@@ -51,6 +51,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: quality
+    env:
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_ENV: development
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL || 'http://localhost:54321' }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY || 'dummy-anon-key' }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.E2E_SUPABASE_SERVICE_ROLE_KEY || 'dummy-service-role' }}
+      UPSTASH_REDIS_REST_URL: ${{ secrets.E2E_UPSTASH_URL || 'http://localhost:8079' }}
+      UPSTASH_REDIS_REST_TOKEN: ${{ secrets.E2E_UPSTASH_TOKEN || 'dummy-token' }}
+      INTERNAL_SECRET: ${{ secrets.E2E_INTERNAL_SECRET || 'dummy-secret-at-least-32-characters-long' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -60,28 +69,12 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium webkit
       - run: npm run build
-        env:
-          NEXT_PUBLIC_APP_URL: http://localhost:3000
-          NEXT_PUBLIC_APP_ENV: development
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL || 'http://localhost:54321' }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY || 'dummy-anon-key' }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.E2E_SUPABASE_SERVICE_ROLE_KEY || 'dummy-service-role' }}
-          UPSTASH_REDIS_REST_URL: ${{ secrets.E2E_UPSTASH_URL || 'http://localhost:8079' }}
-          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.E2E_UPSTASH_TOKEN || 'dummy-token' }}
-          INTERNAL_SECRET: ${{ secrets.E2E_INTERNAL_SECRET || 'dummy-secret-at-least-32-characters-long' }}
       - name: Start server
         run: npm run start &
-        env:
-          NEXT_PUBLIC_APP_URL: http://localhost:3000
-          NEXT_PUBLIC_APP_ENV: development
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL || 'http://localhost:54321' }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY || 'dummy-anon-key' }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.E2E_SUPABASE_SERVICE_ROLE_KEY || 'dummy-service-role' }}
-          UPSTASH_REDIS_REST_URL: ${{ secrets.E2E_UPSTASH_URL || 'http://localhost:8079' }}
-          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.E2E_UPSTASH_TOKEN || 'dummy-token' }}
-          INTERNAL_SECRET: ${{ secrets.E2E_INTERNAL_SECRET || 'dummy-secret-at-least-32-characters-long' }}
-      - name: Wait for server
-        run: npx wait-on http://localhost:3000 -t 60000
+      - name: Wait for server port
+        # tcp:3000 avoids flakiness from root-path redirects or transient 500s
+        # that would make an HTTP probe fail even when the server is up.
+        run: npx wait-on tcp:3000 -t 60000
       - run: npm run e2e
       - uses: actions/upload-artifact@v4
         if: always()

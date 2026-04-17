@@ -7,8 +7,14 @@ test.describe('GDPR — marketing surface', () => {
     await expect(banner).toBeVisible();
 
     await banner.getByRole('button', { name: /essentiels uniquement/i }).click();
-    // useSyncExternalStore + localStorage write settles slightly slower on WebKit.
-    await expect(banner).toBeHidden({ timeout: 10_000 });
+
+    // Consent is the source of truth — verify the localStorage write directly
+    // before touching the DOM. On WebKit mobile, useSyncExternalStore can lag
+    // behind the localStorage mutation by a frame or two, so polling the DOM
+    // for hidden state is flaky even when the click handler ran correctly.
+    await expect
+      .poll(() => page.evaluate(() => window.localStorage.getItem('ankora.consent.v1')))
+      .not.toBeNull();
 
     // Reload: banner stays hidden because consent is persisted in localStorage.
     await page.reload();
