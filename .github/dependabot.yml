@@ -1,5 +1,6 @@
 version: 2
 updates:
+  # npm — weekly, heavily grouped to minimize PR noise
   - package-ecosystem: npm
     directory: /
     schedule:
@@ -10,12 +11,12 @@ updates:
     open-pull-requests-limit: 5
     labels:
       - dependencies
-      - triage
     commit-message:
       prefix: chore
       prefix-development: chore
       include: scope
     groups:
+      # Critical frameworks — review manually
       next:
         patterns:
           - next
@@ -30,27 +31,29 @@ updates:
       supabase:
         patterns:
           - '@supabase/*'
-      testing:
-        patterns:
-          - vitest
-          - '@vitest/*'
-          - '@playwright/*'
-          - playwright
-      linting:
-        patterns:
-          - eslint
-          - eslint-*
-          - '@eslint/*'
-          - prettier
-          - '*-prettier'
-      types:
-        patterns:
-          - '@types/*'
+      # Everything else minor/patch gets bundled into ONE PR per week
+      dev-minor-patch:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+      prod-minor-patch:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+        exclude-patterns:
+          - next
+          - '@next/*'
+          - react
+          - react-dom
+          - '@supabase/*'
     ignore:
-      # Pin Node types to Node 22 LTS series
+      # Pin Node types to current LTS major
       - dependency-name: '@types/node'
         update-types: ['version-update:semver-major']
 
+  # GitHub Actions — one grouped PR per week, auto-merged by workflow
   - package-ecosystem: github-actions
     directory: /
     schedule:
@@ -58,10 +61,14 @@ updates:
       day: monday
       time: '07:00'
       timezone: Europe/Brussels
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 1
     labels:
       - ci
       - dependencies
     commit-message:
       prefix: ci
       include: scope
+    groups:
+      github-actions:
+        patterns:
+          - '*'
