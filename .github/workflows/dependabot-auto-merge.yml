@@ -1,0 +1,76 @@
+name: Dependabot auto-merge
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    steps:
+      - name: Fetch Dependabot metadata
+        id: meta
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Safe = github-actions bumps OR npm dev deps on patch/minor,
+      # OR npm prod deps on patch only AND not in the critical-framework list.
+      # Critical frameworks (next / react / @supabase/*) are kept for manual review.
+      - name: Decide auto-merge eligibility
+        id: gate
+        env:
+          ECOSYSTEM: ${{ steps.meta.outputs.package-ecosystem }}
+          DEP_TYPE: ${{ steps.meta.outputs.dependency-type }}
+          UPDATE_TYPE: ${{ steps.meta.outputs.update-type }}
+          DEP_NAMES: ${{ steps.meta.outputs.dependency-names }}
+        run: |
+          critical='^(next|@next/.*|eslint-config-next|react|react-dom|@types/react|@types/react-dom|@supabase/.*)$'
+          eligible=false
+
+          if [ "$ECOSYSTEM" = "github_actions" ] && \
+             { [ "$UPDATE_TYPE" = "version-update:semver-patch" ] || [ "$UPDATE_TYPE" = "version-update:semver-minor" ]; }; then
+            eligible=true
+          elif [ "$ECOSYSTEM" = "npm_and_yarn" ] && \
+               [ "$DEP_TYPE" = "direct:development" ] && \
+               { [ "$UPDATE_TYPE" = "version-update:semver-patch" ] || [ "$UPDATE_TYPE" = "version-update:semver-minor" ]; }; then
+            eligible=true
+          elif [ "$ECOSYSTEM" = "npm_and_yarn" ] && \
+               [ "$DEP_TYPE" = "direct:production" ] && \
+               [ "$UPDATE_TYPE" = "version-update:semver-patch" ]; then
+            eligible=true
+          fi
+
+          # Veto if any listed dependency matches the critical-framework allowlist.
+          if [ "$eligible" = "true" ] && [ -n "$DEP_NAMES" ]; then
+            IFS=',' read -ra names <<< "$DEP_NAMES"
+            for name in "${names[@]}"; do
+              trimmed=$(echo "$name" | xargs)
+              if echo "$trimmed" | grep -Eq "$critical"; then
+                eligible=false
+                echo "Critical framework detected ($trimmed) — manual review required."
+                break
+              fi
+            done
+          fi
+
+          echo "eligible=$eligible" >> $GITHUB_OUTPUT
+
+      - name: Auto-approve
+        if: steps.gate.outputs.eligible == 'true'
+        run: gh pr review --approve "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Enable auto-merge
+        if: steps.gate.outputs.eligible == 'true'
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
