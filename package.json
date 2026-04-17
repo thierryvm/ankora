@@ -6,7 +6,7 @@
   "license": "UNLICENSED",
   "author": "Thierry Vanmansart <thierryvm@gmail.com>",
   "engines": {
-    "node": ">=20.0.0"
+    "node": "24.x"
   },
   "scripts": {
     "dev": "next dev --turbopack",
