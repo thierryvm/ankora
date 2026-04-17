@@ -2,8 +2,6 @@
   "ci": {
     "collect": {
       "url": ["http://localhost:3000/"],
-      "startServerCommand": "npm run start",
-      "startServerReadyPattern": "Ready in",
       "numberOfRuns": 3,
       "settings": {
         "preset": "desktop",
