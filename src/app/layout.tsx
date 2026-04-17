@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 import { SITE } from '@/lib/site';
 import { ConsentBanner } from '@/components/gdpr/ConsentBanner';
@@ -87,6 +89,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <Toaster />
         <ServiceWorkerRegister />
         <JsonLd data={organizationJsonLd} />
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
