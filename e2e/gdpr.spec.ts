@@ -7,7 +7,8 @@ test.describe('GDPR — marketing surface', () => {
     await expect(banner).toBeVisible();
 
     await banner.getByRole('button', { name: /essentiels uniquement/i }).click();
-    await expect(banner).toBeHidden();
+    // useSyncExternalStore + localStorage write settles slightly slower on WebKit.
+    await expect(banner).toBeHidden({ timeout: 10_000 });
 
     // Reload: banner stays hidden because consent is persisted in localStorage.
     await page.reload();

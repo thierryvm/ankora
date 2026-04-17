@@ -20,9 +20,9 @@ test.describe('PWA', () => {
   test('icon endpoints respond', async ({ request }) => {
     const svg = await request.get('/icon.svg');
     expect(svg.status()).toBe(200);
-    // Next.js App Router serves apple-icon.svg via /apple-icon (file-based route
-    // without extension in the output URL).
-    const apple = await request.get('/apple-icon');
-    expect([200, 308]).toContain(apple.status());
+    // apple-icon.svg lives in /public (Next.js App Router only serves
+    // apple-icon.(jpg|jpeg|png) via file-based metadata routes, not SVG).
+    const apple = await request.get('/apple-icon.svg');
+    expect(apple.status()).toBe(200);
   });
 });
