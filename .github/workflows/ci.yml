@@ -99,7 +99,6 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Wait for Vercel production deploy
-        id: vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}
@@ -110,11 +109,10 @@ jobs:
           for i in $(seq 1 60); do
             payload=$(curl -sf -H "Authorization: Bearer $VERCEL_TOKEN" \
               "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&teamId=$VERCEL_TEAM_ID&target=production&limit=10") || true
-            url=$(echo "$payload" | jq -r --arg sha "$COMMIT_SHA" \
+            ready=$(echo "$payload" | jq -r --arg sha "$COMMIT_SHA" \
               '.deployments[]? | select(.meta.githubCommitSha == $sha and .readyState == "READY") | .url' | head -n1)
-            if [ -n "$url" ] && [ "$url" != "null" ]; then
-              echo "url=https://$url" >> "$GITHUB_OUTPUT"
-              echo "Production deploy READY: https://$url"
+            if [ -n "$ready" ] && [ "$ready" != "null" ]; then
+              echo "Production deploy READY for $COMMIT_SHA: https://$ready"
               exit 0
             fi
             echo "Waiting for Vercel production deploy ($i/60)…"
@@ -122,5 +120,8 @@ jobs:
           done
           echo "Timeout: no READY production deploy for $COMMIT_SHA" >&2
           exit 1
-      - name: Run Lighthouse against production
-        run: npm run lhci -- --collect.url="${{ steps.vercel.outputs.url }}/"
+      - name: Run Lighthouse against canonical production URL
+        # The deployment-specific *.vercel.app hostname is gated by Vercel SSO
+        # (Deployment Protection), so Lighthouse hits the login page and every
+        # perf/a11y assertion fails. The canonical alias skips the gate.
+        run: npm run lhci -- --collect.url="https://ankora-chi.vercel.app/"
