@@ -55,6 +55,9 @@ export function Header({ variant = 'marketing', isAuthenticated = false }: Heade
               <Link href="/app">Tableau de bord</Link>
             </Button>
             <Button asChild variant="ghost" size="sm">
+              <Link href="/app/accounts">Comptes</Link>
+            </Button>
+            <Button asChild variant="ghost" size="sm">
               <Link href="/app/charges">Charges</Link>
             </Button>
             <Button asChild variant="ghost" size="sm">

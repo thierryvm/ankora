@@ -1,11 +1,24 @@
 import { money, zero, type Charge, type ChargeFrequency, type Money } from '@/lib/domain/types';
 
-const FREQUENCY_DIVISOR: Record<ChargeFrequency, number> = {
+export const FREQUENCY_DIVISOR: Record<ChargeFrequency, number> = {
   monthly: 1,
   quarterly: 3,
   semiannual: 6,
   annual: 12,
 };
+
+/**
+ * Whether a charge falls due in a given month.
+ * Monthly charges are always due; periodic charges only on their reference month
+ * and every N months thereafter (N = period in months).
+ */
+export function isChargeDueInMonth(charge: Charge, month: number): boolean {
+  if (!charge.isActive) return false;
+  if (charge.frequency === 'monthly') return true;
+  const period = FREQUENCY_DIVISOR[charge.frequency];
+  if (period === 12) return charge.dueMonth === month;
+  return (((month - charge.dueMonth) % period) + period) % period === 0;
+}
 
 /**
  * Monthly provision target for a single charge — amount spread across its period.
@@ -31,16 +44,10 @@ export function monthlyProvisionTotal(charges: readonly Charge[]): Money {
 export function billsDueInMonth(charges: readonly Charge[], month: number): Money {
   if (month < 1 || month > 12) throw new RangeError(`month must be 1..12, received ${month}`);
 
-  return charges.reduce((acc, charge) => {
-    if (!charge.isActive) return acc;
-    if (charge.frequency === 'monthly') return acc.plus(charge.amount);
-    if (charge.dueMonth === month) return acc.plus(charge.amount);
-    if (charge.frequency === 'quarterly' && (month - charge.dueMonth) % 3 === 0)
-      return acc.plus(charge.amount);
-    if (charge.frequency === 'semiannual' && (month - charge.dueMonth) % 6 === 0)
-      return acc.plus(charge.amount);
-    return acc;
-  }, zero());
+  return charges.reduce(
+    (acc, charge) => (isChargeDueInMonth(charge, month) ? acc.plus(charge.amount) : acc),
+    zero(),
+  );
 }
 
 /**

@@ -2,6 +2,8 @@ import { z } from 'zod';
 
 export const chargeFrequencySchema = z.enum(['monthly', 'quarterly', 'semiannual', 'annual']);
 
+export const chargePaidFromSchema = z.enum(['principal', 'epargne']);
+
 export const chargeInputSchema = z.object({
   label: z
     .string()
@@ -22,9 +24,11 @@ export const chargeInputSchema = z.object({
   categoryId: z.string().uuid().nullable(),
   isActive: z.boolean().default(true),
   notes: z.string().max(500).optional().nullable(),
+  paidFrom: chargePaidFromSchema.optional(),
 });
 
 export const chargeUpdateSchema = chargeInputSchema.partial();
 
 export type ChargeInput = z.infer<typeof chargeInputSchema>;
 export type ChargeUpdate = z.infer<typeof chargeUpdateSchema>;
+export type ChargePaidFrom = z.infer<typeof chargePaidFromSchema>;

@@ -12,6 +12,7 @@ import type { Charge } from '@/lib/domain/types';
 const base = {
   categoryId: null,
   isActive: true,
+  paidFrom: 'principal',
 } satisfies Partial<Charge>;
 
 const rent: Charge = {

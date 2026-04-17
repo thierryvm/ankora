@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Simulation, money, type Charge } from '@/lib/domain';
+import { Simulation, money, type Charge, type ChargePaidFrom } from '@/lib/domain';
 import { formatMoney } from '@/lib/format';
 
 type RawCharge = {
@@ -24,6 +24,7 @@ type RawCharge = {
   dueMonth: number;
   categoryId: string | null;
   isActive: boolean;
+  paidFrom: ChargePaidFrom;
 };
 
 type Mode = 'cancel' | 'negotiate' | 'add';
@@ -48,6 +49,7 @@ export function SimulatorClient({ charges }: { charges: RawCharge[] }) {
         dueMonth: c.dueMonth,
         categoryId: c.categoryId,
         isActive: c.isActive,
+        paidFrom: c.paidFrom,
       })),
     [charges],
   );
@@ -78,6 +80,7 @@ export function SimulatorClient({ charges }: { charges: RawCharge[] }) {
         dueMonth: Number(newDueMonth),
         categoryId: null,
         isActive: true,
+        paidFrom: newFrequency === 'monthly' ? 'principal' : 'epargne',
       },
     });
   }, [mode, chargeId, newAmount, newLabel, newFrequency, newDueMonth, domainCharges]);
