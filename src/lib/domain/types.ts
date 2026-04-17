@@ -9,6 +9,13 @@ export const zero = (): Money => new Decimal(0);
 
 export type ChargeFrequency = 'monthly' | 'quarterly' | 'semiannual' | 'annual';
 
+/** Physical account that settles a charge or an expense. */
+export type AccountKind = 'principal' | 'vie_courante' | 'epargne';
+
+/** Accounts allowed as a charge source. Vie-courante is excluded by design:
+ *  its role is daily spending, not bill settlement. */
+export type ChargePaidFrom = Extract<AccountKind, 'principal' | 'epargne'>;
+
 export type Charge = {
   id: string;
   label: string;
@@ -18,6 +25,9 @@ export type Charge = {
   dueMonth: number;
   categoryId: string | null;
   isActive: boolean;
+  /** Which account settles the bill. Defaults to 'principal' in the DB;
+   *  periodic charges normally use 'epargne' to be smoothed. */
+  paidFrom: ChargePaidFrom;
 };
 
 export type Expense = {
@@ -28,6 +38,7 @@ export type Expense = {
   occurredOn: string;
   categoryId: string | null;
   note: string | null;
+  paidFrom: AccountKind;
 };
 
 export type MonthKey =

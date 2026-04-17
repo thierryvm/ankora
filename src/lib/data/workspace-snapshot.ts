@@ -1,14 +1,28 @@
 import { redirect } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/server';
-import { money, type Charge, type Expense } from '@/lib/domain/types';
+import {
+  money,
+  type AccountKind,
+  type Charge,
+  type ChargePaidFrom,
+  type Expense,
+} from '@/lib/domain/types';
+
+export type AccountSnapshot = {
+  kind: AccountKind;
+  label: string;
+  balance: number;
+};
 
 export type WorkspaceSnapshot = {
   workspaceId: string;
   workspaceName: string;
   monthlyIncome: number | null;
+  vieCouranteMonthlyTransfer: number | null;
   savingsBalance: number;
   monthsTracked: number;
+  accounts: AccountSnapshot[];
   charges: Charge[];
   rawCharges: Array<{
     id: string;
@@ -19,6 +33,7 @@ export type WorkspaceSnapshot = {
     categoryId: string | null;
     isActive: boolean;
     notes: string | null;
+    paidFrom: ChargePaidFrom;
   }>;
 };
 
@@ -51,8 +66,12 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
 
   const workspaceId = membership.workspace_id;
 
-  const [wsRes, settingsRes, chargesRes] = await Promise.all([
-    supabase.from('workspaces').select('id, name, monthly_income').eq('id', workspaceId).single(),
+  const [wsRes, settingsRes, chargesRes, accountsRes] = await Promise.all([
+    supabase
+      .from('workspaces')
+      .select('id, name, monthly_income, vie_courante_monthly_transfer')
+      .eq('id', workspaceId)
+      .single(),
     supabase
       .from('workspace_settings')
       .select('savings_balance, months_tracked')
@@ -60,9 +79,10 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
       .maybeSingle(),
     supabase
       .from('charges')
-      .select('id, label, amount, frequency, due_month, category_id, is_active, notes')
+      .select('id, label, amount, frequency, due_month, category_id, is_active, notes, paid_from')
       .eq('workspace_id', workspaceId)
       .order('created_at', { ascending: true }),
+    supabase.from('accounts').select('kind, label, balance').eq('workspace_id', workspaceId),
   ]);
 
   if (wsRes.error || !wsRes.data) redirect('/onboarding');
@@ -76,6 +96,7 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
     categoryId: c.category_id,
     isActive: c.is_active,
     notes: c.notes,
+    paidFrom: c.paid_from as ChargePaidFrom,
   }));
 
   const charges: Charge[] = rawCharges.map((c) => ({
@@ -86,14 +107,23 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
     dueMonth: c.dueMonth,
     categoryId: c.categoryId,
     isActive: c.isActive,
+    paidFrom: c.paidFrom,
+  }));
+
+  const accounts: AccountSnapshot[] = (accountsRes.data ?? []).map((a) => ({
+    kind: a.kind as AccountKind,
+    label: a.label,
+    balance: Number(a.balance),
   }));
 
   return {
     workspaceId,
     workspaceName: wsRes.data.name,
     monthlyIncome: wsRes.data.monthly_income,
+    vieCouranteMonthlyTransfer: wsRes.data.vie_courante_monthly_transfer,
     savingsBalance: Number(settingsRes.data?.savings_balance ?? 0),
     monthsTracked: Math.max(1, settingsRes.data?.months_tracked ?? 1),
+    accounts,
     charges,
     rawCharges,
   };
@@ -103,7 +133,7 @@ export async function getExpenses(workspaceId: string, limit = 50): Promise<Expe
   const supabase = await createClient();
   const { data } = await supabase
     .from('expenses')
-    .select('id, label, amount, occurred_on, category_id, note')
+    .select('id, label, amount, occurred_on, category_id, note, paid_from')
     .eq('workspace_id', workspaceId)
     .order('occurred_on', { ascending: false })
     .limit(limit);
@@ -115,5 +145,6 @@ export async function getExpenses(workspaceId: string, limit = 50): Promise<Expe
     occurredOn: e.occurred_on,
     categoryId: e.category_id,
     note: e.note,
+    paidFrom: e.paid_from as AccountKind,
   }));
 }

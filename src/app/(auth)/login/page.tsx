@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LoginForm } from './LoginForm';
 
@@ -29,6 +30,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             Mot de passe mis à jour. Tu peux te connecter.
           </div>
         )}
+        <div className="mb-6 flex flex-col gap-4">
+          <GoogleSignInButton />
+          <div className="flex items-center gap-3 text-xs text-(--color-muted-foreground)">
+            <span className="h-px flex-1 bg-(--color-border)" />
+            <span>ou avec ton email</span>
+            <span className="h-px flex-1 bg-(--color-border)" />
+          </div>
+        </div>
         <LoginForm />
         <div className="mt-6 flex flex-col gap-2 text-center text-sm">
           <Link

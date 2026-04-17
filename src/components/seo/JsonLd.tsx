@@ -16,9 +16,14 @@ import { headers } from 'next/headers';
 export async function JsonLd({ data }: { data: object }) {
   const nonce = (await headers()).get('x-nonce') ?? undefined;
   const propKey = ['dangerously', 'Set', 'Inner', 'HTML'].join('');
+  // HTML spec strips the `nonce` attribute from the DOM after parsing (to prevent
+  // exfiltration via CSS selectors), so the client sees nonce="" while SSR emits
+  // the real value. That discrepancy is benign — the JSON-LD payload is static
+  // data, not executable script — so we silence the hydration warning here.
   return createElement('script', {
     type: 'application/ld+json',
     nonce,
+    suppressHydrationWarning: true,
     [propKey]: { __html: JSON.stringify(data) },
   });
 }

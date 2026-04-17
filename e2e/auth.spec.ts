@@ -5,7 +5,7 @@ test.describe('Auth — validation (no DB writes)', () => {
   test('signup: weak password surfaces inline field error', async ({ page }) => {
     const user = makeTestUser();
     await fillSignup(page, { ...user, password: 'short' });
-    await page.getByRole('button', { name: /créer mon compte/i }).click();
+    await page.getByRole('button', { name: 'Créer mon compte', exact: true }).click();
 
     await expect(page.getByText(/12 caractères/i).first()).toBeVisible();
   });
@@ -16,7 +16,7 @@ test.describe('Auth — validation (no DB writes)', () => {
     await page.getByLabel('Email').fill(user.email);
     await page.getByLabel('Mot de passe', { exact: true }).fill(user.password);
     await page.getByLabel('Confirmer le mot de passe').fill(user.password);
-    await page.getByRole('button', { name: /créer mon compte/i }).click();
+    await page.getByRole('button', { name: 'Créer mon compte', exact: true }).click();
 
     // Browser-native required validation prevents navigation — still on /signup.
     await expect(page).toHaveURL(/\/signup\b/);

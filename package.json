@@ -26,6 +26,7 @@
     "e2e:install": "playwright install --with-deps chromium",
     "lhci": "lhci autorun",
     "icons": "tsx scripts/generate-pwa-icons.ts",
+    "import:coda": "tsx scripts/import-coda-charges.ts",
     "security:audit": "tsx scripts/security-audit.ts",
     "security:headers": "tsx scripts/check-security-headers.ts",
     "supabase:start": "supabase start",

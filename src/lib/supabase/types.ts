@@ -33,6 +33,38 @@ export type Database = {
   };
   public: {
     Tables: {
+      accounts: {
+        Row: {
+          balance: number;
+          kind: string;
+          label: string;
+          updated_at: string;
+          workspace_id: string;
+        };
+        Insert: {
+          balance?: number;
+          kind: string;
+          label: string;
+          updated_at?: string;
+          workspace_id: string;
+        };
+        Update: {
+          balance?: number;
+          kind?: string;
+          label?: string;
+          updated_at?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'accounts_workspace_id_fkey';
+            columns: ['workspace_id'];
+            isOneToOne: false;
+            referencedRelation: 'workspaces';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       audit_log: {
         Row: {
           event_type: string;
@@ -141,6 +173,7 @@ export type Database = {
           is_active: boolean;
           label: string;
           notes: string | null;
+          paid_from: string;
           updated_at: string;
           workspace_id: string;
         };
@@ -155,6 +188,7 @@ export type Database = {
           is_active?: boolean;
           label: string;
           notes?: string | null;
+          paid_from?: string;
           updated_at?: string;
           workspace_id: string;
         };
@@ -169,6 +203,7 @@ export type Database = {
           is_active?: boolean;
           label?: string;
           notes?: string | null;
+          paid_from?: string;
           updated_at?: string;
           workspace_id?: string;
         };
@@ -247,6 +282,7 @@ export type Database = {
           label: string;
           note: string | null;
           occurred_on: string;
+          paid_from: string;
           workspace_id: string;
         };
         Insert: {
@@ -258,6 +294,7 @@ export type Database = {
           label: string;
           note?: string | null;
           occurred_on: string;
+          paid_from?: string;
           workspace_id: string;
         };
         Update: {
@@ -269,6 +306,7 @@ export type Database = {
           label?: string;
           note?: string | null;
           occurred_on?: string;
+          paid_from?: string;
           workspace_id?: string;
         };
         Relationships: [
@@ -447,6 +485,7 @@ export type Database = {
           name: string;
           owner_id: string;
           updated_at: string;
+          vie_courante_monthly_transfer: number | null;
         };
         Insert: {
           created_at?: string;
@@ -457,6 +496,7 @@ export type Database = {
           name: string;
           owner_id: string;
           updated_at?: string;
+          vie_courante_monthly_transfer?: number | null;
         };
         Update: {
           created_at?: string;
@@ -467,6 +507,7 @@ export type Database = {
           name?: string;
           owner_id?: string;
           updated_at?: string;
+          vie_courante_monthly_transfer?: number | null;
         };
         Relationships: [
           {
@@ -483,8 +524,19 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      assert_rls_coverage: {
+        Args: never;
+        Returns: {
+          rls_enabled: boolean;
+          rls_forced: boolean;
+          schema_name: string;
+          table_name: string;
+        }[];
+      };
       is_workspace_editor: { Args: { ws_id: string }; Returns: boolean };
       is_workspace_member: { Args: { ws_id: string }; Returns: boolean };
+      purge_audit_log_older_than_12_months: { Args: never; Returns: number };
+      seed_default_accounts: { Args: { ws_id: string }; Returns: undefined };
     };
     Enums: {
       [_ in never]: never;

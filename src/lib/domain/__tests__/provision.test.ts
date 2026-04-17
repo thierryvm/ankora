@@ -12,6 +12,7 @@ const charges: Charge[] = [
     dueMonth: 1,
     categoryId: null,
     isActive: true,
+    paidFrom: 'principal',
   },
   {
     id: 'c2',
@@ -21,6 +22,7 @@ const charges: Charge[] = [
     dueMonth: 3,
     categoryId: null,
     isActive: true,
+    paidFrom: 'principal',
   },
 ];
 // Monthly provision target = 900 + 100 = 1000

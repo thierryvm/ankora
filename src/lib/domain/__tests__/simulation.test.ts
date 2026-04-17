@@ -12,6 +12,7 @@ const charges: Charge[] = [
     dueMonth: 1,
     categoryId: null,
     isActive: true,
+    paidFrom: 'principal',
   },
   {
     id: 'c2',
@@ -21,6 +22,7 @@ const charges: Charge[] = [
     dueMonth: 3,
     categoryId: null,
     isActive: true,
+    paidFrom: 'principal',
   },
 ];
 // Monthly provision = 50 + 100 = 150
@@ -70,6 +72,7 @@ describe('simulate / add', () => {
         dueMonth: 1,
         categoryId: null,
         isActive: true,
+        paidFrom: 'principal',
       },
     });
     expect(result.projectedMonthlyProvision.toNumber()).toBe(165);
@@ -87,6 +90,7 @@ describe('simulate / add', () => {
           dueMonth: 1,
           categoryId: null,
           isActive: true,
+          paidFrom: 'principal',
         },
       }),
     ).toThrow(RangeError);

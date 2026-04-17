@@ -78,6 +78,36 @@ export async function signupAction(formData: FormData): Promise<ActionResult> {
   redirect('/signup/check-email');
 }
 
+export async function signInWithGoogleAction(): Promise<ActionResult> {
+  const { ip, userAgent } = await contextFromHeaders();
+  const identifier = ip ? `ip:${ip}` : 'anon';
+
+  const rl = await rateLimit('auth', identifier);
+  if (!rl.success) {
+    await logAuditEvent(AuditEvent.AUTH_RATE_LIMITED, { userId: null, ipAddress: ip, userAgent });
+    return { ok: false, error: 'Trop de tentatives. Réessaie dans quelques minutes.' };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent',
+      },
+    },
+  });
+
+  if (error || !data?.url) {
+    console.error('[signInWithGoogleAction]', error?.message ?? 'no url');
+    return { ok: false, error: 'Connexion Google indisponible. Réessaie plus tard.' };
+  }
+
+  redirect(data.url);
+}
+
 export async function loginAction(formData: FormData): Promise<ActionResult> {
   const { ip, userAgent } = await contextFromHeaders();
   const identifier = ip ? `ip:${ip}` : 'anon';

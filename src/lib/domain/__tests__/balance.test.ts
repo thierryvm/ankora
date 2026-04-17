@@ -10,6 +10,7 @@ const exp = (id: string, amount: number, categoryId: string | null): Expense => 
   occurredOn: '2026-04-15',
   categoryId,
   note: null,
+  paidFrom: 'vie_courante',
 });
 
 describe('summarizeExpenses', () => {
