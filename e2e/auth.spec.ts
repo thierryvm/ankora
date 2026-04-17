@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 import { fillSignup, makeTestUser, fillLogin } from './helpers/user';
 
 test.describe('Auth — validation (no DB writes)', () => {
