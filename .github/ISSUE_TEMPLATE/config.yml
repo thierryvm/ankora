@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/thierryvm/ankora/security/advisories/new
+    about: Report a vulnerability privately. Do NOT open a public issue for security bugs.
+  - name: Questions & discussion
+    url: https://github.com/thierryvm/ankora/discussions
+    about: For general questions, feedback, or to chat with the community.
+  - name: Product website
+    url: https://ankora.eu
+    about: Learn more about what Ankora is and who it's for.

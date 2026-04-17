@@ -1,0 +1,33 @@
+# Ankora
+
+> Ton ancrage financier. Cockpit personnel pour lisser tes charges annuelles sur 12 mois, anticiper chaque facture et garder le contrôle de ton budget mensuel. Pas de conseil en placement — juste un outil d'organisation et d'éducation budgétaire, hébergé en Union européenne, avec isolation stricte des données par utilisateur.
+
+## Pages essentielles
+
+- [Accueil](/): présentation, fonctionnalités, FAQ
+- [FAQ](/faq): questions fréquentes sur le produit
+- [Tarifs](/pricing): plans disponibles (en construction)
+- [Conditions générales](/legal/cgu): règles d'utilisation
+- [Politique de confidentialité](/legal/privacy): traitement des données (RGPD)
+- [Politique cookies](/legal/cookies): gestion des cookies
+
+## Principes clés
+
+- **Positionnement** : outil d'organisation et d'éducation budgétaire. Pas de conseil en placement personnalisé (contrainte réglementaire FSMA en Belgique).
+- **Souveraineté des données** : hébergement Supabase région UE, Row Level Security (RLS) sur toutes les tables, pas de partage de données entre utilisateurs par défaut.
+- **Sécurité par design** : CSP nonce-based, HSTS preload, headers stricts, audit logs, 2FA.
+- **Accessibilité** : mobile-first, PWA installable, WCAG 2.2 AA.
+
+## Fonctionnalités cœur
+
+- **Lissage** : les charges trimestrielles et annuelles sont réparties sur 12 mois pour calculer une provision mensuelle cible.
+- **Assistant virements** : calcule combien virer vers l'épargne ce mois-ci (Provisions mensuelles − Factures dues ce mois).
+- **Santé des provisions** : compare la cible théorique avec le solde réel, propose un plan de rattrapage lissé sur 3 mois en cas de déficit.
+- **Simulateur d'action** : estime l'impact d'une résiliation ou d'une négociation sur la capacité d'épargne mensuelle.
+
+## Ce qu'Ankora n'est PAS
+
+- Un conseiller en placement ou en investissement
+- Un service d'agrégation bancaire (pas de connexion PSD2)
+- Un outil de comptabilité en partie double pour entreprises
+- Un service d'automatisation de la déclaration fiscale (simple analyse en lecture)

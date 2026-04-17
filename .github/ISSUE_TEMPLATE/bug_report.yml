@@ -1,0 +1,93 @@
+name: Bug report
+description: Report a defect in the app
+labels: [bug, triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report. Please fill in as much as you can.
+
+        **Security issue?** Please do **not** file it here. Read [SECURITY.md](../SECURITY.md) and email **security@ankora.eu**.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: One sentence that describes the bug.
+      placeholder: 'Export JSON truncates amounts above 10,000 EUR'
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps someone else can follow.
+      placeholder: |
+        1. Go to '/app/settings'
+        2. Click "Exporter mes données"
+        3. Open the downloaded JSON
+        4. See that `charges[0].amount` is "10000.00" instead of the actual "12345.67"
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - auth
+        - onboarding
+        - dashboard
+        - settings
+        - pwa / offline
+        - gdpr / export / deletion
+        - domain / calculations
+        - ui / a11y
+        - performance
+        - other
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser + OS + app version.
+      placeholder: 'Chrome 142 / macOS 15 / v0.2.0'
+    validations:
+      required: true
+
+  - type: textarea
+    id: console
+    attributes:
+      label: Console errors / logs
+      description: Paste relevant console output. Remove any PII first.
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Sanity checks
+      options:
+        - label: I searched [existing issues](https://github.com/thierryvm/ankora/issues) and this isn't a duplicate.
+          required: true
+        - label: I'm using the latest version of `main`.
+          required: true
+        - label: This is not a security issue (those go to security@ankora.eu).
+          required: true

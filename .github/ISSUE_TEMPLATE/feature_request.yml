@@ -1,0 +1,68 @@
+name: Feature request
+description: Suggest an improvement or a new capability
+labels: [enhancement, triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the suggestion. Please describe the problem first, then propose a solution.
+
+        **FSMA reminder:** Ankora is an educational budgeting tool. We cannot ship features that could be interpreted as investment advice.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user problem would this feature solve?
+      placeholder: 'Power users track 30+ charges and the dashboard list becomes hard to scan.'
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe your idea. Screenshots / mockups welcome.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - auth
+        - onboarding
+        - dashboard
+        - settings
+        - pwa / offline
+        - gdpr
+        - domain / calculations
+        - ui / a11y
+        - accessibility
+        - performance
+        - other
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Links, references, related issues.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Sanity checks
+      options:
+        - label: I searched [existing issues](https://github.com/thierryvm/ankora/issues) and this isn't a duplicate.
+          required: true
+        - label: This feature would not constitute investment advice (FSMA-compliant).
+          required: true

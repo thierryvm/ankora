@@ -1,0 +1,67 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '07:00'
+      timezone: Europe/Brussels
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - triage
+    commit-message:
+      prefix: chore
+      prefix-development: chore
+      include: scope
+    groups:
+      next:
+        patterns:
+          - next
+          - '@next/*'
+          - eslint-config-next
+      react:
+        patterns:
+          - react
+          - react-dom
+          - '@types/react'
+          - '@types/react-dom'
+      supabase:
+        patterns:
+          - '@supabase/*'
+      testing:
+        patterns:
+          - vitest
+          - '@vitest/*'
+          - '@playwright/*'
+          - playwright
+      linting:
+        patterns:
+          - eslint
+          - eslint-*
+          - '@eslint/*'
+          - prettier
+          - '*-prettier'
+      types:
+        patterns:
+          - '@types/*'
+    ignore:
+      # Pin Node types to Node 22 LTS series
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '07:00'
+      timezone: Europe/Brussels
+    open-pull-requests-limit: 3
+    labels:
+      - ci
+      - dependencies
+    commit-message:
+      prefix: ci
+      include: scope
