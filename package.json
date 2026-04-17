@@ -93,5 +93,8 @@
     "tsx": "^4.21.0",
     "typescript": "^5",
     "vitest": "^4.1.4"
+  },
+  "overrides": {
+    "tmp": "^0.2.4"
   }
 }
