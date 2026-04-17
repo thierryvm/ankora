@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+# Conventional commit check: type(scope): description
+pattern='^(feat|fix|refactor|test|docs|chore|security|perf|style|ci|build|revert)(\(.+\))?: .{1,100}$'
+if ! head -n1 "$1" | grep -Eq "$pattern"; then
+  echo "✖ Commit message must follow: type(scope): description"
+  echo "  Allowed types: feat, fix, refactor, test, docs, chore, security, perf, style, ci, build, revert"
+  exit 1
+fi

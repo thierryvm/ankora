@@ -1,0 +1,27 @@
+# Ankora code owners — reviewers auto-requested on PRs.
+# Syntax: https://docs.github.com/en/repositories/managing-your-repositories-settings-and-security/customizing-your-repository/about-code-owners
+
+# Default — everything requires review from the project owner.
+*                                       @thierryvm
+
+# Security-critical surfaces — do not merge without explicit owner sign-off.
+/src/middleware.ts                      @thierryvm
+/src/proxy.ts                           @thierryvm
+/src/lib/security/                      @thierryvm
+/src/lib/supabase/                      @thierryvm
+/src/lib/env.ts                         @thierryvm
+/src/lib/gdpr/                          @thierryvm
+/src/app/auth/                          @thierryvm
+/src/app/(auth)/                        @thierryvm
+
+# Database — every migration gets a second look.
+/supabase/                              @thierryvm
+
+# Financial domain — pure, tested, no DB leaks.
+/src/lib/domain/                        @thierryvm
+
+# CI / release pipeline.
+/.github/                               @thierryvm
+/next.config.ts                         @thierryvm
+/package.json                           @thierryvm
+/package-lock.json                      @thierryvm

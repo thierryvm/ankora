@@ -1,0 +1,156 @@
+'use client';
+
+import { useState, useTransition } from 'react';
+import { Plus, Trash2 } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { toast } from '@/components/ui/toast';
+import { createExpenseAction, deleteExpenseAction } from '@/lib/actions/expenses';
+import { formatMoney } from '@/lib/format';
+
+type RawExpense = {
+  id: string;
+  label: string;
+  amount: number;
+  occurredOn: string;
+  note: string | null;
+};
+
+function today(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+export function ExpensesClient({ expenses }: { expenses: RawExpense[] }) {
+  const [isPending, startTransition] = useTransition();
+  const [label, setLabel] = useState('');
+  const [amount, setAmount] = useState('');
+  const [occurredOn, setOccurredOn] = useState(today());
+
+  function onCreate(e: React.FormEvent) {
+    e.preventDefault();
+    startTransition(async () => {
+      const result = await createExpenseAction({
+        label: label.trim(),
+        amount: Number(amount),
+        occurredOn,
+        categoryId: null,
+        note: null,
+      });
+      if (result.ok) {
+        toast.success('Dépense ajoutée');
+        setLabel('');
+        setAmount('');
+      } else {
+        toast.error(result.error);
+      }
+    });
+  }
+
+  function onDelete(id: string) {
+    startTransition(async () => {
+      const result = await deleteExpenseAction(id);
+      if (result.ok) toast.success('Dépense supprimée');
+      else toast.error(result.error);
+    });
+  }
+
+  const total = expenses.reduce((acc, e) => acc + e.amount, 0);
+
+  return (
+    <div className="flex flex-col gap-6">
+      <header>
+        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Mes dépenses</h1>
+        <p className="mt-1 text-(--color-muted-foreground)">
+          Les sorties hors charges récurrentes — courses, resto, loisirs…
+        </p>
+      </header>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Ajouter une dépense</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={onCreate} className="grid gap-4 md:grid-cols-3">
+            <div className="flex flex-col gap-2 md:col-span-2">
+              <Label htmlFor="label">Libellé</Label>
+              <Input
+                id="label"
+                value={label}
+                onChange={(e) => setLabel(e.target.value)}
+                required
+                maxLength={120}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="amount">Montant (€)</Label>
+              <Input
+                id="amount"
+                type="number"
+                inputMode="decimal"
+                min={0}
+                step="0.01"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                required
+              />
+            </div>
+            <div className="flex flex-col gap-2 md:col-span-2">
+              <Label htmlFor="occurredOn">Date</Label>
+              <Input
+                id="occurredOn"
+                type="date"
+                value={occurredOn}
+                onChange={(e) => setOccurredOn(e.target.value)}
+                required
+              />
+            </div>
+            <div className="md:col-span-3">
+              <Button type="submit" disabled={isPending}>
+                <Plus className="h-4 w-4" />
+                {isPending ? 'Ajout…' : 'Ajouter'}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {expenses.length} dépense{expenses.length > 1 ? 's' : ''} · {formatMoney(total)}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {expenses.length === 0 ? (
+            <p className="text-sm text-(--color-muted-foreground)">Aucune dépense enregistrée.</p>
+          ) : (
+            <ul className="divide-y divide-(--color-border)">
+              {expenses.map((e) => (
+                <li key={e.id} className="flex items-center justify-between gap-4 py-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">{e.label}</p>
+                    <p className="text-xs text-(--color-muted-foreground)">{e.occurredOn}</p>
+                  </div>
+                  <p className="shrink-0 font-mono text-sm tabular-nums">{formatMoney(e.amount)}</p>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onDelete(e.id)}
+                    disabled={isPending}
+                    aria-label={`Supprimer ${e.label}`}
+                  >
+                    <Trash2 className="h-4 w-4 text-(--color-danger)" />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

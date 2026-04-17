@@ -1,0 +1,41 @@
+Proprietary License — Ankora
+
+Copyright (c) 2026 Thierry Van Mele. All rights reserved.
+
+This repository is made publicly viewable for the sole purposes of transparency,
+security auditing, and bug reporting by the community.
+
+Permission is NOT granted to:
+
+  (a) copy, modify, merge, publish, distribute, sublicense, or sell copies of
+      the Software or substantial portions thereof;
+
+  (b) use the Software or any derivative work in a commercial product or
+      service;
+
+  (c) use the Software to train, fine-tune, or evaluate machine learning
+      models without prior written consent from the copyright holder;
+
+  (d) reverse-engineer protected components or bypass rate limiting,
+      authentication, or Row Level Security mechanisms.
+
+You MAY:
+
+  (i)  read the source code for personal learning and review purposes;
+
+  (ii) submit bug reports, security reports (see SECURITY.md), and
+       non-binding suggestions via GitHub Issues or Pull Requests;
+
+  (iii) quote short excerpts of the source code for educational or review
+        purposes, with attribution.
+
+Any contribution submitted via Pull Request is licensed back to the copyright
+holder under the same terms as this repository, unless explicitly agreed
+otherwise.
+
+The Software is provided "AS IS", without warranty of any kind, express or
+implied. In no event shall the copyright holder be liable for any claim,
+damages, or other liability arising from the use of the Software.
+
+For licensing inquiries (including commercial use), contact:
+hello@ankora.eu

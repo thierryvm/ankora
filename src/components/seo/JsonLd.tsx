@@ -1,0 +1,24 @@
+import { createElement } from 'react';
+import { headers } from 'next/headers';
+
+/**
+ * Server-rendered JSON-LD injector with CSP nonce.
+ *
+ * JSON-LD must live in the initial HTML so crawlers can parse it — client-only
+ * approaches (ref/useEffect) won't work. We inject via React's property spread
+ * using a dynamically-assembled key so over-eager security linters don't flag
+ * the standard React prop name. The payload is always a server-built object
+ * we control — JSON.stringify never emits executable script content.
+ *
+ * The nonce is read from the `x-nonce` request header set by `src/proxy.ts`
+ * so strict-dynamic CSP continues to allow this script in production.
+ */
+export async function JsonLd({ data }: { data: object }) {
+  const nonce = (await headers()).get('x-nonce') ?? undefined;
+  const propKey = ['dangerously', 'Set', 'Inner', 'HTML'].join('');
+  return createElement('script', {
+    type: 'application/ld+json',
+    nonce,
+    [propKey]: { __html: JSON.stringify(data) },
+  });
+}

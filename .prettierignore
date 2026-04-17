@@ -1,0 +1,14 @@
+node_modules
+.next
+out
+dist
+coverage
+playwright-report
+test-results
+.vercel
+.lighthouseci
+package-lock.json
+*.tsbuildinfo
+public/brand/*.svg
+src/app/icon.svg
+src/app/apple-icon.svg
