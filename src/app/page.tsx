@@ -1,65 +1,201 @@
-import Image from "next/image";
+import type { Metadata } from 'next';
+import { headers } from 'next/headers';
+import Link from 'next/link';
+import Script from 'next/script';
+import { ArrowRight, Shield, TrendingUp, Wallet } from 'lucide-react';
 
-export default function Home() {
+import { SITE } from '@/lib/site';
+import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
+import { Button } from '@/components/ui/button';
+
+export const metadata: Metadata = {
+  title: `${SITE.name} — ${SITE.tagline}`,
+  description: SITE.description,
+};
+
+const FEATURES = [
+  {
+    icon: TrendingUp,
+    title: 'Lissage automatique',
+    body: "Tes factures annuelles ou trimestrielles réparties sur 12 mois. Plus jamais de mauvaise surprise en fin d'année.",
+  },
+  {
+    icon: Wallet,
+    title: 'Assistant virements',
+    body: 'Chaque mois, Ankora te dit exactement combien virer vers ton épargne — et combien garder sur ton courant pour les factures du mois.',
+  },
+  {
+    icon: Shield,
+    title: 'Isolé et sécurisé',
+    body: 'Tes données ne sortent pas de ton espace privé. Chiffrement, RLS et audit logs par défaut. Hébergement UE.',
+  },
+] as const;
+
+const STEPS = [
+  {
+    n: '01',
+    title: 'Renseigne tes charges',
+    body: 'Loyer, assurances, abonnements… classés par catégorie et fréquence.',
+  },
+  {
+    n: '02',
+    title: 'Ankora lisse',
+    body: 'Chaque facture annuelle est répartie sur les 12 mois pour calculer ta provision idéale.',
+  },
+  {
+    n: '03',
+    title: 'Pilote ton mois',
+    body: 'Le cockpit te dit combien virer, combien garder, et si tu es en avance ou en retard sur tes provisions.',
+  },
+] as const;
+
+const FAQ = [
+  {
+    q: 'Ankora est-il un outil de conseil financier ?',
+    a: "Non. Ankora est un outil d'organisation et d'éducation budgétaire. Il ne fournit pas de recommandations de placement ni de conseil financier personnalisé.",
+  },
+  {
+    q: 'Où sont stockées mes données ?',
+    a: 'Tes données sont hébergées en Union européenne (Supabase, région UE) avec chiffrement au repos et isolation stricte par utilisateur via Row Level Security.',
+  },
+  {
+    q: 'Est-ce que je peux partager mes données ?',
+    a: 'Par défaut, ton espace est 100 % privé. Des pots partagés optionnels (voyage, projet commun) arriveront dans une prochaine version — tu choisiras explicitement ce que tu partages, et avec qui.',
+  },
+] as const;
+
+export default async function HomePage() {
+  const nonce = (await headers()).get('x-nonce') ?? undefined;
+
+  const softwareJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: SITE.name,
+    description: SITE.description,
+    applicationCategory: 'FinanceApplication',
+    operatingSystem: 'Web, iOS, Android',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
+    inLanguage: 'fr-BE',
+  };
+
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: FAQ.map(({ q, a }) => ({
+      '@type': 'Question',
+      name: q,
+      acceptedAnswer: { '@type': 'Answer', text: a },
+    })),
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+    <>
+      <Script id="ld-software" type="application/ld+json" nonce={nonce}>
+        {JSON.stringify(softwareJsonLd)}
+      </Script>
+      <Script id="ld-faq" type="application/ld+json" nonce={nonce}>
+        {JSON.stringify(faqJsonLd)}
+      </Script>
+
+      <Header />
+
+      <main id="main">
+        <section className="mx-auto max-w-6xl px-4 pt-20 pb-16 md:px-6 md:pt-28">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-(--color-border) bg-(--color-card) px-3 py-1 text-xs font-medium text-(--color-brand-700)">
+              <span className="inline-block h-2 w-2 rounded-full bg-(--color-brand-500)" />
+              En construction · lancement 2026
+            </p>
+            <h1 className="text-4xl font-bold tracking-tight text-balance text-(--color-foreground) md:text-6xl">
+              {SITE.tagline}.
+            </h1>
+            <p className="mx-auto mt-6 max-w-2xl text-lg text-pretty text-(--color-muted-foreground)">
+              {SITE.description}
+            </p>
+            <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <Button asChild size="lg">
+                <Link href="/signup">
+                  Créer mon cockpit
+                  <ArrowRight className="h-4 w-4" aria-hidden />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg">
+                <Link href="#features">Découvrir</Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="features"
+          aria-labelledby="features-heading"
+          className="mx-auto max-w-6xl px-4 py-16 md:px-6"
+        >
+          <h2 id="features-heading" className="mb-12 text-center text-3xl font-bold tracking-tight">
+            Trois piliers, zéro angoisse
+          </h2>
+          <ul className="grid gap-6 md:grid-cols-3">
+            {FEATURES.map((f) => (
+              <li
+                key={f.title}
+                className="rounded-xl border border-(--color-border) bg-(--color-card) p-6"
+              >
+                <f.icon
+                  className="mb-4 h-8 w-8 text-(--color-brand-700)"
+                  aria-hidden
+                  strokeWidth={1.75}
+                />
+                <h3 className="mb-2 text-lg font-semibold">{f.title}</h3>
+                <p className="text-sm text-(--color-muted-foreground)">{f.body}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section aria-labelledby="how-heading" className="mx-auto max-w-6xl px-4 py-16 md:px-6">
+          <h2 id="how-heading" className="mb-12 text-center text-3xl font-bold tracking-tight">
+            Comment ça marche
+          </h2>
+          <ol className="grid gap-6 md:grid-cols-3">
+            {STEPS.map((s) => (
+              <li
+                key={s.n}
+                className="rounded-xl border border-(--color-border) bg-(--color-card) p-6"
+              >
+                <div className="mb-4 font-mono text-sm font-bold text-(--color-accent-600)">
+                  {s.n}
+                </div>
+                <h3 className="mb-2 text-lg font-semibold">{s.title}</h3>
+                <p className="text-sm text-(--color-muted-foreground)">{s.body}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <section
+          id="faq"
+          aria-labelledby="faq-heading"
+          className="mx-auto max-w-3xl px-4 py-16 md:px-6"
+        >
+          <h2 id="faq-heading" className="mb-8 text-center text-3xl font-bold tracking-tight">
+            Questions fréquentes
+          </h2>
+          <dl className="space-y-4">
+            {FAQ.map((item) => (
+              <div
+                key={item.q}
+                className="rounded-xl border border-(--color-border) bg-(--color-card) p-6"
+              >
+                <dt className="mb-2 font-semibold">{item.q}</dt>
+                <dd className="text-sm text-(--color-muted-foreground)">{item.a}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
       </main>
-    </div>
+
+      <Footer />
+    </>
   );
 }
