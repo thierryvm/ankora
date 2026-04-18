@@ -68,6 +68,29 @@ supabase/
 - Lighthouse ≥ 95 performance, 100 a11y/BP/SEO
 - Pas de warning console en dev
 
+## Orchestration des PR (règles absolues)
+
+**Toute session de dev démarre par cette checklist — sans exception.**
+
+1. **Lire `docs/ROADMAP.md`** en premier. Ce fichier liste l'ordre des PR techniques et la position actuelle du projet. C'est la source de vérité sur **quoi faire maintenant**.
+2. **Identifier la prochaine PR à exécuter** via la table "Ordre d'exécution des PR techniques" du ROADMAP. Ne jamais sauter une PR "en attente" pour passer à une "💡 idée".
+3. **Lire le prompt correspondant** dans `prompts/PR-{X}-…md`. Ce prompt est exhaustif : quality gates, scope, architecture, sécurité, tests, rapport final attendu. **Rien ne doit être improvisé en dehors.**
+4. **Vérifier les prérequis déclarés** dans le prompt (PRs mergées en amont, migrations appliquées, env vars présentes). Si un prérequis manque, **s'arrêter et demander à Thierry** — ne jamais faire à moitié.
+5. **Exécuter strictement le scope déclaré**. Si un besoin émergent apparaît (refactor tentant, feature adjacente, migration bonus) : **poser la question à Thierry avant**. Le scope creep est le pire ennemi de ce projet.
+6. **À la fin de chaque PR**, produire le rapport demandé dans `docs/prs/PR-{X}-report.md` selon le template fourni par le prompt.
+
+### Contrainte budget 0 € (transverse)
+
+Aucune dépendance payante en production tant que Ankora n'a pas de revenus. Cf. `docs/ROADMAP.md` §"Contrainte transverse : Budget 0 €" pour le détail des services autorisés (Vercel Hobby, Supabase Free, Upstash Free, GitHub Actions public, Sentry Developer free conditionnel). **Introduire une dépendance payante = validation Thierry obligatoire, pas d'exception silencieuse.**
+
+### Ordre actuel (avril 2026)
+
+PR-1 ✅ → PR-Q ✅ → **PR-1bis 🚧** (en cours Vague C→D) → PR-2 ⏳ → PR-B1 📋 → PR-3 📋 → PR-F 💡 → PR-B2 💡
+
+Cet ordre est **verrouillé**. Si une PR émerge hors-plan (ex: hotfix sécurité, bug bloquant), elle doit être cadrée avec Thierry avant d'être ouverte, et le ROADMAP mis à jour pour la tracer.
+
+---
+
 ## Workflow agents (`.claude/agents/`)
 
 - **security-auditor** : avant merge de toute PR touchant auth / middleware / RLS / headers
