@@ -1,30 +1,44 @@
 'use server';
 
-import { redirect } from 'next/navigation';
 import { z } from 'zod';
+
+import { redirect } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/server';
 import { chargeFrequencySchema } from '@/lib/schemas/charge';
 import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
 import { rateLimit } from '@/lib/security/rate-limit';
-
-export type ActionResult =
-  | { ok: true }
-  | { ok: false; error: string; fieldErrors?: Record<string, string[]> };
+import type { ActionResult } from '@/lib/actions/types';
 
 const onboardingSchema = z.object({
-  workspaceName: z.string().trim().min(1, { message: 'Nom requis' }).max(80),
+  workspaceName: z
+    .string()
+    .trim()
+    .min(1, { message: 'onboarding.workspace.required' })
+    .max(80, { message: 'onboarding.workspace.tooLong' }),
   monthlyIncome: z
-    .number({ error: 'Revenu invalide' })
-    .finite()
-    .min(0, { message: 'Doit être ≥ 0' })
-    .max(10_000_000),
+    .number({ error: 'onboarding.income.invalid' })
+    .finite({ message: 'onboarding.income.invalid' })
+    .min(0, { message: 'onboarding.income.negative' })
+    .max(10_000_000, { message: 'onboarding.income.tooHigh' }),
   firstCharge: z
     .object({
-      label: z.string().trim().min(1).max(120),
-      amount: z.number().finite().min(0).max(1_000_000),
+      label: z
+        .string()
+        .trim()
+        .min(1, { message: 'onboarding.firstCharge.label.required' })
+        .max(120, { message: 'onboarding.firstCharge.label.tooLong' }),
+      amount: z
+        .number({ error: 'onboarding.firstCharge.amount.invalid' })
+        .finite({ message: 'onboarding.firstCharge.amount.invalid' })
+        .min(0, { message: 'onboarding.firstCharge.amount.negative' })
+        .max(1_000_000, { message: 'onboarding.firstCharge.amount.tooHigh' }),
       frequency: chargeFrequencySchema,
-      dueMonth: z.number().int().min(1).max(12),
+      dueMonth: z
+        .number({ error: 'onboarding.firstCharge.dueMonth.range' })
+        .int({ message: 'onboarding.firstCharge.dueMonth.range' })
+        .min(1, { message: 'onboarding.firstCharge.dueMonth.range' })
+        .max(12, { message: 'onboarding.firstCharge.dueMonth.range' }),
     })
     .nullable(),
 });
@@ -36,19 +50,19 @@ export async function completeOnboardingAction(input: unknown): Promise<ActionRe
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { ok: false, error: 'Session expirée. Reconnecte-toi.' };
+    return { ok: false, errorCode: 'errors.session.expired' };
   }
 
   const rl = await rateLimit('mutation', `user:${user.id}`);
   if (!rl.success) {
-    return { ok: false, error: 'Trop de requêtes. Attends une minute.' };
+    return { ok: false, errorCode: 'errors.session.rateLimited' };
   }
 
   const parsed = onboardingSchema.safeParse(input);
   if (!parsed.success) {
     return {
       ok: false,
-      error: 'Données invalides',
+      errorCode: 'errors.validation.generic',
       fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
     };
   }
@@ -62,7 +76,7 @@ export async function completeOnboardingAction(input: unknown): Promise<ActionRe
     .single();
 
   if (wsError || !workspace) {
-    return { ok: false, error: 'Workspace introuvable. Contacte le support.' };
+    return { ok: false, errorCode: 'errors.onboarding.workspaceNotFound' };
   }
 
   const { error: updateError } = await supabase
@@ -74,7 +88,7 @@ export async function completeOnboardingAction(input: unknown): Promise<ActionRe
     .eq('id', workspace.id);
 
   if (updateError) {
-    return { ok: false, error: 'Impossible de mettre à jour le workspace.' };
+    return { ok: false, errorCode: 'errors.onboarding.workspaceUpdateFailed' };
   }
 
   await logAuditEvent(AuditEvent.WORKSPACE_UPDATED, {
@@ -83,6 +97,8 @@ export async function completeOnboardingAction(input: unknown): Promise<ActionRe
   });
 
   if (parsed.data.firstCharge) {
+    // Migration 20260417000004_three_accounts_model : paid_from NOT NULL.
+    // Recurring charges default to the principal account.
     const { error: chargeError } = await supabase.from('charges').insert({
       workspace_id: workspace.id,
       created_by: user.id,
@@ -92,10 +108,11 @@ export async function completeOnboardingAction(input: unknown): Promise<ActionRe
       due_month: parsed.data.firstCharge.dueMonth,
       category_id: null,
       is_active: true,
+      paid_from: 'principal',
     });
 
     if (chargeError) {
-      return { ok: false, error: 'Workspace créé mais charge non enregistrée.' };
+      return { ok: false, errorCode: 'errors.onboarding.chargeFailed' };
     }
 
     await logAuditEvent(AuditEvent.CHARGE_CREATED, {

@@ -3,25 +3,18 @@
 import { revalidatePath } from 'next/cache';
 
 import { createClient } from '@/lib/supabase/server';
-import {
-  accountBalanceSchema,
-  accountLabelSchema,
-  ACCOUNT_KIND_LABELS,
-} from '@/lib/schemas/account';
+import { accountBalanceSchema, accountLabelSchema } from '@/lib/schemas/account';
 import { monthlyIncomeSchema, vieCouranteTransferSchema } from '@/lib/schemas/workspace';
 import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
 import { rateLimit } from '@/lib/security/rate-limit';
-
-export type ActionResult =
-  | { ok: true }
-  | { ok: false; error: string; fieldErrors?: Record<string, string[]> };
+import type { ActionResult } from '@/lib/actions/types';
 
 async function resolveSessionWorkspace() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { ok: false as const, error: 'Session expirée.' };
+  if (!user) return { ok: false as const, errorCode: 'errors.session.expired' };
 
   const { data: membership } = await supabase
     .from('workspace_members')
@@ -32,7 +25,7 @@ async function resolveSessionWorkspace() {
     .limit(1)
     .maybeSingle();
 
-  if (!membership) return { ok: false as const, error: 'Aucun workspace accessible.' };
+  if (!membership) return { ok: false as const, errorCode: 'errors.db.workspaceNotFound' };
 
   return {
     ok: true as const,
@@ -52,16 +45,16 @@ function revalidateAccountPaths() {
 // =========================================================================
 export async function updateAccountBalanceAction(input: unknown): Promise<ActionResult> {
   const ctx = await resolveSessionWorkspace();
-  if (!ctx.ok) return { ok: false, error: ctx.error };
+  if (!ctx.ok) return { ok: false, errorCode: ctx.errorCode };
 
   const rl = await rateLimit('mutation', `user:${ctx.user.id}`);
-  if (!rl.success) return { ok: false, error: 'Trop de requêtes. Attends une minute.' };
+  if (!rl.success) return { ok: false, errorCode: 'errors.session.rateLimited' };
 
   const parsed = accountBalanceSchema.safeParse(input);
   if (!parsed.success) {
     return {
       ok: false,
-      error: 'Données invalides',
+      errorCode: 'errors.validation.generic',
       fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
     };
   }
@@ -72,7 +65,7 @@ export async function updateAccountBalanceAction(input: unknown): Promise<Action
     .eq('workspace_id', ctx.workspaceId)
     .eq('kind', parsed.data.kind);
 
-  if (error) return { ok: false, error: 'Impossible de mettre à jour le solde.' };
+  if (error) return { ok: false, errorCode: 'errors.accounts.balanceUpdateFailed' };
 
   await logAuditEvent(
     AuditEvent.ACCOUNT_BALANCE_UPDATED,
@@ -89,29 +82,27 @@ export async function updateAccountBalanceAction(input: unknown): Promise<Action
 // =========================================================================
 export async function renameAccountAction(input: unknown): Promise<ActionResult> {
   const ctx = await resolveSessionWorkspace();
-  if (!ctx.ok) return { ok: false, error: ctx.error };
+  if (!ctx.ok) return { ok: false, errorCode: ctx.errorCode };
 
   const rl = await rateLimit('mutation', `user:${ctx.user.id}`);
-  if (!rl.success) return { ok: false, error: 'Trop de requêtes.' };
+  if (!rl.success) return { ok: false, errorCode: 'errors.session.rateLimited' };
 
   const parsed = accountLabelSchema.safeParse(input);
   if (!parsed.success) {
     return {
       ok: false,
-      error: 'Données invalides',
+      errorCode: 'errors.validation.generic',
       fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
     };
   }
 
-  const trimmed = parsed.data.label.trim() || ACCOUNT_KIND_LABELS[parsed.data.kind];
-
   const { error } = await ctx.supabase
     .from('accounts')
-    .update({ label: trimmed })
+    .update({ label: parsed.data.label.trim() })
     .eq('workspace_id', ctx.workspaceId)
     .eq('kind', parsed.data.kind);
 
-  if (error) return { ok: false, error: 'Impossible de renommer le compte.' };
+  if (error) return { ok: false, errorCode: 'errors.accounts.renameFailed' };
 
   revalidateAccountPaths();
   return { ok: true };
@@ -122,16 +113,16 @@ export async function renameAccountAction(input: unknown): Promise<ActionResult>
 // =========================================================================
 export async function updateMonthlyIncomeAction(input: unknown): Promise<ActionResult> {
   const ctx = await resolveSessionWorkspace();
-  if (!ctx.ok) return { ok: false, error: ctx.error };
+  if (!ctx.ok) return { ok: false, errorCode: ctx.errorCode };
 
   const rl = await rateLimit('mutation', `user:${ctx.user.id}`);
-  if (!rl.success) return { ok: false, error: 'Trop de requêtes.' };
+  if (!rl.success) return { ok: false, errorCode: 'errors.session.rateLimited' };
 
   const parsed = monthlyIncomeSchema.safeParse(input);
   if (!parsed.success) {
     return {
       ok: false,
-      error: 'Données invalides',
+      errorCode: 'errors.validation.generic',
       fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
     };
   }
@@ -141,7 +132,7 @@ export async function updateMonthlyIncomeAction(input: unknown): Promise<ActionR
     .update({ monthly_income: parsed.data.monthlyIncome })
     .eq('id', ctx.workspaceId);
 
-  if (error) return { ok: false, error: 'Impossible de mettre à jour le revenu.' };
+  if (error) return { ok: false, errorCode: 'errors.accounts.incomeUpdateFailed' };
 
   await logAuditEvent(AuditEvent.WORKSPACE_UPDATED, {
     userId: ctx.user.id,
@@ -157,16 +148,16 @@ export async function updateMonthlyIncomeAction(input: unknown): Promise<ActionR
 // =========================================================================
 export async function updateVieCouranteTransferAction(input: unknown): Promise<ActionResult> {
   const ctx = await resolveSessionWorkspace();
-  if (!ctx.ok) return { ok: false, error: ctx.error };
+  if (!ctx.ok) return { ok: false, errorCode: ctx.errorCode };
 
   const rl = await rateLimit('mutation', `user:${ctx.user.id}`);
-  if (!rl.success) return { ok: false, error: 'Trop de requêtes.' };
+  if (!rl.success) return { ok: false, errorCode: 'errors.session.rateLimited' };
 
   const parsed = vieCouranteTransferSchema.safeParse(input);
   if (!parsed.success) {
     return {
       ok: false,
-      error: 'Données invalides',
+      errorCode: 'errors.validation.generic',
       fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
     };
   }
@@ -176,7 +167,7 @@ export async function updateVieCouranteTransferAction(input: unknown): Promise<A
     .update({ vie_courante_monthly_transfer: parsed.data.amount })
     .eq('id', ctx.workspaceId);
 
-  if (error) return { ok: false, error: 'Impossible de mettre à jour le virement.' };
+  if (error) return { ok: false, errorCode: 'errors.accounts.transferUpdateFailed' };
 
   await logAuditEvent(AuditEvent.WORKSPACE_UPDATED, {
     userId: ctx.user.id,

@@ -1,8 +1,8 @@
 'use server';
 
 import { headers } from 'next/headers';
-import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/server';
 import {
@@ -15,10 +15,7 @@ import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
 import { rateLimit } from '@/lib/security/rate-limit';
 import { exportUserData } from '@/lib/gdpr/export';
 import { requestDeletion, cancelDeletion } from '@/lib/gdpr/deletion';
-
-export type ActionResult<T = undefined> =
-  | ({ ok: true } & (T extends undefined ? object : { data: T }))
-  | { ok: false; error: string; fieldErrors?: Record<string, string[]> };
+import type { ActionResult } from '@/lib/actions/types';
 
 async function contextFromHeaders(): Promise<{ ip: string | null; userAgent: string | null }> {
   const h = await headers();
@@ -32,7 +29,7 @@ async function requireSessionUser() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) throw new Error('Session expirée.');
+  if (!user) throw new Error('Session expired.');
   return { supabase, user };
 }
 
@@ -42,13 +39,13 @@ async function requireSessionUser() {
 export async function updateProfileAction(input: unknown): Promise<ActionResult> {
   const { supabase, user } = await requireSessionUser();
   const rl = await rateLimit('mutation', `user:${user.id}`);
-  if (!rl.success) return { ok: false, error: 'Trop de requêtes.' };
+  if (!rl.success) return { ok: false, errorCode: 'errors.session.rateLimited' };
 
   const parsed = profileUpdateSchema.safeParse(input);
   if (!parsed.success) {
     return {
       ok: false,
-      error: 'Données invalides',
+      errorCode: 'errors.validation.generic',
       fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
     };
   }
@@ -61,7 +58,7 @@ export async function updateProfileAction(input: unknown): Promise<ActionResult>
     })
     .eq('id', user.id);
 
-  if (error) return { ok: false, error: 'Impossible de mettre à jour le profil.' };
+  if (error) return { ok: false, errorCode: 'errors.settings.profileUpdateFailed' };
 
   revalidatePath('/app/settings');
   return { ok: true };
@@ -75,11 +72,12 @@ export async function enrollMfaAction(): Promise<
 > {
   const { supabase, user } = await requireSessionUser();
   const rl = await rateLimit('mutation', `user:${user.id}`);
-  if (!rl.success) return { ok: false, error: 'Trop de requêtes.' };
+  if (!rl.success) return { ok: false, errorCode: 'errors.session.rateLimited' };
 
   const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' });
   if (error || !data) {
-    return { ok: false, error: error?.message ?? 'Impossible de démarrer l’enrôlement.' };
+    console.error('[enrollMfaAction]', error?.code ?? 'unknown');
+    return { ok: false, errorCode: 'errors.auth.mfaEnrollFailed' };
   }
 
   return {
@@ -100,7 +98,7 @@ export async function verifyMfaAction(input: unknown): Promise<ActionResult> {
   if (!parsed.success) {
     return {
       ok: false,
-      error: 'Code invalide',
+      errorCode: 'errors.auth.mfaCodeInvalid',
       fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
     };
   }
@@ -109,7 +107,7 @@ export async function verifyMfaAction(input: unknown): Promise<ActionResult> {
     factorId: parsed.data.factorId,
   });
   if (challengeError || !challenge) {
-    return { ok: false, error: 'Challenge MFA impossible.' };
+    return { ok: false, errorCode: 'errors.auth.mfaChallengeFailed' };
   }
 
   const { error: verifyError } = await supabase.auth.mfa.verify({
@@ -119,7 +117,7 @@ export async function verifyMfaAction(input: unknown): Promise<ActionResult> {
   });
 
   if (verifyError) {
-    return { ok: false, error: 'Code incorrect. Réessaie.' };
+    return { ok: false, errorCode: 'errors.auth.mfaCodeInvalid' };
   }
 
   await logAuditEvent(AuditEvent.AUTH_MFA_ENABLED, {
@@ -137,12 +135,12 @@ export async function unenrollMfaAction(factorId: string): Promise<ActionResult>
   const { ip, userAgent } = await contextFromHeaders();
 
   const parsed = factorIdSchema.safeParse(factorId);
-  if (!parsed.success) return { ok: false, error: 'Identifiant invalide.' };
+  if (!parsed.success) return { ok: false, errorCode: 'errors.validation.generic' };
 
   const { error } = await supabase.auth.mfa.unenroll({ factorId: parsed.data });
   if (error) {
     console.error('[unenrollMfaAction]', error.code ?? 'unknown');
-    return { ok: false, error: 'Impossible de désactiver la 2FA.' };
+    return { ok: false, errorCode: 'errors.auth.mfaDisableFailed' };
   }
 
   await logAuditEvent(AuditEvent.AUTH_MFA_DISABLED, {
@@ -166,7 +164,7 @@ export async function exportMyDataAction(): Promise<
 
   const rl = await rateLimit('export', `user:${user.id}`);
   if (!rl.success) {
-    return { ok: false, error: 'Export limité à une fois toutes les 5 minutes.' };
+    return { ok: false, errorCode: 'errors.settings.exportLimited' };
   }
 
   await logAuditEvent(AuditEvent.GDPR_EXPORT_REQUESTED, {
@@ -195,13 +193,13 @@ export async function requestAccountDeletionAction(input: unknown): Promise<Acti
   const { ip, userAgent } = await contextFromHeaders();
 
   const rl = await rateLimit('mutation', `user:${user.id}`);
-  if (!rl.success) return { ok: false, error: 'Trop de requêtes.' };
+  if (!rl.success) return { ok: false, errorCode: 'errors.session.rateLimited' };
 
   const parsed = deletionRequestSchema.safeParse(input);
   if (!parsed.success) {
     return {
       ok: false,
-      error: 'Confirmation invalide',
+      errorCode: 'errors.validation.generic',
       fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
     };
   }
@@ -209,7 +207,7 @@ export async function requestAccountDeletionAction(input: unknown): Promise<Acti
   try {
     await requestDeletion(user.id, parsed.data.reason);
   } catch {
-    return { ok: false, error: 'Impossible de programmer la suppression.' };
+    return { ok: false, errorCode: 'errors.settings.deletionRequestFailed' };
   }
 
   await logAuditEvent(AuditEvent.GDPR_DELETION_REQUESTED, {
@@ -227,12 +225,12 @@ export async function cancelAccountDeletionAction(): Promise<ActionResult> {
   const { user } = await requireSessionUser();
   const { ip, userAgent } = await contextFromHeaders();
   const rl = await rateLimit('mutation', `user:${user.id}`);
-  if (!rl.success) return { ok: false, error: 'Trop de requêtes.' };
+  if (!rl.success) return { ok: false, errorCode: 'errors.session.rateLimited' };
 
   try {
     await cancelDeletion(user.id);
   } catch {
-    return { ok: false, error: 'Impossible d’annuler la demande.' };
+    return { ok: false, errorCode: 'errors.settings.deletionCancelFailed' };
   }
 
   await logAuditEvent(AuditEvent.GDPR_DELETION_CANCELLED, {

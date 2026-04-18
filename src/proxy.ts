@@ -1,12 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { nanoid } from 'nanoid';
+import createMiddleware from 'next-intl/middleware';
+
+import { routing } from '@/i18n/routing';
 import { updateSession } from '@/lib/supabase/middleware';
 
 /**
- * Per-request CSP with nonce + strict-dynamic.
- * Nonce is propagated to Server Components via the x-nonce request header,
- * which is read in src/app/layout.tsx via `headers()`.
+ * Execution order (do not swap):
+ *   1. next-intl `handleI18nRouting` — detects the locale (URL segment > cookie > default),
+ *      performs any 302 redirect / internal rewrite and sets the NEXT_LOCALE cookie on the
+ *      outgoing response. Must run first so that downstream CSP + auth logic operates on the
+ *      locale-aware response.
+ *   2. Per-request CSP + nonce — injected into both the outgoing request headers (so Server
+ *      Components can read the nonce via `headers()`) and the response headers.
+ *   3. Supabase `updateSession` — refreshes the session cookie on the already-localized
+ *      response, otherwise a `redirect()` issued by an auth-protected layout would lose the
+ *      locale prefix.
  */
+
+const handleI18nRouting = createMiddleware(routing);
+
 function buildCsp(nonce: string): string {
   const isDev = process.env.NODE_ENV !== 'production';
   const supabaseDomains = 'https://*.supabase.co wss://*.supabase.co';
@@ -40,16 +53,20 @@ function buildCsp(nonce: string): string {
 }
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
+  // 1. i18n routing. Produces either a redirect, an internal rewrite, or a NextResponse.next()
+  //    carrying the NEXT_LOCALE cookie. Subsequent steps augment this response in-place.
+  const response = handleI18nRouting(request);
+
+  // 2. CSP + nonce. The nonce is also written back onto the request headers so the downstream
+  //    rendering layer can read it via `headers()` in `[locale]/layout.tsx`.
   const nonce = Buffer.from(nanoid()).toString('base64');
   const csp = buildCsp(nonce);
 
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set('x-nonce', nonce);
-  requestHeaders.set('content-security-policy', csp);
-
-  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  request.headers.set('x-nonce', nonce);
+  request.headers.set('content-security-policy', csp);
   response.headers.set('content-security-policy', csp);
 
+  // 3. Supabase session refresh on the locale-aware response (mutates its cookies).
   return updateSession(request, response);
 }
 
@@ -58,15 +75,16 @@ export const config = {
     /*
      * Match all paths EXCEPT:
      * - API routes
-     * - Static assets
-     * - Image optimization endpoints
-     * - Public brand assets
+     * - OAuth callback (never localized, must keep the exact /auth/callback path)
+     * - Monitoring endpoints
+     * - Next internals and image optimization
+     * - Public brand assets and PWA manifest
      *
      * Prefetch requests are excluded so the CSP nonce isn't cached across users.
      */
     {
       source:
-        '/((?!api|_next/static|_next/image|favicon.ico|icon.svg|apple-icon.svg|manifest.webmanifest|robots.txt|sitemap.xml|llms\\.txt|.*\\.(?:png|jpg|jpeg|gif|svg|webp|avif|ico)).*)',
+        '/((?!api|auth/callback|monitoring|_next/static|_next/image|_vercel|favicon.ico|icon.svg|apple-icon.svg|manifest.webmanifest|robots.txt|sitemap.xml|llms\\.txt|.*\\.(?:png|jpg|jpeg|gif|svg|webp|avif|ico)).*)',
       missing: [
         { type: 'header', key: 'next-router-prefetch' },
         { type: 'header', key: 'purpose', value: 'prefetch' },

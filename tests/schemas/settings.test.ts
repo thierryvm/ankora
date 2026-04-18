@@ -25,7 +25,7 @@ describe('profileUpdateSchema', () => {
   });
 
   it('rejects unknown locale', () => {
-    expect(profileUpdateSchema.safeParse({ displayName: 'N', locale: 'de-DE' }).success).toBe(
+    expect(profileUpdateSchema.safeParse({ displayName: 'N', locale: 'xx-ZZ' }).success).toBe(
       false,
     );
   });
