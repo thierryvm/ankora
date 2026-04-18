@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import {
   ArrowDownLeft,
   ArrowRightLeft,
@@ -17,7 +17,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Budget, Provision, Transfer, money } from '@/lib/domain';
 import type { AccountKind } from '@/lib/domain/types';
 import { getWorkspaceSnapshot } from '@/lib/data/workspace-snapshot';
-import { formatMoney, formatMonth } from '@/lib/format';
+import type { Locale } from '@/i18n/routing';
+import { formatCurrency, formatMonth } from '@/lib/i18n/formatters';
 
 const ACCOUNT_ICONS: Record<AccountKind, typeof Landmark> = {
   principal: Landmark,
@@ -34,9 +35,11 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function DashboardPage() {
   const t = await getTranslations('app.dashboard');
+  const locale = (await getLocale()) as Locale;
   const snapshot = await getWorkspaceSnapshot();
   const currentMonth = new Date().getMonth() + 1;
-  const monthLabel = formatMonth(currentMonth);
+  const monthLabel = formatMonth(currentMonth, locale);
+  const fmtMoney = (value: Parameters<typeof formatCurrency>[0]) => formatCurrency(value, locale);
 
   const provisionTarget = Budget.monthlyProvisionTotal(snapshot.charges);
   const billsDue = Budget.billsDueInMonth(snapshot.charges, currentMonth);
@@ -110,9 +113,9 @@ export default async function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold tabular-nums">{formatMoney(provisionTarget)}</p>
+              <p className="text-2xl font-bold tabular-nums">{fmtMoney(provisionTarget)}</p>
               <p className="mt-1 text-xs text-(--color-muted-foreground)">
-                {t('kpiProvisionsAnnualHint', { amount: formatMoney(annualTotal) })}
+                {t('kpiProvisionsAnnualHint', { amount: fmtMoney(annualTotal) })}
               </p>
             </CardContent>
           </Card>
@@ -127,7 +130,7 @@ export default async function DashboardPage() {
             <CardContent>
               <p className={`text-2xl font-bold ${healthColor}`}>{healthLabel}</p>
               <p className="mt-1 text-xs text-(--color-muted-foreground)">
-                {t('kpiHealthTargetHint', { amount: formatMoney(health.target) })}
+                {t('kpiHealthTargetHint', { amount: fmtMoney(health.target) })}
               </p>
             </CardContent>
           </Card>
@@ -140,7 +143,7 @@ export default async function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold tabular-nums">{formatMoney(suggestedTransfer)}</p>
+              <p className="text-2xl font-bold tabular-nums">{fmtMoney(suggestedTransfer)}</p>
               <p className="mt-1 text-xs text-(--color-muted-foreground)">
                 {suggestedTransfer.gte(0)
                   ? t('kpiSuggestedTransferToSavings')
@@ -159,7 +162,7 @@ export default async function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold tabular-nums">{formatMoney(billsDue)}</p>
+              <p className="text-2xl font-bold tabular-nums">{fmtMoney(billsDue)}</p>
               <p className="mt-1 text-xs text-(--color-muted-foreground)">{t('kpiBillsHint')}</p>
             </CardContent>
           </Card>
@@ -205,7 +208,7 @@ export default async function DashboardPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-2xl font-bold tabular-nums">
-                    {formatMoney(plan.vieCouranteTransfer)}
+                    {fmtMoney(plan.vieCouranteTransfer)}
                   </p>
                   <p className="mt-1 text-xs text-(--color-muted-foreground)">
                     {t('transferVieCouranteHint')}
@@ -229,11 +232,11 @@ export default async function DashboardPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-2xl font-bold tabular-nums">{formatMoney(epargneNetAbs)}</p>
+                  <p className="text-2xl font-bold tabular-nums">{fmtMoney(epargneNetAbs)}</p>
                   <p className="mt-1 text-xs text-(--color-muted-foreground)">
                     {t('transferEpargneHint', {
-                      provision: formatMoney(plan.epargneProvisionTarget),
-                      bills: formatMoney(plan.epargneBillsDue),
+                      provision: fmtMoney(plan.epargneProvisionTarget),
+                      bills: fmtMoney(plan.epargneBillsDue),
                     })}
                   </p>
                 </CardContent>
@@ -262,11 +265,11 @@ export default async function DashboardPage() {
                         : 'text-(--color-danger)'
                     }`}
                   >
-                    {formatMoney(plan.netPrincipalAfterPlan)}
+                    {fmtMoney(plan.netPrincipalAfterPlan)}
                   </p>
                   <p className="mt-1 text-xs text-(--color-muted-foreground)">
                     {t('transferPrincipalRemainingHint', {
-                      bills: formatMoney(plan.principalBillsDue),
+                      bills: fmtMoney(plan.principalBillsDue),
                     })}
                   </p>
                 </CardContent>
@@ -290,7 +293,7 @@ export default async function DashboardPage() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-xl font-semibold tabular-nums">
-                      {formatMoney(money(account?.balance ?? 0))}
+                      {fmtMoney(money(account?.balance ?? 0))}
                     </p>
                   </CardContent>
                 </Card>

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,8 +16,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from '@/components/ui/toast';
+import type { Locale } from '@/i18n/routing';
 import { createChargeAction, deleteChargeAction } from '@/lib/actions/charges';
-import { formatMoney } from '@/lib/format';
+import { formatCurrency } from '@/lib/i18n/formatters';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 
 type Frequency = 'monthly' | 'quarterly' | 'semiannual' | 'annual';
@@ -40,6 +41,7 @@ export function ChargesClient({ charges }: { charges: RawCharge[] }) {
   const t = useTranslations('app.charges');
   const tFreq = useTranslations('common.frequency');
   const tMonths = useTranslations('common.months');
+  const locale = useLocale() as Locale;
   const translateError = useActionErrorTranslator();
 
   const [isPending, startTransition] = useTransition();
@@ -177,7 +179,9 @@ export function ChargesClient({ charges }: { charges: RawCharge[] }) {
                       })}
                     </p>
                   </div>
-                  <p className="shrink-0 font-mono text-sm tabular-nums">{formatMoney(c.amount)}</p>
+                  <p className="shrink-0 font-mono text-sm tabular-nums">
+                    {formatCurrency(c.amount, locale)}
+                  </p>
                   <Button
                     type="button"
                     variant="ghost"

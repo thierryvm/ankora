@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,8 +14,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import type { Locale } from '@/i18n/routing';
 import { Simulation, money, type Charge, type ChargePaidFrom } from '@/lib/domain';
-import { formatMoney } from '@/lib/format';
+import { formatCurrency } from '@/lib/i18n/formatters';
 
 type RawCharge = {
   id: string;
@@ -37,6 +38,8 @@ const MODES: readonly Mode[] = ['cancel', 'negotiate', 'add'];
 
 export function SimulatorClient({ charges }: { charges: RawCharge[] }) {
   const t = useTranslations('app.simulator');
+  const locale = useLocale() as Locale;
+  const fmtMoney = (value: Parameters<typeof formatCurrency>[0]) => formatCurrency(value, locale);
   const tScenario = useTranslations('app.simulator.scenario');
   const tModes = useTranslations('app.simulator.scenario.modes');
   const tFields = useTranslations('app.simulator.fields');
@@ -136,7 +139,7 @@ export function SimulatorClient({ charges }: { charges: RawCharge[] }) {
                 <SelectContent>
                   {charges.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
-                      {c.label} — {formatMoney(c.amount)}
+                      {c.label} — {fmtMoney(c.amount)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -235,7 +238,7 @@ export function SimulatorClient({ charges }: { charges: RawCharge[] }) {
                   {tImpact('currentMonthly')}
                 </p>
                 <p className="mt-1 text-xl font-bold tabular-nums">
-                  {formatMoney(result.currentMonthlyProvision)}
+                  {fmtMoney(result.currentMonthlyProvision)}
                 </p>
               </div>
               <div>
@@ -243,7 +246,7 @@ export function SimulatorClient({ charges }: { charges: RawCharge[] }) {
                   {tImpact('projectedMonthly')}
                 </p>
                 <p className="mt-1 text-xl font-bold tabular-nums">
-                  {formatMoney(result.projectedMonthlyProvision)}
+                  {fmtMoney(result.projectedMonthlyProvision)}
                 </p>
               </div>
               <div>
@@ -255,7 +258,7 @@ export function SimulatorClient({ charges }: { charges: RawCharge[] }) {
                     deltaPositive ? 'text-(--color-success)' : 'text-(--color-danger)'
                   }`}
                 >
-                  {formatMoney(result.annualDelta)}
+                  {fmtMoney(result.annualDelta)}
                 </p>
                 <p className="mt-1 text-xs text-(--color-muted-foreground)">
                   {tImpact('monthlyChange', {

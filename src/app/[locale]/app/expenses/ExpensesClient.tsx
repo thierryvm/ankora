@@ -2,15 +2,16 @@
 
 import { useState, useTransition } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/toast';
+import type { Locale } from '@/i18n/routing';
 import { createExpenseAction, deleteExpenseAction } from '@/lib/actions/expenses';
-import { formatMoney } from '@/lib/format';
+import { formatCurrency } from '@/lib/i18n/formatters';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 
 type RawExpense = {
@@ -27,6 +28,7 @@ function today(): string {
 
 export function ExpensesClient({ expenses }: { expenses: RawExpense[] }) {
   const t = useTranslations('app.expenses');
+  const locale = useLocale() as Locale;
   const translateError = useActionErrorTranslator();
 
   const [isPending, startTransition] = useTransition();
@@ -123,7 +125,7 @@ export function ExpensesClient({ expenses }: { expenses: RawExpense[] }) {
       <Card>
         <CardHeader>
           <CardTitle>
-            {t('summary', { count: expenses.length, total: formatMoney(total) })}
+            {t('summary', { count: expenses.length, total: formatCurrency(total, locale) })}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -137,7 +139,9 @@ export function ExpensesClient({ expenses }: { expenses: RawExpense[] }) {
                     <p className="truncate font-medium">{e.label}</p>
                     <p className="text-xs text-(--color-muted-foreground)">{e.occurredOn}</p>
                   </div>
-                  <p className="shrink-0 font-mono text-sm tabular-nums">{formatMoney(e.amount)}</p>
+                  <p className="shrink-0 font-mono text-sm tabular-nums">
+                    {formatCurrency(e.amount, locale)}
+                  </p>
                   <Button
                     type="button"
                     variant="ghost"
