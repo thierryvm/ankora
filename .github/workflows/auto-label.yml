@@ -47,6 +47,7 @@ jobs:
               'supabase': 'area:supabase',
               'security': 'area:security',
               'gdpr': 'area:gdpr',
+              'legal': 'area:legal',
               'pwa': 'area:pwa',
               'ui': 'area:ui',
               'a11y': 'area:a11y',
