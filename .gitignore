@@ -67,3 +67,11 @@ yarn-error.log*
 tmp/
 
 .vercel
+
+# Claude Code runtime (les agents/commands sont versionnés, pas les lock/tmp)
+.claude/scheduled_tasks.lock
+.claude/tmp/
+.claude/logs/
+
+# outputs temporaires (scripts locaux)
+/outputs/

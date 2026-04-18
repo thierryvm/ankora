@@ -1,0 +1,103 @@
+name: PR task (ROADMAP)
+description: Tracking issue for a technical PR listed in docs/ROADMAP.md (PR-B1, PR-3, PR-F, etc.)
+title: '[PR-X] <short description>'
+labels: [type:pr-task, status:todo, triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template **only** for PRs listed in `docs/ROADMAP.md`.
+        For regular features or bugs, use the other templates.
+
+        This issue serves as the tracking ticket for a single PR from the ROADMAP sequence.
+        Claude Code will reference this issue during execution (`Closes #N` in the final PR).
+
+  - type: input
+    id: pr-id
+    attributes:
+      label: ROADMAP PR ID
+      description: The ID exactly as it appears in `docs/ROADMAP.md` (e.g. PR-B1, PR-3, PR-F)
+      placeholder: 'PR-B1'
+    validations:
+      required: true
+
+  - type: input
+    id: prompt-path
+    attributes:
+      label: Prompt file path
+      description: Path to the corresponding prompt file
+      placeholder: 'prompts/PR-B1-bug-reporting-mvp.md'
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope summary
+      description: Paste the short scope summary from the prompt file (§1 Scope exact)
+      placeholder: |
+        - 17 files created (migrations, schemas, actions, components, admin pages, docs)
+        - 5 files modified (root layout, audit-log, i18n, env.example)
+        - 1 new dependency (html-to-image)
+    validations:
+      required: true
+
+  - type: textarea
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      description: List PRs that must be merged before this one can start
+      placeholder: |
+        - PR-1 ✅
+        - PR-Q ✅
+        - PR-1bis (must be merged)
+        - PR-2 (must be merged)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: status
+    attributes:
+      label: Current status
+      options:
+        - '📋 Prompt ready, waiting to start'
+        - '🚧 In progress'
+        - '🔍 In review'
+        - '✅ Merged'
+        - '⏸️ Blocked'
+      default: 0
+    validations:
+      required: true
+
+  - type: textarea
+    id: budget
+    attributes:
+      label: Budget impact
+      description: Any new paid dependency? If yes, Thierry must approve before starting.
+      placeholder: 'None — fully covered by existing free tiers (Vercel Hobby, Supabase Free, Upstash Free, GitHub Actions public).'
+    validations:
+      required: true
+
+  - type: textarea
+    id: post-merge
+    attributes:
+      label: Post-merge actions
+      description: Anything ops-related that must be done after merge (migrations, env vars, secrets rotation).
+      placeholder: |
+        - Apply Supabase migration `20260418_bug_reports.sql`
+        - Set `GITHUB_ADMIN_TOKEN` + `GITHUB_REPO_OWNER` + `GITHUB_REPO_NAME` on Vercel
+        - Populate `app_config.admin_user_ids` with Thierry's UUID
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-start checklist
+      options:
+        - label: I have read `docs/ROADMAP.md`
+          required: true
+        - label: I have read the corresponding prompt file in full
+          required: true
+        - label: All prerequisite PRs are merged (or I am explicitly working on the next one in sequence)
+          required: true
+        - label: No paid dependency will be introduced (or it has been approved)
+          required: true

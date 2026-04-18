@@ -1,0 +1,74 @@
+name: Auto-label PRs
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Derive labels from branch name and title
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const branch = pr.head.ref;
+            const title = pr.title.toLowerCase();
+            const labels = new Set();
+
+            // PR-series detection (from branch name)
+            const prMatch = branch.match(/\bpr-(b?\d+(?:bis)?|q|f)\b/i);
+            if (prMatch) {
+              labels.add(`pr:PR-${prMatch[1].toUpperCase().replace(/BIS/i, 'bis')}`);
+            }
+
+            // Type detection (from title — conventional commits)
+            const typeMatch = title.match(/^(feat|fix|refactor|perf|test|docs|chore|security|style)(?:\([^)]+\))?!?:/);
+            if (typeMatch) {
+              labels.add(`type:${typeMatch[1]}`);
+            }
+
+            // Area detection (from branch name)
+            const areaMap = {
+              'auth': 'area:auth',
+              'onboarding': 'area:onboarding',
+              'dashboard': 'area:dashboard',
+              'charges': 'area:charges',
+              'expenses': 'area:expenses',
+              'settings': 'area:settings',
+              'admin': 'area:admin',
+              'i18n': 'area:i18n',
+              'domain': 'area:domain',
+              'supabase': 'area:supabase',
+              'security': 'area:security',
+              'gdpr': 'area:gdpr',
+              'pwa': 'area:pwa',
+              'ui': 'area:ui',
+              'a11y': 'area:a11y',
+              'seo': 'area:seo',
+              'ci': 'area:ci',
+            };
+            for (const [kw, lbl] of Object.entries(areaMap)) {
+              if (branch.toLowerCase().includes(kw)) labels.add(lbl);
+            }
+
+            // Default status
+            labels.add('status:review-needed');
+
+            // Apply
+            if (labels.size > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                labels: [...labels],
+              });
+              core.info(`Applied labels: ${[...labels].join(', ')}`);
+            } else {
+              core.info('No labels matched — PR may need manual labeling.');
+            }
