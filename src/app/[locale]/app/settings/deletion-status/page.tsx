@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 
 import { Link } from '@/i18n/navigation';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import type { Locale } from '@/i18n/routing';
 import { requireUser } from '@/lib/auth/require-user';
+import { formatDate, formatDateTime } from '@/lib/i18n/formatters';
 import { createClient } from '@/lib/supabase/server';
 import { CancelDeletionButton } from './CancelDeletionButton';
 
@@ -17,6 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function DeletionStatusPage() {
   const t = await getTranslations('app.deletionStatus');
+  const locale = (await getLocale()) as Locale;
   const user = await requireUser();
   const supabase = await createClient();
 
@@ -36,11 +39,11 @@ export default async function DeletionStatusPage() {
     0,
     Math.ceil((scheduled.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
   );
-  const requestedAt = new Date(data.requested_at).toLocaleString('fr-BE', {
+  const requestedAt = formatDateTime(data.requested_at, locale, {
     dateStyle: 'long',
     timeStyle: 'short',
   });
-  const scheduledAt = scheduled.toLocaleDateString('fr-BE', { dateStyle: 'long' });
+  const scheduledAt = formatDate(scheduled, locale);
 
   const statusColor =
     data.status === 'pending'
@@ -102,9 +105,7 @@ export default async function DeletionStatusPage() {
             <p className="text-sm">
               {data.cancelled_at
                 ? t('cancelledOn', {
-                    date: new Date(data.cancelled_at).toLocaleDateString('fr-BE', {
-                      dateStyle: 'long',
-                    }),
+                    date: formatDate(data.cancelled_at, locale),
                   })
                 : t('cancelledNoDate')}
             </p>

@@ -11,7 +11,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
-      include: ['src/lib/domain/**/*.ts', 'src/lib/schemas/**/*.ts'],
+      include: ['src/lib/domain/**/*.ts', 'src/lib/schemas/**/*.ts', 'src/lib/i18n/formatters.ts'],
       exclude: ['**/*.test.ts', '**/*.spec.ts', '**/index.ts', '**/types.ts'],
       thresholds: {
         lines: 90,

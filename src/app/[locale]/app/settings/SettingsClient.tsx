@@ -3,6 +3,9 @@
 import { useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 
+import type { Locale } from '@/i18n/routing';
+import { formatDate } from '@/lib/i18n/formatters';
+
 import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -43,7 +46,7 @@ export function SettingsClient({ email, displayName, locale, factors, deletion }
       <ProfileCard email={email} displayName={displayName} locale={locale} />
       <MfaCard factors={factors} />
       <DataCard />
-      <DangerZone deletion={deletion} />
+      <DangerZone deletion={deletion} locale={locale} />
     </div>
   );
 }
@@ -288,7 +291,7 @@ function DataCard() {
   );
 }
 
-function DangerZone({ deletion }: { deletion: Deletion }) {
+function DangerZone({ deletion, locale }: { deletion: Deletion; locale: string }) {
   const t = useTranslations('app.settings.danger');
   const translateError = useActionErrorTranslator();
   const [reason, setReason] = useState('');
@@ -309,9 +312,7 @@ function DangerZone({ deletion }: { deletion: Deletion }) {
   };
 
   if (deletion) {
-    const date = new Date(deletion.scheduledFor).toLocaleDateString('fr-BE', {
-      dateStyle: 'long',
-    });
+    const date = formatDate(deletion.scheduledFor, locale as Locale, 'long');
     return (
       <Card className="border-(--color-danger)/40">
         <CardHeader>
