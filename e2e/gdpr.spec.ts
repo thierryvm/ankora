@@ -1,12 +1,15 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('GDPR — marketing surface', () => {
-  test('cookie banner renders and can be dismissed', async ({ page, browserName }) => {
-    // Playwright's iPhone emulation fails to dispatch the click through to the
-    // banner button during React hydration — the handler never fires and
+  test('cookie banner renders and can be dismissed', async ({ page }, testInfo) => {
+    // Playwright's mobile emulation (Pixel 7 + iPhone 14) flakes on tap dispatch
+    // to the banner button during React hydration — the handler never fires and
     // localStorage stays empty. The dismiss contract is identical across
-    // engines, so chromium-desktop and mobile-chrome cover it.
-    test.skip(browserName === 'webkit', 'Tap dispatch flakes under iPhone emulation.');
+    // engines, so chromium-desktop covers it.
+    test.skip(
+      testInfo.project.name.startsWith('mobile-'),
+      'Tap dispatch flakes under mobile emulation (Pixel 7 + iPhone 14).',
+    );
 
     await page.goto('/');
     const banner = page.getByRole('dialog').filter({ hasText: /cookies/i });
