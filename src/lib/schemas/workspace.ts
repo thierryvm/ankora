@@ -1,30 +1,45 @@
 import { z } from 'zod';
 
 export const workspaceInputSchema = z.object({
-  name: z.string().trim().min(1, { message: 'Nom requis' }).max(80),
+  name: z
+    .string()
+    .trim()
+    .min(1, { message: 'workspace.name.required' })
+    .max(80, { message: 'workspace.name.tooLong' }),
   currency: z.enum(['EUR', 'USD', 'GBP', 'CHF']).default('EUR'),
-  monthlyIncome: z.number().finite().min(0).max(10_000_000).nullable(),
+  monthlyIncome: z
+    .number({ error: 'workspace.income.invalid' })
+    .finite({ message: 'workspace.income.invalid' })
+    .min(0, { message: 'workspace.income.negative' })
+    .max(10_000_000, { message: 'workspace.income.tooHigh' })
+    .nullable(),
   fiscalMonthStart: z.number().int().min(1).max(28).default(1),
-  vieCouranteMonthlyTransfer: z.number().finite().min(0).max(100_000_000).nullable().optional(),
+  vieCouranteMonthlyTransfer: z
+    .number()
+    .finite({ message: 'workspace.transfer.invalid' })
+    .min(0, { message: 'workspace.transfer.negative' })
+    .max(100_000_000, { message: 'workspace.transfer.tooHigh' })
+    .nullable()
+    .optional(),
 });
 
 export const workspaceUpdateSchema = workspaceInputSchema.partial();
 
 export const monthlyIncomeSchema = z.object({
   monthlyIncome: z
-    .number({ error: 'Revenu invalide' })
-    .finite()
-    .min(0, { message: 'Doit être ≥ 0' })
-    .max(10_000_000)
+    .number({ error: 'workspace.income.invalid' })
+    .finite({ message: 'workspace.income.invalid' })
+    .min(0, { message: 'workspace.income.negative' })
+    .max(10_000_000, { message: 'workspace.income.tooHigh' })
     .nullable(),
 });
 
 export const vieCouranteTransferSchema = z.object({
   amount: z
-    .number({ error: 'Montant invalide' })
-    .finite()
-    .min(0, { message: 'Doit être ≥ 0' })
-    .max(100_000_000)
+    .number({ error: 'workspace.transfer.invalid' })
+    .finite({ message: 'workspace.transfer.invalid' })
+    .min(0, { message: 'workspace.transfer.negative' })
+    .max(100_000_000, { message: 'workspace.transfer.tooHigh' })
     .nullable(),
 });
 

@@ -75,3 +75,12 @@ tmp/
 
 # outputs temporaires (scripts locaux)
 /outputs/
+
+# local design mockups
+design-mockup-*.html
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# internal PR prompts
+prompts/

@@ -13,10 +13,7 @@ import {
 } from '@/lib/schemas/auth';
 import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
 import { rateLimit } from '@/lib/security/rate-limit';
-
-export type ActionResult =
-  | { ok: true }
-  | { ok: false; error: string; fieldErrors?: Record<string, string[]> };
+import type { ActionResult } from '@/lib/actions/types';
 
 async function contextFromHeaders(): Promise<{ ip: string | null; userAgent: string | null }> {
   const h = await headers();
@@ -36,7 +33,7 @@ export async function signupAction(formData: FormData): Promise<ActionResult> {
       ipAddress: ip,
       userAgent,
     });
-    return { ok: false, error: 'Trop de tentatives. Réessaie dans quelques minutes.' };
+    return { ok: false, errorCode: 'errors.auth.rateLimited' };
   }
 
   const parsed = signupSchema.safeParse({
@@ -50,7 +47,7 @@ export async function signupAction(formData: FormData): Promise<ActionResult> {
   if (!parsed.success) {
     return {
       ok: false,
-      error: 'Données invalides',
+      errorCode: 'errors.validation.generic',
       fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
     };
   }
@@ -66,7 +63,7 @@ export async function signupAction(formData: FormData): Promise<ActionResult> {
 
   if (error) {
     console.error('[signupAction]', error.code ?? 'unknown');
-    return { ok: false, error: 'Inscription impossible. Réessaie plus tard.' };
+    return { ok: false, errorCode: 'errors.auth.signupFailed' };
   }
 
   await logAuditEvent(AuditEvent.AUTH_SIGNUP, {
@@ -85,7 +82,7 @@ export async function signInWithGoogleAction(): Promise<ActionResult> {
   const rl = await rateLimit('auth', identifier);
   if (!rl.success) {
     await logAuditEvent(AuditEvent.AUTH_RATE_LIMITED, { userId: null, ipAddress: ip, userAgent });
-    return { ok: false, error: 'Trop de tentatives. Réessaie dans quelques minutes.' };
+    return { ok: false, errorCode: 'errors.auth.rateLimited' };
   }
 
   const supabase = await createClient();
@@ -102,7 +99,7 @@ export async function signInWithGoogleAction(): Promise<ActionResult> {
 
   if (error || !data?.url) {
     console.error('[signInWithGoogleAction]', error?.message ?? 'no url');
-    return { ok: false, error: 'Connexion Google indisponible. Réessaie plus tard.' };
+    return { ok: false, errorCode: 'errors.auth.googleFailed' };
   }
 
   redirect(data.url);
@@ -119,7 +116,7 @@ export async function loginAction(formData: FormData): Promise<ActionResult> {
       ipAddress: ip,
       userAgent,
     });
-    return { ok: false, error: 'Trop de tentatives. Réessaie dans quelques minutes.' };
+    return { ok: false, errorCode: 'errors.auth.rateLimited' };
   }
 
   const parsed = loginSchema.safeParse({
@@ -130,7 +127,7 @@ export async function loginAction(formData: FormData): Promise<ActionResult> {
   if (!parsed.success) {
     return {
       ok: false,
-      error: 'Identifiants invalides',
+      errorCode: 'errors.auth.invalidCredentials',
       fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
     };
   }
@@ -142,7 +139,7 @@ export async function loginAction(formData: FormData): Promise<ActionResult> {
   });
 
   if (error || !data.user) {
-    return { ok: false, error: 'Email ou mot de passe incorrect' };
+    return { ok: false, errorCode: 'errors.auth.invalidCredentials' };
   }
 
   await logAuditEvent(AuditEvent.AUTH_LOGIN, { userId: data.user.id, ipAddress: ip, userAgent });
@@ -178,7 +175,7 @@ export async function requestPasswordResetAction(formData: FormData): Promise<Ac
 
   const rl = await rateLimit('auth', identifier);
   if (!rl.success) {
-    return { ok: false, error: 'Trop de tentatives. Réessaie plus tard.' };
+    return { ok: false, errorCode: 'errors.auth.rateLimited' };
   }
 
   const parsed = passwordResetRequestSchema.safeParse({
@@ -188,7 +185,7 @@ export async function requestPasswordResetAction(formData: FormData): Promise<Ac
   if (!parsed.success) {
     return {
       ok: false,
-      error: 'Email invalide',
+      errorCode: 'errors.validation.generic',
       fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
     };
   }
@@ -215,7 +212,7 @@ export async function confirmPasswordResetAction(formData: FormData): Promise<Ac
   if (!parsed.success) {
     return {
       ok: false,
-      error: 'Mot de passe invalide',
+      errorCode: 'errors.validation.generic',
       fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
     };
   }
@@ -226,14 +223,14 @@ export async function confirmPasswordResetAction(formData: FormData): Promise<Ac
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { ok: false, error: 'Lien expiré. Demande un nouveau lien.' };
+    return { ok: false, errorCode: 'errors.auth.linkExpired' };
   }
 
   const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
 
   if (error) {
     console.error('[confirmPasswordResetAction]', error.code ?? 'unknown');
-    return { ok: false, error: 'Impossible de mettre à jour le mot de passe.' };
+    return { ok: false, errorCode: 'errors.auth.passwordResetFailed' };
   }
 
   await logAuditEvent(AuditEvent.AUTH_PASSWORD_RESET, {

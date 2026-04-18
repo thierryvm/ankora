@@ -1,15 +1,19 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { signInWithGoogleAction } from '@/lib/actions/auth';
+import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 
 type Props = {
   label?: string;
 };
 
-export function GoogleSignInButton({ label = 'Continuer avec Google' }: Props) {
+export function GoogleSignInButton({ label }: Props) {
+  const t = useTranslations('auth.google');
+  const translateError = useActionErrorTranslator();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -17,9 +21,11 @@ export function GoogleSignInButton({ label = 'Continuer avec Google' }: Props) {
     setError(null);
     startTransition(async () => {
       const result = await signInWithGoogleAction();
-      if (!result.ok) setError(result.error);
+      if (!result.ok) setError(translateError(result.errorCode));
     });
   }
+
+  const displayLabel = label ?? t('label');
 
   return (
     <div className="flex flex-col gap-2">
@@ -31,7 +37,7 @@ export function GoogleSignInButton({ label = 'Continuer avec Google' }: Props) {
         disabled={isPending}
       >
         <GoogleGlyph />
-        <span>{isPending ? 'Redirection…' : label}</span>
+        <span>{isPending ? t('redirecting') : displayLabel}</span>
       </Button>
       {error && (
         <p role="alert" className="text-center text-xs font-medium text-(--color-danger)">

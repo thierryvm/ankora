@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useSyncExternalStore } from 'react';
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+
+import { Link } from '@/i18n/navigation';
 
 const STORAGE_KEY = 'ankora.consent.v1';
 const CONSENT_VERSION = '1.0.0';
@@ -72,12 +74,8 @@ function notify() {
   STORAGE_LISTENERS.forEach((cb) => cb());
 }
 
-/**
- * Minimal cookie banner — essentials always on, analytics/marketing off by default.
- * Server-side consent recording happens only once the user is authenticated
- * via Server Action `recordConsent()`. Until then, localStorage is the source of truth.
- */
 export function ConsentBanner() {
+  const t = useTranslations('consent');
   const stored = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const [dismissed, setDismissed] = useState(false);
 
@@ -102,16 +100,16 @@ export function ConsentBanner() {
       className="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-3xl rounded-xl border border-(--color-border) bg-(--color-card) p-5 shadow-lg md:inset-x-auto md:left-1/2 md:-translate-x-1/2"
     >
       <h2 id="consent-title" className="text-base font-semibold">
-        Cookies et vie privée
+        {t('title')}
       </h2>
       <p id="consent-body" className="mt-2 text-sm text-(--color-muted-foreground)">
-        On utilise uniquement les cookies essentiels pour te connecter. Les cookies d&apos;analyse
-        sont désactivés par défaut — tu peux les activer si tu veux nous aider à améliorer Ankora.
-        Tu peux changer d&apos;avis à tout moment via{' '}
-        <Link href="/legal/cookies" className="underline">
-          la politique cookies
-        </Link>
-        .
+        {t.rich('body', {
+          link: (chunks) => (
+            <Link href="/legal/cookies" className="underline">
+              {chunks}
+            </Link>
+          ),
+        })}
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
         <button
@@ -119,14 +117,14 @@ export function ConsentBanner() {
           onClick={() => accept(false, false)}
           className="rounded-md border border-(--color-border) px-4 py-2 text-sm font-medium hover:bg-(--color-brand-100) focus-visible:ring-2 focus-visible:ring-(--color-brand-600) focus-visible:outline-none"
         >
-          Essentiels uniquement
+          {t('essentialOnly')}
         </button>
         <button
           type="button"
           onClick={() => accept(true, false)}
           className="rounded-md bg-(--color-brand-700) px-4 py-2 text-sm font-medium text-white hover:bg-(--color-brand-800) focus-visible:ring-2 focus-visible:ring-(--color-brand-600) focus-visible:outline-none"
         >
-          Accepter les analyses
+          {t('acceptAnalytics')}
         </button>
       </div>
     </div>

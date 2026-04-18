@@ -1,26 +1,30 @@
 import { z } from 'zod';
 
-export const chargeFrequencySchema = z.enum(['monthly', 'quarterly', 'semiannual', 'annual']);
+export const chargeFrequencySchema = z.enum(['monthly', 'quarterly', 'semiannual', 'annual'], {
+  error: 'charge.frequency.invalid',
+});
 
-export const chargePaidFromSchema = z.enum(['principal', 'epargne']);
+export const chargePaidFromSchema = z.enum(['principal', 'epargne'], {
+  error: 'charge.paidFrom.invalid',
+});
 
 export const chargeInputSchema = z.object({
   label: z
     .string()
     .trim()
-    .min(1, { message: 'Libellé requis' })
-    .max(120, { message: 'Maximum 120 caractères' }),
+    .min(1, { message: 'charge.label.required' })
+    .max(120, { message: 'charge.label.tooLong' }),
   amount: z
-    .number({ error: 'Montant invalide' })
-    .finite()
-    .min(0, { message: 'Doit être ≥ 0' })
-    .max(1_000_000, { message: 'Montant trop élevé' }),
+    .number({ error: 'charge.amount.invalid' })
+    .finite({ message: 'charge.amount.invalid' })
+    .min(0, { message: 'charge.amount.negative' })
+    .max(1_000_000, { message: 'charge.amount.tooHigh' }),
   frequency: chargeFrequencySchema,
   dueMonth: z
-    .number()
-    .int()
-    .min(1, { message: 'Mois entre 1 et 12' })
-    .max(12, { message: 'Mois entre 1 et 12' }),
+    .number({ error: 'charge.dueMonth.range' })
+    .int({ message: 'charge.dueMonth.range' })
+    .min(1, { message: 'charge.dueMonth.range' })
+    .max(12, { message: 'charge.dueMonth.range' }),
   categoryId: z.string().uuid().nullable(),
   isActive: z.boolean().default(true),
   notes: z.string().max(500).optional().nullable(),
