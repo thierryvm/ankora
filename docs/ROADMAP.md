@@ -1,6 +1,6 @@
 # Roadmap — Ankora
 
-Dernière mise à jour : 18 avril 2026 — après merge PR-1bis (commit a491297).
+Dernière mise à jour : 18 avril 2026 — après merge PR #20 `chore(i18n): remove obsolete dashboard keys` (commit b13e52c).
 
 ---
 
@@ -48,8 +48,8 @@ PR-3 est gros (40+ composants React, migrations visuelles massives) et va géné
 
 Trois PRs atomiques enchaînées **dans cet ordre** pour éviter les conflits sur `messages/*.json` et les diffs Tailwind qui touchent partout. Chaque item fait l'objet d'une PR dédiée (pas de bundling).
 
-- [ ] **`chore(i18n): remove obsolete dashboard keys`** — nettoyer les 7 clés vestiges `welcome`, `subtitle`, `emptyState`, `cards.*` dans `messages/fr-BE.json`. Vérifier via grep qu'aucun composant n'en dépend. Diff petit, CI rapide.
-- [ ] **`feat(i18n): locale-aware formatters`** — créer `src/lib/i18n/formatters.ts` (`formatCurrency`, `formatDate`, `formatNumber` via `Intl.NumberFormat` + `Intl.DateTimeFormat`). Remplacer `formatMonth()`, `formatMoney()` et les 3× `toLocaleString('fr-BE')` hardcodés dans `deletion-status`. Tests Vitest sur les 5 locales. **Conditionne le port des mockups v2** (affichage `1 250,00 €` en fr-BE vs `€1,250.00` en en-GB).
+- [x] **`chore(i18n): remove obsolete dashboard keys`** — mergée PR #20 (commit b13e52c, 18 avril 2026). 10 clés orphelines (`title`, `welcome`, `subtitle`, `emptyState`, `cards.*`) retirées sur 5 locales (−90 lignes).
+- [ ] **`feat(i18n): locale-aware formatters`** — créer `src/lib/i18n/formatters.ts` (`formatCurrency`, `formatDate`, `formatNumber`, `formatMonth`, `formatPercent` via `Intl.NumberFormat` + `Intl.DateTimeFormat`). Remplacer `formatMonth()`, `formatMoney()` et les 3× `toLocaleString('fr-BE')` hardcodés dans `deletion-status`. Tests Vitest sur fr-BE / fr-FR / en-US / en-GB / nl-BE. **Conditionne le port des mockups v2** (affichage `1 250,00 €` en fr-BE vs `€1,250.00` en en-GB).
 - [ ] **`chore(tailwind): migrate to canonical classes`** — résoudre les ~50 hints ESLint `suggestCanonicalClasses` relevés pendant PR-1bis. PR la plus volumineuse en diff mais la plus sûre (purement cosmétique). À faire en dernier pour éviter les conflits avec les PRs 1 et 2.
 
 ---
