@@ -476,25 +476,7 @@
       "transferPrincipalRemainingHint": "Après salaire, virements et factures Principal ({bills}).",
       "ctaCharges": "Mes charges",
       "ctaExpenses": "Mes dépenses",
-      "ctaSimulator": "Simuler",
-      "title": "Tableau de bord",
-      "welcome": "Bienvenue {name}",
-      "subtitle": "Ton cockpit en un coup d'œil.",
-      "emptyState": "Ajoute tes premières charges pour voir apparaître ton plan de provision.",
-      "cards": {
-        "provision": {
-          "title": "Provision du mois",
-          "description": "Somme à mettre de côté ce mois-ci."
-        },
-        "available": {
-          "title": "Disponible vie courante",
-          "description": "Budget libre après provision et charges du mois."
-        },
-        "upcoming": {
-          "title": "Prochaines échéances",
-          "description": "Factures à venir dans les 3 mois."
-        }
-      }
+      "ctaSimulator": "Simuler"
     },
     "charges": {
       "title": "Mes charges",
