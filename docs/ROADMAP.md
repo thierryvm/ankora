@@ -1,6 +1,6 @@
 # Roadmap — Ankora
 
-Dernière mise à jour : 18 avril 2026.
+Dernière mise à jour : 18 avril 2026 — après merge PR-1bis (commit a491297).
 
 ---
 
@@ -29,8 +29,8 @@ L'ordre ci-dessous est **verrouillé**. Il a été pensé pour que chaque PR dé
 | --- | -------------------------------------------- | ----------------------------------------------------- | ----------------- | ------------------------------------------ |
 | 1   | **PR-1 — Socle i18n next-intl**              | ✅ mergée                                             | PR-1bis           | Route group `[locale]` + 5 locales         |
 | 2   | **PR-Q — OpenGraph statique**                | ✅ mergée                                             | —                 | 5 PNG 1200×630 générés via Playwright      |
-| 3   | **PR-1bis — Extraction i18n routes privées** | 🚧 en cours (Vague C→D)                               | PR-2              | Clés i18n pour auth + app + onboarding     |
-| 4   | **PR-2 — Traductions NL/EN/ES/DE**           | ⏳ en attente (clés finales de PR-1bis)               | PR-3              | Remplissage des 4 locales non-FR           |
+| 3   | **PR-1bis — Extraction i18n routes privées** | ✅ mergée (a491297, 18 avril 2026)                    | PR-2              | Clés i18n pour auth + app + onboarding     |
+| 4   | **PR-2 — Traductions NL/EN/ES/DE**           | ⏳ en attente (après dettes post-PR-1bis)             | PR-3              | Remplissage des 4 locales non-FR           |
 | 5   | **PR-B1 — Bug reporting MVP**                | 📋 prompt prêt (`prompts/PR-B1-bug-reporting-mvp.md`) | PR-3 (recommandé) | Capteur d'erreurs + widget avant QA lourde |
 | 6   | **PR-3 — Port mockups → React prod**         | 📋 prompt prêt                                        | PR-F              | Remplacement de l'UI actuelle              |
 | 7   | **PR-F — Rétro-planning provisions**         | 💡 idée                                               | PR-B2             | Alertes J-N avant retrait d'épargne        |
@@ -41,6 +41,26 @@ Signification des icônes : ✅ mergée · 🚧 en cours · ⏳ en attente d'un 
 ### Pourquoi PR-B1 avant PR-3 ?
 
 PR-3 est gros (40+ composants React, migrations visuelles massives) et va générer des bugs subtils de style/interaction/a11y. Si PR-B1 est en place **avant** PR-3, chaque bug rencontré en QA génère un bundle markdown copiable en 2 clics vers Claude Code. Gain de temps majeur sur le debugging de PR-3.
+
+---
+
+## Dettes post-PR-1bis (à solder avant PR-2)
+
+Trois PRs atomiques enchaînées **dans cet ordre** pour éviter les conflits sur `messages/*.json` et les diffs Tailwind qui touchent partout. Chaque item fait l'objet d'une PR dédiée (pas de bundling).
+
+- [ ] **`chore(i18n): remove obsolete dashboard keys`** — nettoyer les 7 clés vestiges `welcome`, `subtitle`, `emptyState`, `cards.*` dans `messages/fr-BE.json`. Vérifier via grep qu'aucun composant n'en dépend. Diff petit, CI rapide.
+- [ ] **`feat(i18n): locale-aware formatters`** — créer `src/lib/i18n/formatters.ts` (`formatCurrency`, `formatDate`, `formatNumber` via `Intl.NumberFormat` + `Intl.DateTimeFormat`). Remplacer `formatMonth()`, `formatMoney()` et les 3× `toLocaleString('fr-BE')` hardcodés dans `deletion-status`. Tests Vitest sur les 5 locales. **Conditionne le port des mockups v2** (affichage `1 250,00 €` en fr-BE vs `€1,250.00` en en-GB).
+- [ ] **`chore(tailwind): migrate to canonical classes`** — résoudre les ~50 hints ESLint `suggestCanonicalClasses` relevés pendant PR-1bis. PR la plus volumineuse en diff mais la plus sûre (purement cosmétique). À faire en dernier pour éviter les conflits avec les PRs 1 et 2.
+
+---
+
+## Prochaine feature majeure
+
+- **PR-3 — Port mockups React prod** : en attente du **mockup v2 simulateur bidirectionnel** validé par Thierry (travail en cours côté Cowork, livrable courant semaine). Ne pas démarrer avant validation explicite du mockup et du glossaire de composants.
+
+## Backlog produit
+
+- **Modèle enveloppes (ex-buckets)** : 3 ADRs fondateurs en rédaction côté Cowork — (a) no-PSD2, (b) bucket-model, (c) notifications-system. Les ADRs doivent être mergés dans `docs/adr/` avant d'engager PR-3 ou PR-F, car ils conditionnent l'architecture de données.
 
 ---
 
@@ -67,8 +87,12 @@ Objectif : cockpit personnel utilisable par Thierry, ses enfants et amis.
 
 - [x] PR-1 — socle i18n next-intl + route group `[locale]` + 5 locales
 - [x] PR-Q — OpenGraph statique 5 locales
-- [ ] PR-1bis — extraction i18n routes privées (Vagues A-B ✅, C-D en cours chez Claude Code)
-- [ ] PR-2 — traductions NL-BE / EN / ES-ES / DE-DE (glossaire doc déjà écrit, prompt final après PR-1bis)
+- [x] PR-1bis — extraction i18n routes privées (mergée dans a491297, 18 avril 2026)
+  - Batch A : routes publiques locale-aware (landing, FAQ, legal, offline, onboarding) + `LocaleSwitcher` + `ScrollToTop` + middleware i18n
+  - Batch B : routes privées (auth + app) migrées avec `generateMetadata` via `getTranslations`, server actions locale-aware, Zod i18n-friendly
+  - Tests : parity sync des 4 stubs non-FR + E2E skip GDPR banner sur mobile emulations (Pixel 7 + iPhone 14, flaky tap dispatch)
+  - Hygiène : `.gitignore` durci (`design-mockup-*.html`, `.claude/settings.local.json`, `prompts/`)
+- [ ] PR-2 — traductions NL-BE / EN / ES-ES / DE-DE (glossaire doc déjà écrit, prompt final après dettes post-PR-1bis)
 - [ ] PR-B1 — Bug reporting MVP (voir §PR-B1 ci-dessous)
 - [ ] PR-3 — port mockups → React production (prompt prêt)
 

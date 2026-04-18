@@ -85,9 +85,13 @@ Aucune dépendance payante en production tant que Ankora n'a pas de revenus. Cf.
 
 ### Ordre actuel (avril 2026)
 
-PR-1 ✅ → PR-Q ✅ → **PR-1bis 🚧** (en cours Vague C→D) → PR-2 ⏳ → PR-B1 📋 → PR-3 📋 → PR-F 💡 → PR-B2 💡
+PR-1 ✅ → PR-Q ✅ → PR-1bis ✅ (a491297, 18 avril 2026) → **dettes post-PR-1bis** (obsolete keys → formatters → canonical Tailwind) → PR-2 ⏳ → PR-B1 📋 → PR-3 📋 → PR-F 💡 → PR-B2 💡
 
 Cet ordre est **verrouillé**. Si une PR émerge hors-plan (ex: hotfix sécurité, bug bloquant), elle doit être cadrée avec Thierry avant d'être ouverte, et le ROADMAP mis à jour pour la tracer.
+
+### Synchronisation ROADMAP ↔ repo (règle durable)
+
+**Avant tout nouveau commit sur `main`, vérifier que `docs/ROADMAP.md` reflète l'état réel du repo** (livré / en cours / backlog). Si un delta existe (PR mergée non cochée, dette non trackée, feature non référencée), corriger le ROADMAP **en priorité absolue** avant d'ouvrir la branche suivante. Constitution = verrou contre les dérives d'hygiène documentaire.
 
 ---
 
