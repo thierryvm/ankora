@@ -349,6 +349,7 @@
     "login": {
       "title": "Se connecter",
       "subtitle": "Retrouve ton cockpit Ankora.",
+      "metaTitle": "Connexion",
       "emailLabel": "Email",
       "passwordLabel": "Mot de passe",
       "forgotLink": "Mot de passe oublié ?",
@@ -356,11 +357,15 @@
       "submitting": "Connexion…",
       "noAccount": "Pas encore de compte ?",
       "signupLink": "Créer un compte",
-      "dividerOr": "ou"
+      "dividerOr": "ou",
+      "dividerOrEmail": "ou avec ton email",
+      "passwordUpdatedBanner": "Mot de passe mis à jour. Tu peux te connecter."
     },
     "signup": {
       "title": "Créer un compte",
       "subtitle": "Lance ton cockpit financier en moins de 2 minutes.",
+      "pageTitle": "Créer mon cockpit",
+      "pageDescription": "Quelques secondes. Aucune carte bancaire.",
       "emailLabel": "Email",
       "passwordLabel": "Mot de passe",
       "passwordHint": "Au moins 12 caractères, 1 majuscule, 1 minuscule, 1 chiffre.",
@@ -373,7 +378,10 @@
       "submitting": "Création…",
       "haveAccount": "Déjà un compte ?",
       "loginLink": "Se connecter",
-      "dividerOr": "ou"
+      "dividerOr": "ou",
+      "dividerOrEmail": "ou avec ton email",
+      "googleCta": "Créer mon compte avec Google",
+      "googleTerms": "En continuant avec Google, tu acceptes nos <cgu>CGU</cgu> et notre <privacy>politique de confidentialité</privacy>."
     },
     "forgot": {
       "title": "Mot de passe oublié",
@@ -398,44 +406,77 @@
     },
     "checkEmail": {
       "title": "Vérifie ta boîte mail",
+      "metaTitle": "Vérifie ton email",
       "body": "On vient de t'envoyer un lien de confirmation. Clique dessus pour activer ton compte.",
       "backToLogin": "Retour à la connexion"
     }
   },
   "onboarding": {
-    "progress": "Étape {current} sur {total}",
-    "previous": "Précédent",
-    "next": "Suivant",
+    "defaultWorkspaceName": "Mon espace",
+    "previous": "Retour",
+    "next": "Continuer",
     "finish": "Terminer",
-    "finishing": "Création en cours…",
+    "finishing": "Enregistrement…",
+    "validation": {
+      "workspaceNameRequired": "Donne un nom à ton espace.",
+      "incomeInvalid": "Renseigne un revenu valide (≥ 0)."
+    },
     "step1": {
-      "title": "Donne un nom à ton cockpit",
-      "subtitle": "Tu pourras le modifier plus tard.",
-      "nameLabel": "Nom du cockpit",
-      "namePlaceholder": "Ex. Budget maison",
-      "nameHint": "Maximum 80 caractères."
+      "title": "Nomme ton espace",
+      "description": "Tu pourras le modifier plus tard dans les paramètres.",
+      "nameLabel": "Nom de l'espace"
     },
     "step2": {
-      "title": "Quel est ton revenu mensuel ?",
-      "subtitle": "Utilisé pour estimer ta capacité de provision. Modifiable à tout moment.",
-      "incomeLabel": "Revenu net mensuel (€)",
-      "incomePlaceholder": "Ex. 2500",
-      "incomeHint": "Valeur arrondie suffisante — aucun conseil en placement."
+      "title": "Ton revenu mensuel net",
+      "description": "Sert de base pour te suggérer les virements mensuels.",
+      "incomeLabel": "Revenu mensuel net (€)"
     },
     "step3": {
-      "title": "Ajoute une première charge",
-      "subtitle": "Optionnel — tu pourras en ajouter d'autres plus tard.",
-      "skip": "Passer cette étape",
+      "title": "Ta première charge (optionnel)",
+      "description": "Ajoute un loyer, une assurance, un abonnement…",
       "labelLabel": "Libellé",
-      "labelPlaceholder": "Ex. Loyer",
+      "labelPlaceholder": "Loyer, assurance auto…",
       "amountLabel": "Montant (€)",
-      "amountPlaceholder": "Ex. 750",
       "frequencyLabel": "Fréquence",
-      "dueMonthLabel": "Mois d'échéance"
+      "dueMonthLabel": "Mois de référence",
+      "skipLater": "Je renseignerai mes charges plus tard"
     }
   },
   "app": {
     "dashboard": {
+      "metaTitle": "Tableau de bord",
+      "headerTitle": "{month} — ton cockpit",
+      "emptyTitle": "Commence par ajouter tes charges",
+      "emptyDescription": "Loyer, assurances, abonnements — Ankora les lisse sur 12 mois pour toi.",
+      "emptyCta": "Ajouter une charge",
+      "kpiProvisionsMonthly": "Provisions / mois",
+      "kpiProvisionsAnnualHint": "Annuel : {amount}",
+      "kpiHealth": "Santé provisions",
+      "kpiHealthTargetHint": "Cible : {amount}",
+      "kpiSuggestedTransfer": "Virement suggéré",
+      "kpiSuggestedTransferToSavings": "À mettre de côté",
+      "kpiSuggestedTransferFromSavings": "À retirer de l'épargne",
+      "kpiBillsMonth": "Factures {month}",
+      "kpiBillsHint": "Sortie de cash ce mois",
+      "healthHealthy": "Sain",
+      "healthWarning": "À surveiller",
+      "healthCritical": "Critique",
+      "planTitle": "Plan du mois — {month}",
+      "planDescription": "Les virements à exécuter en début de mois sur tes trois comptes.",
+      "planAdjustAccounts": "Ajuster mes comptes",
+      "missingSetupTitle": "Renseigne d'abord tes comptes",
+      "missingSetupDescription": "Pour calculer ton Virement Intelligent, Ankora a besoin de ton revenu mensuel et du montant fixe que tu envoies sur Vie Courante.",
+      "missingSetupCta": "Configurer mes comptes",
+      "transferPrincipalToVieCourante": "Principal → Vie Courante",
+      "transferVieCouranteHint": "Enveloppe courses, essence, restos.",
+      "transferPrincipalToEpargne": "Principal → Épargne",
+      "transferEpargneToPrincipal": "Épargne → Principal",
+      "transferEpargneHint": "Provision {provision} − factures {bills}",
+      "transferPrincipalRemaining": "Restant Principal",
+      "transferPrincipalRemainingHint": "Après salaire, virements et factures Principal ({bills}).",
+      "ctaCharges": "Mes charges",
+      "ctaExpenses": "Mes dépenses",
+      "ctaSimulator": "Simuler",
       "title": "Tableau de bord",
       "welcome": "Bienvenue {name}",
       "subtitle": "Ton cockpit en un coup d'œil.",
@@ -456,142 +497,165 @@
       }
     },
     "charges": {
-      "title": "Charges",
-      "subtitle": "Gère les charges récurrentes de ton cockpit.",
-      "addButton": "Ajouter une charge",
-      "emptyState": "Aucune charge pour le moment.",
-      "tableLabel": "Libellé",
-      "tableAmount": "Montant",
-      "tableFrequency": "Fréquence",
-      "tableDueMonth": "Échéance",
-      "tablePaidFrom": "Débitée de",
-      "tableActions": "Actions",
-      "formTitle": "Nouvelle charge",
-      "editFormTitle": "Modifier la charge",
+      "title": "Mes charges",
+      "subtitle": "Chaque charge est lissée automatiquement sur 12 mois.",
+      "addFormTitle": "Ajouter une charge",
+      "emptyState": "Aucune charge pour l'instant.",
       "labelLabel": "Libellé",
       "amountLabel": "Montant (€)",
       "frequencyLabel": "Fréquence",
-      "dueMonthLabel": "Mois d'échéance",
-      "paidFromLabel": "Compte débiteur",
-      "activeLabel": "Active",
-      "paidFromOptions": {
-        "principal": "Compte principal",
-        "vieCourante": "Vie courante"
-      },
-      "deleteConfirm": "Supprimer cette charge ?",
-      "editAction": "Modifier",
-      "deleteAction": "Supprimer"
+      "dueMonthLabel": "Mois de référence",
+      "addButton": "Ajouter",
+      "adding": "Ajout…",
+      "count": "{count, plural, =0 {aucune charge} one {1 charge} other {# charges}}",
+      "referenceFormat": "{frequency} · ref. {month}",
+      "deleteAria": "Supprimer {label}",
+      "toastCreated": "Charge ajoutée",
+      "toastDeleted": "Charge supprimée"
     },
     "accounts": {
-      "title": "Comptes",
-      "subtitle": "Les trois comptes d'Ankora : principal (provision), vie courante, épargne.",
-      "balanceLabel": "Solde actuel (€)",
-      "renameLabel": "Nom personnalisé",
-      "saveBalance": "Mettre à jour le solde",
-      "saveRename": "Renommer",
-      "incomeSection": {
-        "title": "Revenu mensuel",
-        "description": "Utilisé pour calculer ton virement vie courante.",
-        "label": "Revenu net mensuel (€)"
+      "metaTitle": "Mes comptes",
+      "metaDescription": "Suis les soldes de tes comptes Principal, Vie Courante et Épargne. Règle ton revenu mensuel et ton virement vers Vie Courante.",
+      "title": "Mes comptes",
+      "subtitle": "Saisis tes soldes réels pour qu'Ankora calcule précisément ton virement intelligent chaque mois.",
+      "balancesHeading": "Soldes actuels",
+      "amountLabel": "Montant (€)",
+      "saveButton": "Enregistrer",
+      "saving": "Enregistrement…",
+      "income": {
+        "title": "Revenu mensuel net",
+        "description": "Le salaire qui arrive chaque mois sur ton compte Principal. Sert à calculer ce qu'il te reste après les charges et le virement vers Vie Courante.",
+        "placeholder": "Ex. 2500",
+        "toastSaved": "Revenu mensuel mis à jour"
       },
-      "transferSection": {
-        "title": "Virement vie courante",
-        "description": "Montant transféré chaque mois du principal vers vie courante.",
-        "label": "Virement mensuel (€)"
+      "transfer": {
+        "title": "Virement mensuel vers Vie Courante",
+        "description": "Somme fixe transférée chaque mois du Principal vers ton compte Vie Courante. C'est ce qui servira aux courses, à l'essence et aux restos.",
+        "placeholder": "Ex. 500",
+        "toastSaved": "Virement mensuel mis à jour"
+      },
+      "balance": {
+        "invalidAmount": "Entre un montant valide.",
+        "saveLabel": "Mettre à jour",
+        "srLabel": "Solde actuel de {label}",
+        "toastSaved": "{name} mis à jour"
       },
       "kind": {
         "principal": {
-          "label": "Compte principal",
-          "description": "Reçoit ton revenu. Alimente la provision et le virement vie courante."
+          "description": "Reçoit le salaire, paye les charges fixes mensuelles."
         },
         "vieCourante": {
-          "label": "Vie courante",
-          "description": "Budget libre pour les dépenses du quotidien."
+          "description": "Budget du quotidien (courses, essence, restos)."
         },
         "epargne": {
-          "label": "Épargne",
-          "description": "Réserve long terme. Ne rentre pas dans la provision."
+          "description": "Lisse les factures trimestrielles et annuelles."
         }
       }
     },
     "expenses": {
-      "title": "Dépenses",
-      "subtitle": "Suivi des dépenses imputées à vie courante.",
-      "addButton": "Ajouter une dépense",
-      "emptyState": "Aucune dépense enregistrée.",
-      "formTitle": "Nouvelle dépense",
+      "title": "Mes dépenses",
+      "subtitle": "Les sorties hors charges récurrentes — courses, resto, loisirs…",
+      "addFormTitle": "Ajouter une dépense",
       "labelLabel": "Libellé",
       "amountLabel": "Montant (€)",
       "dateLabel": "Date",
-      "categoryLabel": "Catégorie",
-      "noCategory": "Sans catégorie",
-      "deleteConfirm": "Supprimer cette dépense ?",
-      "deleteAction": "Supprimer",
-      "totalMonth": "Total du mois"
+      "addButton": "Ajouter",
+      "adding": "Ajout…",
+      "emptyState": "Aucune dépense enregistrée.",
+      "summary": "{count, plural, =0 {Aucune dépense} one {1 dépense · {total}} other {# dépenses · {total}}}",
+      "deleteAria": "Supprimer {label}",
+      "toastCreated": "Dépense ajoutée",
+      "toastDeleted": "Dépense supprimée"
     },
     "settings": {
+      "metaTitle": "Paramètres",
+      "metaDescription": "Gère ton profil, la sécurité 2FA et tes données personnelles.",
       "title": "Paramètres",
-      "subtitle": "Profil, sécurité, confidentialité.",
-      "sections": {
-        "profile": {
-          "title": "Profil",
-          "description": "Comment Ankora t'appelle.",
-          "displayNameLabel": "Nom d'affichage",
-          "localeLabel": "Langue",
-          "save": "Enregistrer"
+      "description": "Profil, sécurité et données personnelles.",
+      "profile": {
+        "title": "Profil",
+        "description": "Ces informations personnalisent ton cockpit.",
+        "emailLabel": "Email",
+        "displayNameLabel": "Nom d'affichage",
+        "localeLabel": "Langue",
+        "localeOptions": {
+          "fr-BE": "Français (Belgique)",
+          "fr-FR": "Français (France)",
+          "en-GB": "English"
         },
-        "security": {
-          "title": "Sécurité",
-          "description": "Authentification à deux facteurs (TOTP).",
-          "mfaEnabled": "2FA activée.",
-          "mfaDisabled": "2FA désactivée — recommandé pour ta sécurité.",
-          "enrollButton": "Activer la 2FA",
-          "disableButton": "Désactiver la 2FA",
-          "scanTitle": "Scanne ce QR code",
-          "scanHint": "Utilise Google Authenticator, 1Password ou Authy.",
-          "secretLabel": "Code secret (copie manuelle)",
-          "codeLabel": "Code à 6 chiffres",
-          "codePlaceholder": "123456",
-          "verifySubmit": "Valider",
-          "verifySubmitting": "Validation…"
-        },
-        "dataPrivacy": {
-          "title": "Données personnelles",
-          "description": "Export et suppression de ton compte (RGPD).",
-          "exportButton": "Télécharger mes données",
-          "exportPreparing": "Préparation…",
-          "exportReady": "Export prêt : {filename}",
-          "deleteTitle": "Supprimer mon compte",
-          "deleteDescription": "Suppression effective après 30 jours (période annulable).",
-          "reasonLabel": "Raison (optionnelle)",
-          "confirmLabel": "Tape « SUPPRIMER » pour confirmer",
-          "confirmButton": "Demander la suppression",
-          "cancelButton": "Annuler la demande",
-          "cancelling": "Annulation…",
-          "pendingNotice": "Suppression programmée.",
-          "viewStatus": "Voir le statut"
-        },
-        "session": {
-          "title": "Session",
-          "description": "Déconnecte-toi de tous tes appareils.",
-          "logoutButton": "Se déconnecter"
-        }
+        "submit": "Enregistrer",
+        "submitting": "Enregistrement…",
+        "toastSaved": "Profil mis à jour"
+      },
+      "mfa": {
+        "title": "Sécurité — 2FA",
+        "description": "Un code à usage unique généré par une app d'authentification (Authy, 1Password, Google Authenticator).",
+        "emptyState": "Aucun facteur 2FA actif. Active-le pour protéger ton compte.",
+        "enrollButton": "Activer la 2FA",
+        "enrolling": "Préparation…",
+        "scanInstruction": "Scanne ce QR code dans ton app d'authentification, puis saisis le code à 6 chiffres.",
+        "qrAlt": "QR code pour l'app d'authentification",
+        "manualEntry": "Saisie manuelle",
+        "codeLabel": "Code à 6 chiffres",
+        "verifyButton": "Vérifier et activer",
+        "verifying": "Vérification…",
+        "cancel": "Annuler",
+        "defaultFactorName": "App TOTP",
+        "activeLabel": "Actif",
+        "disableButton": "Désactiver",
+        "toastEnabled": "MFA activé",
+        "toastDisabled": "MFA désactivé"
+      },
+      "data": {
+        "title": "Mes données",
+        "description": "Portabilité RGPD (art. 20) — télécharge un JSON complet de tout ce qu'Ankora détient sur toi.",
+        "exportButton": "Télécharger mes données",
+        "exporting": "Génération…",
+        "toastDownloaded": "Export téléchargé"
+      },
+      "danger": {
+        "scheduledTitle": "Suppression en cours",
+        "scheduledBody": "Ton compte sera supprimé le <strong>{date}</strong>. Tu peux annuler à tout moment jusque-là.",
+        "viewStatus": "Voir le statut",
+        "title": "Zone dangereuse",
+        "description": "Suppression définitive du compte. Grâce de 30 jours pour annuler — après, tout est effacé (logs audit pseudonymisés).",
+        "reasonLabel": "Raison (optionnel)",
+        "reasonPlaceholder": "Aide-nous à nous améliorer…",
+        "confirmLabel": "Tape <code>SUPPRIMER</code> pour confirmer",
+        "confirmKeyword": "SUPPRIMER",
+        "submit": "Supprimer mon compte",
+        "submitting": "Programmation…",
+        "toastScheduled": "Suppression programmée — tu as 30 jours pour annuler"
       }
     },
     "simulator": {
       "title": "Simulateur",
-      "subtitle": "Projections à titre pédagogique uniquement. Pas de conseil en placement.",
-      "disclaimer": "Ankora ne propose aucune recommandation d'investissement. Les projections ci-dessous sont illustratives.",
-      "inputs": {
-        "monthlyDeposit": "Versement mensuel (€)",
-        "annualRate": "Taux annuel estimé (%)",
-        "durationYears": "Durée (années)"
+      "subtitle": "Mesure l'impact d'un changement sans toucher à tes données réelles.",
+      "scenario": {
+        "title": "Scénario",
+        "description": "Choisis une action à simuler.",
+        "modes": {
+          "cancel": "Annuler une charge",
+          "negotiate": "Renégocier",
+          "add": "Ajouter une charge"
+        }
       },
-      "compute": "Calculer",
-      "results": {
-        "totalDeposited": "Total versé",
-        "estimatedValue": "Valeur estimée",
-        "estimatedGain": "Gain estimé"
+      "fields": {
+        "charge": "Charge",
+        "chargePlaceholder": "Sélectionne…",
+        "newAmount": "Nouveau montant (€)",
+        "label": "Libellé",
+        "amount": "Montant (€)",
+        "frequency": "Fréquence",
+        "month": "Mois"
+      },
+      "impact": {
+        "title": "Impact",
+        "empty": "Complète le scénario pour voir l'impact.",
+        "currentMonthly": "Actuel / mois",
+        "projectedMonthly": "Projeté / mois",
+        "annualSavings": "Économie annuelle",
+        "monthlyChange": "{sign}{percent}% / mois"
       }
     },
     "deletionStatus": {
@@ -613,7 +677,8 @@
       "cancelledOn": "Demande annulée le {date}. Ton compte est conservé.",
       "cancelledNoDate": "Demande annulée. Ton compte est conservé.",
       "cancelButton": "Annuler la suppression",
-      "cancelling": "Annulation…"
+      "cancelling": "Annulation…",
+      "toastCancelled": "Demande annulée — ton compte est conservé"
     }
   },
   "errors": {
