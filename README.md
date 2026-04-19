@@ -2,7 +2,7 @@
 
 <img src="public/brand/logo.svg" alt="Ankora" width="96" height="96" />
 
-# Ankora
+# Ankora™
 
 **Cockpit budgétaire personnel — Belgique · RGPD · hébergé UE**
 
@@ -302,9 +302,13 @@ docs(readme): update roadmap
 
 ## Licence
 
-Propriétaire. © 2026 Thierry Van Mele. Tous droits réservés. Voir [LICENSE](LICENSE).
+**Propriétaire.** © 2026 Thierry Vanmeeteren. Tous droits réservés.
 
-Le code est consultable publiquement à fin de transparence mais son usage, sa copie et sa redistribution sont soumis à autorisation écrite.
+- **Ankora™** est une marque déposée de Thierry Vanmeeteren
+- Le code source est fourni à titre consultatif (transparence, audit de sécurité)
+- Toute utilisation, copie, modification ou distribution requiert une autorisation écrite
+
+Voir [LICENSE](LICENSE) pour les conditions détaillées, ou [NOTICE](NOTICE) pour l'inventaire des dépendances tierces.
 
 ---
 

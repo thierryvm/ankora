@@ -51,6 +51,7 @@ Trois PRs atomiques enchaînées **dans cet ordre** pour éviter les conflits su
 - [x] **`chore(i18n): remove obsolete dashboard keys`** — mergée PR #20 (commit b13e52c, 18 avril 2026). 10 clés orphelines (`title`, `welcome`, `subtitle`, `emptyState`, `cards.*`) retirées sur 5 locales (−90 lignes).
 - [x] **`feat(i18n): locale-aware formatters`** — mergée PR #21 (commit 4b5e045, 18 avril 2026). `src/lib/i18n/formatters.ts` avec `formatCurrency`, `formatDate`, `formatDateTime`, `formatMonth`, `formatNumber`, `formatPercent`. Cache Intl par locale. Migration complète : 8 fichiers (`page.tsx` dashboard, `deletion-status`, 4 `*Client.tsx`, `SettingsClient`) + suppression de `src/lib/format.ts`. Tests Vitest 20 cas sur 5 locales, coverage 100/100/95 lines/funcs/branches. **Conditionne le port des mockups v2** (affichage `1 234,50 €` en fr-BE vs `€1,234.50` en en).
 - [x] **`chore(tailwind): migrate to canonical classes`** — **Verified compliant 2026-04-19** (audit zéro inline colors, repo déjà 100% tokens canoniques). Pas de migration nécessaire. Audit report sauvegardé : `docs/tailwind-canonical-audit.md`. Mergée PR #23.
+- [ ] **#61 — Aligner classes Tailwind legacy sur convention canonique** — `text-(--color-muted-foreground)` → `text-muted-foreground`. Les deux marchent en v4 mais la convention canonique est maintenant le standard (introducée dans Header refactor commit 354ad28). Cette PR aligne le RESTE du codebase sur ce standard.
 
 ---
 
@@ -250,6 +251,20 @@ Implémentation : `src/lib/admin/rules/` — chaque règle exporte `{ id, label,
 - Suggestions d'épargne sans conseil (ex: livret A/LDDS = informationnel uniquement)
 - Version mobile native via Expo (si la PWA montre des limites)
 - Tarification payante (plan pro : multi-espaces, IA inclus, support prioritaire) — le moment où Ankora peut **enfin** engager des coûts d'infra
+
+---
+
+## Tâches post-lancement — Infrastructure domaine
+
+Une fois le MVP en production public (fin Phase 1), les alias `privacy@ankora.eu` et `security@ankora.eu` doivent être migrés vers le domaine definitivement.
+
+- [ ] Configurer MX ankora.be + alias `privacy@ankora.be`, `security@ankora.be`, `contact@ankora.be`
+- [ ] Migrer contacts dans les 5 locales (fichiers `messages/{en,fr-BE,nl-BE,es-ES,de-DE}.json`) : remplacer `privacy@ankora.eu` par `privacy@ankora.be`
+- [ ] Mettre à jour `SECURITY.md` : remplacer le TODO temporaire et utiliser `privacy@ankora.be`
+- [ ] Mettre à jour `LICENSE` et `NOTICE` si références à `*@ankora.eu`
+- [ ] Page Privacy section "Responsable de traitement" : confirmer adresse postale + contact email belge
+
+**État actuel (avril 2026)** : tous les contacts unifiés sur `thierryvm@gmail.com` en attente de config MX domaine.
 
 ---
 

@@ -7,7 +7,12 @@
     "nav": {
       "mainLabel": "Navigation principale",
       "appLabel": "Navigation application",
+      "mobileLabel": "Navigation mobile",
       "footerLabel": "Pied de page",
+      "menu": "Menu",
+      "close": "Schließen",
+      "lightMode": "Helfer Modus",
+      "darkMode": "Dunkler Modus",
       "features": "Fonctionnalités",
       "faq": "FAQ",
       "login": "Se connecter",
@@ -196,6 +201,9 @@
       "metaTitle": "Conditions générales d'utilisation",
       "metaDescription": "CGU de Ankora — règles d'utilisation du service.",
       "title": "Conditions générales d'utilisation",
+      "draft": "Unsere Nutzungsbedingungen werden derzeit verfasst.",
+      "contact": "Bei Fragen kontaktieren Sie uns bitte: thierryvm@gmail.com",
+      "backHome": "Zurück zur Startseite",
       "s1": {
         "heading": "1. Objet",
         "body": "Ankora est un outil d'organisation budgétaire et d'éducation financière destiné aux particuliers. Il permet de saisir manuellement ses charges et dépenses, de les lisser sur l'année, et d'anticiper les besoins de trésorerie."
@@ -246,7 +254,7 @@
       "title": "Politique de confidentialité",
       "s1": {
         "heading": "1. Responsable de traitement",
-        "body": "Ankora, édité par Thierry Van Mele (Belgique). Contact : <mail>privacy@ankora.eu</mail>."
+        "body": "Ankora, édité par Thierry Van Mele (Belgique). Contact : <mail>thierryvm@gmail.com</mail>."
       },
       "s2": {
         "heading": "2. Données collectées",
@@ -343,7 +351,8 @@
     "cgu": "CGU",
     "privacy": "Confidentialité",
     "cookies": "Gérer les cookies",
-    "faq": "FAQ"
+    "faq": "FAQ",
+    "copyrightNotice": "© {year} Ankora™. Alle Rechte vorbehalten."
   },
   "auth": {
     "login": {
