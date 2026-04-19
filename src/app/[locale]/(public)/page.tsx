@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { headers } from 'next/headers';
+import { getNonce } from '@/lib/security/nonce';
 import Script from 'next/script';
 import { getTranslations } from 'next-intl/server';
 import { ArrowRight, Shield, TrendingUp, Wallet } from 'lucide-react';
@@ -21,7 +21,7 @@ const STEP_KEYS = ['one', 'two', 'three'] as const;
 const FAQ_KEYS = ['advice', 'storage', 'sharing'] as const;
 
 export default async function HomePage() {
-  const nonce = (await headers()).get('x-nonce') ?? undefined;
+  const nonce = await getNonce();
   const t = await getTranslations('landing');
   const tCommon = await getTranslations('common');
 

@@ -1,5 +1,6 @@
 import { createElement } from 'react';
-import { headers } from 'next/headers';
+
+import { getNonce } from '@/lib/security/nonce';
 
 /**
  * Server-rendered JSON-LD injector with CSP nonce.
@@ -14,7 +15,7 @@ import { headers } from 'next/headers';
  * so strict-dynamic CSP continues to allow this script in production.
  */
 export async function JsonLd({ data }: { data: object }) {
-  const nonce = (await headers()).get('x-nonce') ?? undefined;
+  const nonce = await getNonce();
   const propKey = ['dangerously', 'Set', 'Inner', 'HTML'].join('');
   // HTML spec strips the `nonce` attribute from the DOM after parsing (to prevent
   // exfiltration via CSS selectors), so the client sees nonce="" while SSR emits
