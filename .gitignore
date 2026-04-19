@@ -87,3 +87,8 @@ prompts/
 
 # Playwright MCP temp folder
 .playwright-mcp/
+
+# Screenshots and visual test artifacts
+/screenshots/
+/*.png
+/*.jpg
