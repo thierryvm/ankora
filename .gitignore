@@ -84,3 +84,6 @@ design-mockup-*.html
 
 # internal PR prompts
 prompts/
+
+# Playwright MCP temp folder
+.playwright-mcp/
