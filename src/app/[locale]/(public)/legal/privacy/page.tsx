@@ -24,7 +24,7 @@ export default async function PrivacyPage() {
   const tLegal = await getTranslations('legal');
 
   const strong = (c: React.ReactNode) => <strong>{c}</strong>;
-  const mail = (c: React.ReactNode) => <a href="mailto:privacy@ankora.eu">{c}</a>;
+  const mail = (c: React.ReactNode) => <a href="mailto:thierryvm@gmail.com">{c}</a>;
   const apd = (c: React.ReactNode) => (
     <a href="https://www.autoriteprotectiondonnees.be/" rel="noopener">
       {c}

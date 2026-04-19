@@ -1,5 +1,7 @@
 # Security policy — Ankora
 
+<!-- TODO: migrate to privacy@ankora.be once domain MX is configured -->
+
 ## Reporting a vulnerability
 
 If you discover a security issue, please email **thierryvm@gmail.com** with:
