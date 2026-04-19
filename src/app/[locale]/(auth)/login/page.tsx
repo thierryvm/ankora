@@ -30,30 +30,27 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         {resetDone && (
           <div
             role="status"
-            className="mb-4 rounded-md border border-(--color-success) bg-(--color-success)/10 px-3 py-2 text-sm text-(--color-success)"
+            className="border-success bg-success/10 text-success mb-4 rounded-md border px-3 py-2 text-sm"
           >
             {t('passwordUpdatedBanner')}
           </div>
         )}
         <div className="mb-6 flex flex-col gap-4">
           <GoogleSignInButton />
-          <div className="flex items-center gap-3 text-xs text-(--color-muted-foreground)">
-            <span className="h-px flex-1 bg-(--color-border)" />
+          <div className="text-muted-foreground flex items-center gap-3 text-xs">
+            <span className="bg-border h-px flex-1" />
             <span>{t('dividerOrEmail')}</span>
-            <span className="h-px flex-1 bg-(--color-border)" />
+            <span className="bg-border h-px flex-1" />
           </div>
         </div>
         <LoginForm />
         <div className="mt-6 flex flex-col gap-2 text-center text-sm">
-          <Link
-            href="/forgot-password"
-            className="text-(--color-muted-foreground) hover:text-(--color-foreground)"
-          >
+          <Link href="/forgot-password" className="text-muted-foreground hover:text-foreground">
             {t('forgotLink')}
           </Link>
-          <p className="text-(--color-muted-foreground)">
+          <p className="text-muted-foreground">
             {t('noAccount')}{' '}
-            <Link href="/signup" className="font-medium text-(--color-brand-700) hover:underline">
+            <Link href="/signup" className="text-brand-700 font-medium hover:underline">
               {t('signupLink')}
             </Link>
           </p>

@@ -17,8 +17,8 @@ export default async function CheckEmailPage() {
   return (
     <Card>
       <CardHeader>
-        <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-(--color-brand-100)">
-          <Mail className="h-6 w-6 text-(--color-brand-700)" aria-hidden />
+        <div className="bg-brand-100 mb-2 flex h-12 w-12 items-center justify-center rounded-full">
+          <Mail className="text-brand-700 h-6 w-6" aria-hidden />
         </div>
         <CardTitle>{t('title')}</CardTitle>
         <CardDescription>{t('body')}</CardDescription>

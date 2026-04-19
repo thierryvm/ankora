@@ -70,7 +70,7 @@ export function ExpensesClient({ expenses }: { expenses: RawExpense[] }) {
     <div className="flex flex-col gap-6">
       <header>
         <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{t('title')}</h1>
-        <p className="mt-1 text-(--color-muted-foreground)">{t('subtitle')}</p>
+        <p className="text-muted-foreground mt-1">{t('subtitle')}</p>
       </header>
 
       <Card>
@@ -130,14 +130,14 @@ export function ExpensesClient({ expenses }: { expenses: RawExpense[] }) {
         </CardHeader>
         <CardContent>
           {expenses.length === 0 ? (
-            <p className="text-sm text-(--color-muted-foreground)">{t('emptyState')}</p>
+            <p className="text-muted-foreground text-sm">{t('emptyState')}</p>
           ) : (
-            <ul className="divide-y divide-(--color-border)">
+            <ul className="divide-border divide-y">
               {expenses.map((e) => (
                 <li key={e.id} className="flex items-center justify-between gap-4 py-3">
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium">{e.label}</p>
-                    <p className="text-xs text-(--color-muted-foreground)">{e.occurredOn}</p>
+                    <p className="text-muted-foreground text-xs">{e.occurredOn}</p>
                   </div>
                   <p className="shrink-0 font-mono text-sm tabular-nums">
                     {formatCurrency(e.amount, locale)}
@@ -150,7 +150,7 @@ export function ExpensesClient({ expenses }: { expenses: RawExpense[] }) {
                     disabled={isPending}
                     aria-label={t('deleteAria', { label: e.label })}
                   >
-                    <Trash2 className="h-4 w-4 text-(--color-danger)" />
+                    <Trash2 className="text-danger h-4 w-4" />
                   </Button>
                 </li>
               ))}

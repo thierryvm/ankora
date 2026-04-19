@@ -54,10 +54,10 @@ export default async function DashboardPage() {
 
   const healthColor =
     health.status === 'healthy'
-      ? 'text-(--color-success)'
+      ? 'text-success'
       : health.status === 'warning'
-        ? 'text-(--color-warning)'
-        : 'text-(--color-danger)';
+        ? 'text-warning'
+        : 'text-danger';
 
   const healthLabel =
     health.status === 'healthy'
@@ -85,7 +85,7 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-col gap-8">
       <header>
-        <p className="text-sm text-(--color-muted-foreground)">{snapshot.workspaceName}</p>
+        <p className="text-muted-foreground text-sm">{snapshot.workspaceName}</p>
         <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
           {t('headerTitle', { month: monthLabel })}
         </h1>
@@ -107,14 +107,14 @@ export default async function DashboardPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="pb-2">
-              <div className="flex items-center gap-2 text-(--color-brand-700)">
+              <div className="text-brand-700 flex items-center gap-2">
                 <PiggyBank className="h-5 w-5" aria-hidden />
                 <CardTitle className="text-sm font-medium">{t('kpiProvisionsMonthly')}</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold tabular-nums">{fmtMoney(provisionTarget)}</p>
-              <p className="mt-1 text-xs text-(--color-muted-foreground)">
+              <p className="text-muted-foreground mt-1 text-xs">
                 {t('kpiProvisionsAnnualHint', { amount: fmtMoney(annualTotal) })}
               </p>
             </CardContent>
@@ -129,7 +129,7 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent>
               <p className={`text-2xl font-bold ${healthColor}`}>{healthLabel}</p>
-              <p className="mt-1 text-xs text-(--color-muted-foreground)">
+              <p className="text-muted-foreground mt-1 text-xs">
                 {t('kpiHealthTargetHint', { amount: fmtMoney(health.target) })}
               </p>
             </CardContent>
@@ -137,14 +137,14 @@ export default async function DashboardPage() {
 
           <Card>
             <CardHeader className="pb-2">
-              <div className="flex items-center gap-2 text-(--color-brand-700)">
+              <div className="text-brand-700 flex items-center gap-2">
                 <ArrowRightLeft className="h-5 w-5" aria-hidden />
                 <CardTitle className="text-sm font-medium">{t('kpiSuggestedTransfer')}</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold tabular-nums">{fmtMoney(suggestedTransfer)}</p>
-              <p className="mt-1 text-xs text-(--color-muted-foreground)">
+              <p className="text-muted-foreground mt-1 text-xs">
                 {suggestedTransfer.gte(0)
                   ? t('kpiSuggestedTransferToSavings')
                   : t('kpiSuggestedTransferFromSavings')}
@@ -154,7 +154,7 @@ export default async function DashboardPage() {
 
           <Card>
             <CardHeader className="pb-2">
-              <div className="flex items-center gap-2 text-(--color-accent-600)">
+              <div className="text-accent-600 flex items-center gap-2">
                 <Receipt className="h-5 w-5" aria-hidden />
                 <CardTitle className="text-sm font-medium">
                   {t('kpiBillsMonth', { month: monthLabel })}
@@ -163,7 +163,7 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold tabular-nums">{fmtMoney(billsDue)}</p>
-              <p className="mt-1 text-xs text-(--color-muted-foreground)">{t('kpiBillsHint')}</p>
+              <p className="text-muted-foreground mt-1 text-xs">{t('kpiBillsHint')}</p>
             </CardContent>
           </Card>
         </div>
@@ -176,7 +176,7 @@ export default async function DashboardPage() {
               <h2 id="plan-heading" className="text-xl font-semibold">
                 {t('planTitle', { month: monthLabel })}
               </h2>
-              <p className="text-sm text-(--color-muted-foreground)">{t('planDescription')}</p>
+              <p className="text-muted-foreground text-sm">{t('planDescription')}</p>
             </div>
             <Button asChild variant="ghost" size="sm">
               <Link href="/app/accounts">{t('planAdjustAccounts')}</Link>
@@ -199,7 +199,7 @@ export default async function DashboardPage() {
             <div className="grid gap-4 md:grid-cols-3">
               <Card>
                 <CardHeader className="pb-2">
-                  <div className="flex items-center gap-2 text-(--color-brand-700)">
+                  <div className="text-brand-700 flex items-center gap-2">
                     <ArrowRightLeft className="h-5 w-5" aria-hidden />
                     <CardTitle className="text-sm font-medium">
                       {t('transferPrincipalToVieCourante')}
@@ -210,7 +210,7 @@ export default async function DashboardPage() {
                   <p className="text-2xl font-bold tabular-nums">
                     {fmtMoney(plan.vieCouranteTransfer)}
                   </p>
-                  <p className="mt-1 text-xs text-(--color-muted-foreground)">
+                  <p className="text-muted-foreground mt-1 text-xs">
                     {t('transferVieCouranteHint')}
                   </p>
                 </CardContent>
@@ -218,7 +218,7 @@ export default async function DashboardPage() {
 
               <Card>
                 <CardHeader className="pb-2">
-                  <div className="flex items-center gap-2 text-(--color-brand-700)">
+                  <div className="text-brand-700 flex items-center gap-2">
                     {epargneGoesToEpargne ? (
                       <ArrowUpRight className="h-5 w-5" aria-hidden />
                     ) : (
@@ -233,7 +233,7 @@ export default async function DashboardPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-2xl font-bold tabular-nums">{fmtMoney(epargneNetAbs)}</p>
-                  <p className="mt-1 text-xs text-(--color-muted-foreground)">
+                  <p className="text-muted-foreground mt-1 text-xs">
                     {t('transferEpargneHint', {
                       provision: fmtMoney(plan.epargneProvisionTarget),
                       bills: fmtMoney(plan.epargneBillsDue),
@@ -246,9 +246,7 @@ export default async function DashboardPage() {
                 <CardHeader className="pb-2">
                   <div
                     className={`flex items-center gap-2 ${
-                      plan.netPrincipalAfterPlan.gte(0)
-                        ? 'text-(--color-success)'
-                        : 'text-(--color-danger)'
+                      plan.netPrincipalAfterPlan.gte(0) ? 'text-success' : 'text-danger'
                     }`}
                   >
                     <Landmark className="h-5 w-5" aria-hidden />
@@ -260,14 +258,12 @@ export default async function DashboardPage() {
                 <CardContent>
                   <p
                     className={`text-2xl font-bold tabular-nums ${
-                      plan.netPrincipalAfterPlan.gte(0)
-                        ? 'text-(--color-success)'
-                        : 'text-(--color-danger)'
+                      plan.netPrincipalAfterPlan.gte(0) ? 'text-success' : 'text-danger'
                     }`}
                   >
                     {fmtMoney(plan.netPrincipalAfterPlan)}
                   </p>
-                  <p className="mt-1 text-xs text-(--color-muted-foreground)">
+                  <p className="text-muted-foreground mt-1 text-xs">
                     {t('transferPrincipalRemainingHint', {
                       bills: fmtMoney(plan.principalBillsDue),
                     })}
@@ -284,7 +280,7 @@ export default async function DashboardPage() {
               return (
                 <Card key={kind}>
                   <CardHeader className="pb-2">
-                    <div className="flex items-center gap-2 text-(--color-muted-foreground)">
+                    <div className="text-muted-foreground flex items-center gap-2">
                       <Icon className="h-4 w-4" aria-hidden />
                       <CardTitle className="text-xs font-medium tracking-wide uppercase">
                         {account?.label ?? kind}

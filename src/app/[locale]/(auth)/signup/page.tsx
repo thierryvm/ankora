@@ -23,30 +23,30 @@ export default async function SignupPage() {
       <CardContent>
         <div className="mb-6 flex flex-col gap-3">
           <GoogleSignInButton label={t('googleCta')} />
-          <p className="text-center text-xs text-(--color-muted-foreground)">
+          <p className="text-muted-foreground text-center text-xs">
             {t.rich('googleTerms', {
               cgu: (chunks) => (
-                <Link href="/legal/cgu" className="underline hover:text-(--color-foreground)">
+                <Link href="/legal/cgu" className="hover:text-foreground underline">
                   {chunks}
                 </Link>
               ),
               privacy: (chunks) => (
-                <Link href="/legal/privacy" className="underline hover:text-(--color-foreground)">
+                <Link href="/legal/privacy" className="hover:text-foreground underline">
                   {chunks}
                 </Link>
               ),
             })}
           </p>
-          <div className="flex items-center gap-3 text-xs text-(--color-muted-foreground)">
-            <span className="h-px flex-1 bg-(--color-border)" />
+          <div className="text-muted-foreground flex items-center gap-3 text-xs">
+            <span className="bg-border h-px flex-1" />
             <span>{t('dividerOrEmail')}</span>
-            <span className="h-px flex-1 bg-(--color-border)" />
+            <span className="bg-border h-px flex-1" />
           </div>
         </div>
         <SignupForm />
-        <p className="mt-6 text-center text-sm text-(--color-muted-foreground)">
+        <p className="text-muted-foreground mt-6 text-center text-sm">
           {t('haveAccount')}{' '}
-          <Link href="/login" className="font-medium text-(--color-brand-700) hover:underline">
+          <Link href="/login" className="text-brand-700 font-medium hover:underline">
             {t('loginLink')}
           </Link>
         </p>

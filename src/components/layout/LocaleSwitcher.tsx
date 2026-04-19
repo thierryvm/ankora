@@ -24,14 +24,14 @@ export function LocaleSwitcher() {
   }
 
   return (
-    <label className="inline-flex items-center gap-2 text-xs text-(--color-muted-foreground)">
+    <label className="text-muted-foreground inline-flex items-center gap-2 text-xs">
       <span className="sr-only">{t('label')}</span>
       <select
         value={locale}
         onChange={onChange}
         disabled={pending}
         aria-label={t('aria')}
-        className="rounded-md border border-(--color-border) bg-(--color-background) px-2 py-1 text-xs text-(--color-foreground) focus-visible:ring-2 focus-visible:ring-(--color-brand-600) focus-visible:outline-none"
+        className="border-border bg-background text-foreground focus-visible:ring-brand-600 rounded-md border px-2 py-1 text-xs focus-visible:ring-2 focus-visible:outline-none"
       >
         {LOCALES.map((code) => (
           <option key={code} value={code}>

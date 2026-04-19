@@ -11,16 +11,13 @@ function Toaster(props: ToasterProps) {
       position="top-right"
       toastOptions={{
         classNames: {
-          toast:
-            'group toast rounded-lg border border-(--color-border) bg-(--color-card) text-(--color-foreground) shadow-lg',
-          description: 'text-(--color-muted-foreground)',
-          actionButton:
-            'bg-(--color-brand-700) text-white rounded-md px-3 py-1 text-xs font-medium',
-          cancelButton:
-            'bg-(--color-border) text-(--color-foreground) rounded-md px-3 py-1 text-xs font-medium',
-          error: 'border-(--color-danger) text-(--color-danger)',
-          success: 'border-(--color-success) text-(--color-success)',
-          warning: 'border-(--color-warning) text-(--color-warning)',
+          toast: 'group toast rounded-lg border border-border bg-card text-foreground shadow-lg',
+          description: 'text-muted-foreground',
+          actionButton: 'bg-brand-700 text-white rounded-md px-3 py-1 text-xs font-medium',
+          cancelButton: 'bg-border text-foreground rounded-md px-3 py-1 text-xs font-medium',
+          error: 'border-danger text-danger',
+          success: 'border-success text-success',
+          warning: 'border-warning text-warning',
         },
       }}
       {...props}

@@ -13,7 +13,7 @@ export async function Header({ variant = 'marketing', isAuthenticated = false }:
   const t = await getTranslations('common');
 
   return (
-    <header className="sticky top-0 z-40 border-b border-(--color-border) bg-(--color-background)/80 backdrop-blur">
+    <header className="border-border bg-background/80 sticky top-0 z-40 border-b backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-4 md:px-6">
         <Link
           href={isAuthenticated ? '/app' : '/'}

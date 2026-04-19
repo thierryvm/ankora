@@ -172,7 +172,7 @@ function MfaCard({ factors }: { factors: Factor[] }) {
       <CardContent className="flex flex-col gap-4">
         {verified.length === 0 && !enrollment && (
           <div>
-            <p className="text-sm text-(--color-muted-foreground)">{t('emptyState')}</p>
+            <p className="text-muted-foreground text-sm">{t('emptyState')}</p>
             <Button type="button" onClick={startEnroll} disabled={pending} className="mt-3">
               {pending ? t('enrolling') : t('enrollButton')}
             </Button>
@@ -188,11 +188,11 @@ function MfaCard({ factors }: { factors: Factor[] }) {
               alt={t('qrAlt')}
               width={192}
               height={192}
-              className="h-48 w-48 rounded-md border border-(--color-border) bg-white p-2"
+              className="border-border h-48 w-48 rounded-md border bg-white p-2"
             />
-            <details className="text-xs text-(--color-muted-foreground)">
+            <details className="text-muted-foreground text-xs">
               <summary className="cursor-pointer">{t('manualEntry')}</summary>
-              <code className="mt-2 block rounded bg-(--color-brand-100) px-2 py-1 font-mono text-(--color-brand-900)">
+              <code className="bg-brand-100 text-brand-900 mt-2 block rounded px-2 py-1 font-mono">
                 {enrollment.secret}
               </code>
             </details>
@@ -229,11 +229,11 @@ function MfaCard({ factors }: { factors: Factor[] }) {
             {verified.map((f) => (
               <li
                 key={f.id}
-                className="flex items-center justify-between rounded-md border border-(--color-border) px-4 py-3"
+                className="border-border flex items-center justify-between rounded-md border px-4 py-3"
               >
                 <div>
                   <p className="text-sm font-medium">{f.friendlyName ?? t('defaultFactorName')}</p>
-                  <p className="text-xs text-(--color-success)">{t('activeLabel')}</p>
+                  <p className="text-success text-xs">{t('activeLabel')}</p>
                 </div>
                 <Button
                   type="button"
@@ -314,9 +314,9 @@ function DangerZone({ deletion, locale }: { deletion: Deletion; locale: string }
   if (deletion) {
     const date = formatDate(deletion.scheduledFor, locale as Locale, 'long');
     return (
-      <Card className="border-(--color-danger)/40">
+      <Card className="border-danger/40">
         <CardHeader>
-          <CardTitle className="text-(--color-danger)">{t('scheduledTitle')}</CardTitle>
+          <CardTitle className="text-danger">{t('scheduledTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm">
@@ -334,9 +334,9 @@ function DangerZone({ deletion, locale }: { deletion: Deletion; locale: string }
   }
 
   return (
-    <Card className="border-(--color-danger)/40">
+    <Card className="border-danger/40">
       <CardHeader>
-        <CardTitle className="text-(--color-danger)">{t('title')}</CardTitle>
+        <CardTitle className="text-danger">{t('title')}</CardTitle>
         <CardDescription>{t('description')}</CardDescription>
       </CardHeader>
       <CardContent>

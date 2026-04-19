@@ -8,12 +8,12 @@ const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLI
       type={type}
       ref={ref}
       className={cn(
-        'flex h-10 w-full rounded-lg border border-(--color-border) bg-(--color-card) px-3 py-2 text-sm text-(--color-foreground) shadow-sm transition-colors',
-        'file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-(--color-foreground)',
-        'placeholder:text-(--color-muted)',
-        'focus-visible:border-(--color-brand-500) focus-visible:ring-2 focus-visible:ring-(--color-brand-600) focus-visible:ring-offset-2 focus-visible:outline-none',
+        'border-border bg-card text-foreground flex h-10 w-full rounded-lg border px-3 py-2 text-sm shadow-sm transition-colors',
+        'file:text-foreground file:border-0 file:bg-transparent file:text-sm file:font-medium',
+        'placeholder:text-muted',
+        'focus-visible:border-brand-500 focus-visible:ring-brand-600 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
         'disabled:cursor-not-allowed disabled:opacity-50',
-        'aria-invalid:border-(--color-danger) aria-invalid:focus-visible:ring-(--color-danger)',
+        'aria-invalid:border-danger aria-invalid:focus-visible:ring-danger',
         className,
       )}
       {...props}
