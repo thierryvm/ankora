@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { notFound } from 'next/navigation';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { Analytics } from '@vercel/analytics/next';
@@ -118,6 +118,9 @@ export default async function LocaleLayout({
   const themeCookie = cookieStore.get('theme')?.value;
   const dataTheme = themeCookie === 'dark' ? 'dark' : undefined;
 
+  const headersList = await headers();
+  const nonce = headersList.get('x-nonce') ?? undefined;
+
   return (
     <html
       lang={locale}
@@ -126,6 +129,7 @@ export default async function LocaleLayout({
       {...(dataTheme ? { 'data-theme': dataTheme } : {})}
     >
       <script
+        nonce={nonce}
         dangerouslySetInnerHTML={{
           __html: `(function(){try{var t=localStorage.getItem('theme');if(!t){var m=window.matchMedia('(prefers-color-scheme: dark)').matches;t=m?'dark':'light';}if(t==='dark')document.documentElement.setAttribute('data-theme','dark');else document.documentElement.removeAttribute('data-theme');}catch(e){}})();`,
         }}
