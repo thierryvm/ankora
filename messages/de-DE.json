@@ -252,6 +252,9 @@
       "metaTitle": "Politique de confidentialité",
       "metaDescription": "Politique de confidentialité de Ankora — hébergement UE, RGPD, droits des utilisateurs.",
       "title": "Politique de confidentialité",
+      "draft": "",
+      "contact": "",
+      "backHome": "",
       "s1": {
         "heading": "1. Responsable de traitement",
         "body": "Ankora, édité par Thierry Van Mele (Belgique). Contact : <mail>thierryvm@gmail.com</mail>."
@@ -314,6 +317,9 @@
       "metaTitle": "Politique cookies",
       "metaDescription": "Politique cookies de Ankora — granularité totale, tout refusable sauf essentiels.",
       "title": "Politique cookies",
+      "draft": "",
+      "contact": "",
+      "backHome": "",
       "categoriesHeading": "Catégories",
       "essentialHeading": "Essentiels (toujours actifs)",
       "essentialBody": "Indispensables au fonctionnement : session d'authentification, préférence de thème, anti-CSRF.",
