@@ -1,10 +1,27 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Sun, Moon, Menu, X } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { LocaleSwitcher } from './LocaleSwitcher';
+
+function subscribeToTheme(callback: () => void) {
+  const observer = new MutationObserver(callback);
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme'],
+  });
+  return () => observer.disconnect();
+}
+
+function getThemeSnapshot() {
+  return document.documentElement.getAttribute('data-theme') === 'dark';
+}
+
+function getServerThemeSnapshot() {
+  return false;
+}
 
 type HeaderNavProps = {
   variant?: 'marketing' | 'app';
@@ -12,18 +29,30 @@ type HeaderNavProps = {
 
 export function HeaderNav({ variant = 'marketing' }: HeaderNavProps) {
   const t = useTranslations('common');
-  const [isDark, setIsDark] = useState(() => {
-    if (typeof document === 'undefined') return false;
-    return document.documentElement.getAttribute('data-theme') === 'dark';
-  });
+  const isDark = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, getServerThemeSnapshot);
   const [isOpen, setIsOpen] = useState(false);
   const checkboxRef = useRef<HTMLInputElement>(null);
   const navRef = useRef<HTMLElement>(null);
 
-  // Close drawer on Escape key, handle focus trap and scroll lock
+  // Focus 1st focusable element when drawer opens
   useEffect(() => {
+    if (!isOpen) return;
+
+    const firstFocusable = navRef.current?.querySelector<HTMLElement>(
+      'button, [href], input:not([type="hidden"]), [tabindex]:not([tabindex="-1"])',
+    );
+    firstFocusable?.focus();
+  }, [isOpen]);
+
+  // Handle drawer open/close: scroll lock, keyboard events, focus trap
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // Lock scroll
+    document.body.style.overflow = 'hidden';
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
+      if (e.key === 'Escape') {
         setIsOpen(false);
         if (checkboxRef.current) {
           checkboxRef.current.checked = false;
@@ -32,9 +61,9 @@ export function HeaderNav({ variant = 'marketing' }: HeaderNavProps) {
       }
 
       // Focus trap: keep Tab within drawer
-      if (e.key === 'Tab' && isOpen && navRef.current) {
+      if (e.key === 'Tab' && navRef.current) {
         const focusableElements = navRef.current.querySelectorAll(
-          'button, [href], input, [tabindex]:not([tabindex="-1"])',
+          'button, [href], input:not([type="hidden"]), [tabindex]:not([tabindex="-1"])',
         );
         const firstElement = focusableElements[0] as HTMLElement;
         const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
@@ -49,10 +78,7 @@ export function HeaderNav({ variant = 'marketing' }: HeaderNavProps) {
       }
     };
 
-    if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = 'hidden';
-    }
+    document.addEventListener('keydown', handleKeyDown);
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
@@ -61,28 +87,28 @@ export function HeaderNav({ variant = 'marketing' }: HeaderNavProps) {
   }, [isOpen]);
 
   const toggleTheme = useCallback(() => {
-    const newIsDark = !isDark;
-    setIsDark(newIsDark);
-
     if (typeof document === 'undefined') return;
 
+    const current = document.documentElement.getAttribute('data-theme');
+    const next = current === 'dark' ? 'light' : 'dark';
+
     try {
-      if (newIsDark) {
+      if (next === 'dark') {
         document.documentElement.setAttribute('data-theme', 'dark');
-        localStorage.setItem('theme', 'dark');
       } else {
         document.documentElement.removeAttribute('data-theme');
-        localStorage.setItem('theme', 'light');
       }
+      localStorage.setItem('theme', next);
     } catch {
       // Safari private mode or quota exceeded
     }
-  }, [isDark]);
+  }, []);
 
   const handleDrawerClose = useCallback(() => {
     setIsOpen(false);
     if (checkboxRef.current) {
       checkboxRef.current.checked = false;
+      checkboxRef.current.focus();
     }
   }, []);
 
@@ -200,9 +226,11 @@ export function HeaderNav({ variant = 'marketing' }: HeaderNavProps) {
             className="bg-muted hover:bg-muted/80 focus-visible:ring-brand-600 flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             aria-label={isDark ? t('nav.lightMode') : t('nav.darkMode')}
           >
-            <span>{isDark ? t('nav.lightMode') : t('nav.darkMode')}</span>
+            <span className="dark:hidden">{t('nav.darkMode')}</span>
+            <span className="hidden dark:block">{t('nav.lightMode')}</span>
             <div className="h-4 w-4">
-              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              <Moon className="h-4 w-4 dark:hidden" aria-hidden="true" />
+              <Sun className="hidden h-4 w-4 dark:block" aria-hidden="true" />
             </div>
           </button>
 
@@ -217,7 +245,8 @@ export function HeaderNav({ variant = 'marketing' }: HeaderNavProps) {
           className="hover:bg-muted focus-visible:ring-brand-600 flex h-10 w-10 items-center justify-center rounded-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
           aria-label={isDark ? t('nav.lightMode') : t('nav.darkMode')}
         >
-          {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          <Moon className="h-5 w-5 dark:hidden" aria-hidden="true" />
+          <Sun className="hidden h-5 w-5 dark:block" aria-hidden="true" />
         </button>
 
         <LocaleSwitcher />

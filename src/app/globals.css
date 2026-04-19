@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 @theme {
   /* ---------- Brand palette (Teal scale — from landing mockup v2) ---------- */
   --color-brand-50: #f0fdfa;
@@ -64,30 +66,28 @@
   --radius-2xl: 1.25rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  @theme {
-    /* Neutral tokens (Dark mode) */
-    --color-background: #0b1120;
-    --color-foreground: #e2e8f0;
-    --color-muted: #94a3b8;
-    --color-muted-foreground: #cbd5e1;
-    --color-border: #1e293b;
-    --color-card: #111a2e;
-    --color-surface-soft: #0f172a;
-    --color-surface-muted: #0f172a;
+[data-theme='dark'] {
+  /* Neutral tokens (Dark mode) */
+  --color-background: #0b1120;
+  --color-foreground: #e2e8f0;
+  --color-muted: #94a3b8;
+  --color-muted-foreground: #cbd5e1;
+  --color-border: #1e293b;
+  --color-card: #111a2e;
+  --color-surface-soft: #0f172a;
+  --color-surface-muted: #0f172a;
 
-    /* Semantic text colors (Dark mode — lighter for contrast) */
-    --color-brand-text: #2dd4bf;
-    --color-brand-text-strong: #5eead4;
-    --color-accent-text: #fbbf24;
-    --color-accent-text-strong: #fde68a;
+  /* Semantic text colors (Dark mode — lighter for contrast) */
+  --color-brand-text: #2dd4bf;
+  --color-brand-text-strong: #5eead4;
+  --color-accent-text: #fbbf24;
+  --color-accent-text-strong: #fde68a;
 
-    /* Tinted surfaces (Dark mode — translucent glows) */
-    --color-brand-surface: rgba(20, 184, 166, 0.1);
-    --color-brand-surface-border: rgba(20, 184, 166, 0.22);
-    --color-accent-surface: rgba(245, 158, 11, 0.1);
-    --color-accent-surface-border: rgba(245, 158, 11, 0.24);
-  }
+  /* Tinted surfaces (Dark mode — translucent glows) */
+  --color-brand-surface: rgba(20, 184, 166, 0.1);
+  --color-brand-surface-border: rgba(20, 184, 166, 0.22);
+  --color-accent-surface: rgba(245, 158, 11, 0.1);
+  --color-accent-surface-border: rgba(245, 158, 11, 0.24);
 }
 
 /* ---------- Base reset & a11y ---------- */
