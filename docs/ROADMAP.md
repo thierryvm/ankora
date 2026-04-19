@@ -1,6 +1,6 @@
 # Roadmap — Ankora
 
-Dernière mise à jour : 19 avril 2026 — après alignement Tailwind canonical (#61) et préparation PR post-PR-25 debts.
+Dernière mise à jour : 20 avril 2026 — PR #27 (post-PR-25 debts) mergée. Prêt pour PR-2 (traductions).
 
 ---
 
@@ -52,6 +52,7 @@ Trois PRs atomiques enchaînées **dans cet ordre** pour éviter les conflits su
 - [x] **`feat(i18n): locale-aware formatters`** — mergée PR #21 (commit 4b5e045, 18 avril 2026). `src/lib/i18n/formatters.ts` avec `formatCurrency`, `formatDate`, `formatDateTime`, `formatMonth`, `formatNumber`, `formatPercent`. Cache Intl par locale. Migration complète : 8 fichiers (`page.tsx` dashboard, `deletion-status`, 4 `*Client.tsx`, `SettingsClient`) + suppression de `src/lib/format.ts`. Tests Vitest 20 cas sur 5 locales, coverage 100/100/95 lines/funcs/branches. **Conditionne le port des mockups v2** (affichage `1 234,50 €` en fr-BE vs `€1,234.50` en en).
 - [x] **`chore(tailwind): migrate to canonical classes`** — **Verified compliant 2026-04-19** (audit zéro inline colors, repo déjà 100% tokens canoniques). Pas de migration nécessaire. Audit report sauvegardé : `docs/tailwind-canonical-audit.md`. Mergée PR #23.
 - [x] **#61 — Aligner classes Tailwind legacy sur convention canonique** — `text-(--color-muted-foreground)` → `text-muted-foreground`. Les deux marchent en v4 mais la convention canonique est maintenant le standard (introducée dans Header refactor commit 354ad28). Alignement complet du codebase (38 fichiers, ~150 instances) — commit 1 du refactor/post-pr25-debts (2026-04-19).
+- [x] **PR #27 — Code review cleanup + i18n parity** — Consolidation finale : CSP nonce, centralisation brand constants, extraction formatters i18n, alignement Tailwind, parité messages de-DE (6 clés placeholder). Mergée 2026-04-20 (581641d).
 
 ---
 
