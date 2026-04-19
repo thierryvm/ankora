@@ -201,6 +201,9 @@
       "metaTitle": "Conditions générales d'utilisation",
       "metaDescription": "CGU de Ankora — règles d'utilisation du service.",
       "title": "Conditions générales d'utilisation",
+      "draft": "Our terms of use are currently being written.",
+      "contact": "For any questions, please contact us: thierryvm@gmail.com",
+      "backHome": "Back to home",
       "s1": {
         "heading": "1. Objet",
         "body": "Ankora est un outil d'organisation budgétaire et d'éducation financière destiné aux particuliers. Il permet de saisir manuellement ses charges et dépenses, de les lisser sur l'année, et d'anticiper les besoins de trésorerie."
@@ -249,9 +252,12 @@
       "metaTitle": "Politique de confidentialité",
       "metaDescription": "Politique de confidentialité de Ankora — hébergement UE, RGPD, droits des utilisateurs.",
       "title": "Politique de confidentialité",
+      "draft": "Our privacy policy is currently being written.",
+      "contact": "For any questions, please contact us: thierryvm@gmail.com",
+      "backHome": "Back to home",
       "s1": {
         "heading": "1. Responsable de traitement",
-        "body": "Ankora, édité par Thierry Van Mele (Belgique). Contact : <mail>privacy@ankora.eu</mail>."
+        "body": "Ankora, édité par Thierry Van Mele (Belgique). Contact : <mail>thierryvm@gmail.com</mail>."
       },
       "s2": {
         "heading": "2. Données collectées",
@@ -311,6 +317,9 @@
       "metaTitle": "Politique cookies",
       "metaDescription": "Politique cookies de Ankora — granularité totale, tout refusable sauf essentiels.",
       "title": "Politique cookies",
+      "draft": "This cookie policy is currently being written.",
+      "contact": "For any questions, please contact us: thierryvm@gmail.com",
+      "backHome": "Back to home",
       "categoriesHeading": "Catégories",
       "essentialHeading": "Essentiels (toujours actifs)",
       "essentialBody": "Indispensables au fonctionnement : session d'authentification, préférence de thème, anti-CSRF.",
@@ -348,7 +357,8 @@
     "cgu": "CGU",
     "privacy": "Confidentialité",
     "cookies": "Gérer les cookies",
-    "faq": "FAQ"
+    "faq": "FAQ",
+    "copyrightNotice": "© {year} Ankora™. All rights reserved."
   },
   "auth": {
     "login": {

@@ -1,41 +1,99 @@
-Proprietary License — Ankora
+# Proprietary License — Ankora™
 
-Copyright (c) 2026 Thierry Vanmeeteren. All rights reserved.
+**Copyright © 2026 Thierry Vanmeeteren. All rights reserved.**
 
-This repository is made publicly viewable for the sole purposes of transparency,
-security auditing, and bug reporting by the community.
+## Grant of Limited License
 
-Permission is NOT granted to:
+This repository is made publicly available **solely** for the purposes of:
+- Transparency and code review
+- Security auditing and vulnerability disclosure
+- Bug reporting and feature suggestions
 
-  (a) copy, modify, merge, publish, distribute, sublicense, or sell copies of
-      the Software or substantial portions thereof;
+## Strict Prohibitions
 
-  (b) use the Software or any derivative work in a commercial product or
-      service;
+Permission is **expressly prohibited** for:
 
-  (c) use the Software to train, fine-tune, or evaluate machine learning
-      models without prior written consent from the copyright holder;
+1. **Commercial Use**: Any use of the Software (in whole or in part) in a
+   commercial product, service, or revenue-generating application without
+   prior written license agreement from the copyright holder.
 
-  (d) reverse-engineer protected components or bypass rate limiting,
-      authentication, or Row Level Security mechanisms.
+2. **Modification & Distribution**: Copying, modifying, merging, publishing,
+   distributing, sublicensing, or selling copies of the Software or any
+   substantial portion thereof.
+
+3. **Derivative Works**: Creating derivative works based on the Software for
+   any purpose without explicit written consent.
+
+4. **AI/ML Training**: Using the Software or any part thereof to train,
+   fine-tune, evaluate, or otherwise enhance machine learning, large language
+   models (LLMs), generative AI systems, or similar technologies without
+   prior written consent from the copyright holder.
+
+5. **Reverse Engineering**: Reverse-engineering, decompiling, disassembling,
+   or otherwise attempting to derive the source code or architecture of
+   protected components, including but not limited to:
+   - Authentication and authorization mechanisms
+   - Rate limiting systems
+   - Row Level Security (RLS) policies
+   - Encryption or obfuscation techniques
+   - API endpoints and data structures
+
+6. **Circumvention**: Bypassing, disabling, or circumventing any technical,
+   legal, or security measures protecting the Software.
+
+## Permitted Uses
 
 You MAY:
 
-  (i)  read the source code for personal learning and review purposes;
+1. **Review Code**: Read the source code for personal learning, security
+   review, or evaluation purposes only.
 
-  (ii) submit bug reports, security reports (see SECURITY.md), and
-       non-binding suggestions via GitHub Issues or Pull Requests;
+2. **Report Issues**: Submit bug reports, security vulnerabilities (via
+   SECURITY.md), and feature suggestions through GitHub Issues or Pull
+   Requests.
 
-  (iii) quote short excerpts of the source code for educational or review
-        purposes, with attribution.
+3. **Quote Excerpts**: Include short passages of the source code in
+   educational or review contexts, with full attribution to the original
+   author and repository.
 
-Any contribution submitted via Pull Request is licensed back to the copyright
-holder under the same terms as this repository, unless explicitly agreed
-otherwise.
+## Contributions
 
-The Software is provided "AS IS", without warranty of any kind, express or
-implied. In no event shall the copyright holder be liable for any claim,
-damages, or other liability arising from the use of the Software.
+Any code, documentation, or other material submitted via Pull Request is
+licensed to the copyright holder under the same terms as this repository,
+unless explicitly negotiated in writing beforehand.
 
-For licensing inquiries (including commercial use), contact:
-thierryvm@hotmail.com
+## Disclaimer
+
+The Software is provided **"AS IS"**, without warranty of any kind, express
+or implied, including but not limited to warranties of merchantability,
+fitness for a particular purpose, or non-infringement.
+
+The copyright holder shall not be liable for any claim, damage, loss, or
+liability arising from:
+- Use or misuse of the Software
+- Loss of data or business interruption
+- Security breaches or unauthorized access
+- Violation of laws or regulations by the user
+- Reliance on the Software for critical operations
+
+## Jurisdiction & Enforcement
+
+This License is governed by the laws of **Belgium**, without regard to
+conflict of law principles. Any dispute arising from this License shall be
+resolved under Belgian jurisdiction.
+
+The copyright holder reserves the right to pursue legal action against
+unauthorized use, copying, or distribution of the Software, including seeking
+injunctive relief and damages.
+
+## Commercial Licensing
+
+For inquiries regarding commercial licenses, ML/AI training rights, or other
+authorized uses, contact:
+
+**Thierry Vanmeeteren**
+Email: thierryvm@gmail.com
+
+---
+
+**Ankora™ is a trademark of Thierry Vanmeeteren. All rights reserved.**
