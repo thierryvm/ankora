@@ -52,7 +52,7 @@ export function SignupForm() {
           aria-describedby={emailError ? 'email-error' : undefined}
         />
         {emailError && (
-          <p id="email-error" className="text-xs font-medium text-(--color-danger)">
+          <p id="email-error" className="text-danger text-xs font-medium">
             {emailError}
           </p>
         )}
@@ -69,11 +69,11 @@ export function SignupForm() {
           aria-invalid={Boolean(passwordError)}
           aria-describedby="password-hint password-error"
         />
-        <p id="password-hint" className="text-xs text-(--color-muted-foreground)">
+        <p id="password-hint" className="text-muted-foreground text-xs">
           {t('passwordHint')}
         </p>
         {passwordError && (
-          <p id="password-error" className="text-xs font-medium text-(--color-danger)">
+          <p id="password-error" className="text-danger text-xs font-medium">
             {passwordError}
           </p>
         )}
@@ -90,50 +90,48 @@ export function SignupForm() {
           aria-invalid={Boolean(passwordConfirmError)}
         />
         {passwordConfirmError && (
-          <p className="text-xs font-medium text-(--color-danger)">{passwordConfirmError}</p>
+          <p className="text-danger text-xs font-medium">{passwordConfirmError}</p>
         )}
       </div>
 
-      <label className="flex items-start gap-2 text-sm text-(--color-muted-foreground)">
+      <label className="text-muted-foreground flex items-start gap-2 text-sm">
         <input
           type="checkbox"
           name="acceptTos"
           required
-          className="mt-1 h-4 w-4 rounded border-(--color-border) text-(--color-brand-700) focus:ring-(--color-brand-600)"
+          className="border-border text-brand-700 focus:ring-brand-600 mt-1 h-4 w-4 rounded"
         />
         <span>
           {t('acceptTosPrefix')}{' '}
-          <Link href="/legal/cgu" className="text-(--color-brand-700) underline">
+          <Link href="/legal/cgu" className="text-brand-700 underline">
             {t('acceptTosLink')}
           </Link>
         </span>
       </label>
-      {acceptTosError && (
-        <p className="text-xs font-medium text-(--color-danger)">{acceptTosError}</p>
-      )}
+      {acceptTosError && <p className="text-danger text-xs font-medium">{acceptTosError}</p>}
 
-      <label className="flex items-start gap-2 text-sm text-(--color-muted-foreground)">
+      <label className="text-muted-foreground flex items-start gap-2 text-sm">
         <input
           type="checkbox"
           name="acceptPrivacy"
           required
-          className="mt-1 h-4 w-4 rounded border-(--color-border) text-(--color-brand-700) focus:ring-(--color-brand-600)"
+          className="border-border text-brand-700 focus:ring-brand-600 mt-1 h-4 w-4 rounded"
         />
         <span>
           {t('acceptPrivacyPrefix')}{' '}
-          <Link href="/legal/privacy" className="text-(--color-brand-700) underline">
+          <Link href="/legal/privacy" className="text-brand-700 underline">
             {t('acceptPrivacyLink')}
           </Link>
         </span>
       </label>
       {acceptPrivacyError && (
-        <p className="text-xs font-medium text-(--color-danger)">{acceptPrivacyError}</p>
+        <p className="text-danger text-xs font-medium">{acceptPrivacyError}</p>
       )}
 
       {error && (
         <div
           role="alert"
-          className="rounded-md border border-(--color-danger) bg-(--color-danger)/10 px-3 py-2 text-sm text-(--color-danger)"
+          className="border-danger bg-danger/10 text-danger rounded-md border px-3 py-2 text-sm"
         >
           {error}
         </div>

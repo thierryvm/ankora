@@ -5,18 +5,17 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-(--color-brand-600) focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
   {
     variants: {
       variant: {
-        default: 'bg-(--color-brand-700) text-white shadow-sm hover:bg-(--color-brand-800)',
-        destructive: 'bg-(--color-danger) text-white shadow-sm hover:bg-(--color-danger)/90',
+        default: 'bg-brand-700 text-white shadow-sm hover:bg-brand-800',
+        destructive: 'bg-danger text-white shadow-sm hover:bg-danger/90',
         outline:
-          'border border-(--color-border) bg-(--color-card) text-(--color-foreground) hover:border-(--color-brand-500) hover:text-(--color-brand-700)',
-        secondary: 'bg-(--color-brand-100) text-(--color-brand-900) hover:bg-(--color-brand-200)',
-        ghost:
-          'text-(--color-foreground) hover:bg-(--color-brand-100) hover:text-(--color-brand-900)',
-        link: 'text-(--color-brand-700) underline-offset-4 hover:underline',
+          'border border-border bg-card text-foreground hover:border-brand-500 hover:text-brand-700',
+        secondary: 'bg-brand-100 text-brand-900 hover:bg-brand-200',
+        ghost: 'text-foreground hover:bg-brand-100 hover:text-brand-900',
+        link: 'text-brand-700 underline-offset-4 hover:underline',
       },
       size: {
         default: 'h-10 px-4 py-2',

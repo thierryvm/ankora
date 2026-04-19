@@ -1,6 +1,6 @@
 # Roadmap — Ankora
 
-Dernière mise à jour : 18 avril 2026 — après merge PR #20 `chore(i18n): remove obsolete dashboard keys` (commit b13e52c).
+Dernière mise à jour : 19 avril 2026 — après alignement Tailwind canonical (#61) et préparation PR post-PR-25 debts.
 
 ---
 
@@ -51,7 +51,7 @@ Trois PRs atomiques enchaînées **dans cet ordre** pour éviter les conflits su
 - [x] **`chore(i18n): remove obsolete dashboard keys`** — mergée PR #20 (commit b13e52c, 18 avril 2026). 10 clés orphelines (`title`, `welcome`, `subtitle`, `emptyState`, `cards.*`) retirées sur 5 locales (−90 lignes).
 - [x] **`feat(i18n): locale-aware formatters`** — mergée PR #21 (commit 4b5e045, 18 avril 2026). `src/lib/i18n/formatters.ts` avec `formatCurrency`, `formatDate`, `formatDateTime`, `formatMonth`, `formatNumber`, `formatPercent`. Cache Intl par locale. Migration complète : 8 fichiers (`page.tsx` dashboard, `deletion-status`, 4 `*Client.tsx`, `SettingsClient`) + suppression de `src/lib/format.ts`. Tests Vitest 20 cas sur 5 locales, coverage 100/100/95 lines/funcs/branches. **Conditionne le port des mockups v2** (affichage `1 234,50 €` en fr-BE vs `€1,234.50` en en).
 - [x] **`chore(tailwind): migrate to canonical classes`** — **Verified compliant 2026-04-19** (audit zéro inline colors, repo déjà 100% tokens canoniques). Pas de migration nécessaire. Audit report sauvegardé : `docs/tailwind-canonical-audit.md`. Mergée PR #23.
-- [ ] **#61 — Aligner classes Tailwind legacy sur convention canonique** — `text-(--color-muted-foreground)` → `text-muted-foreground`. Les deux marchent en v4 mais la convention canonique est maintenant le standard (introducée dans Header refactor commit 354ad28). Cette PR aligne le RESTE du codebase sur ce standard.
+- [x] **#61 — Aligner classes Tailwind legacy sur convention canonique** — `text-(--color-muted-foreground)` → `text-muted-foreground`. Les deux marchent en v4 mais la convention canonique est maintenant le standard (introducée dans Header refactor commit 354ad28). Alignement complet du codebase (38 fichiers, ~150 instances) — commit 1 du refactor/post-pr25-debts (2026-04-19).
 
 ---
 

@@ -4,12 +4,12 @@ import { AnkoraLogo } from '@/components/brand/AnkoraLogo';
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="border-b border-(--color-border) bg-(--color-card)">
+      <header className="border-border bg-card border-b">
         <div className="mx-auto flex h-16 max-w-6xl items-center px-4 md:px-6">
           <Link
             href="/"
             aria-label="Accueil Ankora"
-            className="flex items-center gap-2 rounded-md focus-visible:ring-2 focus-visible:ring-(--color-brand-600) focus-visible:ring-offset-2 focus-visible:outline-none"
+            className="focus-visible:ring-brand-600 flex items-center gap-2 rounded-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
           >
             <AnkoraLogo className="h-8 w-auto" />
           </Link>

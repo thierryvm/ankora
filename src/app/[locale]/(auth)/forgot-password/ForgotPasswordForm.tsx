@@ -33,7 +33,7 @@ export function ForgotPasswordForm() {
     return (
       <div
         role="status"
-        className="rounded-md border border-(--color-success) bg-(--color-success)/10 px-3 py-3 text-sm text-(--color-success)"
+        className="border-success bg-success/10 text-success rounded-md border px-3 py-3 text-sm"
       >
         {t('sentMessage')}
       </div>
@@ -50,7 +50,7 @@ export function ForgotPasswordForm() {
       {error && (
         <div
           role="alert"
-          className="rounded-md border border-(--color-danger) bg-(--color-danger)/10 px-3 py-2 text-sm text-(--color-danger)"
+          className="border-danger bg-danger/10 text-danger rounded-md border px-3 py-2 text-sm"
         >
           {error}
         </div>

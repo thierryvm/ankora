@@ -28,20 +28,17 @@ const SheetOverlay = React.forwardRef<
 ));
 SheetOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
-const sheetVariants = cva(
-  'fixed z-50 gap-4 bg-(--color-card) p-6 shadow-lg transition ease-in-out',
-  {
-    variants: {
-      side: {
-        top: 'inset-x-0 top-0 border-b border-(--color-border)',
-        bottom: 'inset-x-0 bottom-0 border-t border-(--color-border)',
-        left: 'inset-y-0 left-0 h-full w-3/4 border-r border-(--color-border) sm:max-w-sm',
-        right: 'inset-y-0 right-0 h-full w-3/4 border-l border-(--color-border) sm:max-w-sm',
-      },
+const sheetVariants = cva('fixed z-50 gap-4 bg-card p-6 shadow-lg transition ease-in-out', {
+  variants: {
+    side: {
+      top: 'inset-x-0 top-0 border-b border-border',
+      bottom: 'inset-x-0 bottom-0 border-t border-border',
+      left: 'inset-y-0 left-0 h-full w-3/4 border-r border-border sm:max-w-sm',
+      right: 'inset-y-0 right-0 h-full w-3/4 border-l border-border sm:max-w-sm',
     },
-    defaultVariants: { side: 'right' },
   },
-);
+  defaultVariants: { side: 'right' },
+});
 
 interface SheetContentProps
   extends
@@ -60,7 +57,7 @@ const SheetContent = React.forwardRef<
       {...props}
     >
       {children}
-      <DialogPrimitive.Close className="absolute top-4 right-4 rounded-md text-(--color-muted-foreground) transition-colors hover:text-(--color-foreground) focus:outline-none focus-visible:ring-2 focus-visible:ring-(--color-brand-600) focus-visible:ring-offset-2">
+      <DialogPrimitive.Close className="text-muted-foreground hover:text-foreground focus-visible:ring-brand-600 absolute top-4 right-4 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2">
         <X className="h-4 w-4" />
         <span className="sr-only">Fermer</span>
       </DialogPrimitive.Close>
@@ -88,7 +85,7 @@ const SheetTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={cn('text-lg font-semibold text-(--color-foreground)', className)}
+    className={cn('text-foreground text-lg font-semibold', className)}
     {...props}
   />
 ));
@@ -100,7 +97,7 @@ const SheetDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn('text-sm text-(--color-muted-foreground)', className)}
+    className={cn('text-muted-foreground text-sm', className)}
     {...props}
   />
 ));

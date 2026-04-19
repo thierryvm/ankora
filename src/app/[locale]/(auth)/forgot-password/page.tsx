@@ -21,8 +21,8 @@ export default async function ForgotPasswordPage() {
       </CardHeader>
       <CardContent>
         <ForgotPasswordForm />
-        <p className="mt-6 text-center text-sm text-(--color-muted-foreground)">
-          <Link href="/login" className="hover:text-(--color-foreground)">
+        <p className="text-muted-foreground mt-6 text-center text-sm">
+          <Link href="/login" className="hover:text-foreground">
             ← {t('backToLogin')}
           </Link>
         </p>

@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { notFound } from 'next/navigation';
-import { cookies, headers } from 'next/headers';
+import { cookies } from 'next/headers';
+
+import { getNonce } from '@/lib/security/nonce';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { Analytics } from '@vercel/analytics/next';
@@ -118,8 +120,7 @@ export default async function LocaleLayout({
   const themeCookie = cookieStore.get('theme')?.value;
   const dataTheme = themeCookie === 'dark' ? 'dark' : undefined;
 
-  const headersList = await headers();
-  const nonce = headersList.get('x-nonce') ?? undefined;
+  const nonce = await getNonce();
 
   return (
     <html

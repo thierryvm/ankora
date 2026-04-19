@@ -97,12 +97,12 @@ export function ConsentBanner() {
       role="dialog"
       aria-labelledby="consent-title"
       aria-describedby="consent-body"
-      className="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-3xl rounded-xl border border-(--color-border) bg-(--color-card) p-5 shadow-lg md:inset-x-auto md:left-1/2 md:-translate-x-1/2"
+      className="border-border bg-card fixed inset-x-4 bottom-4 z-50 mx-auto max-w-3xl rounded-xl border p-5 shadow-lg md:inset-x-auto md:left-1/2 md:-translate-x-1/2"
     >
       <h2 id="consent-title" className="text-base font-semibold">
         {t('title')}
       </h2>
-      <p id="consent-body" className="mt-2 text-sm text-(--color-muted-foreground)">
+      <p id="consent-body" className="text-muted-foreground mt-2 text-sm">
         {t.rich('body', {
           link: (chunks) => (
             <Link href="/legal/cookies" className="underline">
@@ -115,14 +115,14 @@ export function ConsentBanner() {
         <button
           type="button"
           onClick={() => accept(false, false)}
-          className="rounded-md border border-(--color-border) px-4 py-2 text-sm font-medium hover:bg-(--color-brand-100) focus-visible:ring-2 focus-visible:ring-(--color-brand-600) focus-visible:outline-none"
+          className="border-border hover:bg-brand-100 focus-visible:ring-brand-600 rounded-md border px-4 py-2 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
         >
           {t('essentialOnly')}
         </button>
         <button
           type="button"
           onClick={() => accept(true, false)}
-          className="rounded-md bg-(--color-brand-700) px-4 py-2 text-sm font-medium text-white hover:bg-(--color-brand-800) focus-visible:ring-2 focus-visible:ring-(--color-brand-600) focus-visible:outline-none"
+          className="bg-brand-700 hover:bg-brand-800 focus-visible:ring-brand-600 rounded-md px-4 py-2 text-sm font-medium text-white focus-visible:ring-2 focus-visible:outline-none"
         >
           {t('acceptAnalytics')}
         </button>

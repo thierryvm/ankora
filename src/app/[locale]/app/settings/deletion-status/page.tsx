@@ -47,10 +47,10 @@ export default async function DeletionStatusPage() {
 
   const statusColor =
     data.status === 'pending'
-      ? 'text-(--color-warning)'
+      ? 'text-warning'
       : data.status === 'cancelled'
-        ? 'text-(--color-success)'
-        : 'text-(--color-danger)';
+        ? 'text-success'
+        : 'text-danger';
 
   const statusLabel =
     data.status === 'pending'
@@ -63,10 +63,10 @@ export default async function DeletionStatusPage() {
     <div className="flex flex-col gap-6">
       <header>
         <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{t('title')}</h1>
-        <p className="mt-1 text-(--color-muted-foreground)">{t('subtitle')}</p>
+        <p className="text-muted-foreground mt-1">{t('subtitle')}</p>
       </header>
 
-      <Card className="border-(--color-danger)/40">
+      <Card className="border-danger/40">
         <CardHeader>
           <CardTitle>
             {t('statusLabel')} <span className={statusColor}>{statusLabel}</span>
@@ -78,17 +78,17 @@ export default async function DeletionStatusPage() {
             <>
               <dl className="grid gap-4 md:grid-cols-3">
                 <div>
-                  <dt className="text-xs text-(--color-muted-foreground)">{t('scheduledFor')}</dt>
+                  <dt className="text-muted-foreground text-xs">{t('scheduledFor')}</dt>
                   <dd className="mt-1 text-lg font-semibold tabular-nums">{scheduledAt}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-(--color-muted-foreground)">{t('daysLeft')}</dt>
+                  <dt className="text-muted-foreground text-xs">{t('daysLeft')}</dt>
                   <dd className="mt-1 text-lg font-semibold tabular-nums">
                     {t('daysCount', { days: daysLeft })}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-(--color-muted-foreground)">{t('auditLogs')}</dt>
+                  <dt className="text-muted-foreground text-xs">{t('auditLogs')}</dt>
                   <dd className="mt-1 text-sm">{t('auditLogsValue')}</dd>
                 </div>
               </dl>

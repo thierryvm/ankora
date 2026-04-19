@@ -106,7 +106,7 @@ export function SimulatorClient({ charges }: { charges: RawCharge[] }) {
     <div className="flex flex-col gap-6">
       <header>
         <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{t('title')}</h1>
-        <p className="mt-1 text-(--color-muted-foreground)">{t('subtitle')}</p>
+        <p className="text-muted-foreground mt-1">{t('subtitle')}</p>
       </header>
 
       <Card>
@@ -230,37 +230,31 @@ export function SimulatorClient({ charges }: { charges: RawCharge[] }) {
         </CardHeader>
         <CardContent>
           {!result ? (
-            <p className="text-sm text-(--color-muted-foreground)">{tImpact('empty')}</p>
+            <p className="text-muted-foreground text-sm">{tImpact('empty')}</p>
           ) : (
             <div className="grid gap-4 md:grid-cols-3">
               <div>
-                <p className="text-xs text-(--color-muted-foreground)">
-                  {tImpact('currentMonthly')}
-                </p>
+                <p className="text-muted-foreground text-xs">{tImpact('currentMonthly')}</p>
                 <p className="mt-1 text-xl font-bold tabular-nums">
                   {fmtMoney(result.currentMonthlyProvision)}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-(--color-muted-foreground)">
-                  {tImpact('projectedMonthly')}
-                </p>
+                <p className="text-muted-foreground text-xs">{tImpact('projectedMonthly')}</p>
                 <p className="mt-1 text-xl font-bold tabular-nums">
                   {fmtMoney(result.projectedMonthlyProvision)}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-(--color-muted-foreground)">
-                  {tImpact('annualSavings')}
-                </p>
+                <p className="text-muted-foreground text-xs">{tImpact('annualSavings')}</p>
                 <p
                   className={`mt-1 text-xl font-bold tabular-nums ${
-                    deltaPositive ? 'text-(--color-success)' : 'text-(--color-danger)'
+                    deltaPositive ? 'text-success' : 'text-danger'
                   }`}
                 >
                   {fmtMoney(result.annualDelta)}
                 </p>
-                <p className="mt-1 text-xs text-(--color-muted-foreground)">
+                <p className="text-muted-foreground mt-1 text-xs">
                   {tImpact('monthlyChange', {
                     sign: result.changePercent > 0 ? '+' : '',
                     percent: result.changePercent,

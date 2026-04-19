@@ -40,7 +40,7 @@ export function GoogleSignInButton({ label }: Props) {
         <span>{isPending ? t('redirecting') : displayLabel}</span>
       </Button>
       {error && (
-        <p role="alert" className="text-center text-xs font-medium text-(--color-danger)">
+        <p role="alert" className="text-danger text-center text-xs font-medium">
           {error}
         </p>
       )}

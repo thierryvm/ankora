@@ -46,9 +46,7 @@ export function ResetPasswordForm() {
           required
           aria-invalid={Boolean(passwordError)}
         />
-        {passwordError && (
-          <p className="text-xs font-medium text-(--color-danger)">{passwordError}</p>
-        )}
+        {passwordError && <p className="text-danger text-xs font-medium">{passwordError}</p>}
       </div>
 
       <div className="flex flex-col gap-2">
@@ -62,14 +60,14 @@ export function ResetPasswordForm() {
           aria-invalid={Boolean(passwordConfirmError)}
         />
         {passwordConfirmError && (
-          <p className="text-xs font-medium text-(--color-danger)">{passwordConfirmError}</p>
+          <p className="text-danger text-xs font-medium">{passwordConfirmError}</p>
         )}
       </div>
 
       {error && (
         <div
           role="alert"
-          className="rounded-md border border-(--color-danger) bg-(--color-danger)/10 px-3 py-2 text-sm text-(--color-danger)"
+          className="border-danger bg-danger/10 text-danger rounded-md border px-3 py-2 text-sm"
         >
           {error}
         </div>

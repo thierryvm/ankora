@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 
 import { Link } from '@/i18n/navigation';
+import { brand } from '@/lib/brand';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Prose, ProseMeta } from '@/components/layout/Prose';
@@ -14,7 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: t('metaTitle'),
     description: t('metaDescription'),
-    robots: { index: false, follow: false },
+    robots: { index: false, follow: true },
     alternates: { canonical: '/legal/privacy' },
   };
 }
@@ -24,7 +25,7 @@ export default async function PrivacyPage() {
   const tLegal = await getTranslations('legal');
 
   const strong = (c: React.ReactNode) => <strong>{c}</strong>;
-  const mail = (c: React.ReactNode) => <a href="mailto:thierryvm@gmail.com">{c}</a>;
+  const mail = (c: React.ReactNode) => <a href={`mailto:${brand.privacyEmail}`}>{c}</a>;
   const apd = (c: React.ReactNode) => (
     <a href="https://www.autoriteprotectiondonnees.be/" rel="noopener">
       {c}

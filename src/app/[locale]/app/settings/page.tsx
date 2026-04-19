@@ -43,7 +43,7 @@ export default async function SettingsPage() {
     <div className="flex flex-col gap-8">
       <header>
         <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{t('title')}</h1>
-        <p className="mt-1 text-(--color-muted-foreground)">{t('description')}</p>
+        <p className="text-muted-foreground mt-1">{t('description')}</p>
       </header>
 
       <SettingsClient
