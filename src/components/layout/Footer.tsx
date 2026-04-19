@@ -13,7 +13,7 @@ export async function Footer() {
         <div className="flex items-center gap-2">
           <AnkoraLogo className="h-7 w-auto" />
           <span className="text-sm text-(--color-muted-foreground)">
-            {t('copyright', { year: new Date().getFullYear() })}
+            {t('copyrightNotice', { year: new Date().getFullYear() })}
           </span>
         </div>
         <nav aria-label={tCommon('nav.footerLabel')} className="flex flex-wrap gap-4 text-sm">

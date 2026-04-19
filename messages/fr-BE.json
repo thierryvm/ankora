@@ -357,7 +357,8 @@
     "cgu": "CGU",
     "privacy": "Confidentialité",
     "cookies": "Gérer les cookies",
-    "faq": "FAQ"
+    "faq": "FAQ",
+    "copyrightNotice": "© {year} Ankora™. Tous droits réservés."
   },
   "auth": {
     "login": {
