@@ -7,7 +7,12 @@
     "nav": {
       "mainLabel": "Navigation principale",
       "appLabel": "Navigation application",
+      "mobileLabel": "Navigation mobile",
       "footerLabel": "Pied de page",
+      "menu": "Menu",
+      "close": "Schließen",
+      "lightMode": "Helfer Modus",
+      "darkMode": "Dunkler Modus",
       "features": "Fonctionnalités",
       "faq": "FAQ",
       "login": "Se connecter",
