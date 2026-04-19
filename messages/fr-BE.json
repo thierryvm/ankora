@@ -243,7 +243,10 @@
       "s8": {
         "heading": "8. Droit applicable",
         "body": "Ces CGU sont soumises au droit belge. Tribunal compétent : Bruxelles."
-      }
+      },
+      "draft": "Nos conditions générales d'utilisation sont en cours de rédaction.",
+      "contact": "Pour toute question, contacte-nous : thierryvm@gmail.com",
+      "backHome": "Retour à l'accueil"
     },
     "privacy": {
       "metaTitle": "Politique de confidentialité",
@@ -305,7 +308,10 @@
       "s9": {
         "heading": "9. Modifications",
         "body": "Toute modification matérielle de cette politique est notifiée par email et nécessite ton consentement renouvelé pour continuer à utiliser le service."
-      }
+      },
+      "draft": "Notre politique de confidentialité est en cours de rédaction.",
+      "contact": "Pour toute question, contacte-nous : thierryvm@gmail.com",
+      "backHome": "Retour à l'accueil"
     },
     "cookies": {
       "metaTitle": "Politique cookies",
@@ -327,7 +333,10 @@
       "lifetimeHeading": "Durée de vie",
       "lifetimeItem1": "Session : fin de navigation",
       "lifetimeItem2": "Préférences : 12 mois",
-      "lifetimeItem3": "Analytics : 6 mois (si acceptés)"
+      "lifetimeItem3": "Analytics : 6 mois (si acceptés)",
+      "draft": "Cette page de politique cookies est en cours de rédaction.",
+      "contact": "Pour toute question, contacte-nous : thierryvm@gmail.com",
+      "backHome": "Retour à l'accueil"
     }
   },
   "offline": {

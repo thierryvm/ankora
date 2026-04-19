@@ -201,6 +201,9 @@
       "metaTitle": "Conditions générales d'utilisation",
       "metaDescription": "CGU de Ankora — règles d'utilisation du service.",
       "title": "Conditions générales d'utilisation",
+      "draft": "Nuestros términos de uso se están redactando actualmente.",
+      "contact": "Para cualquier pregunta, contáctanos: thierryvm@gmail.com",
+      "backHome": "Volver a inicio",
       "s1": {
         "heading": "1. Objet",
         "body": "Ankora est un outil d'organisation budgétaire et d'éducation financière destiné aux particuliers. Il permet de saisir manuellement ses charges et dépenses, de les lisser sur l'année, et d'anticiper les besoins de trésorerie."
@@ -249,6 +252,9 @@
       "metaTitle": "Politique de confidentialité",
       "metaDescription": "Politique de confidentialité de Ankora — hébergement UE, RGPD, droits des utilisateurs.",
       "title": "Politique de confidentialité",
+      "draft": "Nuestra política de privacidad se está redactando actualmente.",
+      "contact": "Para cualquier pregunta, contáctanos: thierryvm@gmail.com",
+      "backHome": "Volver a inicio",
       "s1": {
         "heading": "1. Responsable de traitement",
         "body": "Ankora, édité par Thierry Van Mele (Belgique). Contact : <mail>privacy@ankora.eu</mail>."
@@ -311,6 +317,9 @@
       "metaTitle": "Politique cookies",
       "metaDescription": "Politique cookies de Ankora — granularité totale, tout refusable sauf essentiels.",
       "title": "Politique cookies",
+      "draft": "Esta política de cookies se está redactando actualmente.",
+      "contact": "Para cualquier pregunta, contáctanos: thierryvm@gmail.com",
+      "backHome": "Volver a inicio",
       "categoriesHeading": "Catégories",
       "essentialHeading": "Essentiels (toujours actifs)",
       "essentialBody": "Indispensables au fonctionnement : session d'authentification, préférence de thème, anti-CSRF.",
