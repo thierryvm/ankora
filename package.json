@@ -8,6 +8,7 @@
   "engines": {
     "node": "24.x"
   },
+  "packageManager": "npm@11.11.1",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
@@ -79,7 +80,7 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
-    "@types/node": "^22.19.17",
+    "@types/node": "^24.0.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitest/coverage-v8": "^4.1.4",
