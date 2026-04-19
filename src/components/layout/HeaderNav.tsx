@@ -99,6 +99,8 @@ export function HeaderNav({ variant = 'marketing' }: HeaderNavProps) {
         document.documentElement.removeAttribute('data-theme');
       }
       localStorage.setItem('theme', next);
+      // Cookie for SSR at next reload — SameSite=Lax, 1 year
+      document.cookie = `theme=${next}; path=/; max-age=31536000; SameSite=Lax`;
     } catch {
       // Safari private mode or quota exceeded
     }

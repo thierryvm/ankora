@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { notFound } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { Analytics } from '@vercel/analytics/next';
@@ -113,11 +114,20 @@ export default async function LocaleLayout({
 
   const messages = await getMessages();
 
+  const cookieStore = await cookies();
+  const themeCookie = cookieStore.get('theme')?.value;
+  const dataTheme = themeCookie === 'dark' ? 'dark' : undefined;
+
   return (
-    <html lang={locale} data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html
+      lang={locale}
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
+      {...(dataTheme ? { 'data-theme': dataTheme } : {})}
+    >
       <script
         dangerouslySetInnerHTML={{
-          __html: `(function(){try{var t=localStorage.getItem('theme');var m=window.matchMedia('(prefers-color-scheme: dark)').matches;var theme=t||(m?'dark':'light');if(theme==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();`,
+          __html: `(function(){try{var t=localStorage.getItem('theme');if(!t){var m=window.matchMedia('(prefers-color-scheme: dark)').matches;t=m?'dark':'light';}if(t==='dark')document.documentElement.setAttribute('data-theme','dark');else document.documentElement.removeAttribute('data-theme');}catch(e){}})();`,
         }}
       />
       <body className={`${inter.variable} font-sans antialiased`}>
