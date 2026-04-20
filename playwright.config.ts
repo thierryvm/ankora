@@ -30,10 +30,16 @@ export default defineConfig({
     {
       name: 'mobile-safari',
       use: { ...devices['iPhone 14'] },
+      // Focus trap tests use Tab key (keyboard input) — unavailable on native mobile touch.
+      // Tested via chromium-desktop with 375×667 viewport to cover mobile use case.
+      testIgnore: '**/a11y/drawer-mobile-focus-trap.spec.ts',
     },
     {
       name: 'mobile-chrome',
       use: { ...devices['Pixel 7'] },
+      // Focus trap tests use Tab key (keyboard input) — unavailable on native mobile touch.
+      // Tested via chromium-desktop with 375×667 viewport to cover mobile use case.
+      testIgnore: '**/a11y/drawer-mobile-focus-trap.spec.ts',
     },
   ],
 

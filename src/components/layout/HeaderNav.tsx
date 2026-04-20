@@ -152,7 +152,7 @@ export function HeaderNav({ variant = 'marketing' }: HeaderNavProps) {
         aria-modal="true"
         aria-label={t('nav.mobileLabel')}
         className={`bg-card border-border fixed top-0 right-0 bottom-0 z-40 w-80 overflow-y-auto border-l transition-transform duration-300 lg:hidden ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
+          isOpen ? 'pointer-events-auto translate-x-0' : 'pointer-events-none translate-x-full'
         }`}
       >
         <div className="border-border bg-card sticky top-0 flex items-center justify-between border-b p-4">
