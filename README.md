@@ -208,7 +208,7 @@ Voir [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) pour les détails d'invocation
 
 ### Signalement d'une vulnérabilité
 
-Voir [SECURITY.md](SECURITY.md). Email dédié : **security@ankora.eu**.
+Voir [SECURITY.md](SECURITY.md). Email dédié : **security@ankora.be**.
 
 ---
 
@@ -266,13 +266,13 @@ L'app est utilisable depuis toute l'UE. Les avertissements réglementaires sont 
 
 Voir [docs/ROADMAP.md](docs/ROADMAP.md) pour la roadmap détaillée.
 
-**Phase actuelle** : Phase 2 MVP — auth, onboarding, dashboard, settings, RGPD, PWA. _(avril 2026)_
+**Phase actuelle** : Phase 1 MVP — auth, onboarding, dashboard, settings, RGPD, PWA. _(avril 2026)_
 
 **Prochaines phases** :
 
-- Phase 3 : analytics opt-in, notifications mensuelles, partage famille (read-only)
-- Phase 4 : imports CSV, catégorisation assistée par IA (local-first)
-- Phase 5 : multi-devise (EUR + CHF + GBP), exports PDF annuels
+- Phase 2 : analytics opt-in, notifications mensuelles, partage famille (read-only)
+- Phase 3 : imports CSV, catégorisation assistée par IA (local-first)
+- Phase 4 : multi-devise (EUR + CHF + GBP), exports PDF annuels
 
 ---
 
@@ -316,6 +316,6 @@ Voir [LICENSE](LICENSE) pour les conditions détaillées, ou [NOTICE](NOTICE) po
 
 **Made with care in Belgium 🇧🇪**
 
-[Site web](https://ankora.eu) · [Politique de confidentialité](https://ankora.eu/legal/privacy) · [Contact](mailto:hello@ankora.eu)
+[Site web](https://ankora.be) · [Politique de confidentialité](https://ankora.be/legal/privacy) · [Contact](mailto:hello@ankora.be)
 
 </div>

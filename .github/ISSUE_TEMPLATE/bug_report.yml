@@ -7,7 +7,7 @@ body:
       value: |
         Thanks for taking the time to file a bug report. Please fill in as much as you can.
 
-        **Security issue?** Please do **not** file it here. Read [SECURITY.md](../SECURITY.md) and email **security@ankora.eu**.
+        **Security issue?** Please do **not** file it here. Read [SECURITY.md](../SECURITY.md) and email **security@ankora.be**.
 
   - type: input
     id: summary
@@ -89,5 +89,5 @@ body:
           required: true
         - label: I'm using the latest version of `main`.
           required: true
-        - label: This is not a security issue (those go to security@ankora.eu).
+        - label: This is not a security issue (those go to security@ankora.be).
           required: true

@@ -64,7 +64,7 @@ Only the `main` branch receives security fixes.
 
 In scope:
 
-- ankora.eu and ankora.be (when live)
+- ankora.be (production) and any preview deployments on `*.vercel.app`
 - Production Supabase project
 - Ankora GitHub organisation
 

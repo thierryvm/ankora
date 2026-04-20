@@ -257,15 +257,16 @@ Implémentation : `src/lib/admin/rules/` — chaque règle exporte `{ id, label,
 
 ## Tâches post-lancement — Infrastructure domaine
 
-Une fois le MVP en production public (fin Phase 1), les alias `privacy@ankora.eu` et `security@ankora.eu` doivent être migrés vers le domaine definitivement.
+Une fois le MVP en production public (fin Phase 1), les alias `privacy@ankora.be` et `security@ankora.be` doivent être câblés sur le domaine.
 
-- [ ] Configurer MX ankora.be + alias `privacy@ankora.be`, `security@ankora.be`, `contact@ankora.be`
-- [ ] Migrer contacts dans les 5 locales (fichiers `messages/{en,fr-BE,nl-BE,es-ES,de-DE}.json`) : remplacer `privacy@ankora.eu` par `privacy@ankora.be`
-- [ ] Mettre à jour `SECURITY.md` : remplacer le TODO temporaire et utiliser `privacy@ankora.be`
+- [ ] Configurer MX ankora.be + alias `privacy@ankora.be`, `security@ankora.be`, `contact@ankora.be`, `conduct@ankora.be`
+- [x] Migrer contacts dans les 5 locales (fichiers `messages/{en,fr-BE,nl-BE,es-ES,de-DE}.json`) — déjà en `ankora.be`
+- [x] Aligner `README.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`, `.github/ISSUE_TEMPLATE/*` sur `ankora.be` (20 avr 2026)
+- [ ] Mettre à jour `SECURITY.md` : remplacer le TODO temporaire par `privacy@ankora.be` une fois la MX active
 - [ ] Mettre à jour `LICENSE` et `NOTICE` si références à `*@ankora.eu`
 - [ ] Page Privacy section "Responsable de traitement" : confirmer adresse postale + contact email belge
 
-**État actuel (avril 2026)** : tous les contacts unifiés sur `thierryvm@gmail.com` en attente de config MX domaine.
+**État actuel (avril 2026)** : tous les contacts unifiés sur `thierryvm@gmail.com` en attente de config MX domaine. Les références repo pointent désormais toutes vers `ankora.be`.
 
 ---
 
