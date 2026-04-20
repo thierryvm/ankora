@@ -45,15 +45,21 @@ describe('redactShallow', () => {
     expect(result).toEqual({});
   });
 
-  it('handles cookie header', () => {
+  it('redacts nested PII fields (headers.cookie, headers.authorization, req.body.password)', () => {
     const input = {
-      headers: { cookie: 'session=abc123' },
+      headers: { cookie: 'session=abc123', authorization: 'Bearer xyz' },
+      req: { body: { password: 'secret' }, method: 'POST' },
       error_message: 'auth failed',
     };
 
     const result = redactShallow(input);
 
-    // Shallow redaction only checks first-level keys
+    expect((result.headers as Record<string, unknown>).cookie).toBe('[Redacted]');
+    expect((result.headers as Record<string, unknown>).authorization).toBe('[Redacted]');
+    expect(((result.req as Record<string, unknown>).body as Record<string, unknown>).password).toBe(
+      '[Redacted]',
+    );
+    expect((result.req as Record<string, unknown>).method).toBe('POST');
     expect(result.error_message).toBe('auth failed');
   });
 });
