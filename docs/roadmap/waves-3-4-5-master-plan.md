@@ -52,7 +52,7 @@ avant d'ouvrir les vannes SEO. Issues #104 et #105.
 
 Livrables :
 
-- `public/ai.txt` — déclaration d'acceptation/refus bots IA
+- `public/ai.txt` — déclaration d'acceptation/refus des bots IA
 - `public/llms.txt` — index lisible LLM (pitch + liens pages clés)
 - `public/llms-full.txt` — contenu pleine forme, sections factuelles courtes
 - `src/app/robots.ts` — allow GPTBot, ClaudeBot, PerplexityBot, Google-Extended, etc.
@@ -79,8 +79,8 @@ Dépendance : `fast-check@^3.22.x` (MIT, 0 €).
 Dossiers cibles :
 
 - `src/lib/calcs/smoothing.ts` — lissage mensuel
-- `src/lib/calcs/provision.ts` — calcul provisions
-- `src/lib/calcs/bucketing.ts` — allocation buckets
+- `src/lib/calcs/provision.ts` — calcul de provisions
+- `src/lib/calcs/bucketing.ts` — allocation des buckets
 - `src/lib/calcs/forecast.ts` — projections
 - `src/lib/calcs/currency.ts` — arithmétique EUR cents
 
@@ -228,7 +228,7 @@ Thierry  →  arbitrage produit / merge final / tranchement
 | Chaos monkey maison    | 5    | —                    | ✅ (code projet)    |
 | **Aucun SaaS payant**  | —    | —                    | ✅                  |
 
-Sentry / PostHog / LogRocket / Datadog restent **hors scope** et flaggés par
+Sentry / PostHog / LogRocket / Datadog restent **hors scope** et signalés par
 `/pr-audit`. Toute tentative d'introduction nécessite validation explicite
 de Thierry (Wave 3.5 optionnelle si un jour nécessaire).
 
