@@ -4,6 +4,9 @@
     "tagline": "Ton ancrage financier",
     "description": "Ankora te ayuda a suavizar tus facturas, anticipar gastos y mantener el control de tu presupuesto. Panel claro y seguro, sin asesoramiento de inversión.",
     "homeAria": "Accueil Ankora",
+    "a11y": {
+      "skipToMain": "Saltar al contenido principal"
+    },
     "nav": {
       "mainLabel": "Navigation principale",
       "appLabel": "Navigation application",

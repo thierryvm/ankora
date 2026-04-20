@@ -4,6 +4,9 @@
     "tagline": "Ton ancrage financier",
     "description": "Ankora helpt je om je rekeningen in te delen, uitgaven in te plannen en je budget onder controle te houden. Helder veilig paneel, geen beleggingsadvies.",
     "homeAria": "Accueil Ankora",
+    "a11y": {
+      "skipToMain": "Ga naar de hoofdinhoud"
+    },
     "nav": {
       "mainLabel": "Navigation principale",
       "appLabel": "Navigation application",

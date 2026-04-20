@@ -5,7 +5,7 @@ import { cookies } from 'next/headers';
 
 import { getNonce } from '@/lib/security/nonce';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
-import { getMessages, setRequestLocale } from 'next-intl/server';
+import { getMessages, setRequestLocale, getTranslations } from 'next-intl/server';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
@@ -115,6 +115,7 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
 
   const messages = await getMessages();
+  const t = await getTranslations('common');
 
   const cookieStore = await cookies();
   const themeCookie = cookieStore.get('theme')?.value;
@@ -136,6 +137,12 @@ export default async function LocaleLayout({
         }}
       />
       <body className={`${inter.variable} font-sans antialiased`}>
+        <a
+          href="#main"
+          className="focus:bg-primary focus:text-primary-foreground focus:ring-ring sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:px-4 focus:py-2 focus:shadow-lg focus:ring-2 focus:outline-none"
+        >
+          {t('a11y.skipToMain')}
+        </a>
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
           <ConsentBanner />

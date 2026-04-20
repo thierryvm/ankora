@@ -4,6 +4,9 @@
     "tagline": "Ton ancrage financier",
     "description": "Ankora t'aide à lisser tes charges, anticiper chaque facture et garder le contrôle de ton budget. Cockpit clair et sécurisé, sans conseils en placement.",
     "homeAria": "Accueil Ankora",
+    "a11y": {
+      "skipToMain": "Aller au contenu principal"
+    },
     "nav": {
       "mainLabel": "Navigation principale",
       "appLabel": "Navigation application",
