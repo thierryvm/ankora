@@ -13,7 +13,9 @@ test.describe('Drawer Mobile Accessibility — Focus Trap (WCAG 2.1 2.4.3)', () 
     // Set mobile viewport to simulate mobile screen size on desktop browser
     await page.setViewportSize(MOBILE_VIEWPORT);
     // Navigate to marketing homepage (has HeaderNav without auth requirement)
-    await page.goto('/', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'load' });
+    // Ensure hamburger menu is visible before running tests
+    await page.locator('label[for="menu-toggle"]').waitFor({ state: 'visible', timeout: 10_000 });
   });
 
   test('1. Tab cycle stays inside drawer when open', async ({ page }) => {

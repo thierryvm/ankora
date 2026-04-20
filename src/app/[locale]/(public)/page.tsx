@@ -5,22 +5,30 @@ import { getTranslations } from 'next-intl/server';
 import { ArrowRight, Shield, TrendingUp, Wallet } from 'lucide-react';
 
 import { Link } from '@/i18n/navigation';
+import type { Locale } from '@/i18n/routing';
 import { SITE } from '@/lib/site';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 
-export const metadata: Metadata = {
-  title: `${SITE.name} — ${SITE.tagline}`,
-  description: SITE.description,
-};
+type LocaleParams = { params: Promise<{ locale: string }> };
+
+export async function generateMetadata({ params }: LocaleParams): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale: locale as Locale, namespace: 'common' });
+  return {
+    title: `${SITE.name} — ${t('tagline')}`,
+    description: t('description'),
+  };
+}
 
 const FEATURE_KEYS = ['smoothing', 'assistant', 'secure'] as const;
 const FEATURE_ICONS = { smoothing: TrendingUp, assistant: Wallet, secure: Shield } as const;
 const STEP_KEYS = ['one', 'two', 'three'] as const;
 const FAQ_KEYS = ['advice', 'storage', 'sharing'] as const;
 
-export default async function HomePage() {
+export default async function HomePage({ params }: LocaleParams) {
+  const { locale } = await params;
   const nonce = await getNonce();
   const t = await getTranslations('landing');
   const tCommon = await getTranslations('common');
@@ -29,11 +37,11 @@ export default async function HomePage() {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
     name: SITE.name,
-    description: SITE.description,
+    description: tCommon('description'),
     applicationCategory: 'FinanceApplication',
     operatingSystem: 'Web, iOS, Android',
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
-    inLanguage: 'fr-BE',
+    inLanguage: locale,
   };
 
   const faqJsonLd = {
