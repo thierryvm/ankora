@@ -44,6 +44,7 @@ const nextConfig: NextConfig = {
       { source: '/de', destination: '/de-DE', permanent: true },
       { source: '/es', destination: '/es-ES', permanent: true },
       { source: '/fr/:path*', destination: '/:path*', permanent: true },
+      { source: '/fr-BE/:path*', destination: '/:path*', permanent: true },
       { source: '/nl/:path*', destination: '/nl-BE/:path*', permanent: true },
       { source: '/de/:path*', destination: '/de-DE/:path*', permanent: true },
       { source: '/es/:path*', destination: '/es-ES/:path*', permanent: true },

@@ -196,7 +196,12 @@ export async function requestAccountDeletionAction(input: unknown): Promise<Acti
   const rl = await rateLimit('mutation', `user:${user.id}`);
   if (!rl.success) return { ok: false, errorCode: 'errors.session.rateLimited' };
 
-  const parsed = makeDeletionRequestSchema(user.email ?? '').safeParse(input);
+  if (!user.email) {
+    log.error('User email missing for deletion request', { user_id: user.id });
+    return { ok: false, errorCode: 'errors.settings.deletionRequestFailed' };
+  }
+
+  const parsed = makeDeletionRequestSchema(user.email).safeParse(input);
   if (!parsed.success) {
     return {
       ok: false,

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { LOCALES } from '@/i18n/routing';
+import { normalizeEmail } from '@/lib/i18n/formatters';
 
 export const profileUpdateSchema = z.object({
   displayName: z
@@ -38,7 +39,7 @@ export const makeDeletionRequestSchema = (expectedEmail: string) =>
     confirm: z
       .string()
       .trim()
-      .refine((v) => v.toLowerCase() === expectedEmail.trim().toLowerCase(), {
+      .refine((v) => normalizeEmail(v) === normalizeEmail(expectedEmail), {
         message: 'settings.deletion.confirm',
       }),
   });

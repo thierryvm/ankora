@@ -110,3 +110,7 @@ export function formatMonth(
   const label = getDateFormatter(locale, { month: style, timeZone: 'UTC' }).format(reference);
   return label.charAt(0).toLocaleUpperCase(locale) + label.slice(1);
 }
+
+export function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
