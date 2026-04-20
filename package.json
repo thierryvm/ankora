@@ -4,7 +4,7 @@
   "private": true,
   "description": "Ankora — Ton ancrage financier. Cockpit personnel pour lisser charges, suivre provisions et piloter ton budget au quotidien.",
   "license": "UNLICENSED",
-  "author": "Thierry vanmeeteren <thierryvm@gmail.com>",
+  "author": "Thierry Vanmeeteren <thierryvm@gmail.com>",
   "engines": {
     "node": "24.x"
   },
