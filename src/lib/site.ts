@@ -17,6 +17,6 @@ export const SITE = {
   ],
   themeColor: '#0F766E',
   background: '#F8FAFC',
-  authors: [{ name: 'Thierry Vanmansart' }],
+  authors: [{ name: 'Thierry vanmeeteren' }],
   twitter: '@ankora_app',
 } as const;

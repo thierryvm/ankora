@@ -689,6 +689,7 @@
       "signupFailed": "Inscription impossible. Réessaie plus tard.",
       "googleFailed": "Connexion Google indisponible. Réessaie plus tard.",
       "rateLimited": "Trop de tentatives. Réessaie dans quelques minutes.",
+      "serviceTemporarilyUnavailable": "Service temporairement indisponible. Réessaie dans quelques minutes.",
       "passwordResetFailed": "Impossible de mettre à jour le mot de passe.",
       "linkExpired": "Lien expiré. Demande un nouveau lien.",
       "mfaEnrollFailed": "Impossible de démarrer l'enrôlement.",

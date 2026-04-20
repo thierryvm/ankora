@@ -12,7 +12,7 @@ import {
   passwordResetConfirmSchema,
 } from '@/lib/schemas/auth';
 import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
-import { rateLimit } from '@/lib/security/rate-limit';
+import { rateLimit, mapRateLimitErrorToErrorCode } from '@/lib/security/rate-limit';
 import type { ActionResult } from '@/lib/actions/types';
 
 async function contextFromHeaders(): Promise<{ ip: string | null; userAgent: string | null }> {
@@ -33,7 +33,7 @@ export async function signupAction(formData: FormData): Promise<ActionResult> {
       ipAddress: ip,
       userAgent,
     });
-    return { ok: false, errorCode: 'errors.auth.rateLimited' };
+    return { ok: false, errorCode: mapRateLimitErrorToErrorCode(rl.reason) };
   }
 
   const parsed = signupSchema.safeParse({
@@ -82,7 +82,7 @@ export async function signInWithGoogleAction(): Promise<ActionResult> {
   const rl = await rateLimit('auth', identifier);
   if (!rl.success) {
     await logAuditEvent(AuditEvent.AUTH_RATE_LIMITED, { userId: null, ipAddress: ip, userAgent });
-    return { ok: false, errorCode: 'errors.auth.rateLimited' };
+    return { ok: false, errorCode: mapRateLimitErrorToErrorCode(rl.reason) };
   }
 
   const supabase = await createClient();
@@ -116,7 +116,7 @@ export async function loginAction(formData: FormData): Promise<ActionResult> {
       ipAddress: ip,
       userAgent,
     });
-    return { ok: false, errorCode: 'errors.auth.rateLimited' };
+    return { ok: false, errorCode: mapRateLimitErrorToErrorCode(rl.reason) };
   }
 
   const parsed = loginSchema.safeParse({
@@ -175,7 +175,7 @@ export async function requestPasswordResetAction(formData: FormData): Promise<Ac
 
   const rl = await rateLimit('auth', identifier);
   if (!rl.success) {
-    return { ok: false, errorCode: 'errors.auth.rateLimited' };
+    return { ok: false, errorCode: mapRateLimitErrorToErrorCode(rl.reason) };
   }
 
   const parsed = passwordResetRequestSchema.safeParse({
