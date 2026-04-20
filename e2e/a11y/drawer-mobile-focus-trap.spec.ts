@@ -3,10 +3,11 @@ import { test, expect } from '@playwright/test';
 // Mobile viewport: typical iOS/Android dimensions
 const MOBILE_VIEWPORT = { width: 375, height: 667 };
 
-test.describe('Drawer Mobile Accessibility — Focus Trap (WCAG 2.1 2.4.3)', () => {
-  // Run only on chromium-desktop; Tab key focus trap is a desktop-specific accessibility feature
-  test.use({ browserName: 'chromium' });
+// Run only on chromium-desktop; Tab key focus trap is a desktop-specific accessibility feature
+// test.use MUST be top-level (Playwright rule), not inside describe
+test.use({ browserName: 'chromium' });
 
+test.describe('Drawer Mobile Accessibility — Focus Trap (WCAG 2.1 2.4.3)', () => {
   test.beforeEach(async ({ page }) => {
     // Set mobile viewport to simulate mobile screen size on desktop browser
     await page.setViewportSize(MOBILE_VIEWPORT);
