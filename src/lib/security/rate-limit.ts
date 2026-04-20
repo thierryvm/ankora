@@ -1,6 +1,7 @@
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { env } from '@/lib/env';
+import { log } from '@/lib/log';
 
 type LimiterKind = 'auth' | 'api' | 'mutation' | 'export';
 
@@ -21,12 +22,12 @@ function warnOnce() {
   if (warned) return;
   warned = true;
   if (env.NODE_ENV === 'production') {
-    console.error(
-      '[rate-limit] Upstash Redis env vars are missing in production — requests are NOT rate-limited. Configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.',
+    log.error(
+      'Upstash Redis env vars are missing in production — requests are NOT rate-limited. Configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.',
     );
   } else {
-    console.warn(
-      '[rate-limit] Upstash Redis env vars are missing — rate-limiting disabled (dev fallback). Requests will always succeed.',
+    log.warn(
+      'Upstash Redis env vars are missing — rate-limiting disabled (dev fallback). Requests will always succeed.',
     );
   }
 }
@@ -92,7 +93,7 @@ export async function rateLimit(kind: LimiterKind, identifier: string): Promise<
         : identifier != null
           ? '[non-string-identifier]'
           : undefined;
-    console.error('[rate-limit] upstream error', {
+    log.error('Rate limit upstream error', {
       kind,
       identifier: redactedIdentifier,
       error,

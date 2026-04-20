@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/server';
+import { log } from '@/lib/log';
 
 /**
  * Audit events — append-only. Drives GDPR accountability + security investigations.
@@ -90,6 +91,6 @@ export async function logAuditEvent(
 
   if (error) {
     // Never throw from audit logging — log to stderr but do not break caller flow.
-    console.error('[audit]', event, error.message);
+    log.error('Audit event persistence failed', { event, error_message: error.message });
   }
 }
