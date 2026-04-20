@@ -57,7 +57,7 @@ export default async function HomePage() {
 
       <Header />
 
-      <main id="main">
+      <main id="main" tabIndex={-1}>
         <section className="mx-auto max-w-6xl px-4 pt-20 pb-16 md:px-6 md:pt-28">
           <div className="mx-auto max-w-3xl text-center">
             <p className="border-border bg-card text-brand-700 mb-4 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium">
