@@ -15,6 +15,7 @@ import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
 import { rateLimit } from '@/lib/security/rate-limit';
 import { exportUserData } from '@/lib/gdpr/export';
 import { requestDeletion, cancelDeletion } from '@/lib/gdpr/deletion';
+import { log } from '@/lib/log';
 import type { ActionResult } from '@/lib/actions/types';
 
 async function contextFromHeaders(): Promise<{ ip: string | null; userAgent: string | null }> {
@@ -76,7 +77,7 @@ export async function enrollMfaAction(): Promise<
 
   const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' });
   if (error || !data) {
-    console.error('[enrollMfaAction]', error?.code ?? 'unknown');
+    log.error('MFA enrollment failed', { error_code: error?.code ?? 'unknown' });
     return { ok: false, errorCode: 'errors.auth.mfaEnrollFailed' };
   }
 
@@ -139,7 +140,7 @@ export async function unenrollMfaAction(factorId: string): Promise<ActionResult>
 
   const { error } = await supabase.auth.mfa.unenroll({ factorId: parsed.data });
   if (error) {
-    console.error('[unenrollMfaAction]', error.code ?? 'unknown');
+    log.error('MFA unenroll failed', { error_code: error.code ?? 'unknown' });
     return { ok: false, errorCode: 'errors.auth.mfaDisableFailed' };
   }
 
