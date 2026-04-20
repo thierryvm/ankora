@@ -4,9 +4,6 @@
     "tagline": "Ton ancrage financier",
     "description": "Ankora hilft dir, Rechnungen zu glätten, Kosten zu planen und dein Budget im Griff zu behalten. Klarer sicherer Cockpit, keine Anlageberatung.",
     "homeAria": "Accueil Ankora",
-    "a11y": {
-      "skipToMain": "Zum Hauptinhalt springen"
-    },
     "nav": {
       "mainLabel": "Navigation principale",
       "appLabel": "Navigation application",
