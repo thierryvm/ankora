@@ -33,7 +33,11 @@ export async function signupAction(formData: FormData): Promise<ActionResult> {
       ipAddress: ip,
       userAgent,
     });
-    return { ok: false, errorCode: 'errors.auth.rateLimited' };
+    const errorCode =
+      rl.reason === 'rate_limit_unavailable'
+        ? 'errors.auth.serviceTemporarilyUnavailable'
+        : 'errors.auth.rateLimited';
+    return { ok: false, errorCode };
   }
 
   const parsed = signupSchema.safeParse({
@@ -82,7 +86,11 @@ export async function signInWithGoogleAction(): Promise<ActionResult> {
   const rl = await rateLimit('auth', identifier);
   if (!rl.success) {
     await logAuditEvent(AuditEvent.AUTH_RATE_LIMITED, { userId: null, ipAddress: ip, userAgent });
-    return { ok: false, errorCode: 'errors.auth.rateLimited' };
+    const errorCode =
+      rl.reason === 'rate_limit_unavailable'
+        ? 'errors.auth.serviceTemporarilyUnavailable'
+        : 'errors.auth.rateLimited';
+    return { ok: false, errorCode };
   }
 
   const supabase = await createClient();
@@ -116,7 +124,11 @@ export async function loginAction(formData: FormData): Promise<ActionResult> {
       ipAddress: ip,
       userAgent,
     });
-    return { ok: false, errorCode: 'errors.auth.rateLimited' };
+    const errorCode =
+      rl.reason === 'rate_limit_unavailable'
+        ? 'errors.auth.serviceTemporarilyUnavailable'
+        : 'errors.auth.rateLimited';
+    return { ok: false, errorCode };
   }
 
   const parsed = loginSchema.safeParse({
@@ -175,7 +187,11 @@ export async function requestPasswordResetAction(formData: FormData): Promise<Ac
 
   const rl = await rateLimit('auth', identifier);
   if (!rl.success) {
-    return { ok: false, errorCode: 'errors.auth.rateLimited' };
+    const errorCode =
+      rl.reason === 'rate_limit_unavailable'
+        ? 'errors.auth.serviceTemporarilyUnavailable'
+        : 'errors.auth.rateLimited';
+    return { ok: false, errorCode };
   }
 
   const parsed = passwordResetRequestSchema.safeParse({

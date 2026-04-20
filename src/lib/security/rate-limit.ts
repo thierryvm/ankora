@@ -6,6 +6,7 @@ type LimiterKind = 'auth' | 'api' | 'mutation' | 'export';
 
 export type RateLimitVerdict = {
   success: boolean;
+  reason?: string;
   limit: number;
   remaining: number;
   reset: number;
@@ -64,17 +65,31 @@ const limiters: Record<LimiterKind, Ratelimit> | null = redisConfigured
   : null;
 
 export async function rateLimit(kind: LimiterKind, identifier: string): Promise<RateLimitVerdict> {
+  const isProd = env.NODE_ENV === 'production';
+
   if (!limiters) {
     warnOnce();
+    if (isProd) {
+      return { success: false, reason: 'rate_limit_unavailable', limit: 0, remaining: 0, reset: 0 };
+    }
     return { success: true, limit: 0, remaining: 0, reset: 0 };
   }
-  const result = await limiters[kind].limit(identifier);
-  return {
-    success: result.success,
-    limit: result.limit,
-    remaining: result.remaining,
-    reset: result.reset,
-  };
+
+  try {
+    const result = await limiters[kind].limit(identifier);
+    return {
+      success: result.success,
+      limit: result.limit,
+      remaining: result.remaining,
+      reset: result.reset,
+    };
+  } catch (error) {
+    console.error('[rate-limit] upstream error', { kind, identifier, error });
+    if (isProd) {
+      return { success: false, reason: 'rate_limit_unavailable', limit: 0, remaining: 0, reset: 0 };
+    }
+    return { success: true, limit: 0, remaining: 0, reset: 0 };
+  }
 }
 
 export function identifierFromRequest(request: Request, userId?: string): string {
