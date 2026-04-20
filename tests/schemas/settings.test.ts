@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   profileUpdateSchema,
   mfaVerifySchema,
-  deletionRequestSchema,
+  makeDeletionRequestSchema,
 } from '@/lib/schemas/settings';
 
 describe('profileUpdateSchema', () => {
@@ -51,20 +51,42 @@ describe('mfaVerifySchema', () => {
   });
 });
 
-describe('deletionRequestSchema', () => {
-  it('requires the exact confirmation literal', () => {
-    expect(deletionRequestSchema.safeParse({ confirm: 'SUPPRIMER' }).success).toBe(true);
-    expect(deletionRequestSchema.safeParse({ confirm: 'supprimer' }).success).toBe(false);
-    expect(deletionRequestSchema.safeParse({ confirm: 'DELETE' }).success).toBe(false);
+describe('makeDeletionRequestSchema (email-as-keyword)', () => {
+  const email = 'thierry@example.com';
+  const schema = makeDeletionRequestSchema(email);
+
+  it('accepts the exact user email', () => {
+    expect(schema.safeParse({ confirm: 'thierry@example.com' }).success).toBe(true);
+  });
+
+  it('is case-insensitive and tolerant of whitespace', () => {
+    expect(schema.safeParse({ confirm: 'THIERRY@EXAMPLE.COM' }).success).toBe(true);
+    expect(schema.safeParse({ confirm: '  thierry@example.com  ' }).success).toBe(true);
+    expect(schema.safeParse({ confirm: 'Thierry@Example.Com' }).success).toBe(true);
+  });
+
+  it('rejects a different address', () => {
+    expect(schema.safeParse({ confirm: 'someone@example.com' }).success).toBe(false);
+    expect(schema.safeParse({ confirm: 'thierry@other.com' }).success).toBe(false);
+  });
+
+  it('rejects legacy locale keywords', () => {
+    expect(schema.safeParse({ confirm: 'SUPPRIMER' }).success).toBe(false);
+    expect(schema.safeParse({ confirm: 'DELETE' }).success).toBe(false);
+    expect(schema.safeParse({ confirm: 'LÖSCHEN' }).success).toBe(false);
+    expect(schema.safeParse({ confirm: 'ELIMINAR' }).success).toBe(false);
+    expect(schema.safeParse({ confirm: 'VERWIJDER' }).success).toBe(false);
+    expect(schema.safeParse({ confirm: 'VERWIJDEREN' }).success).toBe(false);
+  });
+
+  it('rejects an empty string', () => {
+    expect(schema.safeParse({ confirm: '' }).success).toBe(false);
+    expect(schema.safeParse({ confirm: '   ' }).success).toBe(false);
   });
 
   it('allows an optional reason, clamped to 500 chars', () => {
+    expect(schema.safeParse({ confirm: email, reason: 'ok' }).success).toBe(true);
     const long = 'x'.repeat(501);
-    expect(deletionRequestSchema.safeParse({ confirm: 'SUPPRIMER', reason: 'ok' }).success).toBe(
-      true,
-    );
-    expect(deletionRequestSchema.safeParse({ confirm: 'SUPPRIMER', reason: long }).success).toBe(
-      false,
-    );
+    expect(schema.safeParse({ confirm: email, reason: long }).success).toBe(false);
   });
 });

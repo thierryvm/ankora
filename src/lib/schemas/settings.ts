@@ -21,13 +21,28 @@ export const mfaVerifySchema = z.object({
     .regex(/^\d{6}$/, { message: 'settings.mfaCode.invalid' }),
 });
 
-export const deletionRequestSchema = z.object({
-  reason: z.string().trim().max(500).optional(),
-  confirm: z.literal('SUPPRIMER', {
-    message: 'settings.deletion.confirm',
-  }),
-});
+/**
+ * Deletion confirmation schema — factory pattern.
+ *
+ * i18n-safe: the user must type their own email address (case-insensitive,
+ * trimmed) rather than a translated keyword. This avoids:
+ *   - backend drift when adding locales (no z.union to maintain)
+ *   - grammar pitfalls per locale (VERWIJDER vs VERWIJDEREN, etc.)
+ *   - cross-locale support ambiguity
+ *
+ * Pattern inspired by GitHub / Vercel / Linear destructive-action confirmations.
+ */
+export const makeDeletionRequestSchema = (expectedEmail: string) =>
+  z.object({
+    reason: z.string().trim().max(500).optional(),
+    confirm: z
+      .string()
+      .trim()
+      .refine((v) => v.toLowerCase() === expectedEmail.trim().toLowerCase(), {
+        message: 'settings.deletion.confirm',
+      }),
+  });
 
 export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
 export type MfaVerifyInput = z.infer<typeof mfaVerifySchema>;
-export type DeletionRequestInput = z.infer<typeof deletionRequestSchema>;
+export type DeletionRequestInput = z.infer<ReturnType<typeof makeDeletionRequestSchema>>;

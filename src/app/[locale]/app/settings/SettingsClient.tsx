@@ -46,7 +46,7 @@ export function SettingsClient({ email, displayName, locale, factors, deletion }
       <ProfileCard email={email} displayName={displayName} locale={locale} />
       <MfaCard factors={factors} />
       <DataCard />
-      <DangerZone deletion={deletion} locale={locale} />
+      <DangerZone deletion={deletion} locale={locale} email={email} />
     </div>
   );
 }
@@ -291,13 +291,24 @@ function DataCard() {
   );
 }
 
-function DangerZone({ deletion, locale }: { deletion: Deletion; locale: string }) {
+function DangerZone({
+  deletion,
+  locale,
+  email,
+}: {
+  deletion: Deletion;
+  locale: string;
+  email: string;
+}) {
   const t = useTranslations('app.settings.danger');
   const translateError = useActionErrorTranslator();
   const [reason, setReason] = useState('');
   const [confirm, setConfirm] = useState('');
   const [pending, startTransition] = useTransition();
-  const confirmKeyword = t('confirmKeyword');
+  // i18n-safe destructive-action pattern: the user must type their own email
+  // address (case-insensitive, trimmed) — no translated keyword to drift.
+  const expected = email.trim().toLowerCase();
+  const confirmMatches = confirm.trim().toLowerCase() === expected;
 
   const onRequest = (e: React.FormEvent) => {
     e.preventDefault();
@@ -354,23 +365,26 @@ function DangerZone({ deletion, locale }: { deletion: Deletion; locale: string }
           <div className="flex flex-col gap-2">
             <Label htmlFor="confirm">
               {t.rich('confirmLabel', {
+                email,
                 code: (chunks) => <code className="font-mono">{chunks}</code>,
               })}
             </Label>
             <Input
               id="confirm"
+              type="email"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               autoComplete="off"
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
+              inputMode="email"
+              placeholder={email}
               required
             />
           </div>
           <div>
-            <Button
-              type="submit"
-              variant="destructive"
-              disabled={pending || confirm !== confirmKeyword}
-            >
+            <Button type="submit" variant="destructive" disabled={pending || !confirmMatches}>
               {pending ? t('submitting') : t('submit')}
             </Button>
           </div>

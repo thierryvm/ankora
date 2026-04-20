@@ -621,8 +621,7 @@
         "description": "Suppression définitive du compte. Grâce de 30 jours pour annuler — après, tout est effacé (logs audit pseudonymisés).",
         "reasonLabel": "Raison (optionnel)",
         "reasonPlaceholder": "Aide-nous à nous améliorer…",
-        "confirmLabel": "Tape <code>SUPPRIMER</code> pour confirmer",
-        "confirmKeyword": "SUPPRIMER",
+        "confirmLabel": "Pour confirmer, tape ton adresse e-mail : <code>{email}</code>",
         "submit": "Supprimer mon compte",
         "submitting": "Programmation…",
         "toastScheduled": "Suppression programmée — tu as 30 jours pour annuler"
@@ -810,7 +809,7 @@
           "invalid": "Code à 6 chiffres."
         },
         "deletion": {
-          "confirm": "Tape « SUPPRIMER » pour confirmer."
+          "confirm": "Cette adresse ne correspond pas à ton compte."
         }
       },
       "onboarding": {

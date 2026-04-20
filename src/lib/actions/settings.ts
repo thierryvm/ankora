@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/server';
 import {
   profileUpdateSchema,
   mfaVerifySchema,
-  deletionRequestSchema,
+  makeDeletionRequestSchema,
   factorIdSchema,
 } from '@/lib/schemas/settings';
 import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
@@ -196,7 +196,7 @@ export async function requestAccountDeletionAction(input: unknown): Promise<Acti
   const rl = await rateLimit('mutation', `user:${user.id}`);
   if (!rl.success) return { ok: false, errorCode: 'errors.session.rateLimited' };
 
-  const parsed = deletionRequestSchema.safeParse(input);
+  const parsed = makeDeletionRequestSchema(user.email ?? '').safeParse(input);
   if (!parsed.success) {
     return {
       ok: false,
