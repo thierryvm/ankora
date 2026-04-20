@@ -2,8 +2,11 @@
   "common": {
     "appName": "Ankora",
     "tagline": "Ton ancrage financier",
-    "description": "Ankora t'aide à lisser tes charges, anticiper chaque facture et garder le contrôle de ton budget mois après mois. Pas de conseil en placement, juste un cockpit clair et sécurisé.",
+    "description": "Ankora helps you smooth your bills, anticipate charges and stay in control of your budget. Clear secure cockpit, no investment advice.",
     "homeAria": "Accueil Ankora",
+    "a11y": {
+      "skipToMain": "Skip to main content"
+    },
     "nav": {
       "mainLabel": "Navigation principale",
       "appLabel": "Navigation application",
