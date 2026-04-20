@@ -4,9 +4,11 @@ import { env } from '@/lib/env';
 
 type LimiterKind = 'auth' | 'api' | 'mutation' | 'export';
 
+type RateLimitReason = 'rate_limit_unavailable' | 'rate_limited';
+
 export type RateLimitVerdict = {
   success: boolean;
-  reason?: string;
+  reason?: RateLimitReason;
   limit: number;
   remaining: number;
   reset: number;
@@ -84,12 +86,28 @@ export async function rateLimit(kind: LimiterKind, identifier: string): Promise<
       reset: result.reset,
     };
   } catch (error) {
-    console.error('[rate-limit] upstream error', { kind, identifier, error });
+    const redactedIdentifier =
+      typeof identifier === 'string'
+        ? `${identifier.slice(0, 3)}***`
+        : identifier != null
+          ? '[non-string-identifier]'
+          : undefined;
+    console.error('[rate-limit] upstream error', {
+      kind,
+      identifier: redactedIdentifier,
+      error,
+    });
     if (isProd) {
       return { success: false, reason: 'rate_limit_unavailable', limit: 0, remaining: 0, reset: 0 };
     }
     return { success: true, limit: 0, remaining: 0, reset: 0 };
   }
+}
+
+export function mapRateLimitErrorToErrorCode(reason?: RateLimitReason): string {
+  return reason === 'rate_limit_unavailable'
+    ? 'errors.auth.serviceTemporarilyUnavailable'
+    : 'errors.auth.rateLimited';
 }
 
 export function identifierFromRequest(request: Request, userId?: string): string {
