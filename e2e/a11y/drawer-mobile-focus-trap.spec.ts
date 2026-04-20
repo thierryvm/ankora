@@ -4,10 +4,9 @@ import { test, expect } from '@playwright/test';
 const MOBILE_VIEWPORT = { width: 375, height: 667 };
 
 // Run only on chromium-desktop; Tab key focus trap is a desktop-specific accessibility feature
-// test.use MUST be top-level (Playwright rule), not inside describe
-test.use({ browserName: 'chromium' });
-
 test.describe('Drawer Mobile Accessibility — Focus Trap (WCAG 2.1 2.4.3)', () => {
+  // Skip on mobile browsers — Tab key focus trap only works on desktop
+  test.skip(({ project }) => project.name.includes('mobile'), 'Tab focus trap is desktop-only');
   test.beforeEach(async ({ page }) => {
     // Set mobile viewport to simulate mobile screen size on desktop browser
     await page.setViewportSize(MOBILE_VIEWPORT);
