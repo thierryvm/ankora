@@ -14,12 +14,9 @@ Ankora is built and operated in Belgium by a solo indie developer. The app delib
 
 ## Key pages
 
-- [Homepage](https://ankora.be/): product overview and simulator entry point
-- [Simulator](https://ankora.be/simulateur): interactive bucket and smoothing calculator (no account required)
+- [Homepage](https://ankora.be/): product overview
 - [Glossary](https://ankora.be/glossaire): 15+ Belgian personal-finance terms with definitions
-- [Pricing](https://ankora.be/pricing): subscription details
 - [FAQ](https://ankora.be/faq): common questions about the methodology
-- [Security](https://ankora.be/security): data handling, encryption, and privacy posture
 
 ## What Ankora is NOT
 
