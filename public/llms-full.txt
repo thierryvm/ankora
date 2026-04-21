@@ -34,12 +34,9 @@ Ankora is built and operated in Belgium by a solo indie developer. The app delib
 
 ## Key pages
 
-- [Homepage](https://ankora.be/): product overview and simulator entry point
-- [Simulator](https://ankora.be/simulateur): interactive bucket and smoothing calculator (no account required)
+- [Homepage](https://ankora.be/): product overview
 - [Glossary](https://ankora.be/glossaire): 15+ Belgian personal-finance terms with definitions
-- [Pricing](https://ankora.be/pricing): subscription details
 - [FAQ](https://ankora.be/faq): common questions about the methodology
-- [Security](https://ankora.be/security): data handling, encryption, and privacy posture
 
 ## What Ankora is NOT
 
@@ -69,51 +66,99 @@ Converting irregular annual charges into monthly contributions.
 
 ## 3. Glossary
 
-### title
+### Budget de lissage
 
-Glossaire
+Méthode budgétaire qui répartit les charges annuelles irrégulières (assurances, taxes, cadeaux, entretien auto) en versements mensuels prévisibles. Plutôt que d'encaisser des pics de dépenses ponctuels, on met de côté chaque mois la part proportionnelle, pour que le compte courant ne soit jamais pris de court.
 
-### subtitle
+### Compte bucket (compte thématique)
 
-15 termes essentiels pour comprendre ta gestion budgétaire et tes finances personnelles.
+Sous-compte d'épargne affecté à un objectif précis — vacances, taxes, nouvelle voiture, travaux. Chaque bucket isole visuellement une enveloppe d'argent pour empêcher qu'elle ne serve à autre chose. En Belgique, cela se matérialise par un deuxième compte d'épargne ou une sous-rubrique logique.
 
-### metaTitle
+### Capacité d'épargne
 
-Glossaire — Termes financiers
+Montant maximal qu'un ménage peut mettre de côté chaque mois sans rogner sur son niveau de vie de base. Elle se calcule en soustrayant toutes les charges fixes et variables récurrentes des revenus nets. C'est un indicateur clé de santé financière, distinct du simple solde de fin de mois.
 
-### metaDescription
+### Taux d'épargne
 
-Glossaire des 15 termes essentiels de la gestion budgétaire : budget de lissage, compte bucket, épargne de précaution, et plus.
+Part des revenus nets effectivement mise de côté, exprimée en pourcentage. Formule : (épargne mensuelle ÷ revenus nets) × 100. La moyenne belge tourne autour de 13-15 % selon la Banque nationale ; un taux sain pour atteindre l'indépendance financière se situe généralement entre 20 et 30 %.
 
-### breadcrumb
+### Épargne de précaution
 
-[object Object]
+Réserve liquide destinée à couvrir les imprévus — perte d'emploi, panne majeure, frais médicaux, réparations urgentes. Généralement dimensionnée à 3 à 6 mois de charges fixes pour un salarié CDI, et 6 à 12 mois pour un indépendant. Doit rester immédiatement disponible, donc jamais bloquée ni investie en bourse.
 
-### section
+### Fonds de roulement personnel
 
-[object Object]
+Matelas de trésorerie courante qui absorbe le décalage entre revenus et dépenses au sein d'un même mois — loyer payé le 1er alors que le salaire tombe le 25, taxes trimestrielles, courses groupées. Distinct de l'épargne de précaution, qui couvre les imprévus : le fonds de roulement, lui, sert au quotidien.
+
+### Charges fixes
+
+Dépenses récurrentes au montant prévisible et à la date connue — loyer ou remboursement d'emprunt, assurances, abonnements télécoms, gaz/électricité forfaitaire, taxes communales. Par définition, elles ne varient pas ou peu d'un mois à l'autre et ne sont pas négociables à court terme sans changement contractuel.
+
+### Charges variables
+
+Dépenses récurrentes mais au montant fluctuant — courses alimentaires, carburant, restaurants, loisirs, habillement, cadeaux. Contrairement aux charges fixes, elles dépendent du comportement de consommation et peuvent être ajustées à court terme. Elles constituent le principal levier d'économies rapides pour qui veut augmenter sa capacité d'épargne.
+
+### Compte d'épargne réglementé
+
+Produit d'épargne bancaire belge dont le taux minimum et le régime fiscal sont fixés par l'État. Composé d'un taux de base et d'une prime de fidélité (acquise après 12 mois). Les intérêts sont exonérés d'impôt jusqu'à un plafond annuel indexé (1 020 € par personne pour 2026, 2 040 € pour un couple marié ou cohabitant légal), au-delà duquel s'applique un précompte mobilier de 15 %.
+
+### Virement permanent (ordre permanent)
+
+Mandat donné à la banque pour exécuter automatiquement un virement récurrent — même montant, même bénéficiaire, même fréquence. Utilisé pour le loyer, les mensualités d'emprunt, les transferts d'épargne automatiques. À distinguer de la domiciliation, qui est initiée par le créancier et dont le montant peut varier.
+
+### Domiciliation (bancaire)
+
+Autorisation permanente donnée à un créancier (fournisseur d'énergie, opérateur télécom, bailleur) de prélever directement les montants dus sur le compte du débiteur. Contrairement au virement permanent, c'est le créancier qui initie chaque paiement, et le montant peut varier à chaque échéance selon la facture.
+
+### PSD2 (Payment Services Directive 2)
+
+Directive européenne en vigueur depuis 2018 qui encadre les services de paiement au sein de l'Espace économique européen. Elle impose aux banques d'ouvrir leurs données de compte et leurs capacités de paiement, via des API sécurisées, aux prestataires tiers autorisés — agrégateurs, initiateurs de paiement, applications de gestion financière.
+
+### Reste à vivre
+
+Montant disponible chaque mois une fois toutes les charges fixes et les transferts d'épargne automatisés déduits du revenu net. Il couvre les charges variables et les loisirs. C'est l'indicateur pratique que l'on peut consulter au jour le jour pour savoir combien on peut dépenser sans déséquilibrer le budget mensuel.
+
+### Intérêts composés
+
+Mécanisme par lequel les intérêts générés par un capital s'ajoutent à ce capital et produisent eux-mêmes des intérêts aux périodes suivantes. L'effet est exponentiel sur le long terme : doubler l'horizon de placement quadruple quasiment le gain total. Popularisé par la formule attribuée (à tort) à Einstein : "huitième merveille du monde".
+
+### Méthode 50/30/20
+
+Cadre budgétaire popularisé par Elizabeth Warren qui répartit le revenu net mensuel en trois blocs : 50 % pour les besoins incompressibles (logement, alimentation, transport), 30 % pour les envies et loisirs, 20 % pour l'épargne et le remboursement de dettes. C'est une règle de pouce simple, pas une formule rigide.
 
 ## 4. FAQ
 
-### Q: undefined
+### Q: Est-ce qu'Ankora se connecte à ma banque ?
 
-undefined
+Non. Ankora n'utilise pas la directive PSD2. Tu saisis manuellement tes charges et dépenses. Ce choix garantit que tu restes propriétaire de tes données et qu'aucune information bancaire sensible n'est stockée.
 
-### Q: undefined
+### Q: Où sont hébergées mes données ?
 
-undefined
+Toutes tes données sont hébergées dans l'Union européenne (Supabase région UE, Vercel région UE, Upstash UE). Aucun transfert hors UE n'est effectué.
 
-### Q: undefined
+### Q: Comment fonctionne le lissage ?
 
-undefined
+Ankora prend tes charges trimestrielles, semestrielles et annuelles et les répartit sur 12 mois. Tu sais ainsi combien mettre de côté chaque mois pour couvrir toutes tes futures factures sans stress.
 
-### Q: undefined
+### Q: Puis-je supprimer mon compte ?
 
-undefined
+Oui, à tout moment depuis Paramètres → Confidentialité. La suppression prend effet 30 jours après ta demande (tu peux annuler pendant cette période). Toutes tes données financières sont effacées, les logs de sécurité sont pseudonymisés.
 
-### Q: undefined
+### Q: Puis-je exporter mes données ?
 
-undefined
+Oui. Le bouton « Télécharger mes données » dans Paramètres te fournit un fichier JSON complet de tout ce qu'Ankora détient sur toi. Conforme au droit de portabilité RGPD (art. 20).
+
+### Q: Est-ce qu'Ankora donne des conseils financiers ?
+
+Non. Ankora est un outil d'éducation budgétaire et d'organisation. Nous n'émettons aucun conseil en placement (contrainte réglementaire FSMA Belgique). Pour toute décision d'investissement, consulte un professionnel agréé.
+
+### Q: Y a-t-il de l'intelligence artificielle ?
+
+En Phase 1, non. Les calculs sont déterministes et auditables. En Phase 2, une couche optionnelle BYOK (Bring Your Own Key) te permettra de connecter ta propre clé Anthropic ou OpenRouter pour des suggestions — aucun surcoût côté Ankora.
+
+### Q: Puis-je partager mon espace avec mes enfants ou mes amis ?
+
+En Phase 1, chaque utilisateur a un espace privé, isolé par défaut. En Phase 2, nous ajouterons la possibilité de créer des « pots partagés » (par invitation, avec rôles viewer/editor) sans jamais mélanger tes données personnelles.
 
 ## 5. Legal and data handling
 

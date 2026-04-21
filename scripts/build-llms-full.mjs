@@ -8,6 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.join(__dirname, '..');
 const publicDir = path.join(rootDir, 'public');
 const messagesDir = path.join(rootDir, 'messages');
+const contentDir = path.join(rootDir, 'content');
 
 // Load llms.txt header (template for full version)
 const llmsHeader = fs.readFileSync(path.join(publicDir, 'llms.txt'), 'utf-8');
@@ -15,7 +16,24 @@ const llmsHeader = fs.readFileSync(path.join(publicDir, 'llms.txt'), 'utf-8');
 // Load messages to extract landing + FAQ content
 const messages = JSON.parse(fs.readFileSync(path.join(messagesDir, 'fr-BE.json'), 'utf-8'));
 
+// Load glossary terms (fail fast if missing)
+let glossaryTerms = [];
+try {
+  const glossaryData = JSON.parse(
+    fs.readFileSync(path.join(contentDir, 'glossary', 'fr-BE.json'), 'utf-8'),
+  );
+  glossaryTerms = Object.values(glossaryData);
+} catch (err) {
+  throw new Error(`Failed to load glossary from content/glossary/fr-BE.json: ${err.message}`);
+}
+
+// Fail fast if FAQ data is missing
+if (!messages.faq?.items) {
+  throw new Error('FAQ data not found in messages.faq.items');
+}
+
 const timestamp = new Date().toISOString().split('T')[0];
+const glossaryCount = glossaryTerms.length;
 
 const llmsFullContent = `# ankora.be — Full content export for LLMs
 
@@ -27,7 +45,7 @@ License: content available for citation with attribution. Code is proprietary.
 
 1. About Ankora
 2. Methodology: smoothed budgets and bucket accounts
-3. Glossary (15 terms)
+3. Glossary (${glossaryCount} terms)
 4. FAQ
 5. Legal and data handling
 
@@ -49,24 +67,16 @@ ${messages.glossary?.['smoothed-budget'] || 'Converting irregular annual charges
 
 ## 3. Glossary
 
-${
-  messages.glossary
-    ? Object.entries(messages.glossary)
-        .slice(0, 7)
-        .map(([key, value]) => `### ${key}\n\n${value}`)
-        .join('\n\n')
-    : '# TODO: integrate glossary after PR-SEO-2 merge'
-}
+${glossaryTerms
+  .slice(0, glossaryCount)
+  .map((term) => `### ${term.term}\n\n${term.shortDefinition}`)
+  .join('\n\n')}
 
 ## 4. FAQ
 
-${
-  messages.faq
-    ? Object.entries(messages.faq)
-        .map(([key, value]) => `### Q: ${value.question}\n\n${value.answer}`)
-        .join('\n\n')
-    : '[FAQ section - to be extracted from messages]'
-}
+${Object.entries(messages.faq.items)
+  .map(([, item]) => `### Q: ${item.q}\n\n${item.a}`)
+  .join('\n\n')}
 
 ## 5. Legal and data handling
 
@@ -90,7 +100,7 @@ For detailed cookie policy, see: https://ankora.be/legal/cookies
 fs.writeFileSync(path.join(publicDir, 'llms-full.txt'), llmsFullContent);
 
 const stats = fs.statSync(path.join(publicDir, 'llms-full.txt'));
-console.log(`✓ Generated llms-full.txt (${stats.size} bytes)`);
+console.log(`✓ Generated llms-full.txt (${stats.size} bytes, ${glossaryCount} glossary terms)`);
 
 if (stats.size < 2000) {
   console.warn(
