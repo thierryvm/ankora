@@ -1,0 +1,33 @@
+name: Sourcery Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  check-sourcery-resolved:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for active Sourcery comments on latest commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # Fetch Sourcery inline comments on the PR
+          comments=$(gh api "repos/${{ github.repository }}/pulls/${PR_NUMBER}/comments" \
+            --jq '[.[] | select(.user.login == "sourcery-ai[bot]") | select(.commit_id == "'${HEAD_SHA}'")] | length')
+
+          echo "Active Sourcery comments on HEAD (${HEAD_SHA}): $comments"
+
+          if [ "$comments" -gt 0 ]; then
+            echo "::error::Sourcery has $comments active comments on the latest commit. Resolve them before merging."
+            gh api "repos/${{ github.repository }}/pulls/${PR_NUMBER}/comments" \
+              --jq '[.[] | select(.user.login == "sourcery-ai[bot]") | select(.commit_id == "'${HEAD_SHA}'") | {path, line, body}]'
+            exit 1
+          fi
+
+          echo "✅ No active Sourcery comments on HEAD."
