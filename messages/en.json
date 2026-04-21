@@ -680,6 +680,21 @@
       "toastCancelled": "Request cancelled — your account is preserved"
     }
   },
+  "glossary": {
+    "title": "Glossary",
+    "subtitle": "15 essential terms for understanding your budgeting and personal finances.",
+    "metaTitle": "Glossary — Financial Terms",
+    "metaDescription": "Glossary of 15 essential budgeting terms: smoothed budget, bucket account, emergency fund, and more.",
+    "breadcrumb": {
+      "home": "Home",
+      "glossary": "Glossary"
+    },
+    "section": {
+      "whyItMatters": "Why It Matters",
+      "example": "Concrete Example",
+      "relatedTerms": "Related Terms"
+    }
+  },
   "errors": {
     "generic": "Something went wrong. Try again.",
     "session": {

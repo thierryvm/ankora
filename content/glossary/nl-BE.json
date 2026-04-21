@@ -1,0 +1,122 @@
+[
+  {
+    "slug": "budget-de-lissage",
+    "term": "Uitvlakkingsbudget",
+    "shortDefinition": "Budgetteringsmethode die onregelmatige jaarlijkse kosten (verzekeringen, belastingen, cadeaus, auto-onderhoud) omzet in voorspelbare maandelijkse stortingen. In plaats van grote uitgavenpieken op te vangen, zet je elke maand een evenredig deel opzij zodat je zichtrekening nooit verrast wordt.",
+    "whyItMatters": "Zonder uitvlakking valt een jaarlijkse verzekering van 600 € als een steen op je rekening. Met uitvlakking wordt het 50 €/maand, onzichtbaar. Ankora berekent automatisch het uit te vlakken bedrag per post en reserveert het in een speciale rekening.",
+    "example": "Jaarlijkse onroerende voorheffing = 1 200 €. Uitvlakkingsbudget = 100 €/maand op een \"Belastingen\"-bucket. In november staat het geld klaar voor de factuur.",
+    "relatedTerms": ["compte-bucket", "fonds-de-roulement-personnel", "charges-fixes"]
+  },
+  {
+    "slug": "compte-bucket",
+    "term": "Bucket-rekening (thematische rekening)",
+    "shortDefinition": "Subrekening van een spaarrekening, toegewezen aan een specifiek doel — vakantie, belastingen, nieuwe auto, werken. Elke bucket isoleert visueel een envelop geld zodat die niet voor iets anders wordt gebruikt. In België neemt dit de vorm aan van een tweede spaarrekening of een logische subrubriek.",
+    "whyItMatters": "Noodspaargeld, vakantiebudget en belastingen op één rekening mengen maakt het onmogelijk om te weten wat je écht kunt uitgeven. Ankora maakt en volgt je buckets automatisch op basis van je uitvlakkingsregels.",
+    "example": "Je hoofdspaarrekening bevat 8 500 €. Ankora-buckets: Nood 4 000 €, Auto 1 500 €, Vakantie 2 000 €, Belastingen 1 000 €. In één oogopslag zie je wat \"gereserveerd\" is en wat vrij.",
+    "relatedTerms": ["budget-de-lissage", "fonds-de-roulement-personnel", "epargne-de-precaution"]
+  },
+  {
+    "slug": "capacite-d-epargne",
+    "term": "Spaarcapaciteit",
+    "shortDefinition": "Het maximale bedrag dat een huishouden elke maand opzij kan zetten zonder in te boeten op de basislevensstandaard. Berekend door alle vaste en terugkerende variabele kosten af te trekken van het netto-inkomen. Een kernindicator voor financiële gezondheid, los van het saldo aan het einde van de maand.",
+    "whyItMatters": "Veel mensen verwarren \"er blijft 200 € over op het einde van de maand\" met \"ik heb 200 € spaarcapaciteit\". Ankora isoleert de échte structurele capaciteit, die je zonder pijn kunt automatiseren.",
+    "example": "Netto maandinkomen 2 500 €, vaste kosten 1 400 €, gemiddelde variabele kosten 700 € → spaarcapaciteit ≈ 400 €/maand. Te automatiseren op de dag van het loon, niet aan het einde van de maand.",
+    "relatedTerms": ["taux-d-epargne", "reste-a-vivre", "fonds-de-roulement-personnel"]
+  },
+  {
+    "slug": "taux-d-epargne",
+    "term": "Spaarquote",
+    "shortDefinition": "Percentage van het netto-inkomen dat effectief opzij wordt gezet. Formule: (maandelijks gespaard bedrag ÷ netto-inkomen) × 100. Het Belgische gemiddelde ligt volgens de Nationale Bank rond 13-15 %; een gezonde spaarquote richting financiële onafhankelijkheid ligt meestal tussen 20 en 30 %.",
+    "whyItMatters": "De belangrijkste KPI van persoonlijke financiële gezondheid. Veelzeggender dan het saldo, universeler dan het absolute gespaarde bedrag. Ankora berekent het continu en waarschuwt als je afwijkt van je doel.",
+    "example": "Netto-inkomen 2 800 €, automatische maandelijkse spaart 420 € → spaarquote = 15 %. Streefdoel: 20 % = 560 €/maand.",
+    "relatedTerms": ["capacite-d-epargne", "reste-a-vivre", "interets-composes"]
+  },
+  {
+    "slug": "epargne-de-precaution",
+    "term": "Noodspaargeld",
+    "shortDefinition": "Liquide reserve bedoeld voor onverwachte uitgaven — jobverlies, grote panne, medische kosten, dringende herstellingen. Meestal gedimensioneerd op 3 tot 6 maanden vaste kosten voor een werknemer met vast contract, en 6 tot 12 maanden voor een zelfstandige. Moet onmiddellijk beschikbaar blijven, dus nooit geblokkeerd of in aandelen belegd.",
+    "whyItMatters": "Het eerste vangnet dat voorkomt dat het minste ongeluk een consumentenkrediet noodzakelijk maakt. Ankora onderscheidt het visueel van andere buckets, zodat je er nooit zonder reden aan komt.",
+    "example": "Maandelijkse vaste kosten = 1 400 €. Doel noodspaargeld (4 maanden) = 5 600 €, op een aparte gereglementeerde spaarrekening los van de zichtrekening.",
+    "relatedTerms": ["compte-bucket", "compte-d-epargne-reglemente", "fonds-de-roulement-personnel"]
+  },
+  {
+    "slug": "fonds-de-roulement-personnel",
+    "term": "Persoonlijk werkkapitaal",
+    "shortDefinition": "Reguliere kasbuffer die de kloof tussen inkomsten en uitgaven binnen dezelfde maand opvangt — huur op de 1e terwijl het loon op de 25e binnenkomt, driemaandelijkse belastingen, grotere boodschappen. Onderscheidt zich van noodspaargeld (voor onverwachte zaken): het werkkapitaal dient voor het dagelijks leven.",
+    "whyItMatters": "Zonder werkkapitaal wordt het einde van de maand een banktetris. Met werkkapitaal beheer je de timingsverschillen rustig, zonder drie keer per dag je saldo te checken. Ankora dimensioneert het automatisch op basis van je uitgavenprofiel.",
+    "example": "Huur 800 €, boodschappen 400 €, uitgevlakte driemaandelijkse belastingen 120 €/maand → aanbevolen werkkapitaal ≈ 1 200-1 500 € permanent op de zichtrekening.",
+    "relatedTerms": ["budget-de-lissage", "epargne-de-precaution", "reste-a-vivre"]
+  },
+  {
+    "slug": "charges-fixes",
+    "term": "Vaste kosten",
+    "shortDefinition": "Terugkerende uitgaven met een voorspelbaar bedrag en een bekende datum — huur of kredietaflossing, verzekeringen, telecomabonnementen, forfaitaire gas/elektriciteit, gemeentebelastingen. Per definitie variëren ze weinig of niet van maand tot maand en zijn ze op korte termijn niet onderhandelbaar zonder contractwijziging.",
+    "whyItMatters": "Ze vormen de onverminderbare sokkel van het budget. Zonder exact totaal kun je noch je restinkomen noch je spaarcapaciteit berekenen. Ankora detecteert ze automatisch via terugkerende overschrijvingen.",
+    "example": "Huur 750 € + autoverzekering 42 € + mutualiteit 18 € + internet 45 € + elektriciteit 95 € + streamingabonnementen 25 € = 975 €/maand vaste kosten.",
+    "relatedTerms": ["charges-variables", "reste-a-vivre", "virement-permanent"]
+  },
+  {
+    "slug": "charges-variables",
+    "term": "Variabele kosten",
+    "shortDefinition": "Terugkerende uitgaven met een wisselend bedrag — boodschappen, brandstof, restaurants, vrije tijd, kleding, cadeaus. In tegenstelling tot vaste kosten hangen ze af van consumptiegedrag en kunnen ze op korte termijn worden bijgesteld. Ze vormen de belangrijkste hefboom voor snelle besparingen en een hogere spaarcapaciteit.",
+    "whyItMatters": "Hier verbergt zich 80 % van de realistische optimalisaties. Ankora berekent het voortschrijdend gemiddelde over 90 dagen per categorie om een realistisch ijkpunt te geven, en signaleert atypische maanden.",
+    "example": "Boodschappen 380 € (90d-gem.: 420 €), brandstof 110 €, restaurants 160 €, vrije tijd 95 € → variabele kosten van de maand 745 €, onder het gemiddelde.",
+    "relatedTerms": ["charges-fixes", "reste-a-vivre", "methode-50-30-20"]
+  },
+  {
+    "slug": "compte-d-epargne-reglemente",
+    "term": "Gereglementeerde spaarrekening",
+    "shortDefinition": "Belgisch bancair spaarproduct waarvan de minimumrente en het belastingregime door de Staat zijn vastgelegd. Samengesteld uit een basisrente en een getrouwheidspremie (verworven na 12 maanden). De intresten zijn fiscaal vrijgesteld tot een jaarlijks geïndexeerd plafond (1 020 € per persoon voor 2026, 2 040 € voor een gehuwd of wettelijk samenwonend koppel); daarboven geldt een roerende voorheffing van 15 %.",
+    "whyItMatters": "Het standaardvehikel voor noodspaargeld en buckets in België: onmiddellijke beschikbaarheid, depositogarantie tot 100 000 € per bank, gunstige fiscaliteit zolang je onder het plafond blijft. Ankora raadt aan te spreiden over twee banken boven 100 000 €.",
+    "example": "15 000 € op een gereglementeerde spaarrekening aan 0,90 % (basis) + 1,10 % (getrouwheid) → ongeveer 300 €/jaar aan intresten, vrijgesteld want onder het plafond.",
+    "relatedTerms": ["epargne-de-precaution", "compte-bucket"]
+  },
+  {
+    "slug": "virement-permanent",
+    "term": "Doorlopende opdracht",
+    "shortDefinition": "Mandaat aan de bank om automatisch een terugkerende overschrijving uit te voeren — zelfde bedrag, zelfde begunstigde, zelfde frequentie. Gebruikt voor huur, kredietaflossing, automatische spaaroverschrijvingen. Te onderscheiden van de domiciliëring, die door de schuldeiser wordt geïnitieerd en waarvan het bedrag kan variëren.",
+    "whyItMatters": "De nummer één hefboom om sparen te automatiseren: \"eerst je spaarcapaciteit betalen\" op de dag van het loon via een doorlopende opdracht naar een bucket-rekening. Ankora stelt het bedrag en de optimale datum voor.",
+    "example": "Doorlopende opdracht van 400 € op de 26e van elke maand, vanaf de zichtrekening naar de gereglementeerde spaarrekening \"Nood\".",
+    "relatedTerms": ["domiciliation", "capacite-d-epargne", "charges-fixes"]
+  },
+  {
+    "slug": "domiciliation",
+    "term": "Domiciliëring",
+    "shortDefinition": "Permanente toelating aan een schuldeiser (energieleverancier, telecomoperator, verhuurder) om verschuldigde bedragen rechtstreeks van de rekening van de debiteur af te nemen. In tegenstelling tot een doorlopende opdracht is het hier de schuldeiser die elke betaling initieert, en het bedrag kan per vervaldag variëren volgens de factuur.",
+    "whyItMatters": "Handig om vergeten te vermijden, maar moet opgevolgd worden: een domiciliëring laat de schuldeiser afnemen wat hij wil. In België kan de betaler binnen 8 weken betwisten en terugbetaling krijgen (SEPA Direct Debit Core). Ankora waarschuwt bij atypische bedragen.",
+    "example": "Variabele elektriciteitsfactuur 60-180 € volgens het seizoen → domiciliëring die elke maand het werkelijke bedrag int. 8 weken betwistbaar.",
+    "relatedTerms": ["virement-permanent", "charges-fixes", "psd2"]
+  },
+  {
+    "slug": "psd2",
+    "term": "PSD2 (Payment Services Directive 2)",
+    "shortDefinition": "Europese richtlijn in werking sinds 2018, die de betalingsdiensten binnen de Europese Economische Ruimte regelt. Ze verplicht banken hun rekeninggegevens en betalingscapaciteit, via beveiligde API's, open te stellen voor erkende derde partijen — aggregators, betalingsinitiatoren, financiële beheerapplicaties.",
+    "whyItMatters": "Dankzij PSD2 kan een externe app de transacties van een bankrekening lezen met de uitdrukkelijke toestemming van de gebruiker, zonder dat bankgegevens opnieuw worden opgegeven. Ankora positioneert zich bewust buiten PSD2 om de privacy van gebruikers te respecteren.",
+    "example": "Een app die je rekeningen bij KBC, Belfius en ING aggregeert, doet dit via de PSD2-API's van elke bank, na toestemming die om de 90 of 180 dagen wordt vernieuwd afhankelijk van de bank.",
+    "relatedTerms": ["domiciliation"]
+  },
+  {
+    "slug": "reste-a-vivre",
+    "term": "Restinkomen",
+    "shortDefinition": "Bedrag dat elke maand beschikbaar is zodra alle vaste kosten en geautomatiseerde spaaroverdrachten van het netto-inkomen zijn afgetrokken. Dekt de variabele kosten en vrije tijd. Het praktische getal dat je dagelijks kunt raadplegen om te weten hoeveel je kunt uitgeven zonder het maandbudget uit balans te brengen.",
+    "whyItMatters": "Dit is het cijfer dat mensen écht zoeken wanneer ze hun bankapp openen. Ankora berekent het in real time en toont het los van het brutosaldo van de rekening — want dat saldo liegt (het bevat wat al \"gereserveerd\" is).",
+    "example": "Inkomen 2 500 €, vaste kosten 1 000 €, automatisch gespaard 400 € → restinkomen 1 100 €/maand voor boodschappen, vrije tijd, dagelijkse onverwachte zaken.",
+    "relatedTerms": ["charges-fixes", "charges-variables", "capacite-d-epargne"]
+  },
+  {
+    "slug": "interets-composes",
+    "term": "Samengestelde rente",
+    "shortDefinition": "Mechanisme waarbij de rente op een kapitaal wordt bijgevoegd aan dat kapitaal en in de volgende periodes zelf rente genereert. Het effect is exponentieel op lange termijn: de beleggingshorizon verdubbelen vermenigvuldigt de totale winst bijna met vier. Populair dankzij de (onterecht) aan Einstein toegeschreven uitspraak: \"het achtste wereldwonder\".",
+    "whyItMatters": "De stille motor van financiële onafhankelijkheid. Ankora toont concreet de impact van vroeg en regelmatig beginnen: 100 €/maand aan 5 % gedurende 30 jaar = 83 000 €, waarvan 47 000 € rente.",
+    "example": "Startkapitaal 5 000 € belegd aan 4 % gedurende 20 jaar met samengestelde rente → 10 956 €. Bij enkelvoudige rente slechts 9 000 €. Het verschil van 1 956 € komt uitsluitend van rente-op-rente.",
+    "relatedTerms": ["taux-d-epargne", "epargne-de-precaution", "compte-d-epargne-reglemente"]
+  },
+  {
+    "slug": "methode-50-30-20",
+    "term": "50/30/20-methode",
+    "shortDefinition": "Budgetkader populair gemaakt door Elizabeth Warren, dat het netto maandinkomen opsplitst in drie blokken: 50 % voor onvermijdbare behoeften (wonen, voeding, vervoer), 30 % voor wensen en vrije tijd, 20 % voor sparen en schuldaflossing. Een eenvoudige vuistregel, geen strikte formule.",
+    "whyItMatters": "Uitstekende startpunt voor wie nog nooit heeft gebudgetteerd. Ankora toont het als een indicatief ijkpunt, maar raadt aan aan te passen aan de Belgische realiteit: huur in Brussel duwt \"behoeften\" vaak boven 50 %, en de 20 % sparen wordt eerder een vloer dan een plafond.",
+    "example": "Netto-inkomen 2 500 € → 1 250 € voor behoeften, 750 € voor wensen, 500 € voor sparen. Als behoeften stijgen tot 1 500 €, vangt de 30 % wensen het verschil op.",
+    "relatedTerms": ["capacite-d-epargne", "taux-d-epargne", "reste-a-vivre"]
+  }
+]

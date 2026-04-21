@@ -680,6 +680,21 @@
       "toastCancelled": "Aanvraag geannuleerd — je account blijft behouden"
     }
   },
+  "glossary": {
+    "title": "Woordenboek",
+    "subtitle": "15 essentiële termen voor het begrijpen van je budgetbeheer en persoonlijke financiën.",
+    "metaTitle": "Woordenboek — Financiële termen",
+    "metaDescription": "Woordenboek van 15 essentiële termen voor budgetbeheer: uitvlakkingsbudget, bucket-rekening, noodspaargeld, en meer.",
+    "breadcrumb": {
+      "home": "Startpagina",
+      "glossary": "Woordenboek"
+    },
+    "section": {
+      "whyItMatters": "Waarom dit belangrijk is",
+      "example": "Concreet voorbeeld",
+      "relatedTerms": "Gerelateerde termen"
+    }
+  },
   "errors": {
     "generic": "Er is een fout opgetreden. Probeer opnieuw.",
     "session": {

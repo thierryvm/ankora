@@ -1,8 +1,15 @@
 import type { MetadataRoute } from 'next';
 import { SITE } from '@/lib/site';
 import { routing } from '@/i18n/routing';
+import { GLOSSARY_LOCALES, getGlossaryTerms } from '@/lib/glossary';
 
 const PUBLIC_ROUTES = ['', '/faq', '/legal/cgu', '/legal/privacy', '/legal/cookies'] as const;
+
+const GLOSSARY_LOCALE_PREFIXES: Record<string, string> = {
+  'fr-BE': '',
+  'nl-BE': '/nl-BE',
+  en: '/en',
+};
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
@@ -23,6 +30,44 @@ export default function sitemap(): MetadataRoute.Sitemap {
             routing.locales.map((l) => [
               l,
               `${base}${l === routing.defaultLocale ? '' : `/${l}`}${route}`,
+            ]),
+          ),
+        },
+      });
+    }
+  }
+
+  // Glossary index entries (3 locales)
+  for (const locale of GLOSSARY_LOCALES) {
+    const prefix = GLOSSARY_LOCALE_PREFIXES[locale];
+    entries.push({
+      url: `${base}${prefix}/glossaire`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+      alternates: {
+        languages: Object.fromEntries(
+          GLOSSARY_LOCALES.map((l) => [l, `${base}${GLOSSARY_LOCALE_PREFIXES[l]}/glossaire`]),
+        ),
+      },
+    });
+  }
+
+  // Glossary term entries (3 locales × 15 terms)
+  for (const locale of GLOSSARY_LOCALES) {
+    const prefix = GLOSSARY_LOCALE_PREFIXES[locale];
+    const terms = getGlossaryTerms(locale);
+    for (const term of terms) {
+      entries.push({
+        url: `${base}${prefix}/glossaire/${term.slug}`,
+        lastModified: now,
+        changeFrequency: 'monthly',
+        priority: 0.7,
+        alternates: {
+          languages: Object.fromEntries(
+            GLOSSARY_LOCALES.map((l) => [
+              l,
+              `${base}${GLOSSARY_LOCALE_PREFIXES[l]}/glossaire/${term.slug}`,
             ]),
           ),
         },
