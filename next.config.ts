@@ -39,7 +39,6 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       { source: '/fr', destination: '/', permanent: true },
-      { source: '/fr-BE', destination: '/', permanent: true },
       { source: '/nl', destination: '/nl-BE', permanent: true },
       { source: '/de', destination: '/de-DE', permanent: true },
       { source: '/es', destination: '/es-ES', permanent: true },
