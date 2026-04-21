@@ -58,10 +58,12 @@ supabase/
 6. **Nonce CSP** : jamais de script/style inline sans `nonce={nonce}`. Nonce lu via `headers()` dans Server Components.
 7. **Messages UI en français**, commits/code/comments en anglais.
 8. **Tests domain ≥ 90% lignes + fonctions, ≥ 85% branches**.
+9. **'use server' exports** : un fichier avec `'use server';` ne peut exporter QUE des fonctions `async` (Server Actions). Infrastructure code (logger factory, clients, helpers) n'a jamais le directive `'use server'`. Vérifié par `npm run lint:use-server` en CI.
 
 ## Qualité obligatoire avant merge
 
 - `npm run lint` → 0 erreur
+- `npm run lint:use-server` → 0 erreur (vérifié en CI)
 - `npm run typecheck` → 0 erreur
 - `npm run test` → 100% pass
 - `npm run e2e` → 100% pass sur parcours critiques
@@ -113,6 +115,7 @@ npm run dev              # dev server (Turbopack)
 npm run build            # prod build
 npm run start            # prod server
 npm run lint             # ESLint
+npm run lint:use-server  # lint 'use server' exports (async-only enforcement)
 npm run typecheck        # tsc --noEmit
 npm run test             # Vitest
 npm run test:coverage    # Vitest + coverage
