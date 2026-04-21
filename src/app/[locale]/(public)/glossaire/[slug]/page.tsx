@@ -4,6 +4,8 @@ import {
   getGlossaryTerms,
   getGlossaryTerm,
   isGlossaryLocale,
+  buildCanonicalUrl,
+  getLocalePrefix,
 } from '@/lib/glossary';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { Header } from '@/components/layout/Header';
@@ -14,16 +16,9 @@ import { notFound } from 'next/navigation';
 
 export const dynamicParams = false;
 
-type Params = Promise<{ locale: string; slug: string }>;
+type Params = { locale: string; slug: string };
 
-const GLOSSARY_LOCALE_PREFIXES: Record<string, string> = {
-  'fr-BE': '',
-  'nl-BE': '/nl-BE',
-  en: '/en',
-};
-
-export async function generateMetadata(props: { params: Params }) {
-  const params = await props.params;
+export async function generateMetadata({ params }: { params: Params }) {
   const { locale, slug } = params;
 
   if (!isGlossaryLocale(locale)) {
@@ -35,9 +30,7 @@ export async function generateMetadata(props: { params: Params }) {
     notFound();
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://ankora-chi.vercel.app';
-  const localePrefix = GLOSSARY_LOCALE_PREFIXES[locale];
-  const canonicalUrl = `${baseUrl}${localePrefix}/glossaire/${slug}`;
+  const canonicalUrl = buildCanonicalUrl(`/glossaire/${slug}`, locale);
 
   return {
     title: term.term,
@@ -45,10 +38,7 @@ export async function generateMetadata(props: { params: Params }) {
     alternates: {
       canonical: canonicalUrl,
       languages: Object.fromEntries(
-        GLOSSARY_LOCALES.map((l) => [
-          l,
-          `${baseUrl}${GLOSSARY_LOCALE_PREFIXES[l]}/glossaire/${slug}`,
-        ]),
+        GLOSSARY_LOCALES.map((l) => [l, buildCanonicalUrl(`/glossaire/${slug}`, l)]),
       ),
     },
   };
@@ -63,8 +53,7 @@ export async function generateStaticParams() {
   );
 }
 
-export default async function GlossaireTermPage(props: { params: Params }) {
-  const params = await props.params;
+export default async function GlossaireTermPage({ params }: { params: Params }) {
   const { locale, slug } = params;
 
   if (!isGlossaryLocale(locale)) {
@@ -77,9 +66,8 @@ export default async function GlossaireTermPage(props: { params: Params }) {
   }
 
   const t = await getTranslations('glossary');
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://ankora-chi.vercel.app';
-  const localePrefix = GLOSSARY_LOCALE_PREFIXES[locale];
-  const canonicalUrl = `${baseUrl}${localePrefix}/glossaire/${slug}`;
+  const localePrefix = getLocalePrefix(locale);
+  const canonicalUrl = buildCanonicalUrl(`/glossaire/${slug}`, locale);
 
   const definedTermJsonLd = {
     '@context': 'https://schema.org',
@@ -87,7 +75,7 @@ export default async function GlossaireTermPage(props: { params: Params }) {
     '@id': canonicalUrl,
     name: term.term,
     description: term.shortDefinition,
-    inDefinedTermSet: `${baseUrl}${localePrefix}/glossaire#termset`,
+    inDefinedTermSet: `${buildCanonicalUrl('/glossaire', locale)}#termset`,
   };
 
   const breadcrumbListJsonLd = {
@@ -98,13 +86,13 @@ export default async function GlossaireTermPage(props: { params: Params }) {
         '@type': 'ListItem',
         position: 1,
         name: t('breadcrumb.home'),
-        item: `${baseUrl}${localePrefix}`,
+        item: buildCanonicalUrl('', locale),
       },
       {
         '@type': 'ListItem',
         position: 2,
         name: t('breadcrumb.glossary'),
-        item: `${baseUrl}${localePrefix}/glossaire`,
+        item: buildCanonicalUrl('/glossaire', locale),
       },
       {
         '@type': 'ListItem',
@@ -130,8 +118,8 @@ export default async function GlossaireTermPage(props: { params: Params }) {
         <div className="container mx-auto px-4 py-12 sm:py-16">
           <Breadcrumb
             items={[
-              { label: t('breadcrumb.home'), href: '/' },
-              { label: t('breadcrumb.glossary'), href: '/glossaire' },
+              { label: t('breadcrumb.home'), href: localePrefix || '/' },
+              { label: t('breadcrumb.glossary'), href: `${localePrefix}/glossaire` },
               { label: term.term },
             ]}
             className="mb-8"
@@ -170,7 +158,7 @@ export default async function GlossaireTermPage(props: { params: Params }) {
                   {term.relatedTerms.map((relatedSlug) => (
                     <li key={relatedSlug}>
                       <Link
-                        href={`/glossaire/${relatedSlug}`}
+                        href={`${localePrefix}/glossaire/${relatedSlug}`}
                         className="bg-secondary text-secondary-foreground hover:bg-brand-600 inline-block rounded-full px-4 py-2 text-sm font-medium transition-colors hover:text-white"
                       >
                         {relatedTermsMap[relatedSlug] || relatedSlug}

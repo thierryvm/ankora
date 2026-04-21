@@ -1,15 +1,9 @@
 import type { MetadataRoute } from 'next';
 import { SITE } from '@/lib/site';
 import { routing } from '@/i18n/routing';
-import { GLOSSARY_LOCALES, getGlossaryTerms } from '@/lib/glossary';
+import { GLOSSARY_LOCALES, getGlossaryTerms, GLOSSARY_LOCALE_PREFIXES } from '@/lib/glossary';
 
 const PUBLIC_ROUTES = ['', '/faq', '/legal/cgu', '/legal/privacy', '/legal/cookies'] as const;
-
-const GLOSSARY_LOCALE_PREFIXES: Record<string, string> = {
-  'fr-BE': '',
-  'nl-BE': '/nl-BE',
-  en: '/en',
-};
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();

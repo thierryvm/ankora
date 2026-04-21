@@ -14,6 +14,12 @@ export type GlossaryTerm = {
 export const GLOSSARY_LOCALES = ['fr-BE', 'nl-BE', 'en'] as const;
 export type GlossaryLocale = (typeof GLOSSARY_LOCALES)[number];
 
+export const GLOSSARY_LOCALE_PREFIXES: Record<GlossaryLocale, string> = {
+  'fr-BE': '',
+  'nl-BE': '/nl-BE',
+  en: '/en',
+};
+
 const GLOSSARY_DATA: Record<GlossaryLocale, GlossaryTerm[]> = {
   'fr-BE': frBE,
   'nl-BE': nlBE,
@@ -34,4 +40,17 @@ export function getGlossaryTerm(locale: GlossaryLocale, slug: string): GlossaryT
 
 export function getAllGlossarySlugs(): string[] {
   return getGlossaryTerms('fr-BE').map((term) => term.slug);
+}
+
+export function getLocalePrefix(locale: string): string {
+  if (isGlossaryLocale(locale)) {
+    return GLOSSARY_LOCALE_PREFIXES[locale];
+  }
+  return `/${locale}`;
+}
+
+export function buildCanonicalUrl(path: string, locale: string): string {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://ankora-chi.vercel.app';
+  const prefix = getLocalePrefix(locale);
+  return `${baseUrl}${prefix}${path}`;
 }

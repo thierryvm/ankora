@@ -1,5 +1,10 @@
 import { getTranslations } from 'next-intl/server';
-import { GLOSSARY_LOCALES, getGlossaryTerms, isGlossaryLocale } from '@/lib/glossary';
+import {
+  GLOSSARY_LOCALES,
+  getGlossaryTerms,
+  isGlossaryLocale,
+  buildCanonicalUrl,
+} from '@/lib/glossary';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -8,10 +13,9 @@ import { notFound } from 'next/navigation';
 
 export const dynamicParams = false;
 
-type Params = Promise<{ locale: string }>;
+type Params = { locale: string };
 
-export async function generateMetadata(props: { params: Params }) {
-  await props.params;
+export async function generateMetadata({ params }: { params: Params }) {
   const t = await getTranslations('glossary');
 
   return {
@@ -24,8 +28,7 @@ export async function generateStaticParams() {
   return GLOSSARY_LOCALES.map((locale) => ({ locale }));
 }
 
-export default async function GlossairePage(props: { params: Params }) {
-  const params = await props.params;
+export default async function GlossairePage({ params }: { params: Params }) {
   const { locale } = params;
 
   if (!isGlossaryLocale(locale)) {
@@ -35,9 +38,7 @@ export default async function GlossairePage(props: { params: Params }) {
   const t = await getTranslations('glossary');
   const terms = getGlossaryTerms(locale);
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://ankora-chi.vercel.app';
-  const localePrefix = locale === 'fr-BE' ? '' : `/${locale}`;
-  const canonicalUrl = `${baseUrl}${localePrefix}/glossaire`;
+  const canonicalUrl = buildCanonicalUrl('/glossaire', locale);
 
   const definedTermSetJsonLd = {
     '@context': 'https://schema.org',
