@@ -680,6 +680,21 @@
       "toastCancelled": "Demande annulée — ton compte est conservé"
     }
   },
+  "glossary": {
+    "title": "Glossaire",
+    "subtitle": "15 termes essentiels pour comprendre ta gestion budgétaire et tes finances personnelles.",
+    "metaTitle": "Glossaire — Termes financiers",
+    "metaDescription": "Glossaire des 15 termes essentiels de la gestion budgétaire : budget de lissage, compte bucket, épargne de précaution, et plus.",
+    "breadcrumb": {
+      "home": "Accueil",
+      "glossary": "Glossaire"
+    },
+    "section": {
+      "whyItMatters": "Pourquoi c'est important",
+      "example": "Exemple concret",
+      "relatedTerms": "Termes liés"
+    }
+  },
   "errors": {
     "generic": "Une erreur est survenue. Réessaie.",
     "session": {
