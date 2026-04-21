@@ -10,6 +10,7 @@
   },
   "scripts": {
     "dev": "next dev --turbopack",
+    "prebuild": "node scripts/build-llms-full.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
