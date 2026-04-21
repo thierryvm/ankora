@@ -16,7 +16,8 @@ import { notFound } from 'next/navigation';
 
 export const dynamicParams = false;
 
-type LocaleSlugParams = { params: Promise<{ locale: string; slug: string }> };
+type Params = { locale: string; slug: string };
+type LocaleSlugParams = { params: Promise<Params> };
 
 export async function generateMetadata({ params }: LocaleSlugParams) {
   const { locale, slug } = await params;
