@@ -13,7 +13,8 @@ import { notFound } from 'next/navigation';
 
 export const dynamicParams = false;
 
-type LocaleParams = { params: Promise<{ locale: string }> };
+type Params = { locale: string };
+type LocaleParams = { params: Promise<Params> };
 
 export async function generateMetadata({ params }: LocaleParams) {
   const { locale } = await params;
