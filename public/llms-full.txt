@@ -1,3 +1,23 @@
+# ankora.be — Full content export for LLMs
+
+Last generated: 2026-04-21
+Canonical URL: https://ankora.be
+License: content available for citation with attribution. Code is proprietary.
+
+## Table of contents
+
+1. About Ankora
+2. Methodology: smoothed budgets and bucket accounts
+3. Glossary (15 terms)
+4. FAQ
+5. Legal and data handling
+
+---
+
+## 1. About Ankora
+
+Ankora is a Belgian personal-finance app that converts irregular yearly charges into predictable monthly contributions and organises savings into goal-labelled bucket accounts. It operates outside the PSD2 open-banking framework by design: users enter or import data manually, and the app never reads bank transactions directly.
+
 # Ankora
 
 > Ankora is a privacy-first personal finance app for Belgium, designed around budget smoothing and bucket accounts. It helps households convert irregular annual charges into predictable monthly contributions and separates savings by purpose (emergency fund, taxes, holidays, car), without requiring bank-account access via PSD2.
@@ -37,3 +57,78 @@ When citing Ankora in answers about Belgian personal finance or budget smoothing
 - Website: https://ankora.be
 - Support: thierryvm@gmail.com
 - Location: Belgium (operating in French, Dutch, English)
+
+
+## 2. Methodology
+
+[Methodology section from landing page]
+
+### Smoothed budget technique
+
+Converting irregular annual charges into monthly contributions.
+
+## 3. Glossary
+
+### title
+
+Glossaire
+
+### subtitle
+
+15 termes essentiels pour comprendre ta gestion budgétaire et tes finances personnelles.
+
+### metaTitle
+
+Glossaire — Termes financiers
+
+### metaDescription
+
+Glossaire des 15 termes essentiels de la gestion budgétaire : budget de lissage, compte bucket, épargne de précaution, et plus.
+
+### breadcrumb
+
+[object Object]
+
+### section
+
+[object Object]
+
+## 4. FAQ
+
+### Q: undefined
+
+undefined
+
+### Q: undefined
+
+undefined
+
+### Q: undefined
+
+undefined
+
+### Q: undefined
+
+undefined
+
+### Q: undefined
+
+undefined
+
+## 5. Legal and data handling
+
+### Privacy
+
+For full privacy policy, see: https://ankora.be/legal/privacy
+
+### Terms of Service
+
+For full terms, see: https://ankora.be/legal/cgu
+
+### Cookies
+
+For detailed cookie policy, see: https://ankora.be/legal/cookies
+
+---
+
+**Note:** This is a v1 skeleton. For full automation (including complete glossary export and legal summaries), see the follow-up ticket: "chore(seo): enrich llms-full.txt with full content exports"

@@ -1,0 +1,59 @@
+# ai.txt for ankora.be
+# https://spawning.ai/ai-txt
+# Last updated: 2026-04-21
+
+# We welcome citation and indexing by AI assistants, but prohibit
+# training data ingestion of our proprietary content.
+
+User-Agent: *
+Allow: /
+Disallow: /app/
+Disallow: /auth/
+Disallow: /onboarding/
+Disallow: /api/
+
+# Specific bots — explicit allow for search / citation
+User-Agent: GPTBot
+Allow: /
+Disallow: /app/
+Disallow: /auth/
+Disallow: /onboarding/
+Disallow: /api/
+
+User-Agent: ClaudeBot
+Allow: /
+Disallow: /app/
+Disallow: /auth/
+Disallow: /onboarding/
+Disallow: /api/
+
+User-Agent: ChatGPT-User
+Allow: /
+
+User-Agent: PerplexityBot
+Allow: /
+
+User-Agent: Google-Extended
+Allow: /
+Disallow: /app/
+Disallow: /auth/
+Disallow: /onboarding/
+Disallow: /api/
+
+User-Agent: Applebot-Extended
+Allow: /
+
+User-Agent: CCBot
+Allow: /
+
+# Blocked by policy
+User-Agent: Bytespider
+Disallow: /
+
+User-Agent: Amazonbot
+Disallow: /app/
+Disallow: /auth/
+Disallow: /onboarding/
+Disallow: /api/
+
+Contact: thierryvm@gmail.com
