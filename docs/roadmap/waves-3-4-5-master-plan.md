@@ -142,7 +142,7 @@ Fichier `tests/middleware.test.ts` :
 
 3 projets Playwright : `unauthenticated`, `user`, `admin`.
 
-Pages à screenshoter par projet :
+Pages à capturer en screenshot par projet :
 
 - Landing `/`
 - Glossaire `/glossaire`
