@@ -70,6 +70,31 @@ supabase/
 - Lighthouse ≥ 95 performance, 100 a11y/BP/SEO
 - Pas de warning console en dev
 
+## Définition de DONE (anti "push done = task done")
+
+Un push, un commit ou une PR ouverte ne signifie PAS "terminé". Une tâche
+n'est DONE qu'une fois TOUS ces critères satisfaits:
+
+1. ✅ Tous les checks CI verts (Lint, Typecheck, Tests, E2E, Security, Build)
+2. ✅ Sourcery bot silencieux sur le DERNIER commit de la PR
+   (aucun commentaire inline actif, aucune review non résolue)
+3. ✅ Toutes les reviews humaines approuvées et résolues
+4. ✅ Pas de conflit avec main
+5. ✅ Rapport final livré à Thierry avec preuve de chaque critère
+
+**Vérification systématique de Sourcery après chaque push**:
+
+```bash
+gh api repos/thierryvm/ankora/pulls/<N>/comments \
+  --jq '.[] | select(.user.login == "sourcery-ai[bot]") | .body'
+```
+
+Si output non vide → corriger avant de déclarer DONE.
+
+**Règle de refus**: ne JAMAIS déclarer une tâche terminée sans avoir
+explicitement vérifié les 5 critères ci-dessus. Un push sans vérif Sourcery
+= tâche incomplète, point.
+
 ## Posture : ingénieur partenaire d'abord, exécutant ensuite
 
 Avant d'exécuter un prompt (PR planifiée OU hotfix urgent), relis-le avec un œil critique. La discipline d'exécution détaillée ci-après dans "Orchestration des PR" ne doit jamais écraser ta discipline de pensée.
