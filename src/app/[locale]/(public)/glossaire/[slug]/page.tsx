@@ -16,10 +16,10 @@ import { notFound } from 'next/navigation';
 
 export const dynamicParams = false;
 
-type Params = { locale: string; slug: string };
+type LocaleSlugParams = { params: Promise<{ locale: string; slug: string }> };
 
-export async function generateMetadata({ params }: { params: Params }) {
-  const { locale, slug } = params;
+export async function generateMetadata({ params }: LocaleSlugParams) {
+  const { locale, slug } = await params;
 
   if (!isGlossaryLocale(locale)) {
     notFound();
@@ -53,8 +53,8 @@ export async function generateStaticParams() {
   );
 }
 
-export default async function GlossaireTermPage({ params }: { params: Params }) {
-  const { locale, slug } = params;
+export default async function GlossaireTermPage({ params }: LocaleSlugParams) {
+  const { locale, slug } = await params;
 
   if (!isGlossaryLocale(locale)) {
     notFound();

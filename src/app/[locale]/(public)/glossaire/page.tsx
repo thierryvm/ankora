@@ -13,9 +13,10 @@ import { notFound } from 'next/navigation';
 
 export const dynamicParams = false;
 
-type Params = { locale: string };
+type LocaleParams = { params: Promise<{ locale: string }> };
 
-export async function generateMetadata({ params }: { params: Params }) {
+export async function generateMetadata({ params }: LocaleParams) {
+  const { locale } = await params;
   const t = await getTranslations('glossary');
 
   return {
@@ -28,8 +29,8 @@ export async function generateStaticParams() {
   return GLOSSARY_LOCALES.map((locale) => ({ locale }));
 }
 
-export default async function GlossairePage({ params }: { params: Params }) {
-  const { locale } = params;
+export default async function GlossairePage({ params }: LocaleParams) {
+  const { locale } = await params;
 
   if (!isGlossaryLocale(locale)) {
     notFound();
