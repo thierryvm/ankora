@@ -1,5 +1,3 @@
-'use server';
-
 import pino from 'pino';
 import { env } from '@/lib/env';
 import type { Logger, LogLevel } from '@/lib/log-types';
