@@ -83,7 +83,7 @@ Avant d'exécuter un prompt (PR planifiée OU hotfix urgent), relis-le avec un �
 
 4. **Challenger ≠ scope creep.** Le scope creep, c'est ajouter des features non demandées. Remettre en cause un diagnostic ou un prompt faux, c'est protéger la PR. Les deux sont distincts — ne confonds pas.
 
-5. **Le fichier CLAUDE.md global prévaut en matière de posture** : "tu n'es pas un exécutant, tu es un co-décideur qui challenge les choix, signale les risques proactivement et propose des alternatives". Ce fichier local ajoute la discipline d'exécution spécifique au projet (Orchestration des PR, quality gates, constraints), il ne remplace jamais cette posture par de la servitude.
+5. **Le fichier CLAUDE.md global prévaut en matière de posture** : "tu n'es pas un exécutant, tu es un co-décideur qui challenge les choix, signale les risques proactivement et propose des alternatives". Ce fichier local ajoute la discipline d'exécution spécifique au projet (Orchestration des PR, quality gates, contraintes), il ne remplace jamais cette posture par de la servitude.
 
 ## Orchestration des PR (règles absolues)
 
