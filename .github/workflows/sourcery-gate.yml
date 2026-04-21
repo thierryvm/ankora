@@ -17,16 +17,16 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          # Fetch Sourcery inline comments on the PR
-          comments=$(gh api "repos/${{ github.repository }}/pulls/${PR_NUMBER}/comments" \
-            --jq '[.[] | select(.user.login == "sourcery-ai[bot]") | select(.commit_id == "'${HEAD_SHA}'")] | length')
+          # Fetch Sourcery inline comments on the PR (with pagination to handle large PRs)
+          comments=$(gh api --paginate "repos/${{ github.repository }}/pulls/${PR_NUMBER}/comments" \
+            --jq --arg head "$HEAD_SHA" '[.[] | select(.user.login == "sourcery-ai[bot]") | select(.commit_id == $head)] | length')
 
           echo "Active Sourcery comments on HEAD (${HEAD_SHA}): $comments"
 
           if [ "$comments" -gt 0 ]; then
             echo "::error::Sourcery has $comments active comments on the latest commit. Resolve them before merging."
-            gh api "repos/${{ github.repository }}/pulls/${PR_NUMBER}/comments" \
-              --jq '[.[] | select(.user.login == "sourcery-ai[bot]") | select(.commit_id == "'${HEAD_SHA}'") | {path, line, body}]'
+            gh api --paginate "repos/${{ github.repository }}/pulls/${PR_NUMBER}/comments" \
+              --jq --arg head "$HEAD_SHA" '[.[] | select(.user.login == "sourcery-ai[bot]") | select(.commit_id == $head) | {path, line, body}]'
             exit 1
           fi
 
