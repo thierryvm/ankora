@@ -3,6 +3,72 @@
 Projet **Ankora** : cockpit personnel de finances (PWA Next.js 16 + Supabase, hébergé UE).
 Ce fichier complète le `CLAUDE.md` global de Thierry. En cas de conflit, ce fichier prévaut.
 
+## Cap v1.0 publique (verrouillé 2026-04-23)
+
+Cible : SaaS v1.0 sur ankora.be, signups ouverts, **12 semaines max** depuis 2026-04-23.
+
+**Communication externe = 12 semaines, jamais moins.** Aucune fausse promesse. Si on livre en 9, c'est du bonus.
+
+### Trois jalons
+
+| Jalon         | Horizon      | Contenu                                                                          |
+| ------------- | ------------ | -------------------------------------------------------------------------------- |
+| Alpha privé   | ~4 semaines  | Thierry + 2-3 proches, FR seul, cœur fonctionnel + baseline sécurité             |
+| Beta privée   | ~8 semaines  | 5-10 testeurs externes, CGU/Privacy UE+BE 2026, GDPR complet, bug reporting live |
+| v1.0 publique | ~12 semaines | Signups libres, AEO/SEO/Lighthouse 100, FR + EN, /roadmap publique               |
+
+### Les 5 piliers (parallélisables)
+
+- **A — Fondations & Hygiène** : ROADMAP à jour, CLAUDE.md, agents QA, CI gates
+- **B — Product Excellence** : recherche concurrentielle, mockups dashboard user v3, admin panel v1
+- **C — Core Fonctionnel** : PR-B1 bug report, PR-3 port mockups, auth + MFA, onboarding, CRUD, simulateur intégré
+- **D — Sécurité & Légal** : CGU/Privacy UE+BE 2026, Klaro!, GDPR export/deletion, rate limiting, audit log
+- **E — SEO/AEO/Perf** : schemas JSON-LD fintech, entity consistency, /roadmap publique, Lighthouse 100
+
+Cowork pilote A+B+contenus D/E, CC Ankora pilote C+tech D/E, Thierry valide + merge.
+
+### Contraintes 2026 verrouillées
+
+- **FSMA non-régulé** : outil éducation budgétaire, jamais "conseil"
+- **PSD2 exclu** (ADR-001)
+- **GDPR renforcé** : APD belge enforcement +++ 2026-2028, privacy policy **en langue user** obligatoire
+- **DORA / NIS2 / MiFID II** : non-applicables à notre échelle, on suit leurs baselines par hygiène
+- **Budget 0 €** : Thierry sur mutuelle Solidaris Belgique, aucun revenu autorisé en Phase 1
+
+### Dashboard Excellence — non négociable
+
+Le dashboard user EST le produit. Cible : niveau Monarch Money, pensé enveloppes (pas comptes agrégés).
+
+Sections obligatoires user dashboard v3 :
+
+1. Hero cashflow waterfall (salaire → enveloppes → sorties)
+2. Health score provisions (jauge + nudges)
+3. Timeline 6 mois prédictive
+4. Enveloppes actives (drag-to-rebalance)
+5. Prochaines factures 7/14/30j
+6. Goals épargne avec ETA
+7. Simulateur what-if en drawer
+8. Activité récente
+
+Admin panel obligatoire : santé technique, santé produit, acquisition, recommandations rule-based.
+
+Tout dashboard minimaliste = refus de merge.
+
+### Agents QA (10 au total)
+
+Existants : `security-auditor`, `rls-flow-tester`, `financial-formula-validator`, `ui-auditor`, `lighthouse-auditor`, `seo-geo-auditor`, `gdpr-compliance-auditor`, `test-runner`.
+
+Nouveaux : `dashboard-ux-auditor`, `admin-dashboard-auditor` (ajoutés pilier A).
+
+### Choix techniques lockés
+
+- **Auth MFA** : TOTP via Supabase Auth natif (optionnel user, UI dans `/app/settings/security`)
+- **Cookie consent** : Klaro! (open source, TCF v2.2, 0 €)
+- **Langues v1.0** : FR + EN seulement. NL/DE/ES annoncées dans `/roadmap` publique, livrées post-launch
+- **Admin auth** : `requireAdmin()` basé sur `user_id` Thierry initialement
+
+---
+
 ## Positionnement réglementaire (non-négociable)
 
 Ankora est un **outil d'éducation budgétaire et d'organisation**.
