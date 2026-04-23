@@ -1,6 +1,6 @@
 # ankora.be — Full content export for LLMs
 
-Last generated: 2026-04-21
+Last generated: 2026-04-23
 Canonical URL: https://ankora.be
 License: content available for citation with attribution. Code is proprietary.
 

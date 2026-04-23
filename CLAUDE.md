@@ -3,6 +3,50 @@
 Projet **Ankora** : cockpit personnel de finances (PWA Next.js 16 + Supabase, hébergé UE).
 Ce fichier complète le `CLAUDE.md` global de Thierry. En cas de conflit, ce fichier prévaut.
 
+## Cap v1.0 publique (verrouillé 2026-04-23)
+
+**Source unique de vérité** : `docs/NORTH_STAR.md` (consolidation de la vision, 3 jalons, 5 piliers, 9 contraintes non négociables, cibles mesurables).
+
+Résumé local :
+
+- **Horizon** : 12 semaines max depuis 2026-04-23 (Alpha ~4w, Beta ~8w, v1.0 publique ~12w)
+- **Gouvernance** : Cowork pilote A+B+contenus D/E, CC Ankora pilote C+tech D/E, Thierry valide + merge
+- **Contraintes clés** : FSMA non régulé, PSD2 exclu, GDPR renforcé, Budget 0 €
+
+### Dashboard Excellence — non négociable
+
+Le dashboard user EST le produit. Cible : niveau Monarch Money, pensé enveloppes (pas comptes agrégés).
+
+Sections obligatoires user dashboard v3 :
+
+1. Hero cashflow waterfall (salaire → enveloppes → sorties)
+2. Health score provisions (jauge + nudges)
+3. Timeline 6 mois prédictive
+4. Enveloppes actives (drag-to-rebalance)
+5. Prochaines factures 7/14/30j
+6. Goals épargne avec ETA
+7. Simulateur what-if en drawer
+8. Activité récente
+
+Admin panel obligatoire : santé technique, santé produit, acquisition, recommandations rule-based.
+
+Tout dashboard minimaliste = refus de merge.
+
+### Agents QA (10 au total)
+
+Existants : `security-auditor`, `rls-flow-tester`, `financial-formula-validator`, `ui-auditor`, `lighthouse-auditor`, `seo-geo-auditor`, `gdpr-compliance-auditor`, `test-runner`.
+
+Nouveaux : `dashboard-ux-auditor`, `admin-dashboard-auditor` (ajoutés pilier A).
+
+### Choix techniques lockés
+
+- **Auth MFA** : TOTP via Supabase Auth natif (optionnel user, UI dans `/app/settings/security`)
+- **Cookie consent** : Klaro! (open source, TCF v2.2, 0 €)
+- **Langues v1.0** : FR + EN seulement. NL/DE/ES annoncées dans `/roadmap` publique, livrées post-launch
+- **Admin auth** : `requireAdmin()` basé sur `user_id` Thierry initialement
+
+---
+
 ## Positionnement réglementaire (non-négociable)
 
 Ankora est un **outil d'éducation budgétaire et d'organisation**.
