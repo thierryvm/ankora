@@ -1,6 +1,47 @@
 # Roadmap — Ankora
 
-Dernière mise à jour : 20 avril 2026 — PR #27 (post-PR-25 debts) mergée. Prêt pour PR-2 (traductions).
+Dernière mise à jour : 23 avril 2026 — Reboot v1.0 Pilier A (gouvernance + agents QA) complété. Prêt pour PR-2 (traductions).
+
+## Cap v1.0 publique — Vision & Jalons (23 avril 2026)
+
+**Source unique de vérité** : `docs/NORTH_STAR.md` (19 avril 2026). Ce document consolide la vision v1.0 publique, les 5 piliers parallélisables, les contraintes non négociables et les cibles mesurables.
+
+### Trois jalons verrouillés
+
+| Jalon     | Horizon      | Contenu minimal                                                                                    |
+| --------- | ------------ | -------------------------------------------------------------------------------------------------- |
+| **Alpha** | ~4 semaines  | Thierry + 2-3 proches, FR seul, auth + onboarding + CRUD + dashboard v3 + simulateur + MFA         |
+| **Beta**  | ~8 semaines  | 5-10 testeurs, CGU/Privacy UE+BE 2026, GDPR export/delete, bug reporting live, Klaro!              |
+| **v1.0**  | ~12 semaines | Signups ouverts ankora.be, FR + EN, AEO complet, Lighthouse 100, /roadmap publique, admin panel v1 |
+
+### Cinq piliers parallélisables
+
+- **A — Fondations & Hygiène** : ROADMAP sync, agents QA (10), CI gates (Sourcery, Lighthouse budget), branch protection
+- **B — Product Excellence** : recherche concurrentielle (12 acteurs), mockups user dashboard v3, admin panel v1, design tokens finaux
+- **C — Core Fonctionnel** : auth + MFA, onboarding 3 étapes, CRUD charges/dépenses, dashboard core, simulateur intégré, goals
+- **D — Sécurité & Légal** : CGU/Privacy en langue user (BE 2026), Klaro! TCF v2.2, GDPR export/deletion, rate limiting, audit log
+- **E — SEO/AEO/Perf** : schemas JSON-LD fintech, llms-full.txt, /roadmap publique, Lighthouse 100/100/100/100, Service Worker
+
+Cowork pilote A+B+contenus D/E. CC Ankora pilote C+tech D/E. Thierry valide + merge.
+
+---
+
+## Agents QA Pilier A (10 au total)
+
+Tous les agents résident dans `.claude/agents/` et sont trigger-driven. Chaque agent valide un domaine critique avant merge.
+
+| #   | Agent                         | Domaine                           | Trigger                 | Gate            |
+| --- | ----------------------------- | --------------------------------- | ----------------------- | --------------- |
+| 1   | `security-auditor`            | Auth, middleware, RLS, headers    | touch auth/\*\*         | ✅ requis       |
+| 2   | `rls-flow-tester`             | Supabase RLS + migrations         | touch migrations/\*\*   | ✅ requis       |
+| 3   | `financial-formula-validator` | `src/lib/domain/`                 | touch domain/\*\*       | ✅ requis       |
+| 4   | `ui-auditor`                  | WCAG 2.2 AA, mobile, Tailwind 4   | touch components/\*\*   | ✅ requis       |
+| 5   | `lighthouse-auditor`          | Performance, a11y, BP, SEO        | pre-release only        | ✅ requis RC    |
+| 6   | `seo-geo-auditor`             | SEO signals, entity consistency   | touch public pages      | ✅ requis       |
+| 7   | `gdpr-compliance-auditor`     | PII, consent, export, deletion    | touch PII, auth, D-lang | ✅ requis       |
+| 8   | `test-runner`                 | Vitest + Playwright               | post-change             | ✅ requis       |
+| 9   | `dashboard-ux-auditor`        | User dashboard UX + design tokens | touch app/app/\*\*      | ✅ requis PR-3  |
+| 10  | `admin-dashboard-auditor`     | Admin security, perf, a11y        | touch app/admin/\*\*    | ✅ requis PR-B2 |
 
 ---
 
@@ -73,7 +114,7 @@ Trois PRs atomiques enchaînées **dans cet ordre** pour éviter les conflits su
 - [x] Headers sécurité A+ (CSP nonce, HSTS, COOP, Permissions-Policy)
 - [x] Couche domaine pure (budget, provision, simulation, balance) testée
 - [x] Migrations Supabase + RLS complètes
-- [x] `.claude/agents/` (7 QA agents)
+- [x] `.claude/agents/` (10 QA agents — 7 bootstrap + dashboard-ux-auditor + admin-dashboard-auditor)
 - [x] CI GitHub Actions (lint + typecheck + test + e2e + lighthouse + audit)
 - [x] Husky pre-commit + commit-msg
 - [x] PWA manifest + llms.txt + sitemap + robots
