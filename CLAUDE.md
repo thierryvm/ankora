@@ -5,35 +5,13 @@ Ce fichier complète le `CLAUDE.md` global de Thierry. En cas de conflit, ce fic
 
 ## Cap v1.0 publique (verrouillé 2026-04-23)
 
-Cible : SaaS v1.0 sur ankora.be, signups ouverts, **12 semaines max** depuis 2026-04-23.
+**Source unique de vérité** : `docs/NORTH_STAR.md` (consolidation de la vision, 3 jalons, 5 piliers, 9 contraintes non négociables, cibles mesurables).
 
-**Communication externe = 12 semaines, jamais moins.** Aucune fausse promesse. Si on livre en 9, c'est du bonus.
+Résumé local :
 
-### Trois jalons
-
-| Jalon         | Horizon      | Contenu                                                                          |
-| ------------- | ------------ | -------------------------------------------------------------------------------- |
-| Alpha privé   | ~4 semaines  | Thierry + 2-3 proches, FR seul, cœur fonctionnel + baseline sécurité             |
-| Beta privée   | ~8 semaines  | 5-10 testeurs externes, CGU/Privacy UE+BE 2026, GDPR complet, bug reporting live |
-| v1.0 publique | ~12 semaines | Signups libres, AEO/SEO/Lighthouse 100, FR + EN, /roadmap publique               |
-
-### Les 5 piliers (parallélisables)
-
-- **A — Fondations & Hygiène** : ROADMAP à jour, CLAUDE.md, agents QA, CI gates
-- **B — Product Excellence** : recherche concurrentielle, mockups dashboard user v3, admin panel v1
-- **C — Core Fonctionnel** : PR-B1 bug report, PR-3 port mockups, auth + MFA, onboarding, CRUD, simulateur intégré
-- **D — Sécurité & Légal** : CGU/Privacy UE+BE 2026, Klaro!, GDPR export/deletion, rate limiting, audit log
-- **E — SEO/AEO/Perf** : schemas JSON-LD fintech, entity consistency, /roadmap publique, Lighthouse 100
-
-Cowork pilote A+B+contenus D/E, CC Ankora pilote C+tech D/E, Thierry valide + merge.
-
-### Contraintes 2026 verrouillées
-
-- **FSMA non-régulé** : outil éducation budgétaire, jamais "conseil"
-- **PSD2 exclu** (ADR-001)
-- **GDPR renforcé** : APD belge enforcement +++ 2026-2028, privacy policy **en langue user** obligatoire
-- **DORA / NIS2 / MiFID II** : non-applicables à notre échelle, on suit leurs baselines par hygiène
-- **Budget 0 €** : Thierry sur mutuelle Solidaris Belgique, aucun revenu autorisé en Phase 1
+- **Horizon** : 12 semaines max depuis 2026-04-23 (Alpha ~4w, Beta ~8w, v1.0 publique ~12w)
+- **Gouvernance** : Cowork pilote A+B+contenus D/E, CC Ankora pilote C+tech D/E, Thierry valide + merge
+- **Contraintes clés** : FSMA non régulé, PSD2 exclu, GDPR renforcé, Budget 0 €
 
 ### Dashboard Excellence — non négociable
 

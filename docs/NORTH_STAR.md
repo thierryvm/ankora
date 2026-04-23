@@ -40,7 +40,7 @@ PR-B1 Bug reporting MVP (filet avant chantier UI), PR-3 port des mockups v3 en R
 
 ### D — Sécurité & Légal (UE + BE 2026)
 
-CGU conformes loi belge 30/07/2018 + directive ePrivacy + AI Act (non-applicable Phase 1), Privacy Policy **en langue utilisateur**, Cookies Policy + intégration Klaro! open source (TCF v2.2), GDPR export JSON + deletion grace 30j, rate limiting Upstash multicouches, audit log append-only.
+CGU conformes loi belge 30/07/2018 + directive ePrivacy + AI Act (non-applicable Phase 1), Privacy Policy **en langue utilisateur**, Cookies Policy + intégration Klaro! open source (TCF v2.2), GDPR export JSON + suppression avec délai de grâce de 30j, rate limiting Upstash multicouches, audit log append-only.
 
 ### E — SEO/AEO/Perf
 

@@ -88,6 +88,6 @@ Next: fix the 3 failures, then re-run audit.
 
 ## Notes
 
-- **Mockup v3 alignment**: Only check when `F:\PROJECTS\Apps\ankora-user-dashboard-v3.html` is available (post-design).
+- **Mockup v3 alignment**: Only check when mockup v3 (HTML or Figma) is available post-design review.
 - **Mobile-first**: Run Lighthouse audit separately if needed (via ui-auditor or lighthouse-auditor).
 - **Figma specs**: Fetch from Cowork's Figma if tokens seem off-brand.

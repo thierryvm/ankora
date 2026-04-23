@@ -43,6 +43,8 @@ Tous les agents résident dans `.claude/agents/` et sont trigger-driven. Chaque 
 | 9   | `dashboard-ux-auditor`        | User dashboard UX + design tokens | touch app/app/\*\*      | ✅ requis PR-3  |
 | 10  | `admin-dashboard-auditor`     | Admin security, perf, a11y        | touch app/admin/\*\*    | ✅ requis PR-B2 |
 
+**Note sur les triggers** : Les chemins documentés (ex. `touch auth/**`, `touch app/app/**`) définissent les cas d'usage _intentionnels_ pour chaque agent. L'invocation manuelle reste primaire pour la Phase 1. Une automatisation CI complète (détection de fichiers + dispatch d'agents) est une future amélioration Pilier A (Phase 2+).
+
 ---
 
 ## ⚠️ Contrainte transverse : Budget 0 €
