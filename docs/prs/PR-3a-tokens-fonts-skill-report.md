@@ -195,7 +195,7 @@ Lignes 20 et 46 du SKILL.md mentionnent `colors_and_type.css` et `ui_kits/_share
 
 #### Finding 2 (security-auditor, low) — double `url()` identique dans chaque `@font-face`
 
-`globals.css` lignes 11-12, 20-21, 28-29 : chaque `@font-face` déclare deux `src` identiques (`truetype-variations` puis `truetype`) pointant vers le même fichier .ttt. Le second est superflu (les deux formats sont résolus par le même fichier .ttf).
+`globals.css` lignes 11-12, 20-21, 28-29 : chaque `@font-face` déclare deux `src` identiques (`truetype-variations` puis `truetype`) pointant vers le même fichier .ttf. Le second est superflu (les deux formats sont résolus par le même fichier .ttf).
 
 **Risque** : 0 sécurité, 0 perf significative, juste dette CSS mineure.
 
@@ -234,7 +234,7 @@ Lignes 20 et 46 du SKILL.md mentionnent `colors_and_type.css` et `ui_kits/_share
 - [x] `--color-warning` reste amber (décision @cowork rejet laiton)
 - [x] Aucun composant ni page touchés (garde-fou ADR-005 #1)
 - [x] Aucune dépendance npm ajoutée
-- [x] Test Vitest 68 assertions (162 lignes)
+- [x] Test Vitest 68 assertions (168 lignes)
 - [x] 242 tests Vitest verts au total
 - [x] Lint, typecheck, lint:use-server clean
 - [x] Agents QA : security PASS + gdpr COMPLIANT
