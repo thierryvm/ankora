@@ -33,7 +33,7 @@ Links to context I'll provide:
   - GitHub repository: github.com/thierryvm/ankora (link sub-paths `src/components/ui/` + `src/app/globals.css` only — not the full monorepo)
 
 Competitors to BEAT (not copy):
-  - Monarch Money (reference dashboard enveloppes, iOS native)
+  - Monarch Money (reference dashboard envelopes, iOS native)
   - Copilot Money (reference animations + hero narrative)
   - Mercury (reference premium fintech desktop)
   - YNAB / Goodbudget (envelope model but outdated UI)

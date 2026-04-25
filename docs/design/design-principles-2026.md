@@ -48,13 +48,13 @@ box-shadow:
 
 ## 3. Dashboard fintech — métaphores dominantes 2026
 
-| Métaphore                                 | Pertinence Ankora                                    | Ref                   |
-| ----------------------------------------- | ---------------------------------------------------- | --------------------- |
-| **Cashflow waterfall / Sankey**           | Signature PRINCIPALE — salary → envelopes → outflows | YNAB v5, Copilot      |
-| **Jauges de santé (health score)**        | Pour provisions — garder                             | Monarch, Rocket Money |
-| **Timeline prédictive 6 mois**            | Pour projection — garder                             | Copilot, Cleo         |
-| **Enveloppes skeumorphiques modernisées** | Pour cards enveloppes — moderne, pas 90s             | Goodbudget, YNAB      |
-| Orbites / radars / rivières               | À éviter — perçu gadget                              | —                     |
+| Métaphore                                  | Pertinence Ankora                                    | Ref                   |
+| ------------------------------------------ | ---------------------------------------------------- | --------------------- |
+| **Cashflow waterfall / Sankey**            | Signature PRINCIPALE — salary → envelopes → outflows | YNAB v5, Copilot      |
+| **Jauges de santé (health score)**         | Pour provisions — garder                             | Monarch, Rocket Money |
+| **Timeline prédictive 6 mois**             | Pour projection — garder                             | Copilot, Cleo         |
+| **Enveloppes skeuomorphiques modernisées** | Pour cards enveloppes — moderne, pas 90s             | Goodbudget, YNAB      |
+| Orbites / radars / rivières                | À éviter — perçu gadget                              | —                     |
 
 **Bento grid** : banalisé en 2024-25 (Apple, Linear, Vercel), devenu "fond de scène" en 2026. Pas signature. Ankora doit ÉVITER.
 
