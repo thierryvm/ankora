@@ -120,11 +120,18 @@ Ref : Linear Admin, Vercel team settings, Stripe dashboard vs Stripe Atlas.
 
 **Palette Ankora actuelle** : navy (#0b1120) + teal (#2dd4bf) + amber (#fbbf24) = **pertinent mais risque de se fondre** dans la masse Revolut/N26/Lunar. Différenciation nécessaire via accent signature.
 
-**Options accent signature à tester (Claude Design validera)** :
+**Accent signature verrouillé (2026-04-24 par @thierry)** :
 
-- Garder amber #fbbf24 (current)
-- Electric violet #a855f7 (tech-forward, Stripe/Linear-like)
-- Coral magenta #f472b6 (disruptif, Monzo-like)
+- ✅ **Laiton nautique #d4a017** — jaune-doré mat évoquant les instruments marins (sextant, boussole, laiton d'ancre). Cohérent avec le nom "Ankora" (ancre marine). Plus mat et sérieux que l'amber pur, sans conflit avec `--color-danger`.
+- **Rôle** : accent signature + accent admin (teal reste user)
+- **Rationale** : amber #fbbf24 jugé trop générique (Revolut/N26/Qonto l'utilisent), copper #c2410c écarté (conflit sémantique avec rouge danger en fintech), violet/magenta écartés (hors narrative marine).
+
+**Options explorées et écartées** :
+
+- ~~Amber #fbbf24~~ — trop générique fintech
+- ~~Electric violet #a855f7~~ — hors narrative Ankora
+- ~~Coral magenta #f472b6~~ — trop pink, hors narrative
+- ~~Cuivre brûlé #c2410c~~ — conflit sémantique avec danger red
 
 **Typographies** :
 
