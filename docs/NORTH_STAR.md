@@ -1,8 +1,10 @@
 # North Star — Ankora v1.0
 
+> **Trio IA & gouvernance** — Source canonique : [`docs/design/trio-agents.md`](design/trio-agents.md). Le résumé ci-dessous est intentionnellement répété pour visibilité au démarrage de session ; toute modification doit être répercutée dans la source canonique.
+
 Source unique de vérité pour la vision et les décisions produit jusqu'à la v1.0 publique.
 
-Dernière mise à jour : 23 avril 2026.
+Dernière mise à jour : 24 avril 2026 (adoption trio IA + workflow Claude Design).
 
 ---
 
@@ -32,7 +34,7 @@ ROADMAP sync, CLAUDE.md, agents QA (10), CI gates (Sourcery required, Lighthouse
 
 ### B — Product Excellence
 
-Recherche concurrentielle formelle (12 acteurs), mockups user dashboard v3 (niveau Monarch-enveloppes), mockup admin panel v1 (4 sections + rule-based reco), design tokens finaux.
+Recherche concurrentielle formelle (12 acteurs, livrée), spec fonctionnelle user dashboard v3 (niveau Monarch-enveloppes, livrée dans `docs/design/claude-design-brief.md` §3.2), spec fonctionnelle admin panel v1 (4 sections + rule-based reco, §3.4), design tokens finaux via **Claude Design** (Opus 4.7, research preview) — remplace l'itération mockup HTML pixel-perfect. Ordre surfaces verrouillé : DS → Landing → Dashboard → Onboarding → Admin.
 
 ### C — Core Fonctionnel
 
@@ -79,6 +81,27 @@ Schemas JSON-LD fintech avancés (FinancialProduct, SoftwareApplication, Organiz
 | Critical + High npm audit       | 0                                        |
 | Incidents sécurité avant launch | 0 exploitable                            |
 
+## Différenciateur clé — Réserve libre vs Provisions affectées
+
+Le **Compte Épargne Ankora** distingue **deux strates** que les concurrents confondent :
+
+| Strate                   | Nature                                                                                                                      | Comportement                                                                                                                            |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| **Provisions affectées** | Argent mis de côté pour couvrir des factures annuelles spécifiques (impôt communal, assurance voiture, vacances 2026, etc.) | Chaque poste a une date d'échéance et un montant cible. Rapatrier = casser le lissage. Alertes J-7/J-3/J-0 avant échéance (PR-F).       |
+| **Réserve libre**        | Buffer de sécurité non-affecté (excédent mensuel cumulé)                                                                    | Disponible sans contrainte. Peut être rapatriée vers Compte courant à tout moment. Historique de mouvements tracé (apports / retraits). |
+
+Workflow user type : chaque mois, excédent = virement manuel vers compte Épargne → **incrémente la Réserve libre**. Besoin ponctuel (coup dur, vacances extra) = retrait vers courant → **décrémente la Réserve libre**, pas les provisions.
+
+Ankora doit afficher **3 chiffres distincts** sur le Compte Épargne dans le dashboard :
+
+1. Total Épargne (somme)
+2. Provisions affectées (bloquées jusqu'échéance)
+3. Réserve libre (disponible)
+
+Et un **historique de mouvements** de la réserve (in/out par mois) accessible depuis le dashboard.
+
+**Pourquoi c'est différenciant** : YNAB ne distingue pas, Monarch met tout dans des goals, Goodbudget ne gère pas la notion de buffer. Ankora rend visible une gestion déjà pratiquée par les utilisateurs avancés mais jamais formalisée dans les outils.
+
 ## Positionnement concurrentiel (à affiner après recherche)
 
 Ankora se distingue des outils US/FR existants par :
@@ -93,14 +116,33 @@ Ankora se distingue des outils US/FR existants par :
 | Alertes J-7 factures provisionnées       | Rocket Money = abonnements seulement                          |
 | GDPR conformité belge stricte            | Most US tools ignorent APD belge                              |
 | 100 % 0 € utilisateur Phase 1            | YNAB 99$/an, Monarch 99$/an                                   |
+| Provisions vs Réserve libre distinctes   | Confondus partout ailleurs (YNAB/Monarch/Goodbudget)          |
 
-## Gouvernance
+## Gouvernance — Trio IA + Thierry (verrouillé 2026-04-24)
 
-- **Cowork** (Claude desktop) : recherche, mockups, contenu vision/légal, prompts délégués, orchestration
-- **CC Ankora** (terminal avec gh/npm/Brave+Claude extension) : code, commits, PRs, vérifications
-- **Thierry** : backup décisionnel quand cela se justifie vraiment, merge PRs, validation mockups
+- **@cowork** (Claude desktop) : vision produit, spec fonctionnelle, recherche concurrentielle, contenu vision/légal, brief Claude Design, orchestration, revue exports, update NORTH_STAR/ROADMAP
+- **@cc-design** (claude.ai/design, Opus 4.7, research preview) : polish visuel, exploration UI, cohérence design system, variations composants, exports React/Tailwind ou ZIP, handoff Claude Code
+- **@cc-ankora** (Claude Code terminal, gh/npm/supabase CLI) : code production, intégration Supabase/Next.js, tests, CI, PRs, merge sur branches dédiées
+- **@thierry** : vision produit humaine, validation à chaque étape, merge autorité finale sur `main`
 
-Les décisions techniques sont autonomes côté Cowork et CC Ankora dans le cadre verrouillé ici. Tout écart = validation Thierry obligatoire.
+**Convention de tag obligatoire** dans tout rapport / commit / PR / comms inter-agents : `@cowork —`, `@cc-design —`, `@cc-ankora —`, `@thierry —`.
+
+**Loop design standard** :
+@cowork spec fonctionnelle → @cowork brief Claude Design → @cc-design variations visuelles → @thierry valide → @cowork prompt intégration → @cc-ankora branche `feat/cc-design-<surface>` + agents QA → @thierry merge.
+
+**Règle non négociable** : aucun export Claude Design ne merge direct sur `main`. Toujours branche dédiée, agents QA (`ui-auditor`, `design:accessibility-review`, `gdpr-compliance-auditor`), micro-copy relue par @cowork (FSMA + qualité FR).
+
+### Ordre d'exécution surfaces v1.0 (verrouillé 2026-04-24)
+
+0. **Design System** — étape fondatrice, publiée une fois dans claude.ai/design, héritée automatiquement par toutes les surfaces
+1. **Landing** (`ankora.be`) — PRIORITÉ 1, surface qui fait ou défait le produit (effet "wow" ou funnel perdu)
+2. **User Dashboard v3** — cœur produit, ouvert 2-3× par semaine
+3. **Onboarding 3 étapes** — premier pas décisif, UX premium
+4. **Admin Dashboard** — interne Thierry, dernière priorité
+
+Cf. `docs/design/trio-agents.md` (convention complète), `docs/design/claude-design-brief.md` (template brief), `docs/design/design-principles-2026.md` (trends + red flags).
+
+Les décisions techniques sont autonomes côté @cowork et @cc-ankora dans le cadre verrouillé ici. Tout écart = validation @thierry obligatoire.
 
 ## Après v1.0
 
