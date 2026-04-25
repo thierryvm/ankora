@@ -52,20 +52,11 @@ Ajouter en haut du JSON, juste après `{`, AVANT la clé `permissions` :
 
 ⚠️ **À faire par @thierry directement** (pas par un agent IA) — c'est une config structurelle. Une fois fait, valider avec un test rapide (ouvrir une session CC Ankora, lui demander "quel modèle es-tu ?" pour confirmer Opus 4.7).
 
-### Action #2 — Ajouter Phase 0 « model check » au CLAUDE.md projet (10 min)
+### Action #2 — Phase 0 « model check » au démarrage de session
 
-Dans `F:\PROJECTS\Apps\ankora\CLAUDE.md`, ajouter en tête de la section **"Orchestration des PR"** :
-
-```markdown
-### Phase 0 — Model check (obligatoire au démarrage)
-
-Au début de chaque session CC Ankora, **VÉRIFIER LE MODÈLE ACTIF** :
-
-1. Si Opus 4.7 → continuer normalement
-2. Si Haiku/Sonnet/autre → STOP. Avertir @thierry, ne PAS toucher au code, attendre que Opus soit dispo OU que @thierry valide explicitement le downgrade pour une tâche triviale (jamais sécurité/architecture).
-
-Reference incident : `docs/audits/2026-04-25-haiku-incident-cross-project-lessons.md`.
-```
+> **Source canonique (fichier vivant)** : [`CLAUDE.md`](../../CLAUDE.md) projet, section **« Orchestration des PR »** → sous-section **« Phase 0 — Model check (obligatoire au démarrage) »**.
+>
+> Ce document d'audit reste la **référence historique de l'incident** ayant motivé la règle. Le contenu opérationnel (procédure, garde-fous) vit dans `CLAUDE.md` projet et est mis à jour là-bas.
 
 ### Action #3 — Règle absolue dans CLAUDE.md global (5 min)
 
