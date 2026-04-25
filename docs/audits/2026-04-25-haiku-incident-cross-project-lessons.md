@@ -96,7 +96,7 @@ Le bypass token Vercel a fui sur Terminal Learning parce qu'il a été tapé en 
 
 > **« Je préfère un message d'erreur explicite à un downgrade silencieux. »**
 
-C'est la philosophie qui sous-tend toutes les actions ci-dessus. Le downgrade silencieux est le pire pattern dans un système IA-augmenté parce qu'il fait croire que tout va bien alors que la qualité s'effondre. Un message d'erreur force le humain à décider consciemment ; le downgrade silencieux laisse l'agent dégradé écrire des dégâts qu'on ne détecte qu'après.
+C'est la philosophie qui sous-tend toutes les actions ci-dessus. Le downgrade silencieux est le pire pattern dans un système IA-augmenté parce qu'il fait croire que tout va bien alors que la qualité s'effondre. Un message d'erreur force l'humain à décider consciemment ; le downgrade silencieux laisse l'agent dégradé écrire des dégâts qu'on ne détecte qu'après.
 
 ## 5. Pour les autres projets de @thierry
 
@@ -106,7 +106,7 @@ Cette discipline s'applique aussi à :
 - **Obsidian / cowork-stats / autres** — auditer au cas par cas
 - **Tout futur projet** — ajouter ce check dans le template d'init
 
-Idéalement, créer un **skill global `model-pin-checker`** qui audit tous les projets sous `F:\PROJECTS\` et signale ceux sans pin de modèle. Tâche non urgente mais utile en background.
+Idéalement, créer un **skill global `model-pin-checker`** qui audite tous les projets sous `F:\PROJECTS\` et signale ceux sans pin de modèle. Tâche non urgente mais utile en background.
 
 ## 6. Sources et traces
 
