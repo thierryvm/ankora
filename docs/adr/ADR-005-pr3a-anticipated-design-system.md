@@ -7,6 +7,8 @@
 - **Tags** : `architecture`, `process`, `design-system`, `roadmap`
 - **Portée** : ROADMAP Phase 1 (MVP). N'affecte ni le produit ni la sécurité ; modifie uniquement l'**ordre d'exécution** des PRs techniques.
 
+> **Glossaire des handles** (@cowork, @cc-design, @cc-ankora, @thierry) — voir source canonique : [`docs/design/trio-agents.md`](../design/trio-agents.md).
+
 ---
 
 ## Contexte & problème
@@ -23,7 +25,7 @@ Le 25 avril 2026, @cowork a piloté une session @cc-design (`claude.ai/design`, 
 - Fonts brand (Inter Variable, Fraunces Variable, JetBrains Mono Variable)
 - SKILL `ankora-design-system` (5.6 KB)
 - 4 UI kits HTML/JSX (landing, user dashboard, admin, onboarding)
-- Components atomiques `_shared/` + previews HTML
+- Composants atomiques `_shared/` + previews HTML
 
 Lecture du livrable + brief d'intégration ont révélé que **PR-3 dans sa forme monolithique** (port complet en une PR) :
 
@@ -119,7 +121,7 @@ PR-1 → PR-Q → PR-1bis → PR-3a → PR-2 → PR-B1 → PR-3b → PR-3c → P
 
 1. **PR-3a ne touche aucun composant, aucune page, aucun test E2E.** Uniquement tokens, fonts, SKILL. Cela garantit qu'elle ne peut PAS casser l'UI existante.
 2. **PR-3c sera précédée d'un `docs/design/landing-merge-analysis.md`** documentant le diff section par section entre la Landing actuelle (à GARDER) et l'apport cc-design (à IMPORTER). Pas de remplacement brutal.
-3. **i18n** : les `messages/fr-BE.json` + `en.json` du ZIP cc-design sont **inspiration uniquement**, pas import direct (architecture next-intl + parité 5 locales trop sensible — cf. mémoire feedback `i18n-translator`).
+3. **i18n** : les `messages/fr-BE.json` + `en.json` du ZIP cc-design sont **une source d'inspiration uniquement**, pas import direct (architecture next-intl + parité 5 locales trop sensible — cf. mémoire feedback `i18n-translator`).
 4. **Validation @thierry à chaque étape** : merge PR-3a avant démarrage PR-3b ; merge PR-3b avant démarrage PR-3c.
 5. **Agents QA pertinents** lancés à chaque PR (security-auditor, gdpr-compliance-auditor, ui-auditor pour PR-3b/c, lighthouse-auditor pour PR-3c).
 
@@ -168,4 +170,4 @@ Cet ADR est référencé dans `docs/ROADMAP.md` :
 - Dans la section §"Pourquoi PR-3a avant PR-2 et PR-B1 ?" (justification courte avec lien vers cet ADR)
 - Dans la section §"Prochaine feature majeure" (PR-3a comme prochaine)
 
-Toute évolution du re-séquencement nécessitera **un nouvel ADR** (ADR-006+) qui supersedera celui-ci, conformément à la doctrine immutable des ADRs.
+Toute évolution du re-séquencement nécessitera **un nouvel ADR** (ADR-006+) qui supersédera celui-ci, conformément à la doctrine immutable des ADRs.
