@@ -1,5 +1,7 @@
 # CLAUDE.md — Ankora
 
+> **Trio IA & gouvernance** — Source canonique : [`docs/design/trio-agents.md`](docs/design/trio-agents.md). Le résumé ci-dessous est intentionnellement répété pour visibilité au démarrage de session ; toute modification doit être répercutée dans la source canonique.
+
 Projet **Ankora** : cockpit personnel de finances (PWA Next.js 16 + Supabase, hébergé UE).
 Ce fichier complète le `CLAUDE.md` global de Thierry. En cas de conflit, ce fichier prévaut.
 

@@ -1,5 +1,7 @@
 # Prompt CC Ankora — Handoff intégration Design System Claude Design (PR-3)
 
+> **Trio IA & gouvernance** — Source canonique : [`docs/design/trio-agents.md`](trio-agents.md). Le résumé ci-dessous est intentionnellement répété pour visibilité au démarrage de session ; toute modification doit être répercutée dans la source canonique.
+
 **Date** : 25 avril 2026
 **Source** : Session Claude Design #1 terminée (validée @thierry + @cowork)
 **Branche cible** : `feat/cc-design-handoff-v1` (à créer depuis `main`)

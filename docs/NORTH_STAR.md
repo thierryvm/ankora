@@ -1,5 +1,7 @@
 # North Star — Ankora v1.0
 
+> **Trio IA & gouvernance** — Source canonique : [`docs/design/trio-agents.md`](design/trio-agents.md). Le résumé ci-dessous est intentionnellement répété pour visibilité au démarrage de session ; toute modification doit être répercutée dans la source canonique.
+
 Source unique de vérité pour la vision et les décisions produit jusqu'à la v1.0 publique.
 
 Dernière mise à jour : 24 avril 2026 (adoption trio IA + workflow Claude Design).
