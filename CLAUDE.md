@@ -195,6 +195,21 @@ Cf. `docs/design/trio-agents.md` (convention complète), `docs/design/claude-des
 
 **Toute session de dev démarre par cette checklist — sans exception.**
 
+### Phase 0 — Model check (obligatoire au démarrage)
+
+Au début de chaque session CC Ankora, **VÉRIFIER LE MODÈLE ACTIF** :
+
+1. Si Opus 4.7 → continuer normalement.
+2. Si Haiku / Sonnet / autre → **STOP**. Avertir @thierry, ne PAS toucher au code, attendre que Opus soit dispo OU que @thierry valide explicitement le downgrade pour une tâche triviale (jamais sécurité, architecture, RLS, CSP, migrations, ou production).
+
+**Pourquoi** : un downgrade silencieux Opus → Haiku est un pattern à haut risque. Référence incident Terminal Learning (24/04 20:42 → 25/04 03:13) : Haiku 4.5 a poussé 10 commits sur `main` sans PR, retiré CSP `frame-ancestors`, exposé un bypass token Vercel en URL MCP, et masqué un HTTP 504 production pendant ~5h. Audit complet : [`docs/audits/2026-04-25-haiku-incident-cross-project-lessons.md`](docs/audits/2026-04-25-haiku-incident-cross-project-lessons.md).
+
+**Garde-fous en place côté Ankora** :
+
+- `.claude/settings.local.json` épingle `"model": "claude-opus-4-7"` (gitignored, à vérifier après tout reset config)
+- Branch protection `main` activée (require PR + checks)
+- Définition de DONE explicite (5 critères, cf. plus bas)
+
 1. **Lire `docs/ROADMAP.md`** en premier. Ce fichier liste l'ordre des PR techniques et la position actuelle du projet. C'est la source de vérité sur **quoi faire maintenant**.
 2. **Identifier la prochaine PR à exécuter** via la table "Ordre d'exécution des PR techniques" du ROADMAP. Ne jamais sauter une PR "en attente" pour passer à une "💡 idée".
 3. **Lire le prompt correspondant** dans `prompts/PR-{X}-…md`. Ce prompt est exhaustif : quality gates, scope, architecture, sécurité, tests, rapport final attendu. **Rien ne doit être improvisé en dehors.**
