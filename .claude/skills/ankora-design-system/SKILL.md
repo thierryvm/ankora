@@ -20,6 +20,17 @@ This is **non-negotiable** — it's a regulatory choice, part of the FSMA-compli
 
 - Import `colors_and_type.css` at the top of every new HTML/CSS file. **Do not redefine colors, radii, shadows, or type scale.** Every component reads from the tokens declared there.
 - Dark mode is the default. Light mode is supported via `[data-theme="dark"]` being present or absent on `<html>`. Never hard-code a hex value for a neutral.
+- **In the Ankora Next.js context** (PR-3a integration, 2026-04-25): tokens live in `src/app/globals.css` via `@import 'tailwindcss'` + `@theme {}` block. The `colors_and_type.css` and `ui_kits/_shared/shell.css` references in this SKILL refer to the original ZIP source — adapt paths when generating Ankora Next.js code.
+
+### Browser support baseline
+
+Modern CSS features used by this design system:
+
+- `color-mix(in oklab, ...)` — Chrome 111+ (March 2023), Safari 16.2+ (December 2022), Firefox 113+ (May 2023)
+- `backdrop-filter: blur(...) saturate(...)` — universal modern support
+- `@media (prefers-reduced-transparency: reduce)` — Chrome 116+, Safari 17+, Firefox 113+
+
+**Baseline accepted by @cowork (2026-04-25)**: Chrome 111+ / Safari 16.2+ / Firefox 113+ (~3 years of universal support at v1.0 launch). Older browsers see graceful degradation: `.glass` becomes transparent (background fallback to `var(--color-card)`), text remains readable, no broken layout. If v1.0 launch targets older browsers, add explicit fallbacks in PR-3b.
 
 ## 2. Accent rule is non-negotiable
 

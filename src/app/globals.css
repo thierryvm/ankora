@@ -176,14 +176,24 @@
 
 /* ---------- Admin accent flip ----------
    Scope `[data-accent="admin"]` on any admin root to remap brand* → accent (laiton)
-   without rewriting components. Same grammar, different pigment. */
+   without rewriting components. Same grammar, different pigment.
+
+   Coverage: ALL brand shades (50-950) are remapped to ensure no teal leaks through
+   in admin contexts. brand-950 maps to accent-900 because the laiton palette stops
+   at 900 (no 950 step needed by design — sextant brass doesn't go that deep).
+   Plug-gaps-at-source per @cowork doctrine (PR #62 Sourcery finding L186). */
 [data-accent='admin'] {
   --color-brand-50: var(--color-accent-50);
   --color-brand-100: var(--color-accent-100);
+  --color-brand-200: var(--color-accent-200);
+  --color-brand-300: var(--color-accent-300);
   --color-brand-400: var(--color-accent-400);
   --color-brand-500: var(--color-accent-500);
   --color-brand-600: var(--color-accent-600);
   --color-brand-700: var(--color-accent-700);
+  --color-brand-800: var(--color-accent-800);
+  --color-brand-900: var(--color-accent-900);
+  --color-brand-950: var(--color-accent-900); /* laiton has no 950 — fallback to deepest brass */
   --color-brand-surface: var(--color-accent-surface);
   --color-brand-surface-border: var(--color-accent-surface-border);
   --color-brand-text: var(--color-accent-text);
