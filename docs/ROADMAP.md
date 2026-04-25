@@ -1,6 +1,6 @@
 # Roadmap — Ankora
 
-Dernière mise à jour : 23 avril 2026 — Reboot v1.0 Pilier A (gouvernance + agents QA) complété. Prêt pour PR-2 (traductions).
+Dernière mise à jour : 25 avril 2026 — Workflow trio @cowork/@cc-design/@cc-ankora opérationnel. PR-3 splittée en PR-3a/b/c, PR-3a anticipée comme socle architectural avant PR-2 (cf. [ADR-005](./adr/ADR-005-pr3a-anticipated-design-system.md)).
 
 ## Cap v1.0 publique — Vision & Jalons (23 avril 2026)
 
@@ -68,22 +68,36 @@ Toute PR introduisant un service tiers facturé **doit d'abord obtenir validatio
 
 L'ordre ci-dessous est **verrouillé**. Il a été pensé pour que chaque PR débloque la suivante sans dette technique ni retouche arrière.
 
-| #   | PR                                           | Statut                                                | Bloquant pour     | Raison d'être                              |
-| --- | -------------------------------------------- | ----------------------------------------------------- | ----------------- | ------------------------------------------ |
-| 1   | **PR-1 — Socle i18n next-intl**              | ✅ mergée                                             | PR-1bis           | Route group `[locale]` + 5 locales         |
-| 2   | **PR-Q — OpenGraph statique**                | ✅ mergée                                             | —                 | 5 PNG 1200×630 générés via Playwright      |
-| 3   | **PR-1bis — Extraction i18n routes privées** | ✅ mergée (a491297, 18 avril 2026)                    | PR-2              | Clés i18n pour auth + app + onboarding     |
-| 4   | **PR-2 — Traductions NL/EN/ES/DE**           | ⏳ en attente (après dettes post-PR-1bis)             | PR-3              | Remplissage des 4 locales non-FR           |
-| 5   | **PR-B1 — Bug reporting MVP**                | 📋 prompt prêt (`prompts/PR-B1-bug-reporting-mvp.md`) | PR-3 (recommandé) | Capteur d'erreurs + widget avant QA lourde |
-| 6   | **PR-3 — Port mockups → React prod**         | 📋 prompt prêt                                        | PR-F              | Remplacement de l'UI actuelle              |
-| 7   | **PR-F — Rétro-planning provisions**         | 💡 idée                                               | PR-B2             | Alertes J-N avant retrait d'épargne        |
-| 8   | **PR-B2 — Admin panel complet**              | 💡 idée (post-MVP)                                    | —                 | Dashboard santé + métriques + règles       |
+**Re-séquencement 2026-04-25** : PR-3 monolithique splittée en **PR-3a/b/c** ; PR-3a anticipée avant PR-2/PR-B1 comme socle architectural. Justification complète : [ADR-005](./adr/ADR-005-pr3a-anticipated-design-system.md).
+
+| #   | PR                                                    | Statut                                                               | Bloquant pour        | Raison d'être                                                                              |
+| --- | ----------------------------------------------------- | -------------------------------------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------ |
+| 1   | **PR-1 — Socle i18n next-intl**                       | ✅ mergée                                                            | PR-1bis              | Route group `[locale]` + 5 locales                                                         |
+| 2   | **PR-Q — OpenGraph statique**                         | ✅ mergée                                                            | —                    | 5 PNG 1200×630 générés via Playwright                                                      |
+| 3   | **PR-1bis — Extraction i18n routes privées**          | ✅ mergée (a491297, 18 avril 2026)                                   | PR-2                 | Clés i18n pour auth + app + onboarding                                                     |
+| 4   | **PR-3a — Design System socle (DS + tokens + fonts)** | 📋 prochaine (`docs/design/cc-ankora-prompt-handoff-integration.md`) | PR-2, PR-B1, PR-3b/c | Tokens canoniques, fonts, SKILL `ankora-design-system` — débloque toute la couche visuelle |
+| 5   | **PR-2 — Traductions NL/EN/ES/DE**                    | ⏳ en attente (après PR-3a)                                          | PR-3c                | Remplissage des 4 locales non-FR                                                           |
+| 6   | **PR-B1 — Bug reporting MVP**                         | 📋 prompt prêt (`prompts/PR-B1-bug-reporting-mvp.md`)                | PR-3b/c (recommandé) | Capteur d'erreurs + widget avant QA lourde                                                 |
+| 7   | **PR-3b — Atomic UI kit**                             | 📋 cadré (post-PR-3a)                                                | PR-3c                | `src/components/ui/` (Button, Card, Input, Badge…) + tests Vitest                          |
+| 8   | **PR-3c — Landing fusion intelligente**               | 📋 cadré (post-PR-3b + `landing-merge-analysis.md`)                  | PR-F                 | Fusion ossature TSX/RSC actuelle ↔ apports cc-design (hero waterfall, simulator, pricing)  |
+| 9   | **PR-F — Rétro-planning provisions**                  | 💡 idée                                                              | PR-B2                | Alertes J-N avant retrait d'épargne                                                        |
+| 10  | **PR-B2 — Admin panel complet**                       | 💡 idée (post-MVP)                                                   | —                    | Dashboard santé + métriques + règles                                                       |
 
 Signification des icônes : ✅ mergée · 🚧 en cours · ⏳ en attente d'un prérequis · 📋 prompt rédigé prêt à exécuter · 💡 idée cadrée mais pas encore de prompt.
 
-### Pourquoi PR-B1 avant PR-3 ?
+### Pourquoi PR-3a avant PR-2 et PR-B1 ?
 
-PR-3 est gros (40+ composants React, migrations visuelles massives) et va générer des bugs subtils de style/interaction/a11y. Si PR-B1 est en place **avant** PR-3, chaque bug rencontré en QA génère un bundle markdown copiable en 2 clics vers Claude Code. Gain de temps majeur sur le debugging de PR-3.
+PR-3a livre les **tokens canoniques + fonts + SKILL `ankora-design-system`** sans toucher aux composants ni aux pages. Sans cela :
+
+- **PR-2** traduirait des chaînes UI qui changeront visuellement en PR-3b/c (re-traduction inutile sur copies obsolètes)
+- **PR-B1** construirait son widget bug-reporting sur des primitives `Button`/`Card`/`Modal` qu'il faudrait re-styler en PR-3b
+- **PR-3b** travaillerait sur des tokens incohérents avec le DS final
+
+PR-3a est un **socle architectural** (≤ 400 lignes, 0 régression UI possible) qui débloque proprement la suite.
+
+### Pourquoi PR-B1 avant PR-3b/c ?
+
+PR-3b (composants atomiques) et surtout PR-3c (Landing fusion) vont générer des bugs subtils de style/interaction/a11y. Si PR-B1 est en place **avant** PR-3b/c, chaque bug rencontré en QA génère un bundle markdown copiable en 2 clics vers Claude Code. Gain de temps majeur sur le debugging.
 
 ---
 
@@ -101,7 +115,8 @@ Trois PRs atomiques enchaînées **dans cet ordre** pour éviter les conflits su
 
 ## Prochaine feature majeure
 
-- **PR-3 — Port mockups React prod** : en attente du **mockup v2 simulateur bidirectionnel** validé par Thierry (travail en cours côté Cowork, livrable courant semaine). Ne pas démarrer avant validation explicite du mockup et du glossaire de composants.
+- **PR-3a — Design System socle** : prochaine PR à exécuter sur la branche `feat/cc-design-handoff-v1`. Source : ZIP `Ankora Design System.zip` livré par @cc-design (session #1, validée @thierry + @cowork le 2026-04-25). Prompt complet : `docs/design/cc-ankora-prompt-handoff-integration.md`. Cf. ADR-005 pour la justification du re-séquencement.
+- **PR-3b/c** : suivront PR-3a après validation @thierry. PR-3c sera précédée d'un `docs/design/landing-merge-analysis.md` documentant la fusion ossature TSX/RSC actuelle ↔ apports cc-design.
 
 ## Backlog produit
 
@@ -137,9 +152,11 @@ Objectif : cockpit personnel utilisable par Thierry, ses enfants et amis.
   - Batch B : routes privées (auth + app) migrées avec `generateMetadata` via `getTranslations`, server actions locale-aware, Zod i18n-friendly
   - Tests : parity sync des 4 stubs non-FR + E2E skip GDPR banner sur mobile emulations (Pixel 7 + iPhone 14, flaky tap dispatch)
   - Hygiène : `.gitignore` durci (`design-mockup-*.html`, `.claude/settings.local.json`, `prompts/`)
-- [ ] PR-2 — traductions NL-BE / EN / ES-ES / DE-DE (glossaire doc déjà écrit, prompt final après dettes post-PR-1bis)
+- [ ] **PR-3a — Design System socle** (tokens + fonts + SKILL `ankora-design-system`) — prochaine PR (cf. ADR-005)
+- [ ] PR-2 — traductions NL-BE / EN / ES-ES / DE-DE (glossaire doc déjà écrit)
 - [ ] PR-B1 — Bug reporting MVP (voir §PR-B1 ci-dessous)
-- [ ] PR-3 — port mockups → React production (prompt prêt)
+- [ ] PR-3b — Atomic UI kit (`src/components/ui/` + tests Vitest)
+- [ ] PR-3c — Landing fusion intelligente (ossature actuelle + apports cc-design)
 
 ### Bloc fonctionnel produit
 
