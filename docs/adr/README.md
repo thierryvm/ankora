@@ -28,12 +28,13 @@ Chaque ADR est immuable une fois `Accepted`. Pour le faire évoluer :
 
 ## Index
 
-| #   | Titre                                                                        | Statut   | Date       |
-| --- | ---------------------------------------------------------------------------- | -------- | ---------- |
-| 001 | [No-PSD2 : agrégation via import manuel](./ADR-001-no-psd2.md)               | Accepted | 2026-04-20 |
-| 002 | [Modèle bucket (comptes + enveloppes)](./ADR-002-bucket-model.md)            | Accepted | 2026-04-20 |
-| 003 | [Système de notifications (in-app first)](./ADR-003-notifications-system.md) | Accepted | 2026-04-20 |
-| 004 | [Logger structuré (Pino + wrapper Edge)](./ADR-004-structured-logging.md)    | Accepted | 2026-04-20 |
+| #   | Titre                                                                                        | Statut   | Date       |
+| --- | -------------------------------------------------------------------------------------------- | -------- | ---------- |
+| 001 | [No-PSD2 : agrégation via import manuel](./ADR-001-no-psd2.md)                               | Accepted | 2026-04-20 |
+| 002 | [Modèle bucket (comptes + enveloppes)](./ADR-002-bucket-model.md)                            | Accepted | 2026-04-20 |
+| 003 | [Système de notifications (in-app first)](./ADR-003-notifications-system.md)                 | Accepted | 2026-04-20 |
+| 004 | [Logger structuré (Pino + wrapper Edge)](./ADR-004-structured-logging.md)                    | Accepted | 2026-04-20 |
+| 005 | [PR-3a anticipée comme prérequis architectural](./ADR-005-pr3a-anticipated-design-system.md) | Accepted | 2026-04-25 |
 
 ## Conventions de nommage
 
