@@ -29,9 +29,13 @@ const PUBLIC_ROUTES: ReadonlyArray<{ path: string; label: string }> = [
 test.describe('a11y baseline — WCAG 2.1 AA on public routes', () => {
   for (const route of PUBLIC_ROUTES) {
     test(`${route.label} (${route.path}) has zero WCAG AA violations`, async ({ page }) => {
+      // `waitUntil: 'load'` fires after the load event — DOM + sub-resources
+      // (CSS, fonts, images) are ready, which is what axe needs to compute
+      // contrast and detect missing labels. We intentionally do NOT wait for
+      // `networkidle`: with Next.js prefetch + dev tooling on the preview,
+      // the network rarely goes idle within Playwright's 15s budget and
+      // every test times out (observed on PR #69 / run 24966447424).
       await page.goto(route.path, { waitUntil: 'load' });
-      // Wait for any client hydration to settle before scanning.
-      await page.waitForLoadState('networkidle');
       await expectA11yPass(page);
     });
   }
