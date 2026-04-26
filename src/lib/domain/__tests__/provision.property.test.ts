@@ -2,7 +2,7 @@ import { describe, it } from 'vitest';
 import * as fc from 'fast-check';
 
 import { safetyBuffer } from '../provision';
-import { money, type Charge, type ChargeFrequency } from '../types';
+import { chargeArb } from '../../../../tests/helpers/domain-arbitraries';
 
 /**
  * Property tests for src/lib/domain/provision.safetyBuffer — annualized
@@ -10,28 +10,12 @@ import { money, type Charge, type ChargeFrequency } from '../types';
  * Invariants : non-negativity + commutativity + zero-exclusion of inactive
  * charges.
  *
+ * Uses the shared `chargeArb` (mixed isActive) from
+ * `tests/helpers/domain-arbitraries` so the inactive-charge invariants
+ * are exercised on the same generator shape as other domain tests.
+ *
  * Refs: ADR-006 + docs/testing-strategy.md §Phase T1.
  */
-
-const frequencyArb: fc.Arbitrary<ChargeFrequency> = fc.constantFrom(
-  'monthly',
-  'quarterly',
-  'semiannual',
-  'annual',
-);
-
-const chargeArb = fc.record({
-  id: fc.uuid(),
-  label: fc.string({ minLength: 1, maxLength: 30 }),
-  amount: fc
-    .double({ min: 0.01, max: 100_000, noNaN: true, noDefaultInfinity: true })
-    .map((n) => money(n.toFixed(2))),
-  frequency: frequencyArb,
-  dueMonth: fc.integer({ min: 1, max: 12 }),
-  categoryId: fc.option(fc.uuid(), { nil: null }),
-  isActive: fc.boolean(),
-  paidFrom: fc.constantFrom('principal', 'epargne'),
-}) as fc.Arbitrary<Charge>;
 
 describe('safetyBuffer — properties', () => {
   it('is non-negative for any input', () => {

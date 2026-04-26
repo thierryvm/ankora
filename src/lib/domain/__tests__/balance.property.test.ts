@@ -82,13 +82,44 @@ describe('remainingBudget — properties', () => {
     );
   });
 
-  it('throws RangeError on any negative input', () => {
-    const negativeMoney = fc
-      .double({ min: -1_000_000, max: -0.01, noNaN: true, noDefaultInfinity: true })
-      .map((n) => money(n.toFixed(2)));
+  // The function rejects negativity on each of the three operands. We split
+  // into three focused properties (one per operand) so a regression on any
+  // single guard is attributed clearly in the test report — instead of a
+  // single broad property that could obscure which guard regressed.
 
+  const negativeMoneyArb = fc
+    .double({ min: -1_000_000, max: -0.01, noNaN: true, noDefaultInfinity: true })
+    .map((n) => money(n.toFixed(2)));
+
+  it('throws RangeError when income is negative', () => {
     fc.assert(
-      fc.property(negativeMoney, moneyArb, moneyArb, (income, chargesDue, variableSpent) => {
+      fc.property(negativeMoneyArb, moneyArb, moneyArb, (income, chargesDue, variableSpent) => {
+        try {
+          remainingBudget(income, chargesDue, variableSpent);
+          return false;
+        } catch (error) {
+          return error instanceof RangeError;
+        }
+      }),
+    );
+  });
+
+  it('throws RangeError when chargesDue is negative', () => {
+    fc.assert(
+      fc.property(moneyArb, negativeMoneyArb, moneyArb, (income, chargesDue, variableSpent) => {
+        try {
+          remainingBudget(income, chargesDue, variableSpent);
+          return false;
+        } catch (error) {
+          return error instanceof RangeError;
+        }
+      }),
+    );
+  });
+
+  it('throws RangeError when variableSpent is negative', () => {
+    fc.assert(
+      fc.property(moneyArb, moneyArb, negativeMoneyArb, (income, chargesDue, variableSpent) => {
         try {
           remainingBudget(income, chargesDue, variableSpent);
           return false;

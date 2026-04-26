@@ -137,7 +137,7 @@ Pour chaque feature, les types de tests obligatoires sont marqués ✅ et les op
 - ✅ Helper `e2e/helpers/a11y.ts` exposant `expectA11yPass(page)` (WCAG 2.1 A + AA tags)
 - ✅ `e2e/a11y/baseline.spec.ts` couvrant 7 routes publiques (/, /login, /signup, /glossaire, /legal/cgu, /legal/privacy, /legal/cookies)
 - ✅ Scripts npm `test:property` + `e2e:a11y`
-- ⏳ Tests integration auth/RLS routes : différés à T4 (Supabase test session non câblée en CI, cf. issue #35)
+- ⏳ Tests d'intégration auth/RLS routes : différés à T4 (Supabase test session non câblée en CI, cf. issue #35)
 
 **Objectifs :**
 

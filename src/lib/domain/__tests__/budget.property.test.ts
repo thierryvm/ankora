@@ -8,7 +8,8 @@ import {
   monthlyProvisionFor,
   monthlyProvisionTotal,
 } from '../budget';
-import { money, type Charge, type ChargeFrequency } from '../types';
+import { money } from '../types';
+import { activeChargeArb as chargeArb } from '../../../../tests/helpers/domain-arbitraries';
 
 /**
  * Property tests for src/lib/domain/budget — the smoothing math that turns
@@ -16,28 +17,11 @@ import { money, type Charge, type ChargeFrequency } from '../types';
  * monthly provision. Invariants here are load-bearing for the entire
  * "Budget de lissage" concept.
  *
+ * Uses the shared `activeChargeArb` from `tests/helpers/domain-arbitraries`
+ * so generator updates propagate to every domain property test in one place.
+ *
  * Refs: ADR-006 + docs/testing-strategy.md §Phase T1.
  */
-
-const frequencyArb: fc.Arbitrary<ChargeFrequency> = fc.constantFrom(
-  'monthly',
-  'quarterly',
-  'semiannual',
-  'annual',
-);
-
-const chargeArb = fc.record({
-  id: fc.uuid(),
-  label: fc.string({ minLength: 1, maxLength: 30 }),
-  amount: fc
-    .double({ min: 0.01, max: 100_000, noNaN: true, noDefaultInfinity: true })
-    .map((n) => money(n.toFixed(2))),
-  frequency: frequencyArb,
-  dueMonth: fc.integer({ min: 1, max: 12 }),
-  categoryId: fc.option(fc.uuid(), { nil: null }),
-  isActive: fc.constant(true),
-  paidFrom: fc.constantFrom('principal', 'epargne'),
-}) as fc.Arbitrary<Charge>;
 
 describe('monthlyProvisionFor — properties', () => {
   it('is zero for an inactive charge', () => {

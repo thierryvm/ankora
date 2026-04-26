@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 /**
  * Reusable axe-core helper for WCAG 2.1 AA compliance scans on Playwright pages.
@@ -33,7 +33,16 @@ export type AxeScanOptions = {
  * affected element selector — enough to fix the issue from the test report.
  */
 export async function expectA11yPass(page: Page, options: AxeScanOptions = {}): Promise<void> {
-  let builder = new AxeBuilder({ page }).withTags(options.tags ?? WCAG_AA_TAGS);
+  const tags = options.tags ?? WCAG_AA_TAGS;
+  let builder = new AxeBuilder({ page });
+
+  // Apply tag filter only when non-empty: an empty tags array means "no tag
+  // filter — run all axe rules" (per the AxeScanOptions docstring). Calling
+  // `withTags([])` would instead disable every rule and silently return zero
+  // violations, masking real a11y issues.
+  if (tags.length > 0) {
+    builder = builder.withTags(tags);
+  }
 
   if (options.exclude && options.exclude.length > 0) {
     for (const selector of options.exclude) {
@@ -43,6 +52,9 @@ export async function expectA11yPass(page: Page, options: AxeScanOptions = {}): 
 
   const results = await builder.analyze();
 
+  // Single failure mechanism: throw with a rich, actionable message. The
+  // earlier `expect(...).toHaveLength(0)` assertion was unreachable after
+  // the throw (and offered no extra signal), so it was removed.
   if (results.violations.length > 0) {
     const summary = results.violations
       .map(
@@ -56,6 +68,4 @@ export async function expectA11yPass(page: Page, options: AxeScanOptions = {}): 
       `axe-core found ${results.violations.length} WCAG AA violation(s):\n\n${summary}`,
     );
   }
-
-  expect(results.violations).toHaveLength(0);
 }
