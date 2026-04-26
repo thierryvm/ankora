@@ -150,6 +150,7 @@ export function HeaderNav({ variant = 'marketing' }: HeaderNavProps) {
         ref={navRef}
         role="dialog"
         aria-modal="true"
+        aria-hidden={!isOpen}
         aria-label={t('nav.mobileLabel')}
         className={`bg-card border-border fixed top-0 right-0 bottom-0 z-40 w-80 overflow-y-auto border-l transition-transform duration-300 lg:hidden ${
           isOpen ? 'pointer-events-auto translate-x-0' : 'pointer-events-none translate-x-full'
