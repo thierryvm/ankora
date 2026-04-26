@@ -10,6 +10,8 @@ Langue du brief : **anglais** (Claude Design comprend les deux mais l'anglais do
 
 **À coller en TÊTE de toute session Claude Design Ankora, avant le prompt d'initialisation.** Ces exclusions sont le résultat de contraintes business/réglementaires non négociables (FSMA Belgique, scope v1.0 verrouillé, budget 0 €). Toute variante générée qui viole ces exclusions sera rejetée à l'extraction côté CC Ankora et doit être évitée à la source.
 
+> **Source canonique réglementaire** : [ADR-001 No-PSD2](../adr/ADR-001-no-psd2.md) verrouille la décision FSMA.
+
 ```
 HARD EXCLUSIONS — DO NOT EXPLORE, DO NOT GENERATE VARIANTS, DO NOT ARCHIVE IN scraps/
 
