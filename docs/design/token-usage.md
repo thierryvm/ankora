@@ -4,7 +4,7 @@
 > **Statut** : actif, à respecter sur toutes les PR touchant l'UI.
 > **Trigger de création** : bug WCAG AA détecté en PR T1 (#69) — usage de `--color-muted` comme surface dans HeaderNav, contraste 3.36:1 vs 4.5:1 requis. Investigation @cowork du ZIP cc-design source : les valeurs des tokens muted sont **intentionnelles** (commentaire `colors_and_type.css` ligne 222 : _".t-muted = timestamps, helper text, disabled (#94a3b8, 3.6:1 — below AA)"_). Le bug est l'usage, pas le design system.
 
-Ce document définit la **convention d'usage** des tokens CSS d'Ankora. Tous les agents (humain, CC Ankora, CC Design, futur dev) doivent le respecter pour éviter des régressions WCAG AA silencieuses.
+Ce document définit la **convention d'usage** des tokens CSS d'Ankora. Tous les agents (humains, CC Ankora, CC Design, futurs devs) doivent le respecter pour éviter des régressions WCAG AA silencieuses.
 
 ---
 
@@ -93,7 +93,7 @@ Légende :
 | `--color-border`        | ❌ jamais | ❌ jamais | ✅ Bordure standard                     |       |
 | `--color-border-strong` | ❌ jamais | ❌ jamais | ✅ Bordure renforcée (focus, sélection) |       |
 
-### Tokens SÉMANTIQUE (success / warning / danger / info)
+### Tokens SÉMANTIQUES (success / warning / danger / info)
 
 | Token             | `text-*`                             | `bg-*`                              | `border-*`         | Notes                                                                                   |
 | ----------------- | ------------------------------------ | ----------------------------------- | ------------------ | --------------------------------------------------------------------------------------- |
@@ -115,7 +115,7 @@ Les paires les plus utilisées, vérifiées au moment de la rédaction de ce doc
 | `text-foreground` (#0f172a)       | `bg-background` (#ffffff)      | 18.59:1 | ✅ AAA                                    |
 | `text-foreground` (#0f172a)       | `bg-card` (#ffffff ou variant) | ≥ 15:1  | ✅ AAA                                    |
 | `text-foreground` (#0f172a)       | `bg-surface-muted` (#f1f5f9)   | 15.79:1 | ✅ AAA                                    |
-| `text-foreground` (#0f172a)       | `bg-muted` (#64748b)           | 3.36:1  | ❌ FAIL (≤ 4.5)                           |
+| `text-foreground` (#0f172a)       | `bg-muted` (#64748b)           | 3.36:1  | ❌ FAIL (< 4.5)                           |
 | `text-muted-foreground` (#475569) | `bg-card`                      | ≥ 7:1   | ✅ AAA                                    |
 | `text-muted` (#64748b)            | `bg-card`                      | 4.61:1  | ⚠️ Limite AA (texte décoratif uniquement) |
 
