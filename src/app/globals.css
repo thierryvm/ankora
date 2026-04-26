@@ -61,7 +61,20 @@
   --color-accent-800: #422006;
   --color-accent-900: #1c1917;
 
-  /* ---------- Neutral tokens (Light mode) ---------- */
+  /* ---------- Neutral tokens (Light mode) ----------
+   *
+   * Token usage convention (cc-design intent — do not invert):
+   *   --color-foreground         → primary text (always on background/card/surface-*)
+   *   --color-muted-foreground   → secondary text (paragraphs, labels, captions)
+   *   --color-muted              → DECORATIVE text only (timestamps, helper, disabled)
+   *                                Intentionally below WCAG AA when used as text/text;
+   *                                NEVER use as a background/surface — see below.
+   *   --color-card               → default card surface (white)
+   *   --color-surface-soft       → subtle elevated surface (e.g. inputs, panels)
+   *   --color-surface-muted      → muted surface for hovers, theme toggles, ghost buttons
+   *                                (use this when you'd reach for "bg-muted" by reflex)
+   *   --color-border             → 1px borders / dividers
+   * --------------------------------------------------- */
   --color-background: #f8fafc;
   --color-foreground: #0f172a;
   --color-muted: #64748b;
