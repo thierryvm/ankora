@@ -133,6 +133,15 @@ Ref : Linear Admin, Vercel team settings, Stripe dashboard vs Stripe Atlas.
 - ~~Coral magenta #f472b6~~ — trop pink, hors narrative
 - ~~Cuivre brûlé #c2410c~~ — conflit sémantique avec danger red
 
+**Doctrine `--color-warning` — séparation accent ↔ sémantique (verrouillée 2026-04-25 par @cowork sur arbitrage CC Ankora PR-3a)** :
+
+Le **laiton est l'accent de marque** (différenciation Ankora vs Revolut/N26/Qonto, et accent admin via `[data-accent='admin']`). Le **warning est une couleur sémantique UX universelle** (toast, alerte non-critique, "à vérifier"). Les deux ne doivent **jamais** être alignés sur la même valeur, même si la cohérence visuelle semble tentante.
+
+- ✅ `--color-warning: #d97706` (amber prod, lisibilité standard sur fond clair + sombre)
+- ❌ `--color-warning: #8b6914` (laiton patiné — confusion sémantique + pollution cognitive de l'accent admin)
+
+**Règle générale** : tout token sémantique (`success`, `warning`, `danger`, `info`) reste indépendant de l'accent de marque. La cohérence visuelle ne doit jamais gommer la cohérence cognitive — l'utilisateur lit les couleurs sémantiques avant de lire l'esthétique. Cette règle s'applique à toute future itération palette (y compris si on rebascule un jour sur un autre accent que le laiton).
+
 **Typographies** :
 
 - **Inter Variable** (UI) — OK mais "default", pas signature
