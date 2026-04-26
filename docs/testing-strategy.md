@@ -125,9 +125,19 @@ Pour chaque feature, les types de tests obligatoires sont marqués ✅ et les op
 
 ### Phase T1 — Fondations critiques (immédiat, parallèle PR-3a/b/c)
 
+**Statut** : 🚧 **Started 2026-04-26** (issue [#68](https://github.com/thierryvm/ankora/issues/68), PR `feat/test-t1-property-axe-baseline`)
 **Démarrage** : dès merge de l'ADR-006 + ce document
 **Durée estimée** : 3-4 jours
 **Owner** : @cc-ankora exécute, @cowork valide
+
+**Livraisons (PR-T1)** :
+
+- ✅ `fast-check@^4.7.0` + `@axe-core/playwright@^4.11.2` installés (devDependencies)
+- ✅ 4 fichiers `*.property.test.ts` co-located dans `src/lib/domain/__tests__/` (27 properties sur balance, budget, provision, simulation)
+- ✅ Helper `e2e/helpers/a11y.ts` exposant `expectA11yPass(page)` (WCAG 2.1 A + AA tags)
+- ✅ `e2e/a11y/baseline.spec.ts` couvrant 7 routes publiques (/, /login, /signup, /glossaire, /legal/cgu, /legal/privacy, /legal/cookies)
+- ✅ Scripts npm `test:property` + `e2e:a11y`
+- ⏳ Tests integration auth/RLS routes : différés à T4 (Supabase test session non câblée en CI, cf. issue #35)
 
 **Objectifs :**
 
