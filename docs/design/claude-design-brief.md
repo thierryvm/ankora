@@ -6,6 +6,56 @@ Langue du brief : **anglais** (Claude Design comprend les deux mais l'anglais do
 
 ---
 
+## 0. Non-negotiable exclusions — READ FIRST
+
+**À coller en TÊTE de toute session Claude Design Ankora, avant le prompt d'initialisation.** Ces exclusions sont le résultat de contraintes business/réglementaires non négociables (FSMA Belgique, scope v1.0 verrouillé, budget 0 €). Toute variante générée qui viole ces exclusions sera rejetée à l'extraction côté CC Ankora et doit être évitée à la source.
+
+```
+HARD EXCLUSIONS — DO NOT EXPLORE, DO NOT GENERATE VARIANTS, DO NOT ARCHIVE IN scraps/
+
+1. NO PSD2 / OPEN BANKING / IBAN IMPORT / BANK AGGREGATION
+   Ankora is forbidden by Belgian FSMA regulation from acting as a PSD2 aggregator.
+   The product is 100% manual data entry. Do NOT generate:
+     - Any "Connect your bank" UI
+     - Any "Import IBAN / sync transactions" flow
+     - Any onboarding step that mentions bank connection, even as a "coming soon" tease
+     - Any psd2-version.* archive in scraps/
+   If a flow seems to need bank data, the answer is always: ask the user to enter it manually.
+
+2. NO INVESTMENT ADVICE COPY (FSMA)
+   Ankora is an education + organization tool, NOT a financial advisor.
+   Forbidden formulations (FR + EN):
+     - "Vous devriez placer / investir"
+     - "Nous recommandons"
+     - "Get rich quick", "Investment tips", "Financial advice"
+     - Any nudge that suggests buying/selling assets
+   Allowed: budgeting nudges, savings goals, provision health.
+
+3. NO PAID DEPENDENCIES IN PHASE 1
+   Phase 1 product is free forever for early adopters (grandfathered).
+   Forbidden in any UI kit / component / variant:
+     - Pricing tiers beyond "Free Phase 1" (no $/€ pricing tiers visible in v1.0 surfaces)
+     - Premium-locked features ("Pro only" badges, paywalls)
+     - Trial timers, upgrade modals
+   Public landing /pricing may mention a future paid tier as a roadmap note only.
+
+4. NO STOCK FINTECH CLICHÉS
+   - No "phone-on-a-dashboard" hero illustrations
+   - No emoji icons (Lucide stroke 1.5 only)
+   - No dollar signs ($) — Ankora is European, € only
+   - No bento grid of equal cards without hierarchy
+   - No glassmorphism single-layer (Liquid Glass multi-layer only)
+   - No linear easing on transitions (spring physics default)
+
+5. LOCALE SCOPE v1.0 = FR + EN ONLY
+   Do NOT generate NL / DE / ES variants in user-facing surfaces. They ship post-launch.
+   Public /roadmap page may announce them as upcoming.
+
+If a generated variant violates any of the above, archive it locally (your discretion) but do NOT include it in the export ZIP. CC Ankora's extraction filter excludes paths matching *psd2*, *open-banking*, *iban-import* automatically.
+```
+
+---
+
 ## 1. Project initialization prompt (à coller à la création du projet)
 
 ```
