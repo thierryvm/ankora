@@ -21,12 +21,15 @@ const moneyArb = fc
   .double({ min: 0, max: 1_000_000, noNaN: true, noDefaultInfinity: true })
   .map((n) => money(n.toFixed(2))); // 2-decimal cents to match real currency input
 
-const expenseArb = fc.record({
+const expenseArb: fc.Arbitrary<Expense> = fc.record({
   id: fc.uuid(),
+  label: fc.string({ minLength: 1, maxLength: 30 }),
   amount: moneyArb,
+  occurredOn: fc.constant('2026-01-15'),
   categoryId: fc.option(fc.uuid(), { nil: null }),
-  occurredOn: fc.constant(new Date('2026-01-15')),
-}) as fc.Arbitrary<Expense>;
+  note: fc.option(fc.string({ maxLength: 50 }), { nil: null }),
+  paidFrom: fc.constantFrom('principal', 'vie_courante', 'epargne'),
+});
 
 describe('summarizeExpenses — properties', () => {
   it('totalSpent is commutative under list reordering', () => {
