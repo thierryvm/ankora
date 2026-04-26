@@ -11,24 +11,76 @@ jobs:
   check-sourcery-resolved:
     runs-on: ubuntu-latest
     steps:
-      - name: Check for active Sourcery comments on latest commit
+      - name: Check for unresolved Sourcery review threads
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          REPOSITORY: ${{ github.repository }}
         run: |
-          # Fetch Sourcery inline comments on the PR (with pagination to handle large PRs)
-          # Use escaped shell variable within jq filter to safely compare commit_id
-          filter='[.[] | select(.user.login == "sourcery-ai[bot]") | select(.commit_id == "'$HEAD_SHA'")] | length'
-          comments=$(gh api --paginate "repos/${{ github.repository }}/pulls/${PR_NUMBER}/comments" --jq "$filter")
+          # Why GraphQL instead of REST /comments:
+          # GitHub auto-updates a review comment's `commit_id` to the current HEAD
+          # whenever the comment can be re-anchored to a still-existing line. As a
+          # result, filtering the REST `/pulls/{n}/comments` endpoint by
+          # `commit_id == HEAD_SHA` flags resolved threads as "active" — the REST
+          # payload has no `isResolved` flag.
+          #
+          # GraphQL `pullRequest.reviewThreads` exposes the canonical `isResolved`
+          # field that GitHub UI uses to enforce branch protection. We treat a
+          # thread as actionable iff:
+          #   - the original commenter is `sourcery-ai`
+          #   - `isResolved` is false
+          #
+          # See PR #62 incident report for the bug this replaces.
 
-          echo "Active Sourcery comments on HEAD (${HEAD_SHA}): $comments"
+          owner="${REPOSITORY%/*}"
+          name="${REPOSITORY#*/}"
 
-          if [ "$comments" -gt 0 ]; then
-            echo "::error::Sourcery has $comments active comments on the latest commit. Resolve them before merging."
-            detail_filter='[.[] | select(.user.login == "sourcery-ai[bot]") | select(.commit_id == "'$HEAD_SHA'") | {path, line, body}]'
-            gh api --paginate "repos/${{ github.repository }}/pulls/${PR_NUMBER}/comments" --jq "$detail_filter"
+          query='
+            query($owner: String!, $name: String!, $number: Int!) {
+              repository(owner: $owner, name: $name) {
+                pullRequest(number: $number) {
+                  reviewThreads(first: 100) {
+                    nodes {
+                      isResolved
+                      comments(first: 1) {
+                        nodes {
+                          author { login }
+                          path
+                          body
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          '
+
+          response=$(gh api graphql \
+            -f query="$query" \
+            -F owner="$owner" \
+            -F name="$name" \
+            -F number="$PR_NUMBER")
+
+          unresolved_filter='
+            [.data.repository.pullRequest.reviewThreads.nodes[]
+              | select(.comments.nodes[0].author.login == "sourcery-ai")
+              | select(.isResolved == false)] | length
+          '
+          unresolved=$(echo "$response" | jq "$unresolved_filter")
+
+          echo "Unresolved Sourcery review threads on PR #${PR_NUMBER}: $unresolved"
+
+          if [ "$unresolved" -gt 0 ]; then
+            echo "::error::Sourcery has $unresolved unresolved review threads. Resolve them in the PR Files Changed view before merging."
+            detail_filter='
+              [.data.repository.pullRequest.reviewThreads.nodes[]
+                | select(.comments.nodes[0].author.login == "sourcery-ai")
+                | select(.isResolved == false)
+                | {path: .comments.nodes[0].path, body: .comments.nodes[0].body}]
+            '
+            echo "$response" | jq "$detail_filter"
             exit 1
           fi
 
-          echo "✅ No active Sourcery comments on HEAD."
+          echo "✅ No unresolved Sourcery review threads."
