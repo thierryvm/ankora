@@ -17,6 +17,14 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           REPOSITORY: ${{ github.repository }}
         run: |
+          set -euo pipefail
+          # Strict mode:
+          # - `set -e` aborts on any unchecked command failure (e.g. gh api timeout)
+          #   so a failed GraphQL call never silently produces an empty all_nodes
+          #   that the filter would interpret as "no Sourcery threads → pass".
+          # - `set -u` catches undefined variables (typo guard).
+          # - `set -o pipefail` propagates failures through pipes (jq parse errors).
+
           # Why GraphQL instead of REST /comments:
           # GitHub auto-updates a review comment's `commit_id` to the current HEAD
           # whenever the comment can be re-anchored to a still-existing line. As a
@@ -79,19 +87,25 @@ jobs:
               exit 1
             fi
 
+            # Build args dynamically — adds `cursor` only on pages 2+. GraphQL
+            # treats an absent `$cursor` variable as null (= "fetch from start"),
+            # which is the correct behavior for the first page. This unifies the
+            # call site and removes the previous if/else duplication.
+            args=(-f query="$query" -F owner="$owner" -F name="$name" -F number="$PR_NUMBER")
             if [ -n "$cursor" ]; then
-              response=$(gh api graphql \
-                -f query="$query" \
-                -F owner="$owner" \
-                -F name="$name" \
-                -F number="$PR_NUMBER" \
-                -F cursor="$cursor")
-            else
-              response=$(gh api graphql \
-                -f query="$query" \
-                -F owner="$owner" \
-                -F name="$name" \
-                -F number="$PR_NUMBER")
+              args+=(-F cursor="$cursor")
+            fi
+            response=$(gh api graphql "${args[@]}")
+
+            # Validate response shape before using it. If the GraphQL response
+            # doesn't contain the expected reviewThreads node, something is
+            # wrong (auth issue, schema change, network truncation) — fail loud
+            # rather than silently degrading to "no threads found → pass".
+            if ! echo "$response" | jq -e '.data.repository.pullRequest.reviewThreads.nodes' >/dev/null 2>&1; then
+              echo "::error::GraphQL response missing expected reviewThreads.nodes path. Aborting." >&2
+              echo "Raw response (first 500 chars):" >&2
+              echo "$response" | head -c 500 >&2
+              exit 1
             fi
 
             page_nodes=$(echo "$response" | jq '.data.repository.pullRequest.reviewThreads.nodes')
