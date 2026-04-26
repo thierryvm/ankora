@@ -1,11 +1,15 @@
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { env } from '@/lib/env';
+import { log } from '@/lib/log';
 
 type LimiterKind = 'auth' | 'api' | 'mutation' | 'export';
 
+type RateLimitReason = 'rate_limit_unavailable' | 'rate_limited';
+
 export type RateLimitVerdict = {
   success: boolean;
+  reason?: RateLimitReason;
   limit: number;
   remaining: number;
   reset: number;
@@ -18,12 +22,12 @@ function warnOnce() {
   if (warned) return;
   warned = true;
   if (env.NODE_ENV === 'production') {
-    console.error(
-      '[rate-limit] Upstash Redis env vars are missing in production — requests are NOT rate-limited. Configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.',
+    log.error(
+      'Upstash Redis env vars are missing in production — requests are NOT rate-limited. Configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.',
     );
   } else {
-    console.warn(
-      '[rate-limit] Upstash Redis env vars are missing — rate-limiting disabled (dev fallback). Requests will always succeed.',
+    log.warn(
+      'Upstash Redis env vars are missing — rate-limiting disabled (dev fallback). Requests will always succeed.',
     );
   }
 }
@@ -64,17 +68,47 @@ const limiters: Record<LimiterKind, Ratelimit> | null = redisConfigured
   : null;
 
 export async function rateLimit(kind: LimiterKind, identifier: string): Promise<RateLimitVerdict> {
+  const isProd = env.NODE_ENV === 'production';
+
   if (!limiters) {
     warnOnce();
+    if (isProd) {
+      return { success: false, reason: 'rate_limit_unavailable', limit: 0, remaining: 0, reset: 0 };
+    }
     return { success: true, limit: 0, remaining: 0, reset: 0 };
   }
-  const result = await limiters[kind].limit(identifier);
-  return {
-    success: result.success,
-    limit: result.limit,
-    remaining: result.remaining,
-    reset: result.reset,
-  };
+
+  try {
+    const result = await limiters[kind].limit(identifier);
+    return {
+      success: result.success,
+      limit: result.limit,
+      remaining: result.remaining,
+      reset: result.reset,
+    };
+  } catch (error) {
+    const redactedIdentifier =
+      typeof identifier === 'string'
+        ? `${identifier.slice(0, 3)}***`
+        : identifier != null
+          ? '[non-string-identifier]'
+          : undefined;
+    log.error('Rate limit upstream error', {
+      kind,
+      identifier: redactedIdentifier,
+      error,
+    });
+    if (isProd) {
+      return { success: false, reason: 'rate_limit_unavailable', limit: 0, remaining: 0, reset: 0 };
+    }
+    return { success: true, limit: 0, remaining: 0, reset: 0 };
+  }
+}
+
+export function mapRateLimitErrorToErrorCode(reason?: RateLimitReason): string {
+  return reason === 'rate_limit_unavailable'
+    ? 'errors.auth.serviceTemporarilyUnavailable'
+    : 'errors.auth.rateLimited';
 }
 
 export function identifierFromRequest(request: Request, userId?: string): string {

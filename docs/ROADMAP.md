@@ -1,6 +1,49 @@
 # Roadmap — Ankora
 
-Dernière mise à jour : 18 avril 2026 — après merge PR #20 `chore(i18n): remove obsolete dashboard keys` (commit b13e52c).
+Dernière mise à jour : 25 avril 2026 — Workflow trio @cowork/@cc-design/@cc-ankora opérationnel. PR-3 splittée en PR-3a/b/c, PR-3a anticipée comme socle architectural avant PR-2 (cf. [ADR-005](./adr/ADR-005-pr3a-anticipated-design-system.md)).
+
+## Cap v1.0 publique — Vision & Jalons (23 avril 2026)
+
+**Source unique de vérité** : `docs/NORTH_STAR.md` (19 avril 2026). Ce document consolide la vision v1.0 publique, les 5 piliers parallélisables, les contraintes non négociables et les cibles mesurables.
+
+### Trois jalons verrouillés
+
+| Jalon     | Horizon      | Contenu minimal                                                                                    |
+| --------- | ------------ | -------------------------------------------------------------------------------------------------- |
+| **Alpha** | ~4 semaines  | Thierry + 2-3 proches, FR seul, auth + onboarding + CRUD + dashboard v3 + simulateur + MFA         |
+| **Beta**  | ~8 semaines  | 5-10 testeurs, CGU/Privacy UE+BE 2026, GDPR export/delete, bug reporting live, Klaro!              |
+| **v1.0**  | ~12 semaines | Signups ouverts ankora.be, FR + EN, AEO complet, Lighthouse 100, /roadmap publique, admin panel v1 |
+
+### Cinq piliers parallélisables
+
+- **A — Fondations & Hygiène** : ROADMAP sync, agents QA (10), CI gates (Sourcery, Lighthouse budget), branch protection
+- **B — Product Excellence** : recherche concurrentielle (12 acteurs), mockups user dashboard v3, admin panel v1, design tokens finaux
+- **C — Core Fonctionnel** : auth + MFA, onboarding 3 étapes, CRUD charges/dépenses, dashboard core, simulateur intégré, goals
+- **D — Sécurité & Légal** : CGU/Privacy en langue user (BE 2026), Klaro! TCF v2.2, GDPR export/deletion, rate limiting, audit log
+- **E — SEO/AEO/Perf** : schemas JSON-LD fintech, llms-full.txt, /roadmap publique, Lighthouse 100/100/100/100, Service Worker
+
+Cowork pilote A+B+contenus D/E. CC Ankora pilote C+tech D/E. Thierry valide + merge.
+
+---
+
+## Agents QA Pilier A (10 au total)
+
+Tous les agents résident dans `.claude/agents/` et sont trigger-driven. Chaque agent valide un domaine critique avant merge.
+
+| #   | Agent                         | Domaine                           | Trigger                 | Gate            |
+| --- | ----------------------------- | --------------------------------- | ----------------------- | --------------- |
+| 1   | `security-auditor`            | Auth, middleware, RLS, headers    | touch auth/\*\*         | ✅ requis       |
+| 2   | `rls-flow-tester`             | Supabase RLS + migrations         | touch migrations/\*\*   | ✅ requis       |
+| 3   | `financial-formula-validator` | `src/lib/domain/`                 | touch domain/\*\*       | ✅ requis       |
+| 4   | `ui-auditor`                  | WCAG 2.2 AA, mobile, Tailwind 4   | touch components/\*\*   | ✅ requis       |
+| 5   | `lighthouse-auditor`          | Performance, a11y, BP, SEO        | pre-release only        | ✅ requis RC    |
+| 6   | `seo-geo-auditor`             | SEO signals, entity consistency   | touch public pages      | ✅ requis       |
+| 7   | `gdpr-compliance-auditor`     | PII, consent, export, deletion    | touch PII, auth, D-lang | ✅ requis       |
+| 8   | `test-runner`                 | Vitest + Playwright               | post-change             | ✅ requis       |
+| 9   | `dashboard-ux-auditor`        | User dashboard UX + design tokens | touch app/app/\*\*      | ✅ requis PR-3  |
+| 10  | `admin-dashboard-auditor`     | Admin security, perf, a11y        | touch app/admin/\*\*    | ✅ requis PR-B2 |
+
+**Note sur les triggers** : Les chemins documentés (ex. `touch auth/**`, `touch app/app/**`) définissent les cas d'usage _intentionnels_ pour chaque agent. L'invocation manuelle reste primaire pour la Phase 1. Une automatisation CI complète (détection de fichiers + dispatch d'agents) est une future amélioration Pilier A (Phase 2+).
 
 ---
 
@@ -25,22 +68,36 @@ Toute PR introduisant un service tiers facturé **doit d'abord obtenir validatio
 
 L'ordre ci-dessous est **verrouillé**. Il a été pensé pour que chaque PR débloque la suivante sans dette technique ni retouche arrière.
 
-| #   | PR                                           | Statut                                                | Bloquant pour     | Raison d'être                              |
-| --- | -------------------------------------------- | ----------------------------------------------------- | ----------------- | ------------------------------------------ |
-| 1   | **PR-1 — Socle i18n next-intl**              | ✅ mergée                                             | PR-1bis           | Route group `[locale]` + 5 locales         |
-| 2   | **PR-Q — OpenGraph statique**                | ✅ mergée                                             | —                 | 5 PNG 1200×630 générés via Playwright      |
-| 3   | **PR-1bis — Extraction i18n routes privées** | ✅ mergée (a491297, 18 avril 2026)                    | PR-2              | Clés i18n pour auth + app + onboarding     |
-| 4   | **PR-2 — Traductions NL/EN/ES/DE**           | ⏳ en attente (après dettes post-PR-1bis)             | PR-3              | Remplissage des 4 locales non-FR           |
-| 5   | **PR-B1 — Bug reporting MVP**                | 📋 prompt prêt (`prompts/PR-B1-bug-reporting-mvp.md`) | PR-3 (recommandé) | Capteur d'erreurs + widget avant QA lourde |
-| 6   | **PR-3 — Port mockups → React prod**         | 📋 prompt prêt                                        | PR-F              | Remplacement de l'UI actuelle              |
-| 7   | **PR-F — Rétro-planning provisions**         | 💡 idée                                               | PR-B2             | Alertes J-N avant retrait d'épargne        |
-| 8   | **PR-B2 — Admin panel complet**              | 💡 idée (post-MVP)                                    | —                 | Dashboard santé + métriques + règles       |
+**Re-séquencement 2026-04-25** : PR-3 monolithique splittée en **PR-3a/b/c** ; PR-3a anticipée avant PR-2/PR-B1 comme socle architectural. Justification complète : [ADR-005](./adr/ADR-005-pr3a-anticipated-design-system.md).
+
+| #   | PR                                                    | Statut                                                               | Bloquant pour        | Raison d'être                                                                              |
+| --- | ----------------------------------------------------- | -------------------------------------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------ |
+| 1   | **PR-1 — Socle i18n next-intl**                       | ✅ mergée                                                            | PR-1bis              | Route group `[locale]` + 5 locales                                                         |
+| 2   | **PR-Q — OpenGraph statique**                         | ✅ mergée                                                            | —                    | 5 PNG 1200×630 générés via Playwright                                                      |
+| 3   | **PR-1bis — Extraction i18n routes privées**          | ✅ mergée (a491297, 18 avril 2026)                                   | PR-2                 | Clés i18n pour auth + app + onboarding                                                     |
+| 4   | **PR-3a — Design System socle (DS + tokens + fonts)** | 📋 prochaine (`docs/design/cc-ankora-prompt-handoff-integration.md`) | PR-2, PR-B1, PR-3b/c | Tokens canoniques, fonts, SKILL `ankora-design-system` — débloque toute la couche visuelle |
+| 5   | **PR-2 — Traductions NL/EN/ES/DE**                    | ⏳ en attente (après PR-3a)                                          | PR-3c                | Remplissage des 4 locales non-FR                                                           |
+| 6   | **PR-B1 — Bug reporting MVP**                         | 📋 prompt prêt (`prompts/PR-B1-bug-reporting-mvp.md`)                | PR-3b/c (recommandé) | Capteur d'erreurs + widget avant QA lourde                                                 |
+| 7   | **PR-3b — Atomic UI kit**                             | 📋 cadré (post-PR-3a)                                                | PR-3c                | `src/components/ui/` (Button, Card, Input, Badge…) + tests Vitest                          |
+| 8   | **PR-3c — Landing fusion intelligente**               | 📋 cadré (post-PR-3b + `landing-merge-analysis.md`)                  | PR-F                 | Fusion ossature TSX/RSC actuelle ↔ apports cc-design (hero waterfall, simulator, pricing)  |
+| 9   | **PR-F — Rétro-planning provisions**                  | 💡 idée                                                              | PR-B2                | Alertes J-N avant retrait d'épargne                                                        |
+| 10  | **PR-B2 — Admin panel complet**                       | 💡 idée (post-MVP)                                                   | —                    | Dashboard santé + métriques + règles                                                       |
 
 Signification des icônes : ✅ mergée · 🚧 en cours · ⏳ en attente d'un prérequis · 📋 prompt rédigé prêt à exécuter · 💡 idée cadrée mais pas encore de prompt.
 
-### Pourquoi PR-B1 avant PR-3 ?
+### Pourquoi PR-3a avant PR-2 et PR-B1 ?
 
-PR-3 est gros (40+ composants React, migrations visuelles massives) et va générer des bugs subtils de style/interaction/a11y. Si PR-B1 est en place **avant** PR-3, chaque bug rencontré en QA génère un bundle markdown copiable en 2 clics vers Claude Code. Gain de temps majeur sur le debugging de PR-3.
+PR-3a livre les **tokens canoniques + fonts + SKILL `ankora-design-system`** sans toucher aux composants ni aux pages. Sans cela :
+
+- **PR-2** traduirait des chaînes UI qui changeront visuellement en PR-3b/c (re-traduction inutile sur copies obsolètes)
+- **PR-B1** construirait son widget bug-reporting sur des primitives `Button`/`Card`/`Modal` qu'il faudrait re-styler en PR-3b
+- **PR-3b** travaillerait sur des tokens incohérents avec le DS final
+
+PR-3a est un **socle architectural** (≤ 400 lignes, 0 régression UI possible) qui débloque proprement la suite.
+
+### Pourquoi PR-B1 avant PR-3b/c ?
+
+PR-3b (composants atomiques) et surtout PR-3c (Landing fusion) vont générer des bugs subtils de style/interaction/a11y. Si PR-B1 est en place **avant** PR-3b/c, chaque bug rencontré en QA génère un bundle markdown copiable en 2 clics vers Claude Code. Gain de temps majeur sur le debugging.
 
 ---
 
@@ -51,12 +108,15 @@ Trois PRs atomiques enchaînées **dans cet ordre** pour éviter les conflits su
 - [x] **`chore(i18n): remove obsolete dashboard keys`** — mergée PR #20 (commit b13e52c, 18 avril 2026). 10 clés orphelines (`title`, `welcome`, `subtitle`, `emptyState`, `cards.*`) retirées sur 5 locales (−90 lignes).
 - [x] **`feat(i18n): locale-aware formatters`** — mergée PR #21 (commit 4b5e045, 18 avril 2026). `src/lib/i18n/formatters.ts` avec `formatCurrency`, `formatDate`, `formatDateTime`, `formatMonth`, `formatNumber`, `formatPercent`. Cache Intl par locale. Migration complète : 8 fichiers (`page.tsx` dashboard, `deletion-status`, 4 `*Client.tsx`, `SettingsClient`) + suppression de `src/lib/format.ts`. Tests Vitest 20 cas sur 5 locales, coverage 100/100/95 lines/funcs/branches. **Conditionne le port des mockups v2** (affichage `1 234,50 €` en fr-BE vs `€1,234.50` en en).
 - [x] **`chore(tailwind): migrate to canonical classes`** — **Verified compliant 2026-04-19** (audit zéro inline colors, repo déjà 100% tokens canoniques). Pas de migration nécessaire. Audit report sauvegardé : `docs/tailwind-canonical-audit.md`. Mergée PR #23.
+- [x] **#61 — Aligner classes Tailwind legacy sur convention canonique** — `text-(--color-muted-foreground)` → `text-muted-foreground`. Les deux marchent en v4 mais la convention canonique est maintenant le standard (introducée dans Header refactor commit 354ad28). Alignement complet du codebase (38 fichiers, ~150 instances) — commit 1 du refactor/post-pr25-debts (2026-04-19).
+- [x] **PR #27 — Code review cleanup + i18n parity** — Consolidation finale : CSP nonce, centralisation brand constants, extraction formatters i18n, alignement Tailwind, parité messages de-DE (6 clés placeholder). Mergée 2026-04-20 (581641d).
 
 ---
 
 ## Prochaine feature majeure
 
-- **PR-3 — Port mockups React prod** : en attente du **mockup v2 simulateur bidirectionnel** validé par Thierry (travail en cours côté Cowork, livrable courant semaine). Ne pas démarrer avant validation explicite du mockup et du glossaire de composants.
+- **PR-3a — Design System socle** : prochaine PR à exécuter sur la branche `feat/cc-design-handoff-v1`. Source : ZIP `Ankora Design System.zip` livré par @cc-design (session #1, validée @thierry + @cowork le 2026-04-25). Prompt complet : `docs/design/cc-ankora-prompt-handoff-integration.md`. Cf. ADR-005 pour la justification du re-séquencement.
+- **PR-3b/c** : suivront PR-3a après validation @thierry. PR-3c sera précédée d'un `docs/design/landing-merge-analysis.md` documentant la fusion ossature TSX/RSC actuelle ↔ apports cc-design.
 
 ## Backlog produit
 
@@ -71,7 +131,7 @@ Trois PRs atomiques enchaînées **dans cet ordre** pour éviter les conflits su
 - [x] Headers sécurité A+ (CSP nonce, HSTS, COOP, Permissions-Policy)
 - [x] Couche domaine pure (budget, provision, simulation, balance) testée
 - [x] Migrations Supabase + RLS complètes
-- [x] `.claude/agents/` (7 QA agents)
+- [x] `.claude/agents/` (10 QA agents — 7 bootstrap + dashboard-ux-auditor + admin-dashboard-auditor)
 - [x] CI GitHub Actions (lint + typecheck + test + e2e + lighthouse + audit)
 - [x] Husky pre-commit + commit-msg
 - [x] PWA manifest + llms.txt + sitemap + robots
@@ -92,9 +152,11 @@ Objectif : cockpit personnel utilisable par Thierry, ses enfants et amis.
   - Batch B : routes privées (auth + app) migrées avec `generateMetadata` via `getTranslations`, server actions locale-aware, Zod i18n-friendly
   - Tests : parity sync des 4 stubs non-FR + E2E skip GDPR banner sur mobile emulations (Pixel 7 + iPhone 14, flaky tap dispatch)
   - Hygiène : `.gitignore` durci (`design-mockup-*.html`, `.claude/settings.local.json`, `prompts/`)
-- [ ] PR-2 — traductions NL-BE / EN / ES-ES / DE-DE (glossaire doc déjà écrit, prompt final après dettes post-PR-1bis)
+- [ ] **PR-3a — Design System socle** (tokens + fonts + SKILL `ankora-design-system`) — prochaine PR (cf. ADR-005)
+- [ ] PR-2 — traductions NL-BE / EN / ES-ES / DE-DE (glossaire doc déjà écrit)
 - [ ] PR-B1 — Bug reporting MVP (voir §PR-B1 ci-dessous)
-- [ ] PR-3 — port mockups → React production (prompt prêt)
+- [ ] PR-3b — Atomic UI kit (`src/components/ui/` + tests Vitest)
+- [ ] PR-3c — Landing fusion intelligente (ossature actuelle + apports cc-design)
 
 ### Bloc fonctionnel produit
 
@@ -250,6 +312,21 @@ Implémentation : `src/lib/admin/rules/` — chaque règle exporte `{ id, label,
 - Suggestions d'épargne sans conseil (ex: livret A/LDDS = informationnel uniquement)
 - Version mobile native via Expo (si la PWA montre des limites)
 - Tarification payante (plan pro : multi-espaces, IA inclus, support prioritaire) — le moment où Ankora peut **enfin** engager des coûts d'infra
+
+---
+
+## Tâches post-lancement — Infrastructure domaine
+
+Une fois le MVP en production public (fin Phase 1), les alias `privacy@ankora.be` et `security@ankora.be` doivent être câblés sur le domaine.
+
+- [ ] Configurer MX ankora.be + alias `privacy@ankora.be`, `security@ankora.be`, `contact@ankora.be`, `conduct@ankora.be`
+- [x] Migrer contacts dans les 5 locales (fichiers `messages/{en,fr-BE,nl-BE,es-ES,de-DE}.json`) — déjà en `ankora.be`
+- [x] Aligner `README.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`, `.github/ISSUE_TEMPLATE/*` sur `ankora.be` (20 avr 2026)
+- [ ] Mettre à jour `SECURITY.md` : remplacer le TODO temporaire par `privacy@ankora.be` une fois la MX active
+- [ ] Mettre à jour `LICENSE` et `NOTICE` si références à `*@ankora.eu`
+- [ ] Page Privacy section "Responsable de traitement" : confirmer adresse postale + contact email belge
+
+**État actuel (avril 2026)** : tous les contacts unifiés sur `thierryvm@gmail.com` en attente de config MX domaine. Les références repo pointent désormais toutes vers `ankora.be`.
 
 ---
 

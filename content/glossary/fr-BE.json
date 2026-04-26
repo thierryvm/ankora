@@ -1,0 +1,122 @@
+[
+  {
+    "slug": "budget-de-lissage",
+    "term": "Budget de lissage",
+    "shortDefinition": "Méthode budgétaire qui répartit les charges annuelles irrégulières (assurances, taxes, cadeaux, entretien auto) en versements mensuels prévisibles. Plutôt que d'encaisser des pics de dépenses ponctuels, on met de côté chaque mois la part proportionnelle, pour que le compte courant ne soit jamais pris de court.",
+    "whyItMatters": "Sans lissage, une facture d'assurance annuelle de 600 € tombe comme un rocher. Avec lissage, c'est 50 €/mois invisibles. Ankora calcule automatiquement le montant à lisser par poste et le réserve dans un compte dédié.",
+    "example": "Précompte immobilier annuel = 1 200 €. Budget de lissage = 100 €/mois versés sur un bucket \"Taxes\". En novembre, quand la facture tombe, l'argent est là.",
+    "relatedTerms": ["compte-bucket", "fonds-de-roulement-personnel", "charges-fixes"]
+  },
+  {
+    "slug": "compte-bucket",
+    "term": "Compte bucket (compte thématique)",
+    "shortDefinition": "Sous-compte d'épargne affecté à un objectif précis — vacances, taxes, nouvelle voiture, travaux. Chaque bucket isole visuellement une enveloppe d'argent pour empêcher qu'elle ne serve à autre chose. En Belgique, cela se matérialise par un deuxième compte d'épargne ou une sous-rubrique logique.",
+    "whyItMatters": "Mélanger épargne d'urgence, budget vacances et taxes sur un même compte rend impossible de savoir combien on peut vraiment dépenser. Ankora crée et suit tes buckets automatiquement à partir de tes règles de lissage.",
+    "example": "Ton compte d'épargne principal contient 8 500 €. Buckets Ankora : Urgence 4 000 €, Voiture 1 500 €, Vacances 2 000 €, Taxes 1 000 €. Tu vois en un coup d'œil ce qui est \"réservé\" et ce qui est libre.",
+    "relatedTerms": ["budget-de-lissage", "fonds-de-roulement-personnel", "epargne-de-precaution"]
+  },
+  {
+    "slug": "capacite-d-epargne",
+    "term": "Capacité d'épargne",
+    "shortDefinition": "Montant maximal qu'un ménage peut mettre de côté chaque mois sans rogner sur son niveau de vie de base. Elle se calcule en soustrayant toutes les charges fixes et variables récurrentes des revenus nets. C'est un indicateur clé de santé financière, distinct du simple solde de fin de mois.",
+    "whyItMatters": "Beaucoup de gens confondent \"il me reste 200 € en fin de mois\" avec \"j'ai 200 € de capacité d'épargne\". Ankora isole la vraie capacité structurelle, celle qu'on peut automatiser sans douleur.",
+    "example": "Revenu net mensuel 2 500 €, charges fixes 1 400 €, charges variables moyennes 700 € → capacité d'épargne ≈ 400 €/mois. À automatiser le jour du salaire, pas à la fin du mois.",
+    "relatedTerms": ["taux-d-epargne", "reste-a-vivre", "fonds-de-roulement-personnel"]
+  },
+  {
+    "slug": "taux-d-epargne",
+    "term": "Taux d'épargne",
+    "shortDefinition": "Part des revenus nets effectivement mise de côté, exprimée en pourcentage. Formule : (épargne mensuelle ÷ revenus nets) × 100. La moyenne belge tourne autour de 13-15 % selon la Banque nationale ; un taux sain pour atteindre l'indépendance financière se situe généralement entre 20 et 30 %.",
+    "whyItMatters": "C'est le KPI numéro un de la santé financière personnelle. Plus parlant que le solde, plus universel que le montant absolu épargné. Ankora le calcule en continu et t'alerte si tu décroches de ton objectif.",
+    "example": "Revenu net 2 800 €, épargne mensuelle automatique 420 € → taux d'épargne = 15 %. Objectif cible : 20 % = 560 €/mois.",
+    "relatedTerms": ["capacite-d-epargne", "reste-a-vivre", "interets-composes"]
+  },
+  {
+    "slug": "epargne-de-precaution",
+    "term": "Épargne de précaution",
+    "shortDefinition": "Réserve liquide destinée à couvrir les imprévus — perte d'emploi, panne majeure, frais médicaux, réparations urgentes. Généralement dimensionnée à 3 à 6 mois de charges fixes pour un salarié CDI, et 6 à 12 mois pour un indépendant. Doit rester immédiatement disponible, donc jamais bloquée ni investie en bourse.",
+    "whyItMatters": "C'est le premier filet qui évite que le moindre accident ne force un recours au crédit à la consommation. Ankora la distingue visuellement des autres buckets pour qu'on n'y touche jamais sans raison.",
+    "example": "Charges fixes mensuelles = 1 400 €. Épargne de précaution cible (4 mois) = 5 600 €, logée sur un compte d'épargne réglementé distinct du compte courant.",
+    "relatedTerms": ["compte-bucket", "compte-d-epargne-reglemente", "fonds-de-roulement-personnel"]
+  },
+  {
+    "slug": "fonds-de-roulement-personnel",
+    "term": "Fonds de roulement personnel",
+    "shortDefinition": "Matelas de trésorerie courante qui absorbe le décalage entre revenus et dépenses au sein d'un même mois — loyer payé le 1er alors que le salaire tombe le 25, taxes trimestrielles, courses groupées. Distinct de l'épargne de précaution, qui couvre les imprévus : le fonds de roulement, lui, sert au quotidien.",
+    "whyItMatters": "Sans fonds de roulement, la fin de mois devient un tétris bancaire. Avec, on gère sereinement les décalages sans regarder son solde trois fois par jour. Ankora le dimensionne automatiquement à partir du profil de dépenses.",
+    "example": "Loyer 800 €, courses 400 €, taxes trimestrielles lissées à 120 €/mois → fonds de roulement recommandé ≈ 1 200-1 500 € de coussin permanent sur le compte courant.",
+    "relatedTerms": ["budget-de-lissage", "epargne-de-precaution", "reste-a-vivre"]
+  },
+  {
+    "slug": "charges-fixes",
+    "term": "Charges fixes",
+    "shortDefinition": "Dépenses récurrentes au montant prévisible et à la date connue — loyer ou remboursement d'emprunt, assurances, abonnements télécoms, gaz/électricité forfaitaire, taxes communales. Par définition, elles ne varient pas ou peu d'un mois à l'autre et ne sont pas négociables à court terme sans changement contractuel.",
+    "whyItMatters": "Elles constituent le socle incompressible du budget. Tant qu'on ne connaît pas le total précis de ses charges fixes, on ne peut calculer ni son reste à vivre, ni sa capacité d'épargne. Ankora les détecte automatiquement à partir des virements récurrents.",
+    "example": "Loyer 750 € + assurance voiture 42 € + mutuelle 18 € + internet 45 € + électricité 95 € + abonnements streaming 25 € = 975 €/mois de charges fixes.",
+    "relatedTerms": ["charges-variables", "reste-a-vivre", "virement-permanent"]
+  },
+  {
+    "slug": "charges-variables",
+    "term": "Charges variables",
+    "shortDefinition": "Dépenses récurrentes mais au montant fluctuant — courses alimentaires, carburant, restaurants, loisirs, habillement, cadeaux. Contrairement aux charges fixes, elles dépendent du comportement de consommation et peuvent être ajustées à court terme. Elles constituent le principal levier d'économies rapides pour qui veut augmenter sa capacité d'épargne.",
+    "whyItMatters": "C'est là que se cachent 80 % des optimisations réalistes. Ankora calcule la moyenne glissante sur 90 jours par catégorie pour donner un repère réaliste, et signale les mois atypiques.",
+    "example": "Courses 380 € (moy. 90j : 420 €), carburant 110 €, restaurants 160 €, loisirs 95 € → charges variables du mois 745 €, en dessous de la moyenne.",
+    "relatedTerms": ["charges-fixes", "reste-a-vivre", "methode-50-30-20"]
+  },
+  {
+    "slug": "compte-d-epargne-reglemente",
+    "term": "Compte d'épargne réglementé",
+    "shortDefinition": "Produit d'épargne bancaire belge dont le taux minimum et le régime fiscal sont fixés par l'État. Composé d'un taux de base et d'une prime de fidélité (acquise après 12 mois). Les intérêts sont exonérés d'impôt jusqu'à un plafond annuel indexé (1 020 € par personne pour 2026, 2 040 € pour un couple marié ou cohabitant légal), au-delà duquel s'applique un précompte mobilier de 15 %.",
+    "whyItMatters": "C'est le véhicule standard pour l'épargne de précaution et les buckets en Belgique : disponibilité immédiate, garantie de dépôt jusqu'à 100 000 € par banque, fiscalité avantageuse tant qu'on reste sous le plafond. Ankora recommande de répartir sur deux banques au-dessus de 100 000 €.",
+    "example": "15 000 € sur un compte d'épargne réglementé à 0,90 % (base) + 1,10 % (fidélité) → environ 300 €/an d'intérêts, exonérés car sous le plafond.",
+    "relatedTerms": ["epargne-de-precaution", "compte-bucket"]
+  },
+  {
+    "slug": "virement-permanent",
+    "term": "Virement permanent (ordre permanent)",
+    "shortDefinition": "Mandat donné à la banque pour exécuter automatiquement un virement récurrent — même montant, même bénéficiaire, même fréquence. Utilisé pour le loyer, les mensualités d'emprunt, les transferts d'épargne automatiques. À distinguer de la domiciliation, qui est initiée par le créancier et dont le montant peut varier.",
+    "whyItMatters": "C'est le levier numéro un pour automatiser l'épargne : \"payer sa capacité d'épargne en premier\" le jour du salaire via un virement permanent vers un compte bucket. Ankora suggère le montant et la date optimale.",
+    "example": "Virement permanent de 400 € le 26 de chaque mois depuis le compte courant vers le compte d'épargne réglementé \"Urgence\".",
+    "relatedTerms": ["domiciliation", "capacite-d-epargne", "charges-fixes"]
+  },
+  {
+    "slug": "domiciliation",
+    "term": "Domiciliation (bancaire)",
+    "shortDefinition": "Autorisation permanente donnée à un créancier (fournisseur d'énergie, opérateur télécom, bailleur) de prélever directement les montants dus sur le compte du débiteur. Contrairement au virement permanent, c'est le créancier qui initie chaque paiement, et le montant peut varier à chaque échéance selon la facture.",
+    "whyItMatters": "Pratique pour éviter les oublis, mais doit être suivie : une domiciliation autorise le créancier à prélever ce qu'il veut. En Belgique, le payeur peut contester et obtenir remboursement pendant 8 semaines (SEPA Direct Debit Core). Ankora alerte sur les montants atypiques.",
+    "example": "Facture d'électricité variable 60-180 € selon la saison → domiciliation qui prélève le montant réel chaque mois. Contestable 8 semaines.",
+    "relatedTerms": ["virement-permanent", "charges-fixes", "psd2"]
+  },
+  {
+    "slug": "psd2",
+    "term": "PSD2 (Payment Services Directive 2)",
+    "shortDefinition": "Directive européenne en vigueur depuis 2018 qui encadre les services de paiement au sein de l'Espace économique européen. Elle impose aux banques d'ouvrir leurs données de compte et leurs capacités de paiement, via des API sécurisées, aux prestataires tiers autorisés — agrégateurs, initiateurs de paiement, applications de gestion financière.",
+    "whyItMatters": "C'est grâce à PSD2 qu'une application tierce peut lire les transactions d'un compte bancaire avec le consentement explicite de l'utilisateur, sans redonner les identifiants bancaires. Ankora se positionne délibérément hors-PSD2 pour respecter la vie privée des utilisateurs.",
+    "example": "Une application qui agrège tes comptes KBC, Belfius et ING le fait via les API PSD2 de chaque banque, après consentement renouvelé tous les 90 ou 180 jours selon la banque.",
+    "relatedTerms": ["domiciliation"]
+  },
+  {
+    "slug": "reste-a-vivre",
+    "term": "Reste à vivre",
+    "shortDefinition": "Montant disponible chaque mois une fois toutes les charges fixes et les transferts d'épargne automatisés déduits du revenu net. Il couvre les charges variables et les loisirs. C'est l'indicateur pratique que l'on peut consulter au jour le jour pour savoir combien on peut dépenser sans déséquilibrer le budget mensuel.",
+    "whyItMatters": "C'est le chiffre que les gens cherchent vraiment quand ils ouvrent leur app bancaire. Ankora le calcule et l'affiche en temps réel, distinct du solde brut du compte — parce que le solde ment (il inclut ce qui est déjà \"réservé\").",
+    "example": "Revenu 2 500 €, charges fixes 1 000 €, épargne auto 400 € → reste à vivre 1 100 €/mois pour courses, loisirs, imprévus du quotidien.",
+    "relatedTerms": ["charges-fixes", "charges-variables", "capacite-d-epargne"]
+  },
+  {
+    "slug": "interets-composes",
+    "term": "Intérêts composés",
+    "shortDefinition": "Mécanisme par lequel les intérêts générés par un capital s'ajoutent à ce capital et produisent eux-mêmes des intérêts aux périodes suivantes. L'effet est exponentiel sur le long terme : doubler l'horizon de placement quadruple quasiment le gain total. Popularisé par la formule attribuée (à tort) à Einstein : \"huitième merveille du monde\".",
+    "whyItMatters": "C'est le moteur silencieux de l'indépendance financière. Ankora illustre concrètement l'impact de commencer tôt et régulièrement : 100 €/mois à 5 % pendant 30 ans = 83 000 €, dont 47 000 € d'intérêts.",
+    "example": "Capital initial 5 000 € placé à 4 % sur 20 ans en intérêts composés → 10 956 €. En intérêts simples, seulement 9 000 €. La différence de 1 956 € vient uniquement des intérêts sur intérêts.",
+    "relatedTerms": ["taux-d-epargne", "epargne-de-precaution", "compte-d-epargne-reglemente"]
+  },
+  {
+    "slug": "methode-50-30-20",
+    "term": "Méthode 50/30/20",
+    "shortDefinition": "Cadre budgétaire popularisé par Elizabeth Warren qui répartit le revenu net mensuel en trois blocs : 50 % pour les besoins incompressibles (logement, alimentation, transport), 30 % pour les envies et loisirs, 20 % pour l'épargne et le remboursement de dettes. C'est une règle de pouce simple, pas une formule rigide.",
+    "whyItMatters": "Excellente porte d'entrée pour qui n'a jamais budgété. Ankora l'affiche comme un repère indicatif, mais recommande d'ajuster selon les réalités belges : loyer à Bruxelles pousse souvent le \"besoins\" au-delà de 50 %, et le 20 % épargne devient un plancher plutôt qu'un plafond.",
+    "example": "Revenu net 2 500 € → 1 250 € pour les besoins, 750 € pour les envies, 500 € pour l'épargne. Si les besoins grimpent à 1 500 €, le 30 % envies absorbe l'écart.",
+    "relatedTerms": ["capacite-d-epargne", "taux-d-epargne", "reste-a-vivre"]
+  }
+]

@@ -50,7 +50,7 @@ export function AccountsClient({ monthlyIncome, vieCouranteMonthlyTransfer, acco
     <div className="flex flex-col gap-8">
       <header>
         <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{t('title')}</h1>
-        <p className="mt-1 text-(--color-muted-foreground)">{t('subtitle')}</p>
+        <p className="text-muted-foreground mt-1">{t('subtitle')}</p>
       </header>
 
       <MonthlyIncomeCard initialValue={monthlyIncome} />
@@ -193,7 +193,7 @@ function AccountBalanceCard({ row }: { row: AccountRow }) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <div className="flex items-center gap-2 text-(--color-brand-700)">
+        <div className="text-brand-700 flex items-center gap-2">
           <Icon className="h-5 w-5" aria-hidden />
           <CardTitle className="text-sm font-medium">{row.label}</CardTitle>
         </div>

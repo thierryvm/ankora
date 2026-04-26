@@ -2,7 +2,7 @@
 
 <img src="public/brand/logo.svg" alt="Ankora" width="96" height="96" />
 
-# Ankora
+# Ankora™
 
 **Cockpit budgétaire personnel — Belgique · RGPD · hébergé UE**
 
@@ -208,7 +208,7 @@ Voir [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) pour les détails d'invocation
 
 ### Signalement d'une vulnérabilité
 
-Voir [SECURITY.md](SECURITY.md). Email dédié : **security@ankora.eu**.
+Voir [SECURITY.md](SECURITY.md). Email dédié : **security@ankora.be**.
 
 ---
 
@@ -266,13 +266,13 @@ L'app est utilisable depuis toute l'UE. Les avertissements réglementaires sont 
 
 Voir [docs/ROADMAP.md](docs/ROADMAP.md) pour la roadmap détaillée.
 
-**Phase actuelle** : Phase 2 MVP — auth, onboarding, dashboard, settings, RGPD, PWA. _(avril 2026)_
+**Phase actuelle** : Phase 1 MVP — auth, onboarding, dashboard, settings, RGPD, PWA. _(avril 2026)_
 
 **Prochaines phases** :
 
-- Phase 3 : analytics opt-in, notifications mensuelles, partage famille (read-only)
-- Phase 4 : imports CSV, catégorisation assistée par IA (local-first)
-- Phase 5 : multi-devise (EUR + CHF + GBP), exports PDF annuels
+- Phase 2 : analytics opt-in, notifications mensuelles, partage famille (read-only)
+- Phase 3 : imports CSV, catégorisation assistée par IA (local-first)
+- Phase 4 : multi-devise (EUR + CHF + GBP), exports PDF annuels
 
 ---
 
@@ -302,9 +302,13 @@ docs(readme): update roadmap
 
 ## Licence
 
-Propriétaire. © 2026 Thierry Van Mele. Tous droits réservés. Voir [LICENSE](LICENSE).
+**Propriétaire.** © 2026 Thierry Vanmeeteren. Tous droits réservés.
 
-Le code est consultable publiquement à fin de transparence mais son usage, sa copie et sa redistribution sont soumis à autorisation écrite.
+- **Ankora™** est une marque déposée de Thierry Vanmeeteren
+- Le code source est fourni à titre consultatif (transparence, audit de sécurité)
+- Toute utilisation, copie, modification ou distribution requiert une autorisation écrite
+
+Voir [LICENSE](LICENSE) pour les conditions détaillées, ou [NOTICE](NOTICE) pour l'inventaire des dépendances tierces.
 
 ---
 
@@ -312,6 +316,6 @@ Le code est consultable publiquement à fin de transparence mais son usage, sa c
 
 **Made with care in Belgium 🇧🇪**
 
-[Site web](https://ankora.eu) · [Politique de confidentialité](https://ankora.eu/legal/privacy) · [Contact](mailto:hello@ankora.eu)
+[Site web](https://ankora.be) · [Politique de confidentialité](https://ankora.be/legal/privacy) · [Contact](mailto:hello@ankora.be)
 
 </div>

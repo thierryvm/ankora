@@ -1,67 +1,75 @@
 {
   "common": {
     "appName": "Ankora",
-    "tagline": "Ton ancrage financier",
-    "description": "Ankora t'aide à lisser tes charges, anticiper chaque facture et garder le contrôle de ton budget mois après mois. Pas de conseil en placement, juste un cockpit clair et sécurisé.",
-    "homeAria": "Accueil Ankora",
+    "tagline": "Your financial anchor",
+    "description": "Ankora helps you smooth your bills, anticipate every invoice and stay in control of your budget. A clear, secure cockpit — no investment advice.",
+    "homeAria": "Ankora home",
+    "a11y": {
+      "skipToMain": "Skip to main content"
+    },
     "nav": {
-      "mainLabel": "Navigation principale",
-      "appLabel": "Navigation application",
-      "footerLabel": "Pied de page",
-      "features": "Fonctionnalités",
+      "mainLabel": "Main navigation",
+      "appLabel": "App navigation",
+      "mobileLabel": "Mobile navigation",
+      "footerLabel": "Footer",
+      "menu": "Menu",
+      "close": "Close",
+      "lightMode": "Light mode",
+      "darkMode": "Dark mode",
+      "features": "Features",
       "faq": "FAQ",
-      "login": "Se connecter",
-      "signup": "Créer un compte",
-      "myCockpit": "Mon cockpit",
-      "dashboard": "Tableau de bord",
-      "accounts": "Comptes",
-      "charges": "Charges",
-      "settings": "Paramètres"
+      "login": "Log in",
+      "signup": "Sign up",
+      "myCockpit": "My cockpit",
+      "dashboard": "Dashboard",
+      "accounts": "Accounts",
+      "charges": "Bills",
+      "settings": "Settings"
     },
     "actions": {
-      "retry": "Réessayer",
-      "back": "Retour"
+      "retry": "Retry",
+      "back": "Back"
     },
     "months": {
-      "1": "janvier",
-      "2": "février",
-      "3": "mars",
-      "4": "avril",
-      "5": "mai",
-      "6": "juin",
-      "7": "juillet",
-      "8": "août",
-      "9": "septembre",
-      "10": "octobre",
-      "11": "novembre",
-      "12": "décembre"
+      "1": "January",
+      "2": "February",
+      "3": "March",
+      "4": "April",
+      "5": "May",
+      "6": "June",
+      "7": "July",
+      "8": "August",
+      "9": "September",
+      "10": "October",
+      "11": "November",
+      "12": "December"
     },
     "monthsShort": {
-      "1": "janv.",
-      "2": "févr.",
-      "3": "mars",
-      "4": "avr.",
-      "5": "mai",
-      "6": "juin",
-      "7": "juil.",
-      "8": "août",
-      "9": "sept.",
-      "10": "oct.",
-      "11": "nov.",
-      "12": "déc."
+      "1": "Jan",
+      "2": "Feb",
+      "3": "Mar",
+      "4": "Apr",
+      "5": "May",
+      "6": "Jun",
+      "7": "Jul",
+      "8": "Aug",
+      "9": "Sep",
+      "10": "Oct",
+      "11": "Nov",
+      "12": "Dec"
     },
     "frequency": {
-      "monthly": "Mensuel",
-      "quarterly": "Trimestriel",
-      "semiannual": "Semestriel",
-      "annual": "Annuel"
+      "monthly": "Monthly",
+      "quarterly": "Quarterly",
+      "semiannual": "Semi-annual",
+      "annual": "Annual"
     }
   },
   "ui": {
-    "scrollToTop": "Remonter en haut de la page",
+    "scrollToTop": "Scroll back to top",
     "localeSwitcher": {
-      "label": "Langue",
-      "aria": "Changer de langue",
+      "label": "Language",
+      "aria": "Change language",
       "options": {
         "fr-BE": "Français (BE)",
         "nl-BE": "Nederlands (BE)",
@@ -71,783 +79,808 @@
       }
     },
     "action": {
-      "submit": "Valider",
-      "submitting": "Validation…",
-      "save": "Enregistrer",
-      "saving": "Enregistrement…",
-      "cancel": "Annuler",
-      "cancelling": "Annulation…",
-      "delete": "Supprimer",
-      "deleting": "Suppression…",
-      "create": "Créer",
-      "creating": "Création…",
-      "update": "Mettre à jour",
-      "updating": "Mise à jour…",
-      "send": "Envoyer",
-      "sending": "Envoi…",
-      "verify": "Vérifier",
-      "verifying": "Vérification…",
-      "generate": "Générer",
-      "generating": "Génération…",
-      "download": "Télécharger",
-      "downloading": "Téléchargement…",
-      "preparing": "Préparation…",
-      "confirm": "Confirmer",
-      "close": "Fermer"
+      "submit": "Confirm",
+      "submitting": "Confirming…",
+      "save": "Save",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "cancelling": "Cancelling…",
+      "delete": "Delete",
+      "deleting": "Deleting…",
+      "create": "Create",
+      "creating": "Creating…",
+      "update": "Update",
+      "updating": "Updating…",
+      "send": "Send",
+      "sending": "Sending…",
+      "verify": "Verify",
+      "verifying": "Verifying…",
+      "generate": "Generate",
+      "generating": "Generating…",
+      "download": "Download",
+      "downloading": "Downloading…",
+      "preparing": "Preparing…",
+      "confirm": "Confirm",
+      "close": "Close"
     }
   },
   "landing": {
-    "badge": "En construction · lancement 2026",
-    "heroCtaPrimary": "Créer mon cockpit",
-    "heroCtaSecondary": "Découvrir",
-    "featuresHeading": "Trois piliers, zéro angoisse",
+    "badge": "In development · launching 2026",
+    "heroCtaPrimary": "Create my cockpit",
+    "heroCtaSecondary": "Learn more",
+    "featuresHeading": "Three pillars, zero stress",
     "features": {
       "smoothing": {
-        "title": "Lissage automatique",
-        "body": "Tes factures annuelles ou trimestrielles réparties sur 12 mois. Plus jamais de mauvaise surprise en fin d'année."
+        "title": "Automatic smoothing",
+        "body": "Your annual and quarterly bills spread across 12 months. No more nasty surprises at year-end."
       },
       "assistant": {
-        "title": "Assistant virements",
-        "body": "Chaque mois, Ankora te dit exactement combien virer vers ton épargne — et combien garder sur ton courant pour les factures du mois."
+        "title": "Transfer assistant",
+        "body": "Every month, Ankora tells you exactly how much to transfer to your savings — and how much to keep in your current account for this month's bills."
       },
       "secure": {
-        "title": "Isolé et sécurisé",
-        "body": "Tes données ne sortent pas de ton espace privé. Chiffrement, RLS et audit logs par défaut. Hébergement UE."
+        "title": "Isolated and secure",
+        "body": "Your data never leaves your private space. Encryption, RLS and audit logs by default. EU hosting."
       }
     },
-    "howHeading": "Comment ça marche",
+    "howHeading": "How it works",
     "steps": {
       "one": {
         "n": "01",
-        "title": "Renseigne tes charges",
-        "body": "Loyer, assurances, abonnements… classés par catégorie et fréquence."
+        "title": "Enter your bills",
+        "body": "Rent, insurance, subscriptions… sorted by category and frequency."
       },
       "two": {
         "n": "02",
-        "title": "Ankora lisse",
-        "body": "Chaque facture annuelle est répartie sur les 12 mois pour calculer ta provision idéale."
+        "title": "Ankora smooths",
+        "body": "Each annual bill is spread across 12 months to calculate your ideal reserve."
       },
       "three": {
         "n": "03",
-        "title": "Pilote ton mois",
-        "body": "Le cockpit te dit combien virer, combien garder, et si tu es en avance ou en retard sur tes provisions."
+        "title": "Steer your month",
+        "body": "The cockpit tells you how much to transfer, how much to keep, and whether you're ahead or behind on your reserves."
       }
     },
-    "faqHeading": "Questions fréquentes",
+    "faqHeading": "Frequently asked questions",
     "faq": {
       "advice": {
-        "q": "Ankora est-il un outil de conseil financier ?",
-        "a": "Non. Ankora est un outil d'organisation et d'éducation budgétaire. Il ne fournit pas de recommandations de placement ni de conseil financier personnalisé."
+        "q": "Is Ankora a financial advice tool?",
+        "a": "No. Ankora is a budgeting and financial education tool. It does not provide investment recommendations or personalised financial advice."
       },
       "storage": {
-        "q": "Où sont stockées mes données ?",
-        "a": "Tes données sont hébergées en Union européenne (Supabase, région UE) avec chiffrement au repos et isolation stricte par utilisateur via Row Level Security."
+        "q": "Where is my data stored?",
+        "a": "Your data is hosted in the European Union (Supabase, EU region) with encryption at rest and strict per-user isolation via Row Level Security."
       },
       "sharing": {
-        "q": "Est-ce que je peux partager mes données ?",
-        "a": "Par défaut, ton espace est 100 % privé. Des pots partagés optionnels (voyage, projet commun) arriveront dans une prochaine version — tu choisiras explicitement ce que tu partages, et avec qui."
+        "q": "Can I share my data?",
+        "a": "By default, your space is 100% private. Optional shared pockets (trips, joint projects) are coming in a future release — you'll explicitly choose what you share, and with whom."
       }
     }
   },
   "faq": {
     "metaTitle": "FAQ",
-    "metaDescription": "Questions fréquentes sur Ankora : sécurité, données, fonctionnement, confidentialité.",
-    "title": "Questions fréquentes",
-    "subtitle": "Tout ce qu'il faut savoir sur Ankora avant de se lancer.",
+    "metaDescription": "Frequently asked questions about Ankora: security, data, how it works, privacy.",
+    "title": "Frequently asked questions",
+    "subtitle": "Everything you need to know about Ankora before getting started.",
     "items": {
       "bankConnection": {
-        "q": "Est-ce qu'Ankora se connecte à ma banque ?",
-        "a": "Non. Ankora n'utilise pas la directive PSD2. Tu saisis manuellement tes charges et dépenses. Ce choix garantit que tu restes propriétaire de tes données et qu'aucune information bancaire sensible n'est stockée."
+        "q": "Does Ankora connect to my bank?",
+        "a": "No. Ankora does not use the PSD2 directive. You enter your bills and expenses manually. This choice guarantees you remain the owner of your data and that no sensitive banking information is stored."
       },
       "dataLocation": {
-        "q": "Où sont hébergées mes données ?",
-        "a": "Toutes tes données sont hébergées dans l'Union européenne (Supabase région UE, Vercel région UE, Upstash UE). Aucun transfert hors UE n'est effectué."
+        "q": "Where is my data hosted?",
+        "a": "All your data is hosted in the European Union (Supabase EU region, Vercel EU region, Upstash EU). No data is transferred outside the EU."
       },
       "smoothing": {
-        "q": "Comment fonctionne le lissage ?",
-        "a": "Ankora prend tes charges trimestrielles, semestrielles et annuelles et les répartit sur 12 mois. Tu sais ainsi combien mettre de côté chaque mois pour couvrir toutes tes futures factures sans stress."
+        "q": "How does smoothing work?",
+        "a": "Ankora takes your quarterly, semi-annual and annual bills and spreads them across 12 months. You know exactly how much to set aside each month to cover all your future bills, stress-free."
       },
       "deletion": {
-        "q": "Puis-je supprimer mon compte ?",
-        "a": "Oui, à tout moment depuis Paramètres → Confidentialité. La suppression prend effet 30 jours après ta demande (tu peux annuler pendant cette période). Toutes tes données financières sont effacées, les logs de sécurité sont pseudonymisés."
+        "q": "Can I delete my account?",
+        "a": "Yes, at any time from Settings → Privacy. Deletion takes effect 30 days after your request (you can cancel during this period). All your financial data is wiped, security logs are pseudonymised."
       },
       "export": {
-        "q": "Puis-je exporter mes données ?",
-        "a": "Oui. Le bouton « Télécharger mes données » dans Paramètres te fournit un fichier JSON complet de tout ce qu'Ankora détient sur toi. Conforme au droit de portabilité RGPD (art. 20)."
+        "q": "Can I export my data?",
+        "a": "Yes. The \"Download my data\" button in Settings gives you a complete JSON file of everything Ankora holds about you. Compliant with the GDPR right to portability (art. 20)."
       },
       "advice": {
-        "q": "Est-ce qu'Ankora donne des conseils financiers ?",
-        "a": "Non. Ankora est un outil d'éducation budgétaire et d'organisation. Nous n'émettons aucun conseil en placement (contrainte réglementaire FSMA Belgique). Pour toute décision d'investissement, consulte un professionnel agréé."
+        "q": "Does Ankora provide financial advice?",
+        "a": "No. Ankora is a budgeting education and organisation tool. We do not issue any investment advice (FSMA Belgium regulatory constraint). For any investment decision, consult an authorised professional."
       },
       "ai": {
-        "q": "Y a-t-il de l'intelligence artificielle ?",
-        "a": "En Phase 1, non. Les calculs sont déterministes et auditables. En Phase 2, une couche optionnelle BYOK (Bring Your Own Key) te permettra de connecter ta propre clé Anthropic ou OpenRouter pour des suggestions — aucun surcoût côté Ankora."
+        "q": "Is there any artificial intelligence?",
+        "a": "In Phase 1, no. Calculations are deterministic and auditable. In Phase 2, an optional BYOK (Bring Your Own Key) layer will let you connect your own Anthropic or OpenRouter key for suggestions — no extra cost on Ankora's side."
       },
       "sharing": {
-        "q": "Puis-je partager mon espace avec mes enfants ou mes amis ?",
-        "a": "En Phase 1, chaque utilisateur a un espace privé, isolé par défaut. En Phase 2, nous ajouterons la possibilité de créer des « pots partagés » (par invitation, avec rôles viewer/editor) sans jamais mélanger tes données personnelles."
+        "q": "Can I share my space with my children or friends?",
+        "a": "In Phase 1, each user has a private space, isolated by default. In Phase 2, we'll add the ability to create \"shared pockets\" (by invitation, with viewer/editor roles) without ever mixing your personal data."
       }
     }
   },
   "legal": {
-    "versionLine": "Version {version} — dernière mise à jour : {date}",
-    "lastUpdatedLine": "Dernière mise à jour : {date}",
+    "versionLine": "Version {version} — last updated: {date}",
+    "lastUpdatedLine": "Last updated: {date}",
     "cgu": {
-      "metaTitle": "Conditions générales d'utilisation",
-      "metaDescription": "CGU de Ankora — règles d'utilisation du service.",
-      "title": "Conditions générales d'utilisation",
+      "metaTitle": "Terms of service",
+      "metaDescription": "Ankora's terms of service — rules for using the service.",
+      "title": "Terms of service",
       "s1": {
-        "heading": "1. Objet",
-        "body": "Ankora est un outil d'organisation budgétaire et d'éducation financière destiné aux particuliers. Il permet de saisir manuellement ses charges et dépenses, de les lisser sur l'année, et d'anticiper les besoins de trésorerie."
+        "heading": "1. Purpose",
+        "body": "Ankora is a budgeting and financial education tool for individuals. It lets you manually enter your bills and expenses, smooth them across the year, and anticipate cash-flow needs."
       },
       "s2": {
-        "heading": "2. Ce que Ankora n'est PAS",
-        "item1": "Ankora n'est <b>pas un service de conseil en placement</b> ni en investissement.",
-        "item2": "Ankora n'est <b>pas un service bancaire</b> et ne détient aucun fonds.",
-        "item3": "Ankora n'est <b>pas un agrégateur PSD2</b> — aucune connexion à tes comptes bancaires.",
-        "item4": "Ankora n'est <b>pas un logiciel de comptabilité professionnelle</b>.",
-        "outro": "Les informations affichées sont des estimations basées sur tes saisies. Elles ne constituent pas un conseil financier personnalisé. Pour toute décision importante, consulte un professionnel agréé."
+        "heading": "2. What Ankora is NOT",
+        "item1": "Ankora is <b>not an investment advisory service</b>.",
+        "item2": "Ankora is <b>not a banking service</b> and holds no funds.",
+        "item3": "Ankora is <b>not a PSD2 aggregator</b> — no connection to your bank accounts.",
+        "item4": "Ankora is <b>not professional accounting software</b>.",
+        "outro": "The information displayed consists of estimates based on your inputs. It does not constitute personalised financial advice. For any important decision, consult an authorised professional."
       },
       "s3": {
-        "heading": "3. Compte",
-        "item1": "Tu dois être majeur ou avoir l'autorisation d'un représentant légal.",
-        "item2": "Un seul compte par personne physique.",
-        "item3": "Mot de passe minimum 12 caractères, mixte.",
-        "item4": "Tu es responsable de la confidentialité de tes identifiants."
+        "heading": "3. Account",
+        "item1": "You must be of legal age or have authorisation from a legal representative.",
+        "item2": "One account per individual.",
+        "item3": "Password: minimum 12 characters, mixed case.",
+        "item4": "You are responsible for keeping your credentials confidential."
       },
       "s4": {
-        "heading": "4. Usage acceptable",
-        "intro": "Tu t'engages à ne pas :",
-        "item1": "utiliser le service à des fins illégales,",
-        "item2": "tenter de contourner les mesures de sécurité,",
-        "item3": "automatiser l'accès sans autorisation explicite,",
-        "item4": "partager ton compte avec un tiers."
+        "heading": "4. Acceptable use",
+        "intro": "You agree not to:",
+        "item1": "use the service for illegal purposes,",
+        "item2": "attempt to circumvent security measures,",
+        "item3": "automate access without explicit authorisation,",
+        "item4": "share your account with a third party."
       },
       "s5": {
-        "heading": "5. Propriété intellectuelle",
-        "body": "Tu restes propriétaire de tes données. Ankora conserve la propriété de son code, marque, design et documentation."
+        "heading": "5. Intellectual property",
+        "body": "You remain the owner of your data. Ankora retains ownership of its code, brand, design and documentation."
       },
       "s6": {
-        "heading": "6. Responsabilité",
-        "body": "Ankora est fourni « tel quel ». L'éditeur ne saurait être tenu responsable des décisions financières prises sur base des informations affichées. Aucune garantie de disponibilité à 100%."
+        "heading": "6. Liability",
+        "body": "Ankora is provided \"as is\". The publisher cannot be held liable for financial decisions made on the basis of the information displayed. No 100% availability is guaranteed."
       },
       "s7": {
-        "heading": "7. Résiliation",
-        "body": "Tu peux supprimer ton compte à tout moment depuis Paramètres → Confidentialité. La suppression est effective 30 jours après la demande (période annulable)."
+        "heading": "7. Termination",
+        "body": "You can delete your account at any time from Settings → Privacy. Deletion takes effect 30 days after the request (cancellable during that period)."
       },
       "s8": {
-        "heading": "8. Droit applicable",
-        "body": "Ces CGU sont soumises au droit belge. Tribunal compétent : Bruxelles."
-      }
+        "heading": "8. Governing law",
+        "body": "These terms are governed by Belgian law. Competent court: Brussels."
+      },
+      "draft": "Our terms of service are being drafted.",
+      "contact": "For any questions, contact us: thierryvm@gmail.com",
+      "backHome": "Back to home"
     },
     "privacy": {
-      "metaTitle": "Politique de confidentialité",
-      "metaDescription": "Politique de confidentialité de Ankora — hébergement UE, RGPD, droits des utilisateurs.",
-      "title": "Politique de confidentialité",
+      "metaTitle": "Privacy policy",
+      "metaDescription": "Ankora's privacy policy — EU hosting, GDPR, user rights.",
+      "title": "Privacy policy",
       "s1": {
-        "heading": "1. Responsable de traitement",
-        "body": "Ankora, édité par Thierry Van Mele (Belgique). Contact : <mail>privacy@ankora.eu</mail>."
+        "heading": "1. Data controller",
+        "body": "Ankora, published by Thierry Van Mele (Belgium). Contact: <mail>thierryvm@gmail.com</mail>."
       },
       "s2": {
-        "heading": "2. Données collectées",
-        "intro": "Ankora collecte uniquement les données strictement nécessaires à la fourniture du service :",
-        "item1": "<b>Identité</b> : adresse email, nom d'affichage (optionnel).",
-        "item2": "<b>Données financières saisies par toi</b> : charges, dépenses, catégories, revenus déclarés, solde d'épargne.",
-        "item3": "<b>Données techniques</b> : adresse IP, user-agent (pour les logs de sécurité uniquement).",
-        "item4": "<b>Consentements</b> : horodatage, version, portée (CGU, confidentialité, cookies).",
-        "outro": "Ankora ne se connecte à aucune banque (pas d'agrégation PSD2). Tu saisis toi-même tes charges et dépenses."
+        "heading": "2. Data collected",
+        "intro": "Ankora collects only the data strictly necessary to provide the service:",
+        "item1": "<b>Identity</b>: email address, display name (optional).",
+        "item2": "<b>Financial data you enter</b>: bills, expenses, categories, declared income, savings balance.",
+        "item3": "<b>Technical data</b>: IP address, user-agent (for security logs only).",
+        "item4": "<b>Consents</b>: timestamp, version, scope (terms, privacy, cookies).",
+        "outro": "Ankora does not connect to any bank (no PSD2 aggregation). You enter your bills and expenses yourself."
       },
       "s3": {
-        "heading": "3. Bases légales (RGPD art. 6)",
-        "item1": "<b>Contrat</b> : fourniture du service (compte, données financières).",
-        "item2": "<b>Consentement</b> : cookies analytics/marketing, newsletter.",
-        "item3": "<b>Obligation légale</b> : logs de sécurité (conservation 12 mois).",
-        "item4": "<b>Intérêt légitime</b> : prévention fraude, maintien de la sécurité."
+        "heading": "3. Legal bases (GDPR art. 6)",
+        "item1": "<b>Contract</b>: providing the service (account, financial data).",
+        "item2": "<b>Consent</b>: analytics/marketing cookies, newsletter.",
+        "item3": "<b>Legal obligation</b>: security logs (12-month retention).",
+        "item4": "<b>Legitimate interest</b>: fraud prevention, security maintenance."
       },
       "s4": {
-        "heading": "4. Hébergement et sous-traitants",
-        "item1": "<b>Supabase</b> (base de données, auth) — région UE (Francfort ou Paris).",
-        "item2": "<b>Vercel</b> (hébergement frontend) — région UE (Dublin).",
-        "item3": "<b>Upstash</b> (rate limiting) — région UE.",
-        "outro": "Aucune donnée n'est transférée hors UE/EEE."
+        "heading": "4. Hosting and subprocessors",
+        "item1": "<b>Supabase</b> (database, auth) — EU region (Frankfurt or Paris).",
+        "item2": "<b>Vercel</b> (frontend hosting) — EU region (Dublin).",
+        "item3": "<b>Upstash</b> (rate limiting) — EU region.",
+        "outro": "No data is transferred outside the EU/EEA."
       },
       "s5": {
-        "heading": "5. Durée de conservation",
-        "item1": "Compte actif : tant que tu utilises le service.",
-        "item2": "Compte supprimé : suppression effective 30 jours après ta demande (grace period annulable).",
-        "item3": "Logs de sécurité : 12 mois maximum, pseudonymisés après suppression du compte."
+        "heading": "5. Retention period",
+        "item1": "Active account: for as long as you use the service.",
+        "item2": "Deleted account: deletion takes effect 30 days after your request (cancellable grace period).",
+        "item3": "Security logs: 12 months maximum, pseudonymised after account deletion."
       },
       "s6": {
-        "heading": "6. Tes droits (RGPD art. 15-22)",
-        "item1": "<b>Accès</b> : consulte tes données à tout moment dans ton espace.",
-        "item2": "<b>Rectification</b> : modifie profil et données dans les pages dédiées.",
-        "item3": "<b>Effacement</b> : bouton « Supprimer mon compte » dans Paramètres → Confidentialité.",
-        "item4": "<b>Portabilité</b> : bouton « Télécharger mes données » — export JSON complet.",
-        "item5": "<b>Opposition / Restriction</b> : refuse ou retire les cookies non essentiels à tout moment.",
-        "item6": "<b>Plainte</b> : auprès de l'<apd>Autorité de protection des données</apd> (Belgique)."
+        "heading": "6. Your rights (GDPR art. 15-22)",
+        "item1": "<b>Access</b>: view your data at any time in your space.",
+        "item2": "<b>Rectification</b>: edit profile and data in the dedicated pages.",
+        "item3": "<b>Erasure</b>: \"Delete my account\" button in Settings → Privacy.",
+        "item4": "<b>Portability</b>: \"Download my data\" button — full JSON export.",
+        "item5": "<b>Objection / Restriction</b>: refuse or withdraw non-essential cookies at any time.",
+        "item6": "<b>Complaint</b>: with the <apd>Data Protection Authority</apd> (Belgium)."
       },
       "s7": {
-        "heading": "7. Sécurité",
-        "item1": "Chiffrement en transit (TLS 1.3) et au repos.",
-        "item2": "Row Level Security Supabase sur toutes les tables.",
-        "item3": "Rate limiting, CSP stricte, audit log append-only.",
-        "item4": "Authentification par mot de passe fort + MFA disponible."
+        "heading": "7. Security",
+        "item1": "Encryption in transit (TLS 1.3) and at rest.",
+        "item2": "Supabase Row Level Security on all tables.",
+        "item3": "Rate limiting, strict CSP, append-only audit log.",
+        "item4": "Strong password authentication + MFA available."
       },
       "s8": {
         "heading": "8. Cookies",
-        "body": "Voir la <link>politique cookies</link>."
+        "body": "See the <link>cookie policy</link>."
       },
       "s9": {
-        "heading": "9. Modifications",
-        "body": "Toute modification matérielle de cette politique est notifiée par email et nécessite ton consentement renouvelé pour continuer à utiliser le service."
-      }
+        "heading": "9. Changes",
+        "body": "Any material change to this policy is notified by email and requires your renewed consent to keep using the service."
+      },
+      "draft": "Our privacy policy is being drafted.",
+      "contact": "For any questions, contact us: thierryvm@gmail.com",
+      "backHome": "Back to home"
     },
     "cookies": {
-      "metaTitle": "Politique cookies",
-      "metaDescription": "Politique cookies de Ankora — granularité totale, tout refusable sauf essentiels.",
-      "title": "Politique cookies",
-      "categoriesHeading": "Catégories",
-      "essentialHeading": "Essentiels (toujours actifs)",
-      "essentialBody": "Indispensables au fonctionnement : session d'authentification, préférence de thème, anti-CSRF.",
-      "essentialItem1": "<code>sb-*</code> — session Supabase (auth)",
-      "essentialItem2": "<code>ankora-theme</code> — préférence claire/sombre",
-      "analyticsHeading": "Analytics (désactivés par défaut)",
-      "analyticsBody1": "Uniquement si tu donnes ton consentement. Mesure d'usage agrégée, sans identifiant personnel.",
-      "analyticsBody2": "Ankora n'utilise pas Google Analytics. Les métriques Vercel sont agrégées et anonymisées.",
-      "marketingHeading": "Marketing (désactivés par défaut)",
-      "marketingBody": "Ankora n'utilise actuellement aucun cookie marketing.",
-      "manageHeading": "Gérer tes préférences",
-      "manageBody1": "Tu peux modifier tes consentements à tout moment dans <b>Paramètres → Confidentialité</b> ou en cliquant sur « Gérer les cookies » dans le pied de page.",
-      "manageBody2": "Refuser les cookies non essentiels ne dégrade pas l'expérience : Ankora reste entièrement fonctionnel.",
-      "lifetimeHeading": "Durée de vie",
-      "lifetimeItem1": "Session : fin de navigation",
-      "lifetimeItem2": "Préférences : 12 mois",
-      "lifetimeItem3": "Analytics : 6 mois (si acceptés)"
+      "metaTitle": "Cookie policy",
+      "metaDescription": "Ankora's cookie policy — full granularity, everything refusable except essentials.",
+      "title": "Cookie policy",
+      "categoriesHeading": "Categories",
+      "essentialHeading": "Essential (always active)",
+      "essentialBody": "Required for the service to work: authentication session, theme preference, anti-CSRF.",
+      "essentialItem1": "<code>sb-*</code> — Supabase session (auth)",
+      "essentialItem2": "<code>ankora-theme</code> — light/dark preference",
+      "analyticsHeading": "Analytics (off by default)",
+      "analyticsBody1": "Only if you give your consent. Aggregated usage measurement, with no personal identifier.",
+      "analyticsBody2": "Ankora does not use Google Analytics. Vercel metrics are aggregated and anonymised.",
+      "marketingHeading": "Marketing (off by default)",
+      "marketingBody": "Ankora currently uses no marketing cookies.",
+      "manageHeading": "Manage your preferences",
+      "manageBody1": "You can change your consents at any time in <b>Settings → Privacy</b> or by clicking \"Manage cookies\" in the footer.",
+      "manageBody2": "Declining non-essential cookies does not degrade the experience: Ankora remains fully functional.",
+      "lifetimeHeading": "Lifetime",
+      "lifetimeItem1": "Session: end of browsing",
+      "lifetimeItem2": "Preferences: 12 months",
+      "lifetimeItem3": "Analytics: 6 months (if accepted)",
+      "draft": "This cookie policy page is being drafted.",
+      "contact": "For any questions, contact us: thierryvm@gmail.com",
+      "backHome": "Back to home"
     }
   },
   "offline": {
-    "metaTitle": "Hors-ligne",
-    "metaDescription": "Tu es actuellement hors-ligne. Reconnecte-toi pour accéder à Ankora.",
-    "title": "Tu es hors-ligne",
-    "message": "Reconnecte-toi pour accéder à ton cockpit. Tes données restent intactes.",
-    "retry": "Réessayer"
+    "metaTitle": "Offline",
+    "metaDescription": "You are currently offline. Reconnect to access Ankora.",
+    "title": "You are offline",
+    "message": "Reconnect to access your cockpit. Your data stays intact.",
+    "retry": "Retry"
   },
   "consent": {
-    "title": "Cookies et vie privée",
-    "body": "On utilise uniquement les cookies essentiels pour te connecter. Les cookies d'analyse sont désactivés par défaut — tu peux les activer si tu veux nous aider à améliorer Ankora. Tu peux changer d'avis à tout moment via <link>la politique cookies</link>.",
-    "essentialOnly": "Essentiels uniquement",
-    "acceptAnalytics": "Accepter les analyses"
+    "title": "Cookies and privacy",
+    "body": "We only use essential cookies to log you in. Analytics cookies are off by default — you can turn them on if you want to help us improve Ankora. You can change your mind at any time via <link>the cookie policy</link>.",
+    "essentialOnly": "Essential only",
+    "acceptAnalytics": "Accept analytics"
   },
   "footer": {
-    "copyright": "© {year} — Tous droits réservés",
-    "cgu": "CGU",
-    "privacy": "Confidentialité",
-    "cookies": "Gérer les cookies",
-    "faq": "FAQ"
+    "copyright": "© {year} — All rights reserved",
+    "cgu": "Terms",
+    "privacy": "Privacy",
+    "cookies": "Manage cookies",
+    "faq": "FAQ",
+    "copyrightNotice": "© {year} Ankora™. All rights reserved."
   },
   "auth": {
     "login": {
-      "title": "Se connecter",
-      "subtitle": "Retrouve ton cockpit Ankora.",
-      "metaTitle": "Connexion",
+      "title": "Log in",
+      "subtitle": "Get back to your Ankora cockpit.",
+      "metaTitle": "Log in",
       "emailLabel": "Email",
-      "passwordLabel": "Mot de passe",
-      "forgotLink": "Mot de passe oublié ?",
-      "submit": "Se connecter",
-      "submitting": "Connexion…",
-      "noAccount": "Pas encore de compte ?",
-      "signupLink": "Créer un compte",
-      "dividerOr": "ou",
-      "dividerOrEmail": "ou avec ton email",
-      "passwordUpdatedBanner": "Mot de passe mis à jour. Tu peux te connecter."
+      "passwordLabel": "Password",
+      "forgotLink": "Forgot your password?",
+      "submit": "Log in",
+      "submitting": "Logging in…",
+      "noAccount": "No account yet?",
+      "signupLink": "Sign up",
+      "dividerOr": "or",
+      "dividerOrEmail": "or with your email",
+      "passwordUpdatedBanner": "Password updated. You can log in."
     },
     "signup": {
-      "title": "Créer un compte",
-      "subtitle": "Lance ton cockpit financier en moins de 2 minutes.",
-      "pageTitle": "Créer mon cockpit",
-      "pageDescription": "Quelques secondes. Aucune carte bancaire.",
+      "title": "Sign up",
+      "subtitle": "Launch your financial cockpit in under 2 minutes.",
+      "pageTitle": "Create my cockpit",
+      "pageDescription": "A few seconds. No credit card.",
       "emailLabel": "Email",
-      "passwordLabel": "Mot de passe",
-      "passwordHint": "Au moins 12 caractères, 1 majuscule, 1 minuscule, 1 chiffre.",
-      "passwordConfirmLabel": "Confirmer le mot de passe",
-      "acceptTosPrefix": "J'accepte les",
-      "acceptTosLink": "CGU",
-      "acceptPrivacyPrefix": "J'accepte la",
-      "acceptPrivacyLink": "politique de confidentialité",
-      "submit": "Créer mon compte",
-      "submitting": "Création…",
-      "haveAccount": "Déjà un compte ?",
-      "loginLink": "Se connecter",
-      "dividerOr": "ou",
-      "dividerOrEmail": "ou avec ton email",
-      "googleCta": "Créer mon compte avec Google",
-      "googleTerms": "En continuant avec Google, tu acceptes nos <cgu>CGU</cgu> et notre <privacy>politique de confidentialité</privacy>."
+      "passwordLabel": "Password",
+      "passwordHint": "At least 12 characters, 1 uppercase, 1 lowercase, 1 digit.",
+      "passwordConfirmLabel": "Confirm password",
+      "acceptTosPrefix": "I accept the",
+      "acceptTosLink": "Terms",
+      "acceptPrivacyPrefix": "I accept the",
+      "acceptPrivacyLink": "privacy policy",
+      "submit": "Create my account",
+      "submitting": "Creating…",
+      "haveAccount": "Already have an account?",
+      "loginLink": "Log in",
+      "dividerOr": "or",
+      "dividerOrEmail": "or with your email",
+      "googleCta": "Sign up with Google",
+      "googleTerms": "By continuing with Google, you accept our <cgu>Terms</cgu> and <privacy>privacy policy</privacy>."
     },
     "forgot": {
-      "title": "Mot de passe oublié",
-      "subtitle": "Entre ton email, on t'envoie un lien sécurisé.",
+      "title": "Forgot password",
+      "subtitle": "Enter your email, we'll send you a secure link.",
       "emailLabel": "Email",
-      "submit": "Envoyer le lien",
-      "submitting": "Envoi…",
-      "sentMessage": "Si cet email existe, un lien de réinitialisation vient d'être envoyé.",
-      "backToLogin": "Retour à la connexion"
+      "submit": "Send the link",
+      "submitting": "Sending…",
+      "sentMessage": "If this email exists, a reset link has just been sent.",
+      "backToLogin": "Back to login"
     },
     "reset": {
-      "title": "Nouveau mot de passe",
-      "subtitle": "Choisis un mot de passe solide pour ton compte.",
-      "passwordLabel": "Nouveau mot de passe",
-      "passwordConfirmLabel": "Confirmer",
-      "submit": "Mettre à jour",
-      "submitting": "Mise à jour…"
+      "title": "New password",
+      "subtitle": "Choose a strong password for your account.",
+      "passwordLabel": "New password",
+      "passwordConfirmLabel": "Confirm",
+      "submit": "Update",
+      "submitting": "Updating…"
     },
     "google": {
-      "label": "Continuer avec Google",
-      "redirecting": "Redirection…"
+      "label": "Continue with Google",
+      "redirecting": "Redirecting…"
     },
     "checkEmail": {
-      "title": "Vérifie ta boîte mail",
-      "metaTitle": "Vérifie ton email",
-      "body": "On vient de t'envoyer un lien de confirmation. Clique dessus pour activer ton compte.",
-      "backToLogin": "Retour à la connexion"
+      "title": "Check your inbox",
+      "metaTitle": "Check your email",
+      "body": "We've just sent you a confirmation link. Click it to activate your account.",
+      "backToLogin": "Back to login"
     }
   },
   "onboarding": {
-    "defaultWorkspaceName": "Mon espace",
-    "previous": "Retour",
-    "next": "Continuer",
-    "finish": "Terminer",
-    "finishing": "Enregistrement…",
+    "defaultWorkspaceName": "My space",
+    "previous": "Back",
+    "next": "Continue",
+    "finish": "Finish",
+    "finishing": "Saving…",
     "validation": {
-      "workspaceNameRequired": "Donne un nom à ton espace.",
-      "incomeInvalid": "Renseigne un revenu valide (≥ 0)."
+      "workspaceNameRequired": "Give your space a name.",
+      "incomeInvalid": "Enter a valid income (≥ 0)."
     },
     "step1": {
-      "title": "Nomme ton espace",
-      "description": "Tu pourras le modifier plus tard dans les paramètres.",
-      "nameLabel": "Nom de l'espace"
+      "title": "Name your space",
+      "description": "You can change it later in settings.",
+      "nameLabel": "Space name"
     },
     "step2": {
-      "title": "Ton revenu mensuel net",
-      "description": "Sert de base pour te suggérer les virements mensuels.",
-      "incomeLabel": "Revenu mensuel net (€)"
+      "title": "Your net monthly income",
+      "description": "Used as the basis for suggesting your monthly transfers.",
+      "incomeLabel": "Net monthly income (€)"
     },
     "step3": {
-      "title": "Ta première charge (optionnel)",
-      "description": "Ajoute un loyer, une assurance, un abonnement…",
-      "labelLabel": "Libellé",
-      "labelPlaceholder": "Loyer, assurance auto…",
-      "amountLabel": "Montant (€)",
-      "frequencyLabel": "Fréquence",
-      "dueMonthLabel": "Mois de référence",
-      "skipLater": "Je renseignerai mes charges plus tard"
+      "title": "Your first bill (optional)",
+      "description": "Add rent, insurance, a subscription…",
+      "labelLabel": "Label",
+      "labelPlaceholder": "Rent, car insurance…",
+      "amountLabel": "Amount (€)",
+      "frequencyLabel": "Frequency",
+      "dueMonthLabel": "Reference month",
+      "skipLater": "I'll enter my bills later"
     }
   },
   "app": {
     "dashboard": {
-      "metaTitle": "Tableau de bord",
-      "headerTitle": "{month} — ton cockpit",
-      "emptyTitle": "Commence par ajouter tes charges",
-      "emptyDescription": "Loyer, assurances, abonnements — Ankora les lisse sur 12 mois pour toi.",
-      "emptyCta": "Ajouter une charge",
-      "kpiProvisionsMonthly": "Provisions / mois",
-      "kpiProvisionsAnnualHint": "Annuel : {amount}",
-      "kpiHealth": "Santé provisions",
-      "kpiHealthTargetHint": "Cible : {amount}",
-      "kpiSuggestedTransfer": "Virement suggéré",
-      "kpiSuggestedTransferToSavings": "À mettre de côté",
-      "kpiSuggestedTransferFromSavings": "À retirer de l'épargne",
-      "kpiBillsMonth": "Factures {month}",
-      "kpiBillsHint": "Sortie de cash ce mois",
-      "healthHealthy": "Sain",
-      "healthWarning": "À surveiller",
-      "healthCritical": "Critique",
-      "planTitle": "Plan du mois — {month}",
-      "planDescription": "Les virements à exécuter en début de mois sur tes trois comptes.",
-      "planAdjustAccounts": "Ajuster mes comptes",
-      "missingSetupTitle": "Renseigne d'abord tes comptes",
-      "missingSetupDescription": "Pour calculer ton Virement Intelligent, Ankora a besoin de ton revenu mensuel et du montant fixe que tu envoies sur Vie Courante.",
-      "missingSetupCta": "Configurer mes comptes",
-      "transferPrincipalToVieCourante": "Principal → Vie Courante",
-      "transferVieCouranteHint": "Enveloppe courses, essence, restos.",
-      "transferPrincipalToEpargne": "Principal → Épargne",
-      "transferEpargneToPrincipal": "Épargne → Principal",
-      "transferEpargneHint": "Provision {provision} − factures {bills}",
-      "transferPrincipalRemaining": "Restant Principal",
-      "transferPrincipalRemainingHint": "Après salaire, virements et factures Principal ({bills}).",
-      "ctaCharges": "Mes charges",
-      "ctaExpenses": "Mes dépenses",
-      "ctaSimulator": "Simuler"
+      "metaTitle": "Dashboard",
+      "headerTitle": "{month} — your cockpit",
+      "emptyTitle": "Start by adding your bills",
+      "emptyDescription": "Rent, insurance, subscriptions — Ankora smooths them over 12 months for you.",
+      "emptyCta": "Add a bill",
+      "kpiProvisionsMonthly": "Reserves / month",
+      "kpiProvisionsAnnualHint": "Annual: {amount}",
+      "kpiHealth": "Reserve health",
+      "kpiHealthTargetHint": "Target: {amount}",
+      "kpiSuggestedTransfer": "Suggested transfer",
+      "kpiSuggestedTransferToSavings": "To set aside",
+      "kpiSuggestedTransferFromSavings": "To withdraw from savings",
+      "kpiBillsMonth": "{month} bills",
+      "kpiBillsHint": "Cash out this month",
+      "healthHealthy": "Healthy",
+      "healthWarning": "Watch",
+      "healthCritical": "Critical",
+      "planTitle": "Month plan — {month}",
+      "planDescription": "The transfers to run at the start of the month across your three accounts.",
+      "planAdjustAccounts": "Adjust my accounts",
+      "missingSetupTitle": "Set up your accounts first",
+      "missingSetupDescription": "To calculate your Smart Transfer, Ankora needs your monthly income and the fixed amount you send to Daily Spending.",
+      "missingSetupCta": "Set up my accounts",
+      "transferPrincipalToVieCourante": "Main → Daily Spending",
+      "transferVieCouranteHint": "Envelope for groceries, fuel, dining.",
+      "transferPrincipalToEpargne": "Main → Savings",
+      "transferEpargneToPrincipal": "Savings → Main",
+      "transferEpargneHint": "Reserve {provision} − bills {bills}",
+      "transferPrincipalRemaining": "Main remaining",
+      "transferPrincipalRemainingHint": "After salary, transfers and Main bills ({bills}).",
+      "ctaCharges": "My bills",
+      "ctaExpenses": "My expenses",
+      "ctaSimulator": "Simulate"
     },
     "charges": {
-      "title": "Mes charges",
-      "subtitle": "Chaque charge est lissée automatiquement sur 12 mois.",
-      "addFormTitle": "Ajouter une charge",
-      "emptyState": "Aucune charge pour l'instant.",
-      "labelLabel": "Libellé",
-      "amountLabel": "Montant (€)",
-      "frequencyLabel": "Fréquence",
-      "dueMonthLabel": "Mois de référence",
-      "addButton": "Ajouter",
-      "adding": "Ajout…",
-      "count": "{count, plural, =0 {aucune charge} one {1 charge} other {# charges}}",
+      "title": "My bills",
+      "subtitle": "Every bill is automatically smoothed over 12 months.",
+      "addFormTitle": "Add a bill",
+      "emptyState": "No bills yet.",
+      "labelLabel": "Label",
+      "amountLabel": "Amount (€)",
+      "frequencyLabel": "Frequency",
+      "dueMonthLabel": "Reference month",
+      "addButton": "Add",
+      "adding": "Adding…",
+      "count": "{count, plural, =0 {no bills} one {1 bill} other {# bills}}",
       "referenceFormat": "{frequency} · ref. {month}",
-      "deleteAria": "Supprimer {label}",
-      "toastCreated": "Charge ajoutée",
-      "toastDeleted": "Charge supprimée"
+      "deleteAria": "Delete {label}",
+      "toastCreated": "Bill added",
+      "toastDeleted": "Bill deleted"
     },
     "accounts": {
-      "metaTitle": "Mes comptes",
-      "metaDescription": "Suis les soldes de tes comptes Principal, Vie Courante et Épargne. Règle ton revenu mensuel et ton virement vers Vie Courante.",
-      "title": "Mes comptes",
-      "subtitle": "Saisis tes soldes réels pour qu'Ankora calcule précisément ton virement intelligent chaque mois.",
-      "balancesHeading": "Soldes actuels",
-      "amountLabel": "Montant (€)",
-      "saveButton": "Enregistrer",
-      "saving": "Enregistrement…",
+      "metaTitle": "My accounts",
+      "metaDescription": "Track the balances of your Main, Daily Spending and Savings accounts. Set your monthly income and your transfer to Daily Spending.",
+      "title": "My accounts",
+      "subtitle": "Enter your real balances so Ankora can accurately calculate your smart transfer each month.",
+      "balancesHeading": "Current balances",
+      "amountLabel": "Amount (€)",
+      "saveButton": "Save",
+      "saving": "Saving…",
       "income": {
-        "title": "Revenu mensuel net",
-        "description": "Le salaire qui arrive chaque mois sur ton compte Principal. Sert à calculer ce qu'il te reste après les charges et le virement vers Vie Courante.",
-        "placeholder": "Ex. 2500",
-        "toastSaved": "Revenu mensuel mis à jour"
+        "title": "Net monthly income",
+        "description": "The salary that lands every month in your Main account. Used to calculate what's left after bills and the transfer to Daily Spending.",
+        "placeholder": "e.g. 2500",
+        "toastSaved": "Monthly income updated"
       },
       "transfer": {
-        "title": "Virement mensuel vers Vie Courante",
-        "description": "Somme fixe transférée chaque mois du Principal vers ton compte Vie Courante. C'est ce qui servira aux courses, à l'essence et aux restos.",
-        "placeholder": "Ex. 500",
-        "toastSaved": "Virement mensuel mis à jour"
+        "title": "Monthly transfer to Daily Spending",
+        "description": "Fixed amount transferred every month from Main to your Daily Spending account. This is what covers groceries, fuel and dining.",
+        "placeholder": "e.g. 500",
+        "toastSaved": "Monthly transfer updated"
       },
       "balance": {
-        "invalidAmount": "Entre un montant valide.",
-        "saveLabel": "Mettre à jour",
-        "srLabel": "Solde actuel de {label}",
-        "toastSaved": "{name} mis à jour"
+        "invalidAmount": "Enter a valid amount.",
+        "saveLabel": "Update",
+        "srLabel": "Current balance of {label}",
+        "toastSaved": "{name} updated"
       },
       "kind": {
         "principal": {
-          "description": "Reçoit le salaire, paye les charges fixes mensuelles."
+          "description": "Receives the salary, pays fixed monthly bills."
         },
         "vieCourante": {
-          "description": "Budget du quotidien (courses, essence, restos)."
+          "description": "Day-to-day budget (groceries, fuel, dining)."
         },
         "epargne": {
-          "description": "Lisse les factures trimestrielles et annuelles."
+          "description": "Smooths quarterly and annual bills."
         }
       }
     },
     "expenses": {
-      "title": "Mes dépenses",
-      "subtitle": "Les sorties hors charges récurrentes — courses, resto, loisirs…",
-      "addFormTitle": "Ajouter une dépense",
-      "labelLabel": "Libellé",
-      "amountLabel": "Montant (€)",
+      "title": "My expenses",
+      "subtitle": "Spending outside recurring bills — groceries, dining, leisure…",
+      "addFormTitle": "Add an expense",
+      "labelLabel": "Label",
+      "amountLabel": "Amount (€)",
       "dateLabel": "Date",
-      "addButton": "Ajouter",
-      "adding": "Ajout…",
-      "emptyState": "Aucune dépense enregistrée.",
-      "summary": "{count, plural, =0 {Aucune dépense} one {1 dépense · {total}} other {# dépenses · {total}}}",
-      "deleteAria": "Supprimer {label}",
-      "toastCreated": "Dépense ajoutée",
-      "toastDeleted": "Dépense supprimée"
+      "addButton": "Add",
+      "adding": "Adding…",
+      "emptyState": "No expenses recorded.",
+      "summary": "{count, plural, =0 {No expenses} one {1 expense · {total}} other {# expenses · {total}}}",
+      "deleteAria": "Delete {label}",
+      "toastCreated": "Expense added",
+      "toastDeleted": "Expense deleted"
     },
     "settings": {
-      "metaTitle": "Paramètres",
-      "metaDescription": "Gère ton profil, la sécurité 2FA et tes données personnelles.",
-      "title": "Paramètres",
-      "description": "Profil, sécurité et données personnelles.",
+      "metaTitle": "Settings",
+      "metaDescription": "Manage your profile, 2FA security and personal data.",
+      "title": "Settings",
+      "description": "Profile, security and personal data.",
       "profile": {
-        "title": "Profil",
-        "description": "Ces informations personnalisent ton cockpit.",
+        "title": "Profile",
+        "description": "This information personalizes your cockpit.",
         "emailLabel": "Email",
-        "displayNameLabel": "Nom d'affichage",
-        "localeLabel": "Langue",
+        "displayNameLabel": "Display name",
+        "localeLabel": "Language",
         "localeOptions": {
           "fr-BE": "Français (Belgique)",
           "fr-FR": "Français (France)",
           "en-GB": "English"
         },
-        "submit": "Enregistrer",
-        "submitting": "Enregistrement…",
-        "toastSaved": "Profil mis à jour"
+        "submit": "Save",
+        "submitting": "Saving…",
+        "toastSaved": "Profile updated"
       },
       "mfa": {
-        "title": "Sécurité — 2FA",
-        "description": "Un code à usage unique généré par une app d'authentification (Authy, 1Password, Google Authenticator).",
-        "emptyState": "Aucun facteur 2FA actif. Active-le pour protéger ton compte.",
-        "enrollButton": "Activer la 2FA",
-        "enrolling": "Préparation…",
-        "scanInstruction": "Scanne ce QR code dans ton app d'authentification, puis saisis le code à 6 chiffres.",
-        "qrAlt": "QR code pour l'app d'authentification",
-        "manualEntry": "Saisie manuelle",
-        "codeLabel": "Code à 6 chiffres",
-        "verifyButton": "Vérifier et activer",
-        "verifying": "Vérification…",
-        "cancel": "Annuler",
-        "defaultFactorName": "App TOTP",
-        "activeLabel": "Actif",
-        "disableButton": "Désactiver",
-        "toastEnabled": "MFA activé",
-        "toastDisabled": "MFA désactivé"
+        "title": "Security — 2FA",
+        "description": "A one-time code generated by an authenticator app (Authy, 1Password, Google Authenticator).",
+        "emptyState": "No active 2FA factor. Turn it on to protect your account.",
+        "enrollButton": "Enable 2FA",
+        "enrolling": "Preparing…",
+        "scanInstruction": "Scan this QR code in your authenticator app, then enter the 6-digit code.",
+        "qrAlt": "QR code for the authenticator app",
+        "manualEntry": "Manual entry",
+        "codeLabel": "6-digit code",
+        "verifyButton": "Verify and enable",
+        "verifying": "Verifying…",
+        "cancel": "Cancel",
+        "defaultFactorName": "TOTP app",
+        "activeLabel": "Active",
+        "disableButton": "Disable",
+        "toastEnabled": "MFA enabled",
+        "toastDisabled": "MFA disabled"
       },
       "data": {
-        "title": "Mes données",
-        "description": "Portabilité RGPD (art. 20) — télécharge un JSON complet de tout ce qu'Ankora détient sur toi.",
-        "exportButton": "Télécharger mes données",
-        "exporting": "Génération…",
-        "toastDownloaded": "Export téléchargé"
+        "title": "My data",
+        "description": "GDPR portability (art. 20) — download a full JSON of everything Ankora holds about you.",
+        "exportButton": "Download my data",
+        "exporting": "Generating…",
+        "toastDownloaded": "Export downloaded"
       },
       "danger": {
-        "scheduledTitle": "Suppression en cours",
-        "scheduledBody": "Ton compte sera supprimé le <strong>{date}</strong>. Tu peux annuler à tout moment jusque-là.",
-        "viewStatus": "Voir le statut",
-        "title": "Zone dangereuse",
-        "description": "Suppression définitive du compte. Grâce de 30 jours pour annuler — après, tout est effacé (logs audit pseudonymisés).",
-        "reasonLabel": "Raison (optionnel)",
-        "reasonPlaceholder": "Aide-nous à nous améliorer…",
-        "confirmLabel": "Tape <code>SUPPRIMER</code> pour confirmer",
-        "confirmKeyword": "SUPPRIMER",
-        "submit": "Supprimer mon compte",
-        "submitting": "Programmation…",
-        "toastScheduled": "Suppression programmée — tu as 30 jours pour annuler"
+        "scheduledTitle": "Deletion in progress",
+        "scheduledBody": "Your account will be deleted on <strong>{date}</strong>. You can cancel any time until then.",
+        "viewStatus": "View status",
+        "title": "Danger zone",
+        "description": "Permanent account deletion. 30-day grace period to cancel — after that, everything is wiped (audit logs pseudonymised).",
+        "reasonLabel": "Reason (optional)",
+        "reasonPlaceholder": "Help us improve…",
+        "confirmLabel": "To confirm, type your email address: <code>{email}</code>",
+        "submit": "Delete my account",
+        "submitting": "Scheduling…",
+        "toastScheduled": "Deletion scheduled — you have 30 days to cancel"
       }
     },
     "simulator": {
-      "title": "Simulateur",
-      "subtitle": "Mesure l'impact d'un changement sans toucher à tes données réelles.",
+      "title": "Simulator",
+      "subtitle": "Measure the impact of a change without touching your real data.",
       "scenario": {
-        "title": "Scénario",
-        "description": "Choisis une action à simuler.",
+        "title": "Scenario",
+        "description": "Choose an action to simulate.",
         "modes": {
-          "cancel": "Annuler une charge",
-          "negotiate": "Renégocier",
-          "add": "Ajouter une charge"
+          "cancel": "Cancel a bill",
+          "negotiate": "Renegotiate",
+          "add": "Add a bill"
         }
       },
       "fields": {
-        "charge": "Charge",
-        "chargePlaceholder": "Sélectionne…",
-        "newAmount": "Nouveau montant (€)",
-        "label": "Libellé",
-        "amount": "Montant (€)",
-        "frequency": "Fréquence",
-        "month": "Mois"
+        "charge": "Bill",
+        "chargePlaceholder": "Select…",
+        "newAmount": "New amount (€)",
+        "label": "Label",
+        "amount": "Amount (€)",
+        "frequency": "Frequency",
+        "month": "Month"
       },
       "impact": {
         "title": "Impact",
-        "empty": "Complète le scénario pour voir l'impact.",
-        "currentMonthly": "Actuel / mois",
-        "projectedMonthly": "Projeté / mois",
-        "annualSavings": "Économie annuelle",
-        "monthlyChange": "{sign}{percent}% / mois"
+        "empty": "Complete the scenario to see the impact.",
+        "currentMonthly": "Current / month",
+        "projectedMonthly": "Projected / month",
+        "annualSavings": "Annual savings",
+        "monthlyChange": "{sign}{percent}% / month"
       }
     },
     "deletionStatus": {
-      "title": "Suppression du compte",
-      "subtitle": "État détaillé de ta demande et période d'annulation.",
-      "metaTitle": "Statut de suppression",
-      "metaDescription": "État de la demande de suppression de ton compte Ankora.",
-      "statusLabel": "Statut :",
-      "requestedOn": "Demandée le {date}.",
-      "statusPending": "En attente",
-      "statusCancelled": "Annulée",
-      "statusCompleted": "Complétée",
-      "scheduledFor": "Suppression prévue",
-      "daysLeft": "Jours restants",
-      "auditLogs": "Logs audit",
-      "auditLogsValue": "Pseudonymisés, jamais supprimés",
-      "daysCount": "{days, plural, =0 {Aujourd'hui} one {# jour} other {# jours}}",
-      "backToSettings": "Retour aux paramètres",
-      "cancelledOn": "Demande annulée le {date}. Ton compte est conservé.",
-      "cancelledNoDate": "Demande annulée. Ton compte est conservé.",
-      "cancelButton": "Annuler la suppression",
-      "cancelling": "Annulation…",
-      "toastCancelled": "Demande annulée — ton compte est conservé"
+      "title": "Account deletion",
+      "subtitle": "Detailed status of your request and cancellation period.",
+      "metaTitle": "Deletion status",
+      "metaDescription": "Status of your Ankora account deletion request.",
+      "statusLabel": "Status:",
+      "requestedOn": "Requested on {date}.",
+      "statusPending": "Pending",
+      "statusCancelled": "Cancelled",
+      "statusCompleted": "Completed",
+      "scheduledFor": "Deletion scheduled",
+      "daysLeft": "Days left",
+      "auditLogs": "Audit logs",
+      "auditLogsValue": "Pseudonymised, never deleted",
+      "daysCount": "{days, plural, =0 {Today} one {# day} other {# days}}",
+      "backToSettings": "Back to settings",
+      "cancelledOn": "Request cancelled on {date}. Your account is preserved.",
+      "cancelledNoDate": "Request cancelled. Your account is preserved.",
+      "cancelButton": "Cancel deletion",
+      "cancelling": "Cancelling…",
+      "toastCancelled": "Request cancelled — your account is preserved"
+    }
+  },
+  "glossary": {
+    "title": "Glossary",
+    "subtitle": "15 essential terms for understanding your budgeting and personal finances.",
+    "metaTitle": "Glossary — Financial Terms",
+    "metaDescription": "Glossary of 15 essential budgeting terms: smoothed budget, bucket account, emergency fund, and more.",
+    "breadcrumb": {
+      "home": "Home",
+      "glossary": "Glossary"
+    },
+    "section": {
+      "whyItMatters": "Why It Matters",
+      "example": "Concrete Example",
+      "relatedTerms": "Related Terms"
     }
   },
   "errors": {
-    "generic": "Une erreur est survenue. Réessaie.",
+    "generic": "Something went wrong. Try again.",
     "session": {
-      "expired": "Session expirée. Reconnecte-toi.",
-      "rateLimited": "Trop de requêtes. Attends une minute."
+      "expired": "Session expired. Log in again.",
+      "rateLimited": "Too many requests. Wait a minute."
     },
     "auth": {
-      "invalidCredentials": "Email ou mot de passe incorrect.",
-      "signupFailed": "Inscription impossible. Réessaie plus tard.",
-      "googleFailed": "Connexion Google indisponible. Réessaie plus tard.",
-      "rateLimited": "Trop de tentatives. Réessaie dans quelques minutes.",
-      "passwordResetFailed": "Impossible de mettre à jour le mot de passe.",
-      "linkExpired": "Lien expiré. Demande un nouveau lien.",
-      "mfaEnrollFailed": "Impossible de démarrer l'enrôlement.",
-      "mfaChallengeFailed": "Challenge MFA impossible.",
-      "mfaCodeInvalid": "Code incorrect. Réessaie.",
-      "mfaDisableFailed": "Impossible de désactiver la 2FA."
+      "invalidCredentials": "Incorrect email or password.",
+      "signupFailed": "Sign-up failed. Try again later.",
+      "googleFailed": "Google login unavailable. Try again later.",
+      "rateLimited": "Too many attempts. Try again in a few minutes.",
+      "serviceTemporarilyUnavailable": "Service temporarily unavailable. Try again in a few minutes.",
+      "passwordResetFailed": "Unable to update the password.",
+      "linkExpired": "Link expired. Request a new link.",
+      "mfaEnrollFailed": "Unable to start enrolment.",
+      "mfaChallengeFailed": "MFA challenge failed.",
+      "mfaCodeInvalid": "Incorrect code. Try again.",
+      "mfaDisableFailed": "Unable to disable 2FA."
     },
     "db": {
-      "workspaceNotFound": "Aucun workspace éditable.",
-      "updateFailed": "Mise à jour impossible.",
-      "notEditable": "Tu n'as pas les droits d'édition sur cet espace."
+      "workspaceNotFound": "No editable workspace.",
+      "updateFailed": "Update failed.",
+      "notEditable": "You don't have edit rights on this space."
     },
     "validation": {
-      "generic": "Données invalides.",
+      "generic": "Invalid data.",
       "auth": {
         "email": {
-          "invalid": "Adresse email invalide."
+          "invalid": "Invalid email address."
         },
         "password": {
-          "required": "Mot de passe requis.",
-          "tooShort": "Au moins 12 caractères.",
-          "tooLong": "Maximum 128 caractères.",
-          "lowercase": "Au moins une minuscule.",
-          "uppercase": "Au moins une majuscule.",
-          "digit": "Au moins un chiffre."
+          "required": "Password required.",
+          "tooShort": "At least 12 characters.",
+          "tooLong": "Maximum 128 characters.",
+          "lowercase": "At least one lowercase letter.",
+          "uppercase": "At least one uppercase letter.",
+          "digit": "At least one digit."
         },
         "passwordConfirm": {
-          "mismatch": "Les mots de passe ne correspondent pas."
+          "mismatch": "Passwords do not match."
         },
         "acceptTos": {
-          "required": "Tu dois accepter les CGU."
+          "required": "You must accept the Terms."
         },
         "acceptPrivacy": {
-          "required": "Tu dois accepter la politique de confidentialité."
+          "required": "You must accept the privacy policy."
         }
       },
       "charge": {
         "label": {
-          "required": "Libellé requis.",
-          "tooLong": "Maximum 120 caractères."
+          "required": "Label required.",
+          "tooLong": "Maximum 120 characters."
         },
         "amount": {
-          "invalid": "Montant invalide.",
-          "negative": "Le montant doit être ≥ 0.",
-          "tooHigh": "Montant trop élevé."
+          "invalid": "Invalid amount.",
+          "negative": "Amount must be ≥ 0.",
+          "tooHigh": "Amount too high."
         },
         "frequency": {
-          "invalid": "Fréquence invalide."
+          "invalid": "Invalid frequency."
         },
         "dueMonth": {
-          "range": "Mois entre 1 et 12."
+          "range": "Month between 1 and 12."
         },
         "paidFrom": {
-          "invalid": "Compte débiteur invalide."
+          "invalid": "Invalid debit account."
         }
       },
       "account": {
         "kind": {
-          "invalid": "Type de compte invalide."
+          "invalid": "Invalid account type."
         },
         "balance": {
-          "invalid": "Solde invalide.",
-          "outOfRange": "Valeur hors limites."
+          "invalid": "Invalid balance.",
+          "outOfRange": "Value out of range."
         },
         "label": {
-          "required": "Libellé requis.",
-          "tooLong": "Maximum 80 caractères."
+          "required": "Label required.",
+          "tooLong": "Maximum 80 characters."
         }
       },
       "workspace": {
         "name": {
-          "required": "Nom requis.",
-          "tooLong": "Maximum 80 caractères."
+          "required": "Name required.",
+          "tooLong": "Maximum 80 characters."
         },
         "income": {
-          "invalid": "Revenu invalide.",
-          "negative": "Doit être ≥ 0.",
-          "tooHigh": "Revenu trop élevé."
+          "invalid": "Invalid income.",
+          "negative": "Must be ≥ 0.",
+          "tooHigh": "Income too high."
         },
         "transfer": {
-          "invalid": "Montant invalide.",
-          "negative": "Doit être ≥ 0.",
-          "tooHigh": "Montant trop élevé."
+          "invalid": "Invalid amount.",
+          "negative": "Must be ≥ 0.",
+          "tooHigh": "Amount too high."
         }
       },
       "expense": {
         "label": {
-          "required": "Libellé requis.",
-          "tooLong": "Maximum 120 caractères."
+          "required": "Label required.",
+          "tooLong": "Maximum 120 characters."
         },
         "amount": {
-          "invalid": "Montant invalide.",
-          "negative": "Doit être ≥ 0.",
-          "tooHigh": "Montant trop élevé."
+          "invalid": "Invalid amount.",
+          "negative": "Must be ≥ 0.",
+          "tooHigh": "Amount too high."
         },
         "date": {
-          "format": "Format attendu : YYYY-MM-DD."
+          "format": "Expected format: YYYY-MM-DD."
         },
         "category": {
-          "invalid": "Catégorie invalide."
+          "invalid": "Invalid category."
         }
       },
       "settings": {
         "displayName": {
-          "required": "Nom requis.",
-          "tooLong": "Maximum 80 caractères."
+          "required": "Name required.",
+          "tooLong": "Maximum 80 characters."
         },
         "locale": {
-          "invalid": "Langue invalide."
+          "invalid": "Invalid language."
         },
         "factorId": {
-          "invalid": "Identifiant invalide."
+          "invalid": "Invalid identifier."
         },
         "mfaCode": {
-          "invalid": "Code à 6 chiffres."
+          "invalid": "6-digit code."
         },
         "deletion": {
-          "confirm": "Tape « SUPPRIMER » pour confirmer."
+          "confirm": "This address doesn't match your account."
         }
       },
       "onboarding": {
         "workspace": {
-          "required": "Nom requis.",
-          "tooLong": "Maximum 80 caractères."
+          "required": "Name required.",
+          "tooLong": "Maximum 80 characters."
         },
         "income": {
-          "invalid": "Revenu invalide.",
-          "negative": "Doit être ≥ 0.",
-          "tooHigh": "Revenu trop élevé."
+          "invalid": "Invalid income.",
+          "negative": "Must be ≥ 0.",
+          "tooHigh": "Income too high."
         },
         "firstCharge": {
           "label": {
-            "required": "Libellé requis.",
-            "tooLong": "Maximum 120 caractères."
+            "required": "Label required.",
+            "tooLong": "Maximum 120 characters."
           },
           "amount": {
-            "invalid": "Montant invalide.",
-            "negative": "Doit être ≥ 0.",
-            "tooHigh": "Montant trop élevé."
+            "invalid": "Invalid amount.",
+            "negative": "Must be ≥ 0.",
+            "tooHigh": "Amount too high."
           },
           "dueMonth": {
-            "range": "Mois entre 1 et 12."
+            "range": "Month between 1 and 12."
           }
         }
       }
     },
     "charges": {
-      "createFailed": "Impossible de créer la charge.",
-      "updateFailed": "Impossible de mettre à jour la charge.",
-      "deleteFailed": "Impossible de supprimer la charge."
+      "createFailed": "Unable to create the bill.",
+      "updateFailed": "Unable to update the bill.",
+      "deleteFailed": "Unable to delete the bill."
     },
     "accounts": {
-      "balanceUpdateFailed": "Impossible de mettre à jour le solde.",
-      "renameFailed": "Impossible de renommer le compte.",
-      "incomeUpdateFailed": "Impossible de mettre à jour le revenu.",
-      "transferUpdateFailed": "Impossible de mettre à jour le virement."
+      "balanceUpdateFailed": "Unable to update the balance.",
+      "renameFailed": "Unable to rename the account.",
+      "incomeUpdateFailed": "Unable to update the income.",
+      "transferUpdateFailed": "Unable to update the transfer."
     },
     "expenses": {
-      "createFailed": "Impossible de créer la dépense.",
-      "deleteFailed": "Impossible de supprimer la dépense."
+      "createFailed": "Unable to create the expense.",
+      "deleteFailed": "Unable to delete the expense."
     },
     "settings": {
-      "profileUpdateFailed": "Impossible de mettre à jour le profil.",
-      "deletionRequestFailed": "Impossible de programmer la suppression.",
-      "deletionCancelFailed": "Impossible d'annuler la demande.",
-      "exportLimited": "Export limité à une fois toutes les 5 minutes."
+      "profileUpdateFailed": "Unable to update the profile.",
+      "deletionRequestFailed": "Unable to schedule the deletion.",
+      "deletionCancelFailed": "Unable to cancel the request.",
+      "exportLimited": "Export limited to once every 5 minutes."
     },
     "onboarding": {
-      "workspaceNotFound": "Workspace introuvable. Contacte le support.",
-      "workspaceUpdateFailed": "Impossible de mettre à jour le workspace.",
-      "chargeFailed": "Workspace créé mais charge non enregistrée."
+      "workspaceNotFound": "Workspace not found. Contact support.",
+      "workspaceUpdateFailed": "Unable to update the workspace.",
+      "chargeFailed": "Workspace created but bill not saved."
     },
     "locale": {
-      "invalid": "Langue invalide."
+      "invalid": "Invalid language."
     }
   }
 }

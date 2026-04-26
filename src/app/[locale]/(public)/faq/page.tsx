@@ -50,19 +50,14 @@ export default async function FaqPage() {
       <main id="main" className="mx-auto w-full max-w-3xl px-4 py-12 md:px-6 md:py-16">
         <header>
           <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{t('title')}</h1>
-          <p className="mt-3 text-(--color-muted-foreground)">{t('subtitle')}</p>
+          <p className="text-muted-foreground mt-3">{t('subtitle')}</p>
         </header>
 
         <dl className="mt-10 space-y-8">
           {questions.map((item) => (
-            <div
-              key={item.key}
-              className="border-t border-(--color-border) pt-6 first:border-t-0 first:pt-0"
-            >
-              <dt className="text-lg font-semibold text-(--color-foreground) md:text-xl">
-                {item.q}
-              </dt>
-              <dd className="mt-2 leading-relaxed text-(--color-muted-foreground)">{item.a}</dd>
+            <div key={item.key} className="border-border border-t pt-6 first:border-t-0 first:pt-0">
+              <dt className="text-foreground text-lg font-semibold md:text-xl">{item.q}</dt>
+              <dd className="text-muted-foreground mt-2 leading-relaxed">{item.a}</dd>
             </div>
           ))}
         </dl>

@@ -1,14 +1,20 @@
 # Security policy — Ankora
 
+<!-- TODO: migrate to privacy@ankora.be once domain MX is configured -->
+
 ## Reporting a vulnerability
 
-If you discover a security issue, please email **security@ankora.eu** with:
+If you discover a security issue, please email **thierryvm@gmail.com** with:
 
 - Steps to reproduce
 - Affected versions / URLs
 - Proof of concept (if applicable)
 
-Please do **not** open a public issue. We aim to acknowledge within 48 hours and ship a fix or mitigation within 7 days for critical issues.
+> **TODO**: Once infrastructure is established, transition to security@ankora.be
+> for dedicated security reporting (currently routed to thierryvm@gmail.com).
+
+Please do **not** open a public issue. We aim to acknowledge within 48 hours
+and ship a fix or mitigation within 7 days for critical issues.
 
 ## Supported versions
 
@@ -58,7 +64,7 @@ Only the `main` branch receives security fixes.
 
 In scope:
 
-- ankora.eu and ankora.be (when live)
+- ankora.be (production) and any preview deployments on `*.vercel.app`
 - Production Supabase project
 - Ankora GitHub organisation
 
@@ -67,3 +73,12 @@ Out of scope:
 - Third-party services (Supabase, Vercel, Upstash) — report directly to them
 - Social engineering of Ankora staff
 - DDoS / volumetric attacks
+
+## Jurisdiction & Legal
+
+This security policy is governed by the laws of **Belgium** and is subject to
+Belgian data protection regulations (GDPR, RGPD). Security reports will be
+handled in accordance with Belgian law and EU regulations.
+
+For legal correspondence or disputes regarding security matters, the exclusive
+jurisdiction shall be the courts of Belgium.

@@ -12,7 +12,8 @@ import {
   passwordResetConfirmSchema,
 } from '@/lib/schemas/auth';
 import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
-import { rateLimit } from '@/lib/security/rate-limit';
+import { rateLimit, mapRateLimitErrorToErrorCode } from '@/lib/security/rate-limit';
+import { log } from '@/lib/log';
 import type { ActionResult } from '@/lib/actions/types';
 
 async function contextFromHeaders(): Promise<{ ip: string | null; userAgent: string | null }> {
@@ -33,7 +34,7 @@ export async function signupAction(formData: FormData): Promise<ActionResult> {
       ipAddress: ip,
       userAgent,
     });
-    return { ok: false, errorCode: 'errors.auth.rateLimited' };
+    return { ok: false, errorCode: mapRateLimitErrorToErrorCode(rl.reason) };
   }
 
   const parsed = signupSchema.safeParse({
@@ -62,7 +63,7 @@ export async function signupAction(formData: FormData): Promise<ActionResult> {
   });
 
   if (error) {
-    console.error('[signupAction]', error.code ?? 'unknown');
+    log.error('Signup failed', { error_code: error.code ?? 'unknown' });
     return { ok: false, errorCode: 'errors.auth.signupFailed' };
   }
 
@@ -82,7 +83,7 @@ export async function signInWithGoogleAction(): Promise<ActionResult> {
   const rl = await rateLimit('auth', identifier);
   if (!rl.success) {
     await logAuditEvent(AuditEvent.AUTH_RATE_LIMITED, { userId: null, ipAddress: ip, userAgent });
-    return { ok: false, errorCode: 'errors.auth.rateLimited' };
+    return { ok: false, errorCode: mapRateLimitErrorToErrorCode(rl.reason) };
   }
 
   const supabase = await createClient();
@@ -98,7 +99,7 @@ export async function signInWithGoogleAction(): Promise<ActionResult> {
   });
 
   if (error || !data?.url) {
-    console.error('[signInWithGoogleAction]', error?.message ?? 'no url');
+    log.error('Google sign-in failed', { error_message: error?.message ?? 'no url' });
     return { ok: false, errorCode: 'errors.auth.googleFailed' };
   }
 
@@ -116,7 +117,7 @@ export async function loginAction(formData: FormData): Promise<ActionResult> {
       ipAddress: ip,
       userAgent,
     });
-    return { ok: false, errorCode: 'errors.auth.rateLimited' };
+    return { ok: false, errorCode: mapRateLimitErrorToErrorCode(rl.reason) };
   }
 
   const parsed = loginSchema.safeParse({
@@ -175,7 +176,7 @@ export async function requestPasswordResetAction(formData: FormData): Promise<Ac
 
   const rl = await rateLimit('auth', identifier);
   if (!rl.success) {
-    return { ok: false, errorCode: 'errors.auth.rateLimited' };
+    return { ok: false, errorCode: mapRateLimitErrorToErrorCode(rl.reason) };
   }
 
   const parsed = passwordResetRequestSchema.safeParse({
@@ -229,7 +230,7 @@ export async function confirmPasswordResetAction(formData: FormData): Promise<Ac
   const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
 
   if (error) {
-    console.error('[confirmPasswordResetAction]', error.code ?? 'unknown');
+    log.error('Password reset confirmation failed', { error_code: error.code ?? 'unknown' });
     return { ok: false, errorCode: 'errors.auth.passwordResetFailed' };
   }
 

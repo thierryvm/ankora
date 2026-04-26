@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 import type { Locale } from '@/i18n/routing';
-import { formatDate } from '@/lib/i18n/formatters';
+import { formatDate, normalizeEmail } from '@/lib/i18n/formatters';
 
 import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
@@ -46,7 +46,7 @@ export function SettingsClient({ email, displayName, locale, factors, deletion }
       <ProfileCard email={email} displayName={displayName} locale={locale} />
       <MfaCard factors={factors} />
       <DataCard />
-      <DangerZone deletion={deletion} locale={locale} />
+      <DangerZone deletion={deletion} email={email} />
     </div>
   );
 }
@@ -172,7 +172,7 @@ function MfaCard({ factors }: { factors: Factor[] }) {
       <CardContent className="flex flex-col gap-4">
         {verified.length === 0 && !enrollment && (
           <div>
-            <p className="text-sm text-(--color-muted-foreground)">{t('emptyState')}</p>
+            <p className="text-muted-foreground text-sm">{t('emptyState')}</p>
             <Button type="button" onClick={startEnroll} disabled={pending} className="mt-3">
               {pending ? t('enrolling') : t('enrollButton')}
             </Button>
@@ -188,11 +188,11 @@ function MfaCard({ factors }: { factors: Factor[] }) {
               alt={t('qrAlt')}
               width={192}
               height={192}
-              className="h-48 w-48 rounded-md border border-(--color-border) bg-white p-2"
+              className="border-border h-48 w-48 rounded-md border bg-white p-2"
             />
-            <details className="text-xs text-(--color-muted-foreground)">
+            <details className="text-muted-foreground text-xs">
               <summary className="cursor-pointer">{t('manualEntry')}</summary>
-              <code className="mt-2 block rounded bg-(--color-brand-100) px-2 py-1 font-mono text-(--color-brand-900)">
+              <code className="bg-brand-100 text-brand-900 mt-2 block rounded px-2 py-1 font-mono">
                 {enrollment.secret}
               </code>
             </details>
@@ -229,11 +229,11 @@ function MfaCard({ factors }: { factors: Factor[] }) {
             {verified.map((f) => (
               <li
                 key={f.id}
-                className="flex items-center justify-between rounded-md border border-(--color-border) px-4 py-3"
+                className="border-border flex items-center justify-between rounded-md border px-4 py-3"
               >
                 <div>
                   <p className="text-sm font-medium">{f.friendlyName ?? t('defaultFactorName')}</p>
-                  <p className="text-xs text-(--color-success)">{t('activeLabel')}</p>
+                  <p className="text-success text-xs">{t('activeLabel')}</p>
                 </div>
                 <Button
                   type="button"
@@ -291,13 +291,17 @@ function DataCard() {
   );
 }
 
-function DangerZone({ deletion, locale }: { deletion: Deletion; locale: string }) {
+function DangerZone({ deletion, email }: { deletion: Deletion; email: string }) {
+  const locale = useLocale() as Locale;
   const t = useTranslations('app.settings.danger');
   const translateError = useActionErrorTranslator();
   const [reason, setReason] = useState('');
   const [confirm, setConfirm] = useState('');
   const [pending, startTransition] = useTransition();
-  const confirmKeyword = t('confirmKeyword');
+  // i18n-safe destructive-action pattern: the user must type their own email
+  // address (case-insensitive, trimmed) — no translated keyword to drift.
+  const expected = normalizeEmail(email);
+  const confirmMatches = normalizeEmail(confirm) === expected;
 
   const onRequest = (e: React.FormEvent) => {
     e.preventDefault();
@@ -314,9 +318,9 @@ function DangerZone({ deletion, locale }: { deletion: Deletion; locale: string }
   if (deletion) {
     const date = formatDate(deletion.scheduledFor, locale as Locale, 'long');
     return (
-      <Card className="border-(--color-danger)/40">
+      <Card className="border-danger/40">
         <CardHeader>
-          <CardTitle className="text-(--color-danger)">{t('scheduledTitle')}</CardTitle>
+          <CardTitle className="text-danger">{t('scheduledTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm">
@@ -334,9 +338,9 @@ function DangerZone({ deletion, locale }: { deletion: Deletion; locale: string }
   }
 
   return (
-    <Card className="border-(--color-danger)/40">
+    <Card className="border-danger/40">
       <CardHeader>
-        <CardTitle className="text-(--color-danger)">{t('title')}</CardTitle>
+        <CardTitle className="text-danger">{t('title')}</CardTitle>
         <CardDescription>{t('description')}</CardDescription>
       </CardHeader>
       <CardContent>
@@ -354,23 +358,26 @@ function DangerZone({ deletion, locale }: { deletion: Deletion; locale: string }
           <div className="flex flex-col gap-2">
             <Label htmlFor="confirm">
               {t.rich('confirmLabel', {
+                email,
                 code: (chunks) => <code className="font-mono">{chunks}</code>,
               })}
             </Label>
             <Input
               id="confirm"
+              type="email"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               autoComplete="off"
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
+              inputMode="email"
+              placeholder={email}
               required
             />
           </div>
           <div>
-            <Button
-              type="submit"
-              variant="destructive"
-              disabled={pending || confirm !== confirmKeyword}
-            >
+            <Button type="submit" variant="destructive" disabled={pending || !confirmMatches}>
               {pending ? t('submitting') : t('submit')}
             </Button>
           </div>

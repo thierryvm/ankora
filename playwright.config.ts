@@ -25,15 +25,21 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium-desktop',
-      use: { ...devices['Desktop Chrome'] },
+      use: { ...devices['Desktop Chrome'], locale: 'fr-BE' },
     },
     {
       name: 'mobile-safari',
-      use: { ...devices['iPhone 14'] },
+      use: { ...devices['iPhone 14'], locale: 'fr-BE' },
+      // Focus trap tests use Tab key (keyboard input) — unavailable on native mobile touch.
+      // Tested via chromium-desktop with 375×667 viewport to cover mobile use case.
+      testIgnore: '**/a11y/drawer-mobile-focus-trap.spec.ts',
     },
     {
       name: 'mobile-chrome',
-      use: { ...devices['Pixel 7'] },
+      use: { ...devices['Pixel 7'], locale: 'fr-BE' },
+      // Focus trap tests use Tab key (keyboard input) — unavailable on native mobile touch.
+      // Tested via chromium-desktop with 375×667 viewport to cover mobile use case.
+      testIgnore: '**/a11y/drawer-mobile-focus-trap.spec.ts',
     },
   ],
 

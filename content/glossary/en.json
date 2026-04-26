@@ -1,0 +1,122 @@
+[
+  {
+    "slug": "budget-de-lissage",
+    "term": "Smoothed budget",
+    "shortDefinition": "A budgeting method that converts irregular annual charges (insurance, taxes, gifts, car maintenance) into predictable monthly contributions. Rather than absorbing spending spikes, you set aside a proportional share each month so that your current account is never caught off guard.",
+    "whyItMatters": "Without smoothing, a yearly 600 € insurance bill lands like a rock. With smoothing, it becomes an invisible 50 €/month. Ankora auto-calculates the smoothing amount per category and parks it in a dedicated account.",
+    "example": "Belgian property tax = 1 200 €/year. Smoothed budget = 100 €/month routed to a \"Taxes\" bucket. When the bill arrives in November, the money is already there.",
+    "relatedTerms": ["compte-bucket", "fonds-de-roulement-personnel", "charges-fixes"]
+  },
+  {
+    "slug": "compte-bucket",
+    "term": "Bucket account (themed account)",
+    "shortDefinition": "A savings sub-account allocated to a specific goal — holidays, taxes, next car, renovation. Each bucket visually isolates an envelope of money to prevent it from being spent elsewhere. In Belgium, this typically means a second savings account or a logical sub-category.",
+    "whyItMatters": "Mixing emergency savings, holiday budget and taxes in one account makes it impossible to know what you can actually spend. Ankora creates and tracks your buckets automatically from your smoothing rules.",
+    "example": "Your main savings account holds 8 500 €. Ankora buckets: Emergency 4 000 €, Car 1 500 €, Holidays 2 000 €, Taxes 1 000 €. At a glance you see what is \"reserved\" and what is free.",
+    "relatedTerms": ["budget-de-lissage", "fonds-de-roulement-personnel", "epargne-de-precaution"]
+  },
+  {
+    "slug": "capacite-d-epargne",
+    "term": "Saving capacity",
+    "shortDefinition": "The maximum amount a household can set aside each month without cutting into its baseline standard of living. Calculated by subtracting all fixed and recurring variable expenses from net income. A key financial health indicator, distinct from the balance that happens to be left at month's end.",
+    "whyItMatters": "Many people confuse \"I have 200 € left at month end\" with \"I have 200 € saving capacity\". Ankora isolates the real structural capacity — the one you can automate without pain.",
+    "example": "Net monthly income 2 500 €, fixed costs 1 400 €, average variable costs 700 € → saving capacity ≈ 400 €/month. To automate on payday, not at month end.",
+    "relatedTerms": ["taux-d-epargne", "reste-a-vivre", "fonds-de-roulement-personnel"]
+  },
+  {
+    "slug": "taux-d-epargne",
+    "term": "Saving rate",
+    "shortDefinition": "The share of net income actually set aside, expressed as a percentage. Formula: (monthly savings ÷ net income) × 100. The Belgian average hovers around 13-15 % according to the National Bank; a healthy rate toward financial independence typically sits between 20 and 30 %.",
+    "whyItMatters": "The number-one KPI of personal financial health. More meaningful than a balance, more universal than an absolute amount saved. Ankora tracks it continuously and alerts you when you drift off target.",
+    "example": "Net income 2 800 €, automated monthly savings 420 € → saving rate = 15 %. Target: 20 % = 560 €/month.",
+    "relatedTerms": ["capacite-d-epargne", "reste-a-vivre", "interets-composes"]
+  },
+  {
+    "slug": "epargne-de-precaution",
+    "term": "Emergency fund",
+    "shortDefinition": "A liquid reserve meant to cover the unexpected — job loss, major breakdown, medical bills, urgent repairs. Typically sized at 3 to 6 months of fixed costs for a salaried employee and 6 to 12 months for a freelancer. Must remain immediately available, so never locked away or invested in equities.",
+    "whyItMatters": "The first safety net that prevents any small accident from forcing a consumer-credit workaround. Ankora visually separates it from other buckets so you never dip into it without cause.",
+    "example": "Monthly fixed costs = 1 400 €. Target emergency fund (4 months) = 5 600 €, held in a regulated savings account separate from the current account.",
+    "relatedTerms": ["compte-bucket", "compte-d-epargne-reglemente", "fonds-de-roulement-personnel"]
+  },
+  {
+    "slug": "fonds-de-roulement-personnel",
+    "term": "Personal working capital",
+    "shortDefinition": "A routine cash buffer that absorbs timing gaps between income and expenses within a single month — rent due on the 1st while salary arrives on the 25th, quarterly taxes, bulk grocery runs. Distinct from the emergency fund (which covers unforeseen events): working capital handles day-to-day life.",
+    "whyItMatters": "Without working capital, month-end becomes banking Tetris. With it, you calmly absorb timing mismatches without checking your balance three times a day. Ankora sizes it automatically from your spending profile.",
+    "example": "Rent 800 €, groceries 400 €, smoothed quarterly taxes 120 €/month → recommended working capital ≈ 1 200-1 500 € permanent cushion on the current account.",
+    "relatedTerms": ["budget-de-lissage", "epargne-de-precaution", "reste-a-vivre"]
+  },
+  {
+    "slug": "charges-fixes",
+    "term": "Fixed costs",
+    "shortDefinition": "Recurring expenses with a predictable amount and known due date — rent or loan repayment, insurance, telecom subscriptions, flat-rate utilities, council tax. By definition they vary little from month to month and are not renegotiable in the short term without a contract change.",
+    "whyItMatters": "They form the incompressible base of any budget. Until you know the exact total of your fixed costs, you cannot compute either your disposable income or your saving capacity. Ankora auto-detects them from recurring transfers.",
+    "example": "Rent 750 € + car insurance 42 € + health insurance 18 € + internet 45 € + electricity 95 € + streaming subs 25 € = 975 €/month in fixed costs.",
+    "relatedTerms": ["charges-variables", "reste-a-vivre", "virement-permanent"]
+  },
+  {
+    "slug": "charges-variables",
+    "term": "Variable costs",
+    "shortDefinition": "Recurring expenses with fluctuating amounts — groceries, fuel, restaurants, leisure, clothing, gifts. Unlike fixed costs, they depend on consumption behaviour and can be adjusted in the short term. They are the main lever for quick savings when you want to grow your saving capacity.",
+    "whyItMatters": "This is where 80 % of realistic optimisation hides. Ankora computes a 90-day rolling average per category to give a realistic benchmark, and flags atypical months.",
+    "example": "Groceries 380 € (90d avg: 420 €), fuel 110 €, restaurants 160 €, leisure 95 € → variable costs for the month 745 €, below the average.",
+    "relatedTerms": ["charges-fixes", "reste-a-vivre", "methode-50-30-20"]
+  },
+  {
+    "slug": "compte-d-epargne-reglemente",
+    "term": "Regulated savings account",
+    "shortDefinition": "A Belgian bank savings product whose minimum rate and tax regime are set by the State. Combines a base rate and a loyalty bonus (earned after 12 months). Interest is tax-exempt up to an annually indexed ceiling (1 020 € per person for 2026, 2 040 € for a married or legally cohabiting couple); above that, a 15 % withholding tax applies.",
+    "whyItMatters": "The standard vehicle for emergency funds and buckets in Belgium: immediate availability, deposit guarantee up to 100 000 € per bank, favourable taxation as long as you stay below the ceiling. Ankora recommends spreading across two banks above 100 000 €.",
+    "example": "15 000 € in a regulated savings account at 0.90 % (base) + 1.10 % (loyalty) → roughly 300 €/year in interest, tax-free because under the ceiling.",
+    "relatedTerms": ["epargne-de-precaution", "compte-bucket"]
+  },
+  {
+    "slug": "virement-permanent",
+    "term": "Standing order",
+    "shortDefinition": "A mandate given to your bank to automatically execute a recurring transfer — same amount, same beneficiary, same frequency. Used for rent, loan repayments, automated savings transfers. Distinct from a direct debit, which is initiated by the creditor and may vary in amount.",
+    "whyItMatters": "The number-one lever for automating savings: \"pay your saving capacity first\" on payday via a standing order to a bucket account. Ankora suggests the amount and the optimal date.",
+    "example": "Standing order of 400 € on the 26th of every month, from the current account to the regulated savings account \"Emergency\".",
+    "relatedTerms": ["domiciliation", "capacite-d-epargne", "charges-fixes"]
+  },
+  {
+    "slug": "domiciliation",
+    "term": "Direct debit",
+    "shortDefinition": "A standing authorisation given to a creditor (utility provider, telecom operator, landlord) to directly pull due amounts from the debtor's account. Unlike a standing order, the creditor initiates each payment and the amount can vary at every due date depending on the invoice.",
+    "whyItMatters": "Handy to avoid forgetting bills, but must be monitored: a direct debit lets the creditor pull whatever amount they decide. In Belgium (SEPA Direct Debit Core), the payer can dispute and claim a refund within 8 weeks. Ankora flags atypical amounts.",
+    "example": "Variable electricity bill 60-180 € depending on the season → direct debit pulls the actual amount each month. 8-week refund window.",
+    "relatedTerms": ["virement-permanent", "charges-fixes", "psd2"]
+  },
+  {
+    "slug": "psd2",
+    "term": "PSD2 (Payment Services Directive 2)",
+    "shortDefinition": "A European directive in force since 2018 that governs payment services across the European Economic Area. It requires banks to open their account data and payment capabilities, via secure APIs, to authorised third parties — aggregators, payment initiators, financial management apps.",
+    "whyItMatters": "PSD2 is what allows a third-party app to read a bank account's transactions with the user's explicit consent, without re-entering bank credentials. Ankora deliberately positions itself outside PSD2 to respect user privacy.",
+    "example": "An app that aggregates your KBC, Belfius and ING accounts does so via each bank's PSD2 APIs, after consent renewed every 90 or 180 days depending on the bank.",
+    "relatedTerms": ["domiciliation"]
+  },
+  {
+    "slug": "reste-a-vivre",
+    "term": "Disposable income",
+    "shortDefinition": "The amount available each month once all fixed costs and automated savings transfers have been subtracted from net income. It covers variable costs and leisure. A practical figure you can check day-to-day to know how much you can spend without knocking the monthly budget off balance.",
+    "whyItMatters": "This is the number people actually look for when they open their banking app. Ankora computes it in real time and displays it separately from the raw account balance — because the balance lies (it includes what is already \"earmarked\").",
+    "example": "Income 2 500 €, fixed costs 1 000 €, auto-savings 400 € → disposable income 1 100 €/month for groceries, leisure, everyday unexpected items.",
+    "relatedTerms": ["charges-fixes", "charges-variables", "capacite-d-epargne"]
+  },
+  {
+    "slug": "interets-composes",
+    "term": "Compound interest",
+    "shortDefinition": "The mechanism by which interest earned on a principal is added to that principal and itself generates interest in subsequent periods. The effect is exponential over long horizons: doubling the investment horizon nearly quadruples the total gain. Popularised by the (incorrectly) Einstein-attributed quote: \"the eighth wonder of the world\".",
+    "whyItMatters": "The silent engine of financial independence. Ankora concretely illustrates the impact of starting early and regularly: 100 €/month at 5 % over 30 years = 83 000 €, of which 47 000 € is pure interest.",
+    "example": "Initial capital 5 000 € invested at 4 % over 20 years with compound interest → 10 956 €. With simple interest, only 9 000 €. The 1 956 € difference comes solely from interest on interest.",
+    "relatedTerms": ["taux-d-epargne", "epargne-de-precaution", "compte-d-epargne-reglemente"]
+  },
+  {
+    "slug": "methode-50-30-20",
+    "term": "50/30/20 method",
+    "shortDefinition": "A budgeting framework popularised by Elizabeth Warren, splitting net monthly income into three blocks: 50 % for unavoidable needs (housing, food, transport), 30 % for wants and leisure, 20 % for savings and debt repayment. A simple rule of thumb, not a rigid formula.",
+    "whyItMatters": "An excellent entry point for anyone who has never budgeted. Ankora displays it as an indicative benchmark but recommends adjusting for Belgian realities: Brussels rent often pushes \"needs\" above 50 %, and the 20 % savings slot becomes a floor rather than a ceiling.",
+    "example": "Net income 2 500 € → 1 250 € for needs, 750 € for wants, 500 € for savings. If needs climb to 1 500 €, the 30 % wants block absorbs the gap.",
+    "relatedTerms": ["capacite-d-epargne", "taux-d-epargne", "reste-a-vivre"]
+  }
+]

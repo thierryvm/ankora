@@ -98,7 +98,7 @@ export function OnboardingWizard() {
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className={`h-2 w-10 rounded-full ${i <= step ? 'bg-(--color-brand-700)' : 'bg-(--color-border)'}`}
+              className={`h-2 w-10 rounded-full ${i <= step ? 'bg-brand-700' : 'bg-border'}`}
               aria-hidden
             />
           ))}
@@ -212,12 +212,12 @@ export function OnboardingWizard() {
                 </Select>
               </div>
             </div>
-            <label className="flex items-center gap-2 text-sm text-(--color-muted-foreground)">
+            <label className="text-muted-foreground flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
                 checked={skipCharge}
                 onChange={(e) => setSkipCharge(e.target.checked)}
-                className="h-4 w-4 rounded border-(--color-border)"
+                className="border-border h-4 w-4 rounded"
               />
               {tStep3('skipLater')}
             </label>
@@ -227,7 +227,7 @@ export function OnboardingWizard() {
         {error && (
           <div
             role="alert"
-            className="rounded-md border border-(--color-danger) bg-(--color-danger)/10 px-3 py-2 text-sm text-(--color-danger)"
+            className="border-danger bg-danger/10 text-danger rounded-md border px-3 py-2 text-sm"
           >
             {error}
           </div>

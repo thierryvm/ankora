@@ -31,6 +31,25 @@ const nextConfig: NextConfig = {
   },
 
   /**
+   * Short-locale aliases (/fr /nl /de /es) → full locale paths.
+   * Prevents 404s when users or external links use 2-letter codes.
+   * fr-BE is the defaultLocale (served at /), so /fr-BE and /fr both
+   * point home.
+   */
+  async redirects() {
+    return [
+      { source: '/fr', destination: '/', permanent: true },
+      { source: '/nl', destination: '/nl-BE', permanent: true },
+      { source: '/de', destination: '/de-DE', permanent: true },
+      { source: '/es', destination: '/es-ES', permanent: true },
+      { source: '/fr/:path*', destination: '/:path*', permanent: true },
+      { source: '/nl/:path*', destination: '/nl-BE/:path*', permanent: true },
+      { source: '/de/:path*', destination: '/de-DE/:path*', permanent: true },
+      { source: '/es/:path*', destination: '/es-ES/:path*', permanent: true },
+    ];
+  },
+
+  /**
    * Static security headers. CSP nonce-based header is set per-request
    * in src/proxy.ts to support strict-dynamic with React streaming.
    */

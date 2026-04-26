@@ -97,8 +97,8 @@ Le pipeline CI refait tous ces checks + :
 
 ## Signalement d'une vulnérabilité
 
-**Ne pas ouvrir d'issue publique.** Voir [SECURITY.md](SECURITY.md). Email : **security@ankora.eu**.
+**Ne pas ouvrir d'issue publique.** Voir [SECURITY.md](SECURITY.md). Email : **security@ankora.be**.
 
 ## Questions ?
 
-Ouvre une [Discussion](https://github.com/thierryvm/ankora/discussions) ou envoie un mail à **hello@ankora.eu**.
+Ouvre une [Discussion](https://github.com/thierryvm/ankora/discussions) ou envoie un mail à **hello@ankora.be**.

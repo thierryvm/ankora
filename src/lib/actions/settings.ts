@@ -8,13 +8,14 @@ import { createClient } from '@/lib/supabase/server';
 import {
   profileUpdateSchema,
   mfaVerifySchema,
-  deletionRequestSchema,
+  makeDeletionRequestSchema,
   factorIdSchema,
 } from '@/lib/schemas/settings';
 import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
 import { rateLimit } from '@/lib/security/rate-limit';
 import { exportUserData } from '@/lib/gdpr/export';
 import { requestDeletion, cancelDeletion } from '@/lib/gdpr/deletion';
+import { log } from '@/lib/log';
 import type { ActionResult } from '@/lib/actions/types';
 
 async function contextFromHeaders(): Promise<{ ip: string | null; userAgent: string | null }> {
@@ -76,7 +77,7 @@ export async function enrollMfaAction(): Promise<
 
   const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' });
   if (error || !data) {
-    console.error('[enrollMfaAction]', error?.code ?? 'unknown');
+    log.error('MFA enrollment failed', { error_code: error?.code ?? 'unknown' });
     return { ok: false, errorCode: 'errors.auth.mfaEnrollFailed' };
   }
 
@@ -139,7 +140,7 @@ export async function unenrollMfaAction(factorId: string): Promise<ActionResult>
 
   const { error } = await supabase.auth.mfa.unenroll({ factorId: parsed.data });
   if (error) {
-    console.error('[unenrollMfaAction]', error.code ?? 'unknown');
+    log.error('MFA unenroll failed', { error_code: error.code ?? 'unknown' });
     return { ok: false, errorCode: 'errors.auth.mfaDisableFailed' };
   }
 
@@ -195,7 +196,12 @@ export async function requestAccountDeletionAction(input: unknown): Promise<Acti
   const rl = await rateLimit('mutation', `user:${user.id}`);
   if (!rl.success) return { ok: false, errorCode: 'errors.session.rateLimited' };
 
-  const parsed = deletionRequestSchema.safeParse(input);
+  if (!user.email) {
+    log.error('User email missing for deletion request', { user_id: user.id });
+    return { ok: false, errorCode: 'errors.settings.deletionRequestFailed' };
+  }
+
+  const parsed = makeDeletionRequestSchema(user.email).safeParse(input);
   if (!parsed.success) {
     return {
       ok: false,

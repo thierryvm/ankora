@@ -20,10 +20,10 @@ export default async function OfflinePage() {
       className="mx-auto flex min-h-[60vh] w-full max-w-xl flex-col items-center justify-center px-4 py-16 text-center"
     >
       <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{t('title')}</h1>
-      <p className="mt-3 text-(--color-muted-foreground)">{t('message')}</p>
+      <p className="text-muted-foreground mt-3">{t('message')}</p>
       <Link
         href="/"
-        className="mt-8 rounded-md bg-(--color-brand-700) px-5 py-2.5 text-sm font-medium text-white hover:bg-(--color-brand-800)"
+        className="bg-brand-700 hover:bg-brand-800 mt-8 rounded-md px-5 py-2.5 text-sm font-medium text-white"
       >
         {t('retry')}
       </Link>

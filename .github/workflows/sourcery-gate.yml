@@ -1,0 +1,149 @@
+name: Sourcery Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  check-sourcery-resolved:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for unresolved Sourcery review threads
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          # Strict mode:
+          # - `set -e` aborts on any unchecked command failure (e.g. gh api timeout)
+          #   so a failed GraphQL call never silently produces an empty all_nodes
+          #   that the filter would interpret as "no Sourcery threads → pass".
+          # - `set -u` catches undefined variables (typo guard).
+          # - `set -o pipefail` propagates failures through pipes (jq parse errors).
+
+          # Why GraphQL instead of REST /comments:
+          # GitHub auto-updates a review comment's `commit_id` to the current HEAD
+          # whenever the comment can be re-anchored to a still-existing line. As a
+          # result, filtering the REST `/pulls/{n}/comments` endpoint by
+          # `commit_id == HEAD_SHA` flags resolved threads as "active" — the REST
+          # payload has no `isResolved` flag.
+          #
+          # GraphQL `pullRequest.reviewThreads` exposes the canonical `isResolved`
+          # field that GitHub UI uses to enforce branch protection. We treat a
+          # thread as actionable iff:
+          #   - the original commenter is `sourcery-ai`
+          #   - `isResolved` is false
+          #
+          # On author login: GraphQL returns "sourcery-ai" (login of the underlying
+          # Bot account, no `[bot]` suffix), unlike REST which returns
+          # "sourcery-ai[bot]". Verified live on PR #62 — the GraphQL Bot type's
+          # .login field omits the `[bot]` decoration.
+          #
+          # See PR #62 incident report for the bug this replaces.
+
+          owner="${REPOSITORY%/*}"
+          name="${REPOSITORY#*/}"
+
+          # Paginate through all reviewThreads (first: 100 per page) to support
+          # very large PRs with > 100 threads. Concatenates all pages before
+          # filtering for unresolved Sourcery threads.
+          query='
+            query($owner: String!, $name: String!, $number: Int!, $cursor: String) {
+              repository(owner: $owner, name: $name) {
+                pullRequest(number: $number) {
+                  reviewThreads(first: 100, after: $cursor) {
+                    pageInfo { hasNextPage endCursor }
+                    nodes {
+                      isResolved
+                      comments(first: 1) {
+                        nodes {
+                          author { login }
+                          path
+                          body
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          '
+
+          all_nodes='[]'
+          cursor=''
+          page=1
+          # Defensive cap to prevent infinite loop if hasNextPage misbehaves
+          # (e.g. always returns true, or pagination logic regresses upstream).
+          # 50 pages × 100 threads = 5000 review threads — far beyond any
+          # realistic Ankora PR.
+          max_pages=50
+          while :; do
+            if [ "$page" -gt "$max_pages" ]; then
+              echo "::error::Pagination exceeded $max_pages pages — aborting to avoid infinite loop. Investigate GraphQL pageInfo behavior." >&2
+              exit 1
+            fi
+
+            # Build args dynamically — adds `cursor` only on pages 2+. GraphQL
+            # treats an absent `$cursor` variable as null (= "fetch from start"),
+            # which is the correct behavior for the first page. This unifies the
+            # call site and removes the previous if/else duplication.
+            args=(-f query="$query" -F owner="$owner" -F name="$name" -F number="$PR_NUMBER")
+            if [ -n "$cursor" ]; then
+              args+=(-F cursor="$cursor")
+            fi
+            response=$(gh api graphql "${args[@]}")
+
+            # Validate response shape before using it. If the GraphQL response
+            # doesn't contain the expected reviewThreads node, something is
+            # wrong (auth issue, schema change, network truncation) — fail loud
+            # rather than silently degrading to "no threads found → pass".
+            if ! echo "$response" | jq -e '.data.repository.pullRequest.reviewThreads.nodes' >/dev/null 2>&1; then
+              echo "::error::GraphQL response missing expected reviewThreads.nodes path. Aborting." >&2
+              echo "Raw response (first 500 chars):" >&2
+              echo "$response" | head -c 500 >&2
+              exit 1
+            fi
+
+            page_nodes=$(echo "$response" | jq '.data.repository.pullRequest.reviewThreads.nodes')
+            all_nodes=$(jq -s '.[0] + .[1]' <(echo "$all_nodes") <(echo "$page_nodes"))
+
+            has_next=$(echo "$response" | jq -r '.data.repository.pullRequest.reviewThreads.pageInfo.hasNextPage')
+            cursor=$(echo "$response" | jq -r '.data.repository.pullRequest.reviewThreads.pageInfo.endCursor')
+
+            echo "Fetched page $page (cumulative threads: $(echo "$all_nodes" | jq 'length'))"
+            page=$((page + 1))
+
+            [ "$has_next" = "true" ] || break
+          done
+
+          # Filter for unresolved Sourcery threads. Guard against empty
+          # comments.nodes (defensive — a thread should always have at least one
+          # comment, but `length > 0` prevents jq from crashing on edge cases).
+          unresolved_filter='
+            [.[]
+              | select(.comments.nodes | length > 0)
+              | select(.comments.nodes[0].author.login == "sourcery-ai")
+              | select(.isResolved == false)] | length
+          '
+          unresolved=$(echo "$all_nodes" | jq "$unresolved_filter")
+
+          echo "Unresolved Sourcery review threads on PR #${PR_NUMBER}: $unresolved"
+
+          if [ "$unresolved" -gt 0 ]; then
+            echo "::error::Sourcery has $unresolved unresolved review threads. Resolve them in the PR Files Changed view before merging."
+            detail_filter='
+              [.[]
+                | select(.comments.nodes | length > 0)
+                | select(.comments.nodes[0].author.login == "sourcery-ai")
+                | select(.isResolved == false)
+                | {path: .comments.nodes[0].path, body: .comments.nodes[0].body}]
+            '
+            echo "$all_nodes" | jq "$detail_filter"
+            exit 1
+          fi
+
+          echo "✅ No unresolved Sourcery review threads."

@@ -1,7 +1,40 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ---------- Variable fonts — self-hosted ----------
+   Inter wght 100..900 · Fraunces wght 100..900 · JetBrains Mono wght 100..800.
+   Source: cc-design Design System v1 (2026-04-25). */
+@font-face {
+  font-family: 'Inter';
+  src:
+    url('/fonts/Inter-Variable.ttf') format('truetype-variations'),
+    url('/fonts/Inter-Variable.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Fraunces';
+  src:
+    url('/fonts/Fraunces-Variable.ttf') format('truetype-variations'),
+    url('/fonts/Fraunces-Variable.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src:
+    url('/fonts/JetBrainsMono-Variable.ttf') format('truetype-variations'),
+    url('/fonts/JetBrainsMono-Variable.ttf') format('truetype');
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
-  /* ---------- Brand palette ---------- */
+  /* ---------- Brand palette (Teal scale — user accent) ---------- */
   --color-brand-50: #f0fdfa;
   --color-brand-100: #ccfbf1;
   --color-brand-200: #99f6e4;
@@ -14,49 +47,270 @@
   --color-brand-900: #134e4a;
   --color-brand-950: #042f2e;
 
-  /* ---------- Accent (value / gold) ---------- */
-  --color-accent-50: #fffbeb;
-  --color-accent-100: #fef3c7;
-  --color-accent-400: #fbbf24;
-  --color-accent-500: #f59e0b;
-  --color-accent-600: #d97706;
-  --color-accent-700: #b45309;
+  /* ---------- Accent palette (Laiton nautique — admin accent, locked 2026-04-24)
+     Anchor narrative: sextant brass. Light mode uses aged/patinated #8b6914 (AA 5.09:1 on white).
+     Dark mode keeps fresh brass #d4a017 (AAA 7.93:1 on navy). ---------- */
+  --color-accent-50: #fefce8;
+  --color-accent-100: #fef9c3;
+  --color-accent-200: #fef08a;
+  --color-accent-300: #fde047;
+  --color-accent-400: #d4a017; /* dark-mode anchor — fresh brass */
+  --color-accent-500: #a88914;
+  --color-accent-600: #8b6914; /* light-mode anchor — aged brass (AA on white) */
+  --color-accent-700: #713f12;
+  --color-accent-800: #422006;
+  --color-accent-900: #1c1917;
 
-  /* ---------- Semantic ---------- */
+  /* ---------- Neutral tokens (Light mode) ---------- */
   --color-background: #f8fafc;
   --color-foreground: #0f172a;
   --color-muted: #64748b;
   --color-muted-foreground: #475569;
   --color-border: #e2e8f0;
   --color-card: #ffffff;
+  --color-surface-soft: #fbfcfe;
+  --color-surface-muted: #f1f5f9;
 
+  /* ---------- Semantic text colors (Light mode) ---------- */
+  --color-brand-text: #0f766e;
+  --color-brand-text-strong: #115e59;
+  --color-accent-text: #8b6914; /* laiton patiné — AA 5.09:1 on white */
+  --color-accent-text-strong: #713f12;
+
+  /* ---------- Tinted surfaces ---------- */
+  --color-brand-surface: #f0fdfa;
+  --color-brand-surface-border: #ccfbf1;
+  --color-accent-surface: #fefce8;
+  --color-accent-surface-border: #fef9c3;
+
+  /* ---------- Semantic status colors ----------
+     Note (2026-04-25): --color-warning kept as amber #d97706 by @cowork decision —
+     warning is a universal UX signal (amber = "attention"), kept distinct from the
+     laiton brand accent to avoid sematic confusion (user reads warning vs. admin pigment). */
   --color-success: #059669;
   --color-warning: #d97706;
   --color-danger: #dc2626;
+  --color-info: #0284c7;
 
-  /* ---------- Typography ---------- */
+  /* ---------- Typography (with system fallbacks to avoid FOUT) ---------- */
   --font-sans:
-    var(--font-sans), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue',
+    'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue',
     sans-serif;
+  --font-display: 'Fraunces', 'Inter', ui-serif, Georgia, 'Times New Roman', serif;
   --font-mono:
-    ui-monospace, 'SF Mono', 'Cascadia Mono', 'Roboto Mono', Menlo, Monaco, Consolas, monospace;
+    'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Mono', 'Roboto Mono', Menlo, Consolas,
+    monospace;
 
-  /* ---------- Radius ---------- */
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
+  /* ---------- Type scale (semantic) ----------
+     Display sizes use clamp() for fluid responsive scaling. */
+  --text-display-1: 700 clamp(3.5rem, 6vw, 6rem) / 1.02 var(--font-display); /* 56→96 */
+  --text-display-2: 600 clamp(2.5rem, 4.5vw, 4rem) / 1.05 var(--font-display); /* 40→64 */
+  --text-h1: 700 clamp(2rem, 3.2vw, 2.75rem) / 1.1 var(--font-sans);
+  --text-h2: 700 clamp(1.5rem, 2.4vw, 2rem) / 1.15 var(--font-sans);
+  --text-h3: 600 1.25rem / 1.3 var(--font-sans);
+  --text-h4: 600 1.05rem / 1.35 var(--font-sans);
+  --text-body: 400 0.9375rem / 1.55 var(--font-sans); /* 15px */
+  --text-body-lg: 400 1.0625rem / 1.6 var(--font-sans); /* 17px */
+  --text-small: 400 0.8125rem / 1.5 var(--font-sans); /* 13px */
+  --text-micro: 500 0.6875rem / 1.4 var(--font-sans); /* 11px UPPERCASE */
+  --text-num-xl: 700 2rem / 1 var(--font-mono);
+  --text-num-lg: 600 1.375rem / 1 var(--font-mono);
+  --text-num-md: 500 1rem / 1.2 var(--font-mono);
+
+  --tracking-tight: -0.02em;
+  --tracking-micro: 0.08em;
+
+  /* ---------- Radius (rounded corners) ---------- */
+  --radius-xs: 0.25rem; /* 4px */
+  --radius-sm: 0.375rem; /* 6px */
+  --radius-md: 0.5rem; /* 8px */
+  --radius-lg: 0.75rem; /* 12px */
+  --radius-xl: 1rem; /* 16px */
+  --radius-2xl: 1.25rem; /* 20px */
+  --radius-full: 9999px;
+
+  /* ---------- Elevation (Light mode) ---------- */
+  --shadow-xs: 0 1px 2px rgb(15 23 42 / 0.04);
+  --shadow-sm: 0 1px 2px rgb(15 23 42 / 0.06), 0 1px 3px rgb(15 23 42 / 0.04);
+  --shadow-md: 0 4px 12px rgb(15 23 42 / 0.06), 0 2px 4px rgb(15 23 42 / 0.04);
+  --shadow-lg: 0 12px 32px rgb(15 23 42 / 0.08), 0 4px 12px rgb(15 23 42 / 0.06);
+
+  /* ---------- Motion (durations + easings) ----------
+     Apple spring is the default — never linear, never ease. */
+  --dur-micro: 120ms;
+  --dur-default: 200ms;
+  --dur-structural: 320ms;
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@media (prefers-color-scheme: dark) {
-  @theme {
-    --color-background: #020617;
-    --color-foreground: #f1f5f9;
-    --color-muted: #94a3b8;
-    --color-muted-foreground: #cbd5e1;
-    --color-border: #1e293b;
-    --color-card: #0f172a;
+[data-theme='dark'] {
+  /* Neutral tokens (Dark mode) */
+  --color-background: #0b1120;
+  --color-foreground: #e2e8f0;
+  --color-muted: #94a3b8;
+  --color-muted-foreground: #cbd5e1;
+  --color-border: #1e293b;
+  --color-card: #111a2e;
+  --color-surface-soft: #0f172a;
+  --color-surface-muted: #0f172a;
+
+  /* Semantic text colors (Dark mode — lighter for contrast) */
+  --color-brand-text: #2dd4bf;
+  --color-brand-text-strong: #5eead4;
+  --color-accent-text: #d4a017; /* laiton nautique — dark-mode anchor (AAA 7.93:1 on navy) */
+  --color-accent-text-strong: #fde047;
+
+  /* Tinted surfaces (Dark mode — translucent glows) */
+  --color-brand-surface: rgb(20 184 166 / 0.1);
+  --color-brand-surface-border: rgb(20 184 166 / 0.22);
+  --color-accent-surface: rgb(212 160 23 / 0.1);
+  --color-accent-surface-border: rgb(212 160 23 / 0.24);
+
+  /* Elevation (Dark mode — inset highlights instead of drop shadows) */
+  --shadow-xs: inset 0 1px 0 rgb(255 255 255 / 0.04);
+  --shadow-sm: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-md: inset 0 1px 0 rgb(255 255 255 / 0.07), 0 6px 16px rgb(0 0 0 / 0.45);
+  --shadow-lg: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 20px 40px rgb(0 0 0 / 0.55);
+}
+
+/* ---------- Admin accent flip ----------
+   Scope `[data-accent="admin"]` on any admin root to remap brand* → accent (laiton)
+   without rewriting components. Same grammar, different pigment.
+
+   Coverage: ALL brand shades (50-950) are remapped to ensure no teal leaks through
+   in admin contexts. brand-950 maps to accent-900 because the laiton palette stops
+   at 900 (no 950 step needed by design — sextant brass doesn't go that deep).
+   Plug-gaps-at-source per @cowork doctrine (PR #62 Sourcery finding L186). */
+[data-accent='admin'] {
+  --color-brand-50: var(--color-accent-50);
+  --color-brand-100: var(--color-accent-100);
+  --color-brand-200: var(--color-accent-200);
+  --color-brand-300: var(--color-accent-300);
+  --color-brand-400: var(--color-accent-400);
+  --color-brand-500: var(--color-accent-500);
+  --color-brand-600: var(--color-accent-600);
+  --color-brand-700: var(--color-accent-700);
+  --color-brand-800: var(--color-accent-800);
+  --color-brand-900: var(--color-accent-900);
+  --color-brand-950: var(--color-accent-900); /* laiton has no 950 — fallback to deepest brass */
+  --color-brand-surface: var(--color-accent-surface);
+  --color-brand-surface-border: var(--color-accent-surface-border);
+  --color-brand-text: var(--color-accent-text);
+  --color-brand-text-strong: var(--color-accent-text-strong);
+}
+
+/* ---------- Atmospheric body (dark mode only) ----------
+   Subtle radial gradient to give depth to the navy background. */
+.ankora-atmosphere {
+  background:
+    radial-gradient(60% 45% at 0% 0%, rgb(20 184 166 / 0.08), transparent 60%),
+    radial-gradient(55% 40% at 100% 100%, rgb(212 160 23 / 0.05), transparent 65%),
+    var(--color-background);
+}
+
+/* ---------- Liquid Glass primitive (multi-layer, non-negotiable) ----------
+   Single-layer backdrop-filter is REJECTED. Always use blur + color-mix tint +
+   inset edge highlight + opaque fallback for prefers-reduced-transparency. */
+.glass {
+  position: relative;
+  background: color-mix(in oklab, var(--color-card) 70%, transparent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid color-mix(in oklab, var(--color-border) 60%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.08),
+    inset 0 -1px 0 rgb(0 0 0 / 0.35),
+    0 20px 50px rgb(0 0 0 / 0.35);
+}
+@media (prefers-reduced-transparency: reduce), (prefers-reduced-motion: reduce) {
+  .glass {
+    background: var(--color-card);
+    backdrop-filter: none;
   }
+}
+
+/* ---------- Semantic element presets ---------- */
+h1,
+.h1 {
+  font: var(--text-h1);
+  letter-spacing: var(--tracking-tight);
+}
+h2,
+.h2 {
+  font: var(--text-h2);
+  letter-spacing: var(--tracking-tight);
+}
+h3,
+.h3 {
+  font: var(--text-h3);
+}
+h4,
+.h4 {
+  font: var(--text-h4);
+}
+.display-1 {
+  font: var(--text-display-1);
+  letter-spacing: var(--tracking-tight);
+}
+.display-2 {
+  font: var(--text-display-2);
+  letter-spacing: var(--tracking-tight);
+}
+.num,
+.num-xl {
+  font: var(--text-num-xl);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  color: var(--color-foreground);
+}
+.num-lg {
+  font: var(--text-num-lg);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-foreground);
+}
+.num-md {
+  font: var(--text-num-md);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-foreground);
+}
+.num-accent {
+  color: var(--color-brand-text-strong);
+}
+code,
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Overlines & labels ----------
+   .eyebrow = section-title overline — primary hierarchy, AAA contrast.
+   .micro   = badge/pill metadata — subordinate but still AAA on navy. */
+.eyebrow {
+  font: 600 11px/1.4 var(--font-sans);
+  letter-spacing: var(--tracking-micro);
+  text-transform: uppercase;
+  color: var(--color-foreground);
+}
+.micro {
+  font: var(--text-micro);
+  letter-spacing: var(--tracking-micro);
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+}
+
+/* ---------- Body-text hierarchy helpers ----------
+   .t-primary   = default body/label text (AAA).
+   .t-secondary = supporting copy (AAA but visually subordinate).
+   .t-muted     = timestamps, helper text, disabled — non-essential metadata only. */
+.t-primary {
+  color: var(--color-foreground);
+}
+.t-secondary {
+  color: var(--color-muted-foreground);
+}
+.t-muted {
+  color: var(--color-muted);
 }
 
 /* ---------- Base reset & a11y ---------- */

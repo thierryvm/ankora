@@ -12,6 +12,19 @@ const eslintConfig = defineConfig([
       'react/no-unescaped-entities': 'off',
     },
   },
+  {
+    files: ['src/**/*.ts', 'src/**/*.tsx'],
+    rules: {
+      'no-console': 'warn',
+    },
+  },
+  {
+    // Allow console in bootstrap and logging modules
+    files: ['src/lib/env.ts', 'src/lib/log.ts', 'src/lib/log-types.ts'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

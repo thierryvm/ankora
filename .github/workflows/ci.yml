@@ -23,6 +23,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
+      - run: npm run lint:use-server
       - run: npm run typecheck
       - run: npm run test -- --run --coverage
       - name: Upload coverage
