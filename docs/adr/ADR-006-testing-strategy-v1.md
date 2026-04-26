@@ -33,7 +33,7 @@ Sans ces couches, on shippe un produit financier sur la confiance plutôt que su
 - **Intégrité financière non négociable** : tout montant affiché doit être prouvable mathématiquement, pas approximé. Les hallucinations math (décimales perdues, arrondis incorrects, signes inversés) sont inacceptables sur un produit qui gère le cashflow personnel d'utilisateurs.
 - **Prévention de la régression visuelle** : 8 sections dashboard + 4 surfaces (Landing, User Dashboard, Onboarding, Admin) × 3 viewports × 2 thèmes = 48+ rendus à protéger. Un seul rendu cassé en prod = perte de confiance utilisateur.
 - **Sécurité par construction** : auth flows + RLS testés exhaustivement, pas par échantillonnage. Une faille RLS qui laisse l'utilisateur A voir les enveloppes de l'utilisateur B = incident GDPR + perte de licence FSMA-compatible.
-- **Accessibilité WCAG AA verifiable** : promesse publique sur la landing, doit être prouvable sur chaque route, pas auditée artisanalement.
+- **Accessibilité WCAG AA vérifiable** : promesse publique sur la landing, doit être prouvable sur chaque route, pas auditée artisanalement.
 - **Budget 0 €** : aucune dépendance payante. Tous les outils retenus doivent être open-source ou inclus dans la stack actuelle.
 - **Compatibilité stack existante** : Vitest 4 + Playwright + Lighthouse CI déjà en place. Tout ajout doit s'intégrer sans casser le pipeline.
 - **Phasage compatible avec roadmap v1.0** : ne doit pas bloquer PR-3 (design system) ni PR-2 (data layer). Démarrage fondations en parallèle, pas en série.

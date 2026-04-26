@@ -189,7 +189,7 @@ Pour chaque feature, les types de tests obligatoires sont marqués ✅ et les op
 - Configurer Supabase test instance Docker pour tests RLS critiques
 - Couvrir 100% Server Actions + Route Handlers d'Ankora
 - Tests scénarios E2E avec données réalistes (création enveloppe → ajout transaction → vérif cohérence cashflow + health score)
-- Tests bord cas : montants négatifs (interdits), montants extrêmes (limites Decimal.js), dates aux limites de mois, transactions concurrentes
+- Tests cas limites : montants négatifs (interdits), montants extrêmes (limites Decimal.js), dates aux limites de mois, transactions concurrentes
 
 **Livrables :**
 
@@ -386,4 +386,4 @@ Ce plan est un document vivant. Toute évolution majeure (nouvelle phase, modifi
 3. Être tracée via un nouveau ADR si elle modifie ADR-006 ou via un commit dédié sur ce fichier sinon
 4. Être communiquée explicitement aux 3 agents trio
 
-Versionning informel : la date dans le header de l'ADR-006 fait foi de la version active.
+Versionnage informel : la date dans le header de l'ADR-006 fait foi de la version active.
