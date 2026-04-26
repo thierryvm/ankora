@@ -225,7 +225,7 @@ export function HeaderNav({ variant = 'marketing' }: HeaderNavProps) {
         <div className="border-border bg-card sticky bottom-0 space-y-3 border-t p-4">
           <button
             onClick={toggleTheme}
-            className="bg-muted hover:bg-muted/80 focus-visible:ring-brand-600 flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+            className="bg-muted text-foreground hover:bg-muted/80 focus-visible:ring-brand-600 flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             aria-label={isDark ? t('nav.lightMode') : t('nav.darkMode')}
           >
             <span className="dark:hidden">{t('nav.darkMode')}</span>
