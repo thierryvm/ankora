@@ -2,38 +2,10 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
 import messages from '../../../../messages/fr-BE.json';
+import { createIntlServerMock, createNavigationMock } from '../../../../tests/helpers/intl-mocks';
 
-vi.mock('next-intl/server', () => ({
-  getTranslations: async (namespace: string) => {
-    const ns = (messages as Record<string, Record<string, unknown>>)[namespace] ?? {};
-    return (key: string, params?: Record<string, unknown>) => {
-      const parts = key.split('.');
-      let value: unknown = ns;
-      for (const part of parts) {
-        if (typeof value === 'object' && value !== null && part in value) {
-          value = (value as Record<string, unknown>)[part];
-        } else {
-          return key;
-        }
-      }
-      if (typeof value === 'string' && params) {
-        return Object.entries(params).reduce(
-          (acc, [k, v]) => acc.replace(`{${k}}`, String(v)),
-          value,
-        );
-      }
-      return typeof value === 'string' ? value : key;
-    };
-  },
-}));
-
-vi.mock('@/i18n/navigation', () => ({
-  Link: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
-    <a href={href} {...rest}>
-      {children}
-    </a>
-  ),
-}));
+vi.mock('next-intl/server', () => createIntlServerMock());
+vi.mock('@/i18n/navigation', () => createNavigationMock());
 
 import { Footer } from '../Footer';
 
@@ -45,7 +17,6 @@ async function renderFooter() {
 describe('<Footer />', () => {
   it('renders the four legal links (CGU, Privacy, Cookies, FAQ)', async () => {
     await renderFooter();
-    // Footer-specific link labels come from the `footer` namespace
     const cgu = screen.getByRole('link', { name: messages.footer.cgu });
     const privacy = screen.getByRole('link', { name: messages.footer.privacy });
     const cookies = screen.getByRole('link', { name: messages.footer.cookies });
@@ -60,7 +31,6 @@ describe('<Footer />', () => {
   it('renders the copyright with the current year interpolated', async () => {
     await renderFooter();
     const year = new Date().getFullYear();
-    // copyrightNotice template contains "{year}" — assert the resolved value appears
     expect(screen.getByText((content) => content.includes(String(year)))).toBeInTheDocument();
   });
 
