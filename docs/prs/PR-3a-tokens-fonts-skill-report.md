@@ -256,17 +256,19 @@ Aucun bug bloquant. 2 findings low (cf. section "Agents QA" → 2 findings low n
 
 ## Notes pour PR-3b (issue #60)
 
-Préparer pour PR-3b :
+> **Mise à jour 2026-04-26** — Audit pré-démarrage PR-3b a révélé que **toutes les 4 deps**, **`cn()` helper**, et **les 8 composants TSX** étaient **déjà présents sur main** (importés/copiés lors d'un setup antérieur, date inconnue, antérieur à la convention trio @cowork/@cc-ankora). Le scope « migration » initial de PR-3b était factuellement no-op.
+>
+> **Re-cadrage @cowork** : PR-3b se recentre sur le vrai gap = **tests Vitest co-located absents** pour les 8 composants atomiques + fix `AnkoraLogo` (`#F59E0B` → `#d4a017`).
+>
+> Référence ADR-006 §matrice tests : composants UI = unit tests obligatoires, et PR-3c (Landing fusion) consommera ces composants intensément — sans tests, toute régression silencieuse passe en prod.
 
-1. Ajouter dans `package.json` :
-   - `@radix-ui/react-slot`
-   - `@radix-ui/react-label`
-   - `@radix-ui/react-select`
-   - `class-variance-authority` (cva)
-2. Vérifier ou créer `src/lib/utils.ts` avec `cn()` helper (clsx + tailwind-merge)
-3. Updater `AnkoraLogo.tsx` lors de la migration : `#F59E0B` → `#d4a017` (laiton)
+Préparer pour PR-3b (scope re-cadré) :
+
+1. ~~Ajouter dans `package.json`~~ (déjà fait sur main : @radix-ui slot/label/select + cva)
+2. ~~Vérifier ou créer `src/lib/utils.ts` avec `cn()` helper~~ (déjà présent sur main)
+3. Updater `AnkoraLogo.tsx` : `#F59E0B` → `#d4a017` (laiton) — **scope verrouillé PR-3b**
 4. Adapter SKILL section 1 (paths `colors_and_type.css` → `src/app/globals.css` Ankora — Finding 1 sécurité)
-5. Migrer les 8 TSX du ZIP avec tests Vitest co-located
+5. ~~Migrer les 8 TSX du ZIP~~ → composants déjà sur main, à la place : **ajouter 8 fichiers `*.test.tsx` co-located** (Button variants, Card composition, Input controlled, Label asProp, Select Radix interaction, AnkoraLogo wordmark + laiton anti-régression, Header/Footer server async + getTranslations mock)
 6. Source : `F:\PROJECTS\Apps\ankora-mockups\design-exports\unpacked-v1\src\components\` (8 fichiers, 533 lignes total)
 
 ---

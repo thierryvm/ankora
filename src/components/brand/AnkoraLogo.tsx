@@ -9,7 +9,7 @@ interface AnkoraLogoProps extends React.SVGProps<SVGSVGElement> {
 }
 
 /**
- * Ankora brand mark. Teal background + amber eyelet + white anchor.
+ * Ankora brand mark. Teal background + laiton (brass) eyelet + white anchor.
  * Inline SVG so it inherits `currentColor` for focus styles and can be
  * sized with Tailwind height/width utilities.
  */
@@ -29,7 +29,7 @@ export function AnkoraLogo({
         {...props}
       >
         <rect width="64" height="64" rx="14" fill="#0F766E" />
-        <circle cx="32" cy="17" r="4.5" stroke="#F59E0B" strokeWidth="2.5" fill="none" />
+        <circle cx="32" cy="17" r="4.5" stroke="#d4a017" strokeWidth="2.5" fill="none" />
         <line
           x1="32"
           y1="22"
@@ -80,7 +80,7 @@ export function AnkoraLogo({
       {...props}
     >
       <rect width="64" height="64" rx="14" fill="#0F766E" />
-      <circle cx="32" cy="17" r="4.5" stroke="#F59E0B" strokeWidth="2.5" fill="none" />
+      <circle cx="32" cy="17" r="4.5" stroke="#d4a017" strokeWidth="2.5" fill="none" />
       <line
         x1="32"
         y1="22"
