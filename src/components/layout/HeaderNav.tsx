@@ -150,6 +150,7 @@ export function HeaderNav({ variant = 'marketing' }: HeaderNavProps) {
         ref={navRef}
         role="dialog"
         aria-modal="true"
+        aria-hidden={!isOpen}
         aria-label={t('nav.mobileLabel')}
         className={`bg-card border-border fixed top-0 right-0 bottom-0 z-40 w-80 overflow-y-auto border-l transition-transform duration-300 lg:hidden ${
           isOpen ? 'pointer-events-auto translate-x-0' : 'pointer-events-none translate-x-full'
@@ -225,7 +226,7 @@ export function HeaderNav({ variant = 'marketing' }: HeaderNavProps) {
         <div className="border-border bg-card sticky bottom-0 space-y-3 border-t p-4">
           <button
             onClick={toggleTheme}
-            className="bg-muted hover:bg-muted/80 focus-visible:ring-brand-600 flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+            className="bg-surface-muted text-foreground hover:bg-surface-muted/80 focus-visible:ring-brand-600 flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             aria-label={isDark ? t('nav.lightMode') : t('nav.darkMode')}
           >
             <span className="dark:hidden">{t('nav.darkMode')}</span>
