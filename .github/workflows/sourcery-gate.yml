@@ -68,7 +68,17 @@ jobs:
           all_nodes='[]'
           cursor=''
           page=1
+          # Defensive cap to prevent infinite loop if hasNextPage misbehaves
+          # (e.g. always returns true, or pagination logic regresses upstream).
+          # 50 pages × 100 threads = 5000 review threads — far beyond any
+          # realistic Ankora PR.
+          max_pages=50
           while :; do
+            if [ "$page" -gt "$max_pages" ]; then
+              echo "::error::Pagination exceeded $max_pages pages — aborting to avoid infinite loop. Investigate GraphQL pageInfo behavior." >&2
+              exit 1
+            fi
+
             if [ -n "$cursor" ]; then
               response=$(gh api graphql \
                 -f query="$query" \
