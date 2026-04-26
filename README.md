@@ -101,7 +101,8 @@ Ankora se positionne comme un **outil d'éducation budgétaire et d'organisation
 
 ### Pré-requis
 
-- [Node.js 22+](https://nodejs.org)
+- **[Node.js 24 LTS](https://nodejs.org)** — version pinned via `.nvmrc`. Si tu utilises `nvm` ou `fnm`, lance `nvm use` (ou `fnm use`) à la racine du projet pour t'aligner automatiquement.
+- **npm** — version pinned via le champ `packageManager` du `package.json` (npm@11.x). Si tu as [Corepack](https://nodejs.org/api/corepack.html) activé (`corepack enable`), npm utilisera automatiquement la version pinned. Sinon, `npm install` fonctionnera quand même mais le `package-lock.json` peut diverger légèrement.
 - [Supabase CLI](https://supabase.com/docs/guides/cli) (pour les migrations locales)
 - Un compte [Supabase](https://supabase.com) (projet EU)
 - Un compte [Upstash](https://upstash.com) (pour le rate-limit Redis)
@@ -111,6 +112,8 @@ Ankora se positionne comme un **outil d'éducation budgétaire et d'organisation
 ```bash
 git clone https://github.com/thierryvm/ankora.git
 cd ankora
+nvm use            # aligne sur Node 24 LTS via .nvmrc (optionnel mais recommandé)
+corepack enable    # active la version npm pinned (optionnel mais recommandé)
 npm install
 cp .env.example .env.local
 # Remplir les variables d'environnement (voir .env.example)
