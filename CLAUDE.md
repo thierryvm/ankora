@@ -189,7 +189,7 @@ Ankora est construit par un trio IA + Thierry (vision produit humaine) :
 - Aucune dépendance payante ajoutée sans validation Thierry
 - Micro-copy UI relue par @cowork avant intégration (FSMA + qualité FR)
 
-Cf. `docs/design/trio-agents.md` (convention complète), `docs/design/claude-design-brief.md` (template brief), `docs/design/design-principles-2026.md` (trends + red flags).
+Cf. `docs/design/trio-agents.md` (convention complète), `docs/design/claude-design-brief.md` (template brief), `docs/design/design-principles-2026.md` (trends + red flags), `docs/design/token-usage.md` (**convention d'usage des tokens CSS — anti-régression WCAG AA, à lire avant toute PR UI**).
 
 ## Orchestration des PR (règles absolues)
 

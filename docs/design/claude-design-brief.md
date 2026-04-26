@@ -393,3 +393,19 @@ Recommendations section should feel like a triage inbox, not a dashboard. Each r
 - [ ] WCAG AA contrast verified on all text surfaces
 - [ ] Spring physics / easing-out on transitions (no linear)
 - [ ] Mobile-first media queries (min-width pattern, not max-width)
+- [ ] **Token usage convention respected** — `bg-muted` interdit comme surface (cf. `docs/design/token-usage.md`), utiliser `bg-surface-muted` ou `bg-card`. `text-muted` réservé aux timestamps/captions/disabled uniquement.
+
+---
+
+## 7. Token usage documentation requirement (NEW — verrouillé 2026-04-26 post-incident PR T1)
+
+Pour tout futur brief Claude Design (`claude-design-brief.md`), **exiger explicitement** que l'export ZIP livre :
+
+1. **Les valeurs des tokens** dans `colors_and_type.css` (ou équivalent) — déjà en place ✅
+2. **Une matrice d'usage par token** : pour chaque variable CSS, indiquer `text-only` / `bg-only` / `border-only` / `mixed-with-conditions`. Sans ça, un agent intégrateur peut utiliser un token de texte décoratif (`--color-muted`) comme surface et casser WCAG AA silencieusement.
+3. **Les paires de contraste WCAG AA documentées** (avant-plan × arrière-plan) avec ratios calculés et verdict (AAA/AA/sub-AA-acceptable/FAIL).
+4. **Les anti-patterns connus** : si une valeur de token est volontairement sub-AA (ex : `--color-muted` à 3.6:1 pour timestamps), l'expliquer en commentaire CSS visible **et** dans une doc séparée à intégrer dans le repo Ankora.
+
+**Référence** : voir `docs/design/token-usage.md` pour le format final attendu côté Ankora repo. Le brief Claude Design doit demander à cc-design de produire l'équivalent au moment du handoff.
+
+Sans ces 4 documents, l'intégration produit des bugs WCAG silencieux que personne ne détecte avant que axe-core (PR T1+) le signale en prod. Cf. registre §5 de `token-usage.md` pour l'historique.
