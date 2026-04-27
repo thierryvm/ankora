@@ -145,101 +145,107 @@ export function HeaderNav({ variant = 'marketing' }: HeaderNavProps) {
         />
       )}
 
-      {/* Mobile drawer - fixed off-canvas menu */}
-      <nav
-        ref={navRef}
-        role="dialog"
-        aria-modal="true"
-        aria-hidden={!isOpen}
-        aria-label={t('nav.mobileLabel')}
-        className={`bg-card border-border fixed top-0 right-0 bottom-0 z-40 w-80 overflow-y-auto border-l transition-transform duration-300 lg:hidden ${
-          isOpen ? 'pointer-events-auto translate-x-0' : 'pointer-events-none translate-x-full'
-        }`}
-      >
-        <div className="border-border bg-card sticky top-0 flex items-center justify-between border-b p-4">
-          <span className="text-sm font-semibold">{t('nav.menu')}</span>
-          <button
-            onClick={handleDrawerClose}
-            className="hover:bg-muted focus-visible:ring-brand-600 flex h-8 w-8 items-center justify-center rounded-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-            aria-label={t('nav.close')}
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+      {/* Mobile drawer — conditional render to avoid contributing to scrollWidth
+          when closed. The previous `translate-x-full` pattern (off-canvas
+          slide-in) caused 320px of horizontal overflow on `/` viewport 375px
+          (WCAG 2.1 Reflow 1.4.10), because `position: fixed + translate` keeps
+          the box in the page's overflow flow. Mounting/unmounting on `isOpen`
+          removes that overflow at the cost of the slide animation — re-add via
+          Framer Motion (AnimatePresence) or CSS view-transitions in a follow-up
+          PR (issue to be opened post-merge). */}
+      {isOpen && (
+        <nav
+          ref={navRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={t('nav.mobileLabel')}
+          className="bg-card border-border fixed top-0 right-0 bottom-0 z-40 w-80 overflow-y-auto border-l lg:hidden"
+        >
+          <div className="border-border bg-card sticky top-0 flex items-center justify-between border-b p-4">
+            <span className="text-sm font-semibold">{t('nav.menu')}</span>
+            <button
+              onClick={handleDrawerClose}
+              className="hover:bg-muted focus-visible:ring-brand-600 flex h-8 w-8 items-center justify-center rounded-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+              aria-label={t('nav.close')}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
 
-        {/* Navigation links */}
-        <div className="space-y-2 p-4">
-          {variant === 'marketing' && (
-            <>
-              <Link
-                href="/#features"
-                onClick={handleDrawerClose}
-                className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-              >
-                {t('nav.features')}
-              </Link>
-              <Link
-                href="/faq"
-                onClick={handleDrawerClose}
-                className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-              >
-                {t('nav.faq')}
-              </Link>
-            </>
-          )}
+          {/* Navigation links */}
+          <div className="space-y-2 p-4">
+            {variant === 'marketing' && (
+              <>
+                <Link
+                  href="/#features"
+                  onClick={handleDrawerClose}
+                  className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                >
+                  {t('nav.features')}
+                </Link>
+                <Link
+                  href="/faq"
+                  onClick={handleDrawerClose}
+                  className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                >
+                  {t('nav.faq')}
+                </Link>
+              </>
+            )}
 
-          {variant === 'app' && (
-            <>
-              <Link
-                href="/app"
-                onClick={handleDrawerClose}
-                className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-              >
-                {t('nav.dashboard')}
-              </Link>
-              <Link
-                href="/app/accounts"
-                onClick={handleDrawerClose}
-                className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-              >
-                {t('nav.accounts')}
-              </Link>
-              <Link
-                href="/app/charges"
-                onClick={handleDrawerClose}
-                className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-              >
-                {t('nav.charges')}
-              </Link>
-              <Link
-                href="/app/settings"
-                onClick={handleDrawerClose}
-                className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-              >
-                {t('nav.settings')}
-              </Link>
-            </>
-          )}
-        </div>
+            {variant === 'app' && (
+              <>
+                <Link
+                  href="/app"
+                  onClick={handleDrawerClose}
+                  className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                >
+                  {t('nav.dashboard')}
+                </Link>
+                <Link
+                  href="/app/accounts"
+                  onClick={handleDrawerClose}
+                  className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                >
+                  {t('nav.accounts')}
+                </Link>
+                <Link
+                  href="/app/charges"
+                  onClick={handleDrawerClose}
+                  className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                >
+                  {t('nav.charges')}
+                </Link>
+                <Link
+                  href="/app/settings"
+                  onClick={handleDrawerClose}
+                  className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                >
+                  {t('nav.settings')}
+                </Link>
+              </>
+            )}
+          </div>
 
-        {/* Drawer footer - theme toggle + locale switcher */}
-        <div className="border-border bg-card sticky bottom-0 space-y-3 border-t p-4">
-          <button
-            onClick={toggleTheme}
-            className="bg-surface-muted text-foreground hover:bg-surface-muted/80 focus-visible:ring-brand-600 flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-            aria-label={isDark ? t('nav.lightMode') : t('nav.darkMode')}
-          >
-            <span className="dark:hidden">{t('nav.darkMode')}</span>
-            <span className="hidden dark:block">{t('nav.lightMode')}</span>
-            <div className="h-4 w-4">
-              <Moon className="h-4 w-4 dark:hidden" aria-hidden="true" />
-              <Sun className="hidden h-4 w-4 dark:block" aria-hidden="true" />
-            </div>
-          </button>
+          {/* Drawer footer - theme toggle + locale switcher */}
+          <div className="border-border bg-card sticky bottom-0 space-y-3 border-t p-4">
+            <button
+              onClick={toggleTheme}
+              className="bg-surface-muted text-foreground hover:bg-surface-muted/80 focus-visible:ring-brand-600 flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+              aria-label={isDark ? t('nav.lightMode') : t('nav.darkMode')}
+            >
+              <span className="dark:hidden">{t('nav.darkMode')}</span>
+              <span className="hidden dark:block">{t('nav.lightMode')}</span>
+              <div className="h-4 w-4">
+                <Moon className="h-4 w-4 dark:hidden" aria-hidden="true" />
+                <Sun className="hidden h-4 w-4 dark:block" aria-hidden="true" />
+              </div>
+            </button>
 
-          <LocaleSwitcher />
-        </div>
-      </nav>
+            <LocaleSwitcher />
+          </div>
+        </nav>
+      )}
 
       {/* Desktop theme toggle + locale switcher - visible on desktop only */}
       <div className="hidden items-center gap-2 lg:flex">

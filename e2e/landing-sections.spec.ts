@@ -40,7 +40,13 @@ test.describe('Landing — cc-design sections smoke', () => {
   test('emits a valid FAQPage JSON-LD schema with 3 questions', async ({ page }) => {
     await page.goto('/');
 
-    const faqJsonLd = await page.locator('script[type="application/ld+json"]#ld-faq').innerHTML();
+    // `<script>` tags are never "visible" to Playwright's locator API on
+    // mobile-safari (its visibility model is stricter than chromium's), so
+    // `locator.innerHTML()` times out. `page.evaluate()` reads the DOM
+    // directly without the visibility check — works in every project.
+    const faqJsonLd = await page.evaluate(
+      () => document.querySelector('script#ld-faq')?.textContent ?? '',
+    );
 
     expect(faqJsonLd).toBeTruthy();
     const parsed = JSON.parse(faqJsonLd);
@@ -60,10 +66,11 @@ test.describe('Landing — cc-design sections smoke', () => {
   test('also emits the SoftwareApplication JSON-LD (FinanceApplication)', async ({ page }) => {
     await page.goto('/');
 
-    const softwareJsonLd = await page
-      .locator('script[type="application/ld+json"]#ld-software')
-      .innerHTML();
+    const softwareJsonLd = await page.evaluate(
+      () => document.querySelector('script#ld-software')?.textContent ?? '',
+    );
 
+    expect(softwareJsonLd).toBeTruthy();
     const parsed = JSON.parse(softwareJsonLd);
     expect(parsed['@type']).toBe('SoftwareApplication');
     expect(parsed.applicationCategory).toBe('FinanceApplication');
