@@ -105,41 +105,107 @@
     }
   },
   "landing": {
-    "badge": "En construcción · lanzamiento 2026",
-    "heroCtaPrimary": "Crear mi cockpit",
-    "heroCtaSecondary": "Descubrir",
-    "featuresHeading": "Tres pilares, cero estrés",
-    "features": {
-      "smoothing": {
-        "title": "Distribución automática",
-        "body": "Tus facturas anuales o trimestrales repartidas en 12 meses. Nunca más sorpresas a final de año."
+    "mktnav": {
+      "links": {
+        "product": "Produit",
+        "simulator": "Simulateur",
+        "pricing": "Tarifs",
+        "security": "Sécurité",
+        "journal": "Journal"
       },
-      "assistant": {
-        "title": "Asistente de transferencias",
-        "body": "Cada mes, Ankora te dice exactamente cuánto transferir a tu ahorro — y cuánto dejar en tu cuenta corriente para las facturas del mes."
+      "ctaLogin": "Se connecter",
+      "ctaSignup": "Essayer gratuitement"
+    },
+    "hero": {
+      "badge": "Nouveau · Simulateur what-if",
+      "h1Lead": "Ton ancrage",
+      "h1Highlight": "financier.",
+      "description": "Ankora sépare tes provisions affectées de ta réserve libre, projette six mois devant, et te laisse simuler l'impact de chaque décision — en clair, sans jargon.",
+      "ctaPrimary": "Ouvrir mon cockpit",
+      "ctaSecondary": "Voir le simulateur",
+      "trust": {
+        "encrypted": "Données chiffrées en Belgique",
+        "noSale": "Aucune vente de données",
+        "languages": "FR · NL · EN"
       },
-      "secure": {
-        "title": "Aislado y seguro",
-        "body": "Tus datos no salen de tu espacio privado. Cifrado, RLS y audit logs por defecto. Hospedaje en la UE."
+      "mockup": {
+        "eyebrow": "Aperçu cockpit",
+        "browserUrl": "app.ankora.be · cockpit",
+        "kpis": {
+          "netRemaining": { "label": "Net restant", "sub": "avril · après provisions" },
+          "provisions": { "label": "Provisions", "sub": "67 % des 2 480 € planifiés" },
+          "reserve": { "label": "Réserve", "sub": "+120 € vs. mars" }
+        }
       }
     },
-    "howHeading": "Cómo funciona",
-    "steps": {
-      "one": {
-        "n": "01",
-        "title": "Introduce tus gastos fijos",
-        "body": "Alquiler, seguros, suscripciones… clasificados por categoría y frecuencia."
-      },
-      "two": {
-        "n": "02",
-        "title": "Ankora distribuye",
-        "body": "Cada factura anual se reparte en 12 meses para calcular tu reserva ideal."
-      },
-      "three": {
-        "n": "03",
-        "title": "Pilota tu mes",
-        "body": "El cockpit te dice cuánto transferir, cuánto dejar y si vas por delante o por detrás de tus reservas."
+    "principles": {
+      "eyebrow": "Trois principes",
+      "h2": "Une façon honnête de parler d'argent.",
+      "description": "Ankora n'essaye pas de te vendre un placement ou une carte. On sépare, on projette, on simule. C'est tout. Toi seul décides.",
+      "items": {
+        "provisions": {
+          "title": "Provisions affectées",
+          "description": "Chaque euro réservé a un nom : mutuelle, taxe circulation, entretien chaudière. Rien ne fuit sans que tu le saches."
+        },
+        "reserve": {
+          "title": "Réserve libre",
+          "description": "Ce qui reste vraiment à toi, après les engagements. Le vrai chiffre — pas l'illusion du solde brut."
+        },
+        "whatIf": {
+          "title": "Simulateur what-if",
+          "description": "Renégocier l'électricité ? Changer de fournisseur ? Ankora te montre l'impact sur 12 mois avant que tu décides."
+        }
       }
+    },
+    "feature": {
+      "eyebrow": "Cashflow waterfall",
+      "h3Line1": "Du salaire au net disponible.",
+      "h3Line2": "En un seul coup d'œil.",
+      "description": "Plus de mystère sur où va ton argent. Chaque étape est visible : salaire, provisions affectées, vie courante, réserve. Tu vois immédiatement si un poste dérape.",
+      "ctaPrimary": "Voir un exemple",
+      "ctaSecondary": "Comment ça marche ?",
+      "bars": {
+        "salary": "Salaire",
+        "provisions": "Provisions",
+        "life": "Vie",
+        "reserve": "Réserve",
+        "remaining": "Reste"
+      }
+    },
+    "pricing": {
+      "eyebrow": "Transparent dès le départ",
+      "h2": "Gratuit pendant la Phase 1.",
+      "phaseBadge": "Phase 1 · construction",
+      "price": "0 €",
+      "period": "pour l'instant, et sans date limite",
+      "body": "On construit d'abord le cockpit. Pas de carte demandée, pas de limite de temps, pas de fonctionnalité bridée. Export RGPD à tout moment.",
+      "features": {
+        "cockpit": "Cockpit complet, provisions et réserve libre",
+        "simulator": "Simulateur what-if illimité",
+        "manualEntry": "Saisie manuelle · tes données restent en Belgique",
+        "export": "Export RGPD en un clic"
+      },
+      "ctaPrimary": "Ouvrir mon cockpit",
+      "roadmap": {
+        "title": "Tu rejoins Ankora pendant sa Phase 1 ?",
+        "body": "Ton compte garde un accès complet au cockpit core à vie, gratuitement. Une offre Pro avec features avancées (comptes illimités, exports consolidés, support prioritaire) arrivera post-v1.0 — tu auras le choix d'upgrader ou de rester sur ton plan actuel.",
+        "link": "Lire la roadmap →"
+      }
+    },
+    "footerCta": {
+      "h2Lead": "Commence par ce qui est",
+      "h2Highlight": "déjà à toi.",
+      "description": "30 jours d'essai, pas de carte, export RGPD à tout moment. On fait simple parce que c'est déjà assez compliqué comme ça.",
+      "ctaPrimary": "Ouvrir mon cockpit"
+    },
+    "footer": {
+      "links": {
+        "terms": "Conditions",
+        "privacy": "Confidentialité",
+        "security": "Sécurité",
+        "contact": "Contact"
+      },
+      "copyright": "Ankora · éditeur ancré à Bruxelles · 2026"
     },
     "faqHeading": "Preguntas frecuentes",
     "faq": {

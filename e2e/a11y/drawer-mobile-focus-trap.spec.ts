@@ -61,7 +61,11 @@ test.describe('Drawer Mobile Accessibility — Focus Trap (WCAG 2.1 2.4.3)', () 
 
     const checkbox = page.locator('input#menu-toggle');
     const drawer = page.locator('nav[role="dialog"]');
-    await expect(drawer).toHaveClass(/translate-x-0/);
+    // After PR-3c-2 HeaderNav refactor (commit f45da08), the drawer is
+    // mounted/unmounted on `isOpen` (was `translate-x-*` slide pattern).
+    // The semantic intent of these assertions — "drawer reachable when
+    // open / gone after Escape" — stays identical.
+    await expect(drawer).toBeVisible();
 
     // Focus inside drawer to ensure keyboard listener is active
     const drawerLink = drawer.locator('a, button').first();
@@ -70,7 +74,7 @@ test.describe('Drawer Mobile Accessibility — Focus Trap (WCAG 2.1 2.4.3)', () 
     // Press Escape — drawer should close and checkbox should be unchecked
     await page.keyboard.press('Escape');
     await expect(checkbox).not.toBeChecked({ timeout: 500 });
-    await expect(drawer).toHaveClass(/translate-x-full/);
+    await expect(drawer).toHaveCount(0);
   });
 
   test('3. Focus cycles within drawer with Tab (focus trap)', async ({ page }) => {
@@ -79,7 +83,9 @@ test.describe('Drawer Mobile Accessibility — Focus Trap (WCAG 2.1 2.4.3)', () 
     await hamburger.click();
 
     const drawer = page.locator('nav[role="dialog"]');
-    await expect(drawer).toHaveClass(/translate-x-0/);
+    // Drawer is mounted on `isOpen` (PR-3c-2 conditional render) — visibility
+    // is the right semantic check, no longer the translate-x-0 class.
+    await expect(drawer).toBeVisible();
 
     // Focus first element in drawer
     const firstElement = drawer.locator('a, button, [tabindex="0"]').first();

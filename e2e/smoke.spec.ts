@@ -2,9 +2,16 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Marketing — smoke', () => {
   test('home page renders CTA and navigation', async ({ page }) => {
+    // Force a desktop viewport — MktNav (PR-3c-2) hides the Login + Try-free
+    // CTAs below `sm` (640px), exposing them only via the mobile drawer.
+    // This smoke test is about the visible-by-default top-nav CTAs, not the
+    // drawer (which has its own coverage in landing-sections.spec.ts).
+    await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-    await expect(page.getByRole('link', { name: /créer un compte/i }).first()).toBeVisible();
+    // CTA labels updated by PR-3c-2 MktNav: "Créer un compte" → "Essayer
+    // gratuitement"; "Se connecter" stayed identical.
+    await expect(page.getByRole('link', { name: /essayer gratuitement/i }).first()).toBeVisible();
     await expect(page.getByRole('link', { name: /se connecter/i }).first()).toBeVisible();
   });
 
