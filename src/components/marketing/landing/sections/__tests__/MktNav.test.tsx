@@ -60,13 +60,28 @@ describe('<MktNav />', () => {
     expect(screen.getByTestId('ankora-logo')).toBeInTheDocument();
   });
 
-  it('renders the 5 marketing nav links (desktop)', async () => {
+  it('renders the 3 active marketing nav links pointing at section anchors', async () => {
     await renderMktNav();
     expect(screen.getByRole('link', { name: 'Produit' })).toHaveAttribute('href', '#principles');
     expect(screen.getByRole('link', { name: 'Simulateur' })).toHaveAttribute('href', '#simulator');
     expect(screen.getByRole('link', { name: 'Tarifs' })).toHaveAttribute('href', '#pricing');
-    expect(screen.getByRole('link', { name: 'Sécurité' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Journal' })).toBeInTheDocument();
+  });
+
+  it('renders Sécurité + Journal as disabled spans (pages not built yet, issues #79 + #80)', async () => {
+    await renderMktNav();
+    // Not <a> — assistive tech announces them as disabled, not as navigation targets
+    expect(screen.queryByRole('link', { name: 'Sécurité' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Journal' })).not.toBeInTheDocument();
+
+    const security = screen.getByText('Sécurité');
+    expect(security.tagName).toBe('SPAN');
+    expect(security).toHaveAttribute('aria-disabled', 'true');
+    expect(security.className).toContain('cursor-not-allowed');
+
+    const journal = screen.getByText('Journal');
+    expect(journal.tagName).toBe('SPAN');
+    expect(journal).toHaveAttribute('aria-disabled', 'true');
+    expect(journal.className).toContain('cursor-not-allowed');
   });
 
   it('renders the Login + Signup CTAs', async () => {

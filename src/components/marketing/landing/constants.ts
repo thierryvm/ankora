@@ -30,13 +30,13 @@ export type HeroKpi = {
 };
 
 export const HERO_KPIS: readonly HeroKpi[] = [
-  // cc-design hex #34d399 (emerald-400) → token text-success (#059669, slightly
-  // darker but still in the success family). Prevents a hardcoded literal
-  // per token-usage doctrine §8.1.
-  { key: 'netRemaining', display: '480 €', toneClass: 'text-success' },
-  // cc-design hex #d4a017 — exact match with --color-accent-400 (laiton).
+  // cc-design hex #34d399 — exact match with `--color-success-300` (added
+  // in PR-3c-2 checkpoint per @cowork Q2 — illustrative KPI, intentionally
+  // sub-AA on light because the "Aperçu cockpit" eyebrow signals decoration).
+  { key: 'netRemaining', display: '480 €', toneClass: 'text-success-300' },
+  // cc-design hex #d4a017 — exact match with `--color-accent-400` (laiton).
   { key: 'provisions', display: '1 660 €', toneClass: 'text-accent-400' },
-  // cc-design hex #5eead4 — exact match with --color-brand-300 (teal-300).
+  // cc-design hex #5eead4 — exact match with `--color-brand-300` (teal-300).
   { key: 'reserve', display: '614 €', toneClass: 'text-brand-300' },
 ];
 

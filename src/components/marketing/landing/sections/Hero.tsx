@@ -35,9 +35,12 @@ export async function Hero() {
   return (
     <section
       aria-labelledby="hero-heading"
-      className="mx-auto max-w-6xl px-4 pt-20 pb-16 text-center md:px-6 md:pt-28"
+      className="relative mx-auto max-w-6xl overflow-hidden px-4 pt-20 pb-16 text-center md:px-6 md:pt-28"
     >
-      <div className="mx-auto max-w-3xl">
+      {/* Decorative radial glow (cc-design fidelity, light=12% / dark=18%) */}
+      <div aria-hidden="true" className="lp-hero-glow" />
+
+      <div className="relative z-10 mx-auto max-w-3xl">
         {/* Badge */}
         <Row
           gap={2}
@@ -78,8 +81,8 @@ export async function Hero() {
           </Button>
         </Row>
 
-        {/* Trust signals */}
-        <ul className="text-muted mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs">
+        {/* Trust signals — text-muted-foreground for AAA contrast (Q3 @cowork) */}
+        <ul className="text-muted-foreground mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs">
           <li className="flex items-center gap-1.5">
             <Lock aria-hidden="true" className="h-3.5 w-3.5" />
             <span>{t('trust.encrypted')}</span>
@@ -95,8 +98,8 @@ export async function Hero() {
         </ul>
       </div>
 
-      {/* Mockup */}
-      <Glass padding="lg" className="mx-auto mt-16 max-w-5xl text-left">
+      {/* Mockup — sits above the radial glow via z-10 wrapper */}
+      <Glass padding="lg" className="relative z-10 mx-auto mt-16 max-w-5xl text-left">
         {/* Browser chrome */}
         <Row gap={2} className="mb-4">
           {HERO_BROWSER_DOTS.map((dot, i) => (

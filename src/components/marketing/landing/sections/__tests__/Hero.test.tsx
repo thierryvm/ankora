@@ -80,16 +80,30 @@ describe('<Hero />', () => {
     expect(screen.getByText(/Aperçu cockpit/i)).toBeInTheDocument();
   });
 
-  it('renders the 3 KPI cards with localised labels and the constant display values', async () => {
+  it('renders the 3 KPI cards with localised labels, display values and tone classes', async () => {
     await renderHero();
+
     expect(screen.getByText('Net restant')).toBeInTheDocument();
-    expect(screen.getByText('480 €')).toBeInTheDocument();
+    const netRemaining = screen.getByText('480 €');
+    // cc-design: emerald `--color-success-300` (#34d399) added for landing fidelity
+    expect(netRemaining.className).toContain('text-success-300');
 
     expect(screen.getByText('Provisions')).toBeInTheDocument();
-    expect(screen.getByText('1 660 €')).toBeInTheDocument();
+    const provisions = screen.getByText('1 660 €');
+    // cc-design: laiton `--color-accent-400` (#d4a017)
+    expect(provisions.className).toContain('text-accent-400');
 
     expect(screen.getByText('Réserve')).toBeInTheDocument();
-    expect(screen.getByText('614 €')).toBeInTheDocument();
+    const reserve = screen.getByText('614 €');
+    // cc-design: teal `--color-brand-300` (#5eead4)
+    expect(reserve.className).toContain('text-brand-300');
+  });
+
+  it('renders the decorative radial glow as aria-hidden behind the content', async () => {
+    const { container } = await renderHero();
+    const glow = container.querySelector('.lp-hero-glow');
+    expect(glow).not.toBeNull();
+    expect(glow).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('exposes the section as a named landmark via aria-labelledby="hero-heading"', async () => {
