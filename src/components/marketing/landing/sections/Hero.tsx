@@ -46,7 +46,7 @@ export async function Hero() {
       <div
         aria-hidden="true"
         data-testid="hero-radial-glow"
-        className="pointer-events-none absolute -inset-x-[20%] -top-[40%] -z-0 h-[90%]"
+        className="pointer-events-none absolute -inset-x-[20%] -top-[40%] z-0 h-[90%]"
         style={{
           background:
             'radial-gradient(50% 60% at 50% 20%, color-mix(in oklab, var(--color-brand-400) 15%, transparent), transparent 70%)',
@@ -70,7 +70,7 @@ export async function Hero() {
           className="font-display text-foreground text-5xl leading-tight font-semibold tracking-tight text-balance md:text-7xl"
         >
           {t('h1Lead')}{' '}
-          <em className="text-brand-300 font-display italic not-italic">{t('h1Highlight')}</em>
+          <em className="text-brand-text-strong font-display italic">{t('h1Highlight')}</em>
         </h1>
 
         {/* Description */}
@@ -115,9 +115,9 @@ export async function Hero() {
       <Glass padding="lg" className="relative z-10 mx-auto mt-16 max-w-5xl text-left">
         {/* Browser chrome */}
         <Row gap={2} className="mb-4">
-          {HERO_BROWSER_DOTS.map((dot, i) => (
+          {HERO_BROWSER_DOTS.map((dot) => (
             <span
-              key={i}
+              key={dot.key}
               aria-hidden="true"
               className={`h-2.5 w-2.5 rounded-full ${dot.className}`}
             />

@@ -80,23 +80,23 @@ describe('<Hero />', () => {
     expect(screen.getByText(/Aperçu cockpit/i)).toBeInTheDocument();
   });
 
-  it('renders the 3 KPI cards with localised labels, display values and tone classes', async () => {
+  it('renders the 3 KPI cards with localised labels, display values and AA tone classes', async () => {
     await renderHero();
 
+    // Tone classes upgraded from sub-AA decoratives (text-success-300/
+    // accent-400/brand-300) to AA semantic-text tokens after axe-core
+    // flagged the contrast on PR #78. Same family, proper contrast.
     expect(screen.getByText('Net restant')).toBeInTheDocument();
     const netRemaining = screen.getByText('480 €');
-    // cc-design: emerald `--color-success-300` (#34d399) added for landing fidelity
-    expect(netRemaining.className).toContain('text-success-300');
+    expect(netRemaining.className).toContain('text-success');
 
     expect(screen.getByText('Provisions')).toBeInTheDocument();
     const provisions = screen.getByText('1 660 €');
-    // cc-design: laiton `--color-accent-400` (#d4a017)
-    expect(provisions.className).toContain('text-accent-400');
+    expect(provisions.className).toContain('text-accent-text');
 
     expect(screen.getByText('Réserve')).toBeInTheDocument();
     const reserve = screen.getByText('614 €');
-    // cc-design: teal `--color-brand-300` (#5eead4)
-    expect(reserve.className).toContain('text-brand-300');
+    expect(reserve.className).toContain('text-brand-text-strong');
   });
 
   it('renders the decorative radial glow as aria-hidden with an inline radial-gradient', async () => {

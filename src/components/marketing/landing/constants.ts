@@ -30,14 +30,20 @@ export type HeroKpi = {
 };
 
 export const HERO_KPIS: readonly HeroKpi[] = [
-  // cc-design hex #34d399 — exact match with `--color-success-300` (added
-  // in PR-3c-2 checkpoint per @cowork Q2 — illustrative KPI, intentionally
-  // sub-AA on light because the "Aperçu cockpit" eyebrow signals decoration).
-  { key: 'netRemaining', display: '480 €', toneClass: 'text-success-300' },
-  // cc-design hex #d4a017 — exact match with `--color-accent-400` (laiton).
-  { key: 'provisions', display: '1 660 €', toneClass: 'text-accent-400' },
-  // cc-design hex #5eead4 — exact match with `--color-brand-300` (teal-300).
-  { key: 'reserve', display: '614 €', toneClass: 'text-brand-300' },
+  // Switched from `text-success-300` (#34d399, sub-AA on white at xl size:
+  // 1.78:1) to `text-success` (#059669, AA at xl). axe-core flagged this on
+  // PR #78 — the KPI amounts ARE read by screen readers (informational), so
+  // the "illustrative decorative" reasoning didn't apply. Vivid emerald is
+  // gone in light mode but kept in dark via the same token's lightness.
+  { key: 'netRemaining', display: '480 €', toneClass: 'text-success' },
+  // Switched from `text-accent-400` (fresh brass #d4a017, sub-AA on white,
+  // documented in SKILL.md) to `text-accent-text` (aged brass #8b6914 light /
+  // fresh brass #d4a017 dark — AA on white, AAA on navy). Same laiton story,
+  // proper contrast across modes.
+  { key: 'provisions', display: '1 660 €', toneClass: 'text-accent-text' },
+  // Switched from `text-brand-300` (#5eead4 teal-300, sub-AA on white) to
+  // `text-brand-text-strong` (#115e59 light / #5eead4 dark — AAA both modes).
+  { key: 'reserve', display: '614 €', toneClass: 'text-brand-text-strong' },
 ];
 
 export type WaterfallBar = {
@@ -124,8 +130,8 @@ export const HERO_SPARKLINE = {
  * (mimics macOS window controls). Colours are intentional UI metaphors, kept
  * as semantic Tailwind classes that map to the design system.
  */
-export const HERO_BROWSER_DOTS: readonly { className: string }[] = [
-  { className: 'bg-danger/40' }, // close
-  { className: 'bg-warning/40' }, // minimise
-  { className: 'bg-success/40' }, // maximise
+export const HERO_BROWSER_DOTS: readonly { key: string; className: string }[] = [
+  { key: 'close', className: 'bg-danger/40' },
+  { key: 'minimise', className: 'bg-warning/40' },
+  { key: 'maximise', className: 'bg-success/40' },
 ];

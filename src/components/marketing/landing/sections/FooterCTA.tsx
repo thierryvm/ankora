@@ -31,7 +31,7 @@ export async function FooterCTA() {
         className="font-display text-foreground mb-5 text-4xl leading-tight font-semibold tracking-tight text-balance md:text-5xl lg:text-6xl"
       >
         {t('h2Lead')}{' '}
-        <em className="text-brand-300 font-display italic not-italic">{t('h2Highlight')}</em>
+        <em className="text-brand-text-strong font-display italic">{t('h2Highlight')}</em>
       </h2>
       <p className="text-muted-foreground mx-auto mt-5 mb-8 max-w-md text-base leading-relaxed text-pretty md:text-lg">
         {t('description')}
