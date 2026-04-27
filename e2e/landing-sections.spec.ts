@@ -43,7 +43,13 @@ test.describe('Landing — cc-design sections smoke', () => {
     // `<script>` tags are never "visible" to Playwright's locator API on
     // mobile-safari (its visibility model is stricter than chromium's), so
     // `locator.innerHTML()` times out. `page.evaluate()` reads the DOM
-    // directly without the visibility check — works in every project.
+    // directly without the visibility check.
+    //
+    // `next/script` with the default `strategy="afterInteractive"` injects
+    // the <script> AFTER hydration — so we must `waitForSelector(state:
+    // 'attached')` before reading, otherwise `page.evaluate` snapshots an
+    // empty `textContent` (no visibility check, but no retry either).
+    await page.waitForSelector('script#ld-faq', { state: 'attached' });
     const faqJsonLd = await page.evaluate(
       () => document.querySelector('script#ld-faq')?.textContent ?? '',
     );
@@ -66,6 +72,9 @@ test.describe('Landing — cc-design sections smoke', () => {
   test('also emits the SoftwareApplication JSON-LD (FinanceApplication)', async ({ page }) => {
     await page.goto('/');
 
+    // Same hydration timing as #ld-faq — wait for the <script> to attach
+    // before evaluating its textContent (prevents anti-flakiness).
+    await page.waitForSelector('script#ld-software', { state: 'attached' });
     const softwareJsonLd = await page.evaluate(
       () => document.querySelector('script#ld-software')?.textContent ?? '',
     );
