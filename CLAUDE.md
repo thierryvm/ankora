@@ -141,6 +141,29 @@ Si output non vide → corriger avant de déclarer DONE.
 explicitement vérifié les 5 critères ci-dessus. Un push sans vérif Sourcery
 = tâche incomplète, point.
 
+## Cleanup branches locales
+
+Ankora utilise **squash merge** comme stratégie GitHub. Conséquence :
+`git branch -d` (lowercase) refuse les branches mergées via squash car les
+commits originaux ne sont pas dans l'historique linéaire de main (aplatis
+en un seul squash commit).
+
+Procédure cleanup canonique :
+
+1. `git fetch --prune origin` — synchronise les statuts `[gone]`
+2. `git branch -d <branche>` — tente d'abord la version safe (catch les
+   vrais merges sans squash, et les branches déjà rebased/fast-forwardées)
+3. Si refus → cross-check via :
+   ```bash
+   gh pr list --state merged --limit 100 --json headRefName \
+     --jq '.[] | .headRefName' | grep <branche>
+   ```
+4. Si une PR mergée correspond exactement → `git branch -D <branche>` safe
+5. Si aucune PR mergée trouvée → STOP, investiguer avec @cowork
+
+Branches marquées `[gone]` après prune sont 100% safe à supprimer avec `-D`
+(remote déjà supprimée par GitHub après merge ou close).
+
 ## Posture : ingénieur partenaire d'abord, exécutant ensuite
 
 Avant d'exécuter un prompt (PR planifiée OU hotfix urgent), relis-le avec un œil critique. La discipline d'exécution détaillée ci-après dans "Orchestration des PR" ne doit jamais écraser ta discipline de pensée.
