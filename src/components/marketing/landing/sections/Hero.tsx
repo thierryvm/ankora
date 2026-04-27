@@ -37,8 +37,21 @@ export async function Hero() {
       aria-labelledby="hero-heading"
       className="relative mx-auto max-w-6xl overflow-hidden px-4 pt-20 pb-16 text-center md:px-6 md:pt-28"
     >
-      {/* Decorative radial glow (cc-design fidelity, light=12% / dark=18%) */}
-      <div aria-hidden="true" className="lp-hero-glow" />
+      {/* Decorative radial glow (cc-design fidelity).
+          Inline `style.background` bypasses any potential cascade quirk where
+          a class-based `background` could be overridden by Tailwind utility
+          backgrounds — this guarantees the gradient renders. The colour pulls
+          from `--color-brand-400` via `color-mix` so it stays in sync with
+          the design system across light + dark + admin accent flips. */}
+      <div
+        aria-hidden="true"
+        data-testid="hero-radial-glow"
+        className="pointer-events-none absolute -inset-x-[20%] -top-[40%] -z-0 h-[90%]"
+        style={{
+          background:
+            'radial-gradient(50% 60% at 50% 20%, color-mix(in oklab, var(--color-brand-400) 15%, transparent), transparent 70%)',
+        }}
+      />
 
       <div className="relative z-10 mx-auto max-w-3xl">
         {/* Badge */}

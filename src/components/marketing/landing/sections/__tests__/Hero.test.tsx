@@ -99,11 +99,14 @@ describe('<Hero />', () => {
     expect(reserve.className).toContain('text-brand-300');
   });
 
-  it('renders the decorative radial glow as aria-hidden behind the content', async () => {
-    const { container } = await renderHero();
-    const glow = container.querySelector('.lp-hero-glow');
-    expect(glow).not.toBeNull();
+  it('renders the decorative radial glow as aria-hidden with an inline radial-gradient', async () => {
+    await renderHero();
+    const glow = screen.getByTestId('hero-radial-glow');
     expect(glow).toHaveAttribute('aria-hidden', 'true');
+    // Inline style guarantees the gradient renders even if a class-based
+    // background were ever overridden by a Tailwind utility.
+    expect(glow.style.background).toContain('radial-gradient');
+    expect(glow.style.background).toContain('var(--color-brand-400)');
   });
 
   it('exposes the section as a named landmark via aria-labelledby="hero-heading"', async () => {

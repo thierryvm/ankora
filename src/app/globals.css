@@ -223,30 +223,11 @@
     var(--color-background);
 }
 
-/* ---------- Landing Hero radial glow ----------
-   Mirrors `Landing.jsx` cc-design ligne 36-40 (glow décoratif derrière le H1).
-   Light mode : 12% opacity (subtil pour ne pas écraser le contraste H1).
-   Dark mode  : 18% opacity (mockup original, plus visible sur navy).
-   Tokens-only — pas de hex hardcoded, color-mix oklab pour l'opacité. */
-.lp-hero-glow {
-  position: absolute;
-  inset: -40% -20% auto -20%;
-  height: 90%;
-  background: radial-gradient(
-    50% 60% at 50% 20%,
-    color-mix(in oklab, var(--color-brand-400) 12%, transparent),
-    transparent 70%
-  );
-  pointer-events: none;
-  z-index: 0;
-}
-[data-theme='dark'] .lp-hero-glow {
-  background: radial-gradient(
-    50% 60% at 50% 20%,
-    color-mix(in oklab, var(--color-brand-400) 18%, transparent),
-    transparent 70%
-  );
-}
+/* The Landing Hero radial glow is now inline-styled in
+   `src/components/marketing/landing/sections/Hero.tsx` (15% opacity, single
+   gradient that reads cleanly in both modes). Removing the `.lp-hero-glow`
+   class avoids a stale cascade trap — see PR-3c-2 @cowork checkpoint
+   correction (2026-04-27). */
 
 /* ---------- Liquid Glass primitive (multi-layer, non-negotiable) ----------
    Single-layer backdrop-filter is REJECTED. Always use blur + color-mix tint +
@@ -269,90 +250,101 @@
   }
 }
 
-/* ---------- Semantic element presets ---------- */
-h1,
-.h1 {
-  font: var(--text-h1);
-  letter-spacing: var(--tracking-tight);
-}
-h2,
-.h2 {
-  font: var(--text-h2);
-  letter-spacing: var(--tracking-tight);
-}
-h3,
-.h3 {
-  font: var(--text-h3);
-}
-h4,
-.h4 {
-  font: var(--text-h4);
-}
-.display-1 {
-  font: var(--text-display-1);
-  letter-spacing: var(--tracking-tight);
-}
-.display-2 {
-  font: var(--text-display-2);
-  letter-spacing: var(--tracking-tight);
-}
-.num,
-.num-xl {
-  font: var(--text-num-xl);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
-  color: var(--color-foreground);
-}
-.num-lg {
-  font: var(--text-num-lg);
-  font-variant-numeric: tabular-nums;
-  color: var(--color-foreground);
-}
-.num-md {
-  font: var(--text-num-md);
-  font-variant-numeric: tabular-nums;
-  color: var(--color-foreground);
-}
-.num-accent {
-  color: var(--color-brand-text-strong);
-}
-code,
-.mono {
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-}
+/* ---------- Semantic element presets ----------
+   Wrapped in @layer base so any Tailwind utility class (text-*, bg-*, font-*)
+   overrides the default `color: var(--color-foreground)` baked into `.num*`,
+   `.eyebrow`, `.t-*`. Utilities live in @layer utilities by default and
+   utilities > base in Tailwind 4 cascade order.
 
-/* ---------- Overlines & labels ----------
-   .eyebrow = section-title overline — primary hierarchy, AAA contrast.
-   .micro   = badge/pill metadata — subordinate but still AAA on navy. */
-.eyebrow {
-  font: 600 11px/1.4 var(--font-sans);
-  letter-spacing: var(--tracking-micro);
-  text-transform: uppercase;
-  color: var(--color-foreground);
-}
-.eyebrow-accent {
-  color: var(--color-brand-text-strong);
-}
-.micro {
-  font: var(--text-micro);
-  letter-spacing: var(--tracking-micro);
-  text-transform: uppercase;
-  color: var(--color-muted-foreground);
-}
+   Without the layer wrap, `.num-xl` declared after the `@import 'tailwindcss'`
+   wins on plain cascade order — that broke the Hero KPIs in PR-3c-2 where
+   `text-success-300` / `text-accent-400` / `text-brand-300` couldn't override
+   the default foreground colour. Cf. @cowork DOM-inspection 2026-04-27. */
+@layer base {
+  h1,
+  .h1 {
+    font: var(--text-h1);
+    letter-spacing: var(--tracking-tight);
+  }
+  h2,
+  .h2 {
+    font: var(--text-h2);
+    letter-spacing: var(--tracking-tight);
+  }
+  h3,
+  .h3 {
+    font: var(--text-h3);
+  }
+  h4,
+  .h4 {
+    font: var(--text-h4);
+  }
+  .display-1 {
+    font: var(--text-display-1);
+    letter-spacing: var(--tracking-tight);
+  }
+  .display-2 {
+    font: var(--text-display-2);
+    letter-spacing: var(--tracking-tight);
+  }
+  .num,
+  .num-xl {
+    font: var(--text-num-xl);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+    color: var(--color-foreground);
+  }
+  .num-lg {
+    font: var(--text-num-lg);
+    font-variant-numeric: tabular-nums;
+    color: var(--color-foreground);
+  }
+  .num-md {
+    font: var(--text-num-md);
+    font-variant-numeric: tabular-nums;
+    color: var(--color-foreground);
+  }
+  .num-accent {
+    color: var(--color-brand-text-strong);
+  }
+  code,
+  .mono {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
 
-/* ---------- Body-text hierarchy helpers ----------
-   .t-primary   = default body/label text (AAA).
-   .t-secondary = supporting copy (AAA but visually subordinate).
-   .t-muted     = timestamps, helper text, disabled — non-essential metadata only. */
-.t-primary {
-  color: var(--color-foreground);
-}
-.t-secondary {
-  color: var(--color-muted-foreground);
-}
-.t-muted {
-  color: var(--color-muted);
+  /* ---------- Overlines & labels ----------
+     .eyebrow = section-title overline — primary hierarchy, AAA contrast.
+     .micro   = badge/pill metadata — subordinate but still AAA on navy. */
+  .eyebrow {
+    font: 600 11px/1.4 var(--font-sans);
+    letter-spacing: var(--tracking-micro);
+    text-transform: uppercase;
+    color: var(--color-foreground);
+  }
+  .eyebrow-accent {
+    color: var(--color-brand-text-strong);
+  }
+  .micro {
+    font: var(--text-micro);
+    letter-spacing: var(--tracking-micro);
+    text-transform: uppercase;
+    color: var(--color-muted-foreground);
+  }
+
+  /* ---------- Body-text hierarchy helpers ----------
+     .t-primary   = default body/label text (AAA).
+     .t-secondary = supporting copy (AAA but visually subordinate).
+     .t-muted     = timestamps, helper text, disabled — non-essential metadata only. */
+  .t-primary {
+    color: var(--color-foreground);
+  }
+  .t-secondary {
+    color: var(--color-muted-foreground);
+  }
+  .t-muted {
+    color: var(--color-muted);
+  }
 }
 
 /* ---------- Base reset & a11y ---------- */
