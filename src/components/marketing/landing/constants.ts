@@ -43,6 +43,8 @@ export const HERO_KPIS: readonly HeroKpi[] = [
 export type WaterfallBar = {
   /** i18n key under `landing.feature.bars.{key}`. */
   key: 'salary' | 'provisions' | 'life' | 'reserve' | 'remaining';
+  /** SVG x-coordinate (viewBox 0..400). */
+  x: number;
   /** Bar height in SVG units (max 160 = full height). */
   height: number;
   /** Pre-formatted display value (NBSP separator, sign, no currency). */
@@ -57,6 +59,7 @@ export const WATERFALL_BARS: readonly WaterfallBar[] = [
   // #2dd4bf brand-400 (teal vif).
   {
     key: 'salary',
+    x: 20,
     height: 160,
     display: '+3 200',
     fillClass: 'fill-brand-400',
@@ -65,16 +68,25 @@ export const WATERFALL_BARS: readonly WaterfallBar[] = [
   // #d4a017 accent-400 (laiton).
   {
     key: 'provisions',
+    x: 100,
     height: 50,
     display: '−980',
     fillClass: 'fill-accent-400',
     textClass: 'text-accent-400',
   },
   // #38bdf8 → token --color-info (#0284c7, slightly darker).
-  { key: 'life', height: 70, display: '−1 420', fillClass: 'fill-info', textClass: 'text-info' },
+  {
+    key: 'life',
+    x: 180,
+    height: 70,
+    display: '−1 420',
+    fillClass: 'fill-info',
+    textClass: 'text-info',
+  },
   // #5eead4 brand-300 (teal-300).
   {
     key: 'reserve',
+    x: 260,
     height: 16,
     display: '−320',
     fillClass: 'fill-brand-300',
@@ -83,6 +95,7 @@ export const WATERFALL_BARS: readonly WaterfallBar[] = [
   // #34d399 → token text-success (slightly darker, see HERO_KPIS netRemaining note).
   {
     key: 'remaining',
+    x: 340,
     height: 24,
     display: '+480',
     fillClass: 'fill-success',
