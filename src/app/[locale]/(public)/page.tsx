@@ -5,9 +5,14 @@ import { getTranslations } from 'next-intl/server';
 
 import type { Locale } from '@/i18n/routing';
 import { SITE } from '@/lib/site';
-import { Footer } from '@/components/layout/Footer';
+import { FAQ, FAQ_KEYS } from '@/components/marketing/landing/sections/FAQ';
+import { Feature } from '@/components/marketing/landing/sections/Feature';
+import { FooterCTA } from '@/components/marketing/landing/sections/FooterCTA';
 import { Hero } from '@/components/marketing/landing/sections/Hero';
+import { MktFooter } from '@/components/marketing/landing/sections/MktFooter';
 import { MktNav } from '@/components/marketing/landing/sections/MktNav';
+import { Pricing } from '@/components/marketing/landing/sections/Pricing';
+import { Principles } from '@/components/marketing/landing/sections/Principles';
 
 type LocaleParams = { params: Promise<{ locale: string }> };
 
@@ -19,8 +24,6 @@ export async function generateMetadata({ params }: LocaleParams): Promise<Metada
     description: t('description'),
   };
 }
-
-const FAQ_KEYS = ['advice', 'storage', 'sharing'] as const;
 
 export default async function HomePage({ params }: LocaleParams) {
   const { locale } = await params;
@@ -62,30 +65,14 @@ export default async function HomePage({ params }: LocaleParams) {
 
       <main id="main" tabIndex={-1}>
         <Hero />
-
-        {/* FAQ — kept inline pour l'instant (L6 PR-3c-2 la refondra avec design tokens
-            + repositionnera entre Pricing et FooterCTA). Conserve le JSON-LD FAQPage
-            ci-dessus pour SEO/llms.txt. */}
-        <section
-          id="faq"
-          aria-labelledby="faq-heading"
-          className="mx-auto max-w-3xl px-4 py-16 md:px-6"
-        >
-          <h2 id="faq-heading" className="mb-8 text-center text-3xl font-bold tracking-tight">
-            {t('faqHeading')}
-          </h2>
-          <dl className="space-y-4">
-            {FAQ_KEYS.map((key) => (
-              <div key={key} className="border-border bg-card rounded-xl border p-6">
-                <dt className="mb-2 font-semibold">{t(`faq.${key}.q`)}</dt>
-                <dd className="text-muted-foreground text-sm">{t(`faq.${key}.a`)}</dd>
-              </div>
-            ))}
-          </dl>
-        </section>
+        <Principles />
+        <Feature />
+        <Pricing />
+        <FAQ />
+        <FooterCTA />
       </main>
 
-      <Footer />
+      <MktFooter />
     </>
   );
 }
