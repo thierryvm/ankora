@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { getNonce } from '@/lib/security/nonce';
-import Script from 'next/script';
 import { getTranslations } from 'next-intl/server';
 
 import type { Locale } from '@/i18n/routing';
@@ -52,14 +51,30 @@ export default async function HomePage({ params }: LocaleParams) {
     })),
   };
 
+  // JSON-LD: native <script type="application/ld+json"> rendered server-side
+  // (was `next/script` with afterInteractive strategy, which injects post-
+  // hydration — invisible to crawlers and to Playwright mobile-safari).
+  // Content is `JSON.stringify(...)` of locally-built objects (constants
+  // + i18n translations + locale string), no user input — safe.
+  // This is the canonical Next.js + React pattern for JSON-LD; see
+  // https://nextjs.org/docs/app/guides/json-ld
+  const softwareLdHtml = JSON.stringify(softwareJsonLd);
+  const faqLdHtml = JSON.stringify(faqJsonLd);
+
   return (
     <>
-      <Script id="ld-software" type="application/ld+json" nonce={nonce}>
-        {JSON.stringify(softwareJsonLd)}
-      </Script>
-      <Script id="ld-faq" type="application/ld+json" nonce={nonce}>
-        {JSON.stringify(faqJsonLd)}
-      </Script>
+      <script
+        id="ld-software"
+        type="application/ld+json"
+        nonce={nonce}
+        dangerouslySetInnerHTML={{ __html: softwareLdHtml }}
+      />
+      <script
+        id="ld-faq"
+        type="application/ld+json"
+        nonce={nonce}
+        dangerouslySetInnerHTML={{ __html: faqLdHtml }}
+      />
 
       <MktNav />
 
