@@ -141,6 +141,49 @@
         "body": "De cockpit zegt je hoeveel je moet overschrijven, hoeveel je moet houden, en of je voor of achter staat op je voorzieningen."
       }
     },
+    "simulator": {
+      "section_title": "Projetez votre épargne sur 12 mois",
+      "section_subtitle": "Voyez comment de petites mises de côté régulières construisent votre coussin financier. Aucune connexion requise.",
+      "scenarios": {
+        "label": "Choisissez un scénario de départ",
+        "steady": {
+          "name": "Économe",
+          "tagline": "Petit pas régulier",
+          "description": "Mettez de côté 50 € par mois sans y penser."
+        },
+        "balanced": {
+          "name": "Standard",
+          "tagline": "Rythme confortable",
+          "description": "Construisez votre épargne avec 100 € par mois."
+        },
+        "ambitious": {
+          "name": "Ambitieux",
+          "tagline": "Coussin solide",
+          "description": "Visez un coussin confortable avec 200 € par mois."
+        }
+      },
+      "slider": {
+        "label": "Montant mensuel mis de côté",
+        "value_text": "{amount} euros par mois",
+        "unit": "€/mois"
+      },
+      "chart": {
+        "aria_label": "Projection cumulative de votre épargne sur 12 mois",
+        "x_axis": "Mois",
+        "y_axis": "Cumul (€)",
+        "tooltip": "Mois {month} : {amount}",
+        "fallback_table_caption": "Données mensuelles de la projection"
+      },
+      "result": {
+        "title": "En 12 mois, vous auriez :",
+        "amount_aria": "Montant projeté à 12 mois : {amount}",
+        "caveat": "Projection à titre informatif, hors intérêts et imprévus. Ankora ne fournit pas de conseil en placement."
+      },
+      "cta": {
+        "label": "Créer mon plan d'épargne",
+        "href": "/signup"
+      }
+    },
     "faqHeading": "Veelgestelde vragen",
     "faq": {
       "advice": {

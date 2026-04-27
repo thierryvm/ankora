@@ -9,6 +9,7 @@ import type { Locale } from '@/i18n/routing';
 import { SITE } from '@/lib/site';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { Simulator } from '@/components/marketing/landing/simulator';
 import { Button } from '@/components/ui/button';
 
 type LocaleParams = { params: Promise<{ locale: string }> };
@@ -130,6 +131,8 @@ export default async function HomePage({ params }: LocaleParams) {
             ))}
           </ol>
         </section>
+
+        <Simulator locale={locale as Locale} />
 
         <section
           id="faq"

@@ -141,6 +141,49 @@
         "body": "The cockpit tells you how much to transfer, how much to keep, and whether you're ahead or behind on your reserves."
       }
     },
+    "simulator": {
+      "section_title": "Project your savings over 12 months",
+      "section_subtitle": "See how small regular set-asides build your financial cushion. No login required.",
+      "scenarios": {
+        "label": "Pick a starting scenario",
+        "steady": {
+          "name": "Steady",
+          "tagline": "Small regular step",
+          "description": "Set aside €50 per month without thinking about it."
+        },
+        "balanced": {
+          "name": "Balanced",
+          "tagline": "Comfortable pace",
+          "description": "Build your savings with €100 per month."
+        },
+        "ambitious": {
+          "name": "Ambitious",
+          "tagline": "Solid cushion",
+          "description": "Aim for a comfortable cushion with €200 per month."
+        }
+      },
+      "slider": {
+        "label": "Monthly amount set aside",
+        "value_text": "{amount} euros per month",
+        "unit": "€/month"
+      },
+      "chart": {
+        "aria_label": "Cumulative savings projection over 12 months",
+        "x_axis": "Month",
+        "y_axis": "Cumulative (€)",
+        "tooltip": "Month {month}: {amount}",
+        "fallback_table_caption": "Monthly projection data"
+      },
+      "result": {
+        "title": "After 12 months, you would have:",
+        "amount_aria": "Projected amount at 12 months: {amount}",
+        "caveat": "Informational projection only, excluding interest and unexpected events. Ankora does not provide investment advice."
+      },
+      "cta": {
+        "label": "Create my savings plan",
+        "href": "/signup"
+      }
+    },
     "faqHeading": "Frequently asked questions",
     "faq": {
       "advice": {
