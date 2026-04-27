@@ -305,6 +305,9 @@ code,
   text-transform: uppercase;
   color: var(--color-foreground);
 }
+.eyebrow-accent {
+  color: var(--color-brand-text-strong);
+}
 .micro {
   font: var(--text-micro);
   letter-spacing: var(--tracking-micro);

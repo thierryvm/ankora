@@ -193,6 +193,46 @@ Citation pertinente (ligne 216-222) — à conserver pour future référence :
 - Toute évolution majeure (renommage de token, suppression) → ADR dédié si impact > 3 fichiers
 - Les futurs briefs Claude Design (`claude-design-brief.md`) doivent exiger explicitement la documentation d'usage des tokens livrés (pas juste les valeurs)
 
+### 8.1. Pre-PR checklist UI (anti-duplication)
+
+Avant d'ouvrir une PR qui touche à l'UI :
+
+- [ ] **Tokens** : aucune nouvelle valeur hex hardcodée dans `src/components/` (`grep -r "#[0-9a-fA-F]\{6\}" src/components/`)
+- [ ] **Atomic UI** : aucune classe `_shared/shell.css` (`.glass`, `.eyebrow`, `.num`, `.row`, etc.) dupliquée en JSX — utiliser les composants React du §9
+- [ ] **Surface vs texte** : aucun `bg-muted`, `text-muted` n'est utilisé hors de la matrice §3
+- [ ] **Variants Button** : pas de bouton stylé manuellement avec `<button className="bg-brand-700 …">` — passer par `<Button variant="…">` (premium pattern Apple/Linear est déjà câblé)
+
+---
+
+## 9. Atomic UI registry — composants React au-dessus des classes CSS
+
+Quand une classe utilitaire `_shared/shell.css` est consommée par > 1 surface JSX,
+elle est exposée comme composant React dans `src/components/ui/` pour éviter la
+répétition `className="…"` et permettre des props typées.
+
+| Class CSS source                                                                             | Composant React   | Path                                                                 | Notes                                                                                         |
+| -------------------------------------------------------------------------------------------- | ----------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `.glass`                                                                                     | `<Glass>`         | [src/components/ui/glass.tsx](../../src/components/ui/glass.tsx)     | `padding` prop (`none`/`sm`/`md`/`lg`) — wrapper Liquid Glass multi-couche                    |
+| `.eyebrow`                                                                                   | `<Eyebrow>`       | [src/components/ui/eyebrow.tsx](../../src/components/ui/eyebrow.tsx) | `tone` prop (`default`/`accent`) — préheader uppercase                                        |
+| `.num` / `.num-md` / `.num-lg` / `.num-xl`                                                   | `<Num>`           | [src/components/ui/num.tsx](../../src/components/ui/num.tsx)         | `size` (`sm`/`md`/`lg`/`xl`) + `tone` (`default`/`accent`) — figure tabular-nums              |
+| `.row` (cc-design)                                                                           | `<Row>`           | [src/components/ui/row.tsx](../../src/components/ui/row.tsx)         | `gap` / `align` / `justify` — flex row ergonomique                                            |
+| `.btn`, `.btn-primary`, `.btn-outline`, `.btn-ghost`, `.btn-secondary`, `.btn-sm`, `.btn-lg` | `<Button>`        | [src/components/ui/button.tsx](../../src/components/ui/button.tsx)   | Premium pattern Apple/Linear (translateY hover, scale active, magnetic shadow) wrappé via cva |
+| `.card`                                                                                      | `<Card>` (shadcn) | [src/components/ui/card.tsx](../../src/components/ui/card.tsx)       | Inchangé — quasi-équivalent à shell.css                                                       |
+
+**Règle** : si une nouvelle PR doit consommer une classe `_shared/shell.css`
+dans plus d'une surface, créer le composant Atomic UI correspondant **dans la
+même PR**, pas plus tard. La duplication JSX cassée par un futur changement
+de design est plus coûteuse que d'écrire le wrapper.
+
+**Décision Phase 2 PR-3c-1 (2026-04-27)** : audit Landing.jsx Claude Design vs
+`src/app/globals.css` repo → **0 token manquant**. Le fichier
+`colors_and_type.css` du ZIP est explicitement marqué _"Lifted 1:1 from
+`src/app/globals.css` in thierryvm/ankora@main"_ (cf. ZIP ligne 3). Aucune
+addition de token nécessaire pour PR-3c-2 et PR-3c-3.
+
+Modifier ajouté en PR-3c-1 : `.eyebrow-accent { color: var(--color-brand-text-strong); }`
+pour supporter le tone="accent" du composant `<Eyebrow>`.
+
 ---
 
 > **Pourquoi ce document existe** : un agent (humain ou IA) qui voit `--color-muted` sans contexte va naturellement l'utiliser comme surface. Le commentaire CSS planqué dans le ZIP source ne suffit pas. Cette doc est le filtre anti-régression silencieuse pour toutes les futures PR UI d'Ankora.
