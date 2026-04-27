@@ -105,42 +105,6 @@
     }
   },
   "landing": {
-    "badge": "En construcción · lanzamiento 2026",
-    "heroCtaPrimary": "Crear mi cockpit",
-    "heroCtaSecondary": "Descubrir",
-    "featuresHeading": "Tres pilares, cero estrés",
-    "features": {
-      "smoothing": {
-        "title": "Distribución automática",
-        "body": "Tus facturas anuales o trimestrales repartidas en 12 meses. Nunca más sorpresas a final de año."
-      },
-      "assistant": {
-        "title": "Asistente de transferencias",
-        "body": "Cada mes, Ankora te dice exactamente cuánto transferir a tu ahorro — y cuánto dejar en tu cuenta corriente para las facturas del mes."
-      },
-      "secure": {
-        "title": "Aislado y seguro",
-        "body": "Tus datos no salen de tu espacio privado. Cifrado, RLS y audit logs por defecto. Hospedaje en la UE."
-      }
-    },
-    "howHeading": "Cómo funciona",
-    "steps": {
-      "one": {
-        "n": "01",
-        "title": "Introduce tus gastos fijos",
-        "body": "Alquiler, seguros, suscripciones… clasificados por categoría y frecuencia."
-      },
-      "two": {
-        "n": "02",
-        "title": "Ankora distribuye",
-        "body": "Cada factura anual se reparte en 12 meses para calcular tu reserva ideal."
-      },
-      "three": {
-        "n": "03",
-        "title": "Pilota tu mes",
-        "body": "El cockpit te dice cuánto transferir, cuánto dejar y si vas por delante o por detrás de tus reservas."
-      }
-    },
     "mktnav": {
       "links": {
         "product": "Produit",

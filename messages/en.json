@@ -105,42 +105,6 @@
     }
   },
   "landing": {
-    "badge": "In development · launching 2026",
-    "heroCtaPrimary": "Create my cockpit",
-    "heroCtaSecondary": "Learn more",
-    "featuresHeading": "Three pillars, zero stress",
-    "features": {
-      "smoothing": {
-        "title": "Automatic smoothing",
-        "body": "Your annual and quarterly bills spread across 12 months. No more nasty surprises at year-end."
-      },
-      "assistant": {
-        "title": "Transfer assistant",
-        "body": "Every month, Ankora tells you exactly how much to transfer to your savings — and how much to keep in your current account for this month's bills."
-      },
-      "secure": {
-        "title": "Isolated and secure",
-        "body": "Your data never leaves your private space. Encryption, RLS and audit logs by default. EU hosting."
-      }
-    },
-    "howHeading": "How it works",
-    "steps": {
-      "one": {
-        "n": "01",
-        "title": "Enter your bills",
-        "body": "Rent, insurance, subscriptions… sorted by category and frequency."
-      },
-      "two": {
-        "n": "02",
-        "title": "Ankora smooths",
-        "body": "Each annual bill is spread across 12 months to calculate your ideal reserve."
-      },
-      "three": {
-        "n": "03",
-        "title": "Steer your month",
-        "body": "The cockpit tells you how much to transfer, how much to keep, and whether you're ahead or behind on your reserves."
-      }
-    },
     "mktnav": {
       "links": {
         "product": "Product",

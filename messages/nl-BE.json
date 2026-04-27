@@ -105,42 +105,6 @@
     }
   },
   "landing": {
-    "badge": "In opbouw · lancering 2026",
-    "heroCtaPrimary": "Mijn cockpit aanmaken",
-    "heroCtaSecondary": "Ontdekken",
-    "featuresHeading": "Drie pijlers, nul stress",
-    "features": {
-      "smoothing": {
-        "title": "Automatische spreiding",
-        "body": "Je jaarlijkse of driemaandelijkse facturen gespreid over 12 maanden. Nooit meer vervelende verrassingen op het einde van het jaar."
-      },
-      "assistant": {
-        "title": "Overschrijvingsassistent",
-        "body": "Elke maand zegt Ankora je precies hoeveel je naar je spaargeld moet overschrijven — en hoeveel je op je zichtrekening moet houden voor de facturen van de maand."
-      },
-      "secure": {
-        "title": "Afgeschermd en beveiligd",
-        "body": "Je gegevens verlaten nooit je eigen private ruimte. Versleuteling, RLS en audit logs standaard. Hosting in de EU."
-      }
-    },
-    "howHeading": "Hoe het werkt",
-    "steps": {
-      "one": {
-        "n": "01",
-        "title": "Geef je vaste kosten in",
-        "body": "Huur, verzekeringen, abonnementen… geordend per categorie en frequentie."
-      },
-      "two": {
-        "n": "02",
-        "title": "Ankora spreidt",
-        "body": "Elke jaarlijkse factuur wordt over 12 maanden verdeeld om je ideale voorziening te berekenen."
-      },
-      "three": {
-        "n": "03",
-        "title": "Stuur je maand",
-        "body": "De cockpit zegt je hoeveel je moet overschrijven, hoeveel je moet houden, en of je voor of achter staat op je voorzieningen."
-      }
-    },
     "mktnav": {
       "links": {
         "product": "Produit",

@@ -105,42 +105,6 @@
     }
   },
   "landing": {
-    "badge": "In Entwicklung · Start 2026",
-    "heroCtaPrimary": "Mein Cockpit erstellen",
-    "heroCtaSecondary": "Entdecken",
-    "featuresHeading": "Drei Säulen, null Stress",
-    "features": {
-      "smoothing": {
-        "title": "Automatische Verteilung",
-        "body": "Deine Jahres- oder Quartalsrechnungen werden auf 12 Monate verteilt. Keine bösen Überraschungen mehr am Jahresende."
-      },
-      "assistant": {
-        "title": "Überweisungsassistent",
-        "body": "Jeden Monat sagt dir Ankora genau, wie viel du auf deine Ersparnisse überweisen sollst — und wie viel du auf deinem Girokonto für die Rechnungen des Monats behalten sollst."
-      },
-      "secure": {
-        "title": "Isoliert und sicher",
-        "body": "Deine Daten verlassen deinen privaten Bereich nicht. Verschlüsselung, RLS und Audit-Logs standardmäßig. Hosting in der EU."
-      }
-    },
-    "howHeading": "So funktioniert's",
-    "steps": {
-      "one": {
-        "n": "01",
-        "title": "Trage deine Fixkosten ein",
-        "body": "Miete, Versicherungen, Abos… sortiert nach Kategorie und Frequenz."
-      },
-      "two": {
-        "n": "02",
-        "title": "Ankora verteilt",
-        "body": "Jede Jahresrechnung wird auf 12 Monate verteilt, um deine ideale Rücklage zu berechnen."
-      },
-      "three": {
-        "n": "03",
-        "title": "Steuere deinen Monat",
-        "body": "Das Cockpit sagt dir, wie viel du überweisen, wie viel du behalten sollst, und ob du deinen Rücklagen voraus oder hinterher bist."
-      }
-    },
     "mktnav": {
       "links": {
         "product": "Produit",

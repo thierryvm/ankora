@@ -105,42 +105,6 @@
     }
   },
   "landing": {
-    "badge": "En construction · lancement 2026",
-    "heroCtaPrimary": "Créer mon cockpit",
-    "heroCtaSecondary": "Découvrir",
-    "featuresHeading": "Trois piliers, zéro angoisse",
-    "features": {
-      "smoothing": {
-        "title": "Lissage automatique",
-        "body": "Tes factures annuelles ou trimestrielles réparties sur 12 mois. Plus jamais de mauvaise surprise en fin d'année."
-      },
-      "assistant": {
-        "title": "Assistant virements",
-        "body": "Chaque mois, Ankora te dit exactement combien virer vers ton épargne — et combien garder sur ton courant pour les factures du mois."
-      },
-      "secure": {
-        "title": "Isolé et sécurisé",
-        "body": "Tes données ne sortent pas de ton espace privé. Chiffrement, RLS et audit logs par défaut. Hébergement UE."
-      }
-    },
-    "howHeading": "Comment ça marche",
-    "steps": {
-      "one": {
-        "n": "01",
-        "title": "Renseigne tes charges",
-        "body": "Loyer, assurances, abonnements… classés par catégorie et fréquence."
-      },
-      "two": {
-        "n": "02",
-        "title": "Ankora lisse",
-        "body": "Chaque facture annuelle est répartie sur les 12 mois pour calculer ta provision idéale."
-      },
-      "three": {
-        "n": "03",
-        "title": "Pilote ton mois",
-        "body": "Le cockpit te dit combien virer, combien garder, et si tu es en avance ou en retard sur tes provisions."
-      }
-    },
     "mktnav": {
       "links": {
         "product": "Produit",
