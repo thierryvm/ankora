@@ -12,6 +12,7 @@ import { MktFooter } from '@/components/marketing/landing/sections/MktFooter';
 import { MktNav } from '@/components/marketing/landing/sections/MktNav';
 import { Pricing } from '@/components/marketing/landing/sections/Pricing';
 import { Principles } from '@/components/marketing/landing/sections/Principles';
+import { WhatIfDemo } from '@/components/marketing/landing/sections/WhatIfDemo';
 
 type LocaleParams = { params: Promise<{ locale: string }> };
 
@@ -82,6 +83,7 @@ export default async function HomePage({ params }: LocaleParams) {
         <Hero />
         <Principles />
         <Feature />
+        <WhatIfDemo />
         <Pricing />
         <FAQ />
         <FooterCTA />

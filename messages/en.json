@@ -172,6 +172,57 @@
         "remaining": "Remaining"
       }
     },
+    "whatif": {
+      "title": "What if you changed one thing?",
+      "subtitle": "Move the slider. See the impact on your free reserve, over six months. That's what Ankora does for every financial decision.",
+      "badge": "Demo · no account needed",
+      "scenarios": {
+        "gsm": {
+          "label": "Renegotiate my mobile plan",
+          "hint": "Current plan: €42/month · market: €18–28/month"
+        },
+        "elec": {
+          "label": "Switch electricity provider",
+          "hint": "Current bill: €168/month · 3 cheaper offers in your area"
+        },
+        "stream": {
+          "label": "Cut two streaming subscriptions",
+          "hint": "5 active subscriptions · actual use: 2 over 30 days"
+        }
+      },
+      "controls": {
+        "scenario": "Scenario",
+        "savings": "Monthly savings",
+        "slider_aria": "Monthly savings for {label}"
+      },
+      "annual": {
+        "eyebrow": "Over 12 months",
+        "fleche": "Ankora could route {amount} €/month towards your long-term savings."
+      },
+      "chart": {
+        "title": "Free reserve · projection",
+        "subtitle": "6 months from today",
+        "legend": {
+          "baseline": "Without change",
+          "scenario": "With your choice"
+        },
+        "aria": "6-month projection chart of free reserve, with and without the chosen change",
+        "months": {
+          "may": "May",
+          "jun": "Jun",
+          "jul": "Jul",
+          "aug": "Aug",
+          "sep": "Sep",
+          "oct": "Oct"
+        },
+        "thresholds": {
+          "danger": "⚠️ Estimated overdraft",
+          "fragile": "Fragile zone",
+          "comfortable": "Comfortable zone"
+        }
+      },
+      "caveat": "Demo based on average assumptions. Ankora does not provide investment advice. No bank import — you enter your expenses manually."
+    },
     "pricing": {
       "eyebrow": "Transparent from the start",
       "h2": "Free during Phase 1.",

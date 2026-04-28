@@ -114,3 +114,65 @@ test.describe('Landing — cc-design sections smoke', () => {
     await expect(journal).toHaveAttribute('aria-disabled', 'true');
   });
 });
+
+test.describe('Landing — WhatIfDemo simulator (PR-3c-3)', () => {
+  test('renders the #simulator anchor — referenced by MktNav + Hero CTA', async ({ page }) => {
+    await page.goto('/');
+    const section = page.locator('section#simulator');
+    await section.scrollIntoViewIfNeeded();
+    await expect(section).toBeVisible();
+    await expect(section).toHaveAttribute('aria-labelledby', 'whatif-heading');
+  });
+
+  test('exposes 3 scenario buttons with aria-pressed semantics', async ({ page }) => {
+    await page.goto('/');
+    const section = page.locator('section#simulator');
+    await section.scrollIntoViewIfNeeded();
+
+    const gsm = section.getByRole('button', { name: /Renégocier mon GSM/i });
+    const stream = section.getByRole('button', { name: /Couper deux streamings/i });
+
+    // gsm is the default scenario
+    await expect(gsm).toHaveAttribute('aria-pressed', 'true');
+    await expect(stream).toHaveAttribute('aria-pressed', 'false');
+
+    await stream.click();
+
+    await expect(stream).toHaveAttribute('aria-pressed', 'true');
+    await expect(gsm).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test('updates the annual KPI when the slider value changes', async ({ page }) => {
+    await page.goto('/');
+    const section = page.locator('section#simulator');
+    await section.scrollIntoViewIfNeeded();
+
+    const slider = section.getByRole('slider');
+    await slider.evaluate((el: HTMLInputElement) => {
+      // Programmatic value change + dispatch is more reliable than dragging
+      // the native range thumb on Playwright's keyboard / pointer driver.
+      el.value = '20';
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    // 20 × 12 = 240 €
+    await expect(section.getByText(/\+240\s*€/)).toBeVisible();
+  });
+
+  test('renders 6 projection points + 3 threshold zones in the SVG chart', async ({ page }) => {
+    await page.goto('/');
+    const section = page.locator('section#simulator');
+    await section.scrollIntoViewIfNeeded();
+
+    const svg = section.locator('svg[role="img"]');
+    await expect(svg).toBeVisible();
+
+    // 6 months × 1 point = 6 circles
+    await expect(svg.locator('circle')).toHaveCount(6);
+
+    // 3 threshold rects (danger / fragile / comfortable), all aria-hidden
+    const thresholds = svg.locator('rect[data-threshold]');
+    await expect(thresholds).toHaveCount(3);
+  });
+});
