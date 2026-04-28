@@ -25,6 +25,7 @@ vi.mock('next-intl/server', () => ({
 }));
 
 vi.mock('next-intl', () => ({
+  useLocale: () => 'fr-BE',
   useTranslations: (namespace: string) => {
     let cursor: unknown = messages;
     for (const part of namespace.split('.')) {

@@ -34,7 +34,7 @@ Le retour externe est précieux pour identifier des **angles morts UX**, mais Ch
 
 ## 3. Formulations FSMA-flaggées — BLOCKLIST permanente
 
-Ces formulations ChatGPT **ne doivent JAMAIS être intégrées** dans un texte Ankora. Tout agent qui les voit dans une proposition futur doit les refuser sans appel.
+Ces formulations ChatGPT **ne doivent JAMAIS être intégrées** dans un texte Ankora. Tout agent qui les voit dans une proposition future doit les refuser sans appel.
 
 | Formulation refusée                                          | Cause                                                                                                               | Alternative FSMA-safe                                                      |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
@@ -197,7 +197,7 @@ Ces idées de ChatGPT sont **explicitement écartées** de la roadmap actuelle :
 
 ---
 
-## 8. Principes UX gravés (à appliquer transverse)
+## 8. Principes UX gravés (à appliquer de façon transverse)
 
 Ces principes proviennent de l'analyse ChatGPT et sont **validés** comme directives transverses pour toute future PR landing/dashboard/onboarding/admin :
 
@@ -207,7 +207,7 @@ Ces principes proviennent de l'analyse ChatGPT et sont **validés** comme direct
 4. **Feedback émotionnel discret mais présent** : threshold zones, color coding, delta visible — sans tomber dans l'alarmisme.
 5. **Bénéfice user > feature** : un titre de section doit décrire ce que l'utilisateur GAGNE, pas ce que la feature FAIT.
 
-À ajouter dans `docs/design/design-principles-2026.md` § "Principes UX transverse".
+À ajouter dans `docs/design/design-principles-2026.md` § "Principes UX transverses".
 
 ---
 
@@ -230,7 +230,7 @@ Ces principes proviennent de l'analyse ChatGPT et sont **validés** comme direct
 | Améliorations PR-3c-3 (WhatIfDemo)              | §5             |
 | Améliorations PR-3d (copy refresh)              | §6             |
 | Refuser une demande "Reality Mode" ou similaire | §7             |
-| Principes UX transverse                         | §8             |
+| Principes UX transverses                        | §8             |
 
 ---
 

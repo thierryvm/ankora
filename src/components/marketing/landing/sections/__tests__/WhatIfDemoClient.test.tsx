@@ -4,6 +4,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import messages from '../../../../../../messages/fr-BE.json';
 
 vi.mock('next-intl', () => ({
+  useLocale: () => 'fr-BE',
   useTranslations: (namespace: string) => {
     let cursor: unknown = messages;
     for (const part of namespace.split('.')) {

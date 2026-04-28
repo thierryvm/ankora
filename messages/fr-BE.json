@@ -130,7 +130,7 @@
       },
       "mockup": {
         "eyebrow": "Aperçu cockpit",
-        "browserUrl": "app.ankora.be · cockpit",
+        "browserUrl": "Ankora · cockpit",
         "kpis": {
           "netRemaining": { "label": "Net restant", "sub": "avril · après provisions" },
           "provisions": { "label": "Provisions", "sub": "67 % des 2 480 € planifiés" },
@@ -165,11 +165,11 @@
       "ctaPrimary": "Voir un exemple",
       "ctaSecondary": "Comment ça marche ?",
       "bars": {
-        "salary": "Salaire",
+        "salary": "Revenus",
         "provisions": "Provisions",
-        "life": "Vie",
+        "life": "Dépenses courantes",
         "reserve": "Réserve",
-        "remaining": "Reste"
+        "remaining": "Argent disponible"
       }
     },
     "whatif": {

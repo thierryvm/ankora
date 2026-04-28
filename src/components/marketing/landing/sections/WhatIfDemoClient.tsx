@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 import { Check, Sparkles, TrendingUp } from '@/components/marketing/landing/icons';
 import { Eyebrow } from '@/components/ui/eyebrow';
@@ -54,6 +54,10 @@ const FLEX_BASELINE = H - P * 2 - 12;
  */
 export function WhatIfDemoClient() {
   const t = useTranslations('landing.whatif');
+  // Pull the active locale so number formatting (slider value, annual KPI,
+  // SVG edge labels) follows the user's chosen language. Hardcoding `fr-BE`
+  // would mismatch the rest of the UI on EN / NL / DE / ES.
+  const locale = useLocale();
 
   const [scenarioId, setScenarioId] = useState<WhatIfScenarioId>('gsm');
   // `find` is safe — scenarioId is constrained to keys that always exist.
@@ -96,8 +100,10 @@ export function WhatIfDemoClient() {
     return { x: P, y: PLOT_TOP, width: W - P * 2, height: Math.max(0, yAt200 - PLOT_TOP) };
   };
 
-  const formatNumber = (n: number) =>
-    n > 0 ? `+${n.toLocaleString('fr-BE')}` : n.toLocaleString('fr-BE');
+  const formatNumber = (n: number) => {
+    const formatted = n.toLocaleString(locale);
+    return n > 0 ? `+${formatted}` : formatted;
+  };
   const formatEur = (n: number) => `${formatNumber(n)} €`;
 
   return (
@@ -332,7 +338,7 @@ export function WhatIfDemoClient() {
                       textAnchor={i === 0 ? 'start' : 'end'}
                       style={{ fontVariantNumeric: 'tabular-nums' }}
                     >
-                      {v.toLocaleString('fr-BE')} €
+                      {v.toLocaleString(locale)} €
                     </text>
                   )}
                 </g>

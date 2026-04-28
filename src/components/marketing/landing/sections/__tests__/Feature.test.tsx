@@ -69,7 +69,7 @@ describe('<Feature />', () => {
     expect(rects.length).toBe(WATERFALL_BARS.length);
   });
 
-  it('renders one localised bar label per bar (Salaire, Provisions, Vie, Réserve, Reste)', async () => {
+  it('renders one localised bar label per bar (Revenus, Provisions, Dépenses courantes, Réserve, Argent disponible)', async () => {
     const { container } = await renderFeature();
     const labels = container.querySelectorAll('svg text');
     // 5 value labels (top of bar) + 5 axis labels (below) = 10 text nodes

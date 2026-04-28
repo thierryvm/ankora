@@ -130,7 +130,7 @@
       },
       "mockup": {
         "eyebrow": "Cockpit preview",
-        "browserUrl": "app.ankora.be · cockpit",
+        "browserUrl": "Ankora · cockpit",
         "kpis": {
           "netRemaining": { "label": "Net remaining", "sub": "April · after provisions" },
           "provisions": { "label": "Provisions", "sub": "67% of €2,480 planned" },
