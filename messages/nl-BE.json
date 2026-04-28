@@ -136,6 +136,16 @@
           "provisions": { "label": "Provisions", "sub": "67 % des 2 480 € planifiés" },
           "reserve": { "label": "Réserve", "sub": "+120 € vs. mars" }
         }
+      },
+      "waterfall": {
+        "income": "Revenus",
+        "incomeAmount": "+2 466 €",
+        "expenses": "Dépenses courantes",
+        "expensesAmount": "−1 959 €",
+        "provisionsCaption": "dont {amount} € lissés vers provisions affectées",
+        "available": "Argent disponible",
+        "availableAmount": "+507 €",
+        "ariaLabel": "Cascade illustrative : 2 466 € de revenus, 1 959 € de dépenses courantes (dont 59 € lissés en provisions), 507 € disponibles."
       }
     },
     "principles": {
@@ -161,16 +171,9 @@
       "eyebrow": "Cashflow waterfall",
       "h3Line1": "Du salaire au net disponible.",
       "h3Line2": "En un seul coup d'œil.",
-      "description": "Plus de mystère sur où va ton argent. Chaque étape est visible : salaire, provisions affectées, vie courante, réserve. Tu vois immédiatement si un poste dérape.",
+      "description": "Plus de mystère sur où va ton argent. Chaque étape est visible : revenus, dépenses courantes, argent disponible. Tu vois immédiatement si un poste dérape.",
       "ctaPrimary": "Voir un exemple",
-      "ctaSecondary": "Comment ça marche ?",
-      "bars": {
-        "salary": "Salaire",
-        "provisions": "Provisions",
-        "life": "Vie",
-        "reserve": "Réserve",
-        "remaining": "Reste"
-      }
+      "ctaSecondary": "Comment ça marche ?"
     },
     "whatif": {
       "title": "Et si tu changeais une seule chose ?",

@@ -1,38 +1,84 @@
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 
 import { Button } from '@/components/ui/button';
 import { Eyebrow } from '@/components/ui/eyebrow';
+import { Num } from '@/components/ui/num';
 import { Link } from '@/i18n/navigation';
 
-import { WATERFALL_BARS } from '../constants';
+import { HERO_WATERFALL_DEMO } from '../constants';
 import { ArrowRight } from '../icons';
 
 /**
- * Feature — Cashflow waterfall surface highlight.
+ * Inline SVG used as connector between successive waterfall steps.
+ * Decorative — always rendered with `aria-hidden="true"` and no text content.
+ * Lifted out of `<Feature>` so React tree-shaking can pick it up and to
+ * keep the parent function pure (`react/no-unstable-nested-components`).
+ */
+function WaterfallArrowConnector() {
+  return (
+    <svg
+      aria-hidden="true"
+      width="14"
+      height="20"
+      viewBox="0 0 14 20"
+      fill="none"
+      className="text-muted-foreground mx-auto"
+    >
+      <path
+        d="M7 0 L7 16 M2 11 L7 16 L12 11"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/**
+ * Feature — Cashflow waterfall surface highlight (3 canonical steps).
  *
- * Mirrors `Landing.jsx` cc-design `<Feature>` (lines 143-180):
- * - Outer card with subtle teal/laiton gradient background
- * - 2-column grid (md+): copy block on the left, SVG waterfall on the right
- * - Left: eyebrow accent + h3 split on 2 lines + paragraph + 2 CTAs
- * - Right: 5-bar SVG (salary, provisions, life, reserve, remaining) reading
- *   left→right as a budget breakdown. Bar colours come from
- *   `WATERFALL_BARS` constants (token classes — no hardcoded hex in JSX).
+ * 3 canonical steps per `docs/design/claude-design-brief.md` L95 + L250
+ * (*"salary → envelopes → expenses"*) and the coherence audit at
+ * `Athenaeum/10_Projects/ankora/analysis/2026-04-28-waterfall-coherence-audit.md`.
+ * See `cowork-handoffs/2026-04-28-2345-pr-3c-4-hero-waterfall-3steps.md`
+ * for the full spec — this PR (PR-3c-4) realigned the waterfall away from
+ * the cc-design 5-step mockup which over-represented provisions as a
+ * primary siphon.
  *
- * Each `<rect>` uses `currentColor` for fill, with the colour set by the
- * Tailwind `fill-*` token class on the rect itself (Tailwind 4 emits
- * `fill-brand-400`, `fill-accent-400`, etc. from the `@theme` block). The
- * value labels above the bars use the matching `text-*` class so the colour
- * stays in sync if the palette ever moves.
+ * Layout:
+ * - LEFT: copy block (eyebrow accent, h3 split on 2 lines, paragraph, CTAs)
+ * - RIGHT: 3-step ordered list (Revenus → Dépenses courantes → Argent
+ *   disponible) with token-coloured amounts. Connector arrows live INSIDE
+ *   the second and third `<li>` (above the step content) so the `<ol>`
+ *   contains exactly 3 list items — screen readers announce a 3-item
+ *   ordered sequence (not 5). The expenses step also carries a discreet
+ *   sub-caption ("dont 59 € lissés vers provisions affectées") that
+ *   surfaces the provisioning mechanism without elevating it to a
+ *   standalone step.
+ *
+ * Numbers come from `HERO_WATERFALL_DEMO` (anchored on a real anonymised
+ * user case — 2 466 € income, 1 959 € expenses, 507 € available). The
+ * displayed strings are pre-formatted per-locale in the i18n bundles.
+ *
+ * Accessibility:
+ * - The waterfall is wrapped in a `<figure>` with an `aria-label` that
+ *   reads the full cascade in plain language for assistive tech.
+ * - The step list uses `<ol>` so screen readers announce a 3-item
+ *   ordered sequence. Connector arrows are pure SVG decorations marked
+ *   `aria-hidden="true"` and live inside their step's `<li>`.
+ * - Token-driven colours (`text-success`, `text-danger`, `text-brand-text-strong`)
+ *   guarantee AA/AAA contrast across light + dark + admin accent flips.
  */
 export async function Feature() {
   const t = await getTranslations('landing.feature');
+  const tWaterfall = await getTranslations('landing.hero.waterfall');
+  const locale = await getLocale();
 
-  // SVG geometry — matches cc-design viewBox 0 0 400 200. Bar x-positions and
-  // heights come from `WATERFALL_BARS` constants; only width / baseline /
-  // label offset are tied to the layout itself.
-  const BAR_WIDTH = 46;
-  const BASELINE_Y = 180;
-  const TEXT_LABEL_OFFSET = 5; // gap between top of bar and its value label
+  // Locale-aware formatter for the provisions sub-amount, which is the
+  // one figure rendered dynamically (the three step amounts come straight
+  // from i18n strings so designers can tweak punctuation per locale).
+  const provisions = HERO_WATERFALL_DEMO.provisions.toLocaleString(locale);
 
   return (
     <section
@@ -68,52 +114,51 @@ export async function Feature() {
           </div>
         </div>
 
-        {/* RIGHT: SVG waterfall (a11y: <title> on the <svg> is the single
-            source of label — no redundant aria-label on the <figure>). */}
-        <figure className="border-border bg-card/50 rounded-2xl border p-5">
-          <svg viewBox="0 0 400 200" className="block h-auto w-full" role="img">
-            <title>{t('eyebrow')}</title>
-            {WATERFALL_BARS.map((bar) => {
-              const y = BASELINE_Y - bar.height;
-              return (
-                <g key={bar.key}>
-                  <rect
-                    x={bar.x}
-                    y={y}
-                    width={BAR_WIDTH}
-                    height={bar.height}
-                    rx="4"
-                    fillOpacity="0.85"
-                    className={bar.fillClass}
-                  />
-                  <text
-                    x={bar.x + BAR_WIDTH / 2}
-                    y={y - TEXT_LABEL_OFFSET}
-                    textAnchor="middle"
-                    fontSize="10"
-                    fontWeight="600"
-                    fontFamily="JetBrains Mono, monospace"
-                    className={bar.textClass}
-                    fill="currentColor"
-                  >
-                    {bar.display}
-                  </text>
-                  <text
-                    x={bar.x + BAR_WIDTH / 2}
-                    y={195}
-                    textAnchor="middle"
-                    fontSize="9"
-                    fontWeight="500"
-                    fontFamily="Inter, sans-serif"
-                    className="text-muted-foreground"
-                    fill="currentColor"
-                  >
-                    {t(`bars.${bar.key}`)}
-                  </text>
-                </g>
-              );
-            })}
-          </svg>
+        {/* RIGHT: 3-step waterfall */}
+        <figure
+          aria-label={tWaterfall('ariaLabel')}
+          className="border-border bg-card/50 rounded-2xl border p-5"
+        >
+          <ol className="grid gap-0">
+            {/* Step 1 — Income */}
+            <li className="border-border bg-card/60 flex items-center justify-between rounded-xl border p-4">
+              <span className="text-foreground text-sm font-medium">{tWaterfall('income')}</span>
+              <Num size="md" className="text-success font-semibold">
+                {tWaterfall('incomeAmount')}
+              </Num>
+            </li>
+
+            {/* Step 2 — Expenses + provisions caption (arrow connector at top) */}
+            <li className="grid gap-2">
+              <WaterfallArrowConnector />
+              <div className="border-border bg-card/60 grid gap-1.5 rounded-xl border p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-foreground text-sm font-medium">
+                    {tWaterfall('expenses')}
+                  </span>
+                  <Num size="md" className="text-danger font-semibold">
+                    {tWaterfall('expensesAmount')}
+                  </Num>
+                </div>
+                <p className="text-muted-foreground pl-3 font-mono text-xs tabular-nums">
+                  {tWaterfall('provisionsCaption', { amount: provisions })}
+                </p>
+              </div>
+            </li>
+
+            {/* Step 3 — Available (arrow connector at top) */}
+            <li className="grid gap-2">
+              <WaterfallArrowConnector />
+              <div className="border-brand-surface-border bg-brand-surface flex items-center justify-between rounded-xl border p-4">
+                <span className="text-foreground text-sm font-medium">
+                  {tWaterfall('available')}
+                </span>
+                <Num size="md" tone="accent" className="font-semibold">
+                  {tWaterfall('availableAmount')}
+                </Num>
+              </div>
+            </li>
+          </ol>
         </figure>
       </div>
     </section>

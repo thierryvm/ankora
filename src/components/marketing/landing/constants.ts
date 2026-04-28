@@ -2,19 +2,24 @@
  * Illustrative figures for the public landing.
  *
  * These numbers are NOT real user data — they're the showroom KPIs and
- * waterfall bars copied 1:1 from the cc-design `Landing.jsx` mockup
- * (`design-exports/unpacked-v1/.../landing_page/Landing.jsx`).
+ * waterfall steps used in the Hero/Feature sections. Hero KPIs come from
+ * the cc-design `Landing.jsx` mockup. The hero waterfall steps were
+ * realigned in PR-3c-4 to the 3-canonical-step model (Revenus → Dépenses
+ * courantes → Argent disponible) per `docs/design/claude-design-brief.md`
+ * L95 + L250 and the audit at
+ * `Athenaeum/10_Projects/ankora/analysis/2026-04-28-waterfall-coherence-audit.md`.
  *
- * They are not translatable: amounts use the international `1 660` format
- * (NBSP separator) and stay identical across locales. Only the labels
- * (`netRemaining`, `provisions`, `reserve`, `salary`, etc.) are i18n keys
- * read in the section components.
+ * Numbers are anchored on a real anonymised user case (~2 466 € income,
+ * ~1 959 € expenses, ~59 € provision smoothing, ~507 € available) so the
+ * landing visualises a coherent monthly cashflow rather than the original
+ * cc-design 5-step mockup that over-represented provisions as a 980 €
+ * siphon.
  *
- * Colour tokens use the shared design-system palette so the `[data-theme]`
- * and `[data-accent]` flips remap them consistently. Where a hex from the
- * mockup has no exact token equivalent, we picked the nearest semantic
- * token and noted the substitution — see Hero/Feature sections in PR-3c-2
- * report for the audit.
+ * Localisation: amounts are pre-formatted per locale in the i18n bundles
+ * (`messages/{locale}.json` under `landing.hero.waterfall.*` and
+ * `landing.hero.kpis.*`), with NBSP separators kept for fr-BE only — see
+ * Sourcery #1 / PR #82 pattern. The numeric constants below remain the
+ * source of truth for tests and any future computation.
  */
 
 export type HeroKpi = {
@@ -46,68 +51,31 @@ export const HERO_KPIS: readonly HeroKpi[] = [
   { key: 'reserve', display: '614 €', toneClass: 'text-brand-text-strong' },
 ];
 
-export type WaterfallBar = {
-  /** i18n key under `landing.feature.bars.{key}`. */
-  key: 'salary' | 'provisions' | 'life' | 'reserve' | 'remaining';
-  /** SVG x-coordinate (viewBox 0..400). */
-  x: number;
-  /** Bar height in SVG units (max 160 = full height). */
-  height: number;
-  /** Pre-formatted display value (NBSP separator, sign, no currency). */
-  display: string;
-  /** Tailwind fill class for the SVG `<rect>`. */
-  fillClass: string;
-  /** Tailwind text class for the value label sitting above the bar. */
-  textClass: string;
-};
-
-export const WATERFALL_BARS: readonly WaterfallBar[] = [
-  // #2dd4bf brand-400 (teal vif).
-  {
-    key: 'salary',
-    x: 20,
-    height: 160,
-    display: '+3 200',
-    fillClass: 'fill-brand-400',
-    textClass: 'text-brand-400',
-  },
-  // #d4a017 accent-400 (laiton).
-  {
-    key: 'provisions',
-    x: 100,
-    height: 50,
-    display: '−980',
-    fillClass: 'fill-accent-400',
-    textClass: 'text-accent-400',
-  },
-  // #38bdf8 → token --color-info (#0284c7, slightly darker).
-  {
-    key: 'life',
-    x: 180,
-    height: 70,
-    display: '−1 420',
-    fillClass: 'fill-info',
-    textClass: 'text-info',
-  },
-  // #5eead4 brand-300 (teal-300).
-  {
-    key: 'reserve',
-    x: 260,
-    height: 16,
-    display: '−320',
-    fillClass: 'fill-brand-300',
-    textClass: 'text-brand-300',
-  },
-  // #34d399 → token text-success (slightly darker, see HERO_KPIS netRemaining note).
-  {
-    key: 'remaining',
-    x: 340,
-    height: 24,
-    display: '+480',
-    fillClass: 'fill-success',
-    textClass: 'text-success',
-  },
-];
+/**
+ * Hero waterfall — 3-step canonical cashflow (PR-3c-4).
+ *
+ * Replaces the previous 5-step mockup (`WATERFALL_BARS` removed) which
+ * incorrectly mixed transfers (Provisions, Réserve) with real outflows
+ * (Dépenses courantes) and over-represented provisions as a primary
+ * siphon. The 3-step model matches `claude-design-brief.md` L95 + L250
+ * (*"salary → envelopes → expenses"*) and the audit verdict at
+ * `Athenaeum/10_Projects/ankora/analysis/2026-04-28-waterfall-coherence-audit.md`.
+ *
+ * `provisions` is rendered as a discreet sub-caption under the expenses
+ * step ("dont 59 € lissés vers provisions affectées"), not as a standalone
+ * step. The `available` figure is the visible bottom-line user takeaway
+ * and equals `income − expenses` by construction.
+ */
+export const HERO_WATERFALL_DEMO = {
+  /** Monthly income (illustrative, anchored on real anonymised user data). */
+  income: 2466,
+  /** Daily expenses incl. fixed bills + subscriptions + provision smoothing. */
+  expenses: 1959,
+  /** Discreet sub-segment of expenses smoothed into earmarked provisions. */
+  provisions: 59,
+  /** Bottom-line money available after expenses (= income − expenses). */
+  available: 507,
+} as const;
 
 /**
  * Hero sparkline — pre-baked SVG path from cc-design `Landing.jsx` line 101-102.
