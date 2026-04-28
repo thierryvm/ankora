@@ -153,7 +153,12 @@ export async function Feature() {
                 <span className="text-foreground text-sm font-medium">
                   {tWaterfall('available')}
                 </span>
-                <Num size="md" tone="accent" className="font-semibold">
+                {/* All three step amounts use the same `<Num size>` + token-coloured
+                    className pattern (`text-success`, `text-danger`, `text-brand-text-strong`)
+                    so the visual semantic stays in sync across the cascade. The
+                    `<Num tone>` prop only covers `default` / `accent` — success / danger
+                    do not have prop equivalents, hence the className alignment. */}
+                <Num size="md" className="text-brand-text-strong font-semibold">
                   {tWaterfall('availableAmount')}
                 </Num>
               </div>
