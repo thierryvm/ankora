@@ -130,7 +130,7 @@
       },
       "mockup": {
         "eyebrow": "Aperçu cockpit",
-        "browserUrl": "app.ankora.be · cockpit",
+        "browserUrl": "Ankora · cockpit",
         "kpis": {
           "netRemaining": { "label": "Net restant", "sub": "avril · après provisions" },
           "provisions": { "label": "Provisions", "sub": "67 % des 2 480 € planifiés" },
@@ -165,12 +165,63 @@
       "ctaPrimary": "Voir un exemple",
       "ctaSecondary": "Comment ça marche ?",
       "bars": {
-        "salary": "Salaire",
+        "salary": "Revenus",
         "provisions": "Provisions",
-        "life": "Vie",
+        "life": "Dépenses courantes",
         "reserve": "Réserve",
-        "remaining": "Reste"
+        "remaining": "Argent disponible"
       }
+    },
+    "whatif": {
+      "title": "Et si tu changeais une seule chose ?",
+      "subtitle": "Bouge le curseur. Vois l'impact sur ta réserve libre, sur six mois. C'est ce que fait Ankora à chaque décision financière.",
+      "badge": "Démo · pas de compte requis",
+      "scenarios": {
+        "gsm": {
+          "label": "Renégocier mon GSM",
+          "hint": "Forfait actuel : 42 €/mois · marché : 18–28 €/mois"
+        },
+        "elec": {
+          "label": "Changer de fournisseur d'électricité",
+          "hint": "Conso actuelle : 168 €/mois · 3 offres moins chères dans ta zone"
+        },
+        "stream": {
+          "label": "Couper deux streamings",
+          "hint": "5 abonnements actifs · usage réel : 2 sur 30 jours"
+        }
+      },
+      "controls": {
+        "scenario": "Scénario",
+        "savings": "Économie mensuelle",
+        "slider_aria": "Économie mensuelle pour {label}"
+      },
+      "annual": {
+        "eyebrow": "Sur 12 mois",
+        "fleche": "Ankora pourrait flécher {amount} €/mois vers ton épargne longue."
+      },
+      "chart": {
+        "title": "Réserve libre · projection",
+        "subtitle": "6 mois à partir d'aujourd'hui",
+        "legend": {
+          "baseline": "Sans changement",
+          "scenario": "Avec ton choix"
+        },
+        "aria": "Graphique projection sur 6 mois de la réserve libre, avec et sans le changement choisi",
+        "months": {
+          "may": "mai",
+          "jun": "juin",
+          "jul": "juil",
+          "aug": "août",
+          "sep": "sept",
+          "oct": "oct"
+        },
+        "thresholds": {
+          "danger": "⚠️ Découvert estimé",
+          "fragile": "Zone fragile",
+          "comfortable": "Zone confortable"
+        }
+      },
+      "caveat": "Démo basée sur des hypothèses moyennes. Ankora ne fournit pas de conseil en placement. Aucun import bancaire — tu saisis tes charges manuellement."
     },
     "pricing": {
       "eyebrow": "Transparent dès le départ",

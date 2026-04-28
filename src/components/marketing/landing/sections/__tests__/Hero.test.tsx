@@ -123,7 +123,7 @@ describe('<Hero />', () => {
 
   it('renders the browser-chrome URL eyebrow next to the dots', async () => {
     await renderHero();
-    expect(screen.getByText('app.ankora.be · cockpit')).toBeInTheDocument();
+    expect(screen.getByText('Ankora · cockpit')).toBeInTheDocument();
   });
 
   it('renders KPIs inside an unordered list for assistive tech', async () => {
