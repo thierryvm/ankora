@@ -136,6 +136,16 @@
           "provisions": { "label": "Provisions", "sub": "67% of €2,480 planned" },
           "reserve": { "label": "Reserve", "sub": "+€120 vs. March" }
         }
+      },
+      "waterfall": {
+        "income": "Income",
+        "incomeAmount": "+2,466 €",
+        "expenses": "Daily expenses",
+        "expensesAmount": "−1,959 €",
+        "provisionsCaption": "of which {amount} € smoothed into earmarked provisions",
+        "available": "Available money",
+        "availableAmount": "+507 €",
+        "ariaLabel": "Illustrative cascade: 2,466 € income, 1,959 € daily expenses (of which 59 € smoothed into provisions), 507 € available."
       }
     },
     "principles": {
@@ -161,16 +171,9 @@
       "eyebrow": "Cashflow waterfall",
       "h3Line1": "From salary to net available.",
       "h3Line2": "At a single glance.",
-      "description": "No more mystery about where your money goes. Every step is visible: salary, earmarked provisions, daily life, reserve. You see immediately if anything drifts.",
+      "description": "No more mystery about where your money goes. Every step is visible: income, daily expenses, available money. You see immediately if anything drifts.",
       "ctaPrimary": "See an example",
-      "ctaSecondary": "How does it work?",
-      "bars": {
-        "salary": "Salary",
-        "provisions": "Provisions",
-        "life": "Life",
-        "reserve": "Reserve",
-        "remaining": "Remaining"
-      }
+      "ctaSecondary": "How does it work?"
     },
     "whatif": {
       "title": "What if you changed one thing?",
