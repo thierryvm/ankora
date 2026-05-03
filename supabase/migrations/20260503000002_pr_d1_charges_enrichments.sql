@@ -27,8 +27,10 @@ alter table public.charges
 
 -- -------------------------------------------------------------------------
 -- 2. Constraint: every entry of payment_months must be in 1..12
---    Postgres has no native check on array elements, so we use a CHECK
---    expression that asserts MIN >= 1 AND MAX <= 12 over the array.
+--    Postgres interdit les subqueries dans les CHECK constraints (SQLSTATE 0A000),
+--    on utilise donc l'opérateur `<@` (contained by) qui est immutable et
+--    accepté en CHECK : tous les éléments du tableau doivent être dans
+--    l'ensemble [1,2,...,12].
 -- -------------------------------------------------------------------------
 do $$
 begin
@@ -42,7 +44,7 @@ begin
         array_length(payment_months, 1) is null
         or (
           array_length(payment_months, 1) between 1 and 12
-          and (select bool_and(m between 1 and 12) from unnest(payment_months) as m)
+          and payment_months <@ array[1,2,3,4,5,6,7,8,9,10,11,12]::smallint[]
         )
       );
   end if;
