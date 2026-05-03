@@ -35,21 +35,27 @@ export type Database = {
     Tables: {
       accounts: {
         Row: {
+          account_type: string;
           balance: number;
+          display_name: string;
           kind: string;
           label: string;
           updated_at: string;
           workspace_id: string;
         };
         Insert: {
+          account_type: string;
           balance?: number;
+          display_name: string;
           kind: string;
           label: string;
           updated_at?: string;
           workspace_id: string;
         };
         Update: {
+          account_type?: string;
           balance?: number;
+          display_name?: string;
           kind?: string;
           label?: string;
           updated_at?: string;
@@ -116,30 +122,36 @@ export type Database = {
       categories: {
         Row: {
           color: string | null;
+          color_token: string;
           created_at: string;
           created_by: string;
           icon: string | null;
           id: string;
+          is_system: boolean;
           kind: string;
           name: string;
           workspace_id: string;
         };
         Insert: {
           color?: string | null;
+          color_token?: string;
           created_at?: string;
           created_by: string;
           icon?: string | null;
           id?: string;
+          is_system?: boolean;
           kind: string;
           name: string;
           workspace_id: string;
         };
         Update: {
           color?: string | null;
+          color_token?: string;
           created_at?: string;
           created_by?: string;
           icon?: string | null;
           id?: string;
+          is_system?: boolean;
           kind?: string;
           name?: string;
           workspace_id?: string;
@@ -161,6 +173,70 @@ export type Database = {
           },
         ];
       };
+      charge_payments: {
+        Row: {
+          bucket_id: string | null;
+          charge_id: string;
+          created_at: string;
+          created_by: string;
+          id: string;
+          note: string | null;
+          paid_amount: number;
+          paid_at: string;
+          period_month: number;
+          period_year: number;
+          workspace_id: string;
+        };
+        Insert: {
+          bucket_id?: string | null;
+          charge_id: string;
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          note?: string | null;
+          paid_amount: number;
+          paid_at?: string;
+          period_month: number;
+          period_year: number;
+          workspace_id: string;
+        };
+        Update: {
+          bucket_id?: string | null;
+          charge_id?: string;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          note?: string | null;
+          paid_amount?: number;
+          paid_at?: string;
+          period_month?: number;
+          period_year?: number;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'charge_payments_charge_id_fkey';
+            columns: ['charge_id'];
+            isOneToOne: false;
+            referencedRelation: 'charges';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'charge_payments_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'charge_payments_workspace_id_fkey';
+            columns: ['workspace_id'];
+            isOneToOne: false;
+            referencedRelation: 'workspaces';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       charges: {
         Row: {
           amount: number;
@@ -174,6 +250,9 @@ export type Database = {
           label: string;
           notes: string | null;
           paid_from: string;
+          payment_day: number;
+          payment_months: number[];
+          sort_order: number;
           updated_at: string;
           workspace_id: string;
         };
@@ -189,6 +268,9 @@ export type Database = {
           label: string;
           notes?: string | null;
           paid_from?: string;
+          payment_day?: number;
+          payment_months?: number[];
+          sort_order?: number;
           updated_at?: string;
           workspace_id: string;
         };
@@ -204,6 +286,9 @@ export type Database = {
           label?: string;
           notes?: string | null;
           paid_from?: string;
+          payment_day?: number;
+          payment_months?: number[];
+          sort_order?: number;
           updated_at?: string;
           workspace_id?: string;
         };
