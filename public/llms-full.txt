@@ -1,6 +1,6 @@
 # ankora.be — Full content export for LLMs
 
-Last generated: 2026-04-28
+Last generated: 2026-05-03
 Canonical URL: https://ankora.be
 License: content available for citation with attribution. Code is proprietary.
 
@@ -26,6 +26,7 @@ Ankora is built and operated in Belgium by a solo indie developer. The app delib
 
 ## Core concepts
 
+- [Cashflow waterfall](https://ankora.be/): three canonical steps — income → daily expenses → available money. Earmarked provisions are surfaced as a discreet sub-caption under expenses (smoothing mechanism), not as a standalone step.
 - [Smoothed budget](https://ankora.be/glossaire/budget-de-lissage): converting irregular annual charges into monthly contributions
 - [Bucket account](https://ankora.be/glossaire/compte-bucket): sub-savings-account earmarked for a specific goal
 - [Saving capacity](https://ankora.be/glossaire/capacite-d-epargne): maximum structural savings without cutting into baseline standard of living

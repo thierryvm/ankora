@@ -1,1024 +1,1068 @@
 {
   "common": {
-  "appName": "Ankora",
-  "tagline": "Your financial anchor",
-  "description": "Ankora helps you smooth your bills, anticipate every invoice and stay in control of your budget. A clear, secure cockpit — no investment advice.",
-  "homeAria": "Ankora home",
-  "a11y": {
-    "skipToMain": "Skip to main content"
-  },
-  "nav": {
-    "mainLabel": "Main navigation",
-    "appLabel": "App navigation",
-    "mobileLabel": "Mobile navigation",
-    "footerLabel": "Footer",
-    "menu": "Menu",
-    "close": "Close",
-    "lightMode": "Light mode",
-    "darkMode": "Dark mode",
-    "features": "Features",
-    "faq": "FAQ",
-    "login": "Log in",
-    "signup": "Sign up",
-    "myCockpit": "My cockpit",
-    "dashboard": "Dashboard",
-    "accounts": "Accounts",
-    "charges": "Bills",
-    "settings": "Settings"
-  },
-  "actions": {
-    "retry": "Retry",
-    "back": "Back"
-  },
-  "months": {
-    "1": "January",
-    "2": "February",
-    "3": "March",
-    "4": "April",
-    "5": "May",
-    "6": "June",
-    "7": "July",
-    "8": "August",
-    "9": "September",
-    "10": "October",
-    "11": "November",
-    "12": "December"
-  },
-  "monthsShort": {
-    "1": "Jan",
-    "2": "Feb",
-    "3": "Mar",
-    "4": "Apr",
-    "5": "May",
-    "6": "Jun",
-    "7": "Jul",
-    "8": "Aug",
-    "9": "Sep",
-    "10": "Oct",
-    "11": "Nov",
-    "12": "Dec"
-  },
-  "frequency": {
-    "monthly": "Monthly",
-    "quarterly": "Quarterly",
-    "semiannual": "Semi-annual",
-    "annual": "Annual"
-  }
-  },
-  "ui": {
-  "scrollToTop": "Scroll back to top",
-  "localeSwitcher": {
-    "label": "Language",
-    "aria": "Change language",
-    "options": {
-    "fr-BE": "Français (BE)",
-    "nl-BE": "Nederlands (BE)",
-    "en": "English",
-    "es-ES": "Español",
-    "de-DE": "Deutsch"
-    }
-  },
-  "action": {
-    "submit": "Confirm",
-    "submitting": "Confirming…",
-    "save": "Save",
-    "saving": "Saving…",
-    "cancel": "Cancel",
-    "cancelling": "Cancelling…",
-    "delete": "Delete",
-    "deleting": "Deleting…",
-    "create": "Create",
-    "creating": "Creating…",
-    "update": "Update",
-    "updating": "Updating…",
-    "send": "Send",
-    "sending": "Sending…",
-    "verify": "Verify",
-    "verifying": "Verifying…",
-    "generate": "Generate",
-    "generating": "Generating…",
-    "download": "Download",
-    "downloading": "Downloading…",
-    "preparing": "Preparing…",
-    "confirm": "Confirm",
-    "close": "Close"
-  }
-  },
-  "landing": {
-  "mktnav": {
-    "links": {
-    "product": "Product",
-    "simulator": "Simulator",
-    "pricing": "Pricing",
-    "security": "Security",
-    "journal": "Journal"
+    "appName": "Ankora",
+    "tagline": "Your financial anchor",
+    "description": "Ankora helps you smooth your bills, anticipate every invoice and stay in control of your budget. A clear, secure cockpit — no investment advice.",
+    "homeAria": "Ankora home",
+    "a11y": {
+      "skipToMain": "Skip to main content"
     },
-    "ctaLogin": "Log in",
-    "ctaSignup": "Try for free"
-  },
-  "hero": {
-    "badge": "New · What-if simulator",
-    "h1Lead": "Your financial",
-    "h1Highlight": "anchor.",
-    "description": "Ankora separates your earmarked provisions from your free reserve, projects six months ahead, and lets you simulate the impact of every decision — clearly, without jargon.",
-    "ctaPrimary": "Open my cockpit",
-    "ctaSecondary": "See the simulator",
-    "trust": {
-    "encrypted": "Data encrypted in Belgium",
-    "noSale": "No data selling",
-    "languages": "FR · NL · EN"
+    "nav": {
+      "mainLabel": "Main navigation",
+      "appLabel": "App navigation",
+      "mobileLabel": "Mobile navigation",
+      "footerLabel": "Footer",
+      "menu": "Menu",
+      "close": "Close",
+      "lightMode": "Light mode",
+      "darkMode": "Dark mode",
+      "features": "Features",
+      "faq": "FAQ",
+      "login": "Log in",
+      "signup": "Sign up",
+      "myCockpit": "My cockpit",
+      "dashboard": "Dashboard",
+      "accounts": "Accounts",
+      "charges": "Bills",
+      "settings": "Settings"
     },
-    "mockup": {
-    "eyebrow": "Cockpit preview",
-    "browserUrl": "Ankora · cockpit",
-    "kpis": {
-      "netRemaining": {
-      "label": "Net remaining",
-      "sub": "April · after provisions"
-      },
-      "provisions": {
-      "label": "Provisions",
-      "sub": "67% of €2,480 planned"
-      },
-      "reserve": {
-      "label": "Reserve",
-      "sub": "+€120 vs. March"
-      }
-    }
+    "actions": {
+      "retry": "Retry",
+      "back": "Back"
     },
-    "waterfall": {
-    "income": "Income",
-    "incomeAmount": "+2,466 €",
-    "expenses": "Daily expenses",
-    "expensesAmount": "−1,959 €",
-    "provisionsCaption": "of which {amount} € smoothed into earmarked provisions",
-    "available": "Available money",
-    "availableAmount": "+507 €",
-    "ariaLabel": "Illustrative cascade: 2,466 € income, 1,959 € daily expenses (of which 59 € smoothed into provisions), 507 € available."
-    }
-  },
-  "principles": {
-    "eyebrow": "Three principles",
-    "h2": "An honest way to talk about money.",
-    "description": "Ankora isn't trying to sell you an investment or a card. We separate, we project, we simulate. That's it. You alone decide.",
-    "items": {
-    "provisions": {
-      "title": "Earmarked provisions",
-      "description": "Every reserved euro has a name: insurance, road tax, boiler maintenance. Nothing slips away without you knowing."
-    },
-    "reserve": {
-      "title": "Free reserve",
-      "description": "What's actually yours, after commitments. The real number — not the illusion of a gross balance."
-    },
-    "whatIf": {
-      "title": "What-if simulator",
-      "description": "Renegotiate electricity? Switch provider? Ankora shows you the impact over 12 months before you decide."
-    }
-    }
-  },
-  "feature": {
-    "eyebrow": "Cashflow waterfall",
-    "h3Line1": "From salary to net available.",
-    "h3Line2": "At a single glance.",
-    "description": "No more mystery about where your money goes. Every step is visible: income, daily expenses, available money. You see immediately if anything drifts.",
-    "ctaPrimary": "See an example",
-    "ctaSecondary": "How does it work?"
-  },
-  "whatif": {
-    "title": "What if you changed one thing?",
-    "subtitle": "Move the slider. See the impact on your free reserve, over six months. That's what Ankora does for every financial decision.",
-    "badge": "Demo · no account needed",
-    "scenarios": {
-    "gsm": {
-      "label": "Renegotiate my mobile plan",
-      "hint": "Current plan: €42/month · market: €18–28/month"
-    },
-    "elec": {
-      "label": "Switch electricity provider",
-      "hint": "Current bill: €168/month · 3 cheaper offers in your area"
-    },
-    "stream": {
-      "label": "Cut two streaming subscriptions",
-      "hint": "5 active subscriptions · actual use: 2 over 30 days"
-    }
-    },
-    "controls": {
-    "scenario": "Scenario",
-    "savings": "Monthly savings",
-    "slider_aria": "Monthly savings for {label}"
-    },
-    "annual": {
-    "eyebrow": "Over 12 months",
-    "fleche": "Ankora could route {amount} €/month towards your long-term savings."
-    },
-    "chart": {
-    "title": "Free reserve · projection",
-    "subtitle": "6 months from today",
-    "legend": {
-      "baseline": "Without change",
-      "scenario": "With your choice"
-    },
-    "aria": "6-month projection chart of free reserve, with and without the chosen change",
     "months": {
-      "may": "May",
-      "jun": "Jun",
-      "jul": "Jul",
-      "aug": "Aug",
-      "sep": "Sep",
-      "oct": "Oct"
+      "1": "January",
+      "2": "February",
+      "3": "March",
+      "4": "April",
+      "5": "May",
+      "6": "June",
+      "7": "July",
+      "8": "August",
+      "9": "September",
+      "10": "October",
+      "11": "November",
+      "12": "December"
     },
-    "thresholds": {
-      "danger": "⚠️ Estimated overdraft",
-      "fragile": "Fragile zone",
-      "comfortable": "Comfortable zone"
-    }
-    },
-    "caveat": "Demo based on average assumptions. Ankora does not provide investment advice. No bank import — you enter your expenses manually."
-  },
-  "pricing": {
-    "eyebrow": "Transparent from the start",
-    "h2": "Free during Phase 1.",
-    "phaseBadge": "Phase 1 · building",
-    "price": "€0",
-    "period": "for now, with no end date",
-    "body": "We're building the cockpit first. No card asked, no time limit, no feature gating. GDPR export anytime.",
-    "features": {
-    "cockpit": "Full cockpit, provisions and free reserve",
-    "simulator": "Unlimited what-if simulator",
-    "manualEntry": "Manual entry · your data stays in Belgium",
-    "export": "GDPR export in one click"
-    },
-    "ctaPrimary": "Open my cockpit",
-    "roadmap": {
-    "title": "Joining Ankora during Phase 1?",
-    "body": "Your account keeps full lifetime access to the core cockpit, free. A Pro tier with advanced features (unlimited accounts, consolidated exports, priority support) will arrive post-v1.0 — you'll choose to upgrade or stay on your current plan.",
-    "link": "Read the roadmap →"
-    }
-  },
-  "footerCta": {
-    "h2Lead": "Start with what's",
-    "h2Highlight": "already yours.",
-    "description": "30-day trial, no card, GDPR export anytime. We keep it simple because it's already complicated enough.",
-    "ctaPrimary": "Open my cockpit"
-  },
-  "footer": {
-    "links": {
-    "terms": "Terms",
-    "privacy": "Privacy",
-    "security": "Security",
-    "contact": "Contact"
-    },
-    "copyright": "Ankora · Brussels-anchored editor · 2026"
-  },
-  "faqHeading": "Frequently asked questions",
-  "faq": {
-    "advice": {
-    "q": "Is Ankora a financial advice tool?",
-    "a": "No. Ankora is a budgeting and financial education tool. It does not provide investment recommendations or personalised financial advice."
-    },
-    "storage": {
-    "q": "Where is my data stored?",
-    "a": "Your data is hosted in the European Union (Supabase, EU region) with encryption at rest and strict per-user isolation via Row Level Security."
-    },
-    "sharing": {
-    "q": "Can I share my data?",
-    "a": "By default, your space is 100% private. Optional shared pockets (trips, joint projects) are coming in a future release — you'll explicitly choose what you share, and with whom."
-    }
-  }
-  },
-  "faq": {
-  "metaTitle": "FAQ",
-  "metaDescription": "Frequently asked questions about Ankora: security, data, how it works, privacy.",
-  "title": "Frequently asked questions",
-  "subtitle": "Everything you need to know about Ankora before getting started.",
-  "items": {
-    "bankConnection": {
-    "q": "Does Ankora connect to my bank?",
-    "a": "No. Ankora does not use the PSD2 directive. You enter your bills and expenses manually. This choice guarantees you remain the owner of your data and that no sensitive banking information is stored."
-    },
-    "dataLocation": {
-    "q": "Where is my data hosted?",
-    "a": "All your data is hosted in the European Union (Supabase EU region, Vercel EU region, Upstash EU). No data is transferred outside the EU."
-    },
-    "smoothing": {
-    "q": "How does smoothing work?",
-    "a": "Ankora takes your quarterly, semi-annual and annual bills and spreads them across 12 months. You know exactly how much to set aside each month to cover all your future bills, stress-free."
-    },
-    "deletion": {
-    "q": "Can I delete my account?",
-    "a": "Yes, at any time from Settings → Privacy. Deletion takes effect 30 days after your request (you can cancel during this period). All your financial data is wiped, security logs are pseudonymised."
-    },
-    "export": {
-    "q": "Can I export my data?",
-    "a": "Yes. The \"Download my data\" button in Settings gives you a complete JSON file of everything Ankora holds about you. Compliant with the GDPR right to portability (art. 20)."
-    },
-    "advice": {
-    "q": "Does Ankora provide financial advice?",
-    "a": "No. Ankora is a budgeting education and organisation tool. We do not issue any investment advice (FSMA Belgium regulatory constraint). For any investment decision, consult an authorised professional."
-    },
-    "ai": {
-    "q": "Is there any artificial intelligence?",
-    "a": "In Phase 1, no. Calculations are deterministic and auditable. In Phase 2, an optional BYOK (Bring Your Own Key) layer will let you connect your own Anthropic or OpenRouter key for suggestions — no extra cost on Ankora's side."
-    },
-    "sharing": {
-    "q": "Can I share my space with my children or friends?",
-    "a": "In Phase 1, each user has a private space, isolated by default. In Phase 2, we'll add the ability to create \"shared pockets\" (by invitation, with viewer/editor roles) without ever mixing your personal data."
-    }
-  }
-  },
-  "legal": {
-  "versionLine": "Version {version} — last updated: {date}",
-  "lastUpdatedLine": "Last updated: {date}",
-  "cgu": {
-    "metaTitle": "Terms of service",
-    "metaDescription": "Ankora's terms of service — rules for using the service.",
-    "title": "Terms of service",
-    "s1": {
-    "heading": "1. Purpose",
-    "body": "Ankora is a budgeting and financial education tool for individuals. It lets you manually enter your bills and expenses, smooth them across the year, and anticipate cash-flow needs."
-    },
-    "s2": {
-    "heading": "2. What Ankora is NOT",
-    "item1": "Ankora is <b>not an investment advisory service</b>.",
-    "item2": "Ankora is <b>not a banking service</b> and holds no funds.",
-    "item3": "Ankora is <b>not a PSD2 aggregator</b> — no connection to your bank accounts.",
-    "item4": "Ankora is <b>not professional accounting software</b>.",
-    "outro": "The information displayed consists of estimates based on your inputs. It does not constitute personalised financial advice. For any important decision, consult an authorised professional."
-    },
-    "s3": {
-    "heading": "3. Account",
-    "item1": "You must be of legal age or have authorisation from a legal representative.",
-    "item2": "One account per individual.",
-    "item3": "Password: minimum 12 characters, mixed case.",
-    "item4": "You are responsible for keeping your credentials confidential."
-    },
-    "s4": {
-    "heading": "4. Acceptable use",
-    "intro": "You agree not to:",
-    "item1": "use the service for illegal purposes,",
-    "item2": "attempt to circumvent security measures,",
-    "item3": "automate access without explicit authorisation,",
-    "item4": "share your account with a third party."
-    },
-    "s5": {
-    "heading": "5. Intellectual property",
-    "body": "You remain the owner of your data. Ankora retains ownership of its code, brand, design and documentation."
-    },
-    "s6": {
-    "heading": "6. Liability",
-    "body": "Ankora is provided \"as is\". The publisher cannot be held liable for financial decisions made on the basis of the information displayed. No 100% availability is guaranteed."
-    },
-    "s7": {
-    "heading": "7. Termination",
-    "body": "You can delete your account at any time from Settings → Privacy. Deletion takes effect 30 days after the request (cancellable during that period)."
-    },
-    "s8": {
-    "heading": "8. Governing law",
-    "body": "These terms are governed by Belgian law. Competent court: Brussels."
-    },
-    "draft": "Our terms of service are being drafted.",
-    "contact": "For any questions, contact us: thierryvm@gmail.com",
-    "backHome": "Back to home"
-  },
-  "privacy": {
-    "metaTitle": "Privacy policy",
-    "metaDescription": "Ankora's privacy policy — EU hosting, GDPR, user rights.",
-    "title": "Privacy policy",
-    "s1": {
-    "heading": "1. Data controller",
-    "body": "Ankora, published by Thierry Van Mele (Belgium). Contact: <mail>thierryvm@gmail.com</mail>."
-    },
-    "s2": {
-    "heading": "2. Data collected",
-    "intro": "Ankora collects only the data strictly necessary to provide the service:",
-    "item1": "<b>Identity</b>: email address, display name (optional).",
-    "item2": "<b>Financial data you enter</b>: bills, expenses, categories, declared income, savings balance.",
-    "item3": "<b>Technical data</b>: IP address, user-agent (for security logs only).",
-    "item4": "<b>Consents</b>: timestamp, version, scope (terms, privacy, cookies).",
-    "outro": "Ankora does not connect to any bank (no PSD2 aggregation). You enter your bills and expenses yourself."
-    },
-    "s3": {
-    "heading": "3. Legal bases (GDPR art. 6)",
-    "item1": "<b>Contract</b>: providing the service (account, financial data).",
-    "item2": "<b>Consent</b>: analytics/marketing cookies, newsletter.",
-    "item3": "<b>Legal obligation</b>: security logs (12-month retention).",
-    "item4": "<b>Legitimate interest</b>: fraud prevention, security maintenance."
-    },
-    "s4": {
-    "heading": "4. Hosting and subprocessors",
-    "item1": "<b>Supabase</b> (database, auth) — EU region (Frankfurt or Paris).",
-    "item2": "<b>Vercel</b> (frontend hosting) — EU region (Dublin).",
-    "item3": "<b>Upstash</b> (rate limiting) — EU region.",
-    "outro": "No data is transferred outside the EU/EEA."
-    },
-    "s5": {
-    "heading": "5. Retention period",
-    "item1": "Active account: for as long as you use the service.",
-    "item2": "Deleted account: deletion takes effect 30 days after your request (cancellable grace period).",
-    "item3": "Security logs: 12 months maximum, pseudonymised after account deletion."
-    },
-    "s6": {
-    "heading": "6. Your rights (GDPR art. 15-22)",
-    "item1": "<b>Access</b>: view your data at any time in your space.",
-    "item2": "<b>Rectification</b>: edit profile and data in the dedicated pages.",
-    "item3": "<b>Erasure</b>: \"Delete my account\" button in Settings → Privacy.",
-    "item4": "<b>Portability</b>: \"Download my data\" button — full JSON export.",
-    "item5": "<b>Objection / Restriction</b>: refuse or withdraw non-essential cookies at any time.",
-    "item6": "<b>Complaint</b>: with the <apd>Data Protection Authority</apd> (Belgium)."
-    },
-    "s7": {
-    "heading": "7. Security",
-    "item1": "Encryption in transit (TLS 1.3) and at rest.",
-    "item2": "Supabase Row Level Security on all tables.",
-    "item3": "Rate limiting, strict CSP, append-only audit log.",
-    "item4": "Strong password authentication + MFA available."
-    },
-    "s8": {
-    "heading": "8. Cookies",
-    "body": "See the <link>cookie policy</link>."
-    },
-    "s9": {
-    "heading": "9. Changes",
-    "body": "Any material change to this policy is notified by email and requires your renewed consent to keep using the service."
-    },
-    "draft": "Our privacy policy is being drafted.",
-    "contact": "For any questions, contact us: thierryvm@gmail.com",
-    "backHome": "Back to home"
-  },
-  "cookies": {
-    "metaTitle": "Cookie policy",
-    "metaDescription": "Ankora's cookie policy — full granularity, everything refusable except essentials.",
-    "title": "Cookie policy",
-    "categoriesHeading": "Categories",
-    "essentialHeading": "Essential (always active)",
-    "essentialBody": "Required for the service to work: authentication session, theme preference, anti-CSRF.",
-    "essentialItem1": "<code>sb-*</code> — Supabase session (auth)",
-    "essentialItem2": "<code>ankora-theme</code> — light/dark preference",
-    "analyticsHeading": "Analytics (off by default)",
-    "analyticsBody1": "Only if you give your consent. Aggregated usage measurement, with no personal identifier.",
-    "analyticsBody2": "Ankora does not use Google Analytics. Vercel metrics are aggregated and anonymised.",
-    "marketingHeading": "Marketing (off by default)",
-    "marketingBody": "Ankora currently uses no marketing cookies.",
-    "manageHeading": "Manage your preferences",
-    "manageBody1": "You can change your consents at any time in <b>Settings → Privacy</b> or by clicking \"Manage cookies\" in the footer.",
-    "manageBody2": "Declining non-essential cookies does not degrade the experience: Ankora remains fully functional.",
-    "lifetimeHeading": "Lifetime",
-    "lifetimeItem1": "Session: end of browsing",
-    "lifetimeItem2": "Preferences: 12 months",
-    "lifetimeItem3": "Analytics: 6 months (if accepted)",
-    "draft": "This cookie policy page is being drafted.",
-    "contact": "For any questions, contact us: thierryvm@gmail.com",
-    "backHome": "Back to home"
-  }
-  },
-  "offline": {
-  "metaTitle": "Offline",
-  "metaDescription": "You are currently offline. Reconnect to access Ankora.",
-  "title": "You are offline",
-  "message": "Reconnect to access your cockpit. Your data stays intact.",
-  "retry": "Retry"
-  },
-  "consent": {
-  "title": "Cookies and privacy",
-  "body": "We only use essential cookies to log you in. Analytics cookies are off by default — you can turn them on if you want to help us improve Ankora. You can change your mind at any time via <link>the cookie policy</link>.",
-  "essentialOnly": "Essential only",
-  "acceptAnalytics": "Accept analytics"
-  },
-  "footer": {
-  "copyright": "© {year} — All rights reserved",
-  "cgu": "Terms",
-  "privacy": "Privacy",
-  "cookies": "Manage cookies",
-  "faq": "FAQ",
-  "copyrightNotice": "© {year} Ankora™. All rights reserved."
-  },
-  "auth": {
-  "login": {
-    "title": "Log in",
-    "subtitle": "Get back to your Ankora cockpit.",
-    "metaTitle": "Log in",
-    "emailLabel": "Email",
-    "passwordLabel": "Password",
-    "forgotLink": "Forgot your password?",
-    "submit": "Log in",
-    "submitting": "Logging in…",
-    "noAccount": "No account yet?",
-    "signupLink": "Sign up",
-    "dividerOr": "or",
-    "dividerOrEmail": "or with your email",
-    "passwordUpdatedBanner": "Password updated. You can log in."
-  },
-  "signup": {
-    "title": "Sign up",
-    "subtitle": "Launch your financial cockpit in under 2 minutes.",
-    "pageTitle": "Create my cockpit",
-    "pageDescription": "A few seconds. No credit card.",
-    "emailLabel": "Email",
-    "passwordLabel": "Password",
-    "passwordHint": "At least 12 characters, 1 uppercase, 1 lowercase, 1 digit.",
-    "passwordConfirmLabel": "Confirm password",
-    "acceptTosPrefix": "I accept the",
-    "acceptTosLink": "Terms",
-    "acceptPrivacyPrefix": "I accept the",
-    "acceptPrivacyLink": "privacy policy",
-    "submit": "Create my account",
-    "submitting": "Creating…",
-    "haveAccount": "Already have an account?",
-    "loginLink": "Log in",
-    "dividerOr": "or",
-    "dividerOrEmail": "or with your email",
-    "googleCta": "Sign up with Google",
-    "googleTerms": "By continuing with Google, you accept our <cgu>Terms</cgu> and <privacy>privacy policy</privacy>."
-  },
-  "forgot": {
-    "title": "Forgot password",
-    "subtitle": "Enter your email, we'll send you a secure link.",
-    "emailLabel": "Email",
-    "submit": "Send the link",
-    "submitting": "Sending…",
-    "sentMessage": "If this email exists, a reset link has just been sent.",
-    "backToLogin": "Back to login"
-  },
-  "reset": {
-    "title": "New password",
-    "subtitle": "Choose a strong password for your account.",
-    "passwordLabel": "New password",
-    "passwordConfirmLabel": "Confirm",
-    "submit": "Update",
-    "submitting": "Updating…"
-  },
-  "google": {
-    "label": "Continue with Google",
-    "redirecting": "Redirecting…"
-  },
-  "checkEmail": {
-    "title": "Check your inbox",
-    "metaTitle": "Check your email",
-    "body": "We've just sent you a confirmation link. Click it to activate your account.",
-    "backToLogin": "Back to login"
-  }
-  },
-  "onboarding": {
-  "defaultWorkspaceName": "My space",
-  "previous": "Back",
-  "next": "Continue",
-  "finish": "Finish",
-  "finishing": "Saving…",
-  "validation": {
-    "workspaceNameRequired": "Give your space a name.",
-    "incomeInvalid": "Enter a valid income (≥ 0)."
-  },
-  "step1": {
-    "title": "Name your space",
-    "description": "You can change it later in settings.",
-    "nameLabel": "Space name"
-  },
-  "step2": {
-    "title": "Your net monthly income",
-    "description": "Used as the basis for suggesting your monthly transfers.",
-    "incomeLabel": "Net monthly income (€)"
-  },
-  "step3": {
-    "title": "Your first bill (optional)",
-    "description": "Add rent, insurance, a subscription…",
-    "labelLabel": "Label",
-    "labelPlaceholder": "Rent, car insurance…",
-    "amountLabel": "Amount (€)",
-    "frequencyLabel": "Frequency",
-    "dueMonthLabel": "Reference month",
-    "skipLater": "I'll enter my bills later"
-  }
-  },
-  "app": {
-  "dashboard": {
-    "metaTitle": "Dashboard",
-    "headerTitle": "{month} — your cockpit",
-    "emptyTitle": "Start by adding your bills",
-    "emptyDescription": "Rent, insurance, subscriptions — Ankora smooths them over 12 months for you.",
-    "emptyCta": "Add a bill",
-    "kpiProvisionsMonthly": "Reserves / month",
-    "kpiProvisionsAnnualHint": "Annual: {amount}",
-    "kpiHealth": "Reserve health",
-    "kpiHealthTargetHint": "Target: {amount}",
-    "kpiSuggestedTransfer": "Suggested transfer",
-    "kpiSuggestedTransferToSavings": "To set aside",
-    "kpiSuggestedTransferFromSavings": "To withdraw from savings",
-    "kpiBillsMonth": "{month} bills",
-    "kpiBillsHint": "Cash out this month",
-    "healthHealthy": "Healthy",
-    "healthWarning": "Watch",
-    "healthCritical": "Critical",
-    "planTitle": "Month plan — {month}",
-    "planDescription": "The transfers to run at the start of the month across your three accounts.",
-    "planAdjustAccounts": "Adjust my accounts",
-    "missingSetupTitle": "Set up your accounts first",
-    "missingSetupDescription": "To calculate your Smart Transfer, Ankora needs your monthly income and the fixed amount you send to Daily Spending.",
-    "missingSetupCta": "Set up my accounts",
-    "transferPrincipalToVieCourante": "Main → Daily Spending",
-    "transferVieCouranteHint": "Envelope for groceries, fuel, dining.",
-    "transferPrincipalToEpargne": "Main → Savings",
-    "transferEpargneToPrincipal": "Savings → Main",
-    "transferEpargneHint": "Reserve {provision} − bills {bills}",
-    "transferPrincipalRemaining": "Main remaining",
-    "transferPrincipalRemainingHint": "After salary, transfers and Main bills ({bills}).",
-    "ctaCharges": "My bills",
-    "ctaExpenses": "My expenses",
-    "ctaSimulator": "Simulate",
-    "expensesTitle": "Expenses — {month}",
-    "expensesCount": "{count, plural, =0 {No expenses this month} one {1 expense this month} other {# expenses this month}}",
-    "expensesEmpty": "No expenses recorded for this month.",
-    "expensesViewAll": "View all expenses →"
-  },
-  "charges": {
-    "title": "My bills",
-    "subtitle": "Every bill is automatically smoothed over 12 months.",
-    "addFormTitle": "Add a bill",
-    "emptyState": "No bills yet.",
-    "labelLabel": "Label",
-    "amountLabel": "Amount (€)",
-    "frequencyLabel": "Frequency",
-    "dueMonthLabel": "Reference month",
-    "addButton": "Add",
-    "adding": "Adding…",
-    "count": "{count, plural, =0 {no bills} one {1 bill} other {# bills}}",
-    "referenceFormat": "{frequency} · ref. {month}",
-    "deleteAria": "Delete {label}",
-    "toastCreated": "Bill added",
-    "toastDeleted": "Bill deleted"
-  },
-  "accounts": {
-    "metaTitle": "My accounts",
-    "metaDescription": "Track the balances of your Main, Daily Spending and Savings accounts. Set your monthly income and your transfer to Daily Spending.",
-    "title": "My accounts",
-    "subtitle": "Enter your real balances so Ankora can accurately calculate your smart transfer each month.",
-    "balancesHeading": "Current balances",
-    "amountLabel": "Amount (€)",
-    "saveButton": "Save",
-    "saving": "Saving…",
-    "income": {
-    "title": "Net monthly income",
-    "description": "The salary that lands every month in your Main account. Used to calculate what's left after bills and the transfer to Daily Spending.",
-    "placeholder": "e.g. 2500",
-    "toastSaved": "Monthly income updated"
-    },
-    "transfer": {
-    "title": "Monthly transfer to Daily Spending",
-    "description": "Fixed amount transferred every month from Main to your Daily Spending account. This is what covers groceries, fuel and dining.",
-    "placeholder": "e.g. 500",
-    "toastSaved": "Monthly transfer updated"
-    },
-    "balance": {
-    "invalidAmount": "Enter a valid amount.",
-    "saveLabel": "Update",
-    "srLabel": "Current balance of {label}",
-    "toastSaved": "{name} updated"
-    },
-    "kind": {
-    "principal": {
-      "description": "Receives the salary, pays fixed monthly bills."
-    },
-    "vieCourante": {
-      "description": "Day-to-day budget (groceries, fuel, dining)."
-    },
-    "epargne": {
-      "description": "Smooths quarterly and annual bills."
-    }
-    }
-  },
-  "expenses": {
-    "title": "My expenses",
-    "subtitle": "Spending outside recurring bills — groceries, dining, leisure…",
-    "addFormTitle": "Add an expense",
-    "labelLabel": "Label",
-    "amountLabel": "Amount (€)",
-    "dateLabel": "Date",
-    "addButton": "Add",
-    "adding": "Adding…",
-    "emptyState": "No expenses recorded.",
-    "summary": "{count, plural, =0 {No expenses} one {1 expense · {total}} other {# expenses · {total}}}",
-    "deleteAria": "Delete {label}",
-    "toastCreated": "Expense added",
-    "toastDeleted": "Expense deleted"
-  },
-  "settings": {
-    "metaTitle": "Settings",
-    "metaDescription": "Manage your profile, 2FA security and personal data.",
-    "title": "Settings",
-    "description": "Profile, security and personal data.",
-    "profile": {
-    "title": "Profile",
-    "description": "This information personalizes your cockpit.",
-    "emailLabel": "Email",
-    "displayNameLabel": "Display name",
-    "localeLabel": "Language",
-    "localeOptions": {
-      "fr-BE": "Français (Belgique)",
-      "fr-FR": "Français (France)",
-      "en-GB": "English"
-    },
-    "submit": "Save",
-    "submitting": "Saving…",
-    "toastSaved": "Profile updated"
-    },
-    "mfa": {
-    "title": "Security — 2FA",
-    "description": "A one-time code generated by an authenticator app (Authy, 1Password, Google Authenticator).",
-    "emptyState": "No active 2FA factor. Turn it on to protect your account.",
-    "enrollButton": "Enable 2FA",
-    "enrolling": "Preparing…",
-    "scanInstruction": "Scan this QR code in your authenticator app, then enter the 6-digit code.",
-    "qrAlt": "QR code for the authenticator app",
-    "manualEntry": "Manual entry",
-    "codeLabel": "6-digit code",
-    "verifyButton": "Verify and enable",
-    "verifying": "Verifying…",
-    "cancel": "Cancel",
-    "defaultFactorName": "TOTP app",
-    "activeLabel": "Active",
-    "disableButton": "Disable",
-    "toastEnabled": "MFA enabled",
-    "toastDisabled": "MFA disabled"
-    },
-    "data": {
-    "title": "My data",
-    "description": "GDPR portability (art. 20) — download a full JSON of everything Ankora holds about you.",
-    "exportButton": "Download my data",
-    "exporting": "Generating…",
-    "toastDownloaded": "Export downloaded"
-    },
-    "danger": {
-    "scheduledTitle": "Deletion in progress",
-    "scheduledBody": "Your account will be deleted on <strong>{date}</strong>. You can cancel any time until then.",
-    "viewStatus": "View status",
-    "title": "Danger zone",
-    "description": "Permanent account deletion. 30-day grace period to cancel — after that, everything is wiped (audit logs pseudonymised).",
-    "reasonLabel": "Reason (optional)",
-    "reasonPlaceholder": "Help us improve…",
-    "confirmLabel": "To confirm, type your email address: <code>{email}</code>",
-    "submit": "Delete my account",
-    "submitting": "Scheduling…",
-    "toastScheduled": "Deletion scheduled — you have 30 days to cancel"
-    }
-  },
-  "simulator": {
-    "title": "Simulator",
-    "subtitle": "Measure the impact of a change without touching your real data.",
-    "scenario": {
-    "title": "Scenario",
-    "description": "Choose an action to simulate.",
-    "modes": {
-      "cancel": "Cancel a bill",
-      "negotiate": "Renegotiate",
-      "add": "Add a bill"
-    }
-    },
-    "fields": {
-    "charge": "Bill",
-    "chargePlaceholder": "Select…",
-    "newAmount": "New amount (€)",
-    "label": "Label",
-    "amount": "Amount (€)",
-    "frequency": "Frequency",
-    "month": "Month"
-    },
-    "impact": {
-    "title": "Impact",
-    "empty": "Complete the scenario to see the impact.",
-    "currentMonthly": "Current / month",
-    "projectedMonthly": "Projected / month",
-    "annualSavings": "Annual savings",
-    "monthlyChange": "{sign}{percent}% / month"
-    }
-  },
-  "deletionStatus": {
-    "title": "Account deletion",
-    "subtitle": "Detailed status of your request and cancellation period.",
-    "metaTitle": "Deletion status",
-    "metaDescription": "Status of your Ankora account deletion request.",
-    "statusLabel": "Status:",
-    "requestedOn": "Requested on {date}.",
-    "statusPending": "Pending",
-    "statusCancelled": "Cancelled",
-    "statusCompleted": "Completed",
-    "scheduledFor": "Deletion scheduled",
-    "daysLeft": "Days left",
-    "auditLogs": "Audit logs",
-    "auditLogsValue": "Pseudonymised, never deleted",
-    "daysCount": "{days, plural, =0 {Today} one {# day} other {# days}}",
-    "backToSettings": "Back to settings",
-    "cancelledOn": "Request cancelled on {date}. Your account is preserved.",
-    "cancelledNoDate": "Request cancelled. Your account is preserved.",
-    "cancelButton": "Cancel deletion",
-    "cancelling": "Cancelling…",
-    "toastCancelled": "Request cancelled — your account is preserved"
-  }
-  },
-  "glossary": {
-  "title": "Glossary",
-  "subtitle": "15 essential terms for understanding your budgeting and personal finances.",
-  "metaTitle": "Glossary — Financial Terms",
-  "metaDescription": "Glossary of 15 essential budgeting terms: smoothed budget, bucket account, emergency fund, and more.",
-  "breadcrumb": {
-    "home": "Home",
-    "glossary": "Glossary"
-  },
-  "section": {
-    "whyItMatters": "Why It Matters",
-    "example": "Concrete Example",
-    "relatedTerms": "Related Terms"
-  }
-  },
-  "errors": {
-  "generic": "Something went wrong. Try again.",
-  "session": {
-    "expired": "Session expired. Log in again.",
-    "rateLimited": "Too many requests. Wait a minute."
-  },
-  "auth": {
-    "invalidCredentials": "Incorrect email or password.",
-    "signupFailed": "Sign-up failed. Try again later.",
-    "googleFailed": "Google login unavailable. Try again later.",
-    "rateLimited": "Too many attempts. Try again in a few minutes.",
-    "serviceTemporarilyUnavailable": "Service temporarily unavailable. Try again in a few minutes.",
-    "passwordResetFailed": "Unable to update the password.",
-    "linkExpired": "Link expired. Request a new link.",
-    "mfaEnrollFailed": "Unable to start enrolment.",
-    "mfaChallengeFailed": "MFA challenge failed.",
-    "mfaCodeInvalid": "Incorrect code. Try again.",
-    "mfaDisableFailed": "Unable to disable 2FA."
-  },
-  "db": {
-    "workspaceNotFound": "No editable workspace.",
-    "updateFailed": "Update failed.",
-    "notEditable": "You don't have edit rights on this space."
-  },
-  "validation": {
-    "generic": "Invalid data.",
-    "auth": {
-    "email": {
-      "invalid": "Invalid email address."
-    },
-    "password": {
-      "required": "Password required.",
-      "tooShort": "At least 12 characters.",
-      "tooLong": "Maximum 128 characters.",
-      "lowercase": "At least one lowercase letter.",
-      "uppercase": "At least one uppercase letter.",
-      "digit": "At least one digit."
-    },
-    "passwordConfirm": {
-      "mismatch": "Passwords do not match."
-    },
-    "acceptTos": {
-      "required": "You must accept the Terms."
-    },
-    "acceptPrivacy": {
-      "required": "You must accept the privacy policy."
-    }
-    },
-    "charge": {
-    "label": {
-      "required": "Label required.",
-      "tooLong": "Maximum 120 characters."
-    },
-    "amount": {
-      "invalid": "Invalid amount.",
-      "negative": "Amount must be ≥ 0.",
-      "tooHigh": "Amount too high."
+    "monthsShort": {
+      "1": "Jan",
+      "2": "Feb",
+      "3": "Mar",
+      "4": "Apr",
+      "5": "May",
+      "6": "Jun",
+      "7": "Jul",
+      "8": "Aug",
+      "9": "Sep",
+      "10": "Oct",
+      "11": "Nov",
+      "12": "Dec"
     },
     "frequency": {
-      "invalid": "Invalid frequency."
-    },
-    "dueMonth": {
-      "range": "Month between 1 and 12."
-    },
-    "paidFrom": {
-      "invalid": "Invalid debit account."
+      "monthly": "Monthly",
+      "quarterly": "Quarterly",
+      "semiannual": "Semi-annual",
+      "annual": "Annual"
     }
+  },
+  "ui": {
+    "scrollToTop": "Scroll back to top",
+    "localeSwitcher": {
+      "label": "Language",
+      "aria": "Change language",
+      "options": {
+        "fr-BE": "Français (BE)",
+        "nl-BE": "Nederlands (BE)",
+        "en": "English",
+        "es-ES": "Español",
+        "de-DE": "Deutsch"
+      }
     },
-    "account": {
-    "kind": {
-      "invalid": "Invalid account type."
-    },
-    "balance": {
-      "invalid": "Invalid balance.",
-      "outOfRange": "Value out of range."
-    },
-    "label": {
-      "required": "Label required.",
-      "tooLong": "Maximum 80 characters."
+    "action": {
+      "submit": "Confirm",
+      "submitting": "Confirming…",
+      "save": "Save",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "cancelling": "Cancelling…",
+      "delete": "Delete",
+      "deleting": "Deleting…",
+      "create": "Create",
+      "creating": "Creating…",
+      "update": "Update",
+      "updating": "Updating…",
+      "send": "Send",
+      "sending": "Sending…",
+      "verify": "Verify",
+      "verifying": "Verifying…",
+      "generate": "Generate",
+      "generating": "Generating…",
+      "download": "Download",
+      "downloading": "Downloading…",
+      "preparing": "Preparing…",
+      "confirm": "Confirm",
+      "close": "Close"
     }
+  },
+  "landing": {
+    "mktnav": {
+      "links": {
+        "product": "Product",
+        "simulator": "Simulator",
+        "pricing": "Pricing",
+        "security": "Security",
+        "journal": "Journal"
+      },
+      "ctaLogin": "Log in",
+      "ctaSignup": "Try for free"
     },
-    "workspace": {
-    "name": {
-      "required": "Name required.",
-      "tooLong": "Maximum 80 characters."
+    "hero": {
+      "badge": "New · What-if simulator",
+      "h1Lead": "Your financial",
+      "h1Highlight": "anchor.",
+      "description": "Ankora separates your earmarked provisions from your free reserve, projects six months ahead, and lets you simulate the impact of every decision — clearly, without jargon.",
+      "ctaPrimary": "Open my cockpit",
+      "ctaSecondary": "See the simulator",
+      "trust": {
+        "encrypted": "Data encrypted in Belgium",
+        "noSale": "No data selling",
+        "languages": "FR · NL · EN"
+      },
+      "mockup": {
+        "eyebrow": "Cockpit preview",
+        "browserUrl": "Ankora · cockpit",
+        "kpis": {
+          "netRemaining": {
+            "label": "Net remaining",
+            "sub": "April · after provisions"
+          },
+          "provisions": {
+            "label": "Provisions",
+            "sub": "67% of €2,480 planned"
+          },
+          "reserve": {
+            "label": "Reserve",
+            "sub": "+€120 vs. March"
+          }
+        }
+      },
+      "waterfall": {
+        "income": "Income",
+        "incomeAmount": "+2,466 €",
+        "expenses": "Daily expenses",
+        "expensesAmount": "−1,959 €",
+        "provisionsCaption": "of which {amount} € smoothed into earmarked provisions",
+        "available": "Available money",
+        "availableAmount": "+507 €",
+        "ariaLabel": "Illustrative cascade: 2,466 € income, 1,959 € daily expenses (of which 59 € smoothed into provisions), 507 € available."
+      }
     },
-    "income": {
-      "invalid": "Invalid income.",
-      "negative": "Must be ≥ 0.",
-      "tooHigh": "Income too high."
+    "principles": {
+      "eyebrow": "Three principles",
+      "h2": "An honest way to talk about money.",
+      "description": "Ankora isn't trying to sell you an investment or a card. We separate, we project, we simulate. That's it. You alone decide.",
+      "items": {
+        "provisions": {
+          "title": "Earmarked provisions",
+          "description": "Every reserved euro has a name: insurance, road tax, boiler maintenance. Nothing slips away without you knowing."
+        },
+        "reserve": {
+          "title": "Free reserve",
+          "description": "What's actually yours, after commitments. The real number — not the illusion of a gross balance."
+        },
+        "whatIf": {
+          "title": "What-if simulator",
+          "description": "Renegotiate electricity? Switch provider? Ankora shows you the impact over 12 months before you decide."
+        }
+      }
     },
-    "transfer": {
-      "invalid": "Invalid amount.",
-      "negative": "Must be ≥ 0.",
-      "tooHigh": "Amount too high."
+    "feature": {
+      "eyebrow": "Cashflow waterfall",
+      "h3Line1": "From salary to net available.",
+      "h3Line2": "At a single glance.",
+      "description": "No more mystery about where your money goes. Every step is visible: income, daily expenses, available money. You see immediately if anything drifts.",
+      "ctaPrimary": "See an example",
+      "ctaSecondary": "How does it work?"
+    },
+    "whatif": {
+      "title": "What if you changed one thing?",
+      "subtitle": "Move the slider. See the impact on your free reserve, over six months. That's what Ankora does for every financial decision.",
+      "badge": "Demo · no account needed",
+      "scenarios": {
+        "gsm": {
+          "label": "Renegotiate my mobile plan",
+          "hint": "Current plan: €42/month · market: €18–28/month"
+        },
+        "elec": {
+          "label": "Switch electricity provider",
+          "hint": "Current bill: €168/month · 3 cheaper offers in your area"
+        },
+        "stream": {
+          "label": "Cut two streaming subscriptions",
+          "hint": "5 active subscriptions · actual use: 2 over 30 days"
+        }
+      },
+      "controls": {
+        "scenario": "Scenario",
+        "savings": "Monthly savings",
+        "slider_aria": "Monthly savings for {label}"
+      },
+      "annual": {
+        "eyebrow": "Over 12 months",
+        "fleche": "Ankora could route {amount} €/month towards your long-term savings."
+      },
+      "chart": {
+        "title": "Free reserve · projection",
+        "subtitle": "6 months from today",
+        "legend": {
+          "baseline": "Without change",
+          "scenario": "With your choice"
+        },
+        "aria": "6-month projection chart of free reserve, with and without the chosen change",
+        "months": {
+          "may": "May",
+          "jun": "Jun",
+          "jul": "Jul",
+          "aug": "Aug",
+          "sep": "Sep",
+          "oct": "Oct"
+        },
+        "thresholds": {
+          "danger": "⚠️ Estimated overdraft",
+          "fragile": "Fragile zone",
+          "comfortable": "Comfortable zone"
+        }
+      },
+      "caveat": "Demo based on average assumptions. Ankora does not provide investment advice. No bank import — you enter your expenses manually."
+    },
+    "pricing": {
+      "eyebrow": "Transparent from the start",
+      "h2": "Free during Phase 1.",
+      "phaseBadge": "Phase 1 · building",
+      "price": "€0",
+      "period": "for now, with no end date",
+      "body": "We're building the cockpit first. No card asked, no time limit, no feature gating. GDPR export anytime.",
+      "features": {
+        "cockpit": "Full cockpit, provisions and free reserve",
+        "simulator": "Unlimited what-if simulator",
+        "manualEntry": "Manual entry · your data stays in Belgium",
+        "export": "GDPR export in one click"
+      },
+      "ctaPrimary": "Open my cockpit",
+      "roadmap": {
+        "title": "Joining Ankora during Phase 1?",
+        "body": "Your account keeps full lifetime access to the core cockpit, free. A Pro tier with advanced features (unlimited accounts, consolidated exports, priority support) will arrive post-v1.0 — you'll choose to upgrade or stay on your current plan.",
+        "link": "Read the roadmap →"
+      }
+    },
+    "footerCta": {
+      "h2Lead": "Start with what's",
+      "h2Highlight": "already yours.",
+      "description": "30-day trial, no card, GDPR export anytime. We keep it simple because it's already complicated enough.",
+      "ctaPrimary": "Open my cockpit"
+    },
+    "footer": {
+      "links": {
+        "terms": "Terms",
+        "privacy": "Privacy",
+        "security": "Security",
+        "contact": "Contact"
+      },
+      "copyright": "Ankora · Brussels-anchored editor · 2026"
+    },
+    "faqHeading": "Frequently asked questions",
+    "faq": {
+      "advice": {
+        "q": "Is Ankora a financial advice tool?",
+        "a": "No. Ankora is a budgeting and financial education tool. It does not provide investment recommendations or personalised financial advice."
+      },
+      "storage": {
+        "q": "Where is my data stored?",
+        "a": "Your data is hosted in the European Union (Supabase, EU region) with encryption at rest and strict per-user isolation via Row Level Security."
+      },
+      "sharing": {
+        "q": "Can I share my data?",
+        "a": "By default, your space is 100% private. Optional shared pockets (trips, joint projects) are coming in a future release — you'll explicitly choose what you share, and with whom."
+      }
     }
-    },
-    "expense": {
-    "label": {
-      "required": "Label required.",
-      "tooLong": "Maximum 120 characters."
-    },
-    "amount": {
-      "invalid": "Invalid amount.",
-      "negative": "Must be ≥ 0.",
-      "tooHigh": "Amount too high."
-    },
-    "date": {
-      "format": "Expected format: YYYY-MM-DD."
-    },
-    "category": {
-      "invalid": "Invalid category."
+  },
+  "faq": {
+    "metaTitle": "FAQ",
+    "metaDescription": "Frequently asked questions about Ankora: security, data, how it works, privacy.",
+    "title": "Frequently asked questions",
+    "subtitle": "Everything you need to know about Ankora before getting started.",
+    "items": {
+      "bankConnection": {
+        "q": "Does Ankora connect to my bank?",
+        "a": "No. Ankora does not use the PSD2 directive. You enter your bills and expenses manually. This choice guarantees you remain the owner of your data and that no sensitive banking information is stored."
+      },
+      "dataLocation": {
+        "q": "Where is my data hosted?",
+        "a": "All your data is hosted in the European Union (Supabase EU region, Vercel EU region, Upstash EU). No data is transferred outside the EU."
+      },
+      "smoothing": {
+        "q": "How does smoothing work?",
+        "a": "Ankora takes your quarterly, semi-annual and annual bills and spreads them across 12 months. You know exactly how much to set aside each month to cover all your future bills, stress-free."
+      },
+      "deletion": {
+        "q": "Can I delete my account?",
+        "a": "Yes, at any time from Settings → Privacy. Deletion takes effect 30 days after your request (you can cancel during this period). All your financial data is wiped, security logs are pseudonymised."
+      },
+      "export": {
+        "q": "Can I export my data?",
+        "a": "Yes. The \"Download my data\" button in Settings gives you a complete JSON file of everything Ankora holds about you. Compliant with the GDPR right to portability (art. 20)."
+      },
+      "advice": {
+        "q": "Does Ankora provide financial advice?",
+        "a": "No. Ankora is a budgeting education and organisation tool. We do not issue any investment advice (FSMA Belgium regulatory constraint). For any investment decision, consult an authorised professional."
+      },
+      "ai": {
+        "q": "Is there any artificial intelligence?",
+        "a": "In Phase 1, no. Calculations are deterministic and auditable. In Phase 2, an optional BYOK (Bring Your Own Key) layer will let you connect your own Anthropic or OpenRouter key for suggestions — no extra cost on Ankora's side."
+      },
+      "sharing": {
+        "q": "Can I share my space with my children or friends?",
+        "a": "In Phase 1, each user has a private space, isolated by default. In Phase 2, we'll add the ability to create \"shared pockets\" (by invitation, with viewer/editor roles) without ever mixing your personal data."
+      }
     }
+  },
+  "legal": {
+    "versionLine": "Version {version} — last updated: {date}",
+    "lastUpdatedLine": "Last updated: {date}",
+    "cgu": {
+      "metaTitle": "Terms of service",
+      "metaDescription": "Ankora's terms of service — rules for using the service.",
+      "title": "Terms of service",
+      "s1": {
+        "heading": "1. Purpose",
+        "body": "Ankora is a budgeting and financial education tool for individuals. It lets you manually enter your bills and expenses, smooth them across the year, and anticipate cash-flow needs."
+      },
+      "s2": {
+        "heading": "2. What Ankora is NOT",
+        "item1": "Ankora is <b>not an investment advisory service</b>.",
+        "item2": "Ankora is <b>not a banking service</b> and holds no funds.",
+        "item3": "Ankora is <b>not a PSD2 aggregator</b> — no connection to your bank accounts.",
+        "item4": "Ankora is <b>not professional accounting software</b>.",
+        "outro": "The information displayed consists of estimates based on your inputs. It does not constitute personalised financial advice. For any important decision, consult an authorised professional."
+      },
+      "s3": {
+        "heading": "3. Account",
+        "item1": "You must be of legal age or have authorisation from a legal representative.",
+        "item2": "One account per individual.",
+        "item3": "Password: minimum 12 characters, mixed case.",
+        "item4": "You are responsible for keeping your credentials confidential."
+      },
+      "s4": {
+        "heading": "4. Acceptable use",
+        "intro": "You agree not to:",
+        "item1": "use the service for illegal purposes,",
+        "item2": "attempt to circumvent security measures,",
+        "item3": "automate access without explicit authorisation,",
+        "item4": "share your account with a third party."
+      },
+      "s5": {
+        "heading": "5. Intellectual property",
+        "body": "You remain the owner of your data. Ankora retains ownership of its code, brand, design and documentation."
+      },
+      "s6": {
+        "heading": "6. Liability",
+        "body": "Ankora is provided \"as is\". The publisher cannot be held liable for financial decisions made on the basis of the information displayed. No 100% availability is guaranteed."
+      },
+      "s7": {
+        "heading": "7. Termination",
+        "body": "You can delete your account at any time from Settings → Privacy. Deletion takes effect 30 days after the request (cancellable during that period)."
+      },
+      "s8": {
+        "heading": "8. Governing law",
+        "body": "These terms are governed by Belgian law. Competent court: Brussels."
+      },
+      "draft": "Our terms of service are being drafted.",
+      "contact": "For any questions, contact us: thierryvm@gmail.com",
+      "backHome": "Back to home"
+    },
+    "privacy": {
+      "metaTitle": "Privacy policy",
+      "metaDescription": "Ankora's privacy policy — EU hosting, GDPR, user rights.",
+      "title": "Privacy policy",
+      "s1": {
+        "heading": "1. Data controller",
+        "body": "Ankora, published by Thierry Van Mele (Belgium). Contact: <mail>thierryvm@gmail.com</mail>."
+      },
+      "s2": {
+        "heading": "2. Data collected",
+        "intro": "Ankora collects only the data strictly necessary to provide the service:",
+        "item1": "<b>Identity</b>: email address, display name (optional).",
+        "item2": "<b>Financial data you enter</b>: bills, expenses, categories, declared income, savings balance.",
+        "item3": "<b>Technical data</b>: IP address, user-agent (for security logs only).",
+        "item4": "<b>Consents</b>: timestamp, version, scope (terms, privacy, cookies).",
+        "outro": "Ankora does not connect to any bank (no PSD2 aggregation). You enter your bills and expenses yourself."
+      },
+      "s3": {
+        "heading": "3. Legal bases (GDPR art. 6)",
+        "item1": "<b>Contract</b>: providing the service (account, financial data).",
+        "item2": "<b>Consent</b>: analytics/marketing cookies, newsletter.",
+        "item3": "<b>Legal obligation</b>: security logs (12-month retention).",
+        "item4": "<b>Legitimate interest</b>: fraud prevention, security maintenance."
+      },
+      "s4": {
+        "heading": "4. Hosting and subprocessors",
+        "item1": "<b>Supabase</b> (database, auth) — EU region (Frankfurt or Paris).",
+        "item2": "<b>Vercel</b> (frontend hosting) — EU region (Dublin).",
+        "item3": "<b>Upstash</b> (rate limiting) — EU region.",
+        "outro": "No data is transferred outside the EU/EEA."
+      },
+      "s5": {
+        "heading": "5. Retention period",
+        "item1": "Active account: for as long as you use the service.",
+        "item2": "Deleted account: deletion takes effect 30 days after your request (cancellable grace period).",
+        "item3": "Security logs: 12 months maximum, pseudonymised after account deletion."
+      },
+      "s6": {
+        "heading": "6. Your rights (GDPR art. 15-22)",
+        "item1": "<b>Access</b>: view your data at any time in your space.",
+        "item2": "<b>Rectification</b>: edit profile and data in the dedicated pages.",
+        "item3": "<b>Erasure</b>: \"Delete my account\" button in Settings → Privacy.",
+        "item4": "<b>Portability</b>: \"Download my data\" button — full JSON export.",
+        "item5": "<b>Objection / Restriction</b>: refuse or withdraw non-essential cookies at any time.",
+        "item6": "<b>Complaint</b>: with the <apd>Data Protection Authority</apd> (Belgium)."
+      },
+      "s7": {
+        "heading": "7. Security",
+        "item1": "Encryption in transit (TLS 1.3) and at rest.",
+        "item2": "Supabase Row Level Security on all tables.",
+        "item3": "Rate limiting, strict CSP, append-only audit log.",
+        "item4": "Strong password authentication + MFA available."
+      },
+      "s8": {
+        "heading": "8. Cookies",
+        "body": "See the <link>cookie policy</link>."
+      },
+      "s9": {
+        "heading": "9. Changes",
+        "body": "Any material change to this policy is notified by email and requires your renewed consent to keep using the service."
+      },
+      "draft": "Our privacy policy is being drafted.",
+      "contact": "For any questions, contact us: thierryvm@gmail.com",
+      "backHome": "Back to home"
+    },
+    "cookies": {
+      "metaTitle": "Cookie policy",
+      "metaDescription": "Ankora's cookie policy — full granularity, everything refusable except essentials.",
+      "title": "Cookie policy",
+      "categoriesHeading": "Categories",
+      "essentialHeading": "Essential (always active)",
+      "essentialBody": "Required for the service to work: authentication session, theme preference, anti-CSRF.",
+      "essentialItem1": "<code>sb-*</code> — Supabase session (auth)",
+      "essentialItem2": "<code>ankora-theme</code> — light/dark preference",
+      "analyticsHeading": "Analytics (off by default)",
+      "analyticsBody1": "Only if you give your consent. Aggregated usage measurement, with no personal identifier.",
+      "analyticsBody2": "Ankora does not use Google Analytics. Vercel metrics are aggregated and anonymised.",
+      "marketingHeading": "Marketing (off by default)",
+      "marketingBody": "Ankora currently uses no marketing cookies.",
+      "manageHeading": "Manage your preferences",
+      "manageBody1": "You can change your consents at any time in <b>Settings → Privacy</b> or by clicking \"Manage cookies\" in the footer.",
+      "manageBody2": "Declining non-essential cookies does not degrade the experience: Ankora remains fully functional.",
+      "lifetimeHeading": "Lifetime",
+      "lifetimeItem1": "Session: end of browsing",
+      "lifetimeItem2": "Preferences: 12 months",
+      "lifetimeItem3": "Analytics: 6 months (if accepted)",
+      "draft": "This cookie policy page is being drafted.",
+      "contact": "For any questions, contact us: thierryvm@gmail.com",
+      "backHome": "Back to home"
+    }
+  },
+  "offline": {
+    "metaTitle": "Offline",
+    "metaDescription": "You are currently offline. Reconnect to access Ankora.",
+    "title": "You are offline",
+    "message": "Reconnect to access your cockpit. Your data stays intact.",
+    "retry": "Retry"
+  },
+  "consent": {
+    "title": "Cookies and privacy",
+    "body": "We only use essential cookies to log you in. Analytics cookies are off by default — you can turn them on if you want to help us improve Ankora. You can change your mind at any time via <link>the cookie policy</link>.",
+    "essentialOnly": "Essential only",
+    "acceptAnalytics": "Accept analytics"
+  },
+  "footer": {
+    "copyright": "© {year} — All rights reserved",
+    "cgu": "Terms",
+    "privacy": "Privacy",
+    "cookies": "Manage cookies",
+    "faq": "FAQ",
+    "copyrightNotice": "© {year} Ankora™. All rights reserved."
+  },
+  "auth": {
+    "login": {
+      "title": "Log in",
+      "subtitle": "Get back to your Ankora cockpit.",
+      "metaTitle": "Log in",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "forgotLink": "Forgot your password?",
+      "submit": "Log in",
+      "submitting": "Logging in…",
+      "noAccount": "No account yet?",
+      "signupLink": "Sign up",
+      "dividerOr": "or",
+      "dividerOrEmail": "or with your email",
+      "passwordUpdatedBanner": "Password updated. You can log in."
+    },
+    "signup": {
+      "title": "Sign up",
+      "subtitle": "Launch your financial cockpit in under 2 minutes.",
+      "pageTitle": "Create my cockpit",
+      "pageDescription": "A few seconds. No credit card.",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "passwordHint": "At least 12 characters, 1 uppercase, 1 lowercase, 1 digit.",
+      "passwordConfirmLabel": "Confirm password",
+      "acceptTosPrefix": "I accept the",
+      "acceptTosLink": "Terms",
+      "acceptPrivacyPrefix": "I accept the",
+      "acceptPrivacyLink": "privacy policy",
+      "submit": "Create my account",
+      "submitting": "Creating…",
+      "haveAccount": "Already have an account?",
+      "loginLink": "Log in",
+      "dividerOr": "or",
+      "dividerOrEmail": "or with your email",
+      "googleCta": "Sign up with Google",
+      "googleTerms": "By continuing with Google, you accept our <cgu>Terms</cgu> and <privacy>privacy policy</privacy>."
+    },
+    "forgot": {
+      "title": "Forgot password",
+      "subtitle": "Enter your email, we'll send you a secure link.",
+      "emailLabel": "Email",
+      "submit": "Send the link",
+      "submitting": "Sending…",
+      "sentMessage": "If this email exists, a reset link has just been sent.",
+      "backToLogin": "Back to login"
+    },
+    "reset": {
+      "title": "New password",
+      "subtitle": "Choose a strong password for your account.",
+      "passwordLabel": "New password",
+      "passwordConfirmLabel": "Confirm",
+      "submit": "Update",
+      "submitting": "Updating…"
+    },
+    "google": {
+      "label": "Continue with Google",
+      "redirecting": "Redirecting…"
+    },
+    "checkEmail": {
+      "title": "Check your inbox",
+      "metaTitle": "Check your email",
+      "body": "We've just sent you a confirmation link. Click it to activate your account.",
+      "backToLogin": "Back to login"
+    }
+  },
+  "onboarding": {
+    "defaultWorkspaceName": "My space",
+    "previous": "Back",
+    "next": "Continue",
+    "finish": "Finish",
+    "finishing": "Saving…",
+    "validation": {
+      "workspaceNameRequired": "Give your space a name.",
+      "incomeInvalid": "Enter a valid income (≥ 0)."
+    },
+    "step1": {
+      "title": "Name your space",
+      "description": "You can change it later in settings.",
+      "nameLabel": "Space name"
+    },
+    "step2": {
+      "title": "Your net monthly income",
+      "description": "Used as the basis for suggesting your monthly transfers.",
+      "incomeLabel": "Net monthly income (€)"
+    },
+    "step3": {
+      "title": "Your first bill (optional)",
+      "description": "Add rent, insurance, a subscription…",
+      "labelLabel": "Label",
+      "labelPlaceholder": "Rent, car insurance…",
+      "amountLabel": "Amount (€)",
+      "frequencyLabel": "Frequency",
+      "dueMonthLabel": "Reference month",
+      "skipLater": "I'll enter my bills later"
+    }
+  },
+  "app": {
+    "dashboard": {
+      "metaTitle": "Dashboard",
+      "headerTitle": "{month} — your cockpit",
+      "emptyTitle": "Start by adding your bills",
+      "emptyDescription": "Rent, insurance, subscriptions — Ankora smooths them over 12 months for you.",
+      "emptyCta": "Add a bill",
+      "kpiProvisionsMonthly": "Reserves / month",
+      "kpiProvisionsAnnualHint": "Annual: {amount}",
+      "kpiHealth": "Reserve health",
+      "kpiHealthTargetHint": "Target: {amount}",
+      "kpiSuggestedTransfer": "Suggested transfer",
+      "kpiSuggestedTransferToSavings": "To set aside",
+      "kpiSuggestedTransferFromSavings": "To withdraw from savings",
+      "kpiBillsMonth": "{month} bills",
+      "kpiBillsHint": "Cash out this month",
+      "healthHealthy": "Healthy",
+      "healthWarning": "Watch",
+      "healthCritical": "Critical",
+      "planTitle": "Month plan — {month}",
+      "planDescription": "The transfers to run at the start of the month across your three accounts.",
+      "planAdjustAccounts": "Adjust my accounts",
+      "missingSetupTitle": "Set up your accounts first",
+      "missingSetupDescription": "To calculate your Smart Transfer, Ankora needs your monthly income and the fixed amount you send to Daily Spending.",
+      "missingSetupCta": "Set up my accounts",
+      "transferPrincipalToVieCourante": "Main → Daily Spending",
+      "transferVieCouranteHint": "Envelope for groceries, fuel, dining.",
+      "transferPrincipalToEpargne": "Main → Savings",
+      "transferEpargneToPrincipal": "Savings → Main",
+      "transferEpargneHint": "Reserve {provision} − bills {bills}",
+      "transferPrincipalRemaining": "Main remaining",
+      "transferPrincipalRemainingHint": "After salary, transfers and Main bills ({bills}).",
+      "ctaCharges": "My bills",
+      "ctaExpenses": "My expenses",
+      "ctaSimulator": "Simulate",
+      "expensesTitle": "Expenses — {month}",
+      "expensesCount": "{count, plural, =0 {No expenses this month} one {1 expense this month} other {# expenses this month}}",
+      "expensesEmpty": "No expenses recorded for this month.",
+      "expensesViewAll": "View all expenses →"
+    },
+    "charges": {
+      "title": "My bills",
+      "subtitle": "Every bill is automatically smoothed over 12 months.",
+      "addFormTitle": "Add a bill",
+      "emptyState": "No bills yet.",
+      "labelLabel": "Label",
+      "amountLabel": "Amount (€)",
+      "frequencyLabel": "Frequency",
+      "dueMonthLabel": "Reference month",
+      "addButton": "Add",
+      "adding": "Adding…",
+      "count": "{count, plural, =0 {no bills} one {1 bill} other {# bills}}",
+      "referenceFormat": "{frequency} · ref. {month}",
+      "deleteAria": "Delete {label}",
+      "toastCreated": "Bill added",
+      "toastDeleted": "Bill deleted"
+    },
+    "accounts": {
+      "metaTitle": "My accounts",
+      "metaDescription": "Track the balances of your Main, Daily Spending and Savings accounts. Set your monthly income and your transfer to Daily Spending.",
+      "title": "My accounts",
+      "subtitle": "Enter your real balances so Ankora can accurately calculate your smart transfer each month.",
+      "balancesHeading": "Current balances",
+      "amountLabel": "Amount (€)",
+      "saveButton": "Save",
+      "saving": "Saving…",
+      "income": {
+        "title": "Net monthly income",
+        "description": "The salary that lands every month in your Main account. Used to calculate what's left after bills and the transfer to Daily Spending.",
+        "placeholder": "e.g. 2500",
+        "toastSaved": "Monthly income updated"
+      },
+      "transfer": {
+        "title": "Monthly transfer to Daily Spending",
+        "description": "Fixed amount transferred every month from Main to your Daily Spending account. This is what covers groceries, fuel and dining.",
+        "placeholder": "e.g. 500",
+        "toastSaved": "Monthly transfer updated"
+      },
+      "balance": {
+        "invalidAmount": "Enter a valid amount.",
+        "saveLabel": "Update",
+        "srLabel": "Current balance of {label}",
+        "toastSaved": "{name} updated"
+      },
+      "kind": {
+        "principal": {
+          "description": "Receives the salary, pays fixed monthly bills."
+        },
+        "vieCourante": {
+          "description": "Day-to-day budget (groceries, fuel, dining)."
+        },
+        "epargne": {
+          "description": "Smooths quarterly and annual bills."
+        }
+      },
+      "types": {
+        "income_bills": "Salary & Bills",
+        "provisions": "Annual Provisions",
+        "daily_card": "Groceries, Gas & Leisure"
+      },
+      "defaults": {
+        "income_bills": "Main Account",
+        "provisions": "Savings Account",
+        "daily_card": "Daily Card"
+      }
+    },
+    "expenses": {
+      "title": "My expenses",
+      "subtitle": "Spending outside recurring bills — groceries, dining, leisure…",
+      "addFormTitle": "Add an expense",
+      "labelLabel": "Label",
+      "amountLabel": "Amount (€)",
+      "dateLabel": "Date",
+      "addButton": "Add",
+      "adding": "Adding…",
+      "emptyState": "No expenses recorded.",
+      "summary": "{count, plural, =0 {No expenses} one {1 expense · {total}} other {# expenses · {total}}}",
+      "deleteAria": "Delete {label}",
+      "toastCreated": "Expense added",
+      "toastDeleted": "Expense deleted"
     },
     "settings": {
-    "displayName": {
-      "required": "Name required.",
-      "tooLong": "Maximum 80 characters."
+      "metaTitle": "Settings",
+      "metaDescription": "Manage your profile, 2FA security and personal data.",
+      "title": "Settings",
+      "description": "Profile, security and personal data.",
+      "profile": {
+        "title": "Profile",
+        "description": "This information personalizes your cockpit.",
+        "emailLabel": "Email",
+        "displayNameLabel": "Display name",
+        "localeLabel": "Language",
+        "localeOptions": {
+          "fr-BE": "Français (Belgique)",
+          "fr-FR": "Français (France)",
+          "en-GB": "English"
+        },
+        "submit": "Save",
+        "submitting": "Saving…",
+        "toastSaved": "Profile updated"
+      },
+      "mfa": {
+        "title": "Security — 2FA",
+        "description": "A one-time code generated by an authenticator app (Authy, 1Password, Google Authenticator).",
+        "emptyState": "No active 2FA factor. Turn it on to protect your account.",
+        "enrollButton": "Enable 2FA",
+        "enrolling": "Preparing…",
+        "scanInstruction": "Scan this QR code in your authenticator app, then enter the 6-digit code.",
+        "qrAlt": "QR code for the authenticator app",
+        "manualEntry": "Manual entry",
+        "codeLabel": "6-digit code",
+        "verifyButton": "Verify and enable",
+        "verifying": "Verifying…",
+        "cancel": "Cancel",
+        "defaultFactorName": "TOTP app",
+        "activeLabel": "Active",
+        "disableButton": "Disable",
+        "toastEnabled": "MFA enabled",
+        "toastDisabled": "MFA disabled"
+      },
+      "data": {
+        "title": "My data",
+        "description": "GDPR portability (art. 20) — download a full JSON of everything Ankora holds about you.",
+        "exportButton": "Download my data",
+        "exporting": "Generating…",
+        "toastDownloaded": "Export downloaded"
+      },
+      "danger": {
+        "scheduledTitle": "Deletion in progress",
+        "scheduledBody": "Your account will be deleted on <strong>{date}</strong>. You can cancel any time until then.",
+        "viewStatus": "View status",
+        "title": "Danger zone",
+        "description": "Permanent account deletion. 30-day grace period to cancel — after that, everything is wiped (audit logs pseudonymised).",
+        "reasonLabel": "Reason (optional)",
+        "reasonPlaceholder": "Help us improve…",
+        "confirmLabel": "To confirm, type your email address: <code>{email}</code>",
+        "submit": "Delete my account",
+        "submitting": "Scheduling…",
+        "toastScheduled": "Deletion scheduled — you have 30 days to cancel"
+      }
+    },
+    "simulator": {
+      "title": "Simulator",
+      "subtitle": "Measure the impact of a change without touching your real data.",
+      "scenario": {
+        "title": "Scenario",
+        "description": "Choose an action to simulate.",
+        "modes": {
+          "cancel": "Cancel a bill",
+          "negotiate": "Renegotiate",
+          "add": "Add a bill"
+        }
+      },
+      "fields": {
+        "charge": "Bill",
+        "chargePlaceholder": "Select…",
+        "newAmount": "New amount (€)",
+        "label": "Label",
+        "amount": "Amount (€)",
+        "frequency": "Frequency",
+        "month": "Month"
+      },
+      "impact": {
+        "title": "Impact",
+        "empty": "Complete the scenario to see the impact.",
+        "currentMonthly": "Current / month",
+        "projectedMonthly": "Projected / month",
+        "annualSavings": "Annual savings",
+        "monthlyChange": "{sign}{percent}% / month"
+      }
+    },
+    "deletionStatus": {
+      "title": "Account deletion",
+      "subtitle": "Detailed status of your request and cancellation period.",
+      "metaTitle": "Deletion status",
+      "metaDescription": "Status of your Ankora account deletion request.",
+      "statusLabel": "Status:",
+      "requestedOn": "Requested on {date}.",
+      "statusPending": "Pending",
+      "statusCancelled": "Cancelled",
+      "statusCompleted": "Completed",
+      "scheduledFor": "Deletion scheduled",
+      "daysLeft": "Days left",
+      "auditLogs": "Audit logs",
+      "auditLogsValue": "Pseudonymised, never deleted",
+      "daysCount": "{days, plural, =0 {Today} one {# day} other {# days}}",
+      "backToSettings": "Back to settings",
+      "cancelledOn": "Request cancelled on {date}. Your account is preserved.",
+      "cancelledNoDate": "Request cancelled. Your account is preserved.",
+      "cancelButton": "Cancel deletion",
+      "cancelling": "Cancelling…",
+      "toastCancelled": "Request cancelled — your account is preserved"
+    },
+    "cockpit": {
+      "capaciteEpargneReelle": {
+        "title": "Real Savings Capacity",
+        "messagePositive": "This is what you truly have left every month, with no surprises.",
+        "messageNegative": "Warning — your overall lifestyle exceeds your income.",
+        "tooltip": "This subtracts every charge (smoothed over the year) and your daily allowance from your monthly income. That is what is actually left for savings or unexpected expenses."
+      },
+      "santeProvisions": {
+        "title": "Provisions Health",
+        "cibleTheorique": "Ideal theoretical target:",
+        "soldeActuel": "Current balance:",
+        "statutAJour": "On track ✨",
+        "deficit": "Deficit detected:",
+        "rattrapageDescription": "Includes +{amount} € to recover the deficit over 3 months.",
+        "tooltip": "The algorithm computes how much your Savings account should hold today to absorb all upcoming periodic charges smoothly."
+      },
+      "virements": {
+        "title": "Transfer Assistant",
+        "provisionsMensuelles": "Monthly provisions:",
+        "facturesAnnuelles": "Periodic bills this month:",
+        "aVirer": "Transfer to Savings:",
+        "aRecuperer": "Pull from Savings:",
+        "aucun": "No transfer needed this month. Provisions exactly cover the periodic bills.",
+        "descriptionAVirer": "Covers your monthly provisions, minus the bills due this month.",
+        "descriptionDepuis": "This month’s periodic bills exceed your provision. Use your savings!",
+        "detailHeader": "Breakdown of the {amount} € provisions:"
+      },
+      "notifications": {
+        "transferToSavings": "Remember to transfer {amount} € to Savings this month.",
+        "transferFromSavings": "You need to pull {amount} € from Savings to cover this month’s bills.",
+        "chargeOverdue": "{label} is overdue (was due on {day}).",
+        "chargeDueSoon": "{label} due in {days} day(s)."
+      }
+    }
+  },
+  "glossary": {
+    "title": "Glossary",
+    "subtitle": "15 essential terms for understanding your budgeting and personal finances.",
+    "metaTitle": "Glossary — Financial Terms",
+    "metaDescription": "Glossary of 15 essential budgeting terms: smoothed budget, bucket account, emergency fund, and more.",
+    "breadcrumb": {
+      "home": "Home",
+      "glossary": "Glossary"
+    },
+    "section": {
+      "whyItMatters": "Why It Matters",
+      "example": "Concrete Example",
+      "relatedTerms": "Related Terms"
+    }
+  },
+  "errors": {
+    "generic": "Something went wrong. Try again.",
+    "session": {
+      "expired": "Session expired. Log in again.",
+      "rateLimited": "Too many requests. Wait a minute."
+    },
+    "auth": {
+      "invalidCredentials": "Incorrect email or password.",
+      "signupFailed": "Sign-up failed. Try again later.",
+      "googleFailed": "Google login unavailable. Try again later.",
+      "rateLimited": "Too many attempts. Try again in a few minutes.",
+      "serviceTemporarilyUnavailable": "Service temporarily unavailable. Try again in a few minutes.",
+      "passwordResetFailed": "Unable to update the password.",
+      "linkExpired": "Link expired. Request a new link.",
+      "mfaEnrollFailed": "Unable to start enrolment.",
+      "mfaChallengeFailed": "MFA challenge failed.",
+      "mfaCodeInvalid": "Incorrect code. Try again.",
+      "mfaDisableFailed": "Unable to disable 2FA."
+    },
+    "db": {
+      "workspaceNotFound": "No editable workspace.",
+      "updateFailed": "Update failed.",
+      "notEditable": "You don't have edit rights on this space."
+    },
+    "validation": {
+      "generic": "Invalid data.",
+      "auth": {
+        "email": {
+          "invalid": "Invalid email address."
+        },
+        "password": {
+          "required": "Password required.",
+          "tooShort": "At least 12 characters.",
+          "tooLong": "Maximum 128 characters.",
+          "lowercase": "At least one lowercase letter.",
+          "uppercase": "At least one uppercase letter.",
+          "digit": "At least one digit."
+        },
+        "passwordConfirm": {
+          "mismatch": "Passwords do not match."
+        },
+        "acceptTos": {
+          "required": "You must accept the Terms."
+        },
+        "acceptPrivacy": {
+          "required": "You must accept the privacy policy."
+        }
+      },
+      "charge": {
+        "label": {
+          "required": "Label required.",
+          "tooLong": "Maximum 120 characters."
+        },
+        "amount": {
+          "invalid": "Invalid amount.",
+          "negative": "Amount must be ≥ 0.",
+          "tooHigh": "Amount too high."
+        },
+        "frequency": {
+          "invalid": "Invalid frequency."
+        },
+        "dueMonth": {
+          "range": "Month between 1 and 12."
+        },
+        "paidFrom": {
+          "invalid": "Invalid debit account."
+        }
+      },
+      "account": {
+        "kind": {
+          "invalid": "Invalid account type."
+        },
+        "balance": {
+          "invalid": "Invalid balance.",
+          "outOfRange": "Value out of range."
+        },
+        "label": {
+          "required": "Label required.",
+          "tooLong": "Maximum 80 characters."
+        }
+      },
+      "workspace": {
+        "name": {
+          "required": "Name required.",
+          "tooLong": "Maximum 80 characters."
+        },
+        "income": {
+          "invalid": "Invalid income.",
+          "negative": "Must be ≥ 0.",
+          "tooHigh": "Income too high."
+        },
+        "transfer": {
+          "invalid": "Invalid amount.",
+          "negative": "Must be ≥ 0.",
+          "tooHigh": "Amount too high."
+        }
+      },
+      "expense": {
+        "label": {
+          "required": "Label required.",
+          "tooLong": "Maximum 120 characters."
+        },
+        "amount": {
+          "invalid": "Invalid amount.",
+          "negative": "Must be ≥ 0.",
+          "tooHigh": "Amount too high."
+        },
+        "date": {
+          "format": "Expected format: YYYY-MM-DD."
+        },
+        "category": {
+          "invalid": "Invalid category."
+        }
+      },
+      "settings": {
+        "displayName": {
+          "required": "Name required.",
+          "tooLong": "Maximum 80 characters."
+        },
+        "locale": {
+          "invalid": "Invalid language."
+        },
+        "factorId": {
+          "invalid": "Invalid identifier."
+        },
+        "mfaCode": {
+          "invalid": "6-digit code."
+        },
+        "deletion": {
+          "confirm": "This address doesn't match your account."
+        }
+      },
+      "onboarding": {
+        "workspace": {
+          "required": "Name required.",
+          "tooLong": "Maximum 80 characters."
+        },
+        "income": {
+          "invalid": "Invalid income.",
+          "negative": "Must be ≥ 0.",
+          "tooHigh": "Income too high."
+        },
+        "firstCharge": {
+          "label": {
+            "required": "Label required.",
+            "tooLong": "Maximum 120 characters."
+          },
+          "amount": {
+            "invalid": "Invalid amount.",
+            "negative": "Must be ≥ 0.",
+            "tooHigh": "Amount too high."
+          },
+          "dueMonth": {
+            "range": "Month between 1 and 12."
+          }
+        }
+      }
+    },
+    "charges": {
+      "createFailed": "Unable to create the bill.",
+      "updateFailed": "Unable to update the bill.",
+      "deleteFailed": "Unable to delete the bill."
+    },
+    "accounts": {
+      "balanceUpdateFailed": "Unable to update the balance.",
+      "renameFailed": "Unable to rename the account.",
+      "incomeUpdateFailed": "Unable to update the income.",
+      "transferUpdateFailed": "Unable to update the transfer."
+    },
+    "expenses": {
+      "createFailed": "Unable to create the expense.",
+      "deleteFailed": "Unable to delete the expense."
+    },
+    "settings": {
+      "profileUpdateFailed": "Unable to update the profile.",
+      "deletionRequestFailed": "Unable to schedule the deletion.",
+      "deletionCancelFailed": "Unable to cancel the request.",
+      "exportLimited": "Export limited to once every 5 minutes."
+    },
+    "onboarding": {
+      "workspaceNotFound": "Workspace not found. Contact support.",
+      "workspaceUpdateFailed": "Unable to update the workspace.",
+      "chargeFailed": "Workspace created but bill not saved."
     },
     "locale": {
       "invalid": "Invalid language."
-    },
-    "factorId": {
-      "invalid": "Invalid identifier."
-    },
-    "mfaCode": {
-      "invalid": "6-digit code."
-    },
-    "deletion": {
-      "confirm": "This address doesn't match your account."
     }
-    },
-    "onboarding": {
-    "workspace": {
-      "required": "Name required.",
-      "tooLong": "Maximum 80 characters."
-    },
-    "income": {
-      "invalid": "Invalid income.",
-      "negative": "Must be ≥ 0.",
-      "tooHigh": "Income too high."
-    },
-    "firstCharge": {
-      "label": {
-      "required": "Label required.",
-      "tooLong": "Maximum 120 characters."
-      },
-      "amount": {
-      "invalid": "Invalid amount.",
-      "negative": "Must be ≥ 0.",
-      "tooHigh": "Amount too high."
-      },
-      "dueMonth": {
-      "range": "Month between 1 and 12."
-      }
-    }
-    }
-  },
-  "charges": {
-    "createFailed": "Unable to create the bill.",
-    "updateFailed": "Unable to update the bill.",
-    "deleteFailed": "Unable to delete the bill."
-  },
-  "accounts": {
-    "balanceUpdateFailed": "Unable to update the balance.",
-    "renameFailed": "Unable to rename the account.",
-    "incomeUpdateFailed": "Unable to update the income.",
-    "transferUpdateFailed": "Unable to update the transfer."
-  },
-  "expenses": {
-    "createFailed": "Unable to create the expense.",
-    "deleteFailed": "Unable to delete the expense."
-  },
-  "settings": {
-    "profileUpdateFailed": "Unable to update the profile.",
-    "deletionRequestFailed": "Unable to schedule the deletion.",
-    "deletionCancelFailed": "Unable to cancel the request.",
-    "exportLimited": "Export limited to once every 5 minutes."
-  },
-  "onboarding": {
-    "workspaceNotFound": "Workspace not found. Contact support.",
-    "workspaceUpdateFailed": "Unable to update the workspace.",
-    "chargeFailed": "Workspace created but bill not saved."
-  },
-  "locale": {
-    "invalid": "Invalid language."
-  }
   },
   "opengraphImage": {
-  "trustHosting": "🇧🇪 Belgium · EU hosted",
-  "trustNoBank": "No bank aggregation",
-  "trustFree": "0 € Phase 1"
+    "trustHosting": "🇧🇪 Belgium · EU hosted",
+    "trustNoBank": "No bank aggregation",
+    "trustFree": "0 € Phase 1"
   }
 }
