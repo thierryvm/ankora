@@ -30,7 +30,7 @@ supabase db push --linked
 supabase migration list --linked
 ```
 
-Le push est **idempotent** : Supabase garde l'historique des migrations appliquées et ne re-applique jamais une migration déjà présente.
+Le push est **idempotent** : Supabase garde l'historique des migrations appliquées et ne réapplique jamais une migration déjà présente.
 
 ## Garde-fous obligatoires sur les migrations
 
@@ -117,15 +117,15 @@ Option A en CI dédiée, exécutée seulement sur push `main` (pas en PR), avec 
 
 À ajouter dans la définition de DONE Ankora (`CLAUDE.md` projet) :
 
-- [ ] Migration testée localement avec `supabase db reset` (zero erreur)
+- [ ] Migration testée localement avec `supabase db reset` (zéro erreur)
 - [ ] Migration idempotente (DO bloc avec `if not exists` sur policies/constraints)
 - [ ] **Après merge `main`** : exécuter `supabase db push --linked` et vérifier `supabase migration list --linked` (Local = Remote pour la nouvelle migration)
 - [ ] Smoke test prod du parcours user qui dépend de la migration
 
 ## Historique des incidents traités
 
-| Date | PR | Incident | Résolution |
-|---|---|---|---|
+| Date       | PR        | Incident                                                                                                                                                     | Résolution                                                                                                                                                    |
+| ---------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-05-03 | #94 + #96 | 4 migrations PR-D1 mergées sur main mais non appliquées prod → PR-D2 (#96) servie sans les colonnes `account_type`/`display_name`, rendu fallback silencieux | `supabase db push --linked` exécuté manuellement par @cowork. Migration 2 a planté (subquery in CHECK), fix dans PR #97. Re-push OK 4/4 appliquées 20:23 UTC. |
 
 ---
