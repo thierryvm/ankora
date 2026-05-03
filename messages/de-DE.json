@@ -693,6 +693,12 @@
         "income_bills": "Main Account",
         "provisions": "Savings Account",
         "daily_card": "Daily Card"
+      },
+      "rename": {
+        "placeholder": "E.g. Belfius, Revolut, ING…",
+        "inputLabel": "New account name",
+        "editLabel": "Rename account \"{name}\"",
+        "errorInvalid": "Invalid name (1 to 50 characters, no < or >)."
       }
     },
     "expenses": {
@@ -1039,7 +1045,8 @@
       "balanceUpdateFailed": "Saldo konnte nicht aktualisiert werden.",
       "renameFailed": "Konto konnte nicht umbenannt werden.",
       "incomeUpdateFailed": "Einkommen konnte nicht aktualisiert werden.",
-      "transferUpdateFailed": "Überweisung konnte nicht aktualisiert werden."
+      "transferUpdateFailed": "Überweisung konnte nicht aktualisiert werden.",
+      "notFound": "This account could not be found."
     },
     "expenses": {
       "createFailed": "Ausgabe konnte nicht erstellt werden.",
@@ -1058,6 +1065,16 @@
     },
     "locale": {
       "invalid": "Ungültige Sprache."
+    },
+    "account": {
+      "type": {
+        "invalid": "Invalid account type."
+      },
+      "displayName": {
+        "required": "The account name is required.",
+        "tooLong": "The account name is too long (max 50 characters).",
+        "invalidChars": "The account name cannot contain < or >."
+      }
     }
   },
   "opengraphImage": {

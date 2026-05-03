@@ -28,6 +28,7 @@ export const AuditEvent = {
   EXPENSE_UPDATED: 'expense.updated',
   EXPENSE_DELETED: 'expense.deleted',
   ACCOUNT_BALANCE_UPDATED: 'account.balance_updated',
+  ACCOUNT_RENAMED: 'account.renamed',
 
   // GDPR
   GDPR_CONSENT_GIVEN: 'gdpr.consent_given',

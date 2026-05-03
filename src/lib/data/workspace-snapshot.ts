@@ -9,6 +9,7 @@ import {
   type ChargePaidFrom,
   type Expense,
 } from '@/lib/domain/types';
+import type { AccountType } from '@/lib/domain/cockpit/types';
 
 /**
  * Canonical timezone for month-boundary calculations on the dashboard.
@@ -39,8 +40,14 @@ function getCurrentMonthBoundariesISO(): { startISO: string; nextStartISO: strin
 }
 
 export type AccountSnapshot = {
+  /** Legacy column — kept until PR-D-final migrates every consumer to accountType. */
   kind: AccountKind;
+  /** Legacy column — kept until PR-D-final migrates every consumer to displayName. */
   label: string;
+  /** ADR-008 canonical type. Drives cockpit logic + UI typed cards (PR-D2+). */
+  accountType: AccountType;
+  /** ADR-008 user-defined display name. Editable inline since PR-D2. */
+  displayName: string;
   balance: number;
 };
 
@@ -115,7 +122,10 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
       .select('id, label, amount, frequency, due_month, category_id, is_active, notes, paid_from')
       .eq('workspace_id', workspaceId)
       .order('created_at', { ascending: true }),
-    supabase.from('accounts').select('kind, label, balance').eq('workspace_id', workspaceId),
+    supabase
+      .from('accounts')
+      .select('kind, label, account_type, display_name, balance')
+      .eq('workspace_id', workspaceId),
     supabase
       .from('expenses')
       .select('id, label, amount, occurred_on, category_id, note, paid_from')
@@ -153,6 +163,8 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
   const accounts: AccountSnapshot[] = (accountsRes.data ?? []).map((a) => ({
     kind: a.kind as AccountKind,
     label: a.label,
+    accountType: a.account_type as AccountType,
+    displayName: a.display_name,
     balance: Number(a.balance),
   }));
 

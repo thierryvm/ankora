@@ -8,25 +8,26 @@ import {
   PiggyBank,
   Receipt,
   Shield,
-  Wallet,
 } from 'lucide-react';
 
 import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { AccountCard } from '@/components/features/AccountCard';
 import { Budget, Expenses, Provision, Transfer, money } from '@/lib/domain';
-import type { AccountKind } from '@/lib/domain/types';
 import { getWorkspaceSnapshot } from '@/lib/data/workspace-snapshot';
+import type { AccountType } from '@/lib/schemas/account';
 import type { Locale } from '@/i18n/routing';
 import { formatCurrency, formatDate, formatMonth } from '@/lib/i18n/formatters';
 
-const ACCOUNT_ICONS: Record<AccountKind, typeof Landmark> = {
-  principal: Landmark,
-  vie_courante: Wallet,
-  epargne: PiggyBank,
-};
-
-const ACCOUNT_ORDER: AccountKind[] = ['principal', 'vie_courante', 'epargne'];
+/**
+ * Render order for the typed account cards in the cockpit Bloc 1.
+ * Matches the canonical spec dashboard-cockpit-vraie-vision-2026-05-03.md:
+ *   1. income_bills (where salary lands)
+ *   2. provisions (savings buffer)
+ *   3. daily_card (daily-spending pot)
+ */
+const ACCOUNT_TYPE_ORDER: readonly AccountType[] = ['income_bills', 'provisions', 'daily_card'];
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('app.dashboard');
@@ -84,7 +85,7 @@ export default async function DashboardPage() {
   const epargneGoesToEpargne = plan.epargneTransferNet.gte(0);
   const missingSetup =
     snapshot.monthlyIncome === null || snapshot.vieCouranteMonthlyTransfer === null;
-  const accountByKind = new Map(snapshot.accounts.map((a) => [a.kind, a]));
+  const accountByType = new Map(snapshot.accounts.map((a) => [a.accountType, a]));
 
   return (
     <div className="flex flex-col gap-8">
@@ -278,25 +279,17 @@ export default async function DashboardPage() {
           )}
 
           <div className="grid gap-4 md:grid-cols-3">
-            {ACCOUNT_ORDER.map((kind) => {
-              const account = accountByKind.get(kind);
-              const Icon = ACCOUNT_ICONS[kind];
+            {ACCOUNT_TYPE_ORDER.map((accountType) => {
+              const account = accountByType.get(accountType);
+              if (!account) return null;
               return (
-                <Card key={kind}>
-                  <CardHeader className="pb-2">
-                    <div className="text-muted-foreground flex items-center gap-2">
-                      <Icon className="h-4 w-4" aria-hidden />
-                      <CardTitle className="text-xs font-medium tracking-wide uppercase">
-                        {account?.label ?? kind}
-                      </CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-xl font-semibold tabular-nums">
-                      {fmtMoney(money(account?.balance ?? 0))}
-                    </p>
-                  </CardContent>
-                </Card>
+                <AccountCard
+                  key={accountType}
+                  accountType={accountType}
+                  displayName={account.displayName}
+                  balance={account.balance}
+                  locale={locale}
+                />
               );
             })}
           </div>
