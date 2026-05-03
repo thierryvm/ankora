@@ -1045,7 +1045,8 @@
       "balanceUpdateFailed": "Kan het saldo niet bijwerken.",
       "renameFailed": "Kan de rekening niet hernoemen.",
       "incomeUpdateFailed": "Kan het nettoloon niet bijwerken.",
-      "transferUpdateFailed": "Kan de overschrijving niet bijwerken."
+      "transferUpdateFailed": "Kan de overschrijving niet bijwerken.",
+      "notFound": "This account could not be found."
     },
     "expenses": {
       "createFailed": "Kan de uitgave niet aanmaken.",

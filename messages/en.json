@@ -1045,7 +1045,8 @@
       "balanceUpdateFailed": "Unable to update the balance.",
       "renameFailed": "Unable to rename the account.",
       "incomeUpdateFailed": "Unable to update the income.",
-      "transferUpdateFailed": "Unable to update the transfer."
+      "transferUpdateFailed": "Unable to update the transfer.",
+      "notFound": "This account could not be found."
     },
     "expenses": {
       "createFailed": "Unable to create the expense.",

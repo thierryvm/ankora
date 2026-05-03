@@ -1045,7 +1045,8 @@
       "balanceUpdateFailed": "No se ha podido actualizar el saldo.",
       "renameFailed": "No se ha podido renombrar la cuenta.",
       "incomeUpdateFailed": "No se ha podido actualizar el ingreso.",
-      "transferUpdateFailed": "No se ha podido actualizar la transferencia."
+      "transferUpdateFailed": "No se ha podido actualizar la transferencia.",
+      "notFound": "This account could not be found."
     },
     "expenses": {
       "createFailed": "No se ha podido crear el gasto.",

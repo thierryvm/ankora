@@ -1045,7 +1045,8 @@
       "balanceUpdateFailed": "Impossible de mettre à jour le solde.",
       "renameFailed": "Impossible de renommer le compte.",
       "incomeUpdateFailed": "Impossible de mettre à jour le revenu.",
-      "transferUpdateFailed": "Impossible de mettre à jour le virement."
+      "transferUpdateFailed": "Impossible de mettre à jour le virement.",
+      "notFound": "Ce compte est introuvable."
     },
     "expenses": {
       "createFailed": "Impossible de créer la dépense.",

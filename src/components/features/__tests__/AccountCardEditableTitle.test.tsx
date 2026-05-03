@@ -6,6 +6,7 @@ import messages from '../../../../messages/fr-BE.json';
 
 const renameMock = vi.hoisted(() => vi.fn());
 const toastErrorMock = vi.hoisted(() => vi.fn());
+const routerRefreshMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/actions/accounts', () => ({
   renameAccountByTypeAction: renameMock,
@@ -13,6 +14,12 @@ vi.mock('@/lib/actions/accounts', () => ({
 
 vi.mock('@/components/ui/toast', () => ({
   toast: { error: toastErrorMock, success: vi.fn() },
+}));
+
+// next/navigation is unavailable under jsdom; the App Router context is
+// not mounted in unit tests, so we stub the hook outright.
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ refresh: routerRefreshMock, push: vi.fn(), replace: vi.fn() }),
 }));
 
 import { AccountCardEditableTitle } from '@/components/features/AccountCardEditableTitle';
@@ -35,6 +42,7 @@ describe('<AccountCardEditableTitle />', () => {
   beforeEach(() => {
     renameMock.mockReset();
     toastErrorMock.mockReset();
+    routerRefreshMock.mockReset();
   });
 
   it('renders the display name as a button by default', () => {
@@ -103,7 +111,7 @@ describe('<AccountCardEditableTitle />', () => {
     expect(renameMock).not.toHaveBeenCalled();
   });
 
-  it('shows an error toast when the Server Action returns ok: false', async () => {
+  it('shows an error toast and refreshes the route when the Server Action returns ok: false', async () => {
     renameMock.mockResolvedValue({ ok: false, errorCode: 'errors.accounts.renameFailed' });
     renderWithIntl(<AccountCardEditableTitle {...baseProps} />);
     fireEvent.click(screen.getByRole('button', { name: /Renommer le compte/i }));
@@ -115,6 +123,9 @@ describe('<AccountCardEditableTitle />', () => {
     await waitFor(() => {
       expect(toastErrorMock).toHaveBeenCalled();
     });
+    // router.refresh() forces the Server Component tree to re-render so
+    // that useOptimistic snaps back to the canonical displayName.
+    expect(routerRefreshMock).toHaveBeenCalledTimes(1);
   });
 
   it('exposes an aria-label that names the current account', () => {

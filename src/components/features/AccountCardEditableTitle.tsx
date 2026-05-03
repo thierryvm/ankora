@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, useOptimistic, useRef, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { Edit2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -30,6 +31,7 @@ type Props = {
 export function AccountCardEditableTitle({ accountType, displayName, subLabel }: Props) {
   const t = useTranslations('app.accounts.rename');
   const translateError = useActionErrorTranslator();
+  const router = useRouter();
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -79,8 +81,11 @@ export function AccountCardEditableTitle({ accountType, displayName, subLabel }:
       });
       if (!result.ok) {
         toast.error(translateError(result.errorCode));
-        // Optimistic state is cleared automatically by React on the next
-        // server-rendered prop, so we just surface the error to the user.
+        // useOptimistic only snaps back when the component re-renders. The
+        // failed Server Action did NOT call revalidatePath, so we trigger
+        // an explicit refresh to re-fetch the Server Component tree and
+        // restore the canonical displayName from the DB.
+        router.refresh();
       }
     });
   }
@@ -129,7 +134,7 @@ export function AccountCardEditableTitle({ accountType, displayName, subLabel }:
       <button
         type="button"
         onClick={enterEdit}
-        className="hover:bg-muted/50 focus-visible:bg-muted/50 -mx-1 -my-0.5 flex items-center gap-1.5 rounded-md px-1 py-0.5 text-left text-base font-semibold tracking-tight transition-colors focus-visible:outline-none"
+        className="group hover:bg-muted/50 focus-visible:bg-muted/50 -mx-1 -my-0.5 flex items-center gap-1.5 rounded-md px-1 py-0.5 text-left text-base font-semibold tracking-tight transition-colors focus-visible:outline-none"
         aria-label={t('editLabel', { name: optimisticName })}
         disabled={isPending}
       >

@@ -134,13 +134,20 @@ export async function renameAccountByTypeAction(input: unknown): Promise<ActionR
     };
   }
 
-  const { error } = await ctx.supabase
+  // .select() forces Supabase to return the updated rows so we can detect
+  // the no-op case (RLS rejected the row, account_type doesn't exist for
+  // this workspace, etc.) — `error` alone is null when no row matches.
+  const { data, error } = await ctx.supabase
     .from('accounts')
     .update({ display_name: parsed.data.displayName })
     .eq('workspace_id', ctx.workspaceId)
-    .eq('account_type', parsed.data.accountType);
+    .eq('account_type', parsed.data.accountType)
+    .select('account_type');
 
   if (error) return { ok: false, errorCode: 'errors.accounts.renameFailed' };
+  if (!data || data.length === 0) {
+    return { ok: false, errorCode: 'errors.accounts.notFound' };
+  }
 
   await logAuditEvent(
     AuditEvent.ACCOUNT_RENAMED,
