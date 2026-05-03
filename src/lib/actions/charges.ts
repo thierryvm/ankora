@@ -66,8 +66,8 @@ export async function createChargeAction(input: unknown): Promise<ActionResult> 
     workspaceId: ctx.workspaceId,
   });
 
-  revalidatePath('/app');
-  revalidatePath('/app/charges');
+  revalidatePath('/[locale]/app', 'page');
+  revalidatePath('/[locale]/app/charges', 'page');
   return { ok: true };
 }
 
@@ -109,8 +109,8 @@ export async function updateChargeAction(id: string, input: unknown): Promise<Ac
     workspaceId: ctx.workspaceId,
   });
 
-  revalidatePath('/app');
-  revalidatePath('/app/charges');
+  revalidatePath('/[locale]/app', 'page');
+  revalidatePath('/[locale]/app/charges', 'page');
   return { ok: true };
 }
 
@@ -135,7 +135,7 @@ export async function deleteChargeAction(id: string): Promise<ActionResult> {
     workspaceId: ctx.workspaceId,
   });
 
-  revalidatePath('/app');
-  revalidatePath('/app/charges');
+  revalidatePath('/[locale]/app', 'page');
+  revalidatePath('/[locale]/app/charges', 'page');
   return { ok: true };
 }

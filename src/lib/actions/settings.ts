@@ -61,7 +61,7 @@ export async function updateProfileAction(input: unknown): Promise<ActionResult>
 
   if (error) return { ok: false, errorCode: 'errors.settings.profileUpdateFailed' };
 
-  revalidatePath('/app/settings');
+  revalidatePath('/[locale]/app/settings', 'page');
   return { ok: true };
 }
 
@@ -127,7 +127,7 @@ export async function verifyMfaAction(input: unknown): Promise<ActionResult> {
     userAgent,
   });
 
-  revalidatePath('/app/settings');
+  revalidatePath('/[locale]/app/settings', 'page');
   return { ok: true };
 }
 
@@ -150,7 +150,7 @@ export async function unenrollMfaAction(factorId: string): Promise<ActionResult>
     userAgent,
   });
 
-  revalidatePath('/app/settings');
+  revalidatePath('/[locale]/app/settings', 'page');
   return { ok: true };
 }
 
@@ -222,8 +222,8 @@ export async function requestAccountDeletionAction(input: unknown): Promise<Acti
     userAgent,
   });
 
-  revalidatePath('/app/settings');
-  revalidatePath('/app/settings/deletion-status');
+  revalidatePath('/[locale]/app/settings', 'page');
+  revalidatePath('/[locale]/app/settings/deletion-status', 'page');
   return { ok: true };
 }
 
@@ -245,8 +245,8 @@ export async function cancelAccountDeletionAction(): Promise<ActionResult> {
     userAgent,
   });
 
-  revalidatePath('/app/settings');
-  revalidatePath('/app/settings/deletion-status');
+  revalidatePath('/[locale]/app/settings', 'page');
+  revalidatePath('/[locale]/app/settings/deletion-status', 'page');
   return { ok: true };
 }
 

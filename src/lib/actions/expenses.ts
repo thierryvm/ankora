@@ -64,8 +64,8 @@ export async function createExpenseAction(input: unknown): Promise<ActionResult>
     workspaceId: ctx.workspaceId,
   });
 
-  revalidatePath('/app');
-  revalidatePath('/app/expenses');
+  revalidatePath('/[locale]/app', 'page');
+  revalidatePath('/[locale]/app/expenses', 'page');
   return { ok: true };
 }
 
@@ -90,7 +90,7 @@ export async function deleteExpenseAction(id: string): Promise<ActionResult> {
     workspaceId: ctx.workspaceId,
   });
 
-  revalidatePath('/app');
-  revalidatePath('/app/expenses');
+  revalidatePath('/[locale]/app', 'page');
+  revalidatePath('/[locale]/app/expenses', 'page');
   return { ok: true };
 }

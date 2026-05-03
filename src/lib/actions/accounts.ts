@@ -36,8 +36,8 @@ async function resolveSessionWorkspace() {
 }
 
 function revalidateAccountPaths() {
-  revalidatePath('/app');
-  revalidatePath('/app/accounts');
+  revalidatePath('/[locale]/app', 'page');
+  revalidatePath('/[locale]/app/accounts', 'page');
 }
 
 // =========================================================================
