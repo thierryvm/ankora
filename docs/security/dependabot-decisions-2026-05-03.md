@@ -4,7 +4,7 @@
 
 ## Contexte
 
-Le 2 mai 2026 soir, GitHub Dependabot a remonté **2 alertes Moderate** sur la branche `main` du repo Ankora. Après diagnostic technique, les 2 alertes étaient **bloquées en upgrade** par des dépendances upstream (`@lhci/cli` et `next.js`) qui pinnent des versions vulnérables de leurs sub-deps.
+Le soir du 2 mai 2026, GitHub Dependabot a remonté **2 alertes Moderate** sur la branche `main` du repo Ankora. Après diagnostic technique, les 2 alertes étaient **bloquées en upgrade** par des dépendances upstream (`@lhci/cli` et `next.js`) qui pinnent des versions vulnérables de leurs sub-deps.
 
 Le 3 mai 2026 (~11h00 CEST), @cowork + @thierry ont arbitré la stratégie de gestion sécurité de ces 2 alertes en regard du contexte Ankora :
 
@@ -77,7 +77,7 @@ Trimestrielle. Re-évaluer à chaque release majeure Next.js. Set un reminder à
 
 ---
 
-## Convention `gh api` pour dismiss Dependabot alert
+## Convention `gh api` pour dismiss une alerte Dependabot
 
 Pour bypasser le bug récurrent du redirect 404 sur `/security/dependabot/dismiss?ids%5B%5D=...&redirect_to_alert_number=N` côté GitHub UI, utiliser directement l'API REST :
 
@@ -102,7 +102,7 @@ gh api -X PATCH /repos/thierryvm/ankora/dependabot/alerts/<N> `
 
 ---
 
-## Process général gestion alertes Dependabot
+## Process général de gestion des alertes Dependabot
 
 Pour toute future alerte :
 
