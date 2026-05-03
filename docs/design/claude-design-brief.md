@@ -277,35 +277,205 @@ Comparables to outshine (not copy):
 Language: French by default, English toggle in header. Generate FR version first, EN will follow.
 ```
 
-### 3.2 User Dashboard v3 — PRIORITÉ 2
+### 3.2 User Dashboard v3 — "Cockpit Financier" — PRIORITÉ 2
+
+> **Vision canonique réécrite 2026-05-03** suite au mockup AI Studio "IronBudget" partagé par @thierry. Ce mockup formalise la VRAIE vision Ankora — bien plus aboutie que la version 8-sections précédente. **Source de vérité unique** : `specs/dashboard-cockpit-vraie-vision-2026-05-03.md` dans le vault Athenaeum (700 lignes structurées).
+>
+> **ADRs verrouillés à lire avant la session** : ADR-002 (bucket-model), ADR-008 (account naming), ADR-009 (Capacité d'Épargne Réelle), ADR-010 (live decrement Quotidien), ADR-011 (plan rattrapage 3 mois), ADR-012 (Assistant Virements).
 
 ```
-Surface: User dashboard — THE product core. This is what users open 2-3 times per week. If this is not joyful, the product fails.
+Surface: User Dashboard "Mon Cockpit Financier" — THE product core, 2-3 weekly opens per active user. The cockpit is where Ankora's 5 unique differentiators live. It must feel SOLID (financial gravitas) and ACTIVE (live updates without page reload).
 
-Layout (mobile-first, 8 sections, mobile = vertical scroll, desktop = 2-column with sticky right sidebar):
-  1. HERO — Cashflow waterfall animated (salary → envelopes → outflows) with live numbers
-  2. Health score — gauge 0-100 with 3 contextual nudges below
-  3. Timeline — predictive 6-month balance curve, hoverable for tooltips
-  4. Envelopes — drag-to-rebalance cards, monthly % consumed, visual overflow warning
-  5. Upcoming bills — 7/14/30d tabs, expandable list with provision status
-  6. Goals — savings goals with ETA, progress ring, editable target
-  7. Simulator — collapsed by default in a drawer, "What if I renegotiate X?" inline
-  8. Recent activity — last 10 transactions with semantic badges (Paid / Scheduled / Action needed / Received / Manual)
+The hero promise: "Garde le contrôle absolu sur ton budget, mois par mois."
 
-Extra — Compte Épargne card: must show 3 distinct numbers:
-  - Total savings
-  - Affected provisions (locked until due date)
-  - Free reserve (available anytime, with in/out history)
-This is Ankora's key differentiator — make it VISUALLY obvious.
+────────────────────────────────────────────────────────────────────────
+WHAT THIS DASHBOARD IS NOT
+────────────────────────────────────────────────────────────────────────
+- It is NOT a transaction feed (no "recent activity" list of bank movements — Ankora has no PSD2)
+- It is NOT a budget app where users tag expenses (the user enters their charges + their daily expenses, the algo does the rest)
+- It is NOT 8 equal-weight sections — it has a hierarchy: 3 typed accounts on top, 2 hero KPI radar cards, then a 2/3 charges list + 1/3 sidebar with 4 stacked cards
+- It is NOT a clone of Monarch / YNAB — it has 5 unique calculations no competitor does
 
-Interactions:
-  - Cards with subtle gradient follow on hover (desktop)
-  - Number tickers on value changes (spring physics)
-  - Morph transitions from list item → detail view
-  - Pull-to-refresh with haptic on mobile
+────────────────────────────────────────────────────────────────────────
+LAYOUT — 4 BLOCS CLEARLY HIERARCHIZED
+────────────────────────────────────────────────────────────────────────
+Mobile-first vertical scroll. Desktop = 2-column from Bloc 3 onward.
 
-Forbidden: bento grid of equal cards, emoji icons (use Lucide), dollar signs (always €), historic bar charts (we're predictive).
+Bloc 0 — HEADER (sticky)
+  - Title "Mon Cockpit Financier" + tagline
+  - Bell notifications (badge count = active alerts)
+  - Month selector "< Mai 2026 >" (left/right chevrons + calendar icon, persistent in URL ?month=YYYY-MM)
+    Allows browsing past months (closed/historical) AND future months (predictive)
+
+Bloc 1 — 3 ACCOUNT CARDS (3 colonnes desktop / 1 colonne mobile)
+  Each card = 1 account TYPE with a fixed semantic role + a USER-RENAMABLE display name:
+  - "Compte Principal" (income_bills, blue Wallet icon) — input revenue editable, sub-label "Salaires & Factures"
+  - "Compte Épargne" (provisions, emerald PiggyBank) — input savings balance editable, sub-label "Provisions Annuelles"
+  - "Carte Quotidien" (daily_card, purple CreditCard) — input monthly daily-spending plafond editable, sub-label "Courses, Essence, Loisirs"
+
+  CRITICAL: the card title is RENAMABLE inline (click → input → save). Thierry calls his "Belfius", "Compte Épargne Belfius", "Revolut Quotidien". The account_TYPE is fixed (semantic), but the display_name is free-text. Show a subtle pencil hint on hover.
+
+Bloc 2 — 2 HERO RADAR CARDS (2 colonnes equal width)
+  Card 2.1 — "Effort Financier Lissé"
+    - Big number (4xl bold, white) of the total monthly smoothed effort
+    - Sub-breakdown at bottom: "Charges fixes: X €" + "Provisions: +Y €"
+    - ShieldCheck blue icon top-right
+    - This is the "tax of being alive" — what your monthly money MUST cover before any room
+
+  Card 2.2 — "Capacité d'Épargne Réelle" (THE HERO KPI — Ankora signature)
+    - Big number (4xl bold) — emerald if ≥ 0, rose if < 0, with explicit + sign if positive
+    - Below: contextual message
+      - if ≥ 0: "C'est ton vrai reste à vivre chaque mois, sans surprise."
+      - if < 0: "Attention, ton train de vie global dépasse tes revenus."
+    - CheckCircle2 emerald or AlertCircle rose icon top-right
+    - Glow decorative blob in the bottom-right corner (opacity 0.2, blur-3xl, color matching state)
+
+    THIS IS THE NUMBER USERS COME BACK TO SEE EVERY DAY. Make it iconic. No competitor displays this calculation. The promise "without surprise" must be felt visually — solid, stable, gravitas.
+
+Bloc 3 — 2/3 + 1/3 SPLIT (desktop) / vertical stack (mobile)
+
+  Bloc 3-LEFT (2/3 width desktop) — "À PAYER EN {MOIS}"
+    Header:
+      - Title with TrendingDown icon
+      - Sort toggle: "Trier par date" / "Ordre personnalisé" (drag & drop active when custom)
+      - Buttons: "Catégories" (manage modal) + "+ Ajouter une charge" (add modal)
+
+    Body — sub-sections by source account (CRITICAL UX clarity):
+
+    Section 3-LEFT.A — "Depuis le Compte Principal (display_name)" — blue header
+      List of monthly fixed charges due this month
+      Sum displayed top-right
+
+    Section 3-LEFT.B — "Depuis le Compte Épargne (Provisions)" — emerald header (visible only if periodic charges due this month)
+      List of periodic charges (annual/quarterly) actually due THIS month
+      Sum displayed top-right
+
+    Each row (ChargeRow) — INTERACTIVE:
+      - Toggle paye/non-payé (left side, 11x6 rounded pill, emerald if paid)
+        When paid: charge name line-through + opacity 0.75 + bg emerald subtle
+      - Charge name (font-medium)
+      - Category badge (colored pill, 10px, mapping from categories table — 8 default colors)
+      - Day of month chip ("Le 01")
+      - Frequency tag ("MENSUELLE" / "ANNUELLE" / "TRIMESTRIELLE") in blue uppercase if periodic
+      - Amount (right side, font-mono, lg)
+      - Edit pencil button (visible at hover, opens inline popover with category/day/amount/save/cancel/delete)
+      - In "Ordre personnalisé" mode: GripVertical drag handle (desktop) OR Up/Down arrows (mobile)
+
+  Bloc 3-RIGHT (1/3 width desktop) — 4 STACKED CARDS (vertical)
+
+    Card 3-R.1 — "DÉPENSES DU QUOTIDIEN" (purple ShoppingCart icon, current month badge)
+      - Progress bar "Reste à dépenser X € / Y €" (X = plafond - sum dépenses, Y = plafond)
+        Color logic: < 75% purple, 75-90% amber, ≥ 90% rose
+      - Inline form: description input (placeholder "Ex: Courses Colruyt") + amount input + category select + "+" button
+        LIVE DECREMENT: adding an expense updates the bar IMMEDIATELY (optimistic), Server Action persists in background
+      - List of this month's expenses (description + category badge + day + amount + delete on hover)
+
+    Card 3-R.2 — "ASSISTANT VIREMENTS" (gradient blue-to-emerald background, ArrowRightLeft icon — THE COCKPIT BRAIN)
+      - "Provisions mensuelles: X €" (inline)
+      - "Factures annuelles ce mois-ci: Y €" (inline)
+      - SUB-CARD "Santé des Provisions" (emerald or amber depending on deficit)
+        - "Cible théorique idéale: X €"
+        - "Solde actuel: Y €"
+        - If deficit: "Déficit détecté: -Z €" (amber)
+        - If at goal: "Statut: À jour ✨" (emerald)
+      - HERO MONTANT À VIRER:
+        - If transfertAjusté > 0: "À virer vers l'Épargne: X €" (3xl bold blue) + sub-text explaining inclusion of catch-up if applicable
+        - If transfertAjusté < 0: "À récupérer de l'Épargne: |X| €" (3xl bold emerald) + "Les factures annuelles de ce mois dépassent ta provision. Utilise ton épargne !"
+        - If transfertAjusté = 0: "Aucun virement nécessaire ce mois-ci." (zinc message)
+      - DETAIL PROVISIONS (item by item, expandable section): "Détail des X € de provisions:" with each charge listed (name + lissée provision)
+
+      THIS IS THE UNIQUE SELLING POINT. No competitor calculates the smart "transfertRecommandé = provisions - factures du mois". Make this card feel like a financial co-pilot whispering wisdom. Subtle gradient, soft glow, gravitas. Magic.
+
+    Card 3-R.3 — "PRÉVISIONS (6 mois)" (BarChart3 blue icon)
+      - Custom bar chart, 6 columns (current month + 5 future months)
+      - Bar height ∝ totalCharges of the month (normalized to max in window)
+      - Bar color: blue if margePrevue ≥ 0, rose if margePrevue < 0
+      - Hover tooltip: month name + total charges + margin
+      - Current month label highlighted (white text + bold), others zinc
+      - Pure SVG, no external chart lib (Chart.js / Recharts excluded — bundle weight)
+
+    Card 3-R.4 — "SIMULATEUR D'ACTION" (gradient blue-to-purple, TrendingUp icon)
+      - Step 1 select: "Choisir une dépense" (dropdown listing all charges with format "{nom} ({montant} € - {frequence})")
+      - Step 2 input: "Nouveau prix espéré" (number input, € suffix indicating frequency)
+      - Result panel (animates in when both inputs filled):
+        - "Économie lissée: +X € / mois" (emerald if positive, rose if negative)
+        - 1-line explanatory text
+        - Button "Appliquer ce changement" (primary blue, persists modification + creates provider_negotiations record cf. ADR-013 future)
+
+      Tone: empowering. The user is in control, can simulate "what if I switch internet provider to Orange at 89€" in real-time and see immediate impact. ⚠️ FSMA: do NOT use the word "investissement" or "placement" anywhere in this component.
+
+────────────────────────────────────────────────────────────────────────
+MODALS (overlay, backdrop-blur, Liquid Glass aesthetic)
+────────────────────────────────────────────────────────────────────────
+Modal A — "Nouvelle Charge"
+  Fields: nom + montant + jour échéance + catégorie + fréquence
+  If fréquence ≠ mensuelle: multi-select "Mois d'échéance" (dropdown with 12 months, ctrl-click multi)
+  Helper: "Sélectionne les mois où cette charge doit être payée"
+  Buttons: Annuler (ghost) + Ajouter (primary blue)
+
+Modal B — "Gérer les Catégories"
+  List of all categories (badges with colored background)
+  Trash button per category (except "Autres" which is system-protected)
+  Confirm modal: "Supprimer cette catégorie ? Les charges associées passeront dans 'Autres'."
+  Add form: label input + color select (8 presets: blue/pink/rose/emerald/purple/amber/cyan/zinc)
+
+────────────────────────────────────────────────────────────────────────
+INTERACTIONS & MICRO-MOTIONS
+────────────────────────────────────────────────────────────────────────
+- Cards with subtle gradient follow on hover (desktop, ≤ 200ms ease-out)
+- Number tickers on value changes (spring physics, used on the 2 hero radar cards + Quotidien progress bar)
+- Toggle paye = pillow physics (5x bouncy spring)
+- Modal entry = scale 0.95 → 1 + opacity, exit reverse, 240ms
+- Notification dropdown = slide-in-from-top + fade, 200ms
+- Drag & drop charges = lift (scale 1.02 + shadow + opacity 0.95) and dropzone hint (border accent on hover target)
+- Pull-to-refresh on mobile with haptic feedback (PWA)
+- Bell badge count: subtle pulse animation when new alert arrives (1x ping)
+
+────────────────────────────────────────────────────────────────────────
+9 DOMAIN CALCULATIONS — ARCHITECTURAL CONTEXT (read before designing)
+────────────────────────────────────────────────────────────────────────
+The dashboard surfaces 9 pure-domain calculations (full math in the canonical spec doc). You don't need to implement them — backend handles it — but understanding what they DO informs visual hierarchy:
+
+1. effortFinancierLisse = totalMensuelFixe + provisionMensuelleTotale (Bloc 2.1)
+2. capaciteEpargneReelle = revenus - effortFinancierLisse - plafondQuotidien (Bloc 2.2 — HERO)
+3. transfertRecommande = provisionMensuelleTotale - totalPeriodiquesMois (Bloc 3-R.2 — UNIQUE)
+4. santeProvisions = totalEpargneTheorique vs soldeActuel (Bloc 3-R.2 sub-card)
+5. rattrapageMensuel = deficit / 3 (auto-included in Bloc 3-R.2 hero number)
+6. resteBudgetVie = plafond - sum(depensesDuMois) (Bloc 3-R.1 progress bar)
+7. notifications[] reactive (Bell badge in header)
+8. previsions6mois (Bloc 3-R.3 bar chart)
+9. economieMensuelleLissee (Bloc 3-R.4 simulateur output)
+
+Display all amounts with French formatting: "1 942,00 €" (NBSP thousands, comma decimals, space then €).
+
+────────────────────────────────────────────────────────────────────────
+DIFFERENTIATORS TO MAKE VISUALLY OBVIOUS (vs Monarch/YNAB/Lunch Money)
+────────────────────────────────────────────────────────────────────────
+1. Capacité d'Épargne Réelle (Bloc 2.2) — give it visual GRAVITAS, top hierarchy with the Effort
+2. Assistant Virements (Bloc 3-R.2) — the smart calculation transfertRecommandé. Show pedagogy via the detail-by-charge breakdown. This is the "wow" that makes users say "no other app does this".
+3. Plan rattrapage 3 mois — when activated, surface it cleanly under the À virer hero number ("Inclut +X € pour rattraper sur 3 mois").
+4. Live decrement Quotidien — the bar moves IMMEDIATELY when an expense is added. Sub-100ms perceived latency.
+5. Simulateur d'Action (Bloc 3-R.4) — inline, on the dashboard, not buried in a separate page.
+
+────────────────────────────────────────────────────────────────────────
+FORBIDDEN
+────────────────────────────────────────────────────────────────────────
+- Bento grid of equal-weight cards (we have hierarchy: 3 accounts → 2 radar → 2/3+1/3)
+- Emoji icons (Lucide stroke-1.5 only)
+- Dollar signs ($) — ANKORA IS EUROPEAN, € only
+- Historic bar charts as the main viz (we're predictive — Bloc 3-R.3 looks forward)
+- Generic "transactions feed" (no PSD2, no transactions)
+- The word "investissement" / "placement" / "rendement" in any UI string (FSMA hard exclusion)
+- The 8-section v2 layout from previous brief — that vision is OBSOLETE
+
+────────────────────────────────────────────────────────────────────────
+LANGUAGE
+────────────────────────────────────────────────────────────────────────
+French primary, English alternative. All copy bilingual via i18n keys (cf. ADR docs).
+First-person warm tone. Avoid jargon. When showing a number, ALWAYS explain its meaning in 1 line below.
 ```
+
+> **Pour cette session Claude Design** : merci de produire des variations qui respectent strictement la hiérarchie 4 blocs ci-dessus. Si une exploration créative te tente sur un layout alternatif, archive-la dans `scraps/` mais ne l'envoie pas en variante principale. La cible est le mockup IronBudget visuellement repensé Ankora — pas une réinvention.
 
 ### 3.3 Onboarding (3 steps) — PRIORITÉ 3
 
