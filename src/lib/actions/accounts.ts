@@ -2,7 +2,11 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidateAppPath, revalidateDashboard } from '@/lib/actions/revalidate';
-import { accountBalanceSchema, accountLabelSchema } from '@/lib/schemas/account';
+import {
+  accountBalanceSchema,
+  accountLabelSchema,
+  accountRenameByTypeSchema,
+} from '@/lib/schemas/account';
 import { monthlyIncomeSchema, vieCouranteTransferSchema } from '@/lib/schemas/workspace';
 import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
 import { rateLimit } from '@/lib/security/rate-limit';
@@ -102,6 +106,47 @@ export async function renameAccountAction(input: unknown): Promise<ActionResult>
     .eq('kind', parsed.data.kind);
 
   if (error) return { ok: false, errorCode: 'errors.accounts.renameFailed' };
+
+  revalidateAccountPaths();
+  return { ok: true };
+}
+
+// =========================================================================
+// Rename an account by canonical account_type (ADR-008)
+// =========================================================================
+// Distinct from `renameAccountAction` (legacy `kind`) so PR-D2 cards can
+// drive the rename through the canonical column without churning every
+// existing consumer. Both server actions write to the same row — they
+// only differ in how they identify it.
+export async function renameAccountByTypeAction(input: unknown): Promise<ActionResult> {
+  const ctx = await resolveSessionWorkspace();
+  if (!ctx.ok) return { ok: false, errorCode: ctx.errorCode };
+
+  const rl = await rateLimit('mutation', `user:${ctx.user.id}`);
+  if (!rl.success) return { ok: false, errorCode: 'errors.session.rateLimited' };
+
+  const parsed = accountRenameByTypeSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      errorCode: 'errors.validation.generic',
+      fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+    };
+  }
+
+  const { error } = await ctx.supabase
+    .from('accounts')
+    .update({ display_name: parsed.data.displayName })
+    .eq('workspace_id', ctx.workspaceId)
+    .eq('account_type', parsed.data.accountType);
+
+  if (error) return { ok: false, errorCode: 'errors.accounts.renameFailed' };
+
+  await logAuditEvent(
+    AuditEvent.ACCOUNT_RENAMED,
+    { userId: ctx.user.id, workspaceId: ctx.workspaceId },
+    { resource_type: 'account', resource_id: parsed.data.accountType },
+  );
 
   revalidateAccountPaths();
   return { ok: true };

@@ -693,6 +693,12 @@
         "income_bills": "Compte Principal",
         "provisions": "Compte Épargne",
         "daily_card": "Carte Quotidien"
+      },
+      "rename": {
+        "placeholder": "Ex: Belfius, Revolut, ING…",
+        "inputLabel": "Nouveau nom du compte",
+        "editLabel": "Renommer le compte « {name} »",
+        "errorInvalid": "Nom invalide (1 à 50 caractères, sans < ou >)."
       }
     },
     "expenses": {
@@ -1058,6 +1064,16 @@
     },
     "locale": {
       "invalid": "Langue invalide."
+    },
+    "account": {
+      "type": {
+        "invalid": "Type de compte invalide."
+      },
+      "displayName": {
+        "required": "Le nom du compte est requis.",
+        "tooLong": "Le nom est trop long (max 50 caractères).",
+        "invalidChars": "Le nom ne peut pas contenir < ou >."
+      }
     }
   },
   "opengraphImage": {
