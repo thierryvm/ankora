@@ -1,10 +1,10 @@
 'use server';
 
 import { headers } from 'next/headers';
-import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/server';
+import { revalidateAppPath } from '@/lib/actions/revalidate';
 import {
   profileUpdateSchema,
   mfaVerifySchema,
@@ -61,7 +61,7 @@ export async function updateProfileAction(input: unknown): Promise<ActionResult>
 
   if (error) return { ok: false, errorCode: 'errors.settings.profileUpdateFailed' };
 
-  revalidatePath('/app/settings');
+  revalidateAppPath('settings');
   return { ok: true };
 }
 
@@ -127,7 +127,7 @@ export async function verifyMfaAction(input: unknown): Promise<ActionResult> {
     userAgent,
   });
 
-  revalidatePath('/app/settings');
+  revalidateAppPath('settings');
   return { ok: true };
 }
 
@@ -150,7 +150,7 @@ export async function unenrollMfaAction(factorId: string): Promise<ActionResult>
     userAgent,
   });
 
-  revalidatePath('/app/settings');
+  revalidateAppPath('settings');
   return { ok: true };
 }
 
@@ -222,8 +222,8 @@ export async function requestAccountDeletionAction(input: unknown): Promise<Acti
     userAgent,
   });
 
-  revalidatePath('/app/settings');
-  revalidatePath('/app/settings/deletion-status');
+  revalidateAppPath('settings');
+  revalidateAppPath('settings/deletion-status');
   return { ok: true };
 }
 
@@ -245,8 +245,8 @@ export async function cancelAccountDeletionAction(): Promise<ActionResult> {
     userAgent,
   });
 
-  revalidatePath('/app/settings');
-  revalidatePath('/app/settings/deletion-status');
+  revalidateAppPath('settings');
+  revalidateAppPath('settings/deletion-status');
   return { ok: true };
 }
 

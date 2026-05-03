@@ -1,8 +1,7 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
 import { createClient } from '@/lib/supabase/server';
+import { revalidateAppPath, revalidateDashboard } from '@/lib/actions/revalidate';
 import { chargeInputSchema, chargeUpdateSchema } from '@/lib/schemas/charge';
 import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
 import { rateLimit } from '@/lib/security/rate-limit';
@@ -66,8 +65,8 @@ export async function createChargeAction(input: unknown): Promise<ActionResult> 
     workspaceId: ctx.workspaceId,
   });
 
-  revalidatePath('/app');
-  revalidatePath('/app/charges');
+  revalidateDashboard();
+  revalidateAppPath('charges');
   return { ok: true };
 }
 
@@ -109,8 +108,8 @@ export async function updateChargeAction(id: string, input: unknown): Promise<Ac
     workspaceId: ctx.workspaceId,
   });
 
-  revalidatePath('/app');
-  revalidatePath('/app/charges');
+  revalidateDashboard();
+  revalidateAppPath('charges');
   return { ok: true };
 }
 
@@ -135,7 +134,7 @@ export async function deleteChargeAction(id: string): Promise<ActionResult> {
     workspaceId: ctx.workspaceId,
   });
 
-  revalidatePath('/app');
-  revalidatePath('/app/charges');
+  revalidateDashboard();
+  revalidateAppPath('charges');
   return { ok: true };
 }
