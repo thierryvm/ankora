@@ -698,7 +698,8 @@
         "placeholder": "Ex: Belfius, Revolut, ING…",
         "inputLabel": "Nouveau nom du compte",
         "editLabel": "Renommer le compte « {name} »",
-        "errorInvalid": "Nom invalide (1 à 50 caractères, sans < ou >)."
+        "errorInvalid": "Nom invalide (1 à 50 caractères, sans < ou >).",
+        "tooltip": "Cliquer pour renommer"
       }
     },
     "expenses": {

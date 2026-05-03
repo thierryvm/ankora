@@ -74,12 +74,22 @@ describe('<Header />', () => {
     expect(screen.getByRole('link', { name: 'Paramètres' })).toBeInTheDocument();
   });
 
-  it('home link points to / when unauthenticated, /app when authenticated', async () => {
+  it('home link always points to / regardless of auth state (issue #95)', async () => {
+    // Per issue #95, the logo always navigates to the public landing for
+    // consistency with MktNav.tsx. Clicking from /app is a deliberate
+    // "go home" action and avoids the title-flash no-op described in #95.
     const { unmount } = await renderHeader({ variant: 'marketing', isAuthenticated: false });
     expect(screen.getByLabelText('Accueil Ankora')).toHaveAttribute('href', '/');
     unmount();
 
     await renderHeader({ variant: 'marketing', isAuthenticated: true });
-    expect(screen.getByLabelText('Accueil Ankora')).toHaveAttribute('href', '/app');
+    expect(screen.getByLabelText('Accueil Ankora')).toHaveAttribute('href', '/');
+  });
+
+  it('home link has the active:scale-95 tactile press animation (issue #95)', async () => {
+    await renderHeader({ variant: 'app', isAuthenticated: true });
+    const link = screen.getByLabelText('Accueil Ankora');
+    expect(link.className).toContain('active:scale-95');
+    expect(link.className).toContain('transition-transform');
   });
 });
