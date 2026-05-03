@@ -15,10 +15,16 @@ export async function Header({ variant = 'marketing', isAuthenticated = false }:
   return (
     <header className="border-border bg-background/80 sticky top-0 z-40 border-b backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-4 md:px-6">
+        {/*
+         * The logo always points to the public landing (`/`), aligned with
+         * MktNav.tsx — clicking it from `/app` is now a deliberate
+         * navigation, which avoids the no-op + title-flash described in
+         * issue #95. The tactile press animation reinforces the click.
+         */}
         <Link
-          href={isAuthenticated ? '/app' : '/'}
+          href="/"
           aria-label={t('homeAria')}
-          className="focus-visible:ring-brand-600 flex shrink-0 items-center gap-2 rounded-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+          className="focus-visible:ring-brand-600 flex shrink-0 items-center gap-2 rounded-md transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none motion-safe:active:scale-95"
         >
           <AnkoraLogo className="h-8 w-auto" />
         </Link>

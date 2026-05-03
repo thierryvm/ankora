@@ -133,4 +133,21 @@ describe('<AccountCardEditableTitle />', () => {
     const button = screen.getByRole('button', { name: 'Renommer le compte « Compte Principal »' });
     expect(button).toBeInTheDocument();
   });
+
+  it('exposes a tooltip via the title attribute (issue #98)', () => {
+    renderWithIntl(<AccountCardEditableTitle {...baseProps} />);
+    const button = screen.getByRole('button', { name: /Renommer le compte/i });
+    expect(button).toHaveAttribute('title', 'Cliquer pour renommer');
+  });
+
+  it('keeps the pencil discreetly visible at rest, emphasised on hover and keyboard focus (issue #98 affordance)', () => {
+    renderWithIntl(<AccountCardEditableTitle {...baseProps} />);
+    const button = screen.getByRole('button', { name: /Renommer le compte/i });
+    // The Edit2 icon is the only <svg> child of the button.
+    const icon = button.querySelector('svg');
+    expect(icon).not.toBeNull();
+    // opacity-30 at rest, opacity-70 on either pointer hover OR keyboard
+    // focus — the latter is critical for keyboard-only discoverability.
+    expect(icon).toHaveClass('opacity-30', 'group-hover:opacity-70', 'focus-visible:opacity-70');
+  });
 });

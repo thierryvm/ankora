@@ -698,7 +698,8 @@
         "placeholder": "E.g. Belfius, Revolut, ING…",
         "inputLabel": "New account name",
         "editLabel": "Rename account \"{name}\"",
-        "errorInvalid": "Invalid name (1 to 50 characters, no < or >)."
+        "errorInvalid": "Invalid name (1 to 50 characters, no < or >).",
+        "tooltip": "Click to rename"
       }
     },
     "expenses": {
