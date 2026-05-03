@@ -67,13 +67,18 @@ export async function generateMetadata({ params }: LocaleParams): Promise<Metada
       siteName: SITE.name,
       title: `${SITE.name} — ${tagline}`,
       description,
-      images: [{ url: '/brand/logo.svg', width: 280, height: 64, alt: SITE.name }],
+      // images intentionally omitted: Next.js auto-discovers
+      // src/app/[locale]/opengraph-image.tsx (1200×630 PNG dynamique
+      // par locale, généré via next/og ImageResponse).
     },
     twitter: {
       card: 'summary_large_image',
       title: `${SITE.name} — ${tagline}`,
       description,
       creator: SITE.twitter,
+      // images: same as openGraph above — auto-discovered by Next.js
+      // from src/app/[locale]/twitter-image.tsx if present, falling
+      // back to opengraph-image.tsx otherwise.
     },
     robots: {
       index: true,
