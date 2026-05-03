@@ -132,9 +132,18 @@
         "eyebrow": "Cockpit preview",
         "browserUrl": "Ankora · cockpit",
         "kpis": {
-          "netRemaining": { "label": "Net remaining", "sub": "April · after provisions" },
-          "provisions": { "label": "Provisions", "sub": "67% of €2,480 planned" },
-          "reserve": { "label": "Reserve", "sub": "+€120 vs. March" }
+          "netRemaining": {
+            "label": "Net remaining",
+            "sub": "April · after provisions"
+          },
+          "provisions": {
+            "label": "Provisions",
+            "sub": "67% of €2,480 planned"
+          },
+          "reserve": {
+            "label": "Reserve",
+            "sub": "+€120 vs. March"
+          }
         }
       },
       "waterfall": {
@@ -614,7 +623,11 @@
       "transferPrincipalRemainingHint": "After salary, transfers and Main bills ({bills}).",
       "ctaCharges": "My bills",
       "ctaExpenses": "My expenses",
-      "ctaSimulator": "Simulate"
+      "ctaSimulator": "Simulate",
+      "expensesTitle": "Expenses — {month}",
+      "expensesCount": "{count, plural, =0 {No expenses this month} one {1 expense this month} other {# expenses this month}}",
+      "expensesEmpty": "No expenses recorded for this month.",
+      "expensesViewAll": "View all expenses →"
     },
     "charges": {
       "title": "My bills",

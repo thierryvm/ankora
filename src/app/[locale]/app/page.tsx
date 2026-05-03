@@ -14,11 +14,11 @@ import {
 import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Budget, Provision, Transfer, money } from '@/lib/domain';
+import { Budget, Expenses, Provision, Transfer, money } from '@/lib/domain';
 import type { AccountKind } from '@/lib/domain/types';
 import { getWorkspaceSnapshot } from '@/lib/data/workspace-snapshot';
 import type { Locale } from '@/i18n/routing';
-import { formatCurrency, formatMonth } from '@/lib/i18n/formatters';
+import { formatCurrency, formatDate, formatMonth } from '@/lib/i18n/formatters';
 
 const ACCOUNT_ICONS: Record<AccountKind, typeof Landmark> = {
   principal: Landmark,
@@ -67,6 +67,10 @@ export default async function DashboardPage() {
         : t('healthCritical');
 
   const hasCharges = snapshot.charges.length > 0;
+
+  const monthlyExpenseTotal = Expenses.totalAmount(snapshot.monthlyExpenses);
+  const latestMonthlyExpenses = Expenses.latestExpenses(snapshot.monthlyExpenses, 5);
+  const monthlyExpenseCount = snapshot.monthlyExpenses.length;
 
   const monthlyIncome = money(snapshot.monthlyIncome ?? 0);
   const vieCouranteTransferAmount = money(snapshot.vieCouranteMonthlyTransfer ?? 0);
@@ -296,6 +300,56 @@ export default async function DashboardPage() {
               );
             })}
           </div>
+        </section>
+      )}
+
+      {hasCharges && (
+        <section aria-labelledby="expenses-heading" className="flex flex-col gap-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <CardTitle id="expenses-heading" className="text-xl">
+                    {t('expensesTitle', { month: monthLabel })}
+                  </CardTitle>
+                  <CardDescription>
+                    {t('expensesCount', { count: monthlyExpenseCount })}
+                  </CardDescription>
+                </div>
+                <p className="shrink-0 text-2xl font-bold tabular-nums">
+                  {fmtMoney(monthlyExpenseTotal)}
+                </p>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {monthlyExpenseCount === 0 ? (
+                <p className="text-muted-foreground text-sm">{t('expensesEmpty')}</p>
+              ) : (
+                <>
+                  <ul className="divide-border divide-y">
+                    {latestMonthlyExpenses.map((expense) => (
+                      <li key={expense.id} className="flex items-center justify-between gap-4 py-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-medium">{expense.label}</p>
+                          <p className="text-muted-foreground text-xs">
+                            {formatDate(expense.occurredOn, locale, 'short')}
+                          </p>
+                        </div>
+                        <p className="text-muted-foreground shrink-0 font-mono text-sm tabular-nums">
+                          {fmtMoney(expense.amount)}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-4">
+                    <Button asChild variant="ghost" size="sm">
+                      <Link href="/app/expenses">{t('expensesViewAll')}</Link>
+                    </Button>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
         </section>
       )}
 

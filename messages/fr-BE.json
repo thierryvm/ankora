@@ -614,7 +614,11 @@
       "transferPrincipalRemainingHint": "Après salaire, virements et factures Principal ({bills}).",
       "ctaCharges": "Mes charges",
       "ctaExpenses": "Mes dépenses",
-      "ctaSimulator": "Simuler"
+      "ctaSimulator": "Simuler",
+      "expensesTitle": "Dépenses — {month}",
+      "expensesCount": "{count, plural, =0 {Aucune dépense ce mois} one {1 dépense ce mois} other {# dépenses ce mois}}",
+      "expensesEmpty": "Aucune dépense enregistrée pour ce mois.",
+      "expensesViewAll": "Voir toutes les dépenses →"
     },
     "charges": {
       "title": "Mes charges",

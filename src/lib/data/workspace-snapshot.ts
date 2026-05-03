@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/server';
+import { log } from '@/lib/log';
 import {
   money,
   type AccountKind,
@@ -8,6 +9,34 @@ import {
   type ChargePaidFrom,
   type Expense,
 } from '@/lib/domain/types';
+
+/**
+ * Canonical timezone for month-boundary calculations on the dashboard.
+ * Ankora is FSMA-scoped to Belgium and `next-intl` already uses Europe/Brussels
+ * for date formatting. Computing month boundaries in this timezone avoids
+ * drifting one day around midnight UTC for end-of-month expenses.
+ *
+ * Multi-tenant per-workspace timezone is a post-launch concern (PR-D2).
+ */
+const ANKORA_TIMEZONE = 'Europe/Brussels';
+
+function getCurrentMonthBoundariesISO(): { startISO: string; nextStartISO: string } {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: ANKORA_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  const today = formatter.format(new Date()); // "YYYY-MM-DD"
+  const [yearStr, monthStr] = today.split('-');
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+  const startISO = `${yearStr}-${monthStr}-01`;
+  const nextYear = month === 12 ? year + 1 : year;
+  const nextMonth = month === 12 ? 1 : month + 1;
+  const nextStartISO = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
+  return { startISO, nextStartISO };
+}
 
 export type AccountSnapshot = {
   kind: AccountKind;
@@ -35,6 +64,8 @@ export type WorkspaceSnapshot = {
     notes: string | null;
     paidFrom: ChargePaidFrom;
   }>;
+  /** Expenses occurring in the current calendar month (server-filtered). */
+  monthlyExpenses: Expense[];
 };
 
 /**
@@ -66,7 +97,9 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
 
   const workspaceId = membership.workspace_id;
 
-  const [wsRes, settingsRes, chargesRes, accountsRes] = await Promise.all([
+  const { startISO: startOfMonth, nextStartISO: startOfNextMonth } = getCurrentMonthBoundariesISO();
+
+  const [wsRes, settingsRes, chargesRes, accountsRes, monthlyExpensesRes] = await Promise.all([
     supabase
       .from('workspaces')
       .select('id, name, monthly_income, vie_courante_monthly_transfer')
@@ -83,6 +116,13 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
       .eq('workspace_id', workspaceId)
       .order('created_at', { ascending: true }),
     supabase.from('accounts').select('kind, label, balance').eq('workspace_id', workspaceId),
+    supabase
+      .from('expenses')
+      .select('id, label, amount, occurred_on, category_id, note, paid_from')
+      .eq('workspace_id', workspaceId)
+      .gte('occurred_on', startOfMonth)
+      .lt('occurred_on', startOfNextMonth)
+      .order('occurred_on', { ascending: false }),
   ]);
 
   if (wsRes.error || !wsRes.data) redirect('/onboarding');
@@ -116,6 +156,23 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
     balance: Number(a.balance),
   }));
 
+  if (monthlyExpensesRes.error) {
+    log.warn('Failed to load monthly expenses for dashboard', {
+      workspace_id: workspaceId,
+      error_code: monthlyExpensesRes.error.code ?? 'unknown',
+    });
+  }
+
+  const monthlyExpenses: Expense[] = (monthlyExpensesRes.data ?? []).map((e) => ({
+    id: e.id,
+    label: e.label,
+    amount: money(Number(e.amount)),
+    occurredOn: e.occurred_on,
+    categoryId: e.category_id,
+    note: e.note,
+    paidFrom: e.paid_from as AccountKind,
+  }));
+
   return {
     workspaceId,
     workspaceName: wsRes.data.name,
@@ -126,6 +183,7 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
     accounts,
     charges,
     rawCharges,
+    monthlyExpenses,
   };
 }
 
