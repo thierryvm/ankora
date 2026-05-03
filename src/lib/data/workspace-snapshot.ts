@@ -35,6 +35,8 @@ export type WorkspaceSnapshot = {
     notes: string | null;
     paidFrom: ChargePaidFrom;
   }>;
+  /** Expenses occurring in the current calendar month (server-filtered). */
+  monthlyExpenses: Expense[];
 };
 
 /**
@@ -66,7 +68,16 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
 
   const workspaceId = membership.workspace_id;
 
-  const [wsRes, settingsRes, chargesRes, accountsRes] = await Promise.all([
+  const now = new Date();
+  const year = now.getFullYear();
+  const monthNumber = now.getMonth() + 1;
+  const startOfMonth = `${year}-${String(monthNumber).padStart(2, '0')}-01`;
+  const startOfNextMonth =
+    monthNumber === 12
+      ? `${year + 1}-01-01`
+      : `${year}-${String(monthNumber + 1).padStart(2, '0')}-01`;
+
+  const [wsRes, settingsRes, chargesRes, accountsRes, monthlyExpensesRes] = await Promise.all([
     supabase
       .from('workspaces')
       .select('id, name, monthly_income, vie_courante_monthly_transfer')
@@ -83,6 +94,13 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
       .eq('workspace_id', workspaceId)
       .order('created_at', { ascending: true }),
     supabase.from('accounts').select('kind, label, balance').eq('workspace_id', workspaceId),
+    supabase
+      .from('expenses')
+      .select('id, label, amount, occurred_on, category_id, note, paid_from')
+      .eq('workspace_id', workspaceId)
+      .gte('occurred_on', startOfMonth)
+      .lt('occurred_on', startOfNextMonth)
+      .order('occurred_on', { ascending: false }),
   ]);
 
   if (wsRes.error || !wsRes.data) redirect('/onboarding');
@@ -116,6 +134,16 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
     balance: Number(a.balance),
   }));
 
+  const monthlyExpenses: Expense[] = (monthlyExpensesRes.data ?? []).map((e) => ({
+    id: e.id,
+    label: e.label,
+    amount: money(Number(e.amount)),
+    occurredOn: e.occurred_on,
+    categoryId: e.category_id,
+    note: e.note,
+    paidFrom: e.paid_from as AccountKind,
+  }));
+
   return {
     workspaceId,
     workspaceName: wsRes.data.name,
@@ -126,6 +154,7 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
     accounts,
     charges,
     rawCharges,
+    monthlyExpenses,
   };
 }
 

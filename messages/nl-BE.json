@@ -132,9 +132,18 @@
         "eyebrow": "Aperçu cockpit",
         "browserUrl": "Ankora · cockpit",
         "kpis": {
-          "netRemaining": { "label": "Net restant", "sub": "avril · après provisions" },
-          "provisions": { "label": "Provisions", "sub": "67 % des 2 480 € planifiés" },
-          "reserve": { "label": "Réserve", "sub": "+120 € vs. mars" }
+          "netRemaining": {
+            "label": "Net restant",
+            "sub": "avril · après provisions"
+          },
+          "provisions": {
+            "label": "Provisions",
+            "sub": "67 % des 2 480 € planifiés"
+          },
+          "reserve": {
+            "label": "Réserve",
+            "sub": "+120 € vs. mars"
+          }
         }
       },
       "waterfall": {
@@ -614,7 +623,11 @@
       "transferPrincipalRemainingHint": "Na loon, overschrijvingen en facturen Hoofdrekening ({bills}).",
       "ctaCharges": "Mijn vaste kosten",
       "ctaExpenses": "Mijn uitgaven",
-      "ctaSimulator": "Simuleren"
+      "ctaSimulator": "Simuleren",
+      "expensesTitle": "Uitgaven — {month}",
+      "expensesCount": "{count, plural, =0 {Geen uitgaven deze maand} one {1 uitgave deze maand} other {# uitgaven deze maand}}",
+      "expensesEmpty": "Geen uitgaven geregistreerd voor deze maand.",
+      "expensesViewAll": "Alle uitgaven bekijken →"
     },
     "charges": {
       "title": "Mijn vaste kosten",

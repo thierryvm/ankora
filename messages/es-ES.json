@@ -132,9 +132,18 @@
         "eyebrow": "Aperçu cockpit",
         "browserUrl": "Ankora · cockpit",
         "kpis": {
-          "netRemaining": { "label": "Net restant", "sub": "avril · après provisions" },
-          "provisions": { "label": "Provisions", "sub": "67 % des 2 480 € planifiés" },
-          "reserve": { "label": "Réserve", "sub": "+120 € vs. mars" }
+          "netRemaining": {
+            "label": "Net restant",
+            "sub": "avril · après provisions"
+          },
+          "provisions": {
+            "label": "Provisions",
+            "sub": "67 % des 2 480 € planifiés"
+          },
+          "reserve": {
+            "label": "Réserve",
+            "sub": "+120 € vs. mars"
+          }
         }
       },
       "waterfall": {
@@ -614,7 +623,11 @@
       "transferPrincipalRemainingHint": "Tras el salario, las transferencias y las facturas de Principal ({bills}).",
       "ctaCharges": "Mis gastos fijos",
       "ctaExpenses": "Mis gastos",
-      "ctaSimulator": "Simular"
+      "ctaSimulator": "Simular",
+      "expensesTitle": "Gastos — {month}",
+      "expensesCount": "{count, plural, =0 {Sin gastos este mes} one {1 gasto este mes} other {# gastos este mes}}",
+      "expensesEmpty": "No hay gastos registrados este mes.",
+      "expensesViewAll": "Ver todos los gastos →"
     },
     "charges": {
       "title": "Mis gastos fijos",
