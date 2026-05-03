@@ -24,7 +24,7 @@ export async function Header({ variant = 'marketing', isAuthenticated = false }:
         <Link
           href="/"
           aria-label={t('homeAria')}
-          className="focus-visible:ring-brand-600 flex shrink-0 items-center gap-2 rounded-md transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-95"
+          className="focus-visible:ring-brand-600 flex shrink-0 items-center gap-2 rounded-md transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none motion-safe:active:scale-95"
         >
           <AnkoraLogo className="h-8 w-auto" />
         </Link>

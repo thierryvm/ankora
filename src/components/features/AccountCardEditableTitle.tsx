@@ -135,7 +135,7 @@ export function AccountCardEditableTitle({ accountType, displayName, subLabel }:
         type="button"
         onClick={enterEdit}
         title={t('tooltip')}
-        className="group hover:bg-muted/50 focus-visible:bg-muted/50 -mx-1 -my-0.5 flex cursor-text items-center gap-1.5 rounded-md px-1 py-0.5 text-left text-base font-semibold tracking-tight transition-colors hover:underline hover:decoration-zinc-500 hover:decoration-dotted hover:underline-offset-4 focus-visible:outline-none"
+        className="group hover:bg-muted/50 focus-visible:bg-muted/50 -mx-1 -my-0.5 flex cursor-pointer items-center gap-1.5 rounded-md px-1 py-0.5 text-left text-base font-semibold tracking-tight transition-colors hover:underline hover:decoration-zinc-500 hover:decoration-dotted hover:underline-offset-4 focus-visible:outline-none"
         aria-label={t('editLabel', { name: optimisticName })}
         disabled={isPending}
       >

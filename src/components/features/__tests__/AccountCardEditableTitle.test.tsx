@@ -140,14 +140,14 @@ describe('<AccountCardEditableTitle />', () => {
     expect(button).toHaveAttribute('title', 'Cliquer pour renommer');
   });
 
-  it('keeps the pencil discreetly visible at rest (issue #98 affordance)', () => {
+  it('keeps the pencil discreetly visible at rest, emphasised on hover and keyboard focus (issue #98 affordance)', () => {
     renderWithIntl(<AccountCardEditableTitle {...baseProps} />);
     const button = screen.getByRole('button', { name: /Renommer le compte/i });
     // The Edit2 icon is the only <svg> child of the button.
     const icon = button.querySelector('svg');
     expect(icon).not.toBeNull();
-    // opacity-30 baseline + group-hover:opacity-70 emphasis.
-    expect(icon!.getAttribute('class')).toContain('opacity-30');
-    expect(icon!.getAttribute('class')).toContain('group-hover:opacity-70');
+    // opacity-30 at rest, opacity-70 on either pointer hover OR keyboard
+    // focus — the latter is critical for keyboard-only discoverability.
+    expect(icon).toHaveClass('opacity-30', 'group-hover:opacity-70', 'focus-visible:opacity-70');
   });
 });

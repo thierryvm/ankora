@@ -86,10 +86,11 @@ describe('<Header />', () => {
     expect(screen.getByLabelText('Accueil Ankora')).toHaveAttribute('href', '/');
   });
 
-  it('home link has the active:scale-95 tactile press animation (issue #95)', async () => {
+  it('home link has the tactile press animation, gated on motion-safe (issue #95)', async () => {
     await renderHeader({ variant: 'app', isAuthenticated: true });
     const link = screen.getByLabelText('Accueil Ankora');
-    expect(link.className).toContain('active:scale-95');
-    expect(link.className).toContain('transition-transform');
+    // The full animation set: transition-transform + duration-150 +
+    // motion-safe:active:scale-95 (the latter respects prefers-reduced-motion).
+    expect(link).toHaveClass('transition-transform', 'duration-150', 'motion-safe:active:scale-95');
   });
 });
