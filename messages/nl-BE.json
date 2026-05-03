@@ -1,1019 +1,1024 @@
 {
   "common": {
-    "appName": "Ankora",
-    "tagline": "Je financieel houvast",
-    "description": "Ankora helpt je je vaste kosten te spreiden, elke factuur te anticiperen en de controle over je budget te houden. Een heldere en beveiligde cockpit, zonder beleggingsadvies.",
-    "homeAria": "Ankora startpagina",
-    "a11y": {
-      "skipToMain": "Ga naar de hoofdinhoud"
-    },
-    "nav": {
-      "mainLabel": "Hoofdnavigatie",
-      "appLabel": "Applicatienavigatie",
-      "mobileLabel": "Mobiele navigatie",
-      "footerLabel": "Voettekst",
-      "menu": "Menu",
-      "close": "Sluiten",
-      "lightMode": "Lichte modus",
-      "darkMode": "Donkere modus",
-      "features": "Functies",
-      "faq": "FAQ",
-      "login": "Inloggen",
-      "signup": "Account aanmaken",
-      "myCockpit": "Mijn cockpit",
-      "dashboard": "Dashboard",
-      "accounts": "Rekeningen",
-      "charges": "Vaste kosten",
-      "settings": "Instellingen"
-    },
-    "actions": {
-      "retry": "Opnieuw proberen",
-      "back": "Terug"
-    },
-    "months": {
-      "1": "januari",
-      "2": "februari",
-      "3": "maart",
-      "4": "april",
-      "5": "mei",
-      "6": "juni",
-      "7": "juli",
-      "8": "augustus",
-      "9": "september",
-      "10": "oktober",
-      "11": "november",
-      "12": "december"
-    },
-    "monthsShort": {
-      "1": "jan.",
-      "2": "feb.",
-      "3": "mrt.",
-      "4": "apr.",
-      "5": "mei",
-      "6": "jun.",
-      "7": "jul.",
-      "8": "aug.",
-      "9": "sep.",
-      "10": "okt.",
-      "11": "nov.",
-      "12": "dec."
-    },
-    "frequency": {
-      "monthly": "Maandelijks",
-      "quarterly": "Driemaandelijks",
-      "semiannual": "Halfjaarlijks",
-      "annual": "Jaarlijks"
-    }
+  "appName": "Ankora",
+  "tagline": "Je financieel houvast",
+  "description": "Ankora helpt je je vaste kosten te spreiden, elke factuur te anticiperen en de controle over je budget te houden. Een heldere en beveiligde cockpit, zonder beleggingsadvies.",
+  "homeAria": "Ankora startpagina",
+  "a11y": {
+    "skipToMain": "Ga naar de hoofdinhoud"
+  },
+  "nav": {
+    "mainLabel": "Hoofdnavigatie",
+    "appLabel": "Applicatienavigatie",
+    "mobileLabel": "Mobiele navigatie",
+    "footerLabel": "Voettekst",
+    "menu": "Menu",
+    "close": "Sluiten",
+    "lightMode": "Lichte modus",
+    "darkMode": "Donkere modus",
+    "features": "Functies",
+    "faq": "FAQ",
+    "login": "Inloggen",
+    "signup": "Account aanmaken",
+    "myCockpit": "Mijn cockpit",
+    "dashboard": "Dashboard",
+    "accounts": "Rekeningen",
+    "charges": "Vaste kosten",
+    "settings": "Instellingen"
+  },
+  "actions": {
+    "retry": "Opnieuw proberen",
+    "back": "Terug"
+  },
+  "months": {
+    "1": "januari",
+    "2": "februari",
+    "3": "maart",
+    "4": "april",
+    "5": "mei",
+    "6": "juni",
+    "7": "juli",
+    "8": "augustus",
+    "9": "september",
+    "10": "oktober",
+    "11": "november",
+    "12": "december"
+  },
+  "monthsShort": {
+    "1": "jan.",
+    "2": "feb.",
+    "3": "mrt.",
+    "4": "apr.",
+    "5": "mei",
+    "6": "jun.",
+    "7": "jul.",
+    "8": "aug.",
+    "9": "sep.",
+    "10": "okt.",
+    "11": "nov.",
+    "12": "dec."
+  },
+  "frequency": {
+    "monthly": "Maandelijks",
+    "quarterly": "Driemaandelijks",
+    "semiannual": "Halfjaarlijks",
+    "annual": "Jaarlijks"
+  }
   },
   "ui": {
-    "scrollToTop": "Terug naar boven",
-    "localeSwitcher": {
-      "label": "Taal",
-      "aria": "Taal wijzigen",
-      "options": {
-        "fr-BE": "Français (BE)",
-        "nl-BE": "Nederlands (BE)",
-        "en": "English",
-        "es-ES": "Español",
-        "de-DE": "Deutsch"
-      }
-    },
-    "action": {
-      "submit": "Bevestigen",
-      "submitting": "Bevestigen…",
-      "save": "Opslaan",
-      "saving": "Opslaan…",
-      "cancel": "Annuleren",
-      "cancelling": "Annuleren…",
-      "delete": "Verwijderen",
-      "deleting": "Verwijderen…",
-      "create": "Aanmaken",
-      "creating": "Aanmaken…",
-      "update": "Bijwerken",
-      "updating": "Bijwerken…",
-      "send": "Versturen",
-      "sending": "Versturen…",
-      "verify": "Verifiëren",
-      "verifying": "Verifiëren…",
-      "generate": "Genereren",
-      "generating": "Genereren…",
-      "download": "Downloaden",
-      "downloading": "Downloaden…",
-      "preparing": "Voorbereiden…",
-      "confirm": "Bevestigen",
-      "close": "Sluiten"
+  "scrollToTop": "Terug naar boven",
+  "localeSwitcher": {
+    "label": "Taal",
+    "aria": "Taal wijzigen",
+    "options": {
+    "fr-BE": "Français (BE)",
+    "nl-BE": "Nederlands (BE)",
+    "en": "English",
+    "es-ES": "Español",
+    "de-DE": "Deutsch"
     }
+  },
+  "action": {
+    "submit": "Bevestigen",
+    "submitting": "Bevestigen…",
+    "save": "Opslaan",
+    "saving": "Opslaan…",
+    "cancel": "Annuleren",
+    "cancelling": "Annuleren…",
+    "delete": "Verwijderen",
+    "deleting": "Verwijderen…",
+    "create": "Aanmaken",
+    "creating": "Aanmaken…",
+    "update": "Bijwerken",
+    "updating": "Bijwerken…",
+    "send": "Versturen",
+    "sending": "Versturen…",
+    "verify": "Verifiëren",
+    "verifying": "Verifiëren…",
+    "generate": "Genereren",
+    "generating": "Genereren…",
+    "download": "Downloaden",
+    "downloading": "Downloaden…",
+    "preparing": "Voorbereiden…",
+    "confirm": "Bevestigen",
+    "close": "Sluiten"
+  }
   },
   "landing": {
-    "mktnav": {
-      "links": {
-        "product": "Produit",
-        "simulator": "Simulateur",
-        "pricing": "Tarifs",
-        "security": "Sécurité",
-        "journal": "Journal"
-      },
-      "ctaLogin": "Se connecter",
-      "ctaSignup": "Essayer gratuitement"
+  "mktnav": {
+    "links": {
+    "product": "Produit",
+    "simulator": "Simulateur",
+    "pricing": "Tarifs",
+    "security": "Sécurité",
+    "journal": "Journal"
     },
-    "hero": {
-      "badge": "Nouveau · Simulateur what-if",
-      "h1Lead": "Ton ancrage",
-      "h1Highlight": "financier.",
-      "description": "Ankora sépare tes provisions affectées de ta réserve libre, projette six mois devant, et te laisse simuler l'impact de chaque décision — en clair, sans jargon.",
-      "ctaPrimary": "Ouvrir mon cockpit",
-      "ctaSecondary": "Voir le simulateur",
-      "trust": {
-        "encrypted": "Données chiffrées en Belgique",
-        "noSale": "Aucune vente de données",
-        "languages": "FR · NL · EN"
-      },
-      "mockup": {
-        "eyebrow": "Aperçu cockpit",
-        "browserUrl": "Ankora · cockpit",
-        "kpis": {
-          "netRemaining": {
-            "label": "Net restant",
-            "sub": "avril · après provisions"
-          },
-          "provisions": {
-            "label": "Provisions",
-            "sub": "67 % des 2 480 € planifiés"
-          },
-          "reserve": {
-            "label": "Réserve",
-            "sub": "+120 € vs. mars"
-          }
-        }
-      },
-      "waterfall": {
-        "income": "Revenus",
-        "incomeAmount": "+2 466 €",
-        "expenses": "Dépenses courantes",
-        "expensesAmount": "−1 959 €",
-        "provisionsCaption": "dont {amount} € lissés vers provisions affectées",
-        "available": "Argent disponible",
-        "availableAmount": "+507 €",
-        "ariaLabel": "Cascade illustrative : 2 466 € de revenus, 1 959 € de dépenses courantes (dont 59 € lissés en provisions), 507 € disponibles."
-      }
+    "ctaLogin": "Se connecter",
+    "ctaSignup": "Essayer gratuitement"
+  },
+  "hero": {
+    "badge": "Nouveau · Simulateur what-if",
+    "h1Lead": "Ton ancrage",
+    "h1Highlight": "financier.",
+    "description": "Ankora sépare tes provisions affectées de ta réserve libre, projette six mois devant, et te laisse simuler l'impact de chaque décision — en clair, sans jargon.",
+    "ctaPrimary": "Ouvrir mon cockpit",
+    "ctaSecondary": "Voir le simulateur",
+    "trust": {
+    "encrypted": "Données chiffrées en Belgique",
+    "noSale": "Aucune vente de données",
+    "languages": "FR · NL · EN"
     },
-    "principles": {
-      "eyebrow": "Trois principes",
-      "h2": "Une façon honnête de parler d'argent.",
-      "description": "Ankora n'essaye pas de te vendre un placement ou une carte. On sépare, on projette, on simule. C'est tout. Toi seul décides.",
-      "items": {
-        "provisions": {
-          "title": "Provisions affectées",
-          "description": "Chaque euro réservé a un nom : mutuelle, taxe circulation, entretien chaudière. Rien ne fuit sans que tu le saches."
-        },
-        "reserve": {
-          "title": "Réserve libre",
-          "description": "Ce qui reste vraiment à toi, après les engagements. Le vrai chiffre — pas l'illusion du solde brut."
-        },
-        "whatIf": {
-          "title": "Simulateur what-if",
-          "description": "Renégocier l'électricité ? Changer de fournisseur ? Ankora te montre l'impact sur 12 mois avant que tu décides."
-        }
-      }
-    },
-    "feature": {
-      "eyebrow": "Cashflow waterfall",
-      "h3Line1": "Du salaire au net disponible.",
-      "h3Line2": "En un seul coup d'œil.",
-      "description": "Plus de mystère sur où va ton argent. Chaque étape est visible : revenus, dépenses courantes, argent disponible. Tu vois immédiatement si un poste dérape.",
-      "ctaPrimary": "Voir un exemple",
-      "ctaSecondary": "Comment ça marche ?"
-    },
-    "whatif": {
-      "title": "Et si tu changeais une seule chose ?",
-      "subtitle": "Bouge le curseur. Vois l'impact sur ta réserve libre, sur six mois. C'est ce que fait Ankora à chaque décision financière.",
-      "badge": "Démo · pas de compte requis",
-      "scenarios": {
-        "gsm": {
-          "label": "Renégocier mon GSM",
-          "hint": "Forfait actuel : 42 €/mois · marché : 18–28 €/mois"
-        },
-        "elec": {
-          "label": "Changer de fournisseur d'électricité",
-          "hint": "Conso actuelle : 168 €/mois · 3 offres moins chères dans ta zone"
-        },
-        "stream": {
-          "label": "Couper deux streamings",
-          "hint": "5 abonnements actifs · usage réel : 2 sur 30 jours"
-        }
+    "mockup": {
+    "eyebrow": "Aperçu cockpit",
+    "browserUrl": "Ankora · cockpit",
+    "kpis": {
+      "netRemaining": {
+      "label": "Net restant",
+      "sub": "avril · après provisions"
       },
-      "controls": {
-        "scenario": "Scénario",
-        "savings": "Économie mensuelle",
-        "slider_aria": "Économie mensuelle pour {label}"
+      "provisions": {
+      "label": "Provisions",
+      "sub": "67 % des 2 480 € planifiés"
       },
-      "annual": {
-        "eyebrow": "Sur 12 mois",
-        "fleche": "Ankora pourrait flécher {amount} €/mois vers ton épargne longue."
-      },
-      "chart": {
-        "title": "Réserve libre · projection",
-        "subtitle": "6 mois à partir d'aujourd'hui",
-        "legend": {
-          "baseline": "Sans changement",
-          "scenario": "Avec ton choix"
-        },
-        "aria": "Graphique projection sur 6 mois de la réserve libre, avec et sans le changement choisi",
-        "months": {
-          "may": "mai",
-          "jun": "juin",
-          "jul": "juil",
-          "aug": "août",
-          "sep": "sept",
-          "oct": "oct"
-        },
-        "thresholds": {
-          "danger": "⚠️ Découvert estimé",
-          "fragile": "Zone fragile",
-          "comfortable": "Zone confortable"
-        }
-      },
-      "caveat": "Démo basée sur des hypothèses moyennes. Ankora ne fournit pas de conseil en placement. Aucun import bancaire — tu saisis tes charges manuellement."
-    },
-    "pricing": {
-      "eyebrow": "Transparent dès le départ",
-      "h2": "Gratuit pendant la Phase 1.",
-      "phaseBadge": "Phase 1 · construction",
-      "price": "0 €",
-      "period": "pour l'instant, et sans date limite",
-      "body": "On construit d'abord le cockpit. Pas de carte demandée, pas de limite de temps, pas de fonctionnalité bridée. Export RGPD à tout moment.",
-      "features": {
-        "cockpit": "Cockpit complet, provisions et réserve libre",
-        "simulator": "Simulateur what-if illimité",
-        "manualEntry": "Saisie manuelle · tes données restent en Belgique",
-        "export": "Export RGPD en un clic"
-      },
-      "ctaPrimary": "Ouvrir mon cockpit",
-      "roadmap": {
-        "title": "Tu rejoins Ankora pendant sa Phase 1 ?",
-        "body": "Ton compte garde un accès complet au cockpit core à vie, gratuitement. Une offre Pro avec features avancées (comptes illimités, exports consolidés, support prioritaire) arrivera post-v1.0 — tu auras le choix d'upgrader ou de rester sur ton plan actuel.",
-        "link": "Lire la roadmap →"
-      }
-    },
-    "footerCta": {
-      "h2Lead": "Commence par ce qui est",
-      "h2Highlight": "déjà à toi.",
-      "description": "30 jours d'essai, pas de carte, export RGPD à tout moment. On fait simple parce que c'est déjà assez compliqué comme ça.",
-      "ctaPrimary": "Ouvrir mon cockpit"
-    },
-    "footer": {
-      "links": {
-        "terms": "Conditions",
-        "privacy": "Confidentialité",
-        "security": "Sécurité",
-        "contact": "Contact"
-      },
-      "copyright": "Ankora · éditeur ancré à Bruxelles · 2026"
-    },
-    "faqHeading": "Veelgestelde vragen",
-    "faq": {
-      "advice": {
-        "q": "Is Ankora een tool voor financieel advies?",
-        "a": "Nee. Ankora is een tool voor budgetorganisatie en financiële educatie. Het levert geen beleggingsaanbevelingen of gepersonaliseerd financieel advies."
-      },
-      "storage": {
-        "q": "Waar worden mijn gegevens bewaard?",
-        "a": "Je gegevens worden gehost in de Europese Unie (Supabase, EU-regio) met versleuteling at rest en strikte isolatie per gebruiker via Row Level Security."
-      },
-      "sharing": {
-        "q": "Kan ik mijn gegevens delen?",
-        "a": "Standaard is je ruimte 100% privé. Optionele gedeelde potten (reis, gezamenlijk project) komen in een volgende versie — jij kiest expliciet wat je deelt en met wie."
+      "reserve": {
+      "label": "Réserve",
+      "sub": "+120 € vs. mars"
       }
     }
+    },
+    "waterfall": {
+    "income": "Revenus",
+    "incomeAmount": "+2 466 €",
+    "expenses": "Dépenses courantes",
+    "expensesAmount": "−1 959 €",
+    "provisionsCaption": "dont {amount} € lissés vers provisions affectées",
+    "available": "Argent disponible",
+    "availableAmount": "+507 €",
+    "ariaLabel": "Cascade illustrative : 2 466 € de revenus, 1 959 € de dépenses courantes (dont 59 € lissés en provisions), 507 € disponibles."
+    }
   },
-  "faq": {
-    "metaTitle": "FAQ",
-    "metaDescription": "Veelgestelde vragen over Ankora: veiligheid, gegevens, werking, privacy.",
-    "title": "Veelgestelde vragen",
-    "subtitle": "Alles wat je moet weten over Ankora voor je van start gaat.",
+  "principles": {
+    "eyebrow": "Trois principes",
+    "h2": "Une façon honnête de parler d'argent.",
+    "description": "Ankora n'essaye pas de te vendre un placement ou une carte. On sépare, on projette, on simule. C'est tout. Toi seul décides.",
     "items": {
-      "bankConnection": {
-        "q": "Maakt Ankora verbinding met mijn bank?",
-        "a": "Nee. Ankora gebruikt geen PSD2-richtlijn. Je geeft je vaste kosten en uitgaven handmatig in. Die keuze zorgt ervoor dat jij eigenaar blijft van je gegevens en dat er geen gevoelige bankinformatie bewaard wordt."
-      },
-      "dataLocation": {
-        "q": "Waar worden mijn gegevens gehost?",
-        "a": "Al je gegevens worden gehost in de Europese Unie (Supabase EU-regio, Vercel EU-regio, Upstash EU). Er worden geen gegevens buiten de EU overgedragen."
-      },
-      "smoothing": {
-        "q": "Hoe werkt de spreiding?",
-        "a": "Ankora neemt je driemaandelijkse, halfjaarlijkse en jaarlijkse vaste kosten en verdeelt ze over 12 maanden. Zo weet je hoeveel je elke maand opzij moet zetten om al je toekomstige facturen zonder stress te dekken."
-      },
-      "deletion": {
-        "q": "Kan ik mijn account verwijderen?",
-        "a": "Ja, op elk moment via Instellingen → Privacy. De verwijdering gaat 30 dagen na je aanvraag in (je kunt ze tijdens die periode annuleren). Al je financiële gegevens worden gewist, de beveiligingslogs worden gepseudonimiseerd."
-      },
-      "export": {
-        "q": "Kan ik mijn gegevens exporteren?",
-        "a": "Ja. De knop « Mijn gegevens downloaden » in Instellingen bezorgt je een volledig JSON-bestand met alles wat Ankora over jou bewaart. Conform het recht op dataportabiliteit AVG (art. 20)."
-      },
-      "advice": {
-        "q": "Geeft Ankora financieel advies?",
-        "a": "Nee. Ankora is een tool voor budgeteducatie en -organisatie. We geven geen enkel beleggingsadvies (reglementaire beperking FSMA België). Voor elke investeringsbeslissing, raadpleeg een erkende professional."
-      },
-      "ai": {
-        "q": "Wordt er artificiële intelligentie gebruikt?",
-        "a": "In Fase 1 niet. De berekeningen zijn deterministisch en controleerbaar. In Fase 2 laat een optionele BYOK-laag (Bring Your Own Key) je toe je eigen Anthropic- of OpenRouter-sleutel te koppelen voor suggesties — geen extra kost langs Ankora."
-      },
-      "sharing": {
-        "q": "Kan ik mijn ruimte delen met mijn kinderen of vrienden?",
-        "a": "In Fase 1 heeft elke gebruiker een privé-ruimte, standaard afgeschermd. In Fase 2 voegen we de mogelijkheid toe om « gedeelde potten » aan te maken (op uitnodiging, met viewer/editor-rollen) zonder ooit je persoonlijke gegevens te vermengen."
-      }
+    "provisions": {
+      "title": "Provisions affectées",
+      "description": "Chaque euro réservé a un nom : mutuelle, taxe circulation, entretien chaudière. Rien ne fuit sans que tu le saches."
+    },
+    "reserve": {
+      "title": "Réserve libre",
+      "description": "Ce qui reste vraiment à toi, après les engagements. Le vrai chiffre — pas l'illusion du solde brut."
+    },
+    "whatIf": {
+      "title": "Simulateur what-if",
+      "description": "Renégocier l'électricité ? Changer de fournisseur ? Ankora te montre l'impact sur 12 mois avant que tu décides."
+    }
     }
   },
-  "legal": {
-    "versionLine": "Versie {version} — laatste update: {date}",
-    "lastUpdatedLine": "Laatste update: {date}",
-    "cgu": {
-      "metaTitle": "Algemene gebruiksvoorwaarden",
-      "metaDescription": "Gebruiksvoorwaarden van Ankora — regels voor het gebruik van de dienst.",
-      "title": "Algemene gebruiksvoorwaarden",
-      "s1": {
-        "heading": "1. Doel",
-        "body": "Ankora is een tool voor budgetorganisatie en financiële educatie bestemd voor particulieren. Hij laat toe om handmatig vaste kosten en uitgaven in te geven, ze over het jaar te spreiden en cashflowbehoeften te anticiperen."
-      },
-      "s2": {
-        "heading": "2. Wat Ankora NIET is",
-        "item1": "Ankora is <b>geen dienst voor beleggingsadvies</b> of investeringsadvies.",
-        "item2": "Ankora is <b>geen bankdienst</b> en houdt geen geld aan.",
-        "item3": "Ankora is <b>geen PSD2-aggregator</b> — geen enkele verbinding met je bankrekeningen.",
-        "item4": "Ankora is <b>geen professionele boekhoudsoftware</b>.",
-        "outro": "De getoonde informatie zijn schattingen op basis van jouw invoer. Ze vormen geen gepersonaliseerd financieel advies. Voor elke belangrijke beslissing, raadpleeg een erkende professional."
-      },
-      "s3": {
-        "heading": "3. Account",
-        "item1": "Je moet meerderjarig zijn of toestemming hebben van een wettelijke vertegenwoordiger.",
-        "item2": "Eén account per natuurlijke persoon.",
-        "item3": "Wachtwoord minimum 12 tekens, gemengd.",
-        "item4": "Je bent verantwoordelijk voor de vertrouwelijkheid van je inloggegevens."
-      },
-      "s4": {
-        "heading": "4. Aanvaardbaar gebruik",
-        "intro": "Je verbindt je ertoe om niet:",
-        "item1": "de dienst te gebruiken voor illegale doeleinden,",
-        "item2": "de beveiligingsmaatregelen te proberen omzeilen,",
-        "item3": "de toegang te automatiseren zonder expliciete toestemming,",
-        "item4": "je account te delen met een derde."
-      },
-      "s5": {
-        "heading": "5. Intellectuele eigendom",
-        "body": "Jij blijft eigenaar van je gegevens. Ankora behoudt de eigendom van zijn code, merk, design en documentatie."
-      },
-      "s6": {
-        "heading": "6. Aansprakelijkheid",
-        "body": "Ankora wordt geleverd « as is ». De uitgever kan niet aansprakelijk gesteld worden voor financiële beslissingen genomen op basis van de getoonde informatie. Geen garantie op 100% beschikbaarheid."
-      },
-      "s7": {
-        "heading": "7. Beëindiging",
-        "body": "Je kunt je account op elk moment verwijderen via Instellingen → Privacy. De verwijdering wordt 30 dagen na de aanvraag effectief (annuleerbare periode)."
-      },
-      "s8": {
-        "heading": "8. Toepasselijk recht",
-        "body": "Deze voorwaarden zijn onderworpen aan het Belgische recht. Bevoegde rechtbank: Brussel."
-      },
-      "draft": "Onze algemene gebruiksvoorwaarden worden momenteel opgesteld.",
-      "contact": "Voor elke vraag, contacteer ons: thierryvm@gmail.com",
-      "backHome": "Terug naar de startpagina"
+  "feature": {
+    "eyebrow": "Cashflow waterfall",
+    "h3Line1": "Du salaire au net disponible.",
+    "h3Line2": "En un seul coup d'œil.",
+    "description": "Plus de mystère sur où va ton argent. Chaque étape est visible : revenus, dépenses courantes, argent disponible. Tu vois immédiatement si un poste dérape.",
+    "ctaPrimary": "Voir un exemple",
+    "ctaSecondary": "Comment ça marche ?"
+  },
+  "whatif": {
+    "title": "Et si tu changeais une seule chose ?",
+    "subtitle": "Bouge le curseur. Vois l'impact sur ta réserve libre, sur six mois. C'est ce que fait Ankora à chaque décision financière.",
+    "badge": "Démo · pas de compte requis",
+    "scenarios": {
+    "gsm": {
+      "label": "Renégocier mon GSM",
+      "hint": "Forfait actuel : 42 €/mois · marché : 18–28 €/mois"
     },
-    "privacy": {
-      "metaTitle": "Privacybeleid",
-      "metaDescription": "Privacybeleid van Ankora — EU-hosting, AVG, gebruikersrechten.",
-      "title": "Privacybeleid",
-      "s1": {
-        "heading": "1. Verwerkingsverantwoordelijke",
-        "body": "Ankora, uitgegeven door Thierry Van Mele (België). Contact: <mail>thierryvm@gmail.com</mail>."
-      },
-      "s2": {
-        "heading": "2. Verzamelde gegevens",
-        "intro": "Ankora verzamelt enkel de gegevens die strikt noodzakelijk zijn voor het leveren van de dienst:",
-        "item1": "<b>Identiteit</b>: e-mailadres, weergavenaam (optioneel).",
-        "item2": "<b>Financiële gegevens die jij ingeeft</b>: vaste kosten, uitgaven, categorieën, opgegeven inkomens, spaarsaldo.",
-        "item3": "<b>Technische gegevens</b>: IP-adres, user-agent (enkel voor beveiligingslogs).",
-        "item4": "<b>Toestemmingen</b>: tijdstempel, versie, reikwijdte (gebruiksvoorwaarden, privacy, cookies).",
-        "outro": "Ankora maakt geen verbinding met een bank (geen PSD2-aggregatie). Je geeft zelf je vaste kosten en uitgaven in."
-      },
-      "s3": {
-        "heading": "3. Rechtsgronden (AVG art. 6)",
-        "item1": "<b>Contract</b>: levering van de dienst (account, financiële gegevens).",
-        "item2": "<b>Toestemming</b>: analytics/marketing-cookies, nieuwsbrief.",
-        "item3": "<b>Wettelijke verplichting</b>: beveiligingslogs (bewaring 12 maanden).",
-        "item4": "<b>Gerechtvaardigd belang</b>: fraudepreventie, behoud van veiligheid."
-      },
-      "s4": {
-        "heading": "4. Hosting en onderaannemers",
-        "item1": "<b>Supabase</b> (database, auth) — EU-regio (Frankfurt of Parijs).",
-        "item2": "<b>Vercel</b> (frontend hosting) — EU-regio (Dublin).",
-        "item3": "<b>Upstash</b> (rate limiting) — EU-regio.",
-        "outro": "Geen enkele gegevens worden buiten de EU/EER overgedragen."
-      },
-      "s5": {
-        "heading": "5. Bewaartermijn",
-        "item1": "Actief account: zolang je de dienst gebruikt.",
-        "item2": "Verwijderd account: verwijdering effectief 30 dagen na je aanvraag (annuleerbare grace period).",
-        "item3": "Beveiligingslogs: maximum 12 maanden, gepseudonimiseerd na accountverwijdering."
-      },
-      "s6": {
-        "heading": "6. Je rechten (AVG art. 15-22)",
-        "item1": "<b>Inzage</b>: raadpleeg je gegevens op elk moment in je ruimte.",
-        "item2": "<b>Rectificatie</b>: wijzig profiel en gegevens in de voorziene pagina's.",
-        "item3": "<b>Verwijdering</b>: knop « Mijn account verwijderen » in Instellingen → Privacy.",
-        "item4": "<b>Portabiliteit</b>: knop « Mijn gegevens downloaden » — volledige JSON-export.",
-        "item5": "<b>Bezwaar / Beperking</b>: weiger of trek niet-essentiële cookies op elk moment in.",
-        "item6": "<b>Klacht</b>: bij de <apd>Gegevensbeschermingsautoriteit</apd> (België)."
-      },
-      "s7": {
-        "heading": "7. Veiligheid",
-        "item1": "Versleuteling in transit (TLS 1.3) en at rest.",
-        "item2": "Row Level Security Supabase op alle tabellen.",
-        "item3": "Rate limiting, strikte CSP, append-only audit log.",
-        "item4": "Authenticatie met sterk wachtwoord + MFA beschikbaar."
-      },
-      "s8": {
-        "heading": "8. Cookies",
-        "body": "Zie het <link>cookiebeleid</link>."
-      },
-      "s9": {
-        "heading": "9. Wijzigingen",
-        "body": "Elke materiële wijziging van dit beleid wordt per e-mail gemeld en vereist je vernieuwde toestemming om de dienst te blijven gebruiken."
-      },
-      "draft": "Ons privacybeleid wordt momenteel opgesteld.",
-      "contact": "Voor elke vraag, contacteer ons: thierryvm@gmail.com",
-      "backHome": "Terug naar de startpagina"
+    "elec": {
+      "label": "Changer de fournisseur d'électricité",
+      "hint": "Conso actuelle : 168 €/mois · 3 offres moins chères dans ta zone"
     },
-    "cookies": {
-      "metaTitle": "Cookiebeleid",
-      "metaDescription": "Cookiebeleid van Ankora — volledige granulariteit, alles weigerbaar behalve essentiële.",
-      "title": "Cookiebeleid",
-      "categoriesHeading": "Categorieën",
-      "essentialHeading": "Essentieel (altijd actief)",
-      "essentialBody": "Onmisbaar voor de werking: authenticatiesessie, themavoorkeur, anti-CSRF.",
-      "essentialItem1": "<code>sb-*</code> — Supabase-sessie (auth)",
-      "essentialItem2": "<code>ankora-theme</code> — voorkeur licht/donker",
-      "analyticsHeading": "Analytics (standaard uitgeschakeld)",
-      "analyticsBody1": "Enkel als je toestemming geeft. Geaggregeerde gebruiksmeting, zonder persoonlijke identificator.",
-      "analyticsBody2": "Ankora gebruikt geen Google Analytics. De Vercel-metrics zijn geaggregeerd en anoniem.",
-      "marketingHeading": "Marketing (standaard uitgeschakeld)",
-      "marketingBody": "Ankora gebruikt momenteel geen enkele marketing-cookie.",
-      "manageHeading": "Je voorkeuren beheren",
-      "manageBody1": "Je kunt je toestemmingen op elk moment wijzigen in <b>Instellingen → Privacy</b> of door op « Cookies beheren » te klikken in de voettekst.",
-      "manageBody2": "Niet-essentiële cookies weigeren heeft geen invloed op de ervaring: Ankora blijft volledig functioneel.",
-      "lifetimeHeading": "Levensduur",
-      "lifetimeItem1": "Sessie: einde van de navigatie",
-      "lifetimeItem2": "Voorkeuren: 12 maanden",
-      "lifetimeItem3": "Analytics: 6 maanden (indien aanvaard)",
-      "draft": "Deze pagina met het cookiebeleid wordt momenteel opgesteld.",
-      "contact": "Voor elke vraag, contacteer ons: thierryvm@gmail.com",
-      "backHome": "Terug naar de startpagina"
+    "stream": {
+      "label": "Couper deux streamings",
+      "hint": "5 abonnements actifs · usage réel : 2 sur 30 jours"
+    }
+    },
+    "controls": {
+    "scenario": "Scénario",
+    "savings": "Économie mensuelle",
+    "slider_aria": "Économie mensuelle pour {label}"
+    },
+    "annual": {
+    "eyebrow": "Sur 12 mois",
+    "fleche": "Ankora pourrait flécher {amount} €/mois vers ton épargne longue."
+    },
+    "chart": {
+    "title": "Réserve libre · projection",
+    "subtitle": "6 mois à partir d'aujourd'hui",
+    "legend": {
+      "baseline": "Sans changement",
+      "scenario": "Avec ton choix"
+    },
+    "aria": "Graphique projection sur 6 mois de la réserve libre, avec et sans le changement choisi",
+    "months": {
+      "may": "mai",
+      "jun": "juin",
+      "jul": "juil",
+      "aug": "août",
+      "sep": "sept",
+      "oct": "oct"
+    },
+    "thresholds": {
+      "danger": "⚠️ Découvert estimé",
+      "fragile": "Zone fragile",
+      "comfortable": "Zone confortable"
+    }
+    },
+    "caveat": "Démo basée sur des hypothèses moyennes. Ankora ne fournit pas de conseil en placement. Aucun import bancaire — tu saisis tes charges manuellement."
+  },
+  "pricing": {
+    "eyebrow": "Transparent dès le départ",
+    "h2": "Gratuit pendant la Phase 1.",
+    "phaseBadge": "Phase 1 · construction",
+    "price": "0 €",
+    "period": "pour l'instant, et sans date limite",
+    "body": "On construit d'abord le cockpit. Pas de carte demandée, pas de limite de temps, pas de fonctionnalité bridée. Export RGPD à tout moment.",
+    "features": {
+    "cockpit": "Cockpit complet, provisions et réserve libre",
+    "simulator": "Simulateur what-if illimité",
+    "manualEntry": "Saisie manuelle · tes données restent en Belgique",
+    "export": "Export RGPD en un clic"
+    },
+    "ctaPrimary": "Ouvrir mon cockpit",
+    "roadmap": {
+    "title": "Tu rejoins Ankora pendant sa Phase 1 ?",
+    "body": "Ton compte garde un accès complet au cockpit core à vie, gratuitement. Une offre Pro avec features avancées (comptes illimités, exports consolidés, support prioritaire) arrivera post-v1.0 — tu auras le choix d'upgrader ou de rester sur ton plan actuel.",
+    "link": "Lire la roadmap →"
     }
   },
-  "offline": {
-    "metaTitle": "Offline",
-    "metaDescription": "Je bent momenteel offline. Maak opnieuw verbinding om Ankora te gebruiken.",
-    "title": "Je bent offline",
-    "message": "Maak opnieuw verbinding om je cockpit te openen. Je gegevens blijven intact.",
-    "retry": "Opnieuw proberen"
-  },
-  "consent": {
-    "title": "Cookies en privacy",
-    "body": "We gebruiken enkel essentiële cookies om je te laten inloggen. Analytische cookies zijn standaard uitgeschakeld — je kunt ze activeren als je ons wil helpen Ankora te verbeteren. Je kunt op elk moment van gedacht veranderen via <link>het cookiebeleid</link>.",
-    "essentialOnly": "Enkel essentiële",
-    "acceptAnalytics": "Analyses aanvaarden"
+  "footerCta": {
+    "h2Lead": "Commence par ce qui est",
+    "h2Highlight": "déjà à toi.",
+    "description": "30 jours d'essai, pas de carte, export RGPD à tout moment. On fait simple parce que c'est déjà assez compliqué comme ça.",
+    "ctaPrimary": "Ouvrir mon cockpit"
   },
   "footer": {
-    "copyright": "© {year} — Alle rechten voorbehouden",
-    "cgu": "Voorwaarden",
-    "privacy": "Privacy",
-    "cookies": "Cookies beheren",
-    "faq": "FAQ",
-    "copyrightNotice": "© {year} Ankora™. Alle rechten voorbehouden."
+    "links": {
+    "terms": "Conditions",
+    "privacy": "Confidentialité",
+    "security": "Sécurité",
+    "contact": "Contact"
+    },
+    "copyright": "Ankora · éditeur ancré à Bruxelles · 2026"
+  },
+  "faqHeading": "Veelgestelde vragen",
+  "faq": {
+    "advice": {
+    "q": "Is Ankora een tool voor financieel advies?",
+    "a": "Nee. Ankora is een tool voor budgetorganisatie en financiële educatie. Het levert geen beleggingsaanbevelingen of gepersonaliseerd financieel advies."
+    },
+    "storage": {
+    "q": "Waar worden mijn gegevens bewaard?",
+    "a": "Je gegevens worden gehost in de Europese Unie (Supabase, EU-regio) met versleuteling at rest en strikte isolatie per gebruiker via Row Level Security."
+    },
+    "sharing": {
+    "q": "Kan ik mijn gegevens delen?",
+    "a": "Standaard is je ruimte 100% privé. Optionele gedeelde potten (reis, gezamenlijk project) komen in een volgende versie — jij kiest expliciet wat je deelt en met wie."
+    }
+  }
+  },
+  "faq": {
+  "metaTitle": "FAQ",
+  "metaDescription": "Veelgestelde vragen over Ankora: veiligheid, gegevens, werking, privacy.",
+  "title": "Veelgestelde vragen",
+  "subtitle": "Alles wat je moet weten over Ankora voor je van start gaat.",
+  "items": {
+    "bankConnection": {
+    "q": "Maakt Ankora verbinding met mijn bank?",
+    "a": "Nee. Ankora gebruikt geen PSD2-richtlijn. Je geeft je vaste kosten en uitgaven handmatig in. Die keuze zorgt ervoor dat jij eigenaar blijft van je gegevens en dat er geen gevoelige bankinformatie bewaard wordt."
+    },
+    "dataLocation": {
+    "q": "Waar worden mijn gegevens gehost?",
+    "a": "Al je gegevens worden gehost in de Europese Unie (Supabase EU-regio, Vercel EU-regio, Upstash EU). Er worden geen gegevens buiten de EU overgedragen."
+    },
+    "smoothing": {
+    "q": "Hoe werkt de spreiding?",
+    "a": "Ankora neemt je driemaandelijkse, halfjaarlijkse en jaarlijkse vaste kosten en verdeelt ze over 12 maanden. Zo weet je hoeveel je elke maand opzij moet zetten om al je toekomstige facturen zonder stress te dekken."
+    },
+    "deletion": {
+    "q": "Kan ik mijn account verwijderen?",
+    "a": "Ja, op elk moment via Instellingen → Privacy. De verwijdering gaat 30 dagen na je aanvraag in (je kunt ze tijdens die periode annuleren). Al je financiële gegevens worden gewist, de beveiligingslogs worden gepseudonimiseerd."
+    },
+    "export": {
+    "q": "Kan ik mijn gegevens exporteren?",
+    "a": "Ja. De knop « Mijn gegevens downloaden » in Instellingen bezorgt je een volledig JSON-bestand met alles wat Ankora over jou bewaart. Conform het recht op dataportabiliteit AVG (art. 20)."
+    },
+    "advice": {
+    "q": "Geeft Ankora financieel advies?",
+    "a": "Nee. Ankora is een tool voor budgeteducatie en -organisatie. We geven geen enkel beleggingsadvies (reglementaire beperking FSMA België). Voor elke investeringsbeslissing, raadpleeg een erkende professional."
+    },
+    "ai": {
+    "q": "Wordt er artificiële intelligentie gebruikt?",
+    "a": "In Fase 1 niet. De berekeningen zijn deterministisch en controleerbaar. In Fase 2 laat een optionele BYOK-laag (Bring Your Own Key) je toe je eigen Anthropic- of OpenRouter-sleutel te koppelen voor suggesties — geen extra kost langs Ankora."
+    },
+    "sharing": {
+    "q": "Kan ik mijn ruimte delen met mijn kinderen of vrienden?",
+    "a": "In Fase 1 heeft elke gebruiker een privé-ruimte, standaard afgeschermd. In Fase 2 voegen we de mogelijkheid toe om « gedeelde potten » aan te maken (op uitnodiging, met viewer/editor-rollen) zonder ooit je persoonlijke gegevens te vermengen."
+    }
+  }
+  },
+  "legal": {
+  "versionLine": "Versie {version} — laatste update: {date}",
+  "lastUpdatedLine": "Laatste update: {date}",
+  "cgu": {
+    "metaTitle": "Algemene gebruiksvoorwaarden",
+    "metaDescription": "Gebruiksvoorwaarden van Ankora — regels voor het gebruik van de dienst.",
+    "title": "Algemene gebruiksvoorwaarden",
+    "s1": {
+    "heading": "1. Doel",
+    "body": "Ankora is een tool voor budgetorganisatie en financiële educatie bestemd voor particulieren. Hij laat toe om handmatig vaste kosten en uitgaven in te geven, ze over het jaar te spreiden en cashflowbehoeften te anticiperen."
+    },
+    "s2": {
+    "heading": "2. Wat Ankora NIET is",
+    "item1": "Ankora is <b>geen dienst voor beleggingsadvies</b> of investeringsadvies.",
+    "item2": "Ankora is <b>geen bankdienst</b> en houdt geen geld aan.",
+    "item3": "Ankora is <b>geen PSD2-aggregator</b> — geen enkele verbinding met je bankrekeningen.",
+    "item4": "Ankora is <b>geen professionele boekhoudsoftware</b>.",
+    "outro": "De getoonde informatie zijn schattingen op basis van jouw invoer. Ze vormen geen gepersonaliseerd financieel advies. Voor elke belangrijke beslissing, raadpleeg een erkende professional."
+    },
+    "s3": {
+    "heading": "3. Account",
+    "item1": "Je moet meerderjarig zijn of toestemming hebben van een wettelijke vertegenwoordiger.",
+    "item2": "Eén account per natuurlijke persoon.",
+    "item3": "Wachtwoord minimum 12 tekens, gemengd.",
+    "item4": "Je bent verantwoordelijk voor de vertrouwelijkheid van je inloggegevens."
+    },
+    "s4": {
+    "heading": "4. Aanvaardbaar gebruik",
+    "intro": "Je verbindt je ertoe om niet:",
+    "item1": "de dienst te gebruiken voor illegale doeleinden,",
+    "item2": "de beveiligingsmaatregelen te proberen omzeilen,",
+    "item3": "de toegang te automatiseren zonder expliciete toestemming,",
+    "item4": "je account te delen met een derde."
+    },
+    "s5": {
+    "heading": "5. Intellectuele eigendom",
+    "body": "Jij blijft eigenaar van je gegevens. Ankora behoudt de eigendom van zijn code, merk, design en documentatie."
+    },
+    "s6": {
+    "heading": "6. Aansprakelijkheid",
+    "body": "Ankora wordt geleverd « as is ». De uitgever kan niet aansprakelijk gesteld worden voor financiële beslissingen genomen op basis van de getoonde informatie. Geen garantie op 100% beschikbaarheid."
+    },
+    "s7": {
+    "heading": "7. Beëindiging",
+    "body": "Je kunt je account op elk moment verwijderen via Instellingen → Privacy. De verwijdering wordt 30 dagen na de aanvraag effectief (annuleerbare periode)."
+    },
+    "s8": {
+    "heading": "8. Toepasselijk recht",
+    "body": "Deze voorwaarden zijn onderworpen aan het Belgische recht. Bevoegde rechtbank: Brussel."
+    },
+    "draft": "Onze algemene gebruiksvoorwaarden worden momenteel opgesteld.",
+    "contact": "Voor elke vraag, contacteer ons: thierryvm@gmail.com",
+    "backHome": "Terug naar de startpagina"
+  },
+  "privacy": {
+    "metaTitle": "Privacybeleid",
+    "metaDescription": "Privacybeleid van Ankora — EU-hosting, AVG, gebruikersrechten.",
+    "title": "Privacybeleid",
+    "s1": {
+    "heading": "1. Verwerkingsverantwoordelijke",
+    "body": "Ankora, uitgegeven door Thierry Van Mele (België). Contact: <mail>thierryvm@gmail.com</mail>."
+    },
+    "s2": {
+    "heading": "2. Verzamelde gegevens",
+    "intro": "Ankora verzamelt enkel de gegevens die strikt noodzakelijk zijn voor het leveren van de dienst:",
+    "item1": "<b>Identiteit</b>: e-mailadres, weergavenaam (optioneel).",
+    "item2": "<b>Financiële gegevens die jij ingeeft</b>: vaste kosten, uitgaven, categorieën, opgegeven inkomens, spaarsaldo.",
+    "item3": "<b>Technische gegevens</b>: IP-adres, user-agent (enkel voor beveiligingslogs).",
+    "item4": "<b>Toestemmingen</b>: tijdstempel, versie, reikwijdte (gebruiksvoorwaarden, privacy, cookies).",
+    "outro": "Ankora maakt geen verbinding met een bank (geen PSD2-aggregatie). Je geeft zelf je vaste kosten en uitgaven in."
+    },
+    "s3": {
+    "heading": "3. Rechtsgronden (AVG art. 6)",
+    "item1": "<b>Contract</b>: levering van de dienst (account, financiële gegevens).",
+    "item2": "<b>Toestemming</b>: analytics/marketing-cookies, nieuwsbrief.",
+    "item3": "<b>Wettelijke verplichting</b>: beveiligingslogs (bewaring 12 maanden).",
+    "item4": "<b>Gerechtvaardigd belang</b>: fraudepreventie, behoud van veiligheid."
+    },
+    "s4": {
+    "heading": "4. Hosting en onderaannemers",
+    "item1": "<b>Supabase</b> (database, auth) — EU-regio (Frankfurt of Parijs).",
+    "item2": "<b>Vercel</b> (frontend hosting) — EU-regio (Dublin).",
+    "item3": "<b>Upstash</b> (rate limiting) — EU-regio.",
+    "outro": "Geen enkele gegevens worden buiten de EU/EER overgedragen."
+    },
+    "s5": {
+    "heading": "5. Bewaartermijn",
+    "item1": "Actief account: zolang je de dienst gebruikt.",
+    "item2": "Verwijderd account: verwijdering effectief 30 dagen na je aanvraag (annuleerbare grace period).",
+    "item3": "Beveiligingslogs: maximum 12 maanden, gepseudonimiseerd na accountverwijdering."
+    },
+    "s6": {
+    "heading": "6. Je rechten (AVG art. 15-22)",
+    "item1": "<b>Inzage</b>: raadpleeg je gegevens op elk moment in je ruimte.",
+    "item2": "<b>Rectificatie</b>: wijzig profiel en gegevens in de voorziene pagina's.",
+    "item3": "<b>Verwijdering</b>: knop « Mijn account verwijderen » in Instellingen → Privacy.",
+    "item4": "<b>Portabiliteit</b>: knop « Mijn gegevens downloaden » — volledige JSON-export.",
+    "item5": "<b>Bezwaar / Beperking</b>: weiger of trek niet-essentiële cookies op elk moment in.",
+    "item6": "<b>Klacht</b>: bij de <apd>Gegevensbeschermingsautoriteit</apd> (België)."
+    },
+    "s7": {
+    "heading": "7. Veiligheid",
+    "item1": "Versleuteling in transit (TLS 1.3) en at rest.",
+    "item2": "Row Level Security Supabase op alle tabellen.",
+    "item3": "Rate limiting, strikte CSP, append-only audit log.",
+    "item4": "Authenticatie met sterk wachtwoord + MFA beschikbaar."
+    },
+    "s8": {
+    "heading": "8. Cookies",
+    "body": "Zie het <link>cookiebeleid</link>."
+    },
+    "s9": {
+    "heading": "9. Wijzigingen",
+    "body": "Elke materiële wijziging van dit beleid wordt per e-mail gemeld en vereist je vernieuwde toestemming om de dienst te blijven gebruiken."
+    },
+    "draft": "Ons privacybeleid wordt momenteel opgesteld.",
+    "contact": "Voor elke vraag, contacteer ons: thierryvm@gmail.com",
+    "backHome": "Terug naar de startpagina"
+  },
+  "cookies": {
+    "metaTitle": "Cookiebeleid",
+    "metaDescription": "Cookiebeleid van Ankora — volledige granulariteit, alles weigerbaar behalve essentiële.",
+    "title": "Cookiebeleid",
+    "categoriesHeading": "Categorieën",
+    "essentialHeading": "Essentieel (altijd actief)",
+    "essentialBody": "Onmisbaar voor de werking: authenticatiesessie, themavoorkeur, anti-CSRF.",
+    "essentialItem1": "<code>sb-*</code> — Supabase-sessie (auth)",
+    "essentialItem2": "<code>ankora-theme</code> — voorkeur licht/donker",
+    "analyticsHeading": "Analytics (standaard uitgeschakeld)",
+    "analyticsBody1": "Enkel als je toestemming geeft. Geaggregeerde gebruiksmeting, zonder persoonlijke identificator.",
+    "analyticsBody2": "Ankora gebruikt geen Google Analytics. De Vercel-metrics zijn geaggregeerd en anoniem.",
+    "marketingHeading": "Marketing (standaard uitgeschakeld)",
+    "marketingBody": "Ankora gebruikt momenteel geen enkele marketing-cookie.",
+    "manageHeading": "Je voorkeuren beheren",
+    "manageBody1": "Je kunt je toestemmingen op elk moment wijzigen in <b>Instellingen → Privacy</b> of door op « Cookies beheren » te klikken in de voettekst.",
+    "manageBody2": "Niet-essentiële cookies weigeren heeft geen invloed op de ervaring: Ankora blijft volledig functioneel.",
+    "lifetimeHeading": "Levensduur",
+    "lifetimeItem1": "Sessie: einde van de navigatie",
+    "lifetimeItem2": "Voorkeuren: 12 maanden",
+    "lifetimeItem3": "Analytics: 6 maanden (indien aanvaard)",
+    "draft": "Deze pagina met het cookiebeleid wordt momenteel opgesteld.",
+    "contact": "Voor elke vraag, contacteer ons: thierryvm@gmail.com",
+    "backHome": "Terug naar de startpagina"
+  }
+  },
+  "offline": {
+  "metaTitle": "Offline",
+  "metaDescription": "Je bent momenteel offline. Maak opnieuw verbinding om Ankora te gebruiken.",
+  "title": "Je bent offline",
+  "message": "Maak opnieuw verbinding om je cockpit te openen. Je gegevens blijven intact.",
+  "retry": "Opnieuw proberen"
+  },
+  "consent": {
+  "title": "Cookies en privacy",
+  "body": "We gebruiken enkel essentiële cookies om je te laten inloggen. Analytische cookies zijn standaard uitgeschakeld — je kunt ze activeren als je ons wil helpen Ankora te verbeteren. Je kunt op elk moment van gedacht veranderen via <link>het cookiebeleid</link>.",
+  "essentialOnly": "Enkel essentiële",
+  "acceptAnalytics": "Analyses aanvaarden"
+  },
+  "footer": {
+  "copyright": "© {year} — Alle rechten voorbehouden",
+  "cgu": "Voorwaarden",
+  "privacy": "Privacy",
+  "cookies": "Cookies beheren",
+  "faq": "FAQ",
+  "copyrightNotice": "© {year} Ankora™. Alle rechten voorbehouden."
   },
   "auth": {
-    "login": {
-      "title": "Inloggen",
-      "subtitle": "Vind je Ankora-cockpit terug.",
-      "metaTitle": "Inloggen",
-      "emailLabel": "E-mail",
-      "passwordLabel": "Wachtwoord",
-      "forgotLink": "Wachtwoord vergeten?",
-      "submit": "Inloggen",
-      "submitting": "Inloggen…",
-      "noAccount": "Nog geen account?",
-      "signupLink": "Account aanmaken",
-      "dividerOr": "of",
-      "dividerOrEmail": "of met je e-mail",
-      "passwordUpdatedBanner": "Wachtwoord bijgewerkt. Je kunt inloggen."
-    },
-    "signup": {
-      "title": "Account aanmaken",
-      "subtitle": "Start je financiële cockpit in minder dan 2 minuten.",
-      "pageTitle": "Mijn cockpit aanmaken",
-      "pageDescription": "Enkele seconden. Geen bankkaart nodig.",
-      "emailLabel": "E-mail",
-      "passwordLabel": "Wachtwoord",
-      "passwordHint": "Minimum 12 tekens, 1 hoofdletter, 1 kleine letter, 1 cijfer.",
-      "passwordConfirmLabel": "Wachtwoord bevestigen",
-      "acceptTosPrefix": "Ik aanvaard de",
-      "acceptTosLink": "gebruiksvoorwaarden",
-      "acceptPrivacyPrefix": "Ik aanvaard het",
-      "acceptPrivacyLink": "privacybeleid",
-      "submit": "Mijn account aanmaken",
-      "submitting": "Aanmaken…",
-      "haveAccount": "Al een account?",
-      "loginLink": "Inloggen",
-      "dividerOr": "of",
-      "dividerOrEmail": "of met je e-mail",
-      "googleCta": "Mijn account aanmaken met Google",
-      "googleTerms": "Door verder te gaan met Google, aanvaard je onze <cgu>gebruiksvoorwaarden</cgu> en ons <privacy>privacybeleid</privacy>."
-    },
-    "forgot": {
-      "title": "Wachtwoord vergeten",
-      "subtitle": "Geef je e-mail in, we sturen je een beveiligde link.",
-      "emailLabel": "E-mail",
-      "submit": "Link versturen",
-      "submitting": "Versturen…",
-      "sentMessage": "Als dit e-mailadres bestaat, werd zonet een resetlink verstuurd.",
-      "backToLogin": "Terug naar inloggen"
-    },
-    "reset": {
-      "title": "Nieuw wachtwoord",
-      "subtitle": "Kies een sterk wachtwoord voor je account.",
-      "passwordLabel": "Nieuw wachtwoord",
-      "passwordConfirmLabel": "Bevestigen",
-      "submit": "Bijwerken",
-      "submitting": "Bijwerken…"
-    },
-    "google": {
-      "label": "Verdergaan met Google",
-      "redirecting": "Doorsturen…"
-    },
-    "checkEmail": {
-      "title": "Controleer je inbox",
-      "metaTitle": "Controleer je e-mail",
-      "body": "We stuurden je net een bevestigingslink. Klik erop om je account te activeren.",
-      "backToLogin": "Terug naar inloggen"
-    }
+  "login": {
+    "title": "Inloggen",
+    "subtitle": "Vind je Ankora-cockpit terug.",
+    "metaTitle": "Inloggen",
+    "emailLabel": "E-mail",
+    "passwordLabel": "Wachtwoord",
+    "forgotLink": "Wachtwoord vergeten?",
+    "submit": "Inloggen",
+    "submitting": "Inloggen…",
+    "noAccount": "Nog geen account?",
+    "signupLink": "Account aanmaken",
+    "dividerOr": "of",
+    "dividerOrEmail": "of met je e-mail",
+    "passwordUpdatedBanner": "Wachtwoord bijgewerkt. Je kunt inloggen."
+  },
+  "signup": {
+    "title": "Account aanmaken",
+    "subtitle": "Start je financiële cockpit in minder dan 2 minuten.",
+    "pageTitle": "Mijn cockpit aanmaken",
+    "pageDescription": "Enkele seconden. Geen bankkaart nodig.",
+    "emailLabel": "E-mail",
+    "passwordLabel": "Wachtwoord",
+    "passwordHint": "Minimum 12 tekens, 1 hoofdletter, 1 kleine letter, 1 cijfer.",
+    "passwordConfirmLabel": "Wachtwoord bevestigen",
+    "acceptTosPrefix": "Ik aanvaard de",
+    "acceptTosLink": "gebruiksvoorwaarden",
+    "acceptPrivacyPrefix": "Ik aanvaard het",
+    "acceptPrivacyLink": "privacybeleid",
+    "submit": "Mijn account aanmaken",
+    "submitting": "Aanmaken…",
+    "haveAccount": "Al een account?",
+    "loginLink": "Inloggen",
+    "dividerOr": "of",
+    "dividerOrEmail": "of met je e-mail",
+    "googleCta": "Mijn account aanmaken met Google",
+    "googleTerms": "Door verder te gaan met Google, aanvaard je onze <cgu>gebruiksvoorwaarden</cgu> en ons <privacy>privacybeleid</privacy>."
+  },
+  "forgot": {
+    "title": "Wachtwoord vergeten",
+    "subtitle": "Geef je e-mail in, we sturen je een beveiligde link.",
+    "emailLabel": "E-mail",
+    "submit": "Link versturen",
+    "submitting": "Versturen…",
+    "sentMessage": "Als dit e-mailadres bestaat, werd zonet een resetlink verstuurd.",
+    "backToLogin": "Terug naar inloggen"
+  },
+  "reset": {
+    "title": "Nieuw wachtwoord",
+    "subtitle": "Kies een sterk wachtwoord voor je account.",
+    "passwordLabel": "Nieuw wachtwoord",
+    "passwordConfirmLabel": "Bevestigen",
+    "submit": "Bijwerken",
+    "submitting": "Bijwerken…"
+  },
+  "google": {
+    "label": "Verdergaan met Google",
+    "redirecting": "Doorsturen…"
+  },
+  "checkEmail": {
+    "title": "Controleer je inbox",
+    "metaTitle": "Controleer je e-mail",
+    "body": "We stuurden je net een bevestigingslink. Klik erop om je account te activeren.",
+    "backToLogin": "Terug naar inloggen"
+  }
   },
   "onboarding": {
-    "defaultWorkspaceName": "Mijn ruimte",
-    "previous": "Terug",
-    "next": "Doorgaan",
-    "finish": "Afronden",
-    "finishing": "Opslaan…",
-    "validation": {
-      "workspaceNameRequired": "Geef je ruimte een naam.",
-      "incomeInvalid": "Geef een geldig nettoloon in (≥ 0)."
-    },
-    "step1": {
-      "title": "Benoem je ruimte",
-      "description": "Je kunt dit later wijzigen in de instellingen.",
-      "nameLabel": "Naam van de ruimte"
-    },
-    "step2": {
-      "title": "Je maandelijks nettoloon",
-      "description": "Dient als basis om je maandelijkse overschrijvingen voor te stellen.",
-      "incomeLabel": "Maandelijks nettoloon (€)"
-    },
-    "step3": {
-      "title": "Je eerste vaste kost (optioneel)",
-      "description": "Voeg een huur, een verzekering, een abonnement toe…",
-      "labelLabel": "Omschrijving",
-      "labelPlaceholder": "Huur, autoverzekering…",
-      "amountLabel": "Bedrag (€)",
-      "frequencyLabel": "Frequentie",
-      "dueMonthLabel": "Referentiemaand",
-      "skipLater": "Ik geef mijn vaste kosten later in"
-    }
+  "defaultWorkspaceName": "Mijn ruimte",
+  "previous": "Terug",
+  "next": "Doorgaan",
+  "finish": "Afronden",
+  "finishing": "Opslaan…",
+  "validation": {
+    "workspaceNameRequired": "Geef je ruimte een naam.",
+    "incomeInvalid": "Geef een geldig nettoloon in (≥ 0)."
+  },
+  "step1": {
+    "title": "Benoem je ruimte",
+    "description": "Je kunt dit later wijzigen in de instellingen.",
+    "nameLabel": "Naam van de ruimte"
+  },
+  "step2": {
+    "title": "Je maandelijks nettoloon",
+    "description": "Dient als basis om je maandelijkse overschrijvingen voor te stellen.",
+    "incomeLabel": "Maandelijks nettoloon (€)"
+  },
+  "step3": {
+    "title": "Je eerste vaste kost (optioneel)",
+    "description": "Voeg een huur, een verzekering, een abonnement toe…",
+    "labelLabel": "Omschrijving",
+    "labelPlaceholder": "Huur, autoverzekering…",
+    "amountLabel": "Bedrag (€)",
+    "frequencyLabel": "Frequentie",
+    "dueMonthLabel": "Referentiemaand",
+    "skipLater": "Ik geef mijn vaste kosten later in"
+  }
   },
   "app": {
-    "dashboard": {
-      "metaTitle": "Dashboard",
-      "headerTitle": "{month} — je cockpit",
-      "emptyTitle": "Begin met het toevoegen van je vaste kosten",
-      "emptyDescription": "Huur, verzekeringen, abonnementen — Ankora spreidt ze voor jou over 12 maanden.",
-      "emptyCta": "Vaste kost toevoegen",
-      "kpiProvisionsMonthly": "Voorzieningen / maand",
-      "kpiProvisionsAnnualHint": "Jaarlijks: {amount}",
-      "kpiHealth": "Gezondheid voorzieningen",
-      "kpiHealthTargetHint": "Doel: {amount}",
-      "kpiSuggestedTransfer": "Voorgestelde overschrijving",
-      "kpiSuggestedTransferToSavings": "Opzij te zetten",
-      "kpiSuggestedTransferFromSavings": "Van spaargeld te halen",
-      "kpiBillsMonth": "Facturen {month}",
-      "kpiBillsHint": "Cash-uitstroom deze maand",
-      "healthHealthy": "Gezond",
-      "healthWarning": "In de gaten houden",
-      "healthCritical": "Kritiek",
-      "planTitle": "Plan van de maand — {month}",
-      "planDescription": "De overschrijvingen die je begin van de maand moet uitvoeren op je drie rekeningen.",
-      "planAdjustAccounts": "Mijn rekeningen aanpassen",
-      "missingSetupTitle": "Geef eerst je rekeningen in",
-      "missingSetupDescription": "Om je Slimme Overschrijving te berekenen, heeft Ankora je maandelijkse nettoloon en het vaste bedrag nodig dat je naar Dagelijks Leven stuurt.",
-      "missingSetupCta": "Mijn rekeningen instellen",
-      "transferPrincipalToVieCourante": "Hoofdrekening → Dagelijks Leven",
-      "transferVieCouranteHint": "Envelop boodschappen, benzine, uit eten.",
-      "transferPrincipalToEpargne": "Hoofdrekening → Spaarrekening",
-      "transferEpargneToPrincipal": "Spaarrekening → Hoofdrekening",
-      "transferEpargneHint": "Voorziening {provision} − facturen {bills}",
-      "transferPrincipalRemaining": "Saldo Hoofdrekening",
-      "transferPrincipalRemainingHint": "Na loon, overschrijvingen en facturen Hoofdrekening ({bills}).",
-      "ctaCharges": "Mijn vaste kosten",
-      "ctaExpenses": "Mijn uitgaven",
-      "ctaSimulator": "Simuleren",
-      "expensesTitle": "Uitgaven — {month}",
-      "expensesCount": "{count, plural, =0 {Geen uitgaven deze maand} one {1 uitgave deze maand} other {# uitgaven deze maand}}",
-      "expensesEmpty": "Geen uitgaven geregistreerd voor deze maand.",
-      "expensesViewAll": "Alle uitgaven bekijken →"
+  "dashboard": {
+    "metaTitle": "Dashboard",
+    "headerTitle": "{month} — je cockpit",
+    "emptyTitle": "Begin met het toevoegen van je vaste kosten",
+    "emptyDescription": "Huur, verzekeringen, abonnementen — Ankora spreidt ze voor jou over 12 maanden.",
+    "emptyCta": "Vaste kost toevoegen",
+    "kpiProvisionsMonthly": "Voorzieningen / maand",
+    "kpiProvisionsAnnualHint": "Jaarlijks: {amount}",
+    "kpiHealth": "Gezondheid voorzieningen",
+    "kpiHealthTargetHint": "Doel: {amount}",
+    "kpiSuggestedTransfer": "Voorgestelde overschrijving",
+    "kpiSuggestedTransferToSavings": "Opzij te zetten",
+    "kpiSuggestedTransferFromSavings": "Van spaargeld te halen",
+    "kpiBillsMonth": "Facturen {month}",
+    "kpiBillsHint": "Cash-uitstroom deze maand",
+    "healthHealthy": "Gezond",
+    "healthWarning": "In de gaten houden",
+    "healthCritical": "Kritiek",
+    "planTitle": "Plan van de maand — {month}",
+    "planDescription": "De overschrijvingen die je begin van de maand moet uitvoeren op je drie rekeningen.",
+    "planAdjustAccounts": "Mijn rekeningen aanpassen",
+    "missingSetupTitle": "Geef eerst je rekeningen in",
+    "missingSetupDescription": "Om je Slimme Overschrijving te berekenen, heeft Ankora je maandelijkse nettoloon en het vaste bedrag nodig dat je naar Dagelijks Leven stuurt.",
+    "missingSetupCta": "Mijn rekeningen instellen",
+    "transferPrincipalToVieCourante": "Hoofdrekening → Dagelijks Leven",
+    "transferVieCouranteHint": "Envelop boodschappen, benzine, uit eten.",
+    "transferPrincipalToEpargne": "Hoofdrekening → Spaarrekening",
+    "transferEpargneToPrincipal": "Spaarrekening → Hoofdrekening",
+    "transferEpargneHint": "Voorziening {provision} − facturen {bills}",
+    "transferPrincipalRemaining": "Saldo Hoofdrekening",
+    "transferPrincipalRemainingHint": "Na loon, overschrijvingen en facturen Hoofdrekening ({bills}).",
+    "ctaCharges": "Mijn vaste kosten",
+    "ctaExpenses": "Mijn uitgaven",
+    "ctaSimulator": "Simuleren",
+    "expensesTitle": "Uitgaven — {month}",
+    "expensesCount": "{count, plural, =0 {Geen uitgaven deze maand} one {1 uitgave deze maand} other {# uitgaven deze maand}}",
+    "expensesEmpty": "Geen uitgaven geregistreerd voor deze maand.",
+    "expensesViewAll": "Alle uitgaven bekijken →"
+  },
+  "charges": {
+    "title": "Mijn vaste kosten",
+    "subtitle": "Elke vaste kost wordt automatisch over 12 maanden gespreid.",
+    "addFormTitle": "Vaste kost toevoegen",
+    "emptyState": "Nog geen vaste kosten.",
+    "labelLabel": "Omschrijving",
+    "amountLabel": "Bedrag (€)",
+    "frequencyLabel": "Frequentie",
+    "dueMonthLabel": "Referentiemaand",
+    "addButton": "Toevoegen",
+    "adding": "Toevoegen…",
+    "count": "{count, plural, =0 {geen vaste kosten} one {1 vaste kost} other {# vaste kosten}}",
+    "referenceFormat": "{frequency} · ref. {month}",
+    "deleteAria": "{label} verwijderen",
+    "toastCreated": "Vaste kost toegevoegd",
+    "toastDeleted": "Vaste kost verwijderd"
+  },
+  "accounts": {
+    "metaTitle": "Mijn rekeningen",
+    "metaDescription": "Volg de saldi van je Hoofdrekening, Dagelijks Leven en Spaarrekening. Stel je maandelijks nettoloon en je overschrijving naar Dagelijks Leven in.",
+    "title": "Mijn rekeningen",
+    "subtitle": "Geef je reële saldi in zodat Ankora elke maand je slimme overschrijving precies kan berekenen.",
+    "balancesHeading": "Huidige saldi",
+    "amountLabel": "Bedrag (€)",
+    "saveButton": "Opslaan",
+    "saving": "Opslaan…",
+    "income": {
+    "title": "Maandelijks nettoloon",
+    "description": "Het loon dat elke maand op je Hoofdrekening toekomt. Dient om te berekenen wat je overhoudt na vaste kosten en de overschrijving naar Dagelijks Leven.",
+    "placeholder": "Bv. 2500",
+    "toastSaved": "Maandelijks nettoloon bijgewerkt"
     },
-    "charges": {
-      "title": "Mijn vaste kosten",
-      "subtitle": "Elke vaste kost wordt automatisch over 12 maanden gespreid.",
-      "addFormTitle": "Vaste kost toevoegen",
-      "emptyState": "Nog geen vaste kosten.",
-      "labelLabel": "Omschrijving",
-      "amountLabel": "Bedrag (€)",
-      "frequencyLabel": "Frequentie",
-      "dueMonthLabel": "Referentiemaand",
-      "addButton": "Toevoegen",
-      "adding": "Toevoegen…",
-      "count": "{count, plural, =0 {geen vaste kosten} one {1 vaste kost} other {# vaste kosten}}",
-      "referenceFormat": "{frequency} · ref. {month}",
-      "deleteAria": "{label} verwijderen",
-      "toastCreated": "Vaste kost toegevoegd",
-      "toastDeleted": "Vaste kost verwijderd"
+    "transfer": {
+    "title": "Maandelijkse overschrijving naar Dagelijks Leven",
+    "description": "Vast bedrag dat elke maand van de Hoofdrekening naar je rekening Dagelijks Leven wordt overgeschreven. Dat dient voor boodschappen, benzine en uit eten.",
+    "placeholder": "Bv. 500",
+    "toastSaved": "Maandelijkse overschrijving bijgewerkt"
     },
-    "accounts": {
-      "metaTitle": "Mijn rekeningen",
-      "metaDescription": "Volg de saldi van je Hoofdrekening, Dagelijks Leven en Spaarrekening. Stel je maandelijks nettoloon en je overschrijving naar Dagelijks Leven in.",
-      "title": "Mijn rekeningen",
-      "subtitle": "Geef je reële saldi in zodat Ankora elke maand je slimme overschrijving precies kan berekenen.",
-      "balancesHeading": "Huidige saldi",
-      "amountLabel": "Bedrag (€)",
-      "saveButton": "Opslaan",
-      "saving": "Opslaan…",
-      "income": {
-        "title": "Maandelijks nettoloon",
-        "description": "Het loon dat elke maand op je Hoofdrekening toekomt. Dient om te berekenen wat je overhoudt na vaste kosten en de overschrijving naar Dagelijks Leven.",
-        "placeholder": "Bv. 2500",
-        "toastSaved": "Maandelijks nettoloon bijgewerkt"
-      },
-      "transfer": {
-        "title": "Maandelijkse overschrijving naar Dagelijks Leven",
-        "description": "Vast bedrag dat elke maand van de Hoofdrekening naar je rekening Dagelijks Leven wordt overgeschreven. Dat dient voor boodschappen, benzine en uit eten.",
-        "placeholder": "Bv. 500",
-        "toastSaved": "Maandelijkse overschrijving bijgewerkt"
-      },
-      "balance": {
-        "invalidAmount": "Geef een geldig bedrag in.",
-        "saveLabel": "Bijwerken",
-        "srLabel": "Huidig saldo van {label}",
-        "toastSaved": "{name} bijgewerkt"
-      },
-      "kind": {
-        "principal": {
-          "description": "Ontvangt het loon, betaalt de maandelijkse vaste kosten."
-        },
-        "vieCourante": {
-          "description": "Dagelijks budget (boodschappen, benzine, uit eten)."
-        },
-        "epargne": {
-          "description": "Spreidt de driemaandelijkse en jaarlijkse facturen."
-        }
-      }
+    "balance": {
+    "invalidAmount": "Geef een geldig bedrag in.",
+    "saveLabel": "Bijwerken",
+    "srLabel": "Huidig saldo van {label}",
+    "toastSaved": "{name} bijgewerkt"
     },
-    "expenses": {
-      "title": "Mijn uitgaven",
-      "subtitle": "De uitgaven buiten de terugkerende vaste kosten — boodschappen, resto, vrije tijd…",
-      "addFormTitle": "Uitgave toevoegen",
-      "labelLabel": "Omschrijving",
-      "amountLabel": "Bedrag (€)",
-      "dateLabel": "Datum",
-      "addButton": "Toevoegen",
-      "adding": "Toevoegen…",
-      "emptyState": "Nog geen uitgaven geregistreerd.",
-      "summary": "{count, plural, =0 {Geen uitgaven} one {1 uitgave · {total}} other {# uitgaven · {total}}}",
-      "deleteAria": "{label} verwijderen",
-      "toastCreated": "Uitgave toegevoegd",
-      "toastDeleted": "Uitgave verwijderd"
+    "kind": {
+    "principal": {
+      "description": "Ontvangt het loon, betaalt de maandelijkse vaste kosten."
     },
-    "settings": {
-      "metaTitle": "Instellingen",
-      "metaDescription": "Beheer je profiel, de 2FA-beveiliging en je persoonlijke gegevens.",
-      "title": "Instellingen",
-      "description": "Profiel, beveiliging en persoonlijke gegevens.",
-      "profile": {
-        "title": "Profiel",
-        "description": "Deze informatie personaliseert je cockpit.",
-        "emailLabel": "E-mail",
-        "displayNameLabel": "Weergavenaam",
-        "localeLabel": "Taal",
-        "localeOptions": {
-          "fr-BE": "Français (Belgique)",
-          "fr-FR": "Français (France)",
-          "en-GB": "English"
-        },
-        "submit": "Opslaan",
-        "submitting": "Opslaan…",
-        "toastSaved": "Profiel bijgewerkt"
-      },
-      "mfa": {
-        "title": "Beveiliging — 2FA",
-        "description": "Een eenmalige code gegenereerd door een authenticatie-app (Authy, 1Password, Google Authenticator).",
-        "emptyState": "Geen 2FA-factor actief. Activeer hem om je account te beschermen.",
-        "enrollButton": "2FA activeren",
-        "enrolling": "Voorbereiden…",
-        "scanInstruction": "Scan deze QR-code in je authenticatie-app en geef dan de code van 6 cijfers in.",
-        "qrAlt": "QR-code voor de authenticatie-app",
-        "manualEntry": "Handmatige invoer",
-        "codeLabel": "Code van 6 cijfers",
-        "verifyButton": "Verifiëren en activeren",
-        "verifying": "Verifiëren…",
-        "cancel": "Annuleren",
-        "defaultFactorName": "TOTP-app",
-        "activeLabel": "Actief",
-        "disableButton": "Uitschakelen",
-        "toastEnabled": "MFA geactiveerd",
-        "toastDisabled": "MFA uitgeschakeld"
-      },
-      "data": {
-        "title": "Mijn gegevens",
-        "description": "AVG-dataportabiliteit (art. 20) — download een volledige JSON van alles wat Ankora over jou bewaart.",
-        "exportButton": "Mijn gegevens downloaden",
-        "exporting": "Genereren…",
-        "toastDownloaded": "Export gedownload"
-      },
-      "danger": {
-        "scheduledTitle": "Verwijdering in uitvoering",
-        "scheduledBody": "Je account wordt verwijderd op <strong>{date}</strong>. Je kunt tot dan op elk moment annuleren.",
-        "viewStatus": "Status bekijken",
-        "title": "Gevarenzone",
-        "description": "Definitieve verwijdering van het account. 30 dagen grace period om te annuleren — daarna wordt alles gewist (audit logs gepseudonimiseerd).",
-        "reasonLabel": "Reden (optioneel)",
-        "reasonPlaceholder": "Help ons om te verbeteren…",
-        "confirmLabel": "Typ je e-mailadres om te bevestigen: <code>{email}</code>",
-        "submit": "Mijn account verwijderen",
-        "submitting": "Inplannen…",
-        "toastScheduled": "Verwijdering ingepland — je hebt 30 dagen om te annuleren"
-      }
+    "vieCourante": {
+      "description": "Dagelijks budget (boodschappen, benzine, uit eten)."
     },
-    "simulator": {
-      "title": "Simulator",
-      "subtitle": "Meet de impact van een wijziging zonder aan je echte gegevens te raken.",
-      "scenario": {
-        "title": "Scenario",
-        "description": "Kies een actie om te simuleren.",
-        "modes": {
-          "cancel": "Een vaste kost annuleren",
-          "negotiate": "Heronderhandelen",
-          "add": "Een vaste kost toevoegen"
-        }
-      },
-      "fields": {
-        "charge": "Vaste kost",
-        "chargePlaceholder": "Selecteer…",
-        "newAmount": "Nieuw bedrag (€)",
-        "label": "Omschrijving",
-        "amount": "Bedrag (€)",
-        "frequency": "Frequentie",
-        "month": "Maand"
-      },
-      "impact": {
-        "title": "Impact",
-        "empty": "Vul het scenario aan om de impact te zien.",
-        "currentMonthly": "Huidig / maand",
-        "projectedMonthly": "Verwacht / maand",
-        "annualSavings": "Jaarlijkse besparing",
-        "monthlyChange": "{sign}{percent}% / maand"
-      }
-    },
-    "deletionStatus": {
-      "title": "Accountverwijdering",
-      "subtitle": "Gedetailleerde status van je aanvraag en annulatieperiode.",
-      "metaTitle": "Verwijderingsstatus",
-      "metaDescription": "Status van de verwijderingsaanvraag van je Ankora-account.",
-      "statusLabel": "Status:",
-      "requestedOn": "Aangevraagd op {date}.",
-      "statusPending": "In afwachting",
-      "statusCancelled": "Geannuleerd",
-      "statusCompleted": "Voltooid",
-      "scheduledFor": "Verwijdering gepland",
-      "daysLeft": "Resterende dagen",
-      "auditLogs": "Audit logs",
-      "auditLogsValue": "Gepseudonimiseerd, nooit verwijderd",
-      "daysCount": "{days, plural, =0 {Vandaag} one {# dag} other {# dagen}}",
-      "backToSettings": "Terug naar instellingen",
-      "cancelledOn": "Aanvraag geannuleerd op {date}. Je account blijft behouden.",
-      "cancelledNoDate": "Aanvraag geannuleerd. Je account blijft behouden.",
-      "cancelButton": "Verwijdering annuleren",
-      "cancelling": "Annuleren…",
-      "toastCancelled": "Aanvraag geannuleerd — je account blijft behouden"
+    "epargne": {
+      "description": "Spreidt de driemaandelijkse en jaarlijkse facturen."
     }
+    }
+  },
+  "expenses": {
+    "title": "Mijn uitgaven",
+    "subtitle": "De uitgaven buiten de terugkerende vaste kosten — boodschappen, resto, vrije tijd…",
+    "addFormTitle": "Uitgave toevoegen",
+    "labelLabel": "Omschrijving",
+    "amountLabel": "Bedrag (€)",
+    "dateLabel": "Datum",
+    "addButton": "Toevoegen",
+    "adding": "Toevoegen…",
+    "emptyState": "Nog geen uitgaven geregistreerd.",
+    "summary": "{count, plural, =0 {Geen uitgaven} one {1 uitgave · {total}} other {# uitgaven · {total}}}",
+    "deleteAria": "{label} verwijderen",
+    "toastCreated": "Uitgave toegevoegd",
+    "toastDeleted": "Uitgave verwijderd"
+  },
+  "settings": {
+    "metaTitle": "Instellingen",
+    "metaDescription": "Beheer je profiel, de 2FA-beveiliging en je persoonlijke gegevens.",
+    "title": "Instellingen",
+    "description": "Profiel, beveiliging en persoonlijke gegevens.",
+    "profile": {
+    "title": "Profiel",
+    "description": "Deze informatie personaliseert je cockpit.",
+    "emailLabel": "E-mail",
+    "displayNameLabel": "Weergavenaam",
+    "localeLabel": "Taal",
+    "localeOptions": {
+      "fr-BE": "Français (Belgique)",
+      "fr-FR": "Français (France)",
+      "en-GB": "English"
+    },
+    "submit": "Opslaan",
+    "submitting": "Opslaan…",
+    "toastSaved": "Profiel bijgewerkt"
+    },
+    "mfa": {
+    "title": "Beveiliging — 2FA",
+    "description": "Een eenmalige code gegenereerd door een authenticatie-app (Authy, 1Password, Google Authenticator).",
+    "emptyState": "Geen 2FA-factor actief. Activeer hem om je account te beschermen.",
+    "enrollButton": "2FA activeren",
+    "enrolling": "Voorbereiden…",
+    "scanInstruction": "Scan deze QR-code in je authenticatie-app en geef dan de code van 6 cijfers in.",
+    "qrAlt": "QR-code voor de authenticatie-app",
+    "manualEntry": "Handmatige invoer",
+    "codeLabel": "Code van 6 cijfers",
+    "verifyButton": "Verifiëren en activeren",
+    "verifying": "Verifiëren…",
+    "cancel": "Annuleren",
+    "defaultFactorName": "TOTP-app",
+    "activeLabel": "Actief",
+    "disableButton": "Uitschakelen",
+    "toastEnabled": "MFA geactiveerd",
+    "toastDisabled": "MFA uitgeschakeld"
+    },
+    "data": {
+    "title": "Mijn gegevens",
+    "description": "AVG-dataportabiliteit (art. 20) — download een volledige JSON van alles wat Ankora over jou bewaart.",
+    "exportButton": "Mijn gegevens downloaden",
+    "exporting": "Genereren…",
+    "toastDownloaded": "Export gedownload"
+    },
+    "danger": {
+    "scheduledTitle": "Verwijdering in uitvoering",
+    "scheduledBody": "Je account wordt verwijderd op <strong>{date}</strong>. Je kunt tot dan op elk moment annuleren.",
+    "viewStatus": "Status bekijken",
+    "title": "Gevarenzone",
+    "description": "Definitieve verwijdering van het account. 30 dagen grace period om te annuleren — daarna wordt alles gewist (audit logs gepseudonimiseerd).",
+    "reasonLabel": "Reden (optioneel)",
+    "reasonPlaceholder": "Help ons om te verbeteren…",
+    "confirmLabel": "Typ je e-mailadres om te bevestigen: <code>{email}</code>",
+    "submit": "Mijn account verwijderen",
+    "submitting": "Inplannen…",
+    "toastScheduled": "Verwijdering ingepland — je hebt 30 dagen om te annuleren"
+    }
+  },
+  "simulator": {
+    "title": "Simulator",
+    "subtitle": "Meet de impact van een wijziging zonder aan je echte gegevens te raken.",
+    "scenario": {
+    "title": "Scenario",
+    "description": "Kies een actie om te simuleren.",
+    "modes": {
+      "cancel": "Een vaste kost annuleren",
+      "negotiate": "Heronderhandelen",
+      "add": "Een vaste kost toevoegen"
+    }
+    },
+    "fields": {
+    "charge": "Vaste kost",
+    "chargePlaceholder": "Selecteer…",
+    "newAmount": "Nieuw bedrag (€)",
+    "label": "Omschrijving",
+    "amount": "Bedrag (€)",
+    "frequency": "Frequentie",
+    "month": "Maand"
+    },
+    "impact": {
+    "title": "Impact",
+    "empty": "Vul het scenario aan om de impact te zien.",
+    "currentMonthly": "Huidig / maand",
+    "projectedMonthly": "Verwacht / maand",
+    "annualSavings": "Jaarlijkse besparing",
+    "monthlyChange": "{sign}{percent}% / maand"
+    }
+  },
+  "deletionStatus": {
+    "title": "Accountverwijdering",
+    "subtitle": "Gedetailleerde status van je aanvraag en annulatieperiode.",
+    "metaTitle": "Verwijderingsstatus",
+    "metaDescription": "Status van de verwijderingsaanvraag van je Ankora-account.",
+    "statusLabel": "Status:",
+    "requestedOn": "Aangevraagd op {date}.",
+    "statusPending": "In afwachting",
+    "statusCancelled": "Geannuleerd",
+    "statusCompleted": "Voltooid",
+    "scheduledFor": "Verwijdering gepland",
+    "daysLeft": "Resterende dagen",
+    "auditLogs": "Audit logs",
+    "auditLogsValue": "Gepseudonimiseerd, nooit verwijderd",
+    "daysCount": "{days, plural, =0 {Vandaag} one {# dag} other {# dagen}}",
+    "backToSettings": "Terug naar instellingen",
+    "cancelledOn": "Aanvraag geannuleerd op {date}. Je account blijft behouden.",
+    "cancelledNoDate": "Aanvraag geannuleerd. Je account blijft behouden.",
+    "cancelButton": "Verwijdering annuleren",
+    "cancelling": "Annuleren…",
+    "toastCancelled": "Aanvraag geannuleerd — je account blijft behouden"
+  }
   },
   "glossary": {
-    "title": "Woordenboek",
-    "subtitle": "15 essentiële termen voor het begrijpen van je budgetbeheer en persoonlijke financiën.",
-    "metaTitle": "Woordenboek — Financiële termen",
-    "metaDescription": "Woordenboek van 15 essentiële termen voor budgetbeheer: uitvlakkingsbudget, bucket-rekening, noodspaargeld, en meer.",
-    "breadcrumb": {
-      "home": "Startpagina",
-      "glossary": "Woordenboek"
-    },
-    "section": {
-      "whyItMatters": "Waarom dit belangrijk is",
-      "example": "Concreet voorbeeld",
-      "relatedTerms": "Gerelateerde termen"
-    }
+  "title": "Woordenboek",
+  "subtitle": "15 essentiële termen voor het begrijpen van je budgetbeheer en persoonlijke financiën.",
+  "metaTitle": "Woordenboek — Financiële termen",
+  "metaDescription": "Woordenboek van 15 essentiële termen voor budgetbeheer: uitvlakkingsbudget, bucket-rekening, noodspaargeld, en meer.",
+  "breadcrumb": {
+    "home": "Startpagina",
+    "glossary": "Woordenboek"
+  },
+  "section": {
+    "whyItMatters": "Waarom dit belangrijk is",
+    "example": "Concreet voorbeeld",
+    "relatedTerms": "Gerelateerde termen"
+  }
   },
   "errors": {
-    "generic": "Er is een fout opgetreden. Probeer opnieuw.",
-    "session": {
-      "expired": "Sessie verlopen. Log opnieuw in.",
-      "rateLimited": "Te veel aanvragen. Wacht een minuut."
-    },
+  "generic": "Er is een fout opgetreden. Probeer opnieuw.",
+  "session": {
+    "expired": "Sessie verlopen. Log opnieuw in.",
+    "rateLimited": "Te veel aanvragen. Wacht een minuut."
+  },
+  "auth": {
+    "invalidCredentials": "E-mail of wachtwoord is niet correct.",
+    "signupFailed": "Registratie niet mogelijk. Probeer later opnieuw.",
+    "googleFailed": "Google-login niet beschikbaar. Probeer later opnieuw.",
+    "rateLimited": "Te veel pogingen. Probeer binnen enkele minuten opnieuw.",
+    "serviceTemporarilyUnavailable": "Dienst tijdelijk niet beschikbaar. Probeer binnen enkele minuten opnieuw.",
+    "passwordResetFailed": "Kan het wachtwoord niet bijwerken.",
+    "linkExpired": "Link verlopen. Vraag een nieuwe link aan.",
+    "mfaEnrollFailed": "Kan de inschrijving niet starten.",
+    "mfaChallengeFailed": "MFA-challenge niet mogelijk.",
+    "mfaCodeInvalid": "Code niet correct. Probeer opnieuw.",
+    "mfaDisableFailed": "Kan de 2FA niet uitschakelen."
+  },
+  "db": {
+    "workspaceNotFound": "Geen bewerkbare workspace.",
+    "updateFailed": "Bijwerken niet mogelijk.",
+    "notEditable": "Je hebt geen bewerkingsrechten op deze ruimte."
+  },
+  "validation": {
+    "generic": "Gegevens niet geldig.",
     "auth": {
-      "invalidCredentials": "E-mail of wachtwoord is niet correct.",
-      "signupFailed": "Registratie niet mogelijk. Probeer later opnieuw.",
-      "googleFailed": "Google-login niet beschikbaar. Probeer later opnieuw.",
-      "rateLimited": "Te veel pogingen. Probeer binnen enkele minuten opnieuw.",
-      "serviceTemporarilyUnavailable": "Dienst tijdelijk niet beschikbaar. Probeer binnen enkele minuten opnieuw.",
-      "passwordResetFailed": "Kan het wachtwoord niet bijwerken.",
-      "linkExpired": "Link verlopen. Vraag een nieuwe link aan.",
-      "mfaEnrollFailed": "Kan de inschrijving niet starten.",
-      "mfaChallengeFailed": "MFA-challenge niet mogelijk.",
-      "mfaCodeInvalid": "Code niet correct. Probeer opnieuw.",
-      "mfaDisableFailed": "Kan de 2FA niet uitschakelen."
+    "email": {
+      "invalid": "E-mailadres niet geldig."
     },
-    "db": {
-      "workspaceNotFound": "Geen bewerkbare workspace.",
-      "updateFailed": "Bijwerken niet mogelijk.",
-      "notEditable": "Je hebt geen bewerkingsrechten op deze ruimte."
+    "password": {
+      "required": "Wachtwoord verplicht.",
+      "tooShort": "Minimum 12 tekens.",
+      "tooLong": "Maximum 128 tekens.",
+      "lowercase": "Minstens één kleine letter.",
+      "uppercase": "Minstens één hoofdletter.",
+      "digit": "Minstens één cijfer."
     },
-    "validation": {
-      "generic": "Gegevens niet geldig.",
-      "auth": {
-        "email": {
-          "invalid": "E-mailadres niet geldig."
-        },
-        "password": {
-          "required": "Wachtwoord verplicht.",
-          "tooShort": "Minimum 12 tekens.",
-          "tooLong": "Maximum 128 tekens.",
-          "lowercase": "Minstens één kleine letter.",
-          "uppercase": "Minstens één hoofdletter.",
-          "digit": "Minstens één cijfer."
-        },
-        "passwordConfirm": {
-          "mismatch": "De wachtwoorden komen niet overeen."
-        },
-        "acceptTos": {
-          "required": "Je moet de gebruiksvoorwaarden aanvaarden."
-        },
-        "acceptPrivacy": {
-          "required": "Je moet het privacybeleid aanvaarden."
-        }
-      },
-      "charge": {
-        "label": {
-          "required": "Omschrijving verplicht.",
-          "tooLong": "Maximum 120 tekens."
-        },
-        "amount": {
-          "invalid": "Bedrag niet geldig.",
-          "negative": "Het bedrag moet ≥ 0 zijn.",
-          "tooHigh": "Bedrag te hoog."
-        },
-        "frequency": {
-          "invalid": "Frequentie niet geldig."
-        },
-        "dueMonth": {
-          "range": "Maand tussen 1 en 12."
-        },
-        "paidFrom": {
-          "invalid": "Debetrekening niet geldig."
-        }
-      },
-      "account": {
-        "kind": {
-          "invalid": "Type rekening niet geldig."
-        },
-        "balance": {
-          "invalid": "Saldo niet geldig.",
-          "outOfRange": "Waarde buiten de grenzen."
-        },
-        "label": {
-          "required": "Omschrijving verplicht.",
-          "tooLong": "Maximum 80 tekens."
-        }
-      },
-      "workspace": {
-        "name": {
-          "required": "Naam verplicht.",
-          "tooLong": "Maximum 80 tekens."
-        },
-        "income": {
-          "invalid": "Nettoloon niet geldig.",
-          "negative": "Moet ≥ 0 zijn.",
-          "tooHigh": "Nettoloon te hoog."
-        },
-        "transfer": {
-          "invalid": "Bedrag niet geldig.",
-          "negative": "Moet ≥ 0 zijn.",
-          "tooHigh": "Bedrag te hoog."
-        }
-      },
-      "expense": {
-        "label": {
-          "required": "Omschrijving verplicht.",
-          "tooLong": "Maximum 120 tekens."
-        },
-        "amount": {
-          "invalid": "Bedrag niet geldig.",
-          "negative": "Moet ≥ 0 zijn.",
-          "tooHigh": "Bedrag te hoog."
-        },
-        "date": {
-          "format": "Verwacht formaat: YYYY-MM-DD."
-        },
-        "category": {
-          "invalid": "Categorie niet geldig."
-        }
-      },
-      "settings": {
-        "displayName": {
-          "required": "Naam verplicht.",
-          "tooLong": "Maximum 80 tekens."
-        },
-        "locale": {
-          "invalid": "Taal niet geldig."
-        },
-        "factorId": {
-          "invalid": "Identificator niet geldig."
-        },
-        "mfaCode": {
-          "invalid": "Code van 6 cijfers."
-        },
-        "deletion": {
-          "confirm": "Dit adres komt niet overeen met je account."
-        }
-      },
-      "onboarding": {
-        "workspace": {
-          "required": "Naam verplicht.",
-          "tooLong": "Maximum 80 tekens."
-        },
-        "income": {
-          "invalid": "Nettoloon niet geldig.",
-          "negative": "Moet ≥ 0 zijn.",
-          "tooHigh": "Nettoloon te hoog."
-        },
-        "firstCharge": {
-          "label": {
-            "required": "Omschrijving verplicht.",
-            "tooLong": "Maximum 120 tekens."
-          },
-          "amount": {
-            "invalid": "Bedrag niet geldig.",
-            "negative": "Moet ≥ 0 zijn.",
-            "tooHigh": "Bedrag te hoog."
-          },
-          "dueMonth": {
-            "range": "Maand tussen 1 en 12."
-          }
-        }
-      }
+    "passwordConfirm": {
+      "mismatch": "De wachtwoorden komen niet overeen."
     },
-    "charges": {
-      "createFailed": "Kan de vaste kost niet aanmaken.",
-      "updateFailed": "Kan de vaste kost niet bijwerken.",
-      "deleteFailed": "Kan de vaste kost niet verwijderen."
+    "acceptTos": {
+      "required": "Je moet de gebruiksvoorwaarden aanvaarden."
     },
-    "accounts": {
-      "balanceUpdateFailed": "Kan het saldo niet bijwerken.",
-      "renameFailed": "Kan de rekening niet hernoemen.",
-      "incomeUpdateFailed": "Kan het nettoloon niet bijwerken.",
-      "transferUpdateFailed": "Kan de overschrijving niet bijwerken."
+    "acceptPrivacy": {
+      "required": "Je moet het privacybeleid aanvaarden."
+    }
     },
-    "expenses": {
-      "createFailed": "Kan de uitgave niet aanmaken.",
-      "deleteFailed": "Kan de uitgave niet verwijderen."
+    "charge": {
+    "label": {
+      "required": "Omschrijving verplicht.",
+      "tooLong": "Maximum 120 tekens."
+    },
+    "amount": {
+      "invalid": "Bedrag niet geldig.",
+      "negative": "Het bedrag moet ≥ 0 zijn.",
+      "tooHigh": "Bedrag te hoog."
+    },
+    "frequency": {
+      "invalid": "Frequentie niet geldig."
+    },
+    "dueMonth": {
+      "range": "Maand tussen 1 en 12."
+    },
+    "paidFrom": {
+      "invalid": "Debetrekening niet geldig."
+    }
+    },
+    "account": {
+    "kind": {
+      "invalid": "Type rekening niet geldig."
+    },
+    "balance": {
+      "invalid": "Saldo niet geldig.",
+      "outOfRange": "Waarde buiten de grenzen."
+    },
+    "label": {
+      "required": "Omschrijving verplicht.",
+      "tooLong": "Maximum 80 tekens."
+    }
+    },
+    "workspace": {
+    "name": {
+      "required": "Naam verplicht.",
+      "tooLong": "Maximum 80 tekens."
+    },
+    "income": {
+      "invalid": "Nettoloon niet geldig.",
+      "negative": "Moet ≥ 0 zijn.",
+      "tooHigh": "Nettoloon te hoog."
+    },
+    "transfer": {
+      "invalid": "Bedrag niet geldig.",
+      "negative": "Moet ≥ 0 zijn.",
+      "tooHigh": "Bedrag te hoog."
+    }
+    },
+    "expense": {
+    "label": {
+      "required": "Omschrijving verplicht.",
+      "tooLong": "Maximum 120 tekens."
+    },
+    "amount": {
+      "invalid": "Bedrag niet geldig.",
+      "negative": "Moet ≥ 0 zijn.",
+      "tooHigh": "Bedrag te hoog."
+    },
+    "date": {
+      "format": "Verwacht formaat: YYYY-MM-DD."
+    },
+    "category": {
+      "invalid": "Categorie niet geldig."
+    }
     },
     "settings": {
-      "profileUpdateFailed": "Kan het profiel niet bijwerken.",
-      "deletionRequestFailed": "Kan de verwijdering niet inplannen.",
-      "deletionCancelFailed": "Kan de aanvraag niet annuleren.",
-      "exportLimited": "Export beperkt tot één keer per 5 minuten."
-    },
-    "onboarding": {
-      "workspaceNotFound": "Workspace niet gevonden. Contacteer de support.",
-      "workspaceUpdateFailed": "Kan de workspace niet bijwerken.",
-      "chargeFailed": "Workspace aangemaakt maar vaste kost niet opgeslagen."
+    "displayName": {
+      "required": "Naam verplicht.",
+      "tooLong": "Maximum 80 tekens."
     },
     "locale": {
       "invalid": "Taal niet geldig."
+    },
+    "factorId": {
+      "invalid": "Identificator niet geldig."
+    },
+    "mfaCode": {
+      "invalid": "Code van 6 cijfers."
+    },
+    "deletion": {
+      "confirm": "Dit adres komt niet overeen met je account."
     }
+    },
+    "onboarding": {
+    "workspace": {
+      "required": "Naam verplicht.",
+      "tooLong": "Maximum 80 tekens."
+    },
+    "income": {
+      "invalid": "Nettoloon niet geldig.",
+      "negative": "Moet ≥ 0 zijn.",
+      "tooHigh": "Nettoloon te hoog."
+    },
+    "firstCharge": {
+      "label": {
+      "required": "Omschrijving verplicht.",
+      "tooLong": "Maximum 120 tekens."
+      },
+      "amount": {
+      "invalid": "Bedrag niet geldig.",
+      "negative": "Moet ≥ 0 zijn.",
+      "tooHigh": "Bedrag te hoog."
+      },
+      "dueMonth": {
+      "range": "Maand tussen 1 en 12."
+      }
+    }
+    }
+  },
+  "charges": {
+    "createFailed": "Kan de vaste kost niet aanmaken.",
+    "updateFailed": "Kan de vaste kost niet bijwerken.",
+    "deleteFailed": "Kan de vaste kost niet verwijderen."
+  },
+  "accounts": {
+    "balanceUpdateFailed": "Kan het saldo niet bijwerken.",
+    "renameFailed": "Kan de rekening niet hernoemen.",
+    "incomeUpdateFailed": "Kan het nettoloon niet bijwerken.",
+    "transferUpdateFailed": "Kan de overschrijving niet bijwerken."
+  },
+  "expenses": {
+    "createFailed": "Kan de uitgave niet aanmaken.",
+    "deleteFailed": "Kan de uitgave niet verwijderen."
+  },
+  "settings": {
+    "profileUpdateFailed": "Kan het profiel niet bijwerken.",
+    "deletionRequestFailed": "Kan de verwijdering niet inplannen.",
+    "deletionCancelFailed": "Kan de aanvraag niet annuleren.",
+    "exportLimited": "Export beperkt tot één keer per 5 minuten."
+  },
+  "onboarding": {
+    "workspaceNotFound": "Workspace niet gevonden. Contacteer de support.",
+    "workspaceUpdateFailed": "Kan de workspace niet bijwerken.",
+    "chargeFailed": "Workspace aangemaakt maar vaste kost niet opgeslagen."
+  },
+  "locale": {
+    "invalid": "Taal niet geldig."
+  }
+  },
+  "opengraphImage": {
+  "trustHosting": "🇧🇪 België · EU-gehost",
+  "trustNoBank": "Geen bankaggregatie",
+  "trustFree": "0 € Fase 1"
   }
 }

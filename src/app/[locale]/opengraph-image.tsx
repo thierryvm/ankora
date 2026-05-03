@@ -40,6 +40,12 @@ export default async function OpenGraphImage({ params }: Params) {
   const description =
     fullDescription.length > 140 ? fullDescription.slice(0, 137).trimEnd() + '…' : fullDescription;
 
+  // Trust strip — locale-aware via opengraphImage.* keys (cf. messages/{fr-BE,en}.json)
+  const ogT = await getTranslations({ locale: safeLocale, namespace: 'opengraphImage' });
+  const trustHosting = ogT('trustHosting');
+  const trustNoBank = ogT('trustNoBank');
+  const trustFree = ogT('trustFree');
+
   return new ImageResponse(
     (
       <div
@@ -145,11 +151,11 @@ export default async function OpenGraphImage({ params }: Params) {
               color: 'rgba(226, 232, 240, 0.7)',
             }}
           >
-            <span>🇧🇪 Belgique · Hébergé UE</span>
+            <span>{trustHosting}</span>
             <span>·</span>
-            <span>Sans agrégation bancaire</span>
+            <span>{trustNoBank}</span>
             <span>·</span>
-            <span>0 € Phase 1</span>
+            <span>{trustFree}</span>
           </div>
           <div
             style={{
