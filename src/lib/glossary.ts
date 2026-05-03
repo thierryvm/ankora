@@ -1,6 +1,7 @@
 import frBE from '../../content/glossary/fr-BE.json';
 import nlBE from '../../content/glossary/nl-BE.json';
 import en from '../../content/glossary/en.json';
+import { SITE } from './site';
 
 export type GlossaryTerm = {
   slug: string;
@@ -50,7 +51,6 @@ export function getLocalePrefix(locale: string): string {
 }
 
 export function buildCanonicalUrl(path: string, locale: string): string {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://ankora-chi.vercel.app';
   const prefix = getLocalePrefix(locale);
-  return `${baseUrl}${prefix}${path}`;
+  return `${SITE.url}${prefix}${path}`;
 }
