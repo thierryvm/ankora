@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+import { authenticatedUserResponse, membershipLookupChain } from '../helpers/action-mocks';
+
 const revalidatePathSpy = vi.fn();
 const insertSpy = vi.fn(async () => ({ error: null }));
 const updateEqEqSpy = vi.fn(async () => ({ error: null }));
@@ -24,25 +26,9 @@ vi.mock('@/lib/security/audit-log', () => ({
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
-    auth: { getUser: async () => ({ data: { user: { id: 'user-123' } } }) },
+    auth: { getUser: async () => authenticatedUserResponse() },
     from: (table: string) => {
-      if (table === 'workspace_members') {
-        return {
-          select: () => ({
-            eq: () => ({
-              in: () => ({
-                order: () => ({
-                  limit: () => ({
-                    maybeSingle: async () => ({
-                      data: { workspace_id: 'ws-456', role: 'owner' as const },
-                    }),
-                  }),
-                }),
-              }),
-            }),
-          }),
-        };
-      }
+      if (table === 'workspace_members') return membershipLookupChain();
       if (table === 'charges') {
         return {
           insert: insertSpy,

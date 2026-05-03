@@ -1,8 +1,7 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
 import { createClient } from '@/lib/supabase/server';
+import { revalidateAppPath, revalidateDashboard } from '@/lib/actions/revalidate';
 import { accountBalanceSchema, accountLabelSchema } from '@/lib/schemas/account';
 import { monthlyIncomeSchema, vieCouranteTransferSchema } from '@/lib/schemas/workspace';
 import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
@@ -36,8 +35,8 @@ async function resolveSessionWorkspace() {
 }
 
 function revalidateAccountPaths() {
-  revalidatePath('/[locale]/app', 'page');
-  revalidatePath('/[locale]/app/accounts', 'page');
+  revalidateDashboard();
+  revalidateAppPath('accounts');
 }
 
 // =========================================================================

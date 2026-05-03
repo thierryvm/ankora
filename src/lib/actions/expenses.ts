@@ -1,8 +1,7 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
 import { createClient } from '@/lib/supabase/server';
+import { revalidateAppPath, revalidateDashboard } from '@/lib/actions/revalidate';
 import { expenseInputSchema } from '@/lib/schemas/expense';
 import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
 import { rateLimit } from '@/lib/security/rate-limit';
@@ -64,8 +63,8 @@ export async function createExpenseAction(input: unknown): Promise<ActionResult>
     workspaceId: ctx.workspaceId,
   });
 
-  revalidatePath('/[locale]/app', 'page');
-  revalidatePath('/[locale]/app/expenses', 'page');
+  revalidateDashboard();
+  revalidateAppPath('expenses');
   return { ok: true };
 }
 
@@ -90,7 +89,7 @@ export async function deleteExpenseAction(id: string): Promise<ActionResult> {
     workspaceId: ctx.workspaceId,
   });
 
-  revalidatePath('/[locale]/app', 'page');
-  revalidatePath('/[locale]/app/expenses', 'page');
+  revalidateDashboard();
+  revalidateAppPath('expenses');
   return { ok: true };
 }
