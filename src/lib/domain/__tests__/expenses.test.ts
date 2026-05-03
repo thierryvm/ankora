@@ -46,6 +46,16 @@ describe('totalAmount', () => {
     expect(totalAmount([groceries, lunch, fuel]).toNumber()).toBe(142.5);
   });
 
+  it('handles classic floating-point edge cases without drift (0.1 + 0.2 + 0.3 = 0.6)', () => {
+    const decimals: Expense[] = [
+      { ...base, id: 'd1', label: 'A', amount: money('0.1'), occurredOn: '2026-05-01' },
+      { ...base, id: 'd2', label: 'B', amount: money('0.2'), occurredOn: '2026-05-02' },
+      { ...base, id: 'd3', label: 'C', amount: money('0.3'), occurredOn: '2026-05-03' },
+    ];
+    // Native JS: 0.1 + 0.2 + 0.3 === 0.6000000000000001 — Decimal.js eliminates the drift.
+    expect(totalAmount(decimals).toNumber()).toBe(0.6);
+  });
+
   it('does not mutate the input list', () => {
     const list = [groceries, lunch];
     const snapshot = [...list];

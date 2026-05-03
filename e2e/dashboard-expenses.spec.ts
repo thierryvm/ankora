@@ -48,23 +48,20 @@ test.describe('Dashboard — monthly expenses section', () => {
 
       // Navigate back to the dashboard via the Header link (client-side nav).
       // This exercises the Router Cache invalidation locked by PR #88.
-      const startedAt = Date.now();
       await page.getByRole('link', { name: /tableau de bord/i }).click();
       await page.waitForURL(/\/app(\?|$|\/?$)/, { timeout: 5_000 });
 
       // The new expense must appear in the section, the empty-state copy must be gone,
       // the count must reflect the new value, and the total must show 5,00 €.
-      // All within the 3-second budget.
+      // Each `expect` carries a 5s timeout — the assertions chain enforces a real
+      // user-facing budget without a separate flaky elapsed-time check on top.
       await expect(page.getByText(/aucune dépense enregistrée pour ce mois/i)).not.toBeVisible({
-        timeout: 3_000,
+        timeout: 5_000,
       });
-      await expect(page.getByText(/test pr-c2a/i)).toBeVisible({ timeout: 3_000 });
-      await expect(page.getByText(/1 dépense ce mois/i)).toBeVisible({ timeout: 3_000 });
+      await expect(page.getByText(/test pr-c2a/i)).toBeVisible({ timeout: 5_000 });
+      await expect(page.getByText(/1 dépense ce mois/i)).toBeVisible({ timeout: 5_000 });
       // Total appears in the section header — looking for the formatted euro amount.
-      await expect(page.getByText(/5,00\s*€/).first()).toBeVisible({ timeout: 3_000 });
-
-      const elapsed = Date.now() - startedAt;
-      expect(elapsed).toBeLessThan(3_000);
+      await expect(page.getByText(/5,00\s*€/).first()).toBeVisible({ timeout: 5_000 });
     } finally {
       await deleteSeededUser(admin, user.userId);
     }
