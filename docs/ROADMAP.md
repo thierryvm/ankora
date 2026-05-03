@@ -1,6 +1,6 @@
 # Roadmap — Ankora
 
-Dernière mise à jour : 25 avril 2026 — Workflow trio @cowork/@cc-design/@cc-ankora opérationnel. PR-3 splittée en PR-3a/b/c, PR-3a anticipée comme socle architectural avant PR-2 (cf. [ADR-005](./adr/ADR-005-pr3a-anticipated-design-system.md)).
+Dernière mise à jour : 2 mai 2026 — Série PR-3 complète mergée (PR-3a tokens/fonts, PR-3b atomic UI, PR-3c-1/2/3 landing fusion). Polish post-merge en cours sur `feat/hero-waterfall-3steps`. Prochaine décision stratégique @thierry : (A) lancer **PR-2 traductions NL/EN/ES/DE** (séquence ROADMAP nominale) OU (B) **Session Claude Design #3 pour Dashboard v3** (cf. handoff dormant A4 dans `90_Meta/cc-prompts-en-attente.md` du vault Athenaeum). Cf. [ADR-005](./adr/ADR-005-pr3a-anticipated-design-system.md) pour l'historique du re-séquencement PR-3.
 
 ## Cap v1.0 publique — Vision & Jalons (23 avril 2026)
 
@@ -70,18 +70,19 @@ L'ordre ci-dessous est **verrouillé**. Il a été pensé pour que chaque PR dé
 
 **Re-séquencement 2026-04-25** : PR-3 monolithique splittée en **PR-3a/b/c** ; PR-3a anticipée avant PR-2/PR-B1 comme socle architectural. Justification complète : [ADR-005](./adr/ADR-005-pr3a-anticipated-design-system.md).
 
-| #   | PR                                                    | Statut                                                               | Bloquant pour        | Raison d'être                                                                              |
-| --- | ----------------------------------------------------- | -------------------------------------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------ |
-| 1   | **PR-1 — Socle i18n next-intl**                       | ✅ mergée                                                            | PR-1bis              | Route group `[locale]` + 5 locales                                                         |
-| 2   | **PR-Q — OpenGraph statique**                         | ✅ mergée                                                            | —                    | 5 PNG 1200×630 générés via Playwright                                                      |
-| 3   | **PR-1bis — Extraction i18n routes privées**          | ✅ mergée (a491297, 18 avril 2026)                                   | PR-2                 | Clés i18n pour auth + app + onboarding                                                     |
-| 4   | **PR-3a — Design System socle (DS + tokens + fonts)** | 📋 prochaine (`docs/design/cc-ankora-prompt-handoff-integration.md`) | PR-2, PR-B1, PR-3b/c | Tokens canoniques, fonts, SKILL `ankora-design-system` — débloque toute la couche visuelle |
-| 5   | **PR-2 — Traductions NL/EN/ES/DE**                    | ⏳ en attente (après PR-3a)                                          | PR-3c                | Remplissage des 4 locales non-FR                                                           |
-| 6   | **PR-B1 — Bug reporting MVP**                         | 📋 prompt prêt (`prompts/PR-B1-bug-reporting-mvp.md`)                | PR-3b/c (recommandé) | Capteur d'erreurs + widget avant QA lourde                                                 |
-| 7   | **PR-3b — Atomic UI kit**                             | 📋 cadré (post-PR-3a)                                                | PR-3c                | `src/components/ui/` (Button, Card, Input, Badge…) + tests Vitest                          |
-| 8   | **PR-3c — Landing fusion intelligente**               | 📋 cadré (post-PR-3b + `landing-merge-analysis.md`)                  | PR-F                 | Fusion ossature TSX/RSC actuelle ↔ apports cc-design (hero waterfall, simulator, pricing)  |
-| 9   | **PR-F — Rétro-planning provisions**                  | 💡 idée                                                              | PR-B2                | Alertes J-N avant retrait d'épargne                                                        |
-| 10  | **PR-B2 — Admin panel complet**                       | 💡 idée (post-MVP)                                                   | —                    | Dashboard santé + métriques + règles                                                       |
+| #   | PR                                                    | Statut                                                                                                                                                                                   | Bloquant pour | Raison d'être                                                                               |
+| --- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------- |
+| 1   | **PR-1 — Socle i18n next-intl**                       | ✅ mergée                                                                                                                                                                                | PR-1bis       | Route group `[locale]` + 5 locales                                                          |
+| 2   | **PR-Q — OpenGraph statique**                         | ✅ mergée                                                                                                                                                                                | —             | 5 PNG 1200×630 générés via Playwright                                                       |
+| 3   | **PR-1bis — Extraction i18n routes privées**          | ✅ mergée (a491297, 18 avril 2026)                                                                                                                                                       | PR-2          | Clés i18n pour auth + app + onboarding                                                      |
+| 4   | **PR-3a — Design System socle (DS + tokens + fonts)** | ✅ mergée (rapport `docs/prs/PR-3a-tokens-fonts-skill-report.md`, 26 avril 2026)                                                                                                         | —             | Tokens canoniques, fonts, SKILL `ankora-design-system` — socle visuel livré                 |
+| 5   | **PR-3b — Atomic UI kit**                             | ✅ mergée (PR #67, 24 avril 2026)                                                                                                                                                        | —             | `src/components/ui/` (Button, Card, Input, Badge…) + tests Vitest                           |
+| 6   | **PR-3c — Landing fusion intelligente**               | ✅ mergée en 3 sous-PRs : #76 (PR-3c-1 foundation), #78 (PR-3c-2 MktNav+Hero), #82 (PR-3c-3 WhatIfDemo) — 27/28 avril 2026. Polish post-merge en cours sur `feat/hero-waterfall-3steps`. | —             | Fusion ossature TSX/RSC actuelle ↔ apports cc-design (hero waterfall, simulator, pricing)   |
+| 7   | **PR-2 — Traductions NL/EN/ES/DE**                    | ⏳ en attente — débloquée par PR-3 mergée                                                                                                                                                | —             | Remplissage des 4 locales non-FR                                                            |
+| 8   | **PR-B1 — Bug reporting MVP**                         | 📋 prompt prêt (`prompts/PR-B1-bug-reporting-mvp.md`) — exécutable en parallèle de PR-2                                                                                                  | —             | Capteur d'erreurs + widget avant QA lourde dashboard v3                                     |
+| 9   | **PR Dashboard v3 (Pilier B/C)**                      | 📋 handoff dormant A4 (cf. `90_Meta/cc-prompts-en-attente.md` du vault Athenaeum) — prérequis : Session Claude Design #3                                                                 | —             | 8 sections obligatoires Monarch-level (cashflow waterfall, health score, timeline 6m, etc.) |
+| 10  | **PR-F — Rétro-planning provisions**                  | 💡 idée                                                                                                                                                                                  | PR-B2         | Alertes J-N avant retrait d'épargne                                                         |
+| 11  | **PR-B2 — Admin panel complet**                       | 💡 idée (post-MVP)                                                                                                                                                                       | —             | Dashboard santé + métriques + règles                                                        |
 
 Signification des icônes : ✅ mergée · 🚧 en cours · ⏳ en attente d'un prérequis · 📋 prompt rédigé prêt à exécuter · 💡 idée cadrée mais pas encore de prompt.
 
@@ -115,8 +116,16 @@ Trois PRs atomiques enchaînées **dans cet ordre** pour éviter les conflits su
 
 ## Prochaine feature majeure
 
-- **PR-3a — Design System socle** : prochaine PR à exécuter sur la branche `feat/cc-design-handoff-v1`. Source : ZIP `Ankora Design System.zip` livré par @cc-design (session #1, validée @thierry + @cowork le 2026-04-25). Prompt complet : `docs/design/cc-ankora-prompt-handoff-integration.md`. Cf. ADR-005 pour la justification du re-séquencement.
-- **PR-3b/c** : suivront PR-3a après validation @thierry. PR-3c sera précédée d'un `docs/design/landing-merge-analysis.md` documentant la fusion ossature TSX/RSC actuelle ↔ apports cc-design.
+**Série PR-3 complète ✅ mergée** (PR-3a tokens/fonts, PR-3b atomic UI, PR-3c-1/2/3 landing fusion). Le Design System cc-design est intégré, la landing publique est en place, le polish Hero waterfall 3 étapes est en cours sur `feat/hero-waterfall-3steps`.
+
+**Décision stratégique @thierry — 2 voies parallèles possibles** :
+
+- **Voie A (séquence ROADMAP nominale)** — **PR-2 traductions NL/EN/ES/DE** : remplir les 4 locales non-FR maintenant que les copies UI sont stabilisées par PR-3c. Glossaire fintech multi-locale déjà rédigé (cf. tâche #113 completed). Préalable simple à débrider, débloque le jalon Beta multilingue.
+- **Voie B (vision Pilier B Dashboard Excellence)** — **Session Claude Design #3 pour Dashboard v3** : produire les mockups de la surface stratégique (8 sections Monarch-level). Handoff dormant A4 prêt dans `90_Meta/cc-prompts-en-attente.md` (vault Athenaeum) — déclenchable une fois le brief design préparé par @cowork et le ZIP intégré dans `ankora-mockups/`.
+
+**Recommandation @cowork** : Voie A en premier (1-2 semaines) pour solder la dette i18n côté landing avant qu'elle ne s'accumule sur Dashboard v3. Voie B suit naturellement avec brief design en parallèle pendant l'exécution PR-2. PR-B1 (bug reporting MVP) reste exécutable en intercalaire si besoin.
+
+**À trancher @thierry** lors de la prochaine session synchrone.
 
 ## Backlog produit
 
@@ -152,11 +161,11 @@ Objectif : cockpit personnel utilisable par Thierry, ses enfants et amis.
   - Batch B : routes privées (auth + app) migrées avec `generateMetadata` via `getTranslations`, server actions locale-aware, Zod i18n-friendly
   - Tests : parity sync des 4 stubs non-FR + E2E skip GDPR banner sur mobile emulations (Pixel 7 + iPhone 14, flaky tap dispatch)
   - Hygiène : `.gitignore` durci (`design-mockup-*.html`, `.claude/settings.local.json`, `prompts/`)
-- [ ] **PR-3a — Design System socle** (tokens + fonts + SKILL `ankora-design-system`) — prochaine PR (cf. ADR-005)
-- [ ] PR-2 — traductions NL-BE / EN / ES-ES / DE-DE (glossaire doc déjà écrit)
-- [ ] PR-B1 — Bug reporting MVP (voir §PR-B1 ci-dessous)
-- [ ] PR-3b — Atomic UI kit (`src/components/ui/` + tests Vitest)
-- [ ] PR-3c — Landing fusion intelligente (ossature actuelle + apports cc-design)
+- [x] **PR-3a — Design System socle** (tokens + fonts + SKILL `ankora-design-system`) — mergée 26 avril 2026 (rapport `docs/prs/PR-3a-tokens-fonts-skill-report.md`)
+- [x] **PR-3b — Atomic UI kit** (`src/components/ui/` + tests Vitest) — mergée PR #67, 24 avril 2026
+- [x] **PR-3c — Landing fusion intelligente** — split en 3 sous-PRs ✅ mergées : #76 PR-3c-1 (foundation), #78 PR-3c-2 (MktNav+Hero), #82 PR-3c-3 (WhatIfDemo). Polish hero-waterfall en cours sur `feat/hero-waterfall-3steps`.
+- [ ] PR-2 — traductions NL-BE / EN / ES-ES / DE-DE (glossaire doc déjà écrit) — **prochaine recommandée**
+- [ ] PR-B1 — Bug reporting MVP (voir §PR-B1 ci-dessous) — exécutable en parallèle
 
 ### Bloc fonctionnel produit
 
