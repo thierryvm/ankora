@@ -47,39 +47,17 @@ export default defineConfig({
     // Sprint Mobile Recovery (PR-QA-1b, 4 mai 2026) — three iPhone viewports running
     // exclusively the WebKit-specific suite under `e2e/mobile-ios/`. Locale fr-BE,
     // timezone Europe/Brussels, geolocation Bruxelles for FSMA coherence.
-    {
-      name: 'iPhone 14',
+    ...(['iPhone 14', 'iPhone 15 Pro Max', 'iPhone SE'] as const).map((name) => ({
+      name,
       use: {
-        ...devices['iPhone 14'],
+        ...devices[name],
         locale: 'fr-BE',
         timezoneId: 'Europe/Brussels',
         geolocation: { longitude: 4.3517, latitude: 50.8503 },
         permissions: ['geolocation'],
       },
       testMatch: '**/mobile-ios/**/*.spec.ts',
-    },
-    {
-      name: 'iPhone 15 Pro Max',
-      use: {
-        ...devices['iPhone 15 Pro Max'],
-        locale: 'fr-BE',
-        timezoneId: 'Europe/Brussels',
-        geolocation: { longitude: 4.3517, latitude: 50.8503 },
-        permissions: ['geolocation'],
-      },
-      testMatch: '**/mobile-ios/**/*.spec.ts',
-    },
-    {
-      name: 'iPhone SE',
-      use: {
-        ...devices['iPhone SE'],
-        locale: 'fr-BE',
-        timezoneId: 'Europe/Brussels',
-        geolocation: { longitude: 4.3517, latitude: 50.8503 },
-        permissions: ['geolocation'],
-      },
-      testMatch: '**/mobile-ios/**/*.spec.ts',
-    },
+    })),
   ],
 
   webServer: process.env.CI
