@@ -22,6 +22,8 @@ one-liner en haut du runbook.
 | #   | Runbook                                                                                    | Dernière MAJ |
 | --- | ------------------------------------------------------------------------------------------ | ------------ |
 | 001 | [Upstash + Vercel : setup du rate-limit fail-closed](./RUNBOOK-upstash-ratelimit-setup.md) | 2026-04-20   |
+| 002 | [Supabase : déploiement des migrations](./supabase-migrations.md)                          | 2026-05-03   |
+| 003 | [Dev sur iPhone réel (LAN exposure)](./dev-on-iphone.md)                                   | 2026-05-04   |
 
 ## Conventions
 

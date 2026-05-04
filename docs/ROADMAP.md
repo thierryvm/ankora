@@ -26,24 +26,28 @@ Cowork pilote A+B+contenus D/E. CC Ankora pilote C+tech D/E. Thierry valide + me
 
 ---
 
-## Agents QA Pilier A (10 au total)
+## Agents QA Pilier A (12 au total)
 
 Tous les agents résident dans `.claude/agents/` et sont trigger-driven. Chaque agent valide un domaine critique avant merge.
 
-| #   | Agent                         | Domaine                           | Trigger                 | Gate            |
-| --- | ----------------------------- | --------------------------------- | ----------------------- | --------------- |
-| 1   | `security-auditor`            | Auth, middleware, RLS, headers    | touch auth/\*\*         | ✅ requis       |
-| 2   | `rls-flow-tester`             | Supabase RLS + migrations         | touch migrations/\*\*   | ✅ requis       |
-| 3   | `financial-formula-validator` | `src/lib/domain/`                 | touch domain/\*\*       | ✅ requis       |
-| 4   | `ui-auditor`                  | WCAG 2.2 AA, mobile, Tailwind 4   | touch components/\*\*   | ✅ requis       |
-| 5   | `lighthouse-auditor`          | Performance, a11y, BP, SEO        | pre-release only        | ✅ requis RC    |
-| 6   | `seo-geo-auditor`             | SEO signals, entity consistency   | touch public pages      | ✅ requis       |
-| 7   | `gdpr-compliance-auditor`     | PII, consent, export, deletion    | touch PII, auth, D-lang | ✅ requis       |
-| 8   | `test-runner`                 | Vitest + Playwright               | post-change             | ✅ requis       |
-| 9   | `dashboard-ux-auditor`        | User dashboard UX + design tokens | touch app/app/\*\*      | ✅ requis PR-3  |
-| 10  | `admin-dashboard-auditor`     | Admin security, perf, a11y        | touch app/admin/\*\*    | ✅ requis PR-B2 |
+| #   | Agent                         | Domaine                                                        | Trigger                                 | Gate            |
+| --- | ----------------------------- | -------------------------------------------------------------- | --------------------------------------- | --------------- |
+| 1   | `security-auditor`            | Auth, middleware, RLS, headers                                 | touch auth/\*\*                         | ✅ requis       |
+| 2   | `rls-flow-tester`             | Supabase RLS + migrations                                      | touch migrations/\*\*                   | ✅ requis       |
+| 3   | `financial-formula-validator` | `src/lib/domain/`                                              | touch domain/\*\*                       | ✅ requis       |
+| 4   | `ui-auditor`                  | WCAG 2.2 AA, mobile, Tailwind 4                                | touch components/\*\*                   | ✅ requis       |
+| 5   | `lighthouse-auditor`          | Performance, a11y, BP, SEO                                     | pre-release only                        | ✅ requis RC    |
+| 6   | `seo-geo-auditor`             | SEO signals, entity consistency                                | touch public pages                      | ✅ requis       |
+| 7   | `gdpr-compliance-auditor`     | PII, consent, export, deletion                                 | touch PII, auth, D-lang                 | ✅ requis       |
+| 8   | `test-runner`                 | Vitest + Playwright                                            | post-change                             | ✅ requis       |
+| 9   | `dashboard-ux-auditor`        | User dashboard UX + design tokens                              | touch app/app/\*\*                      | ✅ requis PR-3  |
+| 10  | `admin-dashboard-auditor`     | Admin security, perf, a11y                                     | touch app/admin/\*\*                    | ✅ requis PR-B2 |
+| 11  | `i18n-auditor`                | next-intl key parity, placeholders, glossary, email-as-keyword | touch messages/\*\*, src/i18n/\*\*      | ✅ requis       |
+| 12  | `mobile-ios-auditor`          | iPhone Safari (WebKit) UX, safe-area, ITP, viewport, focus     | touch layout/nav/forms/dashboard mobile | ✅ requis       |
 
 **Note sur les triggers** : Les chemins documentés (ex. `touch auth/**`, `touch app/app/**`) définissent les cas d'usage _intentionnels_ pour chaque agent. L'invocation manuelle reste primaire pour la Phase 1. Une automatisation CI complète (détection de fichiers + dispatch d'agents) est une future amélioration Pilier A (Phase 2+).
+
+**Note sur `mobile-ios-auditor`** : ajouté le 4 mai 2026 suite à la "Mobile Recovery Day" (overflow horizontal, theme toggle full-screen, focus ring cyan, cards Dashboard coupées détectés sur iPhone 14 réel — bugs invisibles en Brave DevTools). Complémentaire de `ui-auditor` (qui audite mobile-first générique en Chromium) — focus exclusif sur les quirks Safari iOS WebKit (ITP, safe-area, `100vh`, auto-zoom inputs, `position: sticky`, PWA Add-to-Home-Screen). Procédure manuelle de test sur iPhone réel : `docs/runbooks/dev-on-iphone.md`.
 
 ---
 
