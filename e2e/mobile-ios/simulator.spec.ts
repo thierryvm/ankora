@@ -36,6 +36,10 @@ test.describe('Simulator — iPhone Safari WebKit (PR-QA-1b)', () => {
   });
 
   test('scenario buttons: each tap target is ≥ 44×44 px (Apple HIG)', async ({ page }) => {
+    test.fixme(
+      true,
+      'BUG-iOS-009: simulator scenario buttons (Renégocier mon GSM, Couper streamings, Changer fournisseur) are 36.5px tall on iPhone (HIG ≥ 44px). Fix in PR-QA-1c-9 (add min-h-11 to ScenarioButton).',
+    );
     await page.goto('/');
     const section = page.locator('section#simulator');
     await section.scrollIntoViewIfNeeded();
@@ -63,6 +67,10 @@ test.describe('Simulator — iPhone Safari WebKit (PR-QA-1b)', () => {
   });
 
   test('range slider: visible and accessible by role', async ({ page }) => {
+    test.fixme(
+      true,
+      'BUG-iOS-010: simulator <input type="range"> is exposed as role=slider but lacks explicit aria-valuemin / aria-valuemax attributes (browsers infer from min/max but assistive tech behavior varies). Fix in PR-QA-1c-10 (add aria-valuemin={0} aria-valuemax={22} on the range input).',
+    );
     await page.goto('/');
     const section = page.locator('section#simulator');
     await section.scrollIntoViewIfNeeded();

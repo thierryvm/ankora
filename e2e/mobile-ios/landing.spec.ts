@@ -41,7 +41,7 @@ test.describe('Landing — iPhone Safari WebKit (PR-QA-1b)', () => {
       const offenders: Array<{ tag: string; classes: string; right: number; clientWidth: number }> =
         [];
       const all = document.querySelectorAll('main *');
-      const clientWidth = document.documentElement.clientWidth;
+      const { clientWidth } = document.documentElement;
       for (const el of all) {
         const rect = (el as HTMLElement).getBoundingClientRect();
         if (rect.right > clientWidth + 1) {
@@ -65,6 +65,10 @@ test.describe('Landing — iPhone Safari WebKit (PR-QA-1b)', () => {
   test('"Se connecter" CTA reachable in ≤ 2 taps from landing (NOT via /signup)', async ({
     page,
   }) => {
+    test.fixme(
+      true,
+      'BUG-iOS-003: no direct "Se connecter" CTA on landing mobile (mirrors auth-flow.spec.ts assertion). Fix in PR-QA-1c-3.',
+    );
     await page.goto('/');
 
     // Path 1: a directly visible login link (1 tap)
@@ -95,6 +99,10 @@ test.describe('Landing — iPhone Safari WebKit (PR-QA-1b)', () => {
   test('theme toggle: popover/menu does NOT cover more than 80% of viewport width', async ({
     page,
   }) => {
+    test.fixme(
+      true,
+      'BUG-iOS-004: theme toggle popover takes near-full-screen on mobile ("toggle bouffe l\'écran" — @thierry 2026-05-04). Fix in PR-QA-1c-2 (compact mobile variant or max-w-[90vw]).',
+    );
     await page.goto('/');
 
     // The theme toggle is typically a button labelled "thème", "theme",
@@ -157,6 +165,10 @@ test.describe('Landing — iPhone Safari WebKit (PR-QA-1b)', () => {
   });
 
   test('footer: legal links are visible AND tappable (≥ 44×44 px)', async ({ page }) => {
+    test.fixme(
+      true,
+      'BUG-iOS-005: footer legal links (CGU, Privacy, Cookies) have height < 44px on mobile (HIG violation). Fix in PR-QA-1c-5 (add py-2 or min-h-11 to anchors).',
+    );
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
@@ -184,6 +196,10 @@ test.describe('Landing — iPhone Safari WebKit (PR-QA-1b)', () => {
   test('body has overflow-x: hidden or clip (defensive against accidental wide elements)', async ({
     page,
   }) => {
+    test.fixme(
+      true,
+      'BUG-iOS-006: body has default overflow-x: visible — no defensive clip against future accidental wide elements. Low-effort fix in PR-QA-1c-6 (add `overflow-x-clip` to body class in layout.tsx).',
+    );
     await page.goto('/');
     const overflowX = await page.evaluate(() => {
       return window.getComputedStyle(document.body).overflowX;

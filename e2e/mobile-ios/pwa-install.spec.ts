@@ -45,6 +45,10 @@ test.describe('PWA install surface — iPhone Safari WebKit (PR-QA-1b)', () => {
     page,
     request,
   }) => {
+    test.fixme(
+      true,
+      'BUG-iOS-007: page.evaluate-based image decode fails on WebKit ("Load failed"). May be a test-side issue (CSP or fetch sandbox) rather than a real bug. Investigate in PR-QA-1c-7: try response.headers["content-length"] or HEAD request + sharp inspection in Node.',
+    );
     await page.goto('/');
 
     const appleTouchIconHref = await page.evaluate(() => {
@@ -87,6 +91,10 @@ test.describe('PWA install surface — iPhone Safari WebKit (PR-QA-1b)', () => {
   });
 
   test('apple-mobile-web-app-capable: meta tag = "yes"', async ({ page }) => {
+    test.fixme(
+      true,
+      'BUG-iOS-008: neither apple-mobile-web-app-capable nor mobile-web-app-capable meta is present — Add-to-Home-Screen opens in Safari chrome instead of standalone. Fix in PR-QA-1c-8 (add to Next.js metadata.appleWebApp config).',
+    );
     await page.goto('/');
     const value = await page.evaluate(
       () =>

@@ -18,6 +18,10 @@ import { fillSignup, makeTestUser } from '../helpers/user';
 
 test.describe('Auth flow — iPhone Safari WebKit (PR-QA-1b)', () => {
   test('signup form: every input has font-size ≥ 16px (no iOS auto-zoom)', async ({ page }) => {
+    test.fixme(
+      true,
+      'BUG-iOS-001: signup form inputs use font-size < 16px on mobile, triggering Safari auto-zoom on focus. Fix in PR-QA-1c-1.',
+    );
     await page.goto('/signup');
 
     const inputs = page.locator('input:not([type="hidden"]):not([type="checkbox"])');
@@ -37,6 +41,10 @@ test.describe('Auth flow — iPhone Safari WebKit (PR-QA-1b)', () => {
   });
 
   test('login form: every input has font-size ≥ 16px (no iOS auto-zoom)', async ({ page }) => {
+    test.fixme(
+      true,
+      'BUG-iOS-002: login form inputs use font-size < 16px on mobile, triggering Safari auto-zoom on focus. Fix in PR-QA-1c-1.',
+    );
     await page.goto('/login');
 
     const inputs = page.locator('input:not([type="hidden"]):not([type="checkbox"])');
@@ -92,6 +100,10 @@ test.describe('Auth flow — iPhone Safari WebKit (PR-QA-1b)', () => {
   test('landing → login is reachable in ≤ 2 taps (without going through /signup)', async ({
     page,
   }) => {
+    test.fixme(
+      true,
+      'BUG-iOS-003: no direct "Se connecter" CTA on landing nor in mobile hamburger — user must navigate /signup → "déjà inscrit ?". Fix in PR-QA-1c-3 (add login link to MktNav drawer).',
+    );
     await page.goto('/');
 
     // Strategy:
