@@ -100,26 +100,49 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Wait for Vercel production deploy
+        # Polls the GitHub Deployments API rather than the Vercel API directly.
+        # Rationale (PR-QA-1c-0, 4 mai 2026): the previous Vercel-API filter
+        # `meta.githubCommitSha == $sha AND target == 'production'` consistently
+        # missed the deploy even after Vercel reported it as success — likely a
+        # field-naming or target-naming mismatch on Vercel's side. GitHub
+        # Deployments API exposes the same data (Vercel pushes to it) and is
+        # accessible with the workflow's GITHUB_TOKEN, no extra secrets needed.
+        # The deployment status `success` corresponds to Vercel `readyState=READY`.
         env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COMMIT_SHA: ${{ github.sha }}
+          REPO: ${{ github.repository }}
         run: |
           set -e
           for i in $(seq 1 60); do
-            payload=$(curl -sf -H "Authorization: Bearer $VERCEL_TOKEN" \
-              "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&teamId=$VERCEL_TEAM_ID&target=production&limit=10") || true
-            ready=$(echo "$payload" | jq -r --arg sha "$COMMIT_SHA" \
-              '.deployments[]? | select(.meta.githubCommitSha == $sha and .readyState == "READY") | .url' | head -n1)
-            if [ -n "$ready" ] && [ "$ready" != "null" ]; then
-              echo "Production deploy READY for $COMMIT_SHA: https://$ready"
-              exit 0
+            # Reset on each iteration so the log line below cannot show a
+            # stale value from a previous loop when this iteration finds no
+            # deployment yet (Sourcery feedback, PR #110).
+            state=""
+            deployment_id=$(curl -sf \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/$REPO/deployments?ref=$COMMIT_SHA&environment=Production&per_page=1" \
+              | jq -r '.[0].id // empty') || true
+            if [ -n "$deployment_id" ]; then
+              state=$(curl -sf \
+                -H "Authorization: Bearer $GH_TOKEN" \
+                -H "Accept: application/vnd.github+json" \
+                "https://api.github.com/repos/$REPO/deployments/$deployment_id/statuses?per_page=1" \
+                | jq -r '.[0].state // empty') || true
+              if [ "$state" = "success" ]; then
+                echo "Production deploy succeeded for $COMMIT_SHA (deployment id=$deployment_id)"
+                exit 0
+              fi
+              if [ "$state" = "failure" ] || [ "$state" = "error" ]; then
+                echo "Production deploy FAILED for $COMMIT_SHA (state=$state)" >&2
+                exit 1
+              fi
             fi
-            echo "Waiting for Vercel production deploy ($i/60)…"
+            echo "Waiting for production deploy ($i/60, current state=${state:-pending})…"
             sleep 10
           done
-          echo "Timeout: no READY production deploy for $COMMIT_SHA" >&2
+          echo "Timeout: no production deployment reached state=success for $COMMIT_SHA" >&2
           exit 1
       - name: Run Lighthouse against canonical production URL
         # The deployment-specific *.vercel.app hostname is gated by Vercel SSO
