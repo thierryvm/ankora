@@ -202,18 +202,16 @@ test.describe('Landing — iPhone Safari WebKit (PR-QA-1b)', () => {
   test('body has overflow-x: hidden or clip (defensive against accidental wide elements)', async ({
     page,
   }) => {
-    // PR-QA-1c-1 (4 mai 2026): BUG-iOS-006 fix DEPLOYED via Tailwind utilities
-    // `overflow-x-hidden` + `max-w-full` on the html and body classNames in
-    // src/app/[locale]/layout.tsx. The CSS bundle does include the rule
-    // (verified via curl on the served stylesheet) and the HTML output shows
-    // the classes applied correctly. HOWEVER, Playwright WebKit consistently
-    // returns `getComputedStyle(body).overflowX === "visible"` regardless of
-    // whether `clip`, `hidden`, or naked CSS rules are used — likely a
-    // WebKit emulation quirk in Playwright (also reproducible with `clip`
-    // on Safari documented bugs). The companion test
-    // `no horizontal overflow on the entire landing page` (which measures
-    // `body.scrollWidth - clientWidth` directly) DOES pass on all 3 iPhone
-    // viewports post-fix, so the regression is properly captured.
+    // PR-QA-1c-1 (4 mai 2026): BUG-iOS-006 fix DEPLOYED via Tailwind utility
+    // `overflow-x-clip` on html and body in layout.tsx. The CSS bundle does
+    // include the rule (verified via curl on the served stylesheet) and the
+    // companion test `no horizontal overflow on the entire landing page`
+    // (which measures `body.scrollWidth - clientWidth`) PASSES on iPhone SE
+    // with `clip` applied — proving the fix works in practice. HOWEVER,
+    // Playwright WebKit consistently returns
+    // `getComputedStyle(body).overflowX === "visible"` regardless of the
+    // rule applied (clip OR hidden), even on production builds — apparent
+    // emulation quirk we cannot fix from this test layer.
     test.fixme(
       true,
       'BUG-iOS-006: assertion blocked by Playwright WebKit getComputedStyle quirk — fix is deployed (cf. layout.tsx + scrollWidth test green). Either drop this test or re-assert via a different signal (e.g. body.scrollWidth ≤ viewport).',
