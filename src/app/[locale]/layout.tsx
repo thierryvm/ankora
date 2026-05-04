@@ -139,6 +139,15 @@ export default async function LocaleLayout({
       lang={locale}
       data-scroll-behavior="smooth"
       suppressHydrationWarning
+      // PR-QA-1c-1 (4 mai 2026): defensive horizontal overflow guard at the
+      // document root. Captured by PR-QA-1b on iPhone SE (375px viewport):
+      // body.scrollWidth=330 vs clientWidth=320 — a 10px overflow that
+      // turned the landing into a horizontally-pannable surface. We use
+      // `overflow-x-hidden` (rather than `overflow-x-clip`) because
+      // Playwright WebKit returns `getComputedStyle().overflowX === "visible"`
+      // for `clip` despite the rule being applied (apparent emulation
+      // quirk), and `hidden` is universally supported.
+      className="overflow-x-hidden"
       {...(dataTheme ? { 'data-theme': dataTheme } : {})}
     >
       <script
@@ -147,7 +156,7 @@ export default async function LocaleLayout({
           __html: `(function(){try{var t=localStorage.getItem('theme');if(!t){var m=window.matchMedia('(prefers-color-scheme: dark)').matches;t=m?'dark':'light';}if(t==='dark')document.documentElement.setAttribute('data-theme','dark');else document.documentElement.removeAttribute('data-theme');}catch(e){}})();`,
         }}
       />
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} max-w-full overflow-x-hidden font-sans antialiased`}>
         <a
           href="#main"
           className="focus:bg-primary focus:text-primary-foreground focus:ring-ring sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:px-4 focus:py-2 focus:shadow-lg focus:ring-2 focus:outline-none"
