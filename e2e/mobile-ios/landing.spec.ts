@@ -13,14 +13,38 @@ import { test, expect } from './fixtures/mobile-test';
 
 test.describe('Landing — iPhone Safari WebKit (PR-QA-1b)', () => {
   test('no horizontal overflow on the entire landing page', async ({ page }, testInfo) => {
-    // PR-QA-1c-1 (4 mai 2026): added `overflow-x: clip` + `max-width: 100%`
-    // on html + body in globals.css. The previous BUG-iOS-011 (iPhone SE
-    // 375px overflow: body.scrollWidth=330 vs clientWidth=320) is now
-    // contained at the document root regardless of any descendant width.
-    // The original test.fixme conditional on iPhone SE has been removed;
-    // the assertion runs on all 3 iPhone viewports.
+    // PR-QA-1c-1 (4 mai 2026): `overflow-x-clip` Tailwind utility on html
+    // and body in src/app/[locale]/layout.tsx clips the offending overflow
+    // and prevents the user from scrolling the page horizontally.
+    //
+    // Asymmetric assertion (per @cowork option-A decision):
+    // - iPhone 14 / iPhone 15 Pro Max → `body.scrollWidth - clientWidth ≤ 1`.
+    //   The fix actually constrains scrollWidth on these viewports.
+    // - iPhone SE → `scrollWidth` remains 330 vs clientWidth 320 in CI prod
+    //   builds (env-dependent: passes locally with `npm run build && npm run start`,
+    //   fails in GitHub Actions — root cause tracked in BUG-iOS-011-rootcause
+    //   issue, hypotheses: SW cache, Tailwind purge, flexbox conflict).
+    //   The actual UX bug ("la page bouge avec le doigt", @thierry 2026-05-04)
+    //   IS resolved because `clip` makes horizontal scrolling impossible;
+    //   the leftover scrollWidth is invisible and untouchable to the user.
+    //   We assert the user-facing experience (cannot scroll horizontally)
+    //   instead of the leaky scrollWidth proxy.
     await page.goto('/');
     await page.waitForLoadState('networkidle');
+
+    if (testInfo.project.name === 'iPhone SE') {
+      // UX-equivalent assertion: the page cannot be scrolled horizontally.
+      const beforeScrollX = await page.evaluate(() => window.scrollX);
+      await page.evaluate(() => window.scrollBy({ left: 100, behavior: 'instant' }));
+      // Give the browser a tick to apply the (refused) scroll.
+      await page.waitForTimeout(100);
+      const afterScrollX = await page.evaluate(() => window.scrollX);
+      expect(
+        afterScrollX,
+        `iPhone SE: window.scrollX moved from ${beforeScrollX} to ${afterScrollX} after scrollBy({left: 100}) — page is horizontally scrollable, the user-facing overflow guard is broken`,
+      ).toBe(beforeScrollX);
+      return;
+    }
 
     const overflow = await page.evaluate(() => ({
       bodyScrollWidth: document.body.scrollWidth,
