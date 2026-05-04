@@ -225,7 +225,7 @@ Pour les bugs qui demandent introspection (DOM, computed CSS, network) :
 
 1. **Brave DevTools en mode "iPhone 14"** pour cerner la cause probable
    (DOM, classes Tailwind appliquées, breakpoints)
-2. **Playwright WebKit** (à mettre en place en PR-QA-1b) pour scripter
+2. **Playwright WebKit** (livré en PR-QA-1b — voir §7) pour scripter
    le bug et avoir un environnement WebKit reproductible avec accès logs
 3. **iPhone réel** pour valider que le fix fonctionne en vrai
 
@@ -245,6 +245,77 @@ récurrents et non-diagnosticables sans Inspector, considérer :
   ponctuelle
 
 À retravailler post-v1.0 si nécessaire.
+
+---
+
+## 7. Lancer les tests Playwright iPhone (PR-QA-1b)
+
+Suite Playwright WebKit livrée le 4 mai 2026 dans `e2e/mobile-ios/` —
+5 spec files (landing, auth-flow, dashboard, simulator, pwa-install) qui
+tournent sur 3 viewports iPhone (14, 15 Pro Max, SE) avec moteur Safari
+WebKit réel (pas une émulation Chromium). Locale `fr-BE`, timezone
+`Europe/Brussels`, geolocation Bruxelles.
+
+### 7.1 Première installation (une seule fois)
+
+```powershell
+npm install                         # installe @playwright/test si absent
+npm run e2e:install:webkit          # télécharge WebKit (~150 Mo, gratuit)
+```
+
+### 7.2 Lancer la suite mobile-iOS
+
+```powershell
+# Tous les viewports iPhone (14 + 15 Pro Max + SE)
+npm run e2e:mobile
+
+# Mode UI interactif (debug pas-à-pas, run un test à la fois)
+npm run e2e:mobile:ui
+
+# Voir le rapport HTML après un run
+npx playwright show-report
+```
+
+### 7.3 Pré-requis env vars
+
+Les specs `auth-flow.spec.ts` et `dashboard.spec.ts` nécessitent une vraie
+instance Supabase pour seed/cleanup les comptes test :
+
+- `NEXT_PUBLIC_SUPABASE_URL` — URL de l'instance (pas le dummy CI)
+- `SUPABASE_SERVICE_ROLE_KEY` — clé service role (jamais commitée, jamais
+  loggée, lecture via `process.env`)
+
+Sans ces variables, les tests authentifiés sont **skippés automatiquement**
+avec un message clair (pas d'échec faux-positif). Les specs sans auth
+(`landing.spec.ts`, `simulator.spec.ts`, `pwa-install.spec.ts`) tournent
+sans configuration supplémentaire.
+
+### 7.4 Debug d'un test qui échoue
+
+1. **Trace viewer** : `playwright show-trace test-results/<spec>/trace.zip`
+   — UI interactive avec timeline, DOM snapshot par action, console, network
+2. **Screenshots** : `test-results/<spec>/test-failed-1.png` (auto-capturé
+   sur échec via `screenshot: 'only-on-failure'` dans la config)
+3. **Vidéos** : `test-results/<spec>/video.webm` (auto-retain on failure)
+4. **VSCode Playwright Test extension** : ouvrir le spec file → cliquer
+   "Debug Test" inline → breakpoints + step-by-step dans VSCode
+
+### 7.5 Limites connues WebKit
+
+Certains patterns React ne fonctionnent pas dans Playwright WebKit
+(documentés dans les commentaires des specs et dans
+`e2e/landing-sections.spec.ts:160`) :
+
+- **Range slider programmatique** : `el.value = X` ne déclenche pas
+  React `onChange` → utiliser `setter.call + dispatchEvent` (cf. landing-sections)
+  OU skipper le test sur WebKit avec couverture chromium-desktop équivalente
+- **Tap sur petits boutons** : événements synthétisés droppés sur boutons
+  < 44px dans le viewport mobile WebKit → skip ou utiliser `force: true`
+
+Ces limitations n'invalident PAS la suite — elles signalent que pour les
+interactions clavier/range complexes, on bascule sur `chromium-desktop` ou
+`mobile-chrome`. Les bugs visuels (overflow, focus, layout, safe-area) sont
+parfaitement détectés par WebKit.
 
 ---
 
