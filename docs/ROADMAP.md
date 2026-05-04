@@ -30,6 +30,8 @@ Cowork pilote A+B+contenus D/E. CC Ankora pilote C+tech D/E. Thierry valide + me
 
 Tous les agents résident dans `.claude/agents/` et sont trigger-driven. Chaque agent valide un domaine critique avant merge.
 
+> **Source de vérité** : le frontmatter et le contenu de `.claude/agents/<name>.md` sont **canoniques**. La table ci-dessous et la section "Workflow agents" de [`CLAUDE.md`](../CLAUDE.md) sont des **résumés navigables** — en cas de divergence, le fichier agent prévaut. Lors de l'ajout/modification d'un agent : éditer d'abord `.claude/agents/<name>.md`, puis répercuter dans cette table et dans `CLAUDE.md`.
+
 | #   | Agent                         | Domaine                                                        | Trigger                                 | Gate            |
 | --- | ----------------------------- | -------------------------------------------------------------- | --------------------------------------- | --------------- |
 | 1   | `security-auditor`            | Auth, middleware, RLS, headers                                 | touch auth/\*\*                         | ✅ requis       |

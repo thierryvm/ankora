@@ -260,6 +260,8 @@ Cet ordre est **verrouillé**. Si une PR émerge hors-plan (ex: hotfix sécurit�
 
 ## Workflow agents (`.claude/agents/`)
 
+> **Source de vérité** : `.claude/agents/<name>.md` est canonique. Cette liste et la table `docs/ROADMAP.md` sont des résumés. En cas de conflit, le fichier agent prévaut. Pour ajouter/modifier un agent : éditer d'abord le fichier agent, puis répercuter ici + ROADMAP.
+
 - **security-auditor** : avant merge de toute PR touchant auth / middleware / RLS / headers
 - **rls-flow-tester** : après toute migration ou changement RLS
 - **financial-formula-validator** : après tout changement dans `src/lib/domain/`

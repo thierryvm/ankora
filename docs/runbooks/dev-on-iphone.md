@@ -41,6 +41,19 @@ manuelle** côté @thierry pour exécuter le smoke test physique.
 
 ## 2. Pré-requis
 
+> **OS scope** : ce runbook est rédigé pour le setup principal de @thierry —
+> **Windows 11 + PowerShell 7**. Les commandes (`ipconfig`, `node.exe`,
+> Pare-feu Windows) sont Windows-specific. Équivalents pour les autres OS :
+>
+> - **macOS** : `ifconfig | grep "inet "` pour l'IP locale, le firewall
+>   macOS s'ouvre automatiquement à la première écoute Node sur LAN
+> - **Linux** : `ip -4 addr show | grep inet` pour l'IP, vérifier que
+>   `ufw` (ou équivalent) ne bloque pas le port 3000 — `sudo ufw allow 3000/tcp`
+>   en réseau de confiance
+>
+> La logique est identique sur les 3 OS (bind `0.0.0.0`, autoriser le port,
+> trouver l'IP LAN), seules les commandes diffèrent.
+
 - iPhone et PC sur le **même réseau WiFi** (même SSID, pas de bridge VPN
   côté PC qui isolerait l'iPhone du subnet)
 - Firewall Windows : autoriser `node.exe` sur les **réseaux privés** (pas
