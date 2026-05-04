@@ -115,6 +115,10 @@ jobs:
         run: |
           set -e
           for i in $(seq 1 60); do
+            # Reset on each iteration so the log line below cannot show a
+            # stale value from a previous loop when this iteration finds no
+            # deployment yet (Sourcery feedback, PR #110).
+            state=""
             deployment_id=$(curl -sf \
               -H "Authorization: Bearer $GH_TOKEN" \
               -H "Accept: application/vnd.github+json" \
@@ -127,7 +131,7 @@ jobs:
                 "https://api.github.com/repos/$REPO/deployments/$deployment_id/statuses?per_page=1" \
                 | jq -r '.[0].state // empty') || true
               if [ "$state" = "success" ]; then
-                echo "Production deploy READY for $COMMIT_SHA (deployment id=$deployment_id)"
+                echo "Production deploy succeeded for $COMMIT_SHA (deployment id=$deployment_id)"
                 exit 0
               fi
               if [ "$state" = "failure" ] || [ "$state" = "error" ]; then
@@ -135,10 +139,10 @@ jobs:
                 exit 1
               fi
             fi
-            echo "Waiting for Vercel production deploy ($i/60, current state=${state:-pending})…"
+            echo "Waiting for production deploy ($i/60, current state=${state:-pending})…"
             sleep 10
           done
-          echo "Timeout: no READY production deploy for $COMMIT_SHA" >&2
+          echo "Timeout: no production deployment reached state=success for $COMMIT_SHA" >&2
           exit 1
       - name: Run Lighthouse against canonical production URL
         # The deployment-specific *.vercel.app hostname is gated by Vercel SSO
