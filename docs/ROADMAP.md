@@ -129,7 +129,7 @@ Trois PRs atomiques enchaînées **dans cet ordre** pour éviter les conflits su
 **Mise à jour 2026-05-03** : suite au partage par @thierry du mockup AI Studio "IronBudget" (5 screenshots + ZIP), la vision du Dashboard v3 a été **profondément réécrite**. La spec canonique remplace désormais la version 8-sections précédente :
 
 - **Source de vérité** : `specs/dashboard-cockpit-vraie-vision-2026-05-03.md` (vault Athenaeum, 700 lignes)
-- **5 ADRs en `Proposed`** : ADR-008 (account naming) / ADR-009 (Capacité Réelle) / ADR-010 (Live Quotidien) / ADR-011 (Plan rattrapage 3 mois) / ADR-012 (Assistant Virements)
+- **5 ADRs `Accepted`** (validés 2026-05-03 par délégation @thierry → @cowork) : ADR-008 (account naming) / ADR-009 (Capacité Réelle) / ADR-010 (Live Quotidien) / ADR-011 (Plan rattrapage 3 mois) / ADR-012 (Assistant Virements)
 - **Brief Claude Design Session #3 réécrit** : section 3.2 de `docs/design/claude-design-brief.md` mise à jour 2026-05-03
 
 **Voies en cours** :
@@ -162,11 +162,11 @@ Suite à la spec canonique `specs/dashboard-cockpit-vraie-vision-2026-05-03.md`,
 
 **Total estimation Voie D complète** : 16-20 jours homme = 3-4 semaines de travail concentré CC Ankora.
 
-### Pré-requis bloquants Voie D (à solder avant PR-D1)
+### Pré-requis bloquants Voie D (à solder avant PR-D3)
 
-1. **5 ADRs validés `Accepted`** par @thierry (008-012). Statut actuel : tous `Proposed`. Lecture nécessaire avant validation : `docs/adr/ADR-008-*.md` à `ADR-012-*.md`.
-2. **Session Claude Design #3 bouclée** : brief Session #3 réécrit dans `docs/design/claude-design-brief.md` §3.2 (mise à jour 2026-05-03). Mockups Claude Design produits + validés par @thierry + ZIP intégré dans `ankora-mockups/dashboard-cockpit-v3/`.
-3. **Decision Option A vs B** sur deadline 10 mai (cf. section "Prochaine feature majeure"). Conditionne le scope de PR-C2 (PR-C2a déjà mergée, PR-C2b intermediate à décider).
+1. ✅ **5 ADRs `Accepted`** (008-012) — validés 2026-05-03 par délégation @thierry → @cowork. Plus de blocage ici.
+2. **Session Claude Design #3 bouclée** ⏳ : brief Session #3 réécrit dans `docs/design/claude-design-brief.md` §3.2 (mise à jour 2026-05-03). **Lancement verrouillé samedi 10 mai** (contrainte abonnement @thierry, fenêtre Opus 4.7 jusqu'au 10 mai). Mockups Claude Design à produire dans `ankora-mockups/dashboard-cockpit-v3-claude-design/`.
+3. ✅ **Décision Option A vs B tranchée 6 mai 2026** par @cowork (carte blanche @thierry) : **Option B retenue** = alpha @thierry + 2-3 proches pendant 4-6 semaines, **PAS de release publique 10 mai**, v1.0 publique mi-juin (NORTH_STAR cap respecté). Raison : Voie D restante = 11-13 jours, ship dégradé violerait NORTH_STAR règle d'or #3 (Dashboard Excellence non négociable).
 
 ### ADRs additionnels Voie D (post-PR-D1 mais avant PR-D8)
 
