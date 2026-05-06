@@ -38,14 +38,29 @@ type Props = {
   locale: string;
   factors: Factor[];
   deletion: Deletion;
+  /**
+   * Optional slot rendered between DataCard and DangerZone — used by the
+   * page-level Server Component to inject the CookiesPreferencesSection
+   * (which needs server-fetched consent state) without leaking that data
+   * fetch into this client tree.
+   */
+  cookiesSection?: React.ReactNode;
 };
 
-export function SettingsClient({ email, displayName, locale, factors, deletion }: Props) {
+export function SettingsClient({
+  email,
+  displayName,
+  locale,
+  factors,
+  deletion,
+  cookiesSection,
+}: Props) {
   return (
     <div className="flex flex-col gap-6">
       <ProfileCard email={email} displayName={displayName} locale={locale} />
       <MfaCard factors={factors} />
       <DataCard />
+      {cookiesSection}
       <DangerZone deletion={deletion} email={email} />
     </div>
   );

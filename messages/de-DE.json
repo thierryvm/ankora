@@ -462,11 +462,16 @@
       "manageHeading": "Deine Präferenzen verwalten",
       "manageBody1": "Du kannst deine Einwilligungen jederzeit unter <b>Einstellungen → Datenschutz</b> ändern oder indem du im Footer auf „Cookies verwalten“ klickst.",
       "manageBody2": "Das Ablehnen nicht-essenzieller Cookies beeinträchtigt das Erlebnis nicht: Ankora bleibt voll funktionsfähig.",
+      "manageMethodsHeading": "Wie verwalte ich meine Cookies",
+      "manageMethod1": "Beim ersten Besuch bietet das Banner drei Optionen: nur essenzielle, anpassen oder alle akzeptieren.",
+      "manageMethod2": "Eingeloggt kannst du in Einstellungen → Cookies & Datenschutz jede Kategorie umschalten.",
+      "manageMethod3": "Auf jeder Seite öffnet der Link \"Cookie-Einstellungen verwalten\" in der Fußzeile das Banner erneut.",
+      "withdrawalHeading": "Widerruf der Einwilligung",
+      "withdrawalBody": "Gemäß DSGVO (Art. 7(3)) ist der Widerruf der Einwilligung genauso einfach wie deren Erteilung. Drei gleichwertige Methoden: 1) Einstellungen → Cookies & Datenschutz → \"Meine Wahl zurücksetzen\". 2) Fußzeile → \"Cookie-Einstellungen verwalten\". 3) E-Mail an thierryvm@gmail.com mit Betreff \"Cookie-Einwilligung widerrufen\".",
       "lifetimeHeading": "Lebensdauer",
       "lifetimeItem1": "Session: Ende der Navigation",
       "lifetimeItem2": "Präferenzen: 12 Monate",
       "lifetimeItem3": "Analytics: 6 Monate (falls akzeptiert)",
-      "draft": "Diese Cookie-Richtlinienseite wird derzeit erstellt.",
       "contact": "Bei Fragen kontaktiere uns: thierryvm@gmail.com",
       "backHome": "Zurück zur Startseite"
     }
@@ -480,9 +485,22 @@
   },
   "consent": {
     "title": "Cookies und Datenschutz",
-    "body": "Wir verwenden nur essenzielle Cookies, um dich anzumelden. Analyse-Cookies sind standardmäßig deaktiviert — du kannst sie aktivieren, wenn du uns helfen möchtest, Ankora zu verbessern. Du kannst deine Meinung jederzeit über <link>die Cookie-Richtlinie</link> ändern.",
+    "body": "Wir verwenden nur essenzielle Cookies, um dich anzumelden. Analyse- und Marketing-Cookies sind standardmäßig deaktiviert — du kannst sie aktivieren, wenn du uns helfen möchtest, Ankora zu verbessern. Du kannst deine Meinung jederzeit über <link>die Cookie-Richtlinie</link> ändern.",
     "essentialOnly": "Nur essenziell",
-    "acceptAnalytics": "Analysen akzeptieren"
+    "acceptAll": "Alle akzeptieren",
+    "customize": {
+      "button": "Anpassen",
+      "save": "Meine Einstellungen speichern",
+      "cancel": "Abbrechen",
+      "legend": "Cookie-Kategorien",
+      "essentialLabel": "Essenziell",
+      "essentialBadge": "(immer aktiv)",
+      "essentialDescription": "Sitzung, Sicherheit, Sprach- und Theme-Einstellungen. Für die Funktion von Ankora notwendig.",
+      "analyticsLabel": "Nutzungsanalyse",
+      "analyticsDescription": "Anonyme Statistiken, um zu verstehen, welche Seiten am meisten helfen. Keine personenbezogenen Daten.",
+      "marketingLabel": "Marketing",
+      "marketingDescription": "Reserviert für zukünftige Kampagnen. Phase 1 von Ankora: keine Marketing-Cookies aktiv."
+    }
   },
   "footer": {
     "copyright": "© {year} — Alle Rechte vorbehalten",
@@ -490,7 +508,8 @@
     "privacy": "Datenschutz",
     "cookies": "Cookies verwalten",
     "faq": "FAQ",
-    "copyrightNotice": "© {year} Ankora™. Alle Rechte vorbehalten."
+    "copyrightNotice": "© {year} Ankora™. Alle Rechte vorbehalten.",
+    "cookiePreferences": "Cookie-Einstellungen verwalten"
   },
   "auth": {
     "login": {
@@ -775,6 +794,23 @@
         "submit": "Mein Konto löschen",
         "submitting": "Planen…",
         "toastScheduled": "Löschung geplant — du hast 30 Tage zum Widerrufen"
+      },
+      "cookies": {
+        "title": "Cookies & Datenschutz",
+        "description": "Wähle aus, welchen Cookie-Kategorien du zustimmst. Deine Wahl wird mit unserem Server synchronisiert (DSGVO-Audit) und kann jederzeit geändert werden.",
+        "essentialLabel": "Essenziell",
+        "essentialBadge": "(immer aktiv)",
+        "essentialDescription": "Sitzung, Sicherheit, Sprach- und Theme-Einstellungen. Für die Funktion von Ankora notwendig.",
+        "analyticsLabel": "Nutzungsanalyse",
+        "analyticsDescription": "Anonyme Statistiken, um zu verstehen, welche Seiten am meisten helfen. Keine personenbezogenen Daten.",
+        "marketingLabel": "Marketing",
+        "marketingDescription": "Reserviert für zukünftige Kampagnen. Phase 1 von Ankora: keine Marketing-Cookies aktiv.",
+        "resetButton": "Meine Wahl zurücksetzen",
+        "resetHint": "Dies löscht deine Entscheidung und zeigt das Banner beim nächsten Laden erneut an.",
+        "noDecisionHint": "Du hast auf diesem Gerät noch keine Wahl getroffen. Das Banner erscheint bei deinem nächsten Besuch.",
+        "toastSaved": "Cookie-Einstellungen gespeichert.",
+        "toastReset": "Wahl zurückgesetzt. Das Banner erscheint erneut.",
+        "toastError": "Deine Wahl konnte nicht gespeichert werden. Versuche es erneut."
       }
     },
     "simulator": {

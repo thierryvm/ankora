@@ -52,6 +52,16 @@ export default async function CookiesPage() {
           <p>{t.rich('manageBody1', { b: strong })}</p>
           <p>{t('manageBody2')}</p>
 
+          <h2>{t('manageMethodsHeading')}</h2>
+          <ol>
+            <li>{t('manageMethod1')}</li>
+            <li>{t('manageMethod2')}</li>
+            <li>{t('manageMethod3')}</li>
+          </ol>
+
+          <h2>{t('withdrawalHeading')}</h2>
+          <p>{t('withdrawalBody')}</p>
+
           <h2>{t('lifetimeHeading')}</h2>
           <ul>
             <li>{t('lifetimeItem1')}</li>

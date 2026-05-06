@@ -462,11 +462,16 @@
       "manageHeading": "Je voorkeuren beheren",
       "manageBody1": "Je kunt je toestemmingen op elk moment wijzigen in <b>Instellingen → Privacy</b> of door op « Cookies beheren » te klikken in de voettekst.",
       "manageBody2": "Niet-essentiële cookies weigeren heeft geen invloed op de ervaring: Ankora blijft volledig functioneel.",
+      "manageMethodsHeading": "Hoe mijn cookies beheren",
+      "manageMethod1": "Bij het eerste bezoek biedt het banner drie keuzes: enkel essentiële, aanpassen of alles aanvaarden.",
+      "manageMethod2": "Aangemeld kun je in Instellingen → Cookies & privacy elke categorie in- of uitschakelen.",
+      "manageMethod3": "Op elke pagina opent de link \"Cookievoorkeuren beheren\" in de voettekst het banner opnieuw.",
+      "withdrawalHeading": "Toestemming intrekken",
+      "withdrawalBody": "Volgens de AVG (art. 7(3)) is toestemming intrekken even eenvoudig als ze geven. Drie gelijkwaardige methoden: 1) Instellingen → Cookies & privacy → \"Mijn keuze opnieuw instellen\". 2) Voettekst → \"Cookievoorkeuren beheren\". 3) E-mail naar thierryvm@gmail.com met onderwerp \"Cookietoestemming intrekken\".",
       "lifetimeHeading": "Levensduur",
       "lifetimeItem1": "Sessie: einde van de navigatie",
       "lifetimeItem2": "Voorkeuren: 12 maanden",
       "lifetimeItem3": "Analytics: 6 maanden (indien aanvaard)",
-      "draft": "Deze pagina met het cookiebeleid wordt momenteel opgesteld.",
       "contact": "Voor elke vraag, contacteer ons: thierryvm@gmail.com",
       "backHome": "Terug naar de startpagina"
     }
@@ -480,9 +485,22 @@
   },
   "consent": {
     "title": "Cookies en privacy",
-    "body": "We gebruiken enkel essentiële cookies om je te laten inloggen. Analytische cookies zijn standaard uitgeschakeld — je kunt ze activeren als je ons wil helpen Ankora te verbeteren. Je kunt op elk moment van gedacht veranderen via <link>het cookiebeleid</link>.",
+    "body": "We gebruiken enkel essentiële cookies om je te laten inloggen. Analytische en marketingcookies zijn standaard uitgeschakeld — je kunt ze activeren als je ons wil helpen Ankora te verbeteren. Je kunt op elk moment van gedacht veranderen via <link>het cookiebeleid</link>.",
     "essentialOnly": "Enkel essentiële",
-    "acceptAnalytics": "Analyses aanvaarden"
+    "acceptAll": "Alles aanvaarden",
+    "customize": {
+      "button": "Aanpassen",
+      "save": "Mijn voorkeuren opslaan",
+      "cancel": "Annuleren",
+      "legend": "Cookie-categorieën",
+      "essentialLabel": "Essentiële",
+      "essentialBadge": "(altijd actief)",
+      "essentialDescription": "Sessie, beveiliging, taal- en thema-voorkeuren. Vereist om Ankora te laten werken.",
+      "analyticsLabel": "Gebruiksanalyse",
+      "analyticsDescription": "Anonieme statistieken om te begrijpen welke pagina's het meest helpen. Geen persoonsgegevens.",
+      "marketingLabel": "Marketing",
+      "marketingDescription": "Voorbehouden voor toekomstige campagnes. Fase 1 van Ankora: geen marketingcookies actief."
+    }
   },
   "footer": {
     "copyright": "© {year} — Alle rechten voorbehouden",
@@ -490,7 +508,8 @@
     "privacy": "Privacy",
     "cookies": "Cookies beheren",
     "faq": "FAQ",
-    "copyrightNotice": "© {year} Ankora™. Alle rechten voorbehouden."
+    "copyrightNotice": "© {year} Ankora™. Alle rechten voorbehouden.",
+    "cookiePreferences": "Cookievoorkeuren beheren"
   },
   "auth": {
     "login": {
@@ -775,6 +794,23 @@
         "submit": "Mijn account verwijderen",
         "submitting": "Inplannen…",
         "toastScheduled": "Verwijdering ingepland — je hebt 30 dagen om te annuleren"
+      },
+      "cookies": {
+        "title": "Cookies & privacy",
+        "description": "Kies welke cookie-categorieën je aanvaardt. Je keuze wordt gesynchroniseerd met onze server (GDPR-audit) en je kunt die op elk moment wijzigen.",
+        "essentialLabel": "Essentiële",
+        "essentialBadge": "(altijd actief)",
+        "essentialDescription": "Sessie, beveiliging, taal- en thema-voorkeuren. Vereist om Ankora te laten werken.",
+        "analyticsLabel": "Gebruiksanalyse",
+        "analyticsDescription": "Anonieme statistieken om te begrijpen welke pagina's het meest helpen. Geen persoonsgegevens.",
+        "marketingLabel": "Marketing",
+        "marketingDescription": "Voorbehouden voor toekomstige campagnes. Fase 1 van Ankora: geen marketingcookies actief.",
+        "resetButton": "Mijn keuze opnieuw instellen",
+        "resetHint": "Dit verwijdert je beslissing en toont het banner opnieuw bij de volgende laadbeurt.",
+        "noDecisionHint": "Je hebt op dit apparaat nog geen keuze gemaakt. Het banner verschijnt bij je volgende bezoek.",
+        "toastSaved": "Cookievoorkeuren opgeslagen.",
+        "toastReset": "Keuze opnieuw ingesteld. Het banner verschijnt opnieuw.",
+        "toastError": "Kon je keuze niet opslaan. Probeer opnieuw."
       }
     },
     "simulator": {

@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { AnkoraLogo } from '@/components/brand/AnkoraLogo';
+import { BrandHomeLink } from '@/components/brand/BrandHomeLink';
 import { Button } from '@/components/ui/button';
 import { HeaderNav } from './HeaderNav';
 
@@ -20,14 +20,10 @@ export async function Header({ variant = 'marketing', isAuthenticated = false }:
          * MktNav.tsx — clicking it from `/app` is now a deliberate
          * navigation, which avoids the no-op + title-flash described in
          * issue #95. The tactile press animation reinforces the click.
+         * Shared with Footer via BrandHomeLink so a11y semantics and focus
+         * styling cannot drift between the two surfaces (Sourcery #119).
          */}
-        <Link
-          href="/"
-          aria-label={t('homeAria')}
-          className="focus-visible:ring-brand-600 flex shrink-0 items-center gap-2 rounded-md transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none motion-safe:active:scale-95"
-        >
-          <AnkoraLogo className="h-8 w-auto" />
-        </Link>
+        <BrandHomeLink ariaLabel={t('homeAria')} logoClassName="h-8 w-auto" />
 
         {variant === 'marketing' ? (
           <nav aria-label={t('nav.mainLabel')} className="hidden items-center gap-1 lg:flex">
