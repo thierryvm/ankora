@@ -80,4 +80,25 @@ tmp/
 .agents/
 
 # outputs temporaires (scripts locaux)
-/output
+/outputs/
+
+# local design mockups
+design-mockup-*.html
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# internal PR prompts
+prompts/
+
+# Playwright MCP temp folder
+.playwright-mcp/
+
+# Screenshots and visual test artifacts
+/screenshots/
+/*.png
+/*.jpg
+
+# CC handoffs (Obsidian sync, ne pas committer en repo)
+cc-handoffs/
+.tmp/
