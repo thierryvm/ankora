@@ -81,6 +81,21 @@ describe('<NotFound /> — root-level branded 404', () => {
     expect(typeof meta.title).toBe('string');
   });
 
+  it('honours the cookie over Accept-Language when both disagree (Sourcery #2)', async () => {
+    cookieStore.value = 'fr-BE';
+    headerStore.acceptLanguage = 'en-US,en;q=0.9';
+    const { container } = await renderTree();
+    expect(container.textContent).toContain('Page introuvable');
+    expect(container.textContent).not.toContain('Page not found');
+  });
+
+  it('treats regional EN cookie variants like en-GB as English (Sourcery #3)', async () => {
+    cookieStore.value = 'en-GB';
+    const { container } = await renderTree();
+    expect(container.textContent).toContain('Page not found');
+    expect(container.textContent).not.toContain('Page introuvable');
+  });
+
   it('points the cockpit CTA to /en/app in EN, /app in FR', async () => {
     cookieStore.value = 'en';
     let { container } = await renderTree();

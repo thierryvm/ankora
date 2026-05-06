@@ -9,6 +9,14 @@ type GlobalErrorProps = {
   reset: () => void;
 };
 
+/**
+ * NOTE: this COPY object MUST stay in sync with `messages/{locale}.json`
+ * `errors.boundary.*` keys. global-error.tsx runs at root level, OUTSIDE
+ * the `[locale]` route group, so it cannot use next-intl. Any wording
+ * change in `messages/*.json` must be mirrored here (and vice versa).
+ *
+ * Cf. src/app/[locale]/error.tsx for the i18n-driven counterpart.
+ */
 const COPY = {
   fr: {
     title: "Quelque chose s'est cassé",
@@ -38,10 +46,11 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
     }
   }, [error.digest]);
 
-  const copy = COPY[pickLocale()];
+  const locale = pickLocale();
+  const copy = COPY[locale];
 
   return (
-    <html lang="fr">
+    <html lang={locale}>
       <body className="bg-background font-sans antialiased">
         <main role="alert" className="flex min-h-screen items-center justify-center px-4 py-16">
           <div className="mx-auto max-w-md text-center">

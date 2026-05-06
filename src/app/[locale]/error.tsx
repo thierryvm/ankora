@@ -12,6 +12,13 @@ type ErrorProps = {
   reset: () => void;
 };
 
+/**
+ * NOTE: the `errors.boundary.*` keys read from `messages/*.json` are
+ * mirrored as a hardcoded fallback inside `src/app/global-error.tsx`,
+ * which runs at the App Router root and cannot reach next-intl. Any
+ * wording change here MUST be mirrored in global-error.tsx (and vice
+ * versa) to keep both surfaces consistent.
+ */
 export default function ErrorBoundary({ error, reset }: ErrorProps) {
   const t = useTranslations('errors.boundary');
 

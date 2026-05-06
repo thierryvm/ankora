@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { renderToStaticMarkup } from 'react-dom/server';
 
 vi.mock('../globals.css', () => ({}));
 
@@ -77,5 +78,23 @@ describe('<GlobalError /> — root html/body error boundary', () => {
   it('marks the main element as role="alert"', () => {
     renderInDoc('fr-BE');
     expect(screen.getByRole('alert')).toBeInTheDocument();
+  });
+
+  it('emits <html lang="fr"> when the FR copy is shown (a11y/SEO — Sourcery #1)', () => {
+    document.documentElement.lang = 'fr-BE';
+    const html = renderToStaticMarkup(
+      <GlobalError error={Object.assign(new Error('boom'), { digest: 'd-fr' })} reset={vi.fn()} />,
+    );
+    expect(html).toMatch(/<html[^>]*lang="fr"/);
+    expect(html).not.toMatch(/<html[^>]*lang="en"/);
+  });
+
+  it('emits <html lang="en"> when the EN copy is shown (a11y/SEO — Sourcery #1)', () => {
+    document.documentElement.lang = 'en-US';
+    const html = renderToStaticMarkup(
+      <GlobalError error={Object.assign(new Error('boom'), { digest: 'd-en' })} reset={vi.fn()} />,
+    );
+    expect(html).toMatch(/<html[^>]*lang="en"/);
+    expect(html).not.toMatch(/<html[^>]*lang="fr"/);
   });
 });
