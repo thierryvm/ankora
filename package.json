@@ -111,6 +111,8 @@
   "overrides": {
     "tmp": "0.2.5",
     "postcss": "^8.5.13",
-    "uuid": "^14.0.0"
+    "uuid": "^14.0.0",
+    "basic-ftp": "^6.0.1",
+    "ip-address": "^10.2.0"
   }
 }

@@ -1,14 +1,6 @@
 import type { Metadata } from 'next';
 import { getLocale, getTranslations } from 'next-intl/server';
-import {
-  ArrowDownLeft,
-  ArrowRightLeft,
-  ArrowUpRight,
-  Landmark,
-  PiggyBank,
-  Receipt,
-  Shield,
-} from 'lucide-react';
+import { ArrowDownLeft, ArrowRightLeft, ArrowUpRight, Landmark } from 'lucide-react';
 
 import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
@@ -16,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { AccountCard } from '@/components/features/AccountCard';
 import { EffortFinancierCard } from '@/components/dashboard/EffortFinancierCard';
 import { CapaciteEpargneCard } from '@/components/dashboard/CapaciteEpargneCard';
-import { Budget, Expenses, Provision, Transfer, money } from '@/lib/domain';
+import { Expenses, Transfer, money } from '@/lib/domain';
 import { getWorkspaceSnapshot, toCockpitCharges } from '@/lib/data/workspace-snapshot';
 import type { AccountType } from '@/lib/schemas/account';
 import type { Locale } from '@/i18n/routing';
@@ -43,31 +35,6 @@ export default async function DashboardPage() {
   const currentMonth = new Date().getMonth() + 1;
   const monthLabel = formatMonth(currentMonth, locale);
   const fmtMoney = (value: Parameters<typeof formatCurrency>[0]) => formatCurrency(value, locale);
-
-  const provisionTarget = Budget.monthlyProvisionTotal(snapshot.charges);
-  const billsDue = Budget.billsDueInMonth(snapshot.charges, currentMonth);
-  const suggestedTransfer = Budget.suggestedTransfer(snapshot.charges, currentMonth);
-  const annualTotal = Budget.annualTotal(snapshot.charges);
-
-  const health = Provision.assessHealth(
-    snapshot.charges,
-    money(snapshot.savingsBalance),
-    snapshot.monthsTracked,
-  );
-
-  const healthColor =
-    health.status === 'healthy'
-      ? 'text-success'
-      : health.status === 'warning'
-        ? 'text-warning'
-        : 'text-danger';
-
-  const healthLabel =
-    health.status === 'healthy'
-      ? t('healthHealthy')
-      : health.status === 'warning'
-        ? t('healthWarning')
-        : t('healthCritical');
 
   const hasCharges = snapshot.charges.length > 0;
 
@@ -127,7 +94,7 @@ export default async function DashboardPage() {
         />
       </section>
 
-      {!hasCharges ? (
+      {!hasCharges && (
         <Card>
           <CardHeader>
             <CardTitle>{t('emptyTitle')}</CardTitle>
@@ -139,70 +106,49 @@ export default async function DashboardPage() {
             </Button>
           </CardContent>
         </Card>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <div className="text-brand-700 flex items-center gap-2">
-                <PiggyBank className="h-5 w-5" aria-hidden />
-                <CardTitle className="text-sm font-medium">{t('kpiProvisionsMonthly')}</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold tabular-nums">{fmtMoney(provisionTarget)}</p>
-              <p className="text-muted-foreground mt-1 text-xs">
-                {t('kpiProvisionsAnnualHint', { amount: fmtMoney(annualTotal) })}
-              </p>
-            </CardContent>
-          </Card>
+      )}
 
-          <Card>
-            <CardHeader className="pb-2">
-              <div className={`flex items-center gap-2 ${healthColor}`}>
-                <Shield className="h-5 w-5" aria-hidden />
-                <CardTitle className="text-sm font-medium">{t('kpiHealth')}</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className={`text-2xl font-bold ${healthColor}`}>{healthLabel}</p>
-              <p className="text-muted-foreground mt-1 text-xs">
-                {t('kpiHealthTargetHint', { amount: fmtMoney(health.target) })}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <div className="text-brand-700 flex items-center gap-2">
-                <ArrowRightLeft className="h-5 w-5" aria-hidden />
-                <CardTitle className="text-sm font-medium">{t('kpiSuggestedTransfer')}</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold tabular-nums">{fmtMoney(suggestedTransfer)}</p>
-              <p className="text-muted-foreground mt-1 text-xs">
-                {suggestedTransfer.gte(0)
-                  ? t('kpiSuggestedTransferToSavings')
-                  : t('kpiSuggestedTransferFromSavings')}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <div className="text-accent-600 flex items-center gap-2">
-                <Receipt className="h-5 w-5" aria-hidden />
-                <CardTitle className="text-sm font-medium">
-                  {t('kpiBillsMonth', { month: monthLabel })}
-                </CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold tabular-nums">{fmtMoney(billsDue)}</p>
-              <p className="text-muted-foreground mt-1 text-xs">{t('kpiBillsHint')}</p>
-            </CardContent>
-          </Card>
-        </div>
+      {/*
+        PR-D3-bis layout — RÉALITÉ d'abord ("combien j'ai sur chaque compte"),
+        plan ensuite ("combien je dois déplacer"). The 4 legacy KPI cards
+        (provisions/health/suggestedTransfer/bills) shipped before Voie D
+        are removed: they duplicate the Bloc 2 hero radar (Effort = same
+        provisionsMonthly + billsMonth, Capacité = same suggestedTransfer
+        intent) and Santé Provisions will be re-introduced enriched in
+        PR-D5 (déficit + plan rattrapage 3 mois). Cf. handoff
+        Athenaeum/.../2026-05-06-2230-feedback-post-pr-d3-dette-ux.md.
+      */}
+      {hasCharges && (
+        <section aria-labelledby="accounts-heading" className="flex flex-col gap-4">
+          <h2 id="accounts-heading" className="sr-only">
+            {t('accountsHeading')}
+          </h2>
+          <div className="grid gap-4 md:grid-cols-3">
+            {ACCOUNT_TYPE_ORDER.map((accountType) => {
+              const account = accountByType.get(accountType);
+              if (!account) return null;
+              const extraHint =
+                accountType === 'daily_card' && dailyPlafondMissing ? (
+                  <Link
+                    href="/app/accounts"
+                    className="text-muted-foreground hover:text-brand-700 text-xs hover:underline"
+                  >
+                    {tDaily('cta_set_plafond')}
+                  </Link>
+                ) : undefined;
+              return (
+                <AccountCard
+                  key={accountType}
+                  accountType={accountType}
+                  displayName={account.displayName}
+                  balance={account.balance}
+                  locale={locale}
+                  extraHint={extraHint}
+                />
+              );
+            })}
+          </div>
+        </section>
       )}
 
       {hasCharges && (
@@ -308,32 +254,6 @@ export default async function DashboardPage() {
               </Card>
             </div>
           )}
-
-          <div className="grid gap-4 md:grid-cols-3">
-            {ACCOUNT_TYPE_ORDER.map((accountType) => {
-              const account = accountByType.get(accountType);
-              if (!account) return null;
-              const extraHint =
-                accountType === 'daily_card' && dailyPlafondMissing ? (
-                  <Link
-                    href="/app/accounts"
-                    className="text-muted-foreground hover:text-brand-700 text-xs hover:underline"
-                  >
-                    {tDaily('cta_set_plafond')}
-                  </Link>
-                ) : undefined;
-              return (
-                <AccountCard
-                  key={accountType}
-                  accountType={accountType}
-                  displayName={account.displayName}
-                  balance={account.balance}
-                  locale={locale}
-                  extraHint={extraHint}
-                />
-              );
-            })}
-          </div>
         </section>
       )}
 

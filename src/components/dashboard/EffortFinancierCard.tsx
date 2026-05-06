@@ -41,7 +41,7 @@ export async function EffortFinancierCard({ charges, locale }: Props) {
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue-500/8 to-transparent"
+        className="pointer-events-none absolute inset-0 bg-linear-to-br from-blue-500/8 to-transparent"
       />
       <CardHeader className="relative flex flex-row items-start justify-between gap-3 pb-2">
         <div className="min-w-0">

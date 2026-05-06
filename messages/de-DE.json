@@ -646,7 +646,8 @@
       "expensesTitle": "Ausgaben — {month}",
       "expensesCount": "{count, plural, =0 {Keine Ausgaben diesen Monat} one {1 Ausgabe diesen Monat} other {# Ausgaben diesen Monat}}",
       "expensesEmpty": "Keine Ausgaben für diesen Monat erfasst.",
-      "expensesViewAll": "Alle Ausgaben anzeigen →"
+      "expensesViewAll": "Alle Ausgaben anzeigen →",
+      "accountsHeading": "Meine Konten"
     },
     "charges": {
       "title": "Meine Fixkosten",
@@ -909,7 +910,12 @@
     "capacite": {
       "title": "Reale Sparkapazität",
       "message_positive": "Das bleibt dir wirklich jeden Monat — keine Überraschungen.",
-      "message_negative": "Achtung: dein gesamter Lebensstil übersteigt dein Einkommen."
+      "message_negative": "Achtung: dein gesamter Lebensstil übersteigt dein Einkommen.",
+      "breakdown": {
+        "revenus": "Einkommen",
+        "effort": "Geglätteter finanzieller Aufwand",
+        "plafond": "Tägliches Limit"
+      }
     },
     "daily": {
       "cta_set_plafond": "Tägliches Limit festlegen"
