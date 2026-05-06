@@ -881,6 +881,18 @@
   },
   "errors": {
     "generic": "Er is een fout opgetreden. Probeer opnieuw.",
+    "notFound": {
+      "title": "Pagina niet gevonden",
+      "description": "Deze pagina bestaat niet of is verplaatst. Ga terug naar je cockpit om verder te gaan.",
+      "ctaHome": "Terug naar startpagina",
+      "ctaCockpit": "Naar mijn cockpit"
+    },
+    "boundary": {
+      "title": "Er is iets misgegaan",
+      "description": "Er is een onverwachte fout opgetreden. Je gegevens zijn veilig.",
+      "ctaRetry": "Opnieuw proberen",
+      "ctaHome": "Terug naar startpagina"
+    },
     "session": {
       "expired": "Sessie verlopen. Log opnieuw in.",
       "rateLimited": "Te veel aanvragen. Wacht een minuut."

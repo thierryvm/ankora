@@ -881,6 +881,18 @@
   },
   "errors": {
     "generic": "Ein Fehler ist aufgetreten. Versuche es erneut.",
+    "notFound": {
+      "title": "Seite nicht gefunden",
+      "description": "Diese Seite existiert nicht oder wurde verschoben. Kehre zu deinem Cockpit zurück, um fortzufahren.",
+      "ctaHome": "Zurück zur Startseite",
+      "ctaCockpit": "Zu meinem Cockpit"
+    },
+    "boundary": {
+      "title": "Etwas ist schiefgelaufen",
+      "description": "Ein unerwarteter Fehler ist aufgetreten. Deine Daten sind sicher.",
+      "ctaRetry": "Erneut versuchen",
+      "ctaHome": "Zurück zur Startseite"
+    },
     "session": {
       "expired": "Session abgelaufen. Melde dich erneut an.",
       "rateLimited": "Zu viele Anfragen. Warte eine Minute."

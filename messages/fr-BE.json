@@ -881,6 +881,18 @@
   },
   "errors": {
     "generic": "Une erreur est survenue. Réessaie.",
+    "notFound": {
+      "title": "Page introuvable",
+      "description": "Cette page n'existe pas ou a été déplacée. Reviens à ton cockpit pour continuer.",
+      "ctaHome": "Retour à l'accueil",
+      "ctaCockpit": "Aller à mon cockpit"
+    },
+    "boundary": {
+      "title": "Quelque chose s'est cassé",
+      "description": "Une erreur inattendue s'est produite. Tes données sont en sécurité.",
+      "ctaRetry": "Réessayer",
+      "ctaHome": "Retour à l'accueil"
+    },
     "session": {
       "expired": "Session expirée. Reconnecte-toi.",
       "rateLimited": "Trop de requêtes. Attends une minute."

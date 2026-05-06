@@ -881,6 +881,18 @@
   },
   "errors": {
     "generic": "Se ha producido un error. Reinténtalo.",
+    "notFound": {
+      "title": "Página no encontrada",
+      "description": "Esta página no existe o ha sido movida. Vuelve a tu cockpit para continuar.",
+      "ctaHome": "Volver al inicio",
+      "ctaCockpit": "Ir a mi cockpit"
+    },
+    "boundary": {
+      "title": "Algo se ha roto",
+      "description": "Se ha producido un error inesperado. Tus datos están a salvo.",
+      "ctaRetry": "Reintentar",
+      "ctaHome": "Volver al inicio"
+    },
     "session": {
       "expired": "Sesión expirada. Vuelve a iniciar sesión.",
       "rateLimited": "Demasiadas solicitudes. Espera un minuto."

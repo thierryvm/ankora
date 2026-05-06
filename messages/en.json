@@ -881,6 +881,18 @@
   },
   "errors": {
     "generic": "Something went wrong. Try again.",
+    "notFound": {
+      "title": "Page not found",
+      "description": "This page doesn't exist or has been moved. Head back to your cockpit to continue.",
+      "ctaHome": "Back to home",
+      "ctaCockpit": "Go to my cockpit"
+    },
+    "boundary": {
+      "title": "Something broke",
+      "description": "An unexpected error occurred. Your data is safe.",
+      "ctaRetry": "Try again",
+      "ctaHome": "Back to home"
+    },
     "session": {
       "expired": "Session expired. Log in again.",
       "rateLimited": "Too many requests. Wait a minute."
