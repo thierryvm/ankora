@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useSyncExternalStore } from 'react';
+import { useState, useSyncExternalStore, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { Link } from '@/i18n/navigation';
+import { recordCookieConsentAction } from '@/lib/actions/consent';
 
 const STORAGE_KEY = 'ankora.consent.v1';
-const CONSENT_VERSION = '1.0.0';
+const REOPEN_FLAG_KEY = 'ankora.consent.reopen';
+export const CONSENT_VERSION = '1.0.0';
 
 type ConsentState = {
   version: string;
@@ -28,8 +30,19 @@ function readStored(): ConsentState | null {
   }
 }
 
+function isReopenRequested(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return window.localStorage.getItem(REOPEN_FLAG_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
 function persist(state: ConsentState): void {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  // Reopen flag is consumed: any successful decision dismisses the banner.
+  window.localStorage.removeItem(REOPEN_FLAG_KEY);
 }
 
 /**
@@ -37,19 +50,44 @@ function persist(state: ConsentState): void {
  * return a stable reference between invalidations — otherwise React loops.
  * We only recompute when subscribers are notified (persist or storage event).
  */
-let cachedSnapshot: ConsentState | null = null;
 let cachedInitialized = false;
 
-function getSnapshot(): ConsentState | null {
-  if (!cachedInitialized) {
-    cachedSnapshot = readStored();
-    cachedInitialized = true;
+type StoreSnapshot = {
+  stored: ConsentState | null;
+  reopen: boolean;
+};
+
+const SNAPSHOT_REF: { value: StoreSnapshot } = {
+  value: { stored: null, reopen: false },
+};
+
+function refreshSnapshot(): void {
+  const next: StoreSnapshot = {
+    stored: readStored(),
+    reopen: isReopenRequested(),
+  };
+  // Stable identity unless the relevant fields changed.
+  const prev = SNAPSHOT_REF.value;
+  if (
+    prev.stored?.version !== next.stored?.version ||
+    prev.stored?.analytics !== next.stored?.analytics ||
+    prev.stored?.marketing !== next.stored?.marketing ||
+    prev.reopen !== next.reopen
+  ) {
+    SNAPSHOT_REF.value = next;
   }
-  return cachedSnapshot;
 }
 
-function getServerSnapshot(): ConsentState | null {
-  return null;
+function getSnapshot(): StoreSnapshot {
+  if (!cachedInitialized) {
+    refreshSnapshot();
+    cachedInitialized = true;
+  }
+  return SNAPSHOT_REF.value;
+}
+
+function getServerSnapshot(): StoreSnapshot {
+  return { stored: null, reopen: false };
 }
 
 const STORAGE_LISTENERS = new Set<() => void>();
@@ -57,8 +95,8 @@ const STORAGE_LISTENERS = new Set<() => void>();
 function subscribe(cb: () => void) {
   STORAGE_LISTENERS.add(cb);
   const onStorage = (event: StorageEvent) => {
-    if (event.key === STORAGE_KEY) {
-      cachedSnapshot = readStored();
+    if (event.key === STORAGE_KEY || event.key === REOPEN_FLAG_KEY) {
+      refreshSnapshot();
       cb();
     }
   };
@@ -70,26 +108,69 @@ function subscribe(cb: () => void) {
 }
 
 function notify() {
-  cachedSnapshot = readStored();
+  refreshSnapshot();
   STORAGE_LISTENERS.forEach((cb) => cb());
+}
+
+/**
+ * Test-only escape hatch — forces the module-level snapshot cache to be
+ * recomputed from a fresh `localStorage` read on the next render. Vitest
+ * shares module state between test cases by default, so without this the
+ * banner would carry the consent decision of one test into the next.
+ *
+ * Not exported in any production import path (only `__tests__/` files
+ * call it). Kept inside the module so the cache implementation stays
+ * private.
+ */
+export function __resetConsentCacheForTests(): void {
+  cachedInitialized = false;
+  SNAPSHOT_REF.value = { stored: null, reopen: false };
+}
+
+/**
+ * Programmatically requests the banner to re-open. Called from the Settings
+ * "Reset choice" button and the Footer "Manage cookie preferences" link so
+ * the user can revisit their decision from anywhere.
+ *
+ * Implementation: clears the consent record AND sets a reopen flag. The flag
+ * is necessary because the version-cookie removal alone cannot distinguish
+ * "first visit" from "user-requested reopen" cleanly across SSR boundaries.
+ */
+export function reopenConsentBanner(): void {
+  if (typeof window === 'undefined') return;
+  window.localStorage.removeItem(STORAGE_KEY);
+  window.localStorage.setItem(REOPEN_FLAG_KEY, '1');
+  notify();
 }
 
 export function ConsentBanner() {
   const t = useTranslations('consent');
-  const stored = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const snap = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const [dismissed, setDismissed] = useState(false);
+  const [customizing, setCustomizing] = useState(false);
+  const [analytics, setAnalytics] = useState(false);
+  const [marketing, setMarketing] = useState(false);
+  const [, startTransition] = useTransition();
 
-  if (dismissed || stored !== null) return null;
+  const hasDecided = snap.stored !== null;
+  const shouldShow = !dismissed && (!hasDecided || snap.reopen);
+  if (!shouldShow) return null;
 
-  const accept = (analytics: boolean, marketing: boolean) => {
+  const accept = (analyticsValue: boolean, marketingValue: boolean) => {
     persist({
       version: CONSENT_VERSION,
-      analytics,
-      marketing,
+      analytics: analyticsValue,
+      marketing: marketingValue,
       decidedAt: new Date().toISOString(),
     });
     setDismissed(true);
     notify();
+    startTransition(() => {
+      void recordCookieConsentAction({
+        analytics: analyticsValue,
+        marketing: marketingValue,
+      });
+    });
   };
 
   return (
@@ -111,22 +192,108 @@ export function ConsentBanner() {
           ),
         })}
       </p>
-      <div className="mt-4 flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => accept(false, false)}
-          className="border-border hover:bg-brand-100 focus-visible:ring-brand-600 rounded-md border px-4 py-2 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
-        >
-          {t('essentialOnly')}
-        </button>
-        <button
-          type="button"
-          onClick={() => accept(true, false)}
-          className="bg-brand-700 hover:bg-brand-800 focus-visible:ring-brand-600 rounded-md px-4 py-2 text-sm font-medium text-white focus-visible:ring-2 focus-visible:outline-none"
-        >
-          {t('acceptAnalytics')}
-        </button>
-      </div>
+
+      {customizing ? (
+        <div className="mt-4 flex flex-col gap-3">
+          <fieldset className="flex flex-col gap-3">
+            <legend className="sr-only">{t('customize.legend')}</legend>
+
+            <label className="border-border flex items-start gap-3 rounded-md border p-3">
+              <input
+                type="checkbox"
+                checked
+                disabled
+                aria-label={t('customize.essentialLabel')}
+                className="text-brand-700 mt-0.5 h-4 w-4"
+              />
+              <span className="flex-1">
+                <span className="block text-sm font-medium">
+                  {t('customize.essentialLabel')}{' '}
+                  <span className="text-muted-foreground text-xs font-normal">
+                    {t('customize.essentialBadge')}
+                  </span>
+                </span>
+                <span className="text-muted-foreground mt-1 block text-xs">
+                  {t('customize.essentialDescription')}
+                </span>
+              </span>
+            </label>
+
+            <label className="border-border flex items-start gap-3 rounded-md border p-3">
+              <input
+                type="checkbox"
+                checked={analytics}
+                onChange={(e) => setAnalytics(e.target.checked)}
+                aria-label={t('customize.analyticsLabel')}
+                className="text-brand-700 focus-visible:ring-brand-600 mt-0.5 h-4 w-4 focus-visible:ring-2 focus-visible:outline-none"
+              />
+              <span className="flex-1">
+                <span className="block text-sm font-medium">{t('customize.analyticsLabel')}</span>
+                <span className="text-muted-foreground mt-1 block text-xs">
+                  {t('customize.analyticsDescription')}
+                </span>
+              </span>
+            </label>
+
+            <label className="border-border flex items-start gap-3 rounded-md border p-3">
+              <input
+                type="checkbox"
+                checked={marketing}
+                onChange={(e) => setMarketing(e.target.checked)}
+                aria-label={t('customize.marketingLabel')}
+                className="text-brand-700 focus-visible:ring-brand-600 mt-0.5 h-4 w-4 focus-visible:ring-2 focus-visible:outline-none"
+              />
+              <span className="flex-1">
+                <span className="block text-sm font-medium">{t('customize.marketingLabel')}</span>
+                <span className="text-muted-foreground mt-1 block text-xs">
+                  {t('customize.marketingDescription')}
+                </span>
+              </span>
+            </label>
+          </fieldset>
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => accept(analytics, marketing)}
+              className="bg-brand-700 hover:bg-brand-800 focus-visible:ring-brand-600 rounded-md px-4 py-2 text-sm font-medium text-white focus-visible:ring-2 focus-visible:outline-none"
+            >
+              {t('customize.save')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setCustomizing(false)}
+              className="border-border hover:bg-brand-100 focus-visible:ring-brand-600 rounded-md border px-4 py-2 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
+            >
+              {t('customize.cancel')}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => accept(false, false)}
+            className="border-border hover:bg-brand-100 focus-visible:ring-brand-600 rounded-md border px-4 py-2 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
+          >
+            {t('essentialOnly')}
+          </button>
+          <button
+            type="button"
+            onClick={() => setCustomizing(true)}
+            className="border-border hover:bg-brand-100 focus-visible:ring-brand-600 rounded-md border px-4 py-2 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
+          >
+            {t('customize.button')}
+          </button>
+          <button
+            type="button"
+            onClick={() => accept(true, true)}
+            className="bg-brand-700 hover:bg-brand-800 focus-visible:ring-brand-600 rounded-md px-4 py-2 text-sm font-medium text-white focus-visible:ring-2 focus-visible:outline-none"
+          >
+            {t('acceptAll')}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

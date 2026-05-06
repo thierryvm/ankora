@@ -462,11 +462,16 @@
       "manageHeading": "Gérer tes préférences",
       "manageBody1": "Tu peux modifier tes consentements à tout moment dans <b>Paramètres → Confidentialité</b> ou en cliquant sur « Gérer les cookies » dans le pied de page.",
       "manageBody2": "Refuser les cookies non essentiels ne dégrade pas l'expérience : Ankora reste entièrement fonctionnel.",
+      "manageMethodsHeading": "Comment gérer mes cookies",
+      "manageMethod1": "À la première visite, le bandeau te propose trois choix : essentiels uniquement, personnaliser, ou tout accepter.",
+      "manageMethod2": "Connecté, dans Paramètres → Cookies & confidentialité, tu peux activer/désactiver chaque catégorie.",
+      "manageMethod3": "Depuis n'importe quelle page, le lien « Modifier mes préférences cookies » dans le pied de page rouvre le bandeau.",
+      "withdrawalHeading": "Retrait du consentement",
+      "withdrawalBody": "Conformément au RGPD (art. 7(3)), retirer ton consentement est aussi simple que de le donner. Trois méthodes équivalentes : 1) Paramètres → Cookies & confidentialité → bouton « Réinitialiser mon choix ». 2) Pied de page → « Modifier mes préférences cookies ». 3) Email à thierryvm@gmail.com avec l'objet « Retrait consentement cookies ».",
       "lifetimeHeading": "Durée de vie",
       "lifetimeItem1": "Session : fin de navigation",
       "lifetimeItem2": "Préférences : 12 mois",
       "lifetimeItem3": "Analytics : 6 mois (si acceptés)",
-      "draft": "Cette page de politique cookies est en cours de rédaction.",
       "contact": "Pour toute question, contacte-nous : thierryvm@gmail.com",
       "backHome": "Retour à l'accueil"
     }
@@ -480,9 +485,22 @@
   },
   "consent": {
     "title": "Cookies et vie privée",
-    "body": "On utilise uniquement les cookies essentiels pour te connecter. Les cookies d'analyse sont désactivés par défaut — tu peux les activer si tu veux nous aider à améliorer Ankora. Tu peux changer d'avis à tout moment via <link>la politique cookies</link>.",
+    "body": "On utilise uniquement les cookies essentiels pour te connecter. Les cookies d'analyse et marketing sont désactivés par défaut — tu peux les activer si tu veux nous aider à améliorer Ankora. Tu peux changer d'avis à tout moment via <link>la politique cookies</link>.",
     "essentialOnly": "Essentiels uniquement",
-    "acceptAnalytics": "Accepter les analyses"
+    "acceptAll": "Tout accepter",
+    "customize": {
+      "button": "Personnaliser",
+      "save": "Enregistrer mes préférences",
+      "cancel": "Annuler",
+      "legend": "Catégories de cookies",
+      "essentialLabel": "Essentiels",
+      "essentialBadge": "(toujours actifs)",
+      "essentialDescription": "Session, sécurité, préférence de langue et de thème. Indispensables au fonctionnement d'Ankora.",
+      "analyticsLabel": "Analyse d'usage",
+      "analyticsDescription": "Statistiques anonymisées pour comprendre quelles pages aident le plus. Aucune donnée personnelle.",
+      "marketingLabel": "Marketing",
+      "marketingDescription": "Réservés à de futures campagnes. Phase 1 d'Ankora : aucun cookie marketing actif."
+    }
   },
   "footer": {
     "copyright": "© {year} — Tous droits réservés",
@@ -490,7 +508,8 @@
     "privacy": "Confidentialité",
     "cookies": "Gérer les cookies",
     "faq": "FAQ",
-    "copyrightNotice": "© {year} Ankora™. Tous droits réservés."
+    "copyrightNotice": "© {year} Ankora™. Tous droits réservés.",
+    "cookiePreferences": "Modifier mes préférences cookies"
   },
   "auth": {
     "login": {
@@ -775,6 +794,23 @@
         "submit": "Supprimer mon compte",
         "submitting": "Programmation…",
         "toastScheduled": "Suppression programmée — tu as 30 jours pour annuler"
+      },
+      "cookies": {
+        "title": "Cookies & confidentialité",
+        "description": "Choisis quelles catégories de cookies tu acceptes. Ton choix est synchronisé avec notre serveur (audit RGPD) et tu peux le modifier à tout moment.",
+        "essentialLabel": "Essentiels",
+        "essentialBadge": "(toujours actifs)",
+        "essentialDescription": "Session, sécurité, préférence de langue et de thème. Indispensables au fonctionnement d'Ankora.",
+        "analyticsLabel": "Analyse d'usage",
+        "analyticsDescription": "Statistiques anonymisées pour comprendre quelles pages aident le plus. Aucune donnée personnelle.",
+        "marketingLabel": "Marketing",
+        "marketingDescription": "Réservés à de futures campagnes. Phase 1 d'Ankora : aucun cookie marketing actif.",
+        "resetButton": "Réinitialiser mon choix",
+        "resetHint": "Le bouton supprime ta décision et te repropose le bandeau au prochain chargement.",
+        "noDecisionHint": "Tu n'as pas encore choisi sur cet appareil. Le bandeau s'affichera à ta prochaine visite.",
+        "toastSaved": "Préférences cookies enregistrées.",
+        "toastReset": "Choix réinitialisé. Le bandeau réapparaîtra.",
+        "toastError": "Impossible d'enregistrer ton choix. Réessaie."
       }
     },
     "simulator": {

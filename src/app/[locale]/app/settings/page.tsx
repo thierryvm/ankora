@@ -3,7 +3,9 @@ import { getTranslations } from 'next-intl/server';
 
 import { requireUser } from '@/lib/auth/require-user';
 import { createClient } from '@/lib/supabase/server';
+import { getCookieConsentAction } from '@/lib/actions/consent';
 import { SettingsClient } from './SettingsClient';
+import { CookiesPreferencesSection } from './CookiesPreferencesSection';
 
 type Factor = { id: string; friendlyName: string | null; status: string };
 type Deletion = { scheduledFor: string; status: string } | null;
@@ -18,7 +20,7 @@ export default async function SettingsPage() {
   const user = await requireUser();
   const supabase = await createClient();
 
-  const [profileRes, factorsRes, deletionRes] = await Promise.all([
+  const [profileRes, factorsRes, deletionRes, consentRes] = await Promise.all([
     supabase.from('users').select('display_name, locale, email').eq('id', user.id).maybeSingle(),
     supabase.auth.mfa.listFactors(),
     supabase
@@ -27,6 +29,7 @@ export default async function SettingsPage() {
       .eq('user_id', user.id)
       .eq('status', 'pending')
       .maybeSingle(),
+    getCookieConsentAction(),
   ]);
 
   const factors: Factor[] = (factorsRes.data?.totp ?? []).map((f) => ({
@@ -52,6 +55,11 @@ export default async function SettingsPage() {
         locale={profileRes.data?.locale ?? 'fr-BE'}
         factors={factors}
         deletion={deletion}
+        cookiesSection={
+          <CookiesPreferencesSection
+            initialServerSnapshot={consentRes.ok ? consentRes.data.snapshot : null}
+          />
+        }
       />
     </div>
   );

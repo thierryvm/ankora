@@ -462,11 +462,16 @@
       "manageHeading": "Manage your preferences",
       "manageBody1": "You can change your consents at any time in <b>Settings → Privacy</b> or by clicking \"Manage cookies\" in the footer.",
       "manageBody2": "Declining non-essential cookies does not degrade the experience: Ankora remains fully functional.",
+      "manageMethodsHeading": "How to manage my cookies",
+      "manageMethod1": "On first visit, the banner offers three choices: essential only, customize, or accept all.",
+      "manageMethod2": "When logged in, Settings → Cookies & privacy lets you toggle each category.",
+      "manageMethod3": "From any page, the \"Manage cookie preferences\" link in the footer reopens the banner.",
+      "withdrawalHeading": "Withdrawing consent",
+      "withdrawalBody": "Under GDPR (art. 7(3)), withdrawing consent is as easy as giving it. Three equivalent methods: 1) Settings → Cookies & privacy → \"Reset my choice\". 2) Footer → \"Manage cookie preferences\". 3) Email thierryvm@gmail.com with subject \"Cookies consent withdrawal\".",
       "lifetimeHeading": "Lifetime",
       "lifetimeItem1": "Session: end of browsing",
       "lifetimeItem2": "Preferences: 12 months",
       "lifetimeItem3": "Analytics: 6 months (if accepted)",
-      "draft": "This cookie policy page is being drafted.",
       "contact": "For any questions, contact us: thierryvm@gmail.com",
       "backHome": "Back to home"
     }
@@ -480,9 +485,22 @@
   },
   "consent": {
     "title": "Cookies and privacy",
-    "body": "We only use essential cookies to log you in. Analytics cookies are off by default — you can turn them on if you want to help us improve Ankora. You can change your mind at any time via <link>the cookie policy</link>.",
+    "body": "We only use essential cookies to log you in. Analytics and marketing cookies are off by default — you can turn them on if you want to help us improve Ankora. You can change your mind at any time via <link>the cookie policy</link>.",
     "essentialOnly": "Essential only",
-    "acceptAnalytics": "Accept analytics"
+    "acceptAll": "Accept all",
+    "customize": {
+      "button": "Customize",
+      "save": "Save my preferences",
+      "cancel": "Cancel",
+      "legend": "Cookie categories",
+      "essentialLabel": "Essential",
+      "essentialBadge": "(always on)",
+      "essentialDescription": "Session, security, language and theme preferences. Required for Ankora to work.",
+      "analyticsLabel": "Usage analytics",
+      "analyticsDescription": "Anonymous stats to understand which pages help most. No personal data.",
+      "marketingLabel": "Marketing",
+      "marketingDescription": "Reserved for future campaigns. Phase 1 of Ankora: no marketing cookies active."
+    }
   },
   "footer": {
     "copyright": "© {year} — All rights reserved",
@@ -490,7 +508,8 @@
     "privacy": "Privacy",
     "cookies": "Manage cookies",
     "faq": "FAQ",
-    "copyrightNotice": "© {year} Ankora™. All rights reserved."
+    "copyrightNotice": "© {year} Ankora™. All rights reserved.",
+    "cookiePreferences": "Manage cookie preferences"
   },
   "auth": {
     "login": {
@@ -775,6 +794,23 @@
         "submit": "Delete my account",
         "submitting": "Scheduling…",
         "toastScheduled": "Deletion scheduled — you have 30 days to cancel"
+      },
+      "cookies": {
+        "title": "Cookies & privacy",
+        "description": "Choose which cookie categories you accept. Your choice is synced with our server (GDPR audit) and you can change it at any time.",
+        "essentialLabel": "Essential",
+        "essentialBadge": "(always on)",
+        "essentialDescription": "Session, security, language and theme preferences. Required for Ankora to work.",
+        "analyticsLabel": "Usage analytics",
+        "analyticsDescription": "Anonymous stats to understand which pages help most. No personal data.",
+        "marketingLabel": "Marketing",
+        "marketingDescription": "Reserved for future campaigns. Phase 1 of Ankora: no marketing cookies active.",
+        "resetButton": "Reset my choice",
+        "resetHint": "This clears your decision and re-prompts the banner on the next page load.",
+        "noDecisionHint": "You haven't made a choice on this device yet. The banner will show on your next visit.",
+        "toastSaved": "Cookie preferences saved.",
+        "toastReset": "Choice reset. The banner will reappear.",
+        "toastError": "Could not save your choice. Try again."
       }
     },
     "simulator": {
