@@ -11,7 +11,13 @@ export async function Footer() {
     <footer className="border-border bg-card border-t">
       <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-4 py-10 md:flex-row md:items-center md:px-6">
         <div className="flex items-center gap-2">
-          <AnkoraLogo className="h-7 w-auto" />
+          <Link
+            href="/"
+            aria-label={tCommon('homeAria')}
+            className="focus-visible:ring-brand-600 flex shrink-0 items-center rounded-md transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none motion-safe:active:scale-95"
+          >
+            <AnkoraLogo className="h-7 w-auto" />
+          </Link>
           <span className="text-muted-foreground text-sm">
             {t('copyrightNotice', { year: new Date().getFullYear() })}
           </span>
