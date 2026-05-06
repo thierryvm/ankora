@@ -900,6 +900,21 @@
       }
     }
   },
+  "dashboard": {
+    "effort": {
+      "title": "Vereffende financiële inspanning",
+      "charges_fixes": "Vaste kosten",
+      "provisions": "Voorzieningen"
+    },
+    "capacite": {
+      "title": "Werkelijke spaarcapaciteit",
+      "message_positive": "Dit is wat je elke maand echt overhoudt, zonder verrassingen.",
+      "message_negative": "Let op: je totale levensstijl overschrijdt je inkomen."
+    },
+    "daily": {
+      "cta_set_plafond": "Dagelijks plafond instellen"
+    }
+  },
   "glossary": {
     "title": "Woordenboek",
     "subtitle": "15 essentiële termen voor het begrijpen van je budgetbeheer en persoonlijke financiën.",

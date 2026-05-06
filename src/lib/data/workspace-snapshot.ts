@@ -9,7 +9,29 @@ import {
   type ChargePaidFrom,
   type Expense,
 } from '@/lib/domain/types';
-import type { AccountType } from '@/lib/domain/cockpit/types';
+import type { AccountType, CockpitCharge } from '@/lib/domain/cockpit/types';
+
+/**
+ * Adapter from the legacy `Charge` shape (still consumed by Bloc 1 KPI helpers
+ * via `Budget.*` / `Transfer.*`) to the cockpit-flavoured `CockpitCharge` that
+ * `effortFinancierLisse()` and `capaciteEpargneReelle()` expect (PR-D1).
+ *
+ * The cockpit math used by PR-D3 only reads `amount`, `frequency`, and
+ * `isActive`; `paymentMonths` and `paymentDay` are stubbed from the legacy
+ * `dueMonth`. PR-D4+ will read the canonical `payment_months[]` / `payment_day`
+ * columns directly from the snapshot once the SELECT is extended.
+ */
+export function toCockpitCharges(charges: readonly Charge[]): readonly CockpitCharge[] {
+  return charges.map((c) => ({
+    id: c.id,
+    label: c.label,
+    amount: c.amount,
+    frequency: c.frequency,
+    paymentMonths: [c.dueMonth] as readonly number[],
+    paymentDay: 1,
+    isActive: c.isActive,
+  }));
+}
 
 /**
  * Canonical timezone for month-boundary calculations on the dashboard.

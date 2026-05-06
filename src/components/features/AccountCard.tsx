@@ -14,6 +14,12 @@ type AccountCardProps = {
   displayName: string;
   balance: number;
   locale: Locale;
+  /**
+   * Optional inline hint rendered below the balance — used by the dashboard
+   * to surface the "Set my daily allowance" CTA on the `daily_card` row when
+   * `vie_courante_monthly_transfer` is unset (PR-D3 mini-CTA).
+   */
+  extraHint?: React.ReactNode;
 };
 
 const TYPE_VISUAL: Record<
@@ -47,7 +53,13 @@ const TYPE_VISUAL: Record<
  * Visual semantics per account_type are locked by the canonical spec
  * `dashboard-cockpit-vraie-vision-2026-05-03.md` (Bloc 1).
  */
-export async function AccountCard({ accountType, displayName, balance, locale }: AccountCardProps) {
+export async function AccountCard({
+  accountType,
+  displayName,
+  balance,
+  locale,
+  extraHint,
+}: AccountCardProps) {
   const t = await getTranslations('app.accounts');
   const visual = TYPE_VISUAL[accountType];
   const Icon = visual.icon;
@@ -76,6 +88,7 @@ export async function AccountCard({ accountType, displayName, balance, locale }:
         >
           {balanceLabel}
         </p>
+        {extraHint ? <div className="mt-2">{extraHint}</div> : null}
       </CardContent>
     </Card>
   );

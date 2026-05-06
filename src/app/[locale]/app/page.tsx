@@ -14,8 +14,10 @@ import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AccountCard } from '@/components/features/AccountCard';
+import { EffortFinancierCard } from '@/components/dashboard/EffortFinancierCard';
+import { CapaciteEpargneCard } from '@/components/dashboard/CapaciteEpargneCard';
 import { Budget, Expenses, Provision, Transfer, money } from '@/lib/domain';
-import { getWorkspaceSnapshot } from '@/lib/data/workspace-snapshot';
+import { getWorkspaceSnapshot, toCockpitCharges } from '@/lib/data/workspace-snapshot';
 import type { AccountType } from '@/lib/schemas/account';
 import type { Locale } from '@/i18n/routing';
 import { formatCurrency, formatDate, formatMonth } from '@/lib/i18n/formatters';
@@ -87,6 +89,15 @@ export default async function DashboardPage() {
     snapshot.monthlyIncome === null || snapshot.vieCouranteMonthlyTransfer === null;
   const accountByType = new Map(snapshot.accounts.map((a) => [a.accountType, a]));
 
+  // PR-D3 — Bloc 2 hero radar inputs.
+  const cockpitCharges = toCockpitCharges(snapshot.charges);
+  // Daily allowance not yet configured: surface the inline CTA on the
+  // daily_card row so the user can complete the cockpit setup without
+  // hunting through Settings.
+  const dailyPlafondMissing =
+    snapshot.vieCouranteMonthlyTransfer === null || snapshot.vieCouranteMonthlyTransfer === 0;
+  const tDaily = await getTranslations('dashboard.daily');
+
   return (
     <div className="flex flex-col gap-8">
       <header>
@@ -95,6 +106,26 @@ export default async function DashboardPage() {
           {t('headerTitle', { month: monthLabel })}
         </h1>
       </header>
+
+      {/*
+        PR-D3 — Bloc 2 hero radar (Voie D 3/8).
+        Always visible (even on an empty workspace, where Effort = 0 and
+        Capacité = revenus - plafond) so the user always sees the canonical
+        cockpit narrative. The Capacité card is the differentiating KPI;
+        the Effort card sits beside it as the breakdown that justifies it.
+      */}
+      <section
+        aria-label={t('headerTitle', { month: monthLabel })}
+        className="grid gap-4 md:grid-cols-2"
+      >
+        <EffortFinancierCard charges={cockpitCharges} locale={locale} />
+        <CapaciteEpargneCard
+          revenus={monthlyIncome}
+          charges={cockpitCharges}
+          plafondQuotidien={vieCouranteTransferAmount}
+          locale={locale}
+        />
+      </section>
 
       {!hasCharges ? (
         <Card>
@@ -282,6 +313,15 @@ export default async function DashboardPage() {
             {ACCOUNT_TYPE_ORDER.map((accountType) => {
               const account = accountByType.get(accountType);
               if (!account) return null;
+              const extraHint =
+                accountType === 'daily_card' && dailyPlafondMissing ? (
+                  <Link
+                    href="/app/accounts"
+                    className="text-muted-foreground hover:text-brand-700 text-xs hover:underline"
+                  >
+                    {tDaily('cta_set_plafond')}
+                  </Link>
+                ) : undefined;
               return (
                 <AccountCard
                   key={accountType}
@@ -289,6 +329,7 @@ export default async function DashboardPage() {
                   displayName={account.displayName}
                   balance={account.balance}
                   locale={locale}
+                  extraHint={extraHint}
                 />
               );
             })}

@@ -900,6 +900,21 @@
       }
     }
   },
+  "dashboard": {
+    "effort": {
+      "title": "Esfuerzo financiero suavizado",
+      "charges_fixes": "Gastos fijos",
+      "provisions": "Provisiones"
+    },
+    "capacite": {
+      "title": "Capacidad real de ahorro",
+      "message_positive": "Esto es lo que realmente te queda cada mes, sin sorpresas.",
+      "message_negative": "Cuidado: tu nivel de vida global supera tus ingresos."
+    },
+    "daily": {
+      "cta_set_plafond": "Configurar el límite diario"
+    }
+  },
   "glossary": {
     "title": "Glossary",
     "subtitle": "15 essential terms for understanding your budgeting and personal finances.",
