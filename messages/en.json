@@ -900,6 +900,21 @@
       }
     }
   },
+  "dashboard": {
+    "effort": {
+      "title": "Smoothed financial effort",
+      "charges_fixes": "Fixed charges",
+      "provisions": "Provisions"
+    },
+    "capacite": {
+      "title": "Real saving capacity",
+      "message_positive": "This is your true monthly leftover — no surprises.",
+      "message_negative": "Heads up: your overall lifestyle exceeds your income."
+    },
+    "daily": {
+      "cta_set_plafond": "Set my daily allowance"
+    }
+  },
   "glossary": {
     "title": "Glossary",
     "subtitle": "15 essential terms for understanding your budgeting and personal finances.",

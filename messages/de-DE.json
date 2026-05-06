@@ -900,6 +900,21 @@
       }
     }
   },
+  "dashboard": {
+    "effort": {
+      "title": "Geglätteter finanzieller Aufwand",
+      "charges_fixes": "Fixe Ausgaben",
+      "provisions": "Rückstellungen"
+    },
+    "capacite": {
+      "title": "Reale Sparkapazität",
+      "message_positive": "Das bleibt dir wirklich jeden Monat — keine Überraschungen.",
+      "message_negative": "Achtung: dein gesamter Lebensstil übersteigt dein Einkommen."
+    },
+    "daily": {
+      "cta_set_plafond": "Tägliches Limit festlegen"
+    }
+  },
   "glossary": {
     "title": "Glossary",
     "subtitle": "15 essential terms for understanding your budgeting and personal finances.",

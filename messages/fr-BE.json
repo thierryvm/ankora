@@ -900,6 +900,21 @@
       }
     }
   },
+  "dashboard": {
+    "effort": {
+      "title": "Effort financier lissé",
+      "charges_fixes": "Charges fixes",
+      "provisions": "Provisions"
+    },
+    "capacite": {
+      "title": "Capacité d'épargne réelle",
+      "message_positive": "C'est ton vrai reste à vivre chaque mois, sans surprise.",
+      "message_negative": "Attention, ton train de vie global dépasse tes revenus."
+    },
+    "daily": {
+      "cta_set_plafond": "Régler le plafond quotidien"
+    }
+  },
   "glossary": {
     "title": "Glossaire",
     "subtitle": "15 termes essentiels pour comprendre ta gestion budgétaire et tes finances personnelles.",
