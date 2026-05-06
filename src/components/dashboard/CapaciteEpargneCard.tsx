@@ -24,6 +24,17 @@ type Props = {
  * income on a true annual basis. No competitor (Monarch, YNAB, Lunch Money,
  * Linxo, Bankin') ships this calculation.
  *
+ * PR-D3-bis pedagogy update — the bare big number that PR-D3 shipped was
+ * opaque to anyone but @thierry: "+124 €" with no audit trail. We now
+ * always show the waterfall breakdown above the big number so a new user
+ * understands the calculation at first glance:
+ *
+ *     Revenus            2 500 €
+ *   − Effort lissé     −1 876 €
+ *   − Plafond quotidien  −500 €
+ *   ────────────────────────
+ *   Capacité réelle    +124 € ✓
+ *
  * Visual semantics:
  *  - emerald accent + CheckCircle2 + positive message when capacité ≥ 0
  *  - rose accent + AlertCircle + warning message when capacité < 0
@@ -62,6 +73,32 @@ export async function CapaciteEpargneCard({ revenus, charges, plafondQuotidien, 
   const formatted = fmt(result.capacite);
   const signed = result.capacite.gt(0) ? `+${formatted}` : formatted;
 
+  // The waterfall row data — order matches the ADR-009 formula left-to-right
+  // so the math is reconstructible by a reader who has never seen the app.
+  const showPlafondRow = plafondQuotidien.gt(0);
+  const breakdownRows: Array<{
+    key: string;
+    label: string;
+    value: string;
+    operator: '+' | '−';
+  }> = [
+    { key: 'revenus', label: t('breakdown.revenus'), value: fmt(revenus), operator: '+' },
+    {
+      key: 'effort',
+      label: t('breakdown.effort'),
+      value: fmt(result.effortFinancierLisse),
+      operator: '−',
+    },
+  ];
+  if (showPlafondRow) {
+    breakdownRows.push({
+      key: 'plafond',
+      label: t('breakdown.plafond'),
+      value: fmt(plafondQuotidien),
+      operator: '−',
+    });
+  }
+
   return (
     <Card
       className={`relative overflow-hidden ring-1 ring-inset ${accent.ringColor}`}
@@ -70,7 +107,7 @@ export async function CapaciteEpargneCard({ revenus, charges, plafondQuotidien, 
     >
       <div
         aria-hidden
-        className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${accent.gradientFrom} to-transparent`}
+        className={`pointer-events-none absolute inset-0 bg-linear-to-br ${accent.gradientFrom} to-transparent`}
       />
       <div
         aria-hidden
@@ -87,13 +124,34 @@ export async function CapaciteEpargneCard({ revenus, charges, plafondQuotidien, 
         />
       </CardHeader>
       <CardContent className="relative">
-        <p
-          className={`text-4xl font-bold tracking-tight tabular-nums ${accent.valueColor}`}
-          data-testid="capacite-epargne-value"
+        <dl
+          className="text-muted-foreground mb-3 flex flex-col gap-1.5 text-sm"
+          data-testid="capacite-epargne-breakdown"
         >
-          {signed}
-        </p>
-        <p className="text-muted-foreground mt-3 text-sm leading-relaxed">{accent.message}</p>
+          {breakdownRows.map((row) => (
+            <div key={row.key} className="flex items-baseline justify-between gap-3">
+              <dt className="flex items-center gap-2">
+                <span
+                  aria-hidden
+                  className="text-muted-foreground/70 inline-flex w-4 justify-center font-medium"
+                >
+                  {row.operator}
+                </span>
+                <span>{row.label}</span>
+              </dt>
+              <dd className="text-foreground/80 font-medium tabular-nums">{row.value}</dd>
+            </div>
+          ))}
+        </dl>
+        <div className="border-border/60 border-t pt-3">
+          <p
+            className={`text-4xl font-bold tracking-tight tabular-nums ${accent.valueColor}`}
+            data-testid="capacite-epargne-value"
+          >
+            {signed}
+          </p>
+          <p className="text-muted-foreground mt-3 text-sm leading-relaxed">{accent.message}</p>
+        </div>
       </CardContent>
     </Card>
   );

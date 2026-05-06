@@ -646,7 +646,8 @@
       "expensesTitle": "Gastos — {month}",
       "expensesCount": "{count, plural, =0 {Sin gastos este mes} one {1 gasto este mes} other {# gastos este mes}}",
       "expensesEmpty": "No hay gastos registrados este mes.",
-      "expensesViewAll": "Ver todos los gastos →"
+      "expensesViewAll": "Ver todos los gastos →",
+      "accountsHeading": "Mis cuentas"
     },
     "charges": {
       "title": "Mis gastos fijos",
@@ -909,7 +910,12 @@
     "capacite": {
       "title": "Capacidad real de ahorro",
       "message_positive": "Esto es lo que realmente te queda cada mes, sin sorpresas.",
-      "message_negative": "Cuidado: tu nivel de vida global supera tus ingresos."
+      "message_negative": "Cuidado: tu nivel de vida global supera tus ingresos.",
+      "breakdown": {
+        "revenus": "Ingresos",
+        "effort": "Esfuerzo financiero suavizado",
+        "plafond": "Límite diario"
+      }
     },
     "daily": {
       "cta_set_plafond": "Configurar el límite diario"

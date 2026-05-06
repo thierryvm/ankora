@@ -29,6 +29,86 @@ test.describe('PR-D3 — Bloc 2 hero radar (Effort Lissé + Capacité Réelle)',
       // 2500 - 900 - 500 = 1100 → positive
       const card = page.getByTestId('capacite-epargne-card');
       await expect(card).toHaveAttribute('data-positive', 'true');
+
+      // PR-D3-bis — the waterfall breakdown must be visible alongside the
+      // big number so a new user understands the calculation at first
+      // glance. Assert all three rows render their localised labels.
+      const breakdown = page.getByTestId('capacite-epargne-breakdown');
+      await expect(breakdown).toBeVisible();
+      await expect(breakdown).toContainText('Revenus');
+      await expect(breakdown).toContainText('Effort financier lissé');
+      await expect(breakdown).toContainText('Plafond quotidien');
+    } finally {
+      await deleteSeededUser(admin, user.userId);
+    }
+  });
+
+  test('PR-D3-bis layout — accounts (réalité) appear before plan (action) in the DOM', async ({
+    page,
+  }) => {
+    if (!admin) return;
+    const user = await seedOnboardedUser(admin, [
+      { label: 'Loyer', amount: 800, frequency: 'monthly', dueMonth: 1, paidFrom: 'principal' },
+    ]);
+    await admin
+      .from('workspaces')
+      .update({ monthly_income: 2500, vie_courante_monthly_transfer: 500 })
+      .eq('id', user.workspaceId);
+
+    try {
+      await page.goto('/login');
+      await page.getByLabel('Email').fill(user.email);
+      await page.getByLabel('Mot de passe').fill(user.password);
+      await page.getByRole('button', { name: /^se connecter$/i }).click();
+      await page.waitForURL(/\/app\b/, { timeout: 15_000 });
+
+      // Both sections must exist…
+      const accountsSection = page.locator('section[aria-labelledby="accounts-heading"]');
+      const planSection = page.locator('section[aria-labelledby="plan-heading"]');
+      await expect(accountsSection).toBeVisible();
+      await expect(planSection).toBeVisible();
+
+      // …and accounts must come BEFORE plan in document order so the user
+      // first sees "where I stand" and only then "what to do" (handoff F3).
+      const accountsBox = await accountsSection.boundingBox();
+      const planBox = await planSection.boundingBox();
+      expect(accountsBox).not.toBeNull();
+      expect(planBox).not.toBeNull();
+      if (accountsBox && planBox) {
+        expect(accountsBox.y).toBeLessThan(planBox.y);
+      }
+    } finally {
+      await deleteSeededUser(admin, user.userId);
+    }
+  });
+
+  test('PR-D3-bis cleanup — legacy KPI cards are gone (no provisions/health/bills tiles above the radar)', async ({
+    page,
+  }) => {
+    if (!admin) return;
+    const user = await seedOnboardedUser(admin, [
+      { label: 'Loyer', amount: 800, frequency: 'monthly', dueMonth: 1, paidFrom: 'principal' },
+    ]);
+    await admin
+      .from('workspaces')
+      .update({ monthly_income: 2500, vie_courante_monthly_transfer: 500 })
+      .eq('id', user.workspaceId);
+
+    try {
+      await page.goto('/login');
+      await page.getByLabel('Email').fill(user.email);
+      await page.getByLabel('Mot de passe').fill(user.password);
+      await page.getByRole('button', { name: /^se connecter$/i }).click();
+      await page.waitForURL(/\/app\b/, { timeout: 15_000 });
+
+      // The four legacy headings disappeared with PR-D3-bis. They duplicated
+      // the Bloc 2 breakdown (provisions+bills = effort lissé) and shipped
+      // a context-free "Critique" badge that PR-D5 will reintroduce
+      // properly with the rattrapage plan.
+      await expect(page.getByText(/^Provisions \/ mois$/i)).toHaveCount(0);
+      await expect(page.getByText(/^Santé provisions$/i)).toHaveCount(0);
+      await expect(page.getByText(/^Virement suggéré$/i)).toHaveCount(0);
+      await expect(page.getByText(/^Factures /i)).toHaveCount(0);
     } finally {
       await deleteSeededUser(admin, user.userId);
     }

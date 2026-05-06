@@ -7,24 +7,17 @@ import type { CockpitCharge } from '@/lib/domain/cockpit/types';
 
 vi.mock('next-intl/server', () => ({
   getTranslations: async (namespace: string) => {
-    const ns =
-      (messages as Record<string, Record<string, unknown>>)[namespace.split('.')[0] ?? ''] ?? {};
-    const sub = namespace
-      .split('.')
-      .slice(1)
-      .reduce<unknown>((acc, key) => {
+    const walk = (root: unknown, path: string[]): unknown =>
+      path.reduce<unknown>((acc, key) => {
         if (typeof acc === 'object' && acc !== null && key in acc) {
           return (acc as Record<string, unknown>)[key];
         }
         return undefined;
-      }, ns);
+      }, root);
+    const sub = walk(messages, namespace.split('.'));
     return (key: string) => {
-      const node = sub;
-      if (typeof node === 'object' && node !== null && key in node) {
-        const value = (node as Record<string, unknown>)[key];
-        return typeof value === 'string' ? value : key;
-      }
-      return key;
+      const value = walk(sub, key.split('.'));
+      return typeof value === 'string' ? value : key;
     };
   },
 }));
@@ -148,6 +141,87 @@ describe('<CapaciteEpargneCard /> (PR-D3 Bloc 2 radar #2 — KPI hero)', () => {
     const value = screen.getByTestId('capacite-epargne-value');
     expect(value.textContent ?? '').toMatch(/-159/);
   });
+});
+
+describe('<CapaciteEpargneCard /> — waterfall breakdown (PR-D3-bis)', () => {
+  it('renders the 3-row waterfall when plafond > 0 (revenus / effort / plafond)', async () => {
+    await renderCard({
+      revenus: new Decimal(2500),
+      charges: [charge({ amount: new Decimal(1500), frequency: 'monthly' })],
+      plafondQuotidien: new Decimal(500),
+    });
+    const breakdown = screen.getByTestId('capacite-epargne-breakdown');
+    expect(breakdown).toBeInTheDocument();
+    expect(breakdown.textContent ?? '').toContain(messages.dashboard.capacite.breakdown.revenus);
+    expect(breakdown.textContent ?? '').toContain(messages.dashboard.capacite.breakdown.effort);
+    expect(breakdown.textContent ?? '').toContain(messages.dashboard.capacite.breakdown.plafond);
+    // Three rows of dt/dd pairs.
+    const rows = breakdown.querySelectorAll('dt');
+    expect(rows.length).toBe(3);
+  });
+
+  it('omits the plafond row when plafondQuotidien is zero (no noise for unconfigured users)', async () => {
+    await renderCard({
+      revenus: new Decimal(2500),
+      charges: [charge({ amount: new Decimal(1000), frequency: 'monthly' })],
+      plafondQuotidien: new Decimal(0),
+    });
+    const breakdown = screen.getByTestId('capacite-epargne-breakdown');
+    expect(breakdown.textContent ?? '').toContain(messages.dashboard.capacite.breakdown.revenus);
+    expect(breakdown.textContent ?? '').toContain(messages.dashboard.capacite.breakdown.effort);
+    expect(breakdown.textContent ?? '').not.toContain(
+      messages.dashboard.capacite.breakdown.plafond,
+    );
+    const rows = breakdown.querySelectorAll('dt');
+    expect(rows.length).toBe(2);
+  });
+
+  it('shows the formatted revenus and effort values in the breakdown rows', async () => {
+    await renderCard({
+      revenus: new Decimal(2500),
+      charges: [charge({ amount: new Decimal(1876), frequency: 'monthly' })],
+      plafondQuotidien: new Decimal(500),
+    });
+    const breakdown = screen.getByTestId('capacite-epargne-breakdown');
+    // Match the @thierry empirical fixture from the post-PR-D3 handoff:
+    // revenus = 2500, effort = 1876, plafond = 500.
+    expect(breakdown.textContent ?? '').toMatch(/2\s?500/);
+    expect(breakdown.textContent ?? '').toMatch(/1\s?876/);
+    expect(breakdown.textContent ?? '').toMatch(/500/);
+  });
+
+  it('keeps the big number visible above the message after the breakdown', async () => {
+    await renderCard({
+      revenus: new Decimal(2500),
+      charges: [charge({ amount: new Decimal(1876), frequency: 'monthly' })],
+      plafondQuotidien: new Decimal(500),
+    });
+    // The hero number must remain present and addressable for both visual
+    // primacy and the existing E2E selectors that PR-D3 introduced.
+    const value = screen.getByTestId('capacite-epargne-value');
+    expect(value).toBeInTheDocument();
+    expect(value.textContent ?? '').toMatch(/^\+/);
+    expect(value.textContent ?? '').toMatch(/124/);
+  });
+});
+
+describe('dashboard.capacite.breakdown — i18n parity (5 locales)', () => {
+  it.each(['fr-BE', 'en', 'de-DE', 'es-ES', 'nl-BE'] as const)(
+    'locale %s exposes breakdown.{revenus,effort,plafond}',
+    async (locale) => {
+      const m = (await import(`../../../../messages/${locale}.json`)).default as {
+        dashboard: {
+          capacite: {
+            breakdown?: { revenus?: string; effort?: string; plafond?: string };
+          };
+        };
+      };
+      expect(m.dashboard.capacite.breakdown?.revenus).toBeTypeOf('string');
+      expect((m.dashboard.capacite.breakdown?.revenus ?? '').length).toBeGreaterThan(0);
+      expect(m.dashboard.capacite.breakdown?.effort).toBeTypeOf('string');
+      expect(m.dashboard.capacite.breakdown?.plafond).toBeTypeOf('string');
+    },
+  );
 });
 
 describe('dashboard.capacite — i18n parity (5 locales)', () => {
