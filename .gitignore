@@ -73,22 +73,11 @@ tmp/
 .claude/tmp/
 .claude/logs/
 
+# Tool-specific derivatives auto-générés depuis .claude/ (canonical source)
+# Ces dossiers sont créés par OpenAI Codex CLI et autres outils tiers.
+# Ne JAMAIS modifier directement — toujours éditer .claude/ et laisser le tool régénérer.
+.codex/
+.agents/
+
 # outputs temporaires (scripts locaux)
-/outputs/
-
-# local design mockups
-design-mockup-*.html
-
-# Claude Code local settings
-.claude/settings.local.json
-
-# internal PR prompts
-prompts/
-
-# Playwright MCP temp folder
-.playwright-mcp/
-
-# Screenshots and visual test artifacts
-/screenshots/
-/*.png
-/*.jpg
+/output
