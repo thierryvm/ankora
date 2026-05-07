@@ -24,6 +24,7 @@ export const AuditEvent = {
   CHARGE_CREATED: 'charge.created',
   CHARGE_UPDATED: 'charge.updated',
   CHARGE_DELETED: 'charge.deleted',
+  CHARGE_PAYMENT_TOGGLED: 'charge.payment_toggled',
   EXPENSE_CREATED: 'expense.created',
   EXPENSE_UPDATED: 'expense.updated',
   EXPENSE_DELETED: 'expense.deleted',
@@ -62,6 +63,13 @@ const SAFE_METADATA_KEYS = new Set([
   'count',
   'duration_ms',
   'error_code',
+  // PR-D4 Phase 1 — charge payment toggle traceability (no PII, no amounts).
+  // `paid` is the boolean outcome; `period_year` / `period_month` are the
+  // schedule slot. We deliberately exclude `paid_amount` from audit metadata
+  // because amounts are PII-adjacent in financial software.
+  'period_year',
+  'period_month',
+  'paid',
 ]);
 
 function sanitizeMetadata(metadata: Record<string, unknown> | undefined): Record<string, unknown> {

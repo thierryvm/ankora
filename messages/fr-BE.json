@@ -1120,7 +1120,11 @@
     "charges": {
       "createFailed": "Impossible de créer la charge.",
       "updateFailed": "Impossible de mettre à jour la charge.",
-      "deleteFailed": "Impossible de supprimer la charge."
+      "deleteFailed": "Impossible de supprimer la charge.",
+      "notFound": "Cette charge est introuvable.",
+      "payments": {
+        "toggleFailed": "Impossible de marquer la charge comme payée."
+      }
     },
     "accounts": {
       "balanceUpdateFailed": "Impossible de mettre à jour le solde.",
@@ -1131,7 +1135,9 @@
     },
     "expenses": {
       "createFailed": "Impossible de créer la dépense.",
-      "deleteFailed": "Impossible de supprimer la dépense."
+      "updateFailed": "Impossible de mettre à jour la dépense.",
+      "deleteFailed": "Impossible de supprimer la dépense.",
+      "notFound": "Cette dépense est introuvable."
     },
     "settings": {
       "profileUpdateFailed": "Impossible de mettre à jour le profil.",

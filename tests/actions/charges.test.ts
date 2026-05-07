@@ -79,7 +79,9 @@ describe('charges Server Actions — revalidatePath uses [locale] dynamic segmen
   it('updateChargeAction revalidates dashboard and charges list with the [locale] page pattern', async () => {
     const { updateChargeAction } = await import('@/lib/actions/charges');
 
-    const result = await updateChargeAction('charge-1', { label: 'Spotify' });
+    const result = await updateChargeAction('10dccda9-7e0f-4b4e-9c7d-23f3c1b7e8a9', {
+      label: 'Spotify',
+    });
 
     expect(result.ok).toBe(true);
     expect(revalidatePathSpy).toHaveBeenCalledTimes(2);
@@ -90,7 +92,7 @@ describe('charges Server Actions — revalidatePath uses [locale] dynamic segmen
   it('deleteChargeAction revalidates dashboard and charges list with the [locale] page pattern', async () => {
     const { deleteChargeAction } = await import('@/lib/actions/charges');
 
-    const result = await deleteChargeAction('charge-1');
+    const result = await deleteChargeAction('10dccda9-7e0f-4b4e-9c7d-23f3c1b7e8a9');
 
     expect(result.ok).toBe(true);
     expect(revalidatePathSpy).toHaveBeenCalledTimes(2);

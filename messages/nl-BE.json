@@ -1120,7 +1120,11 @@
     "charges": {
       "createFailed": "Kan de vaste kost niet aanmaken.",
       "updateFailed": "Kan de vaste kost niet bijwerken.",
-      "deleteFailed": "Kan de vaste kost niet verwijderen."
+      "deleteFailed": "Kan de vaste kost niet verwijderen.",
+      "notFound": "Deze vaste kost is niet gevonden.",
+      "payments": {
+        "toggleFailed": "Kan de vaste kost niet als betaald markeren."
+      }
     },
     "accounts": {
       "balanceUpdateFailed": "Kan het saldo niet bijwerken.",
@@ -1131,7 +1135,9 @@
     },
     "expenses": {
       "createFailed": "Kan de uitgave niet aanmaken.",
-      "deleteFailed": "Kan de uitgave niet verwijderen."
+      "updateFailed": "Kan de uitgave niet bijwerken.",
+      "deleteFailed": "Kan de uitgave niet verwijderen.",
+      "notFound": "Deze uitgave is niet gevonden."
     },
     "settings": {
       "profileUpdateFailed": "Kan het profiel niet bijwerken.",

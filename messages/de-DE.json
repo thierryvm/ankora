@@ -1120,7 +1120,11 @@
     "charges": {
       "createFailed": "Fixkosten konnten nicht erstellt werden.",
       "updateFailed": "Fixkosten konnten nicht aktualisiert werden.",
-      "deleteFailed": "Fixkosten konnten nicht gelöscht werden."
+      "deleteFailed": "Fixkosten konnten nicht gelöscht werden.",
+      "notFound": "Diese Fixkosten wurden nicht gefunden.",
+      "payments": {
+        "toggleFailed": "Fixkosten konnten nicht als bezahlt markiert werden."
+      }
     },
     "accounts": {
       "balanceUpdateFailed": "Saldo konnte nicht aktualisiert werden.",
@@ -1131,7 +1135,9 @@
     },
     "expenses": {
       "createFailed": "Ausgabe konnte nicht erstellt werden.",
-      "deleteFailed": "Ausgabe konnte nicht gelöscht werden."
+      "updateFailed": "Ausgabe konnte nicht aktualisiert werden.",
+      "deleteFailed": "Ausgabe konnte nicht gelöscht werden.",
+      "notFound": "Diese Ausgabe wurde nicht gefunden."
     },
     "settings": {
       "profileUpdateFailed": "Profil konnte nicht aktualisiert werden.",
