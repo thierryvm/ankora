@@ -60,14 +60,20 @@ export function AppBreadcrumbs() {
   return (
     <nav aria-label="breadcrumb" className="border-border/40 border-b">
       <div className="mx-auto w-full max-w-6xl px-4 py-3 md:px-6">
-        <ol className="flex items-center gap-1.5 text-sm">
+        {/*
+         * `role="list"` is explicit because Tailwind Preflight resets `<ol>` to
+         * `list-style: none`, which Safari VoiceOver interprets as "remove the
+         * list semantic" — without this attribute the breadcrumb is announced
+         * as flat text (a11y-high finding from ui-auditor on PR-NAV-1).
+         */}
+        <ol role="list" className="flex items-center gap-1.5 text-sm">
           {/* Mobile compact chain */}
           {showCompact ? (
             <>
               <li className="flex items-center gap-1.5 sm:hidden">
                 <Link
                   href={dashboard.href}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-muted-foreground hover:text-foreground inline-flex min-h-11 items-center px-1 transition-colors"
                 >
                   {t(dashboard.key)}
                 </Link>
@@ -85,7 +91,10 @@ export function AppBreadcrumbs() {
                   strokeWidth={1.5}
                   aria-hidden="true"
                 />
-                <span aria-current="page" className="text-foreground font-medium">
+                <span
+                  aria-current="page"
+                  className="text-foreground inline-flex min-h-11 items-center px-1 font-medium"
+                >
                   {t(items[items.length - 1]!.key)}
                 </span>
               </li>
@@ -93,7 +102,9 @@ export function AppBreadcrumbs() {
           ) : null}
 
           {/* Desktop / non-compact: full chain. Hidden on mobile when
-              `showCompact` is true so the two layouts don't double-render. */}
+              `showCompact` is true so the two layouts don't double-render.
+              `min-h-11` (44px) on every interactive item ensures touch targets
+              meet the Apple HIG / WCAG 2.5.5 baseline (mobile-ios-auditor M1). */}
           {items.map((item, index) => {
             const isLast = index === items.length - 1;
             const hideOnMobile = showCompact ? 'hidden sm:flex' : 'flex';
@@ -108,13 +119,16 @@ export function AppBreadcrumbs() {
                   />
                 )}
                 {isLast ? (
-                  <span aria-current="page" className="text-foreground font-medium">
+                  <span
+                    aria-current="page"
+                    className="text-foreground inline-flex min-h-11 items-center px-1 font-medium"
+                  >
                     {t(item.key)}
                   </span>
                 ) : (
                   <Link
                     href={item.href}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-muted-foreground hover:text-foreground inline-flex min-h-11 items-center px-1 transition-colors"
                   >
                     {t(item.key)}
                   </Link>
