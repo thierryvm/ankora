@@ -217,6 +217,20 @@ export function HeaderNav({ variant = 'marketing' }: HeaderNavProps) {
                   {t('nav.charges')}
                 </Link>
                 <Link
+                  href="/app/expenses"
+                  onClick={handleDrawerClose}
+                  className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                >
+                  {t('nav.expenses')}
+                </Link>
+                <Link
+                  href="/app/simulator"
+                  onClick={handleDrawerClose}
+                  className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                >
+                  {t('nav.simulator')}
+                </Link>
+                <Link
                   href="/app/settings"
                   onClick={handleDrawerClose}
                   className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"

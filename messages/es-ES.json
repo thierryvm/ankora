@@ -24,6 +24,8 @@
       "dashboard": "Panel",
       "accounts": "Cuentas",
       "charges": "Gastos fijos",
+      "expenses": "Gastos",
+      "simulator": "Simulador",
       "settings": "Ajustes"
     },
     "actions": {
@@ -899,6 +901,15 @@
         "chargeOverdue": "{label} is overdue (was due on {day}).",
         "chargeDueSoon": "{label} due in {days} day(s)."
       }
+    },
+    "breadcrumbs": {
+      "dashboard": "Panel",
+      "accounts": "Mis cuentas",
+      "charges": "Mis gastos fijos",
+      "expenses": "Mis gastos",
+      "simulator": "Simulador",
+      "settings": "Ajustes",
+      "deletionStatus": "Eliminación de cuenta"
     }
   },
   "dashboard": {

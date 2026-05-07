@@ -24,6 +24,8 @@
       "dashboard": "Dashboard",
       "accounts": "Konten",
       "charges": "Fixkosten",
+      "expenses": "Ausgaben",
+      "simulator": "Simulator",
       "settings": "Einstellungen"
     },
     "actions": {
@@ -899,6 +901,15 @@
         "chargeOverdue": "{label} is overdue (was due on {day}).",
         "chargeDueSoon": "{label} due in {days} day(s)."
       }
+    },
+    "breadcrumbs": {
+      "dashboard": "Übersicht",
+      "accounts": "Meine Konten",
+      "charges": "Meine Fixkosten",
+      "expenses": "Meine Ausgaben",
+      "simulator": "Simulator",
+      "settings": "Einstellungen",
+      "deletionStatus": "Kontolöschung"
     }
   },
   "dashboard": {
