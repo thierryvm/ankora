@@ -24,6 +24,8 @@
       "dashboard": "Dashboard",
       "accounts": "Rekeningen",
       "charges": "Vaste kosten",
+      "expenses": "Uitgaven",
+      "simulator": "Simulator",
       "settings": "Instellingen"
     },
     "actions": {
@@ -899,6 +901,15 @@
         "chargeOverdue": "{label} is overdue (was due on {day}).",
         "chargeDueSoon": "{label} due in {days} day(s)."
       }
+    },
+    "breadcrumbs": {
+      "dashboard": "Dashboard",
+      "accounts": "Mijn rekeningen",
+      "charges": "Mijn vaste kosten",
+      "expenses": "Mijn uitgaven",
+      "simulator": "Simulator",
+      "settings": "Instellingen",
+      "deletionStatus": "Account verwijderen"
     }
   },
   "dashboard": {

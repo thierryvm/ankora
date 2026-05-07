@@ -52,6 +52,12 @@ export async function Header({ variant = 'marketing', isAuthenticated = false }:
               <Link href="/app/charges">{t('nav.charges')}</Link>
             </Button>
             <Button asChild variant="ghost" size="sm">
+              <Link href="/app/expenses">{t('nav.expenses')}</Link>
+            </Button>
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/app/simulator">{t('nav.simulator')}</Link>
+            </Button>
+            <Button asChild variant="ghost" size="sm">
               <Link href="/app/settings">{t('nav.settings')}</Link>
             </Button>
           </nav>

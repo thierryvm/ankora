@@ -24,6 +24,8 @@
       "dashboard": "Tableau de bord",
       "accounts": "Comptes",
       "charges": "Charges",
+      "expenses": "Dépenses",
+      "simulator": "Simulateur",
       "settings": "Paramètres"
     },
     "actions": {
@@ -899,6 +901,15 @@
         "chargeOverdue": "{label} en retard (prévue le {day}).",
         "chargeDueSoon": "{label} due dans {days} jour(s)."
       }
+    },
+    "breadcrumbs": {
+      "dashboard": "Tableau de bord",
+      "accounts": "Mes comptes",
+      "charges": "Mes charges",
+      "expenses": "Mes dépenses",
+      "simulator": "Simulateur",
+      "settings": "Paramètres",
+      "deletionStatus": "Suppression du compte"
     }
   },
   "dashboard": {

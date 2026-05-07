@@ -24,6 +24,8 @@
       "dashboard": "Dashboard",
       "accounts": "Accounts",
       "charges": "Bills",
+      "expenses": "Expenses",
+      "simulator": "Simulator",
       "settings": "Settings"
     },
     "actions": {
@@ -899,6 +901,15 @@
         "chargeOverdue": "{label} is overdue (was due on {day}).",
         "chargeDueSoon": "{label} due in {days} day(s)."
       }
+    },
+    "breadcrumbs": {
+      "dashboard": "Dashboard",
+      "accounts": "My accounts",
+      "charges": "My bills",
+      "expenses": "My expenses",
+      "simulator": "Simulator",
+      "settings": "Settings",
+      "deletionStatus": "Account deletion"
     }
   },
   "dashboard": {
