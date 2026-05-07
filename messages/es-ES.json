@@ -1120,7 +1120,11 @@
     "charges": {
       "createFailed": "No se ha podido crear el gasto fijo.",
       "updateFailed": "No se ha podido actualizar el gasto fijo.",
-      "deleteFailed": "No se ha podido eliminar el gasto fijo."
+      "deleteFailed": "No se ha podido eliminar el gasto fijo.",
+      "notFound": "No se ha encontrado este gasto fijo.",
+      "payments": {
+        "toggleFailed": "No se ha podido marcar el gasto fijo como pagado."
+      }
     },
     "accounts": {
       "balanceUpdateFailed": "No se ha podido actualizar el saldo.",
@@ -1131,7 +1135,9 @@
     },
     "expenses": {
       "createFailed": "No se ha podido crear el gasto.",
-      "deleteFailed": "No se ha podido eliminar el gasto."
+      "updateFailed": "No se ha podido actualizar el gasto.",
+      "deleteFailed": "No se ha podido eliminar el gasto.",
+      "notFound": "No se ha encontrado este gasto."
     },
     "settings": {
       "profileUpdateFailed": "No se ha podido actualizar el perfil.",

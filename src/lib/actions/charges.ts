@@ -1,11 +1,15 @@
 'use server';
 
+import { z } from 'zod';
+
 import { createClient } from '@/lib/supabase/server';
 import { revalidateAppPath, revalidateDashboard } from '@/lib/actions/revalidate';
 import { chargeInputSchema, chargeUpdateSchema } from '@/lib/schemas/charge';
 import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
 import { rateLimit } from '@/lib/security/rate-limit';
 import type { ActionResult } from '@/lib/actions/types';
+
+const uuidSchema = z.string().uuid();
 
 async function authorizedWorkspace(): Promise<
   { ok: true; userId: string; workspaceId: string } | { ok: false; errorCode: string }
@@ -45,6 +49,13 @@ export async function createChargeAction(input: unknown): Promise<ActionResult> 
     };
   }
 
+  // Sort + de-dup payment_months if explicitly supplied; otherwise let the DB
+  // default ([1..12]) take over for monthly charges.
+  const sortedMonths =
+    parsed.data.paymentMonths !== undefined
+      ? Array.from(new Set(parsed.data.paymentMonths)).sort((a, b) => a - b)
+      : undefined;
+
   const supabase = await createClient();
   const { error } = await supabase.from('charges').insert({
     workspace_id: ctx.workspaceId,
@@ -56,6 +67,10 @@ export async function createChargeAction(input: unknown): Promise<ActionResult> 
     category_id: parsed.data.categoryId,
     is_active: parsed.data.isActive,
     notes: parsed.data.notes ?? null,
+    ...(sortedMonths !== undefined && { payment_months: sortedMonths }),
+    ...(parsed.data.paymentDay !== undefined && { payment_day: parsed.data.paymentDay }),
+    ...(parsed.data.sortOrder !== undefined && { sort_order: parsed.data.sortOrder }),
+    ...(parsed.data.paidFrom !== undefined && { paid_from: parsed.data.paidFrom }),
   });
 
   if (error) return { ok: false, errorCode: 'errors.charges.createFailed' };
@@ -71,6 +86,10 @@ export async function createChargeAction(input: unknown): Promise<ActionResult> 
 }
 
 export async function updateChargeAction(id: string, input: unknown): Promise<ActionResult> {
+  if (!uuidSchema.safeParse(id).success) {
+    return { ok: false, errorCode: 'errors.validation.generic' };
+  }
+
   const ctx = await authorizedWorkspace();
   if (!ctx.ok) return ctx;
 
@@ -86,6 +105,18 @@ export async function updateChargeAction(id: string, input: unknown): Promise<Ac
     };
   }
 
+  // When `paymentMonths` is supplied, sort + de-dup AND mirror the first entry
+  // into the legacy `due_month` column so the snapshot reads stay coherent
+  // until PR-CLEANUP-LEGACY drops `due_month` (per @cowork validation 2026-05-07).
+  const sortedMonths =
+    parsed.data.paymentMonths !== undefined
+      ? Array.from(new Set(parsed.data.paymentMonths)).sort((a, b) => a - b)
+      : undefined;
+  const mirroredDueMonth =
+    parsed.data.paymentMonths !== undefined && sortedMonths && sortedMonths.length > 0
+      ? sortedMonths[0]
+      : parsed.data.dueMonth;
+
   const supabase = await createClient();
   const { error } = await supabase
     .from('charges')
@@ -93,10 +124,14 @@ export async function updateChargeAction(id: string, input: unknown): Promise<Ac
       ...(parsed.data.label !== undefined && { label: parsed.data.label }),
       ...(parsed.data.amount !== undefined && { amount: parsed.data.amount }),
       ...(parsed.data.frequency !== undefined && { frequency: parsed.data.frequency }),
-      ...(parsed.data.dueMonth !== undefined && { due_month: parsed.data.dueMonth }),
+      ...(mirroredDueMonth !== undefined && { due_month: mirroredDueMonth }),
+      ...(sortedMonths !== undefined && { payment_months: sortedMonths }),
+      ...(parsed.data.paymentDay !== undefined && { payment_day: parsed.data.paymentDay }),
+      ...(parsed.data.sortOrder !== undefined && { sort_order: parsed.data.sortOrder }),
       ...(parsed.data.categoryId !== undefined && { category_id: parsed.data.categoryId }),
       ...(parsed.data.isActive !== undefined && { is_active: parsed.data.isActive }),
       ...(parsed.data.notes !== undefined && { notes: parsed.data.notes }),
+      ...(parsed.data.paidFrom !== undefined && { paid_from: parsed.data.paidFrom }),
     })
     .eq('id', id)
     .eq('workspace_id', ctx.workspaceId);
@@ -114,6 +149,10 @@ export async function updateChargeAction(id: string, input: unknown): Promise<Ac
 }
 
 export async function deleteChargeAction(id: string): Promise<ActionResult> {
+  if (!uuidSchema.safeParse(id).success) {
+    return { ok: false, errorCode: 'errors.validation.generic' };
+  }
+
   const ctx = await authorizedWorkspace();
   if (!ctx.ok) return ctx;
 

@@ -95,6 +95,21 @@ export type WorkspaceSnapshot = {
   }>;
   /** Expenses occurring in the current calendar month (server-filtered). */
   monthlyExpenses: Expense[];
+  /**
+   * Charge payments for the current `(year, month)` only — drives the
+   * "À payer / Payé" toggle UI and the Santé Provisions algorithm.
+   * Phase 1 scope (per @cowork validation 2026-05-07): current month only.
+   * PR-D5 will widen to a 3-month window once the cockpit needs the offset.
+   */
+  currentMonthPayments: Array<{
+    chargeId: string;
+    periodYear: number;
+    periodMonth: number;
+    paidAmount: number;
+    paidAt: string;
+  }>;
+  /** Reference period used by `currentMonthPayments`. Same TZ as cashflow boundaries. */
+  currentPeriod: { year: number; month: number };
 };
 
 /**
@@ -128,34 +143,47 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
 
   const { startISO: startOfMonth, nextStartISO: startOfNextMonth } = getCurrentMonthBoundariesISO();
 
-  const [wsRes, settingsRes, chargesRes, accountsRes, monthlyExpensesRes] = await Promise.all([
-    supabase
-      .from('workspaces')
-      .select('id, name, monthly_income, vie_courante_monthly_transfer')
-      .eq('id', workspaceId)
-      .single(),
-    supabase
-      .from('workspace_settings')
-      .select('savings_balance, months_tracked')
-      .eq('workspace_id', workspaceId)
-      .maybeSingle(),
-    supabase
-      .from('charges')
-      .select('id, label, amount, frequency, due_month, category_id, is_active, notes, paid_from')
-      .eq('workspace_id', workspaceId)
-      .order('created_at', { ascending: true }),
-    supabase
-      .from('accounts')
-      .select('kind, label, account_type, display_name, balance')
-      .eq('workspace_id', workspaceId),
-    supabase
-      .from('expenses')
-      .select('id, label, amount, occurred_on, category_id, note, paid_from')
-      .eq('workspace_id', workspaceId)
-      .gte('occurred_on', startOfMonth)
-      .lt('occurred_on', startOfNextMonth)
-      .order('occurred_on', { ascending: false }),
-  ]);
+  // Derive current (year, month) from the same TZ as the cashflow boundaries
+  // so `currentMonthPayments` and `monthlyExpenses` always agree on "this month".
+  const [yearStr, monthStr] = startOfMonth.split('-');
+  const currentYear = Number(yearStr);
+  const currentMonth = Number(monthStr);
+
+  const [wsRes, settingsRes, chargesRes, accountsRes, monthlyExpensesRes, currentMonthPaymentsRes] =
+    await Promise.all([
+      supabase
+        .from('workspaces')
+        .select('id, name, monthly_income, vie_courante_monthly_transfer')
+        .eq('id', workspaceId)
+        .single(),
+      supabase
+        .from('workspace_settings')
+        .select('savings_balance, months_tracked')
+        .eq('workspace_id', workspaceId)
+        .maybeSingle(),
+      supabase
+        .from('charges')
+        .select('id, label, amount, frequency, due_month, category_id, is_active, notes, paid_from')
+        .eq('workspace_id', workspaceId)
+        .order('created_at', { ascending: true }),
+      supabase
+        .from('accounts')
+        .select('kind, label, account_type, display_name, balance')
+        .eq('workspace_id', workspaceId),
+      supabase
+        .from('expenses')
+        .select('id, label, amount, occurred_on, category_id, note, paid_from')
+        .eq('workspace_id', workspaceId)
+        .gte('occurred_on', startOfMonth)
+        .lt('occurred_on', startOfNextMonth)
+        .order('occurred_on', { ascending: false }),
+      supabase
+        .from('charge_payments')
+        .select('charge_id, period_year, period_month, paid_amount, paid_at')
+        .eq('workspace_id', workspaceId)
+        .eq('period_year', currentYear)
+        .eq('period_month', currentMonth),
+    ]);
 
   if (wsRes.error || !wsRes.data) redirect('/onboarding');
 
@@ -207,6 +235,21 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
     paidFrom: e.paid_from as AccountKind,
   }));
 
+  if (currentMonthPaymentsRes.error) {
+    log.warn('Failed to load current-month charge payments for dashboard', {
+      workspace_id: workspaceId,
+      error_code: currentMonthPaymentsRes.error.code ?? 'unknown',
+    });
+  }
+
+  const currentMonthPayments = (currentMonthPaymentsRes.data ?? []).map((p) => ({
+    chargeId: p.charge_id,
+    periodYear: p.period_year,
+    periodMonth: p.period_month,
+    paidAmount: Number(p.paid_amount),
+    paidAt: p.paid_at,
+  }));
+
   return {
     workspaceId,
     workspaceName: wsRes.data.name,
@@ -218,6 +261,8 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
     charges,
     rawCharges,
     monthlyExpenses,
+    currentMonthPayments,
+    currentPeriod: { year: currentYear, month: currentMonth },
   };
 }
 

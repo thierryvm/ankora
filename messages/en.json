@@ -1120,7 +1120,11 @@
     "charges": {
       "createFailed": "Unable to create the bill.",
       "updateFailed": "Unable to update the bill.",
-      "deleteFailed": "Unable to delete the bill."
+      "deleteFailed": "Unable to delete the bill.",
+      "notFound": "This bill could not be found.",
+      "payments": {
+        "toggleFailed": "Unable to mark the bill as paid."
+      }
     },
     "accounts": {
       "balanceUpdateFailed": "Unable to update the balance.",
@@ -1131,7 +1135,9 @@
     },
     "expenses": {
       "createFailed": "Unable to create the expense.",
-      "deleteFailed": "Unable to delete the expense."
+      "updateFailed": "Unable to update the expense.",
+      "deleteFailed": "Unable to delete the expense.",
+      "notFound": "This expense could not be found."
     },
     "settings": {
       "profileUpdateFailed": "Unable to update the profile.",

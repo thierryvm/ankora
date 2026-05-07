@@ -70,7 +70,7 @@ describe('expenses Server Actions — revalidatePath uses [locale] dynamic segme
   it('deleteExpenseAction revalidates dashboard and expenses list with the [locale] page pattern', async () => {
     const { deleteExpenseAction } = await import('@/lib/actions/expenses');
 
-    const result = await deleteExpenseAction('expense-1');
+    const result = await deleteExpenseAction('10dccda9-7e0f-4b4e-9c7d-23f3c1b7e8a9');
 
     expect(result.ok).toBe(true);
     expect(revalidatePathSpy).toHaveBeenCalledTimes(2);
