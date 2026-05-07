@@ -1,5 +1,14 @@
 import { test, expect } from '@playwright/test';
 
+// PR-QA-1d (Bloc C) — iOS WebKit (mobile-safari project) is consistently
+// slower than Chromium on the cold-start navigation that follows a 404 +
+// Link.click() round-trip ("Home CTA navigates back to landing"). The
+// default 10s actionTimeout / 15s navigationTimeout from
+// playwright.config.ts races the WebKit click→navigate pipeline on a
+// freshly-served 404 page. Bumping these caps file-wide is safe: the
+// other 404 specs are short and never approach the original timeout.
+test.use({ actionTimeout: 15_000, navigationTimeout: 30_000 });
+
 test.describe('THI-122 — 404 page brandée (FR default)', () => {
   test('non-existent path returns 404 with the FR copy', async ({ page }) => {
     const response = await page.goto('/this-page-definitely-does-not-exist-thi122');

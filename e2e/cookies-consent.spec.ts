@@ -28,6 +28,16 @@ test.describe('PR-LEGAL-1 — cookies consent flow', () => {
     await clearConsentStorage(page);
     await page.goto('/');
     await page.getByRole('button', { name: 'Tout accepter' }).click();
+    // PR-QA-1d (Bloc B) — wait for the consent decision to be persisted to
+    // localStorage before checking the banner unmount. On mobile-safari /
+    // WebKit, the `useTransition` + Server Action pipeline that the
+    // ConsentBanner uses ships the dismissal state on a different tick
+    // than Chromium, so a bare `not.toBeVisible()` polling races with
+    // the persist() call. Anchoring the assertion on the data source
+    // we ultimately verify removes the timing dependency.
+    await page.waitForFunction((key) => !!window.localStorage.getItem(key), STORAGE_KEY, {
+      timeout: 5000,
+    });
     await expect(page.getByRole('button', { name: 'Tout accepter' })).not.toBeVisible();
     const stored = await page.evaluate((key) => window.localStorage.getItem(key), STORAGE_KEY);
     expect(stored).not.toBeNull();
@@ -44,6 +54,12 @@ test.describe('PR-LEGAL-1 — cookies consent flow', () => {
     await page.getByRole('button', { name: 'Personnaliser' }).click();
     await page.getByRole('checkbox', { name: "Analyse d'usage" }).check();
     await page.getByRole('button', { name: 'Enregistrer mes préférences' }).click();
+    // PR-QA-1d (Bloc B) — same WebKit timing concern as "Accept all": wait
+    // for the granular consent to actually land in localStorage before
+    // asserting the banner is gone. Cf. comment on the previous test.
+    await page.waitForFunction((key) => !!window.localStorage.getItem(key), STORAGE_KEY, {
+      timeout: 5000,
+    });
     await expect(page.getByRole('button', { name: 'Tout accepter' })).not.toBeVisible();
     const stored = await page.evaluate((key) => window.localStorage.getItem(key), STORAGE_KEY);
     const parsed = JSON.parse(stored as string) as { analytics: boolean; marketing: boolean };
@@ -73,8 +89,16 @@ test.describe('PR-LEGAL-1 — cookies consent flow', () => {
     // Banner not visible because a decision already exists.
     await expect(page.getByRole('button', { name: 'Tout accepter' })).not.toBeVisible();
 
-    // Click the footer reopen button.
-    await page.getByRole('button', { name: 'Modifier mes préférences cookies' }).click();
+    // PR-QA-1d (Bloc A) — the footer button lives at the bottom of the page
+    // and is below the fold on most viewports. Without the explicit
+    // scroll, `.click()` raced the auto-scroll on chromium-desktop /
+    // mobile-safari / mobile-chrome and timed out at 10s. Anchoring on
+    // the visible element first removes that race entirely.
+    const footerCookieBtn = page.getByRole('button', {
+      name: 'Modifier mes préférences cookies',
+    });
+    await footerCookieBtn.scrollIntoViewIfNeeded();
+    await footerCookieBtn.click();
     await expect(page.getByRole('button', { name: 'Tout accepter' })).toBeVisible();
   });
 });
