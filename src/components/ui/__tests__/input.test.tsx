@@ -41,4 +41,44 @@ describe('<Input />', () => {
     fireEvent.change(input, { target: { value: 'hello' } });
     expect(input.value).toBe('hello');
   });
+
+  // PR-UI-2 — focus ring should be subtle (brand-500 at 30%, no offset)
+  // instead of the full-opacity ring-brand-600 + ring-offset-2 that read as
+  // a thick white halo on dark theme.
+  it('uses the soft focus ring (brand-500/30, no offset)', () => {
+    render(<Input placeholder="focus-test" />);
+    const input = screen.getByPlaceholderText('focus-test');
+    expect(input.className).toContain('focus-visible:ring-brand-500/30');
+    expect(input.className).toContain('focus-visible:ring-2');
+    expect(input.className).not.toContain('focus-visible:ring-brand-600');
+    expect(input.className).not.toContain('ring-offset-2');
+  });
+
+  // PR-UI-2 — type="number" must hide the webkit spin buttons AND force
+  // appearance: textfield so the wheel/scroll cannot bump the amount.
+  it('disables the scroll-spin behaviour on type="number"', () => {
+    render(<Input type="number" placeholder="amount" />);
+    const input = screen.getByPlaceholderText('amount');
+    expect(input.className).toContain('[appearance:textfield]');
+    expect(input.className).toContain('[&::-webkit-inner-spin-button]:appearance-none');
+    expect(input.className).toContain('[&::-webkit-outer-spin-button]:appearance-none');
+  });
+
+  // PR-UI-2 — non-number inputs must NOT carry the textfield-appearance
+  // override, so checkbox / radio / range / color keep their native UI.
+  it('does not strip the native UI from non-numeric types', () => {
+    render(<Input type="text" placeholder="text-test" />);
+    const input = screen.getByPlaceholderText('text-test');
+    expect(input.className).not.toContain('[appearance:textfield]');
+    expect(input.className).not.toContain('[&::-webkit-inner-spin-button]');
+  });
+
+  // PR-UI-2 — propagate `color-scheme: dark` on the `[data-theme="dark"]`
+  // shell so the native calendar/time icons stay visible (they default to
+  // black-on-black otherwise). Tailwind 4 canonical: `dark:scheme-dark`.
+  it('opts every input into the dark color-scheme on dark theme', () => {
+    render(<Input type="date" placeholder="date-test" />);
+    const input = screen.getByPlaceholderText('date-test');
+    expect(input.className).toContain('dark:scheme-dark');
+  });
 });
