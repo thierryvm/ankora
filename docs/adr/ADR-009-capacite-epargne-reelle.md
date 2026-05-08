@@ -225,3 +225,99 @@ Calculer `Revenus - effortFinancierLisse - dépenses_quotidiennes_du_mois_en_cou
 ## Décision finale
 
 À valider par @thierry. En attendant validation explicite, statut `Proposed`.
+
+---
+
+## Amendement 2026-05-09 — Clarification wording UX (3 concepts distincts)
+
+**Contexte** : pendant la session Claude Design #3 (mockup user dashboard v3 avec vraies données Thierry), il est apparu que le wording original "Capacité d'Épargne Réelle" affichait souvent à l'écran le **Reste disponible** sans soustraire le `Plafond_Quotidien`. Trois corrections successives ont été nécessaires en 24 h sur le même concept (« multiplier par 12 », « 622 vs 662 », « 162 vs 122 »), ce qui prouve qu'un amendement formel est nécessaire pour figer la nomenclature.
+
+Cet amendement **ne modifie PAS la formule mathématique** d'origine — elle prévoyait déjà la soustraction du `Plafond_Quotidien` (rebaptisé ici `Reste_à_vivre` pour clarté). Il **clarifie les concepts UX** que les composants Dashboard doivent afficher distinctement.
+
+### Trois concepts distincts à afficher distinctement
+
+```
+Reste_disponible     = Revenus − Charges_fixes_mensuelles − Provisions_lissées − Virements_automatiques
+
+  ↓ se décompose pédagogiquement en :
+
+Reste_à_vivre        = budget vie courante variable (courses, sorties, plaisir, imprévus)
+                     = saisi par l'utilisateur en onboarding (Étape 3) ou estimé depuis l'historique
+                     = AJUSTABLE manuellement mois par mois (R-10)
+
+Capacité_Épargne_    = Reste_disponible − Reste_à_vivre
+Réelle               = ce qu'on peut effectivement mettre de côté EN PLUS des virements automatiques
+```
+
+**Pour le persona Thierry mai 2026** (cf. `_donnees-thierry/profil-financier.md` dans le vault Athenaeum) :
+
+- Reste disponible : **662 €/mois**
+- Reste à vivre estimé : **500 €/mois** (courses ~200, imprévus ~50, sorties 0 par manque d'argent, marge 250)
+- Capacité d'épargne réelle : **162 €/mois** (= 662 − 500, cohérent avec son souhait personnel +100 €/mois)
+
+### Implications UI sur la card "Capacité d'épargne réelle"
+
+Le composant `CapaciteEpargneReelleCard` doit désormais afficher (de haut en bas) :
+
+1. **KPI principal** : Capacité d'épargne réelle (ex: + 162 €/mois) en grand format, couleur emerald si ≥ 0, rose si < 0.
+2. **Sub-stats** (3 mini-cards horizontales sur desktop, stack mobile) :
+   - "Reste disponible : 662 €" (= avant la vie courante)
+   - "Reste à vivre estimé : 500 €" + bouton **"Ajuster ce mois"** (R-10 ajustement manuel)
+   - "Capacité épargne : 162 €" (= 662 − 500, le KPI principal redondant pour la cohérence visuelle)
+3. **Lede pédagogique adapté** : « Tu peux mettre **+162 €** de côté ce mois en plus de tes virements automatiques. Tu décides combien tu y mets vraiment. »
+4. **Tooltip explicatif** au hover sur le KPI principal : « Cette valeur soustrait tes charges fixes, tes provisions lissées sur l'année, ton virement automatique, ET ton estimation de vie courante (500 €). C'est ce que tu peux choisir d'épargner en plus. »
+
+### Implications onboarding (Étape 3 PR-D5)
+
+L'onboarding doit demander à l'utilisateur son `Reste_à_vivre` estimé via un input dédié :
+
+> **« Combien tu dépenses pour vivre chaque mois ?**
+> _(Courses, sorties, loisirs, plaisir, imprévus quotidiens)_
+>
+> [ 500 €/mois ]
+>
+> Ce montant est ajustable mois par mois. Quand un mois est plus calme (ou plus chargé), tu peux le modifier en un clic depuis ton dashboard. »
+
+Le helper texte sous l'input doit être **adaptatif** selon le ratio reste-à-vivre / revenus :
+
+- ≈ 30 % : "Estimation cohérente avec un budget belge typique."
+- < 15 % : "Estimation basse. Tu peux ajuster plus tard si besoin."
+- > 50 % : "Estimation haute. Ankora respecte ton budget — pas de jugement."
+
+⚠️ **Règle FSMA-safe + R-06 anti-culpabilisation** : ne JAMAIS écrire "tu dépenses trop" ni "tu pourrais économiser X €". Le Reste à vivre est légitime et non-culpabilisé.
+
+### Implications data model
+
+Ajouter dans `workspace_settings` :
+
+```sql
+ALTER TABLE workspace_settings
+  ADD COLUMN reste_a_vivre_default numeric(12,2) DEFAULT 500.00,
+  ADD COLUMN reste_a_vivre_overrides jsonb DEFAULT '{}';  -- { 'YYYY-MM': montant } pour ajustements mensuels
+```
+
+L'UI lit `reste_a_vivre_overrides[currentMonth]` en priorité, sinon fallback `reste_a_vivre_default`.
+
+### Compatibilité avec la formule originale
+
+La formule canonique reste **identique** à celle définie en haut de cet ADR :
+
+```
+Capacité_Épargne_Réelle = Revenus
+                        − Total_Charges_Fixes_Mensuelles
+                        − Provisions_Mensuelles_Lissées
+                        − Plafond_Quotidien (= Reste_à_vivre)
+```
+
+Seul le **wording UX** change (Plafond*Quotidien → Reste*à_vivre dans les labels visibles, ajout de sub-stats explicites). Les tests Vitest existants restent valides.
+
+### Statut de l'amendement
+
+Validé par @thierry 2026-05-09 (chat session, "je valide oui"). Cet amendement est désormais canonique et doit être respecté par tous les composants Dashboard et tous les briefs futurs.
+
+### Mises à jour de cet ADR
+
+| Date       | Auteur              | Changement                                                                                     |
+| ---------- | ------------------- | ---------------------------------------------------------------------------------------------- |
+| 2026-05-03 | cowork-orchestrator | Création initiale (statut Proposed)                                                            |
+| 2026-05-09 | cowork-orchestrator | Amendement clarification UX 3 concepts (Reste disponible / Reste à vivre / Capacité d'épargne) |

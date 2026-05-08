@@ -85,6 +85,11 @@ tmp/
 # local design mockups
 design-mockup-*.html
 
+# Design snapshots & handoff packages (research preview Claude Design — locaux uniquement)
+# Le ZIP brut est lourd et reproductible ; on garde design-snapshots/README.md tracké pour la convention.
+design-snapshots/*.zip
+design_handoff_ankora_v1/
+
 # Claude Code local settings
 .claude/settings.local.json
 
