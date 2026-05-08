@@ -1,7 +1,15 @@
 version: 2
 
+# ---------- Dependabot policy (Ankora) ----------
+# Status : PAUSED for routine bumps until V1.0 release window stabilizes.
+# Security advisories remain active (Dependabot continues to detect vulns
+# but does NOT open routine version-bump PRs while open-pull-requests-limit=0).
+# Re-enable post-V1.0 by setting limits back to 10 (npm) and 5 (github-actions).
+# Decision @cowork+@thierry 2026-05-08 : avoid lockfile churn during PR-D4-PHASE2
+# atoms integration + PR-D5 backend tracking paiements.
+
 updates:
-  # ---------- npm dependencies ----------
+  # ---------- npm dependencies (PAUSED) ----------
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
@@ -9,7 +17,7 @@ updates:
       day: "monday"
       time: "08:00"
       timezone: "Europe/Brussels"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
     labels:
       - "dependencies"
       - "npm"
@@ -76,7 +84,7 @@ updates:
           - "patch"
       # Major bumps stay individual to allow careful review.
 
-  # ---------- GitHub Actions ----------
+  # ---------- GitHub Actions (PAUSED) ----------
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -84,7 +92,7 @@ updates:
       day: "monday"
       time: "08:00"
       timezone: "Europe/Brussels"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0
     labels:
       - "dependencies"
       - "github-actions"
