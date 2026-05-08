@@ -171,3 +171,85 @@
   outline: 2px solid var(--color-brand-600);
   outline-offset: 2px;
 }
+
+/* ============================================================================
+   Atom 03 — Card
+   ============================================================================ */
+.atm-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+}
+.atm-card--flat {
+  box-shadow: none;
+}
+.atm-card--raised {
+  box-shadow: var(--shadow-md);
+}
+
+.atm-card--p-none .atm-card-body {
+  padding: 0;
+}
+.atm-card--p-sm .atm-card-body {
+  padding: 12px;
+}
+.atm-card--p-md .atm-card-body {
+  padding: 16px;
+}
+.atm-card--p-lg .atm-card-body {
+  padding: 24px;
+}
+.atm-card--p-none .atm-card-head,
+.atm-card--p-none .atm-card-foot {
+  padding: 0;
+}
+.atm-card--p-sm .atm-card-head {
+  padding: 12px 12px 0;
+}
+.atm-card--p-md .atm-card-head {
+  padding: 16px 16px 0;
+}
+.atm-card--p-lg .atm-card-head {
+  padding: 24px 24px 0;
+}
+.atm-card--p-sm .atm-card-foot {
+  padding: 0 12px 12px;
+}
+.atm-card--p-md .atm-card-foot {
+  padding: 0 16px 16px;
+}
+.atm-card--p-lg .atm-card-foot {
+  padding: 0 24px 24px;
+}
+
+.atm-card-eyebrow {
+  margin-bottom: 6px;
+  color: var(--color-muted-foreground);
+}
+.atm-card-title {
+  margin: 0;
+  font: var(--text-h3);
+  color: var(--color-foreground);
+}
+
+.atm-card--tone-soft {
+  background: var(--color-surface-soft);
+}
+.atm-card--tone-brand {
+  background: var(--color-brand-surface);
+  border-color: var(--color-brand-surface-border);
+}
+.atm-card--tone-accent {
+  background: var(--color-accent-surface);
+  border-color: var(--color-accent-surface-border);
+}
+.atm-card--tone-warning {
+  background: color-mix(in oklab, var(--color-warning) 8%, transparent);
+  border-color: color-mix(in oklab, var(--color-warning) 24%, transparent);
+}
+.atm-card--tone-danger {
+  background: color-mix(in oklab, var(--color-danger) 8%, transparent);
+  border-color: color-mix(in oklab, var(--color-danger) 24%, transparent);
+}
