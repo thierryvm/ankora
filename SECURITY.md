@@ -1,17 +1,16 @@
 # Security policy — Ankora
 
-<!-- TODO: migrate to privacy@ankora.be once domain MX is configured -->
+> **Email migration in progress** — `security@ankora.be` and `privacy@ankora.be` will be activated once the ankora.be domain MX records are configured (target Beta 2026-06). Until then, all security and privacy reports route to `thierryvm@gmail.com`. See tracking issue: [#email-migration](https://github.com/thierryvm/ankora/issues?q=label%3Aemail-migration) (label `email-migration`).
 
 ## Reporting a vulnerability
 
-If you discover a security issue, please email **thierryvm@gmail.com** with:
+If you discover a security issue, please email **thierryvm@gmail.com** (subject prefix `[ANKORA-SEC]`) with:
 
 - Steps to reproduce
 - Affected versions / URLs
 - Proof of concept (if applicable)
 
-> **TODO**: Once infrastructure is established, transition to security@ankora.be
-> for dedicated security reporting (currently routed to thierryvm@gmail.com).
+Once `security@ankora.be` is live, that address will become the canonical contact and this section will be updated. PGP key publication targeted V1.0 public release.
 
 Please do **not** open a public issue. We aim to acknowledge within 48 hours
 and ship a fix or mitigation within 7 days for critical issues.
