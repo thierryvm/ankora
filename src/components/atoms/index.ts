@@ -2,3 +2,5 @@
 // Order: cf docs/plans/PR-D4-PHASE2-A.md task list.
 export { Button } from './Button';
 export type { ButtonProps, ButtonVariant, ButtonSize } from './Button';
+export { Chip } from './Chip';
+export type { ChipProps, ChipSize } from './Chip';

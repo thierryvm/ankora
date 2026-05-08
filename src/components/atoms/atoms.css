@@ -130,3 +130,44 @@
 .atm-btn-label {
   display: inline-block;
 }
+
+/* ============================================================================
+   Atom 02 — Chip
+   ============================================================================ */
+.atm-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.atm-chip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.atm-chip-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin-left: 2px;
+  color: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-full);
+  width: 14px;
+  height: 14px;
+}
+.atm-chip-x:hover {
+  background: color-mix(in oklab, currentColor 18%, transparent);
+}
+.atm-chip-x:focus-visible {
+  outline: 2px solid var(--color-brand-600);
+  outline-offset: 2px;
+}
