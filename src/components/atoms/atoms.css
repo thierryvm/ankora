@@ -1,0 +1,12 @@
+/* ============================================================================
+   Ankora atoms — shared static classes
+   Source: design_handoff_ankora_v1/atoms/atoms.css (Claude Design Session #3)
+   Conventions:
+   - Préfixe .atm-* pour toutes les classes atoms
+   - Inline styles autorisés pour les valeurs dynamiques (color hex, sizes
+     calculées) ; classes statiques pour le reste (radius, padding, fonts)
+   - Tokens CSS uniquement via var(--color-*), var(--radius-*), var(--shadow-*),
+     var(--ease-*), var(--dur-*) — JAMAIS de valeurs hardcodées
+   ============================================================================ */
+
+/* Classes statiques ajoutées progressivement par chaque tâche d'atom. */
