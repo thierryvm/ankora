@@ -195,17 +195,22 @@ npm run supabase:types   # régénère src/lib/supabase/types.ts
 
 ### Agents QA automatisés
 
-Ce dépôt embarque 7 agents Claude Code spécialisés dans `.claude/agents/` :
+Ce dépôt embarque **12 agents Claude Code** spécialisés dans `.claude/agents/` :
 
-| Agent                         | Déclencheur                                                     |
-| ----------------------------- | --------------------------------------------------------------- |
-| `security-auditor`            | Avant merge de toute PR touchant auth, middleware, RLS, headers |
-| `rls-flow-tester`             | Après toute migration ou changement de policy RLS               |
-| `financial-formula-validator` | Après tout changement dans `src/lib/domain/`                    |
-| `ui-auditor`                  | Après toute modification UI                                     |
-| `lighthouse-auditor`          | Avant release candidate                                         |
-| `seo-geo-auditor`             | Après ajout/renommage de pages publiques                        |
-| `gdpr-compliance-auditor`     | Dès qu'on touche à PII, cookies, export, deletion               |
+| Agent                         | Déclencheur                                                                          |
+| ----------------------------- | ------------------------------------------------------------------------------------ |
+| `security-auditor`            | Avant merge de toute PR touchant auth, middleware, RLS, headers                      |
+| `rls-flow-tester`             | Après toute migration ou changement de policy RLS                                    |
+| `financial-formula-validator` | Après tout changement dans `src/lib/domain/`                                         |
+| `ui-auditor`                  | Après toute modification UI (mobile-first WCAG 2.2 AA, viewport Chromium)            |
+| `mobile-ios-auditor`          | Layout/nav/forms/dashboard mobile — Safari iOS WebKit (safe-area, ITP, focus rings)  |
+| `dashboard-ux-auditor`        | User dashboard `src/app/[locale]/app/**`                                             |
+| `admin-dashboard-auditor`     | Admin panel `src/app/[locale]/admin/**`                                              |
+| `i18n-auditor`                | `messages/*.json`, `src/i18n/`, Server/Client Components avec `useTranslations`      |
+| `lighthouse-auditor`          | Avant release candidate                                                              |
+| `seo-geo-auditor`             | Après ajout/renommage de pages publiques                                             |
+| `gdpr-compliance-auditor`     | Dès qu'on touche à PII, cookies, export, deletion                                    |
+| `test-runner`                 | Après toute modification de code                                                     |
 
 Voir [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) pour les détails d'invocation.
 
@@ -261,7 +266,9 @@ MVP en phase bêta privée. La tarification définitive sera publiée sur `/pric
 
 ### Ankora fonctionne-t-il hors Belgique ?
 
-L'app est utilisable depuis toute l'UE. Les avertissements réglementaires sont orientés Belgique (FSMA). Traductions `fr-BE`, `fr-FR` et `en-GB` disponibles dans les paramètres utilisateur.
+L'app est utilisable depuis toute l'UE. Les avertissements réglementaires sont orientés Belgique (FSMA).
+
+**Locales V1.0** : `fr-BE` (français de Belgique, locale principale) et `en` (anglais international). Les locales `nl-BE`, `de-DE` et `es-ES` sont annoncées sur `/roadmap` et seront livrées post-launch en V1.1.
 
 ---
 
@@ -269,13 +276,22 @@ L'app est utilisable depuis toute l'UE. Les avertissements réglementaires sont 
 
 Voir [docs/ROADMAP.md](docs/ROADMAP.md) pour la roadmap détaillée.
 
-**Phase actuelle** : Phase 1 MVP — auth, onboarding, dashboard, settings, RGPD, PWA. _(avril 2026)_
+**Statut actuel** : design Ankora V1.0 entièrement figé (sessions Claude Design #1 à #5 livrées 2026-05-09). Intégration React/Tailwind en cours via PR-D4 PHASE 2 (atomic design 11 atoms + cockpit + admin RBAC).
 
-**Prochaines phases** :
+**Trois jalons V1.0 publique** :
 
-- Phase 2 : analytics opt-in, notifications mensuelles, partage famille (read-only)
-- Phase 3 : imports CSV, catégorisation assistée par IA (local-first)
-- Phase 4 : multi-devise (EUR + CHF + GBP), exports PDF annuels
+| Jalon       | Horizon                | Contenu                                                                                                       |
+| ----------- | ---------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **Alpha**   | mai 2026 (~4 sem)      | Thierry + 2-3 proches, FR-BE seul, auth + onboarding 3 étapes + cockpit + simulateur + MFA                    |
+| **Beta**    | début juin 2026 (~8 sem) | 5-10 testeurs, CGU/Privacy UE+BE, GDPR export/delete, bug reporting live, Klaro! cookie consent TCF v2.2     |
+| **V1.0**    | fin juin 2026 (~12 sem)  | Signups ouverts ankora.be, FR + EN, AEO complet, Lighthouse 100, /roadmap publique, admin panel V1 live data |
+
+**Prochaines évolutions post-V1.0** :
+
+- V1.1 : NL-BE + DE-DE + ES-ES (locales annoncées), logos fournisseurs réels via Logo.dev API opt-in
+- V1.2 : analytics opt-in détaillés, notifications mensuelles, partage famille (read-only)
+- V1.3 : imports CSV multi-sources (Coda/Notion/Excel/Sheets/Airtable), catégorisation assistée par IA (BYOK utilisateur)
+- V2.0 : multi-devise (EUR + CHF + GBP), exports PDF annuels
 
 ---
 
