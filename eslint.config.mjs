@@ -32,6 +32,17 @@ const eslintConfig = defineConfig([
     'out/**',
     'build/**',
     'next-env.d.ts',
+    // Generated artefacts (gitignored too — defensive double-guard for ESLint):
+    '.tmp/**', // Playwright traces / temp Storybook / scratch
+    'coverage/**', // Vitest coverage reports
+    'playwright-report/**',
+    'test-results/**',
+    'blob-report/**',
+    '.lighthouseci/**',
+    // Design handoff input docs (Claude Design Session bundles, prototypes JSX
+    // not meant to ship — gitignored, but ESLint scans the filesystem so we
+    // exclude them explicitly to keep `npm run lint` clean):
+    'design_handoff_ankora_v1/**',
   ]),
 ]);
 

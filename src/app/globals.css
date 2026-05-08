@@ -409,3 +409,6 @@ body > main {
   background: var(--color-brand-200);
   color: var(--color-brand-900);
 }
+
+/* ---------- Atoms (CD#3 — PR-D4-PHASE2-A) ---------- */
+@import '../components/atoms/atoms.css';

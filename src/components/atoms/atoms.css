@@ -1,0 +1,255 @@
+/* ============================================================================
+   Ankora atoms — shared static classes
+   Source: design_handoff_ankora_v1/atoms/atoms.css (Claude Design Session #3)
+   Conventions:
+   - Préfixe .atm-* pour toutes les classes atoms
+   - Inline styles autorisés pour les valeurs dynamiques (color hex, sizes
+     calculées) ; classes statiques pour le reste (radius, padding, fonts)
+   - Tokens CSS uniquement via var(--color-*), var(--radius-*), var(--shadow-*),
+     var(--ease-*), var(--dur-*) — JAMAIS de valeurs hardcodées
+   ============================================================================ */
+
+/* Classes statiques ajoutées progressivement par chaque tâche d'atom. */
+
+/* ============================================================================
+   Atom 01 — Button
+   Variants: primary (teal solide) · secondary (surface soft) · ghost (texte teal) · destructive (rouge)
+   Sizes: sm (h32) · md (h36) · lg (h44)
+   ============================================================================ */
+.atm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--dur-default) var(--ease-spring),
+    color var(--dur-default) var(--ease-spring),
+    border-color var(--dur-default) var(--ease-spring),
+    box-shadow var(--dur-default) var(--ease-spring),
+    transform var(--dur-micro) var(--ease-spring);
+  border: 1px solid transparent;
+  user-select: none;
+}
+.atm-btn:disabled,
+.atm-btn.is-loading {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.atm-btn:focus-visible {
+  outline: 2px solid var(--color-brand-600);
+  outline-offset: 2px;
+}
+
+.atm-btn--sm {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+.atm-btn--md {
+  height: 36px;
+  padding: 0 14px;
+  font-size: 14px;
+}
+.atm-btn--lg {
+  height: 44px;
+  padding: 0 18px;
+  font-size: 15px;
+}
+
+.atm-btn--primary {
+  background: var(--color-brand-500);
+  color: #fff;
+}
+.atm-btn--primary:hover:not(:disabled) {
+  background: var(--color-brand-600);
+}
+.atm-btn--primary:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.atm-btn--secondary {
+  background: var(--color-surface-soft);
+  color: var(--color-foreground);
+  border-color: var(--color-border);
+}
+.atm-btn--secondary:hover:not(:disabled) {
+  background: var(--color-surface-muted);
+}
+
+.atm-btn--ghost {
+  background: transparent;
+  color: var(--color-brand-text);
+}
+.atm-btn--ghost:hover:not(:disabled) {
+  background: var(--color-brand-surface);
+}
+
+.atm-btn--destructive {
+  background: var(--color-danger);
+  color: #fff;
+}
+.atm-btn--destructive:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.atm-btn--icon-only {
+  padding: 0;
+  width: 36px;
+}
+.atm-btn--icon-only.atm-btn--sm {
+  width: 32px;
+}
+.atm-btn--icon-only.atm-btn--lg {
+  width: 44px;
+}
+
+.atm-btn-spin {
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  animation: atm-btn-spin 720ms linear infinite;
+}
+@keyframes atm-btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.atm-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.atm-btn-label {
+  display: inline-block;
+}
+
+/* ============================================================================
+   Atom 02 — Chip
+   ============================================================================ */
+.atm-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.atm-chip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.atm-chip-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin-left: 2px;
+  color: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-full);
+  width: 14px;
+  height: 14px;
+}
+.atm-chip-x:hover {
+  background: color-mix(in oklab, currentColor 18%, transparent);
+}
+.atm-chip-x:focus-visible {
+  outline: 2px solid var(--color-brand-600);
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+   Atom 03 — Card
+   ============================================================================ */
+.atm-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+}
+.atm-card--flat {
+  box-shadow: none;
+}
+.atm-card--raised {
+  box-shadow: var(--shadow-md);
+}
+
+.atm-card--p-none .atm-card-body {
+  padding: 0;
+}
+.atm-card--p-sm .atm-card-body {
+  padding: 12px;
+}
+.atm-card--p-md .atm-card-body {
+  padding: 16px;
+}
+.atm-card--p-lg .atm-card-body {
+  padding: 24px;
+}
+.atm-card--p-none .atm-card-head,
+.atm-card--p-none .atm-card-foot {
+  padding: 0;
+}
+.atm-card--p-sm .atm-card-head {
+  padding: 12px 12px 0;
+}
+.atm-card--p-md .atm-card-head {
+  padding: 16px 16px 0;
+}
+.atm-card--p-lg .atm-card-head {
+  padding: 24px 24px 0;
+}
+.atm-card--p-sm .atm-card-foot {
+  padding: 0 12px 12px;
+}
+.atm-card--p-md .atm-card-foot {
+  padding: 0 16px 16px;
+}
+.atm-card--p-lg .atm-card-foot {
+  padding: 0 24px 24px;
+}
+
+.atm-card-eyebrow {
+  margin-bottom: 6px;
+  color: var(--color-muted-foreground);
+}
+.atm-card-title {
+  margin: 0;
+  font: var(--text-h3);
+  color: var(--color-foreground);
+}
+
+.atm-card--tone-soft {
+  background: var(--color-surface-soft);
+}
+.atm-card--tone-brand {
+  background: var(--color-brand-surface);
+  border-color: var(--color-brand-surface-border);
+}
+.atm-card--tone-accent {
+  background: var(--color-accent-surface);
+  border-color: var(--color-accent-surface-border);
+}
+.atm-card--tone-warning {
+  background: color-mix(in oklab, var(--color-warning) 8%, transparent);
+  border-color: color-mix(in oklab, var(--color-warning) 24%, transparent);
+}
+.atm-card--tone-danger {
+  background: color-mix(in oklab, var(--color-danger) 8%, transparent);
+  border-color: color-mix(in oklab, var(--color-danger) 24%, transparent);
+}
