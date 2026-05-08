@@ -93,8 +93,12 @@ design_handoff_ankora_v1/
 # Claude Code local settings
 .claude/settings.local.json
 
-# internal PR prompts
-prompts/
+# internal PR prompts — drafts ignored, canonical PR-*.md briefs tracked via exception
+# Pattern explanation: `prompts/*` (vs `prompts/`) lets Git evaluate the exception
+# on individual files. The `!prompts/PR-*.md` line re-includes canonical PR briefs
+# referenced by CLAUDE.md, ROADMAP.md, and ADRs (specs that MUST be versioned).
+prompts/*
+!prompts/PR-*.md
 
 # Playwright MCP temp folder
 .playwright-mcp/
