@@ -10,3 +10,123 @@
    ============================================================================ */
 
 /* Classes statiques ajoutées progressivement par chaque tâche d'atom. */
+
+/* ============================================================================
+   Atom 01 — Button
+   Variants: primary (teal solide) · secondary (surface soft) · ghost (texte teal) · destructive (rouge)
+   Sizes: sm (h32) · md (h36) · lg (h44)
+   ============================================================================ */
+.atm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--dur-default) var(--ease-spring),
+    color var(--dur-default) var(--ease-spring),
+    border-color var(--dur-default) var(--ease-spring),
+    box-shadow var(--dur-default) var(--ease-spring),
+    transform var(--dur-micro) var(--ease-spring);
+  border: 1px solid transparent;
+  user-select: none;
+}
+.atm-btn:disabled,
+.atm-btn.is-loading {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.atm-btn:focus-visible {
+  outline: 2px solid var(--color-brand-600);
+  outline-offset: 2px;
+}
+
+.atm-btn--sm {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+.atm-btn--md {
+  height: 36px;
+  padding: 0 14px;
+  font-size: 14px;
+}
+.atm-btn--lg {
+  height: 44px;
+  padding: 0 18px;
+  font-size: 15px;
+}
+
+.atm-btn--primary {
+  background: var(--color-brand-500);
+  color: #fff;
+}
+.atm-btn--primary:hover:not(:disabled) {
+  background: var(--color-brand-600);
+}
+.atm-btn--primary:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.atm-btn--secondary {
+  background: var(--color-surface-soft);
+  color: var(--color-foreground);
+  border-color: var(--color-border);
+}
+.atm-btn--secondary:hover:not(:disabled) {
+  background: var(--color-surface-muted);
+}
+
+.atm-btn--ghost {
+  background: transparent;
+  color: var(--color-brand-text);
+}
+.atm-btn--ghost:hover:not(:disabled) {
+  background: var(--color-brand-surface);
+}
+
+.atm-btn--destructive {
+  background: var(--color-danger);
+  color: #fff;
+}
+.atm-btn--destructive:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.atm-btn--icon-only {
+  padding: 0;
+  width: 36px;
+}
+.atm-btn--icon-only.atm-btn--sm {
+  width: 32px;
+}
+.atm-btn--icon-only.atm-btn--lg {
+  width: 44px;
+}
+
+.atm-btn-spin {
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  animation: atm-btn-spin 720ms linear infinite;
+}
+@keyframes atm-btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.atm-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.atm-btn-label {
+  display: inline-block;
+}
