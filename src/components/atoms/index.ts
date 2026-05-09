@@ -29,3 +29,5 @@ export type {
   DrawerValues,
   EditDrawerProps,
 } from './Drawer';
+export { ColorPicker, ATM_COLOR_PALETTE } from './ColorPicker';
+export type { ColorPickerProps } from './ColorPicker';

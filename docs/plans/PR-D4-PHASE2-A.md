@@ -1732,11 +1732,11 @@ export interface ColorPickerProps {
 }
 ```
 
-- [ ] **Step 9.1: Tests (~8 cas)** : default palette 12 colors, role=radiogroup + radio per swatch, aria-checked sur active, custom options, custom columns, onChange callback, swatch labels "Couleur #XXX", focus visible.
+- [x] **Step 9.1: Tests (~8 cas)** : default palette 12 colors, role=radiogroup + radio per swatch, aria-checked sur active, custom options, custom columns, onChange callback, swatch labels "Couleur #XXX", focus visible.
 
-- [ ] **Step 9.2: Implement** + CSS `.atm-cpick*`
+- [x] **Step 9.2: Implement** + CSS `.atm-cpick*`
 
-- [ ] **Step 9.3: Commit `feat(atoms): ColorPicker CD#3 (PR-D4-PHASE2-A)`**
+- [x] **Step 9.3: Commit `feat(atoms): ColorPicker CD#3 (PR-D4-PHASE2-A)`**
 
 ---
 

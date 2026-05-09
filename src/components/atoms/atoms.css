@@ -742,3 +742,37 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* ============================================================================
+   Atom 07 — ColorPicker
+   Radiogroup palette de swatches; ring teal sur swatch active.
+   ============================================================================ */
+.atm-cpick {
+  display: grid;
+  gap: 8px;
+}
+.atm-cpick-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition:
+    transform var(--dur-micro) var(--ease-spring),
+    border-color var(--dur-default) var(--ease-spring),
+    box-shadow var(--dur-default) var(--ease-spring);
+}
+.atm-cpick-swatch:hover {
+  transform: scale(1.08);
+}
+.atm-cpick-swatch:focus-visible {
+  outline: 2px solid var(--color-brand-600);
+  outline-offset: 2px;
+}
+.atm-cpick-swatch.is-active {
+  border-color: var(--color-foreground);
+  box-shadow:
+    0 0 0 2px var(--color-card),
+    0 0 0 4px var(--color-brand-500);
+}
