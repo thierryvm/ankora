@@ -16,7 +16,7 @@ const serverSchema = z
     UPSTASH_REDIS_REST_URL: z.string().url().optional(),
     UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
     INTERNAL_SECRET: z.string().min(32),
-    ANKORA_DEV_MODE: z.enum(['0', '1']).default('0').optional(),
+    ANKORA_PLAYGROUND_ENABLED: z.enum(['true', 'false']).default('false').optional(),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV === 'production') {

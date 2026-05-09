@@ -204,6 +204,20 @@ Playwright e2e additionnel :
     - Tokens : `--color-foreground`, `--color-surface-soft`, `--color-border`, `--color-brand-500`, `--radius-md`, `--ease-out`, `--shadow-md`
     - Persistance : cookie `NEXT_LOCALE` + URL routing `/[locale]/...` next-intl
     - V1.0 : 2 langues seulement (FR-BE + EN). NL/DE/ES post-launch (cf. `CLAUDE.md` §"Choix techniques lockés")
+    - **PR-B integration contract (verrouillé @thierry 2026-05-09)** :
+      `onChange` est REQUIS dans l'atom Ankora TS strict (PR-D4-PHASE2-A
+      Task 13). Le wiring prod doit utiliser `next-intl` :
+      ```tsx
+      // src/app/[locale]/admin/_components/AdminTopbar.tsx (PR-B)
+      const router = useRouter();
+      const pathname = usePathname();
+      return (
+        <LangSwitcher value={locale} onChange={(id) => router.replace(pathname, { locale: id })} />
+      );
+      ```
+      Locale canonique = URL (next-intl App Router). Pas de `useState`
+      interne fallback (violerait l'architecture). Cf. note divergence dans
+      `docs/plans/PR-D4-PHASE2-A.md` Task 13.
 
 → Nombre total d'atoms à porter dans cette PR : **11** (au lieu de 9 mentionnés en §0bis F).
 
