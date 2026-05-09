@@ -6,3 +6,10 @@ export { Chip } from './Chip';
 export type { ChipProps, ChipSize } from './Chip';
 export { Card } from './Card';
 export type { CardProps, CardPadding, CardElevation, CardTone } from './Card';
+export { ProgressBar } from './ProgressBar';
+export type {
+  ProgressBarProps,
+  ProgressBarTone,
+  ProgressBarSize,
+  ProgressBarSplit,
+} from './ProgressBar';

@@ -253,3 +253,70 @@
   background: color-mix(in oklab, var(--color-danger) 8%, transparent);
   border-color: color-mix(in oklab, var(--color-danger) 24%, transparent);
 }
+
+/* ============================================================================
+   Atom 05 — ProgressBar
+   value/max + auto tone (warning >0.85, danger >1.0), split-aware (affected+free),
+   sizes sm/md/lg (h 6/8/12 px), optional label/value/cap/sub.
+   ============================================================================ */
+.atm-pbar-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.atm-pbar-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 12px;
+}
+.atm-pbar-label {
+  color: var(--color-muted-foreground);
+}
+.atm-pbar-value {
+  color: var(--color-foreground);
+  font-variant-numeric: tabular-nums;
+}
+.atm-pbar {
+  position: relative;
+  background: var(--color-surface-muted);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  display: flex;
+}
+.atm-pbar-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width var(--dur-structural) var(--ease-spring);
+}
+.atm-pbar--brand {
+  background: var(--color-brand-500);
+}
+.atm-pbar--accent {
+  background: var(--color-accent-400);
+}
+.atm-pbar--success {
+  background: var(--color-success);
+}
+.atm-pbar--warning {
+  background: var(--color-warning);
+}
+.atm-pbar--danger {
+  background: var(--color-danger);
+}
+.atm-pbar--neutral {
+  background: var(--color-muted);
+}
+.atm-pbar-cap {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 2px;
+  background: var(--color-foreground);
+  opacity: 0.6;
+}
+.atm-pbar-sub {
+  font-size: 11px;
+  color: var(--color-muted-foreground);
+}

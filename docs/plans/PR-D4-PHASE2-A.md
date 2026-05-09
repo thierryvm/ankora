@@ -1272,7 +1272,7 @@ export interface ProgressBarProps {
 }
 ```
 
-- [ ] **Step 6.1: Tests TDD (~12 cas)**
+- [x] **Step 6.1: Tests TDD (~12 cas)**
 
 Cases obligatoires:
 
@@ -1289,7 +1289,7 @@ Cases obligatoires:
 - aria-progressbar role + valuenow + valuemin + valuemax
 - label + sub rendered
 
-- [ ] **Step 6.2: Implement** (port `05-ProgressBar.jsx` en TS strict + extension split)
+- [x] **Step 6.2: Implement** (port `05-ProgressBar.jsx` en TS strict + extension split)
 
 ```tsx
 import * as React from 'react';
@@ -1360,7 +1360,7 @@ export function ProgressBar({
 }
 ```
 
-- [ ] **Step 6.3: CSS `.atm-pbar*` (transitions width via CSS, pas framer-motion)**
+- [x] **Step 6.3: CSS `.atm-pbar*` (transitions width via CSS, pas framer-motion)**
 
 ```css
 .atm-pbar-wrap {
@@ -1426,7 +1426,7 @@ export function ProgressBar({
 }
 ```
 
-- [ ] **Step 6.4: Tests PASS + commit**
+- [x] **Step 6.4: Tests PASS + commit**
 
 ```bash
 git commit -m "feat(atoms): ProgressBar CD#3 split-aware (PR-D4-PHASE2-A)
