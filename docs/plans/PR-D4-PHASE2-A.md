@@ -2285,7 +2285,7 @@ export const ANKORA_V1_LOCALES: readonly LangSwitcherLocale[] = [
 ];
 ```
 
-- [ ] **Step 13.1: Tests (~12 cas)**
+- [x] **Step 13.1: Tests (~12 cas)**
   - Closed by default
   - Click trigger → opens listbox (role="listbox")
   - aria-haspopup="listbox" + aria-expanded
@@ -2299,11 +2299,11 @@ export const ANKORA_V1_LOCALES: readonly LangSwitcherLocale[] = [
   - Cleanup listeners on unmount
   - keyboard nav within listbox (Arrow up/down)
 
-- [ ] **Step 13.2: Implement** (port `11-LangSwitcher.jsx` en TS strict, ajouter cleanup useEffect explicite)
+- [x] **Step 13.2: Implement** (port `11-LangSwitcher.jsx` en TS strict, ajouter cleanup useEffect explicite)
 
-- [ ] **Step 13.3: CSS `.atm-lang-switcher*` (dropdown menu, scale-up on open)**
+- [x] **Step 13.3: CSS `.atm-lang-switcher*` (dropdown menu, scale-up on open)**
 
-- [ ] **Step 13.4: Commit `feat(atoms): LangSwitcher CD#3 a11y dropdown (PR-D4-PHASE2-A)`**
+- [x] **Step 13.4: Commit `feat(atoms): LangSwitcher CD#3 a11y dropdown (PR-D4-PHASE2-A)`**
 
 ---
 

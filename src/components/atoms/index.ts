@@ -39,3 +39,5 @@ export { Tabs } from './Tabs';
 export type { TabsProps, TabsVariant, TabsSize, TabItem } from './Tabs';
 export { ThemeToggle } from './ThemeToggle';
 export type { ThemeToggleProps, Theme } from './ThemeToggle';
+export { LangSwitcher, ANKORA_V1_LOCALES } from './LangSwitcher';
+export type { LangSwitcherProps, LangSwitcherLocale } from './LangSwitcher';

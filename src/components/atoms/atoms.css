@@ -934,3 +934,90 @@
 .atm-theme-toggle svg {
   transition: transform var(--dur-structural) var(--ease-spring);
 }
+
+/* ============================================================================
+   Atom 11 — LangSwitcher
+   Headless dropdown listbox (a11y) — wiring next-intl en PR-B.
+   ============================================================================ */
+.atm-lang-switcher {
+  position: relative;
+  display: inline-block;
+}
+.atm-lang-switcher-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-surface-soft);
+  color: var(--color-foreground);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  padding: 4px 10px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  transition: background var(--dur-default) var(--ease-spring);
+}
+.atm-lang-switcher-trigger:hover {
+  background: var(--color-surface-muted);
+}
+.atm-lang-switcher-trigger:focus-visible {
+  outline: 2px solid var(--color-brand-600);
+  outline-offset: 2px;
+}
+.atm-lang-switcher-flag {
+  font-size: 14px;
+  line-height: 1;
+}
+.atm-lang-switcher-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  min-width: 180px;
+  z-index: 30;
+  animation: atm-lang-switcher-pop var(--dur-default) var(--ease-spring);
+}
+@keyframes atm-lang-switcher-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.atm-lang-switcher-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--color-foreground);
+  text-align: left;
+  transition: background var(--dur-default) var(--ease-spring);
+}
+.atm-lang-switcher-option:hover {
+  background: var(--color-surface-soft);
+}
+.atm-lang-switcher-option:focus-visible {
+  outline: 2px solid var(--color-brand-600);
+  outline-offset: -2px;
+}
+.atm-lang-switcher-option.is-selected {
+  background: var(--color-brand-surface);
+  color: var(--color-brand-text);
+}
