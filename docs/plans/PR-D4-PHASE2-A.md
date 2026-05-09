@@ -2305,6 +2305,34 @@ export const ANKORA_V1_LOCALES: readonly LangSwitcherLocale[] = [
 
 - [x] **Step 13.4: Commit `feat(atoms): LangSwitcher CD#3 a11y dropdown (PR-D4-PHASE2-A)`**
 
+### Note — API divergence vs prototype handoff (verrouillé @thierry 2026-05-09)
+
+Le call-site mockup `<LangSwitcher current="fr-BE"/>` dans
+`design_handoff_ankora_v1/surfaces/admin/AdminTopbar.jsx` ne passe pas
+`onChange`. Le source `atoms/11-LangSwitcher.jsx` rend `onChange` optionnel
+(`if (onChange) onChange(loc.id)` + `useState(current)` interne).
+
+**Décision @thierry** : on garde `onChange: (id: string) => void` **REQUIS**
+dans l'atom Ankora TS strict. Le call-site handoff est un PROTOTYPE VISUEL
+sans logique routing. Le call-site PRODUCTION sera
+`src/app/[locale]/admin/_components/AdminTopbar.tsx` (PR-B) qui passera
+toujours :
+
+```tsx
+const router = useRouter();
+const pathname = usePathname();
+return <LangSwitcher value={locale} onChange={(id) => router.replace(pathname, { locale: id })} />;
+```
+
+State interne fallback violerait l'architecture next-intl App Router : la
+locale canonique vit dans l'URL, pas dans `useState`. À documenter dans
+le rapport DoD final Task 18 (section "Concerns / divergences documentées").
+
+Précision garde-fou §3 transverse : "le call-site PRÉVAUT" se lit
+**call-site PRODUCTION**, pas un prototype handoff. Avant d'ajuster une
+API à un call-site, vérifier si ce call-site est PROD ou PROTOTYPE et
+inférer le call-site prod attendu (next-intl, RBAC server, RLS Supabase).
+
 ---
 
 # Task 14 — Route playground `/[locale]/_design-playground/`
