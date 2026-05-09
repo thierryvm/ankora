@@ -5,7 +5,7 @@ Internal QA route — showcase 11 atoms CD#3 du design system Ankora.
 ## Activation
 
 - **Dev** : toujours accessible via `npm run dev` puis ouvrir
-  http://localhost:3000/fr-BE/\_design-playground/
+  http://localhost:3000/fr-BE/design-playground/
 - **Production** : route gardée par variable d'environnement.
   - Par défaut : `notFound()` (404 visible).
   - Pour activer ponctuellement (preview Vercel ou QA designer) :
@@ -21,8 +21,15 @@ d'IBAN). Si tu ajoutes une démo, respecte cette règle.
 ## Sitemap
 
 Cette route n'est PAS listée dans `src/app/sitemap.ts` (whitelist
-explicite des routes publiques). Le préfixe `_` exclut aussi
-automatiquement le segment du middleware locale-routing next-intl.
+explicite des routes publiques). Robots `noindex/nofollow` via
+`metadata` sur la page.
+
+Le segment URL est volontairement sans préfixe `_` car Next.js App Router
+considère les dossiers préfixés `_` comme **private folders exclus du
+routing** (pas seulement du middleware locale-routing). Les sub-folders
+`_components/` et `_components/demos/` gardent le préfixe `_` car ils ne
+sont PAS routés (private folders attendus). Sécurité prod assurée par le
+guard env runtime, pas par le préfixe URL.
 
 ## Structure
 
