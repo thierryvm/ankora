@@ -105,7 +105,7 @@ interface FieldLabelProps {
 function FieldLabel({ children, required, error }: FieldLabelProps): React.JSX.Element {
   return (
     <div className="drw-label-row">
-      <label className={`drw-label${error ? 'is-error' : ''}`}>
+      <label className={['drw-label', error ? 'is-error' : ''].filter(Boolean).join(' ')}>
         {children}
         {required && <span className="drw-required"> *</span>}
       </label>
@@ -137,7 +137,7 @@ function TextFieldRenderer({
         {field.label}
       </FieldLabel>
       <input
-        className={`drw-input${error ? 'is-error' : ''}`}
+        className={['drw-input', error ? 'is-error' : ''].filter(Boolean).join(' ')}
         type={field.inputType ?? 'text'}
         placeholder={field.placeholder}
         value={value ?? ''}
@@ -163,7 +163,9 @@ function MoneyFieldRenderer({
       </FieldLabel>
       <div className="drw-money">
         <input
-          className={`drw-input drw-money-input${error ? 'is-error' : ''}`}
+          className={['drw-input', 'drw-money-input', error ? 'is-error' : '']
+            .filter(Boolean)
+            .join(' ')}
           type="text"
           inputMode="decimal"
           placeholder="0,00"
@@ -189,7 +191,7 @@ function DateFieldRenderer({
         {field.label}
       </FieldLabel>
       <input
-        className={`drw-input${error ? 'is-error' : ''}`}
+        className={['drw-input', error ? 'is-error' : ''].filter(Boolean).join(' ')}
         type="date"
         value={value ?? ''}
         onChange={(e) => onChange(e.target.value)}
@@ -212,7 +214,7 @@ function SelectFieldRenderer({
       </FieldLabel>
       <div className="drw-select">
         <select
-          className={`drw-input${error ? 'is-error' : ''}`}
+          className={['drw-input', error ? 'is-error' : ''].filter(Boolean).join(' ')}
           value={value ?? ''}
           onChange={(e) => onChange(e.target.value)}
         >
@@ -272,7 +274,7 @@ function CategoryFieldRenderer({
             <button
               key={o.value}
               type="button"
-              className={`drw-cat-chip${active ? 'is-active' : ''}`}
+              className={['drw-cat-chip', active ? 'is-active' : ''].filter(Boolean).join(' ')}
               onClick={() => onChange(o.value)}
               style={activeStyle}
             >
@@ -314,7 +316,7 @@ function FrequencyFieldRenderer({
               type="button"
               role="radio"
               aria-checked={active}
-              className={`drw-seg-btn${active ? 'is-active' : ''}`}
+              className={['drw-seg-btn', active ? 'is-active' : ''].filter(Boolean).join(' ')}
               onClick={() => onChange(o.value)}
             >
               {o.label}
@@ -338,7 +340,7 @@ function NotesFieldRenderer({
         {field.label}
       </FieldLabel>
       <textarea
-        className={`drw-input drw-textarea${error ? 'is-error' : ''}`}
+        className={['drw-input', 'drw-textarea', error ? 'is-error' : ''].filter(Boolean).join(' ')}
         rows={3}
         placeholder={field.placeholder}
         value={value ?? ''}
@@ -522,7 +524,10 @@ export function EditDrawer({
   };
 
   return (
-    <div className={`drw-root${open ? 'is-open' : ''}`} aria-hidden={!open}>
+    <div
+      className={['drw-root', open ? 'is-open' : ''].filter(Boolean).join(' ')}
+      aria-hidden={!open}
+    >
       <div className="drw-overlay" onClick={onCancel} />
       <aside
         ref={panelRef}
