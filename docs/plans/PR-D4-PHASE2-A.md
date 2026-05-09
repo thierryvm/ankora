@@ -2101,7 +2101,7 @@ export interface ThemeToggleProps {
 }
 ```
 
-- [ ] **Step 12.1: Tests (~10 cas)**
+- [x] **Step 12.1: Tests (~10 cas)**
   - Initial theme rendered correctly (light icon = sun, dark icon = moon)
   - Click → toggle theme
   - aria-pressed reflète l'état (false=light, true=dark)
@@ -2113,7 +2113,7 @@ export interface ThemeToggleProps {
   - Custom cookieKey respecté
   - sizes sm vs md → 28×28 vs 36×36
 
-- [ ] **Step 12.2: Implement (cookie-first)**
+- [x] **Step 12.2: Implement (cookie-first)**
 
 ```tsx
 'use client';
@@ -2205,7 +2205,7 @@ export function ThemeToggle({
 }
 ```
 
-- [ ] **Step 12.3: CSS `.atm-theme-toggle*` (rotation 180° via @keyframes au toggle)**
+- [x] **Step 12.3: CSS `.atm-theme-toggle*` (rotation 180° via @keyframes au toggle)**
 
 ```css
 .atm-theme-toggle {
@@ -2247,7 +2247,7 @@ export function ThemeToggle({
 }
 ```
 
-- [ ] **Step 12.4: Commit `feat(atoms): ThemeToggle CD#3 cookie-first SSR-safe (PR-D4-PHASE2-A)`**
+- [x] **Step 12.4: Commit `feat(atoms): ThemeToggle CD#3 cookie-first SSR-safe (PR-D4-PHASE2-A)`**
 
 ---
 

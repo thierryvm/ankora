@@ -37,3 +37,5 @@ export { ANKORA_ICON_LIB } from './icons';
 export type { AnkoraIconName, AnkoraIconDef } from './icons';
 export { Tabs } from './Tabs';
 export type { TabsProps, TabsVariant, TabsSize, TabItem } from './Tabs';
+export { ThemeToggle } from './ThemeToggle';
+export type { ThemeToggleProps, Theme } from './ThemeToggle';

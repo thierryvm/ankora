@@ -897,3 +897,40 @@
   background: var(--color-brand-surface);
   color: var(--color-brand-text);
 }
+
+/* ============================================================================
+   Atom 10 — ThemeToggle
+   Bouton SSR-safe, écriture cookie + data-theme on root au toggle.
+   Sizes : sm (28×28) · md (36×36).
+   ============================================================================ */
+.atm-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-soft);
+  color: var(--color-foreground);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition:
+    background var(--dur-default) var(--ease-spring),
+    transform var(--dur-structural) var(--ease-spring);
+}
+.atm-theme-toggle--sm {
+  width: 28px;
+  height: 28px;
+}
+.atm-theme-toggle--md {
+  width: 36px;
+  height: 36px;
+}
+.atm-theme-toggle:hover {
+  background: var(--color-surface-muted);
+}
+.atm-theme-toggle:focus-visible {
+  outline: 2px solid var(--color-brand-600);
+  outline-offset: 2px;
+}
+.atm-theme-toggle svg {
+  transition: transform var(--dur-structural) var(--ease-spring);
+}
