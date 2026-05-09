@@ -15,3 +15,17 @@ export type {
 } from './ProgressBar';
 export { Avatar } from './Avatar';
 export type { AvatarProps, AvatarSize, AvatarShape } from './Avatar';
+export { EditDrawer } from './Drawer';
+export type {
+  DrawerField,
+  DrawerFieldType,
+  DrawerTextField,
+  DrawerMoneyField,
+  DrawerDateField,
+  DrawerSelectField,
+  DrawerCategoryField,
+  DrawerFrequencyField,
+  DrawerNotesField,
+  DrawerValues,
+  EditDrawerProps,
+} from './Drawer';

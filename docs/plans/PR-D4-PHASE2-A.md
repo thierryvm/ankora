@@ -1652,7 +1652,7 @@ export interface EditDrawerProps {
 }
 ```
 
-- [ ] **Step 8.1: Tests TDD (~18 cas)**
+- [x] **Step 8.1: Tests TDD (~18 cas)**
 
 Critical cases:
 
@@ -1675,11 +1675,11 @@ Critical cases:
 - Validation money → "Montant invalide" si NaN ou < 0
 - Custom validate function → message custom retourné
 
-- [ ] **Step 8.2: Implement Drawer.tsx** (port complet `_deps/drawer.jsx` en TS strict). 7 sub-renderers internes au fichier. ~280 lignes TS.
+- [x] **Step 8.2: Implement Drawer.tsx** (port complet `_deps/drawer.jsx` en TS strict). 7 sub-renderers internes au fichier. ~280 lignes TS.
 
-- [ ] **Step 8.3: CSS** — port complet `_deps/drawer.css` dans `atoms.css` (préfixe `.drw-*`)
+- [x] **Step 8.3: CSS** — port complet `_deps/drawer.css` dans `atoms.css` (préfixe `.drw-*`)
 
-- [ ] **Step 8.4: Tests PASS + commit**
+- [x] **Step 8.4: Tests PASS + commit**
 
 ```bash
 git commit -m "feat(atoms): Drawer + 7 field primitives CD#3 (PR-D4-PHASE2-A)
