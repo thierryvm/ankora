@@ -103,7 +103,7 @@ export function Tabs({
             aria-disabled={t.disabled || undefined}
             tabIndex={isActive ? 0 : -1}
             disabled={t.disabled}
-            className={`atm-tabs-tab${isActive ? 'is-active' : ''}`}
+            className={['atm-tabs-tab', isActive ? 'is-active' : ''].filter(Boolean).join(' ')}
             onClick={() => {
               if (!t.disabled && t.id !== activeId) onChange(t.id);
             }}
