@@ -2628,7 +2628,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 
 # Task 16 — Quality gates locaux finaux
 
-- [ ] **Step 16.1: Linter + types + tests + build**
+- [x] **Step 16.1: Linter + types + tests + build**
 
 ```bash
 npm run lint && npm run lint:use-server && npm run typecheck && npm run test:coverage && npm run build
@@ -2636,7 +2636,7 @@ npm run lint && npm run lint:use-server && npm run typecheck && npm run test:cov
 
 Expected: 0 erreur, coverage atoms ≥90%, build succès.
 
-- [ ] **Step 16.2: Vérifier `npm run e2e` (sans ANKORA_DEV_MODE) → smoke 404 PASS**
+- [x] **Step 16.2: Vérifier `npm run e2e` (sans ANKORA_DEV_MODE) → smoke 404 PASS**
 
 - [ ] **Step 16.3: Lighthouse mobile (régression check)**
 
@@ -2650,15 +2650,15 @@ Expected: pas de régression vs baseline.
 
 # Task 17 — Agents QA finale
 
-- [ ] **Step 17.1: ui-auditor** — atoms a11y WCAG 2.2 AA (focus rings, contrast, keyboard, semantic HTML)
+- [x] **Step 17.1: ui-auditor** — atoms a11y WCAG 2.2 AA (focus rings, contrast, keyboard, semantic HTML)
 
-- [ ] **Step 17.2: mobile-ios-auditor** — atoms responsive 375×812 iPhone SE (Drawer full-screen mobile, Tabs scroll horizontal si overflow)
+- [x] **Step 17.2: mobile-ios-auditor** — atoms responsive 375×812 iPhone SE (Drawer full-screen mobile, Tabs scroll horizontal si overflow)
 
-- [ ] **Step 17.3: i18n-auditor** — vérifier que le playground n'a pas de string hardcodée non-i18n (dev-only mais hygiène)
+- [x] **Step 17.3: i18n-auditor** — vérifier que le playground n'a pas de string hardcodée non-i18n (dev-only mais hygiène)
 
-- [ ] **Step 17.4: test-runner** — Vitest + Playwright dernière passe + parse failures
+- [x] **Step 17.4: test-runner** — Vitest + Playwright dernière passe + parse failures
 
-- [ ] **Step 17.5: security-auditor** — focus sur la garde `ANKORA_DEV_MODE` (pas de `NEXT_PUBLIC_*` leak), `notFound()` correct, aucun secret dans le playground
+- [x] **Step 17.5: security-auditor** — focus sur la garde `ANKORA_DEV_MODE` (pas de `NEXT_PUBLIC_*` leak), `notFound()` correct, aucun secret dans le playground
 
 Pour chaque agent : capturer findings, fix P0/P1 dans des commits séparés (`fix(atoms): ui-auditor P1 contrast Card warning tone`), marquer DONE quand 0 P0/P1 résiduel.
 
@@ -2709,7 +2709,7 @@ Expected: `"CLEAN"`.
 
 Embed le screenshot dans le rapport final (Step 18.6) via markdown `![Screenshot playground](../../design-snapshots/2026-05-XX-PR-D4-PHASE2-A-playground.png)`.
 
-- [ ] **Step 18.6: Rédiger `docs/prs/PR-D4-PHASE2-A-report.md`**
+- [x] **Step 18.6: Rédiger `docs/prs/PR-D4-PHASE2-A-report.md`**
 
 Template:
 
