@@ -2606,11 +2606,11 @@ test.describe('Design Playground (PR-D4-PHASE2-A)', () => {
 });
 ```
 
-- [ ] **Step 15.1: Implement spec**
+- [x] **Step 15.1: Implement spec**
 
-- [ ] **Step 15.2: Run `npm run e2e -- design-playground.spec.ts`**
+- [x] **Step 15.2: Run `npm run e2e -- design-playground.spec.ts`**
 
-- [ ] **Step 15.3: Commit**
+- [x] **Step 15.3: Commit**
 
 ```bash
 git commit -m "test(e2e): smoke design-playground (PR-D4-PHASE2-A)
