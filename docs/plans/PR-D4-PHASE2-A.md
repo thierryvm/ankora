@@ -1831,13 +1831,13 @@ export interface IconPickerProps {
 }
 ```
 
-- [ ] **Step 10.1: Tests (~8 cas)** : default lib (25 icons), role radiogroup, aria-checked, click → onChange, custom options, columns, maxHeight scrollable, label tooltip.
+- [x] **Step 10.1: Tests (~8 cas)** : default lib (25 icons), role radiogroup, aria-checked, click → onChange, custom options, columns, maxHeight scrollable, label tooltip.
 
-- [ ] **Step 10.2: Implement IconPicker.tsx** + `icons.ts` registry
+- [x] **Step 10.2: Implement IconPicker.tsx** + `icons.ts` registry
 
-- [ ] **Step 10.3: CSS `.atm-ipick*`**
+- [x] **Step 10.3: CSS `.atm-ipick*`**
 
-- [ ] **Step 10.4: Commit `feat(atoms): IconPicker CD#3 + Ankora icon registry (PR-D4-PHASE2-A)`**
+- [x] **Step 10.4: Commit `feat(atoms): IconPicker CD#3 + Ankora icon registry (PR-D4-PHASE2-A)`**
 
 ---
 

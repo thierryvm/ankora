@@ -31,3 +31,7 @@ export type {
 } from './Drawer';
 export { ColorPicker, ATM_COLOR_PALETTE } from './ColorPicker';
 export type { ColorPickerProps } from './ColorPicker';
+export { IconPicker } from './IconPicker';
+export type { IconPickerProps } from './IconPicker';
+export { ANKORA_ICON_LIB } from './icons';
+export type { AnkoraIconName, AnkoraIconDef } from './icons';
