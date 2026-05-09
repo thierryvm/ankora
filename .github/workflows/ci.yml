@@ -61,6 +61,12 @@ jobs:
       UPSTASH_REDIS_REST_URL: ${{ secrets.E2E_UPSTASH_URL || 'http://localhost:8079' }}
       UPSTASH_REDIS_REST_TOKEN: ${{ secrets.E2E_UPSTASH_TOKEN || 'dummy-token' }}
       INTERNAL_SECRET: ${{ secrets.E2E_INTERNAL_SECRET || 'dummy-secret-at-least-32-characters-long' }}
+      # Playground route is server-only (no NEXT_PUBLIC_ prefix). Enabled in CI
+      # so the smoke E2E `e2e/design-playground.spec.ts` can render the route
+      # against the prod build (`npm run build && npm run start`). Production
+      # deployments must NOT set this to 'true' unless intentionally exposing
+      # the dev-only QA route. Cf. PR-D4-PHASE2-A Task 14 (route guard).
+      ANKORA_PLAYGROUND_ENABLED: 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
