@@ -814,3 +814,86 @@
   border-color: var(--color-brand-500);
   color: var(--color-brand-text);
 }
+
+/* ============================================================================
+   Atom 09 — Tabs (PR-D4-PHASE2-A Task 11/18)
+   Pattern extrait : AdminPanelV1.jsx, AdminTopbar.jsx, onboarding/step2.jsx.
+   Variants: pill | underline. Sizes: sm | md. Keyboard nav (Arrow/Home/End).
+   ============================================================================ */
+.atm-tabs {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+.atm-tabs--pill {
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  padding: 4px;
+}
+.atm-tabs--underline {
+  border-bottom: 1px solid var(--color-border);
+  gap: 0;
+}
+.atm-tabs-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: var(--color-muted-foreground);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  transition:
+    background var(--dur-default) var(--ease-spring),
+    color var(--dur-default) var(--ease-spring),
+    border-color var(--dur-default) var(--ease-spring),
+    box-shadow var(--dur-default) var(--ease-spring);
+  white-space: nowrap;
+}
+.atm-tabs--sm .atm-tabs-tab {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+.atm-tabs--md .atm-tabs-tab {
+  padding: 6px 14px;
+  font-size: 13px;
+}
+.atm-tabs--pill .atm-tabs-tab {
+  border-radius: var(--radius-full);
+}
+.atm-tabs--underline .atm-tabs-tab {
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  margin-bottom: -1px;
+}
+.atm-tabs-tab.is-active {
+  color: var(--color-foreground);
+}
+.atm-tabs--pill .atm-tabs-tab.is-active {
+  background: var(--color-card);
+  box-shadow: var(--shadow-xs);
+}
+.atm-tabs--underline .atm-tabs-tab.is-active {
+  border-bottom-color: var(--color-brand-500);
+}
+.atm-tabs-tab:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.atm-tabs-tab:focus-visible {
+  outline: 2px solid var(--color-brand-600);
+  outline-offset: 2px;
+}
+.atm-tabs-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-muted);
+  color: var(--color-muted-foreground);
+}
+.atm-tabs-tab.is-active .atm-tabs-badge {
+  background: var(--color-brand-surface);
+  color: var(--color-brand-text);
+}

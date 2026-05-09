@@ -35,3 +35,5 @@ export { IconPicker } from './IconPicker';
 export type { IconPickerProps } from './IconPicker';
 export { ANKORA_ICON_LIB } from './icons';
 export type { AnkoraIconName, AnkoraIconDef } from './icons';
+export { Tabs } from './Tabs';
+export type { TabsProps, TabsVariant, TabsSize, TabItem } from './Tabs';

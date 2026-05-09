@@ -1853,7 +1853,7 @@ export interface IconPickerProps {
 
 **Spec ADDENDUM F:** props `tabs: { id, label, badge? }[]`, `activeId`, `onChange`, `variant: 'pill'|'underline'`, `size: 'sm'|'md'`. Tokens `--color-brand-500`, `--color-brand-surface`, `--color-border`, `--color-foreground`, `--radius-full`, `--ease-spring`.
 
-- [ ] **Step 11.1: Lire les 3 implémentations existantes**
+- [x] **Step 11.1: Lire les 3 implémentations existantes**
 
 ```bash
 grep -n -A 8 'role="tablist"' design_handoff_ankora_v1/surfaces/admin/AdminPanelV1.jsx
@@ -1889,7 +1889,7 @@ export interface TabsProps {
 }
 ```
 
-- [ ] **Step 11.2: Tests (~10 cas)**
+- [x] **Step 11.2: Tests (~10 cas)**
   - role="tablist" + tab per item
   - aria-selected sur tab actif (true/false sur tous les autres)
   - clavier : ArrowLeft/Right cyclic, Home → first, End → last
@@ -1901,7 +1901,7 @@ export interface TabsProps {
   - focus visible sur tab actif
   - ariaLabel sur tablist
 
-- [ ] **Step 11.3: Implement avec keyboard navigation**
+- [x] **Step 11.3: Implement avec keyboard navigation**
 
 ```tsx
 'use client';
@@ -1976,7 +1976,7 @@ export function Tabs({
 }
 ```
 
-- [ ] **Step 11.4: CSS `.atm-tabs*`**
+- [x] **Step 11.4: CSS `.atm-tabs*`**
 
 ```css
 .atm-tabs {
@@ -2054,7 +2054,7 @@ export function Tabs({
 }
 ```
 
-- [ ] **Step 11.5: Commit**
+- [x] **Step 11.5: Commit**
 
 ```bash
 git commit -m "feat(atoms): Tabs CD#3 (PR-D4-PHASE2-A)
