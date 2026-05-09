@@ -2547,15 +2547,15 @@ CSS playground :
 }
 ```
 
-- [ ] **Step 14.1: Implementer Page Server Component avec garde**
+- [x] **Step 14.1: Implementer Page Server Component avec garde**
 
-- [ ] **Step 14.2: Créer 5 mini-démos client interactifs**
+- [x] **Step 14.2: Créer 5 mini-démos client interactifs**
 
-- [ ] **Step 14.3: Manuel local : `ANKORA_DEV_MODE=1 npm run dev` → ouvrir `http://localhost:3000/fr-BE/_design-playground/` → vérifier visuellement les 11 atoms**
+- [x] **Step 14.3: Manuel local : `ANKORA_DEV_MODE=1 npm run dev` → ouvrir `http://localhost:3000/fr-BE/_design-playground/` → vérifier visuellement les 11 atoms**
 
-- [ ] **Step 14.4: Vérifier prod-safe : `npm run build` (sans `ANKORA_DEV_MODE`) puis `npm run start` → la route doit répondre 404**
+- [x] **Step 14.4: Vérifier prod-safe : `npm run build` (sans `ANKORA_DEV_MODE`) puis `npm run start` → la route doit répondre 404**
 
-- [ ] **Step 14.5: Commit**
+- [x] **Step 14.5: Commit**
 
 ```bash
 git commit -m "feat(playground): /[locale]/_design-playground/ admin-only route (PR-D4-PHASE2-A)
