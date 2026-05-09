@@ -320,3 +320,21 @@
   font-size: 11px;
   color: var(--color-muted-foreground);
 }
+
+/* ============================================================================
+   Atom 06 — Avatar
+   xs(20)/sm(28)/md(36)/lg(44)/xl(56), shape rounded|circle, emoji|icon|initials.
+   Color-mix dynamique sur color hex prop. role img si label fourni.
+   ============================================================================ */
+.atm-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+.atm-avatar-init {
+  letter-spacing: -0.02em;
+}

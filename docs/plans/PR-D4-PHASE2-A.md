@@ -1466,9 +1466,9 @@ export interface AvatarProps {
 }
 ```
 
-- [ ] **Step 7.1: Tests Vitest (~10 cas)** : sizes mapping (xs=20, sm=28, md=36, lg=44, xl=56), shape rounded vs circle (border-radius), emoji|icon|initials priority order, color-mix dynamique, role img si label fourni.
+- [x] **Step 7.1: Tests Vitest (~10 cas)** : sizes mapping (xs=20, sm=28, md=36, lg=44, xl=56), shape rounded vs circle (border-radius), emoji|icon|initials priority order, color-mix dynamique, role img si label fourni.
 
-- [ ] **Step 7.2: Implement** (port direct `06-Avatar.jsx` en TS)
+- [x] **Step 7.2: Implement** (port direct `06-Avatar.jsx` en TS)
 
 ```tsx
 import * as React from 'react';
@@ -1527,7 +1527,7 @@ export function Avatar({
 }
 ```
 
-- [ ] **Step 7.3: CSS minimal `.atm-avatar*`**
+- [x] **Step 7.3: CSS minimal `.atm-avatar*`**
 
 ```css
 .atm-avatar {
@@ -1544,7 +1544,7 @@ export function Avatar({
 }
 ```
 
-- [ ] **Step 7.4: Tests PASS + commit**
+- [x] **Step 7.4: Tests PASS + commit**
 
 ```bash
 git commit -m "feat(atoms): Avatar CD#3 (PR-D4-PHASE2-A)

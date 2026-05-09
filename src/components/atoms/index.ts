@@ -13,3 +13,5 @@ export type {
   ProgressBarSize,
   ProgressBarSplit,
 } from './ProgressBar';
+export { Avatar } from './Avatar';
+export type { AvatarProps, AvatarSize, AvatarShape } from './Avatar';
