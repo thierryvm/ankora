@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -123,6 +126,30 @@ describe('<ThemeToggle /> (atom CD#3)', () => {
     const { container } = render(<ThemeToggle />);
     const root = container.querySelector('button');
     expect(root?.className).toContain('atm-theme-toggle--md');
+  });
+
+  /**
+   * Touch target hit area pinning (GH issue #153, fixed in PR-D4-PHASE2-B).
+   * Reads atoms.css directly because jsdom does not load external CSS.
+   * Anti-regression: prevents a future refactor from shrinking the hit
+   * target back below WCAG 2.5.8 / Apple HIG 44×44.
+   */
+  it('CSS pins .atm-theme-toggle--md ≥ 44×44 (Apple HIG, GH #153)', () => {
+    const css = readFileSync(resolve(__dirname, '../atoms.css'), 'utf-8');
+    const mdRule = css.match(/\.atm-theme-toggle--md\s*\{[^}]*\}/)?.[0] ?? '';
+    const width = Number(mdRule.match(/width:\s*(\d+)px/)?.[1] ?? '0');
+    const height = Number(mdRule.match(/height:\s*(\d+)px/)?.[1] ?? '0');
+    expect(width, 'md width must satisfy Apple HIG 44×44').toBeGreaterThanOrEqual(44);
+    expect(height, 'md height must satisfy Apple HIG 44×44').toBeGreaterThanOrEqual(44);
+  });
+
+  it('CSS pins .atm-theme-toggle--sm ≥ 24×24 (WCAG 2.5.8 minimum)', () => {
+    const css = readFileSync(resolve(__dirname, '../atoms.css'), 'utf-8');
+    const smRule = css.match(/\.atm-theme-toggle--sm\s*\{[^}]*\}/)?.[0] ?? '';
+    const width = Number(smRule.match(/width:\s*(\d+)px/)?.[1] ?? '0');
+    const height = Number(smRule.match(/height:\s*(\d+)px/)?.[1] ?? '0');
+    expect(width, 'sm width must satisfy WCAG 2.5.8 minimum').toBeGreaterThanOrEqual(24);
+    expect(height, 'sm height must satisfy WCAG 2.5.8 minimum').toBeGreaterThanOrEqual(24);
   });
 
   it('default theme is light, default cookieKey is "theme"', async () => {

@@ -17,6 +17,10 @@ const serverSchema = z
     UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
     INTERNAL_SECRET: z.string().min(32),
     ANKORA_PLAYGROUND_ENABLED: z.enum(['true', 'false']).default('false').optional(),
+    // Comma-separated list of Supabase user IDs allowed in /admin/* routes.
+    // PR-D4-PHASE2-B initial: contains @thierry's user_id only. Future PRs
+    // may move this to a workspace_members.role-based check.
+    ANKORA_ADMIN_USER_IDS: z.string().default('').optional(),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV === 'production') {
