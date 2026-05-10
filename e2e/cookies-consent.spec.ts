@@ -26,13 +26,24 @@ test.describe('PR-LEGAL-1 — cookies consent flow', () => {
     page,
     browserName,
   }) => {
-    // FIXME(@cc-ankora 2026-05-09): webkit-only timeout on `localStorage.getItem`
-    // 5s polling. Same WebKit `useTransition` + Server Action timing bug as the
-    // dismissed `:70` test. Discovered in PR #147 CI run 25606356945. Patterns
-    // align with the deterministic Drawer/Tabs className bugs revealed in
-    // PR-D4-PHASE2-A Task 16 — likely deterministic, not a real flake.
-    // Investigation planned in PR-D4 stabilization Sub-task B. Re-enable webkit then.
-    test.fixme(browserName === 'webkit', 'webkit timing — see Sub-task B');
+    // FIXME(@cc-ankora 2026-05-10): webkit-deterministic timing bug (Sub-task B
+    // investigation: 3/3 fail mobile-safari + 0/3 chromium en CI).
+    //
+    // Hypothèse root cause : ConsentBanner.tsx:148 utilise `useSyncExternalStore`
+    // avec `getServerSnapshot()` retournant `{stored: null, reopen: false}` →
+    // Server-render-empty puis Client-hydrate-snapshot. L'`accept()` flow
+    // (ligne 159-174) appelle synchroné `persist()` + `setDismissed()` + `notify()`
+    // puis async `startTransition(recordCookieConsentAction)`.
+    //
+    // Sur WebKit, le `page.waitForFunction((key) => !!localStorage.getItem(key))`
+    // poll voit `null` pendant 5s alors que `persist()` est synchrone — possible
+    // sandbox storage Playwright/WebKit isolé du contexte React, OU Server Action
+    // via useTransition produit un re-render qui interfère avec l'observabilité
+    // localStorage côté Playwright runner.
+    //
+    // Fix root cause > 30min — défer dédié (issue GH e2e-webkit-hydration-timing).
+    // Tracker conjoint avec :53 + error-boundaries:21 (même famille).
+    test.fixme(browserName === 'webkit', 'webkit hydration timing — see GH issue');
     await clearConsentStorage(page);
     await page.goto('/');
     await page.getByRole('button', { name: 'Tout accepter' }).click();
@@ -58,9 +69,9 @@ test.describe('PR-LEGAL-1 — cookies consent flow', () => {
     page,
     browserName,
   }) => {
-    // FIXME(@cc-ankora 2026-05-09): same webkit timing bug as `:25`. See
-    // PR-D4 stabilization Sub-task B for root cause investigation.
-    test.fixme(browserName === 'webkit', 'webkit timing — see Sub-task B');
+    // FIXME(@cc-ankora 2026-05-10): same webkit-deterministic timing bug as `:25`.
+    // Sub-task B investigation: 3/3 fail mobile-safari, root cause défer dédié.
+    test.fixme(browserName === 'webkit', 'webkit hydration timing — see GH issue');
     await clearConsentStorage(page);
     await page.goto('/');
     await page.getByRole('button', { name: 'Personnaliser' }).click();
@@ -86,6 +97,13 @@ test.describe('PR-LEGAL-1 — cookies consent flow', () => {
   // (1) augmenter timeout à 20s, (2) waitForLoadState('networkidle') avant
   // scrollIntoView, (3) vérifier viewport CI vs viewport local. Tracking issue
   // à créer. Le test reste pertinent — ne pas le supprimer, juste fixme jusqu'à fix.
+  // FIXME(@cowork 2026-05-08, confirmed déterministe @cc-ankora 2026-05-10):
+  // 3/3 fail chromium-desktop ET mobile-safari en local. Confirmé pré-existant
+  // sur main (commits 9f0b400, 32e7683 also failed). Hypothèse : footer hydration
+  // delayed (`scrollIntoViewIfNeeded` times out at 10s), aggravé par cookies-consent
+  // pattern useSyncExternalStore (cf. note `:25`). À investiguer conjointement
+  // avec :25/:49 + error-boundaries:21 — possible root cause commune.
+  // Tracking issue GH e2e-webkit-hydration-timing (Sub-task B follow-up).
   test.fixme('Footer "Modifier mes préférences cookies" reopens the banner from any page', async ({
     page,
   }) => {

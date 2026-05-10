@@ -19,12 +19,13 @@ test.describe('THI-122 — 404 page brandée (FR default)', () => {
   });
 
   test('the home CTA navigates back to the landing page', async ({ page, browserName }) => {
-    // FIXME(@cc-ankora 2026-05-09): webkit-only — `Retour à l'accueil` link
-    // click does not navigate, page stays on `/this-page-does-not-exist`.
-    // Discovered in PR #147 CI run 25606356945. Likely a deterministic webkit
-    // navigation bug (same family as cookies-consent :25/:49). Investigation
-    // planned in PR-D4 stabilization Sub-task B. Re-enable webkit then.
-    test.fixme(browserName === 'webkit', 'webkit navigation timing — see Sub-task B');
+    // FIXME(@cc-ankora 2026-05-10): webkit-deterministic navigation bug
+    // (Sub-task B investigation: 3/3 fail mobile-safari, 0/3 chromium en CI).
+    // `Retour à l'accueil` link click ne navigue pas — page reste sur
+    // `/this-page-does-not-exist`. Probablement même famille que cookies-consent
+    // :25/:49/:70 (hydration timing post-Server Component flip). Tracking
+    // issue GH e2e-webkit-hydration-timing. Root cause > 30min, défer dédié.
+    test.fixme(browserName === 'webkit', 'webkit hydration timing — see GH issue');
     await page.goto('/this-page-does-not-exist');
     await page.getByRole('link', { name: "Retour à l'accueil" }).click();
     await expect(page).toHaveURL(/\/(?:fr-BE)?\/?$/);
