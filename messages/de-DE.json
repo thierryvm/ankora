@@ -26,7 +26,9 @@
       "charges": "Fixkosten",
       "expenses": "Ausgaben",
       "simulator": "Simulator",
-      "settings": "Einstellungen"
+      "settings": "Einstellungen",
+      "admin": "Admin",
+      "adminAriaLabel": "Admin-Bereich (nur Gründer)"
     },
     "actions": {
       "retry": "Erneut versuchen",

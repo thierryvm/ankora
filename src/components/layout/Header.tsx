@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { BrandHomeLink } from '@/components/brand/BrandHomeLink';
 import { Button } from '@/components/ui/button';
+import { isAdmin } from '@/lib/auth/is-admin';
 import { HeaderNav } from './HeaderNav';
 
 type HeaderProps = {
@@ -11,6 +12,12 @@ type HeaderProps = {
 
 export async function Header({ variant = 'marketing', isAuthenticated = false }: HeaderProps) {
   const t = await getTranslations('common');
+
+  // PR-SEC-ADMIN — conditional admin link in app variant. `isAdmin()` reads
+  // session + ANKORA_ADMIN_USER_IDS server-side; returns false for any
+  // non-admin or unauthenticated visitor (fail-closed). Skipped for
+  // marketing variant since marketing pages are public.
+  const showAdminLink = variant === 'app' && (await isAdmin());
 
   return (
     <header className="border-border bg-background/80 sticky top-0 z-40 border-b backdrop-blur">
@@ -60,6 +67,18 @@ export async function Header({ variant = 'marketing', isAuthenticated = false }:
             <Button asChild variant="ghost" size="sm">
               <Link href="/app/settings">{t('nav.settings')}</Link>
             </Button>
+            {showAdminLink && (
+              <Button asChild variant="ghost" size="sm" aria-label={t('nav.adminAriaLabel')}>
+                <Link href="/admin" className="flex items-center gap-1.5">
+                  <span>{t('nav.admin')}</span>
+                  {/* Subtle marker — signals "private zone" without screaming. */}
+                  <span
+                    aria-hidden="true"
+                    className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500"
+                  />
+                </Link>
+              </Button>
+            )}
           </nav>
         )}
 
