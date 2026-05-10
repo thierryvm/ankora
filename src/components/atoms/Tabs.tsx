@@ -21,6 +21,8 @@
 
 import * as React from 'react';
 
+import { cn } from '@/lib/utils';
+
 export type TabsVariant = 'pill' | 'underline';
 export type TabsSize = 'sm' | 'md';
 
@@ -103,7 +105,7 @@ export function Tabs({
             aria-disabled={t.disabled || undefined}
             tabIndex={isActive ? 0 : -1}
             disabled={t.disabled}
-            className={['atm-tabs-tab', isActive ? 'is-active' : ''].filter(Boolean).join(' ')}
+            className={cn('atm-tabs-tab', isActive && 'is-active')}
             onClick={() => {
               if (!t.disabled && t.id !== activeId) onChange(t.id);
             }}

@@ -2,6 +2,8 @@
 
 import * as React from 'react';
 
+import { cn } from '@/lib/utils';
+
 /**
  * Atom 11 — LangSwitcher
  * Headless dropdown listbox a11y (FR-BE / EN par défaut, v1.0 Belgique-first).
@@ -91,7 +93,7 @@ export function LangSwitcher({
 
   const currentLocale = locales.find((l) => l.id === current);
 
-  const classes = ['atm-lang-switcher', className ?? ''].filter(Boolean).join(' ');
+  const classes = cn('atm-lang-switcher', className);
 
   return (
     <div className={classes}>

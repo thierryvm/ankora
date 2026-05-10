@@ -2,6 +2,8 @@
 
 import * as React from 'react';
 
+import { cn } from '@/lib/utils';
+
 /**
  * Curated CD#3 palette — 12 colors covering category needs.
  * Source: design_handoff_ankora_v1/atoms/07-ColorPicker.jsx
@@ -44,7 +46,7 @@ export function ColorPicker({
   className,
   ariaLabel = 'Choisir une couleur',
 }: ColorPickerProps): React.JSX.Element {
-  const classes = ['atm-cpick', className ?? ''].filter(Boolean).join(' ');
+  const classes = cn('atm-cpick', className);
 
   return (
     <div

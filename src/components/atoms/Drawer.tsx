@@ -20,6 +20,8 @@
 
 import * as React from 'react';
 
+import { cn } from '@/lib/utils';
+
 /* ============================================================================
    Types — discriminated union sur `type`
    ============================================================================ */
@@ -105,7 +107,7 @@ interface FieldLabelProps {
 function FieldLabel({ children, required, error }: FieldLabelProps): React.JSX.Element {
   return (
     <div className="drw-label-row">
-      <label className={['drw-label', error ? 'is-error' : ''].filter(Boolean).join(' ')}>
+      <label className={cn('drw-label', error && 'is-error')}>
         {children}
         {required && <span className="drw-required"> *</span>}
       </label>
@@ -137,7 +139,7 @@ function TextFieldRenderer({
         {field.label}
       </FieldLabel>
       <input
-        className={['drw-input', error ? 'is-error' : ''].filter(Boolean).join(' ')}
+        className={cn('drw-input', error && 'is-error')}
         type={field.inputType ?? 'text'}
         placeholder={field.placeholder}
         value={value ?? ''}
@@ -163,9 +165,7 @@ function MoneyFieldRenderer({
       </FieldLabel>
       <div className="drw-money">
         <input
-          className={['drw-input', 'drw-money-input', error ? 'is-error' : '']
-            .filter(Boolean)
-            .join(' ')}
+          className={cn('drw-input', 'drw-money-input', error && 'is-error')}
           type="text"
           inputMode="decimal"
           placeholder="0,00"
@@ -191,7 +191,7 @@ function DateFieldRenderer({
         {field.label}
       </FieldLabel>
       <input
-        className={['drw-input', error ? 'is-error' : ''].filter(Boolean).join(' ')}
+        className={cn('drw-input', error && 'is-error')}
         type="date"
         value={value ?? ''}
         onChange={(e) => onChange(e.target.value)}
@@ -214,7 +214,7 @@ function SelectFieldRenderer({
       </FieldLabel>
       <div className="drw-select">
         <select
-          className={['drw-input', error ? 'is-error' : ''].filter(Boolean).join(' ')}
+          className={cn('drw-input', error && 'is-error')}
           value={value ?? ''}
           onChange={(e) => onChange(e.target.value)}
         >
@@ -274,7 +274,7 @@ function CategoryFieldRenderer({
             <button
               key={o.value}
               type="button"
-              className={['drw-cat-chip', active ? 'is-active' : ''].filter(Boolean).join(' ')}
+              className={cn('drw-cat-chip', active && 'is-active')}
               onClick={() => onChange(o.value)}
               style={activeStyle}
             >
@@ -316,7 +316,7 @@ function FrequencyFieldRenderer({
               type="button"
               role="radio"
               aria-checked={active}
-              className={['drw-seg-btn', active ? 'is-active' : ''].filter(Boolean).join(' ')}
+              className={cn('drw-seg-btn', active && 'is-active')}
               onClick={() => onChange(o.value)}
             >
               {o.label}
@@ -340,7 +340,7 @@ function NotesFieldRenderer({
         {field.label}
       </FieldLabel>
       <textarea
-        className={['drw-input', 'drw-textarea', error ? 'is-error' : ''].filter(Boolean).join(' ')}
+        className={cn('drw-input', 'drw-textarea', error && 'is-error')}
         rows={3}
         placeholder={field.placeholder}
         value={value ?? ''}
@@ -524,10 +524,7 @@ export function EditDrawer({
   };
 
   return (
-    <div
-      className={['drw-root', open ? 'is-open' : ''].filter(Boolean).join(' ')}
-      aria-hidden={!open}
-    >
+    <div className={cn('drw-root', open && 'is-open')} aria-hidden={!open}>
       <div className="drw-overlay" onClick={onCancel} />
       <aside
         ref={panelRef}
