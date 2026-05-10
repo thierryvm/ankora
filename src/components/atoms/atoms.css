@@ -916,13 +916,21 @@
     background var(--dur-default) var(--ease-spring),
     transform var(--dur-structural) var(--ease-spring);
 }
+/*
+ * GH issue #153 (PR-D4-PHASE2-A §C6 P1-1): touch targets must satisfy Apple
+ * HIG 44×44 minimum. Bumped on PR-D4-PHASE2-B (consumer prod admin = real
+ * users). The icon `<svg width="16" height="16">` stays centered via the
+ * .atm-theme-toggle inline-flex parent — visual size grows but icon glyph
+ * remains the same. `sm` keeps a denser tap target (36×36) for compact
+ * surfaces where a 44 button would dominate; `md` is the canonical 44×44.
+ */
 .atm-theme-toggle--sm {
-  width: 28px;
-  height: 28px;
-}
-.atm-theme-toggle--md {
   width: 36px;
   height: 36px;
+}
+.atm-theme-toggle--md {
+  width: 44px;
+  height: 44px;
 }
 .atm-theme-toggle:hover {
   background: var(--color-surface-muted);
