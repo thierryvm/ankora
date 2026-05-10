@@ -2,6 +2,8 @@
 
 import * as React from 'react';
 
+import { cn } from '@/lib/utils';
+
 import { ANKORA_ICON_LIB, type AnkoraIconDef, type AnkoraIconName } from './icons';
 
 export interface IconPickerProps {
@@ -33,7 +35,7 @@ export function IconPicker({
   className,
   ariaLabel = 'Choisir une icône',
 }: IconPickerProps): React.JSX.Element {
-  const classes = ['atm-ipick', className ?? ''].filter(Boolean).join(' ');
+  const classes = cn('atm-ipick', className);
 
   const style: React.CSSProperties = {
     gridTemplateColumns: `repeat(${columns}, 1fr)`,
