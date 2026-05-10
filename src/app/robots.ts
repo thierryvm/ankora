@@ -19,10 +19,14 @@ export default function robots(): MetadataRoute.Robots {
   // With `localePrefix: 'as-needed'`, the default locale exposes paths at root
   // (e.g. /app) while other locales are prefixed (e.g. /nl-BE/app). Disallow the
   // authenticated app surface for both shapes.
-  const disallowBase = ['/app/', '/api/', '/auth/', '/onboarding/', '/_next/'];
+  // PR-SEC-ADMIN: explicitly disallow /admin (per locale + default). Backed
+  // up by route-level metadata.robots noindex/nofollow + middleware
+  // X-Robots-Tag header. Defense-in-depth — robots.txt is advisory but
+  // closes the door on well-behaved crawlers before they probe the route.
+  const disallowBase = ['/app/', '/api/', '/auth/', '/onboarding/', '/admin/', '/_next/'];
   const localizedDisallow = routing.locales
     .filter((l) => l !== routing.defaultLocale)
-    .flatMap((l) => [`/${l}/app/`, `/${l}/auth/`, `/${l}/onboarding/`]);
+    .flatMap((l) => [`/${l}/app/`, `/${l}/auth/`, `/${l}/onboarding/`, `/${l}/admin/`]);
 
   const rules: MetadataRoute.Robots['rules'] = [
     {

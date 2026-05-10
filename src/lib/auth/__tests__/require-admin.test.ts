@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const requireUserMock = vi.fn();
 const rateLimitMock = vi.fn();
 const logAuditEventMock = vi.fn();
-const redirectMock = vi.fn(() => {
+const redirectMock = vi.fn((_path?: string): never => {
   throw new Error('NEXT_REDIRECT');
 });
 const notFoundMock = vi.fn(() => {

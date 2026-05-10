@@ -1,8 +1,32 @@
+import type { Metadata } from 'next';
 import * as React from 'react';
 
 import { requireAdmin } from '@/lib/auth/require-admin';
 
 import { AdminTopbar } from './_components/AdminTopbar';
+
+/**
+ * Admin section root metadata (PR-SEC-ADMIN).
+ *
+ * Layout-level `metadata.robots` propagates to every child page that does not
+ * override it. Defense-in-depth alongside :
+ *   - `X-Robots-Tag` HTTP header (next.config.ts headers /admin/:path*)
+ *   - `robots.txt` Disallow /admin (src/app/robots.ts)
+ *   - `Cache-Control: private, no-store` HTTP header
+ *
+ * A scraper would need to ignore robots.txt + the meta tag + the HTTP
+ * header simultaneously to index any admin URL.
+ */
+export const metadata: Metadata = {
+  title: 'Admin · Ankora',
+  description: 'Internal admin area.',
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: { index: false, follow: false },
+  },
+};
 
 /**
  * Admin section layout — requires admin user.
