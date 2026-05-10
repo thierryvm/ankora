@@ -3,7 +3,7 @@ import { Redis } from '@upstash/redis';
 import { env } from '@/lib/env';
 import { log } from '@/lib/log';
 
-type LimiterKind = 'auth' | 'api' | 'mutation' | 'export';
+type LimiterKind = 'auth' | 'api' | 'mutation' | 'export' | 'admin';
 
 type RateLimitReason = 'rate_limit_unavailable' | 'rate_limited';
 
@@ -62,6 +62,18 @@ const limiters: Record<LimiterKind, Ratelimit> | null = redisConfigured
           limiter: Ratelimit.slidingWindow(3, '1 h'),
           analytics: true,
           prefix: 'rl:export',
+        }),
+        // PR-SEC-ADMIN — /admin/* protection. 10 req/min/IP is generous for
+        // legitimate founder usage but tight enough to make automated scans
+        // expensive. Single tier (auth + non-auth same bucket) — distinguishing
+        // adds complexity without security value: an unauthenticated attacker
+        // is already blocked by requireUser/requireAdmin downstream, the rate
+        // limit's role here is choking scan volume.
+        admin: new Ratelimit({
+          redis,
+          limiter: Ratelimit.slidingWindow(10, '1 m'),
+          analytics: true,
+          prefix: 'rl:admin',
         }),
       };
     })()
