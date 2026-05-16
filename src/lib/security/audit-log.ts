@@ -3,7 +3,11 @@ import { log } from '@/lib/log';
 
 /**
  * Audit events — append-only. Drives GDPR accountability + security investigations.
- * Keep this enum in sync with the DB check constraint on audit_log.event_type.
+ *
+ * Note (PR-SEC-ADMIN 2026-05-10): the underlying `audit_log.event_type` column
+ * is `text` without a check constraint, so adding new events here does NOT
+ * require a DB migration. Names follow the `domain.action[_qualifier]` dot
+ * convention so existing index `audit_log_event_idx` stays effective.
  */
 export const AuditEvent = {
   // Authentication
@@ -39,6 +43,11 @@ export const AuditEvent = {
   GDPR_DELETION_REQUESTED: 'gdpr.deletion_requested',
   GDPR_DELETION_CANCELLED: 'gdpr.deletion_cancelled',
   GDPR_DELETION_COMPLETED: 'gdpr.deletion_completed',
+
+  // Admin RBAC (PR-SEC-ADMIN 2026-05-10)
+  ADMIN_ACCESS_GRANTED: 'admin.access.granted',
+  ADMIN_ACCESS_DENIED: 'admin.access.denied',
+  ADMIN_ACCESS_RATE_LIMITED: 'admin.access.rate_limited',
 } as const;
 
 export type AuditEventType = (typeof AuditEvent)[keyof typeof AuditEvent];
@@ -70,6 +79,15 @@ const SAFE_METADATA_KEYS = new Set([
   'period_year',
   'period_month',
   'paid',
+  // PR-SEC-ADMIN — admin route access traceability. `path` = pathname
+  // requested (no query string, sub-routes future-proof via proxy.ts
+  // x-pathname header). No email, no role, no session token.
+  //
+  // Note: `attempted_user_id` was initially whitelisted but removed after
+  // security-auditor P1-B + gdpr-compliance-auditor P1 — redundant with
+  // canonical `audit_log.user_id` column AND would survive deletion
+  // pseudonymization (jsonb not cascaded by ON DELETE SET NULL).
+  'path',
 ]);
 
 function sanitizeMetadata(metadata: Record<string, unknown> | undefined): Record<string, unknown> {

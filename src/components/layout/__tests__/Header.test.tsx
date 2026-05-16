@@ -41,7 +41,19 @@ vi.mock('../HeaderNav', () => ({
   ),
 }));
 
+// PR-SEC-ADMIN — `isAdmin()` reads env + Supabase session at runtime.
+// In jsdom env validation throws ("Invalid public environment variables").
+// Mock the helper to a deterministic boolean per test below via setIsAdmin().
+const isAdminRef = { value: false };
+vi.mock('@/lib/auth/is-admin', () => ({
+  isAdmin: async () => isAdminRef.value,
+}));
+
 import { Header } from '../Header';
+
+function setIsAdmin(value: boolean): void {
+  isAdminRef.value = value;
+}
 
 async function renderHeader(props: Parameters<typeof Header>[0] = {}) {
   const ui = await Header(props);
@@ -101,6 +113,27 @@ describe('<Header />', () => {
 
     await renderHeader({ variant: 'marketing', isAuthenticated: true });
     expect(screen.getByLabelText('Accueil Ankora')).toHaveAttribute('href', '/');
+  });
+
+  // PR-SEC-ADMIN — admin nav link conditional rendering tests
+  it('app variant + isAdmin=true shows the Admin link with private-zone marker', async () => {
+    setIsAdmin(true);
+    await renderHeader({ variant: 'app', isAuthenticated: true });
+    const adminLink = screen.getByRole('link', { name: 'Espace admin (réservé fondateur)' });
+    expect(adminLink).toBeInTheDocument();
+    expect(adminLink).toHaveAttribute('href', '/admin');
+  });
+
+  it('app variant + isAdmin=false hides the Admin link entirely', async () => {
+    setIsAdmin(false);
+    await renderHeader({ variant: 'app', isAuthenticated: true });
+    expect(screen.queryByRole('link', { name: /Admin/ })).not.toBeInTheDocument();
+  });
+
+  it('marketing variant never shows the Admin link, even if isAdmin=true', async () => {
+    setIsAdmin(true);
+    await renderHeader({ variant: 'marketing', isAuthenticated: true });
+    expect(screen.queryByRole('link', { name: /Admin/ })).not.toBeInTheDocument();
   });
 
   it('home link has the tactile press animation, gated on motion-safe (issue #95)', async () => {

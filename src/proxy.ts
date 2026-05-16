@@ -66,6 +66,13 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   request.headers.set('content-security-policy', csp);
   response.headers.set('content-security-policy', csp);
 
+  // 2bis. Propagate the actual pathname so Server Components can read it via
+  // headers() — Next.js doesn't expose `request.url` to RSC, and the route
+  // params don't carry sub-segments. Required by `require-admin.ts` audit
+  // logging (cf. PR-SEC-ADMIN security-auditor P1-A: without this, every
+  // admin.access.* event records `path: '/admin'` regardless of sub-route).
+  request.headers.set('x-pathname', request.nextUrl.pathname);
+
   // 3. Supabase session refresh on the locale-aware response (mutates its cookies).
   return updateSession(request, response);
 }

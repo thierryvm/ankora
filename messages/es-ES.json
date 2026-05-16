@@ -26,7 +26,9 @@
       "charges": "Gastos fijos",
       "expenses": "Gastos",
       "simulator": "Simulador",
-      "settings": "Ajustes"
+      "settings": "Ajustes",
+      "admin": "Admin",
+      "adminAriaLabel": "Zona admin (solo fundador)"
     },
     "actions": {
       "retry": "Reintentar",

@@ -79,6 +79,40 @@ const nextConfig: NextConfig = {
             : []),
         ],
       },
+      // PR-SEC-ADMIN — defense-in-depth on /[locale]/admin/* surface.
+      // Pattern matches both the default-locale shape (/admin/*) and prefixed
+      // locales (/en/admin/*, /nl-BE/admin/*, etc.). Headers stack on top of
+      // global ones above.
+      //
+      // Rationale per directive:
+      //   X-Robots-Tag: hard-stop indexing even if robots.txt is missed by a
+      //     scraper; redundant with metadata.robots but resilient to
+      //     framework-level metadata regressions.
+      //   Cache-Control: no-store + private = no CDN cache, no browser cache;
+      //     prevents an admin page being served stale to a colleague who
+      //     borrows the device or to a CDN edge after a logout.
+      //   Referrer-Policy: same-origin (tighter than the global
+      //     strict-origin-when-cross-origin) — admin URLs MUST NOT leak to
+      //     third parties via the Referer header on outbound links.
+      //   Content-Security-Policy: frame-ancestors 'none' is enforced
+      //     globally via the nonce-based CSP middleware; not duplicated here
+      //     to avoid drift, only documented for clarity.
+      {
+        source: '/admin/:path*',
+        headers: [
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive, nocache' },
+          { key: 'Cache-Control', value: 'private, no-store, max-age=0' },
+          { key: 'Referrer-Policy', value: 'same-origin' },
+        ],
+      },
+      {
+        source: '/:locale(en|nl-BE|de-DE|es-ES)/admin/:path*',
+        headers: [
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive, nocache' },
+          { key: 'Cache-Control', value: 'private, no-store, max-age=0' },
+          { key: 'Referrer-Policy', value: 'same-origin' },
+        ],
+      },
     ];
   },
 };
