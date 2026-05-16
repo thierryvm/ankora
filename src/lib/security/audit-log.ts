@@ -80,11 +80,14 @@ const SAFE_METADATA_KEYS = new Set([
   'period_month',
   'paid',
   // PR-SEC-ADMIN — admin route access traceability. `path` = pathname
-  // requested (no query string). `attempted_user_id` = the user_id that tried
-  // and was denied (kept for cross-correlation with auth.signup events). No
-  // email, no role, no session token.
+  // requested (no query string, sub-routes future-proof via proxy.ts
+  // x-pathname header). No email, no role, no session token.
+  //
+  // Note: `attempted_user_id` was initially whitelisted but removed after
+  // security-auditor P1-B + gdpr-compliance-auditor P1 — redundant with
+  // canonical `audit_log.user_id` column AND would survive deletion
+  // pseudonymization (jsonb not cascaded by ON DELETE SET NULL).
   'path',
-  'attempted_user_id',
 ]);
 
 function sanitizeMetadata(metadata: Record<string, unknown> | undefined): Record<string, unknown> {

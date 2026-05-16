@@ -65,10 +65,15 @@ export async function requireAdmin(): Promise<User> {
   );
 
   if (!allowed.has(user.id)) {
+    // Note (PR-SEC-ADMIN audit P1-B + GDPR P1): `attempted_user_id` was
+    // initially included in metadata for cross-correlation but is redundant
+    // with the canonical `audit_log.user_id` column AND would survive
+    // `executeDeletion()` pseudonymization (jsonb not cascaded). Removed.
+    // Queries that need the denied-user correlation join on `user_id`.
     await logAuditEvent(
       AuditEvent.ADMIN_ACCESS_DENIED,
       { userId: user.id, ipAddress, userAgent },
-      { path, attempted_user_id: user.id },
+      { path },
     );
     redirect('/app');
   }

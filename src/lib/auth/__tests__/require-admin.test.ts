@@ -104,17 +104,18 @@ describe('requireAdmin() — rate-limited + audit-logged guard', () => {
     await expect(requireAdmin()).rejects.toThrow('NEXT_REDIRECT');
 
     expect(redirectMock).toHaveBeenCalledWith('/app');
+    // Per security-auditor P1-B + gdpr P1, attempted_user_id is no longer
+    // duplicated into metadata — canonical `userId` column carries it.
     expect(logAuditEventMock).toHaveBeenCalledWith(
       'admin.access.denied',
       expect.objectContaining({
         userId: 'user-not-admin',
         ipAddress: '203.0.113.42',
       }),
-      expect.objectContaining({
-        path: '/fr-BE/admin',
-        attempted_user_id: 'user-not-admin',
-      }),
+      expect.objectContaining({ path: '/fr-BE/admin' }),
     );
+    const metadataArg = logAuditEventMock.mock.calls[0]?.[2] as Record<string, unknown>;
+    expect(metadataArg).not.toHaveProperty('attempted_user_id');
   });
 
   it('rate limit OK + admin user → audit granted + returns user', async () => {

@@ -39,14 +39,29 @@ Metadata whitelist enrichie : `path`, `attempted_user_id`. Pas de PII (email, ro
 
 ### Agents QA — scores avant/après
 
-| Agent                     | Avant PR-SEC-ADMIN              | Après PR-SEC-ADMIN               | Delta |
-| ------------------------- | ------------------------------- | -------------------------------- | ----- |
-| `security-auditor`        | TBD (rapport pre-PR à capturer) | TBD (rapport post-PR à capturer) | TBD   |
-| `dashboard-ux-auditor`    | N/A (admin minimal post-#159)   | TBD                              | TBD   |
-| `gdpr-compliance-auditor` | N/A                             | TBD                              | TBD   |
-| `llm-security-auditor`    | **NOT AVAILABLE**               | **NOT AVAILABLE**                | N/A   |
+| Agent                     | Verdict                                           | Findings P0/P1/P2/P3      | Rapport                                                          |
+| ------------------------- | ------------------------------------------------- | ------------------------- | ---------------------------------------------------------------- |
+| `security-auditor`        | PASS_WITH_NOTES (1 fix appliqué post-audit)       | 0 P0 / 2 P1 / 2 P2 / 1 P3 | `docs/audits/2026-05-10-pr-sec-admin/security-auditor.md`        |
+| `dashboard-ux-auditor`    | PASS_WITH_FINDINGS (1 fix appliqué, 2 différés)   | F1, F3✅, F4 (mobile)     | `docs/audits/2026-05-10-pr-sec-admin/dashboard-ux-auditor.md`    |
+| `gdpr-compliance-auditor` | COMPLIANT_WITH_NOTES (1 P1 convergent fix, 2 P2)  | 1 P1✅ / 2 P2             | `docs/audits/2026-05-10-pr-sec-admin/gdpr-compliance-auditor.md` |
+| `llm-security-auditor`    | NOT_APPLICABLE_V1 / BASELINE_DOCUMENTED_FOR_V1.5+ | 0 / surface IA = N/A      | `docs/audits/2026-05-10-pr-sec-admin/llm-security-auditor.md`    |
 
-**`llm-security-auditor` non disponible côté Ankora** : agent absent de `.claude/agents/`. Baseline IA admin anticipée pour V1.5+ documentée dans ADR-019 §TODO différés. À créer avant intégration recommandations IA-powered admin.
+**Fixes appliqués post-audit (1 commit final)** :
+
+- **P1-A security** : `proxy.ts` set `x-pathname` header → audit log enregistre vrai sub-route (préparation PR-B2)
+- **P1-B security + P1 GDPR convergent** : retrait `attempted_user_id` de metadata (redondant avec `user_id` colonne + survivait à `executeDeletion()`)
+- **F3 dashboard-ux** : `bg-amber-500 → amber-600` (WCAG SC 1.4.11 contrast 2.4:1 → 3.5:1)
+
+**Findings différés (avec justification documentée)** :
+
+- P2-A security : `ANKORA_ADMIN_USER_IDS` Zod UUID validation → fix dédié post-PR-SEC-ADMIN
+- P2-B security + P2-A GDPR : retention policy `audit_log.ip_address` → pré-existant, à résoudre avant V1.0 publique
+- P2-B GDPR : analytics Upstash rétention → privacy policy enrichment OU `analytics: false` sur kind admin
+- F1 dashboard-ux : token amber non documenté → décision @cowork (token dédié vs réutilisation `--color-warning`)
+- F4 dashboard-ux : admin link mobile drawer absent → différé (touche HeaderNav existant, risque régression > valeur PR scope)
+- P3 security : timing attack UUID infeasible → noté en ADR-019, pas d'action
+
+**`llm-security-auditor`** : agent IMPORTÉ depuis Terminal Learning (commit 861be8a). Registry pas refresh dans la session du dispatch — placeholder structuré écrit, vrai run à faire en session fraîche.
 
 ### Findings closed
 

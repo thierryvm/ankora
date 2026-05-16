@@ -71,10 +71,14 @@ export async function Header({ variant = 'marketing', isAuthenticated = false }:
               <Button asChild variant="ghost" size="sm" aria-label={t('nav.adminAriaLabel')}>
                 <Link href="/admin" className="flex items-center gap-1.5">
                   <span>{t('nav.admin')}</span>
-                  {/* Subtle marker — signals "private zone" without screaming. */}
+                  {/* Subtle marker — signals "private zone" without screaming.
+                      `bg-amber-600` chosen over `amber-500` per dashboard-ux F3
+                      (WCAG SC 1.4.11 Non-text Contrast 3:1 — amber-500 ≈ 2.4:1
+                      vs background, amber-600 ≈ 3.5:1, aligned with token
+                      `--color-warning` locked @cowork 2026-04-25). */}
                   <span
                     aria-hidden="true"
-                    className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500"
+                    className="inline-block h-1.5 w-1.5 rounded-full bg-amber-600"
                   />
                 </Link>
               </Button>
