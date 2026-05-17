@@ -209,7 +209,7 @@ L'audit dashboard-ux PR-D5 a confirmé que 6 des 8 sections du cockpit v3 (cible
 
 ### Décision architecturale bloquante PR-D6
 
-[THI-189](https://linear.app/thierryvm/issue/THI-189) — **Canonical decision: atoms/_ vs ui/_ — migration plan + ADR**. À trancher AVANT le démarrage PR-D6/D7 pour figer la frontière atoms vs ui consumée par les nouvelles sections. Sinon les 6 sections vont fragmenter encore plus le DS.
+[THI-189](https://linear.app/thierryvm/issue/THI-189) — **Canonical decision: atoms/_ vs ui/_ — migration plan + ADR**. À trancher AVANT le démarrage PR-D6/D7 pour figer la frontière atoms vs ui consommée par les nouvelles sections. Sinon les 6 sections vont fragmenter encore plus le DS.
 
 ### Backlog P2 polish (10 tickets, Low priority)
 
