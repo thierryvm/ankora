@@ -54,7 +54,7 @@ describe('<CapaciteEpargneCard /> (PR-D3 Bloc 2 radar #2 — KPI hero)', () => {
     expect(screen.getByText(messages.dashboard.capacite.title)).toBeInTheDocument();
   });
 
-  it('renders the positive variant with emerald colour and prefix +', async () => {
+  it('renders the positive variant with success token colour and prefix +', async () => {
     await renderCard({
       revenus: new Decimal(2500),
       charges: [charge({ amount: new Decimal(1500), frequency: 'monthly' })],
@@ -64,11 +64,15 @@ describe('<CapaciteEpargneCard /> (PR-D3 Bloc 2 radar #2 — KPI hero)', () => {
     expect(card.getAttribute('data-positive')).toBe('true');
     const value = screen.getByTestId('capacite-epargne-value');
     expect(value.textContent ?? '').toMatch(/^\+/);
-    expect(value.className).toContain('emerald');
+    // PR-D5 (2026-05-17): raw `emerald-*` + `dark:text-emerald-*` hacks
+    // replaced by the semantic `text-success` token. Asserts the new
+    // contract; raw Tailwind colour names must NOT leak back in.
+    expect(value.className).toContain('text-success');
+    expect(value.className).not.toContain('emerald');
     expect(screen.getByText(messages.dashboard.capacite.message_positive)).toBeInTheDocument();
   });
 
-  it('renders the negative variant with rose colour and warning message', async () => {
+  it('renders the negative variant with danger token colour and warning message', async () => {
     await renderCard({
       revenus: new Decimal(1000),
       charges: [charge({ amount: new Decimal(1500), frequency: 'monthly' })],
@@ -77,7 +81,10 @@ describe('<CapaciteEpargneCard /> (PR-D3 Bloc 2 radar #2 — KPI hero)', () => {
     const card = screen.getByTestId('capacite-epargne-card');
     expect(card.getAttribute('data-positive')).toBe('false');
     const value = screen.getByTestId('capacite-epargne-value');
-    expect(value.className).toContain('rose');
+    // PR-D5 (2026-05-17): raw `rose-*` + `dark:text-rose-*` hacks replaced
+    // by the semantic `text-danger` token.
+    expect(value.className).toContain('text-danger');
+    expect(value.className).not.toContain('rose');
     expect(screen.getByText(messages.dashboard.capacite.message_negative)).toBeInTheDocument();
   });
 
