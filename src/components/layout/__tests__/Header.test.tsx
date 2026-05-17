@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
 import messages from '../../../../messages/fr-BE.json';
@@ -49,10 +49,22 @@ vi.mock('@/lib/auth/is-admin', () => ({
   isAdmin: async () => isAdminRef.value,
 }));
 
+// Header now auto-detects auth state on the marketing variant when the
+// `isAuthenticated` prop is omitted. Mock the helper so tests stay
+// deterministic — tests that pass the prop explicitly override the fallback.
+const optionalUserRef = { value: null as null | { id: string } };
+vi.mock('@/lib/auth/require-user', () => ({
+  getOptionalUser: async () => optionalUserRef.value,
+}));
+
 import { Header } from '../Header';
 
 function setIsAdmin(value: boolean): void {
   isAdminRef.value = value;
+}
+
+function setOptionalUser(value: null | { id: string }): void {
+  optionalUserRef.value = value;
 }
 
 async function renderHeader(props: Parameters<typeof Header>[0] = {}) {
@@ -61,6 +73,11 @@ async function renderHeader(props: Parameters<typeof Header>[0] = {}) {
 }
 
 describe('<Header />', () => {
+  beforeEach(() => {
+    setIsAdmin(false);
+    setOptionalUser(null);
+  });
+
   it('renders the marketing variant by default with login + signup CTAs', async () => {
     await renderHeader();
     // Marketing nav links
@@ -69,6 +86,27 @@ describe('<Header />', () => {
     // Auth CTAs
     expect(screen.getByRole('link', { name: 'Se connecter' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Créer un compte' })).toBeInTheDocument();
+  });
+
+  it('auto-detects auth state on marketing variant when prop is omitted', async () => {
+    // Simulates the new wiring on public pages (FAQ, glossaire, legal/*)
+    // where `<Header />` is rendered without `isAuthenticated`. The fallback
+    // calls `getOptionalUser` server-side, which we mock to a valid session.
+    setOptionalUser({ id: 'user-thierry' });
+    await renderHeader();
+    expect(screen.getByRole('link', { name: 'Mon cockpit' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Se connecter' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Créer un compte' })).not.toBeInTheDocument();
+  });
+
+  it('explicit isAuthenticated prop overrides the auto-detect fallback', async () => {
+    // Even if `getOptionalUser` would say "logged in", a call-site that
+    // forces `isAuthenticated={false}` must win — important for cases like
+    // a "Sign out" landing where we want anonymous-looking chrome.
+    setOptionalUser({ id: 'user-thierry' });
+    await renderHeader({ variant: 'marketing', isAuthenticated: false });
+    expect(screen.getByRole('link', { name: 'Se connecter' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Mon cockpit' })).not.toBeInTheDocument();
   });
 
   it('marketing variant + isAuthenticated shows the cockpit CTA instead of login/signup', async () => {

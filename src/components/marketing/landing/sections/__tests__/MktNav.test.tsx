@@ -1,7 +1,19 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
 import messages from '../../../../../../messages/fr-BE.json';
+
+// MktNav now reads the session server-side via getOptionalUser so the CTAs
+// can switch from login/signup to "My cockpit" when the visitor is logged
+// in. Mock with a mutable ref so each test can pick its own session state.
+const optionalUserRef = { value: null as null | { id: string } };
+vi.mock('@/lib/auth/require-user', () => ({
+  getOptionalUser: async () => optionalUserRef.value,
+}));
+
+function setOptionalUser(value: null | { id: string }): void {
+  optionalUserRef.value = value;
+}
 
 vi.mock('next-intl/server', () => ({
   getTranslations: async (namespace: string) => {
@@ -34,8 +46,12 @@ vi.mock('@/i18n/navigation', () => ({
 }));
 
 vi.mock('@/components/layout/HeaderNav', () => ({
-  HeaderNav: ({ variant }: { variant: string }) => (
-    <div data-testid="header-nav-mock" data-variant={variant} />
+  HeaderNav: ({ variant, isAuthenticated }: { variant: string; isAuthenticated?: boolean }) => (
+    <div
+      data-testid="header-nav-mock"
+      data-variant={variant}
+      data-is-authenticated={String(isAuthenticated ?? false)}
+    />
   ),
 }));
 
@@ -53,6 +69,10 @@ async function renderMktNav() {
 }
 
 describe('<MktNav />', () => {
+  beforeEach(() => {
+    setOptionalUser(null);
+  });
+
   it('renders the Ankora logo as the home link', async () => {
     await renderMktNav();
     const home = screen.getByLabelText('Accueil Ankora');
@@ -84,13 +104,22 @@ describe('<MktNav />', () => {
     expect(journal.className).toContain('cursor-not-allowed');
   });
 
-  it('renders the Login + Signup CTAs', async () => {
+  it('renders the Login + Signup CTAs for anonymous visitors', async () => {
     await renderMktNav();
     expect(screen.getByRole('link', { name: 'Se connecter' })).toHaveAttribute('href', '/login');
     expect(screen.getByRole('link', { name: /essayer gratuitement/i })).toHaveAttribute(
       'href',
       '/signup',
     );
+    expect(screen.queryByRole('link', { name: /mon cockpit/i })).not.toBeInTheDocument();
+  });
+
+  it('renders the "Mon cockpit" CTA instead of login/signup when the visitor has a session', async () => {
+    setOptionalUser({ id: 'user-thierry' });
+    await renderMktNav();
+    expect(screen.getByRole('link', { name: /mon cockpit/i })).toHaveAttribute('href', '/app');
+    expect(screen.queryByRole('link', { name: 'Se connecter' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /essayer gratuitement/i })).not.toBeInTheDocument();
   });
 
   it('mounts the existing HeaderNav drawer for mobile parity', async () => {
@@ -98,6 +127,13 @@ describe('<MktNav />', () => {
     const drawer = screen.getByTestId('header-nav-mock');
     expect(drawer).toBeInTheDocument();
     expect(drawer).toHaveAttribute('data-variant', 'marketing');
+  });
+
+  it('propagates isAuthenticated to the drawer so mobile stays consistent', async () => {
+    setOptionalUser({ id: 'user-thierry' });
+    await renderMktNav();
+    const drawer = screen.getByTestId('header-nav-mock');
+    expect(drawer).toHaveAttribute('data-is-authenticated', 'true');
   });
 
   it('exposes the main navigation with a localised aria-label', async () => {
