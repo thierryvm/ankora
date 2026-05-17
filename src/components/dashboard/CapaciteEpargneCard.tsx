@@ -47,22 +47,27 @@ export async function CapaciteEpargneCard({ revenus, charges, plafondQuotidien, 
   const result = capaciteEpargneReelle({ revenus, charges, plafondQuotidien });
   const fmt = (value: Parameters<typeof formatCurrency>[0]) => formatCurrency(value, locale);
 
+  // PR-D5 tokens: replaced raw Tailwind palette (`emerald-*`, `rose-*`) +
+  // `dark:text-*` hacks (which bypassed our `[data-theme="dark"]` custom
+  // variant) by the semantic tokens `--color-success` / `--color-danger`.
+  // The card now follows the design system end-to-end and the dark variant
+  // is handled by the token layer rather than per-component overrides.
   const accent = result.isPositive
     ? {
-        ringColor: 'ring-emerald-500/15',
-        iconColor: 'text-emerald-500',
-        valueColor: 'text-emerald-600 dark:text-emerald-400',
-        glowColor: 'bg-emerald-500/20',
-        gradientFrom: 'from-emerald-500/8',
+        ringColor: 'ring-success/15',
+        iconColor: 'text-success',
+        valueColor: 'text-success',
+        glowColor: 'bg-success/20',
+        gradientFrom: 'from-success/8',
         Icon: CheckCircle2,
         message: t('message_positive'),
       }
     : {
-        ringColor: 'ring-rose-500/15',
-        iconColor: 'text-rose-500',
-        valueColor: 'text-rose-600 dark:text-rose-400',
-        glowColor: 'bg-rose-500/20',
-        gradientFrom: 'from-rose-500/8',
+        ringColor: 'ring-danger/15',
+        iconColor: 'text-danger',
+        valueColor: 'text-danger',
+        glowColor: 'bg-danger/20',
+        gradientFrom: 'from-danger/8',
         Icon: AlertCircle,
         message: t('message_negative'),
       };

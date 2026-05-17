@@ -18,10 +18,10 @@ import { fillSignup, makeTestUser } from '../helpers/user';
 
 test.describe('Auth flow — iPhone Safari WebKit (PR-QA-1b)', () => {
   test('signup form: every input has font-size ≥ 16px (no iOS auto-zoom)', async ({ page }) => {
-    test.fixme(
-      true,
-      'BUG-iOS-001: signup form inputs use font-size < 16px on mobile, triggering Safari auto-zoom on focus. Fix in PR-QA-1c-1.',
-    );
+    // PR-D5 (2026-05-16): BUG-iOS-001 resolved — `Input.tsx` upgraded
+    // `text-sm` → `text-base` so the primitive renders at 16px in all
+    // consumers (signup, login, accounts, charges, expenses, settings,
+    // simulator, onboarding).
     await page.goto('/signup');
 
     const inputs = page.locator('input:not([type="hidden"]):not([type="checkbox"])');
@@ -41,10 +41,8 @@ test.describe('Auth flow — iPhone Safari WebKit (PR-QA-1b)', () => {
   });
 
   test('login form: every input has font-size ≥ 16px (no iOS auto-zoom)', async ({ page }) => {
-    test.fixme(
-      true,
-      'BUG-iOS-002: login form inputs use font-size < 16px on mobile, triggering Safari auto-zoom on focus. Fix in PR-QA-1c-1.',
-    );
+    // PR-D5 (2026-05-16): BUG-iOS-002 resolved — see signup form fixme above.
+    // Same root cause + same fix (Input.tsx text-base).
     await page.goto('/login');
 
     const inputs = page.locator('input:not([type="hidden"]):not([type="checkbox"])');
@@ -100,10 +98,10 @@ test.describe('Auth flow — iPhone Safari WebKit (PR-QA-1b)', () => {
   test('landing → login is reachable in ≤ 2 taps (without going through /signup)', async ({
     page,
   }) => {
-    test.fixme(
-      true,
-      'BUG-iOS-003: no direct "Se connecter" CTA on landing nor in mobile hamburger — user must navigate /signup → "déjà inscrit ?". Fix in PR-QA-1c-3 (add login link to MktNav drawer).',
-    );
+    // PR-D5 (2026-05-16): BUG-iOS-003 resolved — `HeaderNav.tsx` mobile
+    // drawer now exposes a direct "Se connecter" + "Créer un compte" pair
+    // under the marketing variant. Tap-1 opens the hamburger, tap-2 hits
+    // the login link.
     await page.goto('/');
 
     // Strategy:
@@ -137,7 +135,10 @@ test.describe('Auth flow — iPhone Safari WebKit (PR-QA-1b)', () => {
       await hamburger.click();
       tapsUsed = 1;
 
-      const drawerLogin = page.getByRole('link', { name: /se connecter/i }).first();
+      // PR-D5: target the drawer login link directly via data-testid (not
+      // role/name) so we never accidentally hit the desktop header CTA
+      // (which is `hidden sm:inline-flex` — found by name but not visible).
+      const drawerLogin = page.getByTestId('drawer-login-link');
       await drawerLogin.click();
       tapsUsed = 2;
     }

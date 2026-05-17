@@ -33,7 +33,9 @@ describe('<Button />', () => {
   it.each([
     ['sm', 'h-9'],
     ['lg', 'h-12'],
-    ['icon', 'w-10'],
+    // PR-D5 (2026-05-17): icon variant bumped 40 → 44 px (Apple HIG +
+    // WCAG 2.5.5 minimum touch target). Now `h-11 w-11`.
+    ['icon', 'w-11'],
   ] as const)('applies the %s size', (size, expectedClass) => {
     render(<Button size={size}>Test</Button>);
     expect(screen.getByRole('button').className).toContain(expectedClass);

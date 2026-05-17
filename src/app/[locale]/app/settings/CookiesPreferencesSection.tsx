@@ -143,7 +143,10 @@ export function CookiesPreferencesSection({ initialServerSnapshot }: Props) {
             checked={analytics}
             onChange={(e) => save(e.target.checked, marketing)}
             disabled={pending}
-            aria-label={t('analyticsLabel')}
+            // PR-D5 a11y: aria-label removed — the <label htmlFor> below
+            // already provides the accessible name; aria-label would
+            // override it and AT would lose the connection to the
+            // descriptive paragraph.
             className="text-brand-700 focus-visible:ring-brand-600 mt-0.5 h-4 w-4 focus-visible:ring-2 focus-visible:outline-none"
           />
           <div className="flex-1">
@@ -161,7 +164,8 @@ export function CookiesPreferencesSection({ initialServerSnapshot }: Props) {
             checked={marketing}
             onChange={(e) => save(analytics, e.target.checked)}
             disabled={pending}
-            aria-label={t('marketingLabel')}
+            // PR-D5 a11y: same as analytics — drop aria-label, the
+            // <label htmlFor="marketing-toggle"> provides the name.
             className="text-brand-700 focus-visible:ring-brand-600 mt-0.5 h-4 w-4 focus-visible:ring-2 focus-visible:outline-none"
           />
           <div className="flex-1">

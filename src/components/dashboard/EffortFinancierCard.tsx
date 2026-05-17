@@ -35,19 +35,22 @@ export async function EffortFinancierCard({ charges, locale }: Props) {
   const fmt = (value: Parameters<typeof formatCurrency>[0]) => formatCurrency(value, locale);
 
   return (
+    // PR-D5 tokens: raw Tailwind `blue-500` replaced by `--color-info` semantic
+    // token. The accent is decorative (ring + gradient + icon) — switching
+    // anchors the card to the design system rather than a fixed palette.
     <Card
-      className="relative overflow-hidden ring-1 ring-blue-500/15 ring-inset"
+      className="ring-info/15 relative overflow-hidden ring-1 ring-inset"
       data-testid="effort-financier-card"
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-linear-to-br from-blue-500/8 to-transparent"
+        className="from-info/8 pointer-events-none absolute inset-0 bg-linear-to-br to-transparent"
       />
       <CardHeader className="relative flex flex-row items-start justify-between gap-3 pb-2">
         <div className="min-w-0">
           <CardTitle className="text-muted-foreground text-sm font-medium">{t('title')}</CardTitle>
         </div>
-        <ShieldCheck aria-hidden strokeWidth={1.5} className="h-6 w-6 shrink-0 text-blue-500" />
+        <ShieldCheck aria-hidden strokeWidth={1.5} className="text-info h-6 w-6 shrink-0" />
       </CardHeader>
       <CardContent className="relative">
         <p

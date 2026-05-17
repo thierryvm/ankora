@@ -131,7 +131,8 @@ export default async function DashboardPage() {
                 accountType === 'daily_card' && dailyPlafondMissing ? (
                   <Link
                     href="/app/accounts"
-                    className="text-muted-foreground hover:text-brand-700 text-xs hover:underline"
+                    // PR-D5 a11y: underline permanent (was hover-only — invisible on iOS touch).
+                    className="text-muted-foreground hover:text-brand-700 text-xs underline underline-offset-2"
                   >
                     {tDaily('cta_set_plafond')}
                   </Link>

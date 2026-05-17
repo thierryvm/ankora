@@ -102,6 +102,13 @@ export function OnboardingWizard() {
               aria-hidden
             />
           ))}
+          {/* PR-D5 a11y: screen-reader-only progression announcement.
+              The 3 visual bars are aria-hidden — without this counter,
+              AT users had no idea where they stood in the wizard.
+              aria-live=polite so the count is announced on step change. */}
+          <span className="sr-only" aria-live="polite">
+            {t('stepOf', { step, total: 3 })}
+          </span>
         </div>
         <CardTitle>
           {step === 1 && tStep1('title')}

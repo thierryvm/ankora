@@ -17,10 +17,12 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      'border-border bg-card flex h-10 w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm shadow-sm',
+      // PR-D5 mobile-iOS: `ankora-form-control-16` enforces 16px font-size.
+      // See `Input.tsx` + `globals.css` for the full triage.
+      'ankora-form-control-16 border-border bg-card flex h-10 w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 shadow-sm',
       'focus-visible:border-brand-500 focus-visible:ring-brand-600 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
       'disabled:cursor-not-allowed disabled:opacity-50',
-      'data-[placeholder]:text-muted',
+      'data-placeholder:text-muted',
       'aria-invalid:border-danger aria-invalid:focus-visible:ring-danger',
       className,
     )}
@@ -71,7 +73,7 @@ const SelectContent = React.forwardRef<
       ref={ref}
       position={position}
       className={cn(
-        'border-border bg-card text-foreground relative z-50 max-h-[var(--radix-select-content-available-height)] min-w-[8rem] overflow-hidden rounded-lg border shadow-lg',
+        'border-border bg-card text-foreground relative z-50 max-h-(--radix-select-content-available-height) min-w-32 overflow-hidden rounded-lg border shadow-lg',
         position === 'popper' && 'data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1',
         className,
       )}
@@ -82,7 +84,7 @@ const SelectContent = React.forwardRef<
         className={cn(
           'p-1',
           position === 'popper' &&
-            'h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]',
+            'h-(--radix-select-trigger-height) w-full min-w-(--radix-select-trigger-width)',
         )}
       >
         {children}
@@ -114,7 +116,7 @@ const SelectItem = React.forwardRef<
     className={cn(
       'relative flex w-full cursor-default items-center gap-2 rounded-md py-1.5 pr-2 pl-8 text-sm outline-none select-none',
       'focus:bg-brand-100 focus:text-brand-900',
-      'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+      'data-disabled:pointer-events-none data-disabled:opacity-50',
       className,
     )}
     {...props}

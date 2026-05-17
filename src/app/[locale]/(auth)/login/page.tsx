@@ -45,12 +45,21 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </div>
         <LoginForm />
         <div className="mt-6 flex flex-col gap-2 text-center text-sm">
-          <Link href="/forgot-password" className="text-muted-foreground hover:text-foreground">
+          {/* PR-D5 a11y: hover-only affordances are invisible on iOS touch
+              devices (no hover state). Underline made permanent so the link
+              is recognisable regardless of input modality. */}
+          <Link
+            href="/forgot-password"
+            className="text-muted-foreground hover:text-foreground underline underline-offset-2"
+          >
             {t('forgotLink')}
           </Link>
           <p className="text-muted-foreground">
             {t('noAccount')}{' '}
-            <Link href="/signup" className="text-brand-700 font-medium hover:underline">
+            <Link
+              href="/signup"
+              className="text-brand-700 font-medium underline underline-offset-2"
+            >
               {t('signupLink')}
             </Link>
           </p>

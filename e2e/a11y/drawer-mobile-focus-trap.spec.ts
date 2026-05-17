@@ -14,13 +14,19 @@ test.describe('Drawer Mobile Accessibility — Focus Trap (WCAG 2.1 2.4.3)', () 
     await page.setViewportSize(MOBILE_VIEWPORT);
     // Navigate to marketing homepage (has HeaderNav without auth requirement)
     await page.goto('/', { waitUntil: 'load' });
-    // Ensure hamburger menu is visible before running tests
-    await page.locator('label[for="menu-toggle"]').waitFor({ state: 'visible', timeout: 10_000 });
+    // Ensure hamburger menu is visible before running tests.
+    // PR-D5 a11y: refactored from `<label htmlFor="menu-toggle">` + `<input
+    // type="checkbox" hidden id="menu-toggle">` to a native `<button
+    // aria-expanded aria-controls="mobile-nav-drawer">`. Selector adapted
+    // accordingly.
+    await page
+      .locator('button[aria-controls="mobile-nav-drawer"]')
+      .waitFor({ state: 'visible', timeout: 10_000 });
   });
 
   test('1. Tab cycle stays inside drawer when open', async ({ page }) => {
-    // Open the drawer by clicking hamburger menu label
-    const hamburger = page.locator('label[for="menu-toggle"]');
+    // Open the drawer by clicking the hamburger button (PR-D5 refactor).
+    const hamburger = page.locator('button[aria-controls="mobile-nav-drawer"]');
     await expect(hamburger).toBeVisible();
     await hamburger.click();
 
@@ -55,31 +61,34 @@ test.describe('Drawer Mobile Accessibility — Focus Trap (WCAG 2.1 2.4.3)', () 
   });
 
   test('2. Escape key closes drawer', async ({ page }) => {
-    // Open drawer
-    const hamburger = page.locator('label[for="menu-toggle"]');
+    // Open drawer (PR-D5 refactor: hamburger is now a real button with
+    // aria-expanded reflecting the open state, replacing the previous
+    // hidden checkbox `input#menu-toggle`).
+    const hamburger = page.locator('button[aria-controls="mobile-nav-drawer"]');
     await hamburger.click();
 
-    const checkbox = page.locator('input#menu-toggle');
     const drawer = page.locator('nav[role="dialog"]');
     // After PR-3c-2 HeaderNav refactor (commit f45da08), the drawer is
     // mounted/unmounted on `isOpen` (was `translate-x-*` slide pattern).
-    // The semantic intent of these assertions — "drawer reachable when
-    // open / gone after Escape" — stays identical.
+    // PR-D5: the open state is now exposed via `aria-expanded` on the
+    // trigger button instead of a hidden checkbox `:checked` state.
     await expect(drawer).toBeVisible();
+    await expect(hamburger).toHaveAttribute('aria-expanded', 'true');
 
     // Focus inside drawer to ensure keyboard listener is active
     const drawerLink = drawer.locator('a, button').first();
     await drawerLink.focus();
 
-    // Press Escape — drawer should close and checkbox should be unchecked
+    // Press Escape — drawer should close and aria-expanded should flip
+    // back to "false".
     await page.keyboard.press('Escape');
-    await expect(checkbox).not.toBeChecked({ timeout: 500 });
+    await expect(hamburger).toHaveAttribute('aria-expanded', 'false', { timeout: 500 });
     await expect(drawer).toHaveCount(0);
   });
 
   test('3. Focus cycles within drawer with Tab (focus trap)', async ({ page }) => {
-    // Open drawer
-    const hamburger = page.locator('label[for="menu-toggle"]');
+    // Open drawer (PR-D5 refactor: button trigger, see test 2).
+    const hamburger = page.locator('button[aria-controls="mobile-nav-drawer"]');
     await hamburger.click();
 
     const drawer = page.locator('nav[role="dialog"]');

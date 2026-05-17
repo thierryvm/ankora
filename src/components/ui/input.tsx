@@ -26,7 +26,11 @@ const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLI
       type={type}
       ref={ref}
       className={cn(
-        'border-border bg-card text-foreground flex h-10 w-full rounded-lg border px-3 py-2 text-sm shadow-sm transition-colors',
+        // PR-D5 mobile-iOS: `ankora-form-control-16` (declared in globals.css
+        // outside `@layer`) enforces `font-size: 16px !important` so Safari
+        // iOS does not auto-zoom on focus. Every other channel was attempted
+        // and failed — see globals.css for the full triage.
+        'ankora-form-control-16 border-border bg-card text-foreground flex h-10 w-full rounded-lg border px-3 py-2 shadow-sm transition-colors',
         'file:text-foreground file:border-0 file:bg-transparent file:text-sm file:font-medium',
         'placeholder:text-muted',
         // F2 — softer focus ring (no offset, brand-500 at 30% opacity)
