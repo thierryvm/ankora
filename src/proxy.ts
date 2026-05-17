@@ -30,6 +30,19 @@ function buildCsp(nonce: string): string {
   const devScriptExtras = isDev ? ` 'unsafe-${'eval'}' 'unsafe-inline'` : '';
   const devStyleExtras = isDev ? ` 'unsafe-inline'` : '';
 
+  // PR-D5 mobile-iOS: only emit `upgrade-insecure-requests` when the app is
+  // actually served over HTTPS. WebKit-based engines (Playwright iPhone 14
+  // emulation + real iOS Safari) honour this directive strictly even on
+  // localhost, which causes the relative-URL stylesheet to be fetched at
+  // `https://localhost:3000` instead of `http://`. The HTTPS request fails
+  // against `npm run start` (HTTP-only), every Tailwind utility is dropped,
+  // inputs fall back to WebKit's 13px form-control default, and the
+  // anti-auto-zoom invariant cannot be measured. Chromium has an implicit
+  // exception for `localhost`; WebKit does not. Gate the directive on the
+  // canonical app URL so prod (HTTPS) keeps the protection and local prod
+  // builds (HTTP) drop it. Cf. docs/audits/2026-05-16-pr-d5-mobile-ios.md.
+  const appUrlIsHttps = process.env.NEXT_PUBLIC_APP_URL?.startsWith('https://') ?? false;
+
   const directives: Record<string, string> = {
     'default-src': `'self'`,
     'script-src': `'self' 'nonce-${nonce}' 'strict-dynamic'${devScriptExtras}`,
@@ -44,7 +57,7 @@ function buildCsp(nonce: string): string {
     'object-src': `'none'`,
     'manifest-src': `'self'`,
     'worker-src': `'self' blob:`,
-    'upgrade-insecure-requests': '',
+    ...(appUrlIsHttps ? { 'upgrade-insecure-requests': '' } : {}),
   };
 
   return Object.entries(directives)
