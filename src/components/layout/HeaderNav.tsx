@@ -31,7 +31,13 @@ export function HeaderNav({ variant = 'marketing' }: HeaderNavProps) {
   const t = useTranslations('common');
   const isDark = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, getServerThemeSnapshot);
   const [isOpen, setIsOpen] = useState(false);
-  const checkboxRef = useRef<HTMLInputElement>(null);
+  // PR-D5 a11y: replaced the previous `<label htmlFor="menu-toggle">` +
+  // `<input type="checkbox" hidden>` pattern by a real `<button aria-expanded
+  // aria-controls>`. The label/input pair fooled AT (VoiceOver/NVDA
+  // announced "checkbox", not "button", and the visual `<div>` was not
+  // focusable). The ref now points at the trigger button so we can restore
+  // focus to it when the drawer closes.
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const navRef = useRef<HTMLElement>(null);
 
   // Focus 1st focusable element when drawer opens
@@ -54,10 +60,7 @@ export function HeaderNav({ variant = 'marketing' }: HeaderNavProps) {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setIsOpen(false);
-        if (checkboxRef.current) {
-          checkboxRef.current.checked = false;
-          checkboxRef.current.focus();
-        }
+        triggerRef.current?.focus();
       }
 
       // Focus trap: keep Tab within drawer
@@ -108,33 +111,25 @@ export function HeaderNav({ variant = 'marketing' }: HeaderNavProps) {
 
   const handleDrawerClose = useCallback(() => {
     setIsOpen(false);
-    if (checkboxRef.current) {
-      checkboxRef.current.checked = false;
-      checkboxRef.current.focus();
-    }
+    triggerRef.current?.focus();
   }, []);
 
   return (
     <>
-      {/* Hamburger menu - visible on mobile only */}
-      <label
-        htmlFor="menu-toggle"
-        className="flex cursor-pointer items-center lg:hidden"
+      {/* Hamburger menu - visible on mobile only.
+          PR-D5 a11y: native `<button>` with `aria-expanded` + `aria-controls`
+          replaces the old label+hidden-checkbox pattern (BUG-iOS-003). */}
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={() => setIsOpen((open) => !open)}
+        aria-expanded={isOpen}
+        aria-controls="mobile-nav-drawer"
         aria-label={t('nav.menu')}
+        className="hover:bg-muted focus-visible:ring-brand-600 flex h-10 w-10 items-center justify-center rounded-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none lg:hidden"
       >
-        <input
-          ref={checkboxRef}
-          id="menu-toggle"
-          type="checkbox"
-          className="hidden"
-          checked={isOpen}
-          onChange={(e) => setIsOpen(e.target.checked)}
-          aria-expanded={isOpen}
-        />
-        <div className="hover:bg-muted focus-visible:ring-brand-600 flex h-10 w-10 items-center justify-center rounded-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none">
-          {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </div>
-      </label>
+        {isOpen ? <X className="h-5 w-5" aria-hidden /> : <Menu className="h-5 w-5" aria-hidden />}
+      </button>
 
       {/* Drawer overlay - visible when drawer is open */}
       {isOpen && (
@@ -155,13 +150,17 @@ export function HeaderNav({ variant = 'marketing' }: HeaderNavProps) {
           PR (issue to be opened post-merge). */}
       {isOpen && (
         <nav
+          id="mobile-nav-drawer"
           ref={navRef}
           role="dialog"
           aria-modal="true"
           aria-label={t('nav.mobileLabel')}
           className="bg-card border-border fixed top-0 right-0 bottom-0 z-40 w-80 overflow-y-auto border-l lg:hidden"
         >
-          <div className="border-border bg-card sticky top-0 flex items-center justify-between border-b p-4">
+          {/* PR-D5: dropped `sticky top-0` — same Playwright iPhone 14 WebKit
+              pointer-event interception as the footer below. Drawer content
+              fits the mobile viewport without needing sticky chrome. */}
+          <div className="border-border bg-card flex items-center justify-between border-b p-4">
             <span className="text-sm font-semibold">{t('nav.menu')}</span>
             <button
               onClick={handleDrawerClose}
@@ -190,6 +189,33 @@ export function HeaderNav({ variant = 'marketing' }: HeaderNavProps) {
                 >
                   {t('nav.faq')}
                 </Link>
+
+                {/* PR-D5 — auth entrypoints inside the mobile drawer.
+                    Resolves BUG-iOS-003 (login unreachable in ≤ 2 taps from
+                    landing on iPhone — the header CTAs were `hidden sm:`,
+                    invisible below 640px, and the drawer had no fallback).
+                    `data-testid` on the login link lets Playwright target
+                    it directly without role/name globbing — `getByRole('link',
+                    { name: /se connecter/i })` also matches the (hidden)
+                    desktop header CTA and `.first()` picks the wrong one. */}
+                <div className="border-border mt-2 space-y-2 border-t pt-2">
+                  <Link
+                    href="/login"
+                    onClick={handleDrawerClose}
+                    data-testid="drawer-login-link"
+                    className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                  >
+                    {t('nav.login')}
+                  </Link>
+                  <Link
+                    href="/signup"
+                    onClick={handleDrawerClose}
+                    data-testid="drawer-signup-link"
+                    className="bg-brand-700 hover:bg-brand-800 focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-center text-sm font-medium text-white transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                  >
+                    {t('nav.signup')}
+                  </Link>
+                </div>
               </>
             )}
 
@@ -241,8 +267,15 @@ export function HeaderNav({ variant = 'marketing' }: HeaderNavProps) {
             )}
           </div>
 
-          {/* Drawer footer - theme toggle + locale switcher */}
-          <div className="border-border bg-card sticky bottom-0 space-y-3 border-t p-4">
+          {/* Drawer footer - theme toggle + locale switcher.
+              PR-D5: `sticky bottom-0` removed — on Playwright iPhone 14
+              WebKit the sticky footer was reported as intercepting pointer
+              events on links above it (visible regression in the auth-flow
+              ≤ 2 taps test). Functionally equivalent in normal flow because
+              the drawer content rarely overflows the viewport on mobile;
+              if it ever does we'll re-introduce sticky behind a feature
+              detect. */}
+          <div className="border-border bg-card mt-auto space-y-3 border-t p-4">
             <button
               onClick={toggleTheme}
               className="bg-surface-muted text-foreground hover:bg-surface-muted/80 focus-visible:ring-brand-600 flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"

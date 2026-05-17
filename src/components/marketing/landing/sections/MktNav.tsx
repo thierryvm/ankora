@@ -41,7 +41,9 @@ export async function MktNav() {
   ] as const;
 
   return (
-    <header className="border-border bg-background/70 sticky top-0 z-40 border-b backdrop-blur-xl">
+    // PR-D5 mobile-iOS: same safe-area-inset-top handling as `Header.tsx` for
+    // PWA standalone parity on iPhone with notch.
+    <header className="border-border bg-background/70 sticky top-0 z-40 border-b pt-[env(safe-area-inset-top)] backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 md:px-6">
         <Link
           href="/"

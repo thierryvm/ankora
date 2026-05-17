@@ -20,7 +20,7 @@ export default async function OnboardingPage() {
   if (profile?.onboarded_at) redirect('/app');
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-2xl flex-col px-4 py-8 md:py-16">
+    <div className="mx-auto flex min-h-dvh max-w-2xl flex-col px-4 py-8 md:py-16">
       <OnboardingWizard />
     </div>
   );

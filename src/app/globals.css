@@ -394,6 +394,24 @@ body > main {
   border-radius: 2px;
 }
 
+/* PR-D5 mobile-iOS anti-Safari-auto-zoom — declared OUTSIDE `@layer` and
+   without `var()` indirection so the rule survives every cascade quirk we
+   observed:
+     - Tailwind 4 utility `text-base` resolves via `var(--text-base)` and
+       Playwright's bundled WebKit can't read the value back through the
+       @theme + @layer block (empty string in CSSOM).
+     - Arbitrary `text-[1rem]` (even with `!important`) compiles to a class
+       whose escaped selector `.text-\[1rem\]\!` isn't reliably matched by
+       the same WebKit build, so the rule doesn't apply either.
+     - Inline `style="font-size:1rem"` is killed by our prod CSP
+       `style-src 'self' 'nonce-…'` (no `style-src-attr 'unsafe-inline'`).
+   A plain class selector with a literal 16px wins on every engine and
+   passes the CSP. Applied to <input> + Radix Select triggers + any form
+   control consumer that needs to opt in. */
+.ankora-form-control-16 {
+  font-size: 16px !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
