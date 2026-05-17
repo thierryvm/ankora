@@ -1,18 +1,21 @@
 # Roadmap — Ankora
 
+**Update 17 mai 2026** : pivot scope explicite — **Beta (10 juin) = MVP fonctionnel utilisable**, **V1.0 publique (fin juin) = cible Monarch Money level**, **V1.1 post-launch = parité Monarch complète si gap résiduel**. Voir [§Trois jalons](#trois-jalons-verrouillés--v11-post-launch) et nouvelle section [§PR-D6/D7 candidates](#pr-d6d7--dashboard-cockpit-v10-candidates-post-pr-d5-mobile-ios) (17 tickets Linear capturés, projet Ankora créé).
+
 Dernière mise à jour : 9 mai 2026 (clôture session marathon) — **Design Ankora V1.0 ENTIÈREMENT FIGÉ**. PR-D1 à PR-D4 PHASE 1 mergées (6 PRs). Sessions Claude Design : #1 ✅ Design System + #2 ✅ Landing + #3 ✅ Dashboard Cockpit (Surface 1 hero waterfall Option C bidirectionnel pixel-perfect + 11 atoms + Surfaces 2/3/4 Charges/Dépenses/Catégories + Plans d'apurement + Onglet Mouvements Compte Épargne) + **#4 ✅ Onboarding 3 étapes** (catalogue belge ~70 fournisseurs + import CSV 5 sources + saisie manuelle + Reste à vivre + tutoriel 3 cards) + **#5 ✅ Admin Panel V1** (Santé technique Vercel/Supabase/Upstash/Sentry + Santé produit MAU/Drop-off + Acquisition Top 5 sources + Recommandations rule-based 5 patterns avec R-02 FSMA-safe « pas de LLM » et R-06 anti-culpa exemplaire) + **patch finalisation Bloc E** (recolorisation sémantique danger/warning/success/brand pour fixer thème clair monochrome laiton + atom 10 ThemeToggle + atom 11 LangSwitcher FR-BE/EN + RBAC visible badge "Zone admin · réservée fondateur" + nav conditionnelle isAdmin + helper `requireAdmin()` côté serveur). **3 ADRs nouveaux 9 mai** : [ADR-009 amendé](./adr/ADR-009-capacite-epargne-reelle.md) (3 concepts UX Reste disponible 662 € / Reste à vivre 500 € / Capacité d'épargne réelle 162 € + bouton "Ajuster ce mois" R-10) + [ADR-017 Proposed](./adr/ADR-017-plans-apurement.md) (table `installment_plans` + génération auto N transactions + drawer drilldown + cas Thierry 2 407 €/11×) + [ADR-018 Proposed](./adr/ADR-018-provisions-bidirectionnelles-audit-trail.md) (table `provision_transfers` direction OUT/IN + ballet aller-retour compte courant ↔ lissage). [ADR-016](./adr/ADR-016-tracking-paiements-multi-sources.md) reste statut `Proposed` (à valider Accepted post-PR-D5). **Brief PR-D4 PHASE 2 enrichi** (ADDENDUM 2026-05-09 sections A→K) dans `prompts/PR-D4-PHASE2-cd3-integration.md` : 11 atoms (au lieu de 8), ADR-009 amend, R-13 services bundlés (`included_services` jsonb), R-14 i18n FR-BE 100%, ADR-017/018 stubs, RBAC admin complet (helper + nav conditionnelle + badge + footer disclaimer), 4 tests Vitest + 2 e2e additionnels, table garde-fous R-01 à R-14. **Règles critiques 14 verrouillées** dans Obsidian `_regles-decisions-critiques.md`. Prochaines étapes : (1) appliquer patch Bloc E finalisation via @cc-design + export ZIP snapshot complet pour sécurité → (2) lancer @cc-ankora terminal Opus 4.7 sur PR-D4 PHASE 2 (intégration React/Tailwind, ~4-6 jours) → (3) PR-D5 backend (CRUD plans apurement + provision_transfers + table workspace_settings.reste_a_vivre + import CSV 5 sources). **Décision Option B locked** (alpha @thierry + 2-3 proches 4-6 sem, **PAS de release publique 10 mai**, v1.0 publique fin juin). Cf. [ADR-005](./adr/ADR-005-pr3a-anticipated-design-system.md) + [ADR-009 amendé](./adr/ADR-009-capacite-epargne-reelle.md) + [ADR-016](./adr/ADR-016-tracking-paiements-multi-sources.md) + [ADR-017](./adr/ADR-017-plans-apurement.md) + [ADR-018](./adr/ADR-018-provisions-bidirectionnelles-audit-trail.md) + handoff Obsidian `Athenaeum/10_Projects/ankora/cowork-handoffs/2026-05-09-fin-session-bloc-d-onboarding-bloc-e-admin.md`.
 
 ## Cap v1.0 publique — Vision & Jalons (23 avril 2026)
 
 **Source unique de vérité** : `docs/NORTH_STAR.md` (19 avril 2026). Ce document consolide la vision v1.0 publique, les 5 piliers parallélisables, les contraintes non négociables et les cibles mesurables.
 
-### Trois jalons verrouillés
+### Trois jalons verrouillés (+ V1.1 post-launch)
 
-| Jalon     | Horizon      | Contenu minimal                                                                                    |
-| --------- | ------------ | -------------------------------------------------------------------------------------------------- |
-| **Alpha** | ~4 semaines  | Thierry + 2-3 proches, FR seul, auth + onboarding + CRUD + dashboard v3 + simulateur + MFA         |
-| **Beta**  | ~8 semaines  | 5-10 testeurs, CGU/Privacy UE+BE 2026, GDPR export/delete, bug reporting live, Klaro!              |
-| **v1.0**  | ~12 semaines | Signups ouverts ankora.be, FR + EN, AEO complet, Lighthouse 100, /roadmap publique, admin panel v1 |
+| Jalon                | Horizon                            | Contenu minimal                                                                                                                                                                                                            |
+| -------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Alpha**            | ~4 semaines                        | Thierry + 2-3 proches, FR seul, auth + onboarding + CRUD + dashboard v3 partiel + simulateur + MFA                                                                                                                         |
+| **Beta**             | ~8 semaines (cible 10 juin 2026)   | **MVP fonctionnel utilisable** — 5-10 testeurs, CGU/Privacy UE+BE 2026, GDPR export/delete, bug reporting live, Klaro!, **3 sections cockpit v3 essentielles** : Health gauge + Bills J-7/14/30 + Drawer simulator         |
+| **v1.0**             | ~12 semaines (cible fin juin 2026) | **Cible Monarch Money level** — signups ouverts ankora.be, FR + EN, AEO complet, Lighthouse 100, /roadmap publique, admin panel v1, **8/8 sections cockpit v3 livrées** (incluant Timeline 6m + Goals + Drag-to-rebalance) |
+| **v1.1 post-launch** | hors planning verrouillé           | **Parité Monarch complète** si gap résiduel après V1.0 — drag-to-rebalance optimisé, polish UX, NL/DE/ES locales, notifications push PWA. Livré "quand c'est prêt"                                                         |
 
 ### Cinq piliers parallélisables
 
@@ -182,6 +185,46 @@ Suite à la spec canonique `specs/dashboard-cockpit-vraie-vision-2026-05-03.md`,
 - **ADR-013 — Negotiations history** (table `provider_negotiations`, A8 dans le tracking @thierry) — préalable à PR-D8
 - **ADR-014 — Account transfers log** (table `account_transfers`, A9) — utilisé par PR-D5 (Assistant Virements logs)
 - **ADR-015 — Savings buckets segregation** (table `savings_buckets`, A10) — affine ADR-002 (bucket-model), à rédiger en parallèle de PR-D5
+
+---
+
+## PR-D6/D7 — Dashboard Cockpit V1.0 candidates (post-PR-D5 mobile-iOS)
+
+**Source** : audit PR-D5 mobile-iOS (`docs/audits/2026-05-16-pr-d5-mobile-ios.md`), Phase 5 Linear tracking.
+
+**Projet Linear** : <https://linear.app/thierryvm/project/ankora-7dd28cb2e3a1> (team Thierryvm, target 2026-06-30).
+
+L'audit dashboard-ux PR-D5 a confirmé que 6 des 8 sections du cockpit v3 (cible Monarch Money) restent à livrer. Découpage **PR-D6** (Beta essentielles) / **PR-D7** (V1.0 publique) à arbitrer post-merge PR-D5 selon la vélocité réelle.
+
+### Priorisation par jalon
+
+| Section                               | Linear                                                | Cible              | Priorité |
+| ------------------------------------- | ----------------------------------------------------- | ------------------ | -------- |
+| Health score provisions gauge         | [THI-190](https://linear.app/thierryvm/issue/THI-190) | **Beta (10 juin)** | Medium   |
+| Prochaines factures J-7/14/30         | [THI-192](https://linear.app/thierryvm/issue/THI-192) | **Beta (10 juin)** | Medium   |
+| Simulateur what-if drawer integration | [THI-195](https://linear.app/thierryvm/issue/THI-195) | **Beta (10 juin)** | Medium   |
+| Timeline cashflow 6 mois prédictive   | [THI-191](https://linear.app/thierryvm/issue/THI-191) | V1.0 (fin juin)    | Low      |
+| Goals épargne avec ETA                | [THI-193](https://linear.app/thierryvm/issue/THI-193) | V1.0 (fin juin)    | Low      |
+| Enveloppes drag-to-rebalance          | [THI-194](https://linear.app/thierryvm/issue/THI-194) | V1.0 (fin juin)    | Low      |
+
+### Décision architecturale bloquante PR-D6
+
+[THI-189](https://linear.app/thierryvm/issue/THI-189) — **Canonical decision: atoms/_ vs ui/_ — migration plan + ADR**. À trancher AVANT le démarrage PR-D6/D7 pour figer la frontière atoms vs ui consumée par les nouvelles sections. Sinon les 6 sections vont fragmenter encore plus le DS.
+
+### Backlog P2 polish (10 tickets, Low priority)
+
+[THI-196 → THI-205](https://linear.app/thierryvm/project/ankora-7dd28cb2e3a1) — issues mineures non-bloquantes Beta :
+
+- THI-196 : Hero KPI mockup grid fallback responsive grid-cols-2 mobile
+- THI-197 : Landing hero overflow horizontal pré-existant (BUG-iOS-HERO-OVERFLOW, test.fixme actif)
+- THI-198 : PWA decode WebKit emulator workaround (BUG-iOS-007-emulator)
+- THI-199 : Dashboard `/app/loading.tsx` skeleton aligné Bloc 1+2
+- THI-200 : Charges tri/filtre/groupement par fréquence (atome Tabs)
+- THI-201 : Expenses groupement par jour/semaine/mois + dates formatées via `formatDate`
+- THI-202 : Dashboard cards couleur seule positif/négatif (WCAG 1.4.1) → préfixe +/− ou icône
+- THI-203 : Settings `ConsentToggleRow` extraction + harmonisation rounded-md vs rounded-xl
+- THI-204 : `AccountCard` tokenisation purple-500 raw → token sémantique
+- THI-205 : Simulator text-xl KPIs → `.num-lg` cohérence dashboard
 
 ---
 

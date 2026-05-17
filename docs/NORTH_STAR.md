@@ -4,7 +4,7 @@
 
 Source unique de vérité pour la vision et les décisions produit jusqu'à la v1.0 publique.
 
-Dernière mise à jour : 24 avril 2026 (adoption trio IA + workflow Claude Design).
+Dernière mise à jour : 17 mai 2026 (pivot scope explicite : Beta = MVP fonctionnel utilisable, V1.0 publique = cible Monarch level, V1.1 post-launch = parité complète si gap résiduel).
 
 ---
 
@@ -18,13 +18,14 @@ Ankora n'est **pas** une banque, **pas** un agrégateur (pas PSD2), **pas** un c
 
 Date de départ : 23 avril 2026. Cible : mi-juillet 2026. Enveloppe communicable : **12 semaines**. Aucune fausse promesse — si on livre en 9, c'est du bonus.
 
-### Trois jalons verrouillés
+### Trois jalons verrouillés (+ V1.1 post-launch)
 
-| #   | Jalon         | Horizon      | Contenu minimal                                                                                                   |
-| --- | ------------- | ------------ | ----------------------------------------------------------------------------------------------------------------- |
-| 1   | Alpha privé   | ~4 semaines  | Thierry + 2-3 proches, FR seul, auth + onboarding + CRUD + dashboard v3 + simulateur + MFA optionnel              |
-| 2   | Beta privée   | ~8 semaines  | 5-10 testeurs externes, CGU/Privacy UE+BE 2026 rédigées, GDPR export/deletion live, bug reporting, Klaro! intégré |
-| 3   | v1.0 publique | ~12 semaines | Signups libres sur ankora.be, FR + EN, schemas AEO complets, Lighthouse 100, /roadmap publique, admin panel v1    |
+| #   | Jalon            | Horizon                            | Contenu minimal                                                                                                                                                                                                                                                                                       |
+| --- | ---------------- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Alpha privé      | ~4 semaines                        | Thierry + 2-3 proches, FR seul, auth + onboarding + CRUD + dashboard v3 partiel + simulateur + MFA optionnel                                                                                                                                                                                          |
+| 2   | Beta privée      | ~8 semaines (cible 10 juin 2026)   | **MVP fonctionnel utilisable** — 5-10 testeurs externes, CGU/Privacy UE+BE 2026 rédigées, GDPR export/deletion live, bug reporting, Klaro! intégré, **3 sections cockpit v3 essentielles** : Health gauge provisions + Prochaines factures J-7/14/30 + Drawer simulateur what-if intégré au dashboard |
+| 3   | v1.0 publique    | ~12 semaines (cible fin juin 2026) | **Cible Monarch Money level** — signups libres sur ankora.be, FR + EN, schemas AEO complets, Lighthouse 100, /roadmap publique, admin panel v1, **8/8 sections cockpit v3 livrées** (Health + Timeline 6m + Bills + Goals + Drag-to-rebalance + Drawer simulator + Hero waterfall + Activité groupée) |
+| 4   | v1.1 post-launch | hors planning verrouillé           | **Parité Monarch complète** si gap résiduel après v1.0 — drag-to-rebalance optimisé mobile, polish UX, NL/DE/ES locales, notifications push PWA. Aucune pression deadline, livré "quand c'est prêt"                                                                                                   |
 
 ## Les 5 piliers parallélisables
 
