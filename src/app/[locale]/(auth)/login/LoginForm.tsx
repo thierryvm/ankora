@@ -45,8 +45,15 @@ export function LoginForm() {
           autoComplete="email"
           required
           aria-invalid={Boolean(emailError)}
+          // PR-D5 a11y: link error message via aria-describedby so AT
+          // announces it on focus. SignupForm already does this — alignment.
+          aria-describedby={emailError ? 'login-email-error' : undefined}
         />
-        {emailError && <p className="text-danger text-xs font-medium">{emailError}</p>}
+        {emailError && (
+          <p id="login-email-error" className="text-danger text-xs font-medium">
+            {emailError}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-2">
@@ -58,8 +65,13 @@ export function LoginForm() {
           autoComplete="current-password"
           required
           aria-invalid={Boolean(passwordError)}
+          aria-describedby={passwordError ? 'login-password-error' : undefined}
         />
-        {passwordError && <p className="text-danger text-xs font-medium">{passwordError}</p>}
+        {passwordError && (
+          <p id="login-password-error" className="text-danger text-xs font-medium">
+            {passwordError}
+          </p>
+        )}
       </div>
 
       {error && (

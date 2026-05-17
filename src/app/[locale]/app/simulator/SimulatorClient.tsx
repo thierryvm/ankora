@@ -123,6 +123,9 @@ export function SimulatorClient({ charges }: { charges: RawCharge[] }) {
                 variant={mode === key ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setMode(key)}
+                // PR-D5 a11y: announce active state to AT (visual cue is
+                // variant-only otherwise — silent for VoiceOver/NVDA).
+                aria-pressed={mode === key}
               >
                 {tModes(key)}
               </Button>

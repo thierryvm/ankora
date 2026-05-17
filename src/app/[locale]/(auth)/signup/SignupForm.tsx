@@ -88,9 +88,14 @@ export function SignupForm() {
           autoComplete="new-password"
           required
           aria-invalid={Boolean(passwordConfirmError)}
+          // PR-D5 a11y: align with email + password fields which already
+          // wire aria-describedby + id'd error <p>.
+          aria-describedby={passwordConfirmError ? 'passwordConfirm-error' : undefined}
         />
         {passwordConfirmError && (
-          <p className="text-danger text-xs font-medium">{passwordConfirmError}</p>
+          <p id="passwordConfirm-error" className="text-danger text-xs font-medium">
+            {passwordConfirmError}
+          </p>
         )}
       </div>
 
@@ -99,6 +104,9 @@ export function SignupForm() {
           type="checkbox"
           name="acceptTos"
           required
+          // PR-D5 a11y: surface validation errors to AT (was silent).
+          aria-invalid={Boolean(acceptTosError)}
+          aria-describedby={acceptTosError ? 'acceptTos-error' : undefined}
           className="border-border text-brand-700 focus:ring-brand-600 mt-1 h-4 w-4 rounded"
         />
         <span>
@@ -108,13 +116,19 @@ export function SignupForm() {
           </Link>
         </span>
       </label>
-      {acceptTosError && <p className="text-danger text-xs font-medium">{acceptTosError}</p>}
+      {acceptTosError && (
+        <p id="acceptTos-error" className="text-danger text-xs font-medium">
+          {acceptTosError}
+        </p>
+      )}
 
       <label className="text-muted-foreground flex items-start gap-2 text-sm">
         <input
           type="checkbox"
           name="acceptPrivacy"
           required
+          aria-invalid={Boolean(acceptPrivacyError)}
+          aria-describedby={acceptPrivacyError ? 'acceptPrivacy-error' : undefined}
           className="border-border text-brand-700 focus:ring-brand-600 mt-1 h-4 w-4 rounded"
         />
         <span>
@@ -125,7 +139,9 @@ export function SignupForm() {
         </span>
       </label>
       {acceptPrivacyError && (
-        <p className="text-danger text-xs font-medium">{acceptPrivacyError}</p>
+        <p id="acceptPrivacy-error" className="text-danger text-xs font-medium">
+          {acceptPrivacyError}
+        </p>
       )}
 
       {error && (

@@ -587,6 +587,7 @@
     "next": "Weiter",
     "finish": "Fertigstellen",
     "finishing": "Speichern…",
+    "stepOf": "Schritt {step} von {total}",
     "validation": {
       "workspaceNameRequired": "Gib deinem Bereich einen Namen.",
       "incomeInvalid": "Gib ein gültiges Einkommen an (≥ 0)."

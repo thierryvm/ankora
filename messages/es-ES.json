@@ -587,6 +587,7 @@
     "next": "Continuar",
     "finish": "Terminar",
     "finishing": "Guardando…",
+    "stepOf": "Paso {step} de {total}",
     "validation": {
       "workspaceNameRequired": "Dale un nombre a tu espacio.",
       "incomeInvalid": "Introduce un ingreso válido (≥ 0)."

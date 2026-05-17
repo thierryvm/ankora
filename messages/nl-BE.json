@@ -587,6 +587,7 @@
     "next": "Doorgaan",
     "finish": "Afronden",
     "finishing": "Opslaan…",
+    "stepOf": "Stap {step} van {total}",
     "validation": {
       "workspaceNameRequired": "Geef je ruimte een naam.",
       "incomeInvalid": "Geef een geldig nettoloon in (≥ 0)."
