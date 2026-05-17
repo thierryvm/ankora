@@ -1,9 +1,14 @@
 import type { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
 
 import { getExpenses, getWorkspaceSnapshot } from '@/lib/data/workspace-snapshot';
 import { ExpensesClient } from './ExpensesClient';
 
-export const metadata: Metadata = { title: 'Mes dépenses' };
+// PR-D5 i18n: was a hardcoded FR string. See `charges/page.tsx`.
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('app.expenses');
+  return { title: t('title') };
+}
 
 export default async function ExpensesPage() {
   const snapshot = await getWorkspaceSnapshot();
