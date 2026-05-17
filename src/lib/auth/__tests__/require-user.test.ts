@@ -56,14 +56,13 @@ describe('getOptionalUser() — non-redirecting session check', () => {
     expect(result).toEqual(fakeUser);
   });
 
-  it('never throws on transient Supabase failures (returns null instead)', async () => {
-    // Defensive — if Supabase throws (network blip), the helper must still
-    // resolve `null` rather than bubble the error to the calling layout.
-    // Public surfaces should always render, even when auth is degraded.
+  it('swallows transient Supabase failures and resolves to null', async () => {
+    // Defensive — if Supabase throws (network blip, JWT secret rotation,
+    // transient DB outage), the helper degrades to anonymous chrome rather
+    // than bubbling the error up to the public layout. Public surfaces
+    // must always render.
     getUserMock.mockRejectedValueOnce(new Error('Network down'));
 
-    await expect(getOptionalUser()).rejects.toThrow('Network down');
-    // Note: current implementation does not swallow throws — this test
-    // documents that behaviour so a future regression is intentional.
+    await expect(getOptionalUser()).resolves.toBeNull();
   });
 });
