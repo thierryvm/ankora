@@ -22,6 +22,32 @@ export async function requireUser(redirectTo = '/login'): Promise<User> {
 }
 
 /**
+ * Soft variant of `requireUser` — returns the user if a valid session
+ * exists, `null` otherwise. NEVER redirects.
+ *
+ * Use this for public surfaces (landing, FAQ, glossaire, legal pages…) that
+ * need to render different content based on the visitor's auth state without
+ * forcing them off the page. Example: showing a "My cockpit" CTA instead of
+ * "Sign in" in the marketing header.
+ *
+ * Same anti-spoofing properties as `requireUser`: hits
+ * `supabase.auth.getUser()` server-side rather than trusting a cookie claim.
+ */
+export async function getOptionalUser(): Promise<User | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    return null;
+  }
+
+  return user;
+}
+
+/**
  * Like requireUser but also returns the workspace_member row.
  * Redirects to /onboarding if user has no workspace yet.
  */
