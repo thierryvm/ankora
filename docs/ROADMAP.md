@@ -234,6 +234,30 @@ L'audit dashboard-ux PR-D5 a confirmé que 6 des 8 sections du cockpit v3 (cible
 
 ---
 
+## Backlog infrastructure / Tech debt
+
+### PR-INFRA-4 — Migration template GRANT explicite + REVOKE FROM PUBLIC
+
+**Linear** : [THI-206](https://linear.app/thierryvm/issue/THI-206) · **Priorité** : Medium · **Deadline** : 30 octobre 2026
+
+Mettre à jour le template migration Ankora pour intégrer `GRANT explicite` (Supabase breaking change 30/10/2026 — tables non exposées par défaut sans grant) et le pattern empirique `REVOKE FROM PUBLIC` pour fermer les fonctions PostgREST privées.
+
+**Audit Ankora 2026-05-17** (post-merge PR-D5) — infra à jour, action limitée au template :
+
+- Postgres : **17.6** ✅ (deadline force-upgrade 1er juillet caduque pour Ankora)
+- Node CI 4 workflows + `engines` : **24** ✅ (deadline 30 juin caduque)
+- `@supabase/supabase-js` : `^2.103.3` (dans la fenêtre 2.101–2.105 stable)
+- `vercel.json` runtime : défaut Vercel (Node 24+)
+
+Convention canonique documentée dans [`docs/CONVENTIONS.md`](./CONVENTIONS.md#migrations-supabase--conventions-post-30-octobre-2026). Premier usage sur la prochaine migration créée — pas de ré-écriture rétroactive des migrations existantes (RLS + grants implicites conservés pour les tables d'avant la deadline).
+
+**Refs** :
+
+- Obsidian learning : `90_Meta/learnings/2026-05-16-supabase-breaking-changes-2026-cross-project.md`
+- Supabase changelog : <https://supabase.com/changelog/45329-breaking-change-tables-not-exposed-to-data-and-graphql-api-automatically>
+
+---
+
 ## Phase 0 — Bootstrap (terminée)
 
 - [x] Choix du nom + vérification domaines
