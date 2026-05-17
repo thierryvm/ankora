@@ -4,6 +4,7 @@ import { AnkoraLogo } from '@/components/brand/AnkoraLogo';
 import { HeaderNav } from '@/components/layout/HeaderNav';
 import { Button } from '@/components/ui/button';
 import { Link } from '@/i18n/navigation';
+import { getOptionalUser } from '@/lib/auth/require-user';
 
 import { ArrowRight } from '../icons';
 
@@ -28,6 +29,12 @@ import { ArrowRight } from '../icons';
 export async function MktNav() {
   const t = await getTranslations('landing.mktnav');
   const tCommon = await getTranslations('common');
+
+  // Resolve session server-side so the marketing CTAs (and the mobile drawer)
+  // reflect a logged-in visitor. Without this, a user who lands on `/` from
+  // any link still sees "Se connecter" / "Essayer gratuitement", which made
+  // them believe their session was lost (it wasn't — `/app` still worked).
+  const isAuthenticated = !!(await getOptionalUser());
 
   // `disabled` flags links to pages that don't exist yet (issues #79 + #80
   // tracked for post-PR-3c). They render with aria-disabled + cursor-not-allowed
@@ -76,17 +83,28 @@ export async function MktNav() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
-          <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
-            <Link href="/login">{t('ctaLogin')}</Link>
-          </Button>
-          <Button asChild size="sm" className="hidden sm:inline-flex">
-            <Link href="/signup">
-              {t('ctaSignup')}
-              <ArrowRight aria-hidden="true" />
-            </Link>
-          </Button>
+          {isAuthenticated ? (
+            <Button asChild size="sm" className="hidden sm:inline-flex">
+              <Link href="/app">
+                {tCommon('nav.myCockpit')}
+                <ArrowRight aria-hidden="true" />
+              </Link>
+            </Button>
+          ) : (
+            <>
+              <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+                <Link href="/login">{t('ctaLogin')}</Link>
+              </Button>
+              <Button asChild size="sm" className="hidden sm:inline-flex">
+                <Link href="/signup">
+                  {t('ctaSignup')}
+                  <ArrowRight aria-hidden="true" />
+                </Link>
+              </Button>
+            </>
+          )}
 
-          <HeaderNav variant="marketing" />
+          <HeaderNav variant="marketing" isAuthenticated={isAuthenticated} />
         </div>
       </div>
     </header>

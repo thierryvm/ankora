@@ -25,9 +25,14 @@ function getServerThemeSnapshot() {
 
 type HeaderNavProps = {
   variant?: 'marketing' | 'app';
+  // Mirrors the parent Header / MktNav. The drawer's marketing block
+  // swaps the login/signup pair for a single "My cockpit" link when the
+  // visitor already has a session — keeps the mobile UX consistent with
+  // the desktop CTAs.
+  isAuthenticated?: boolean;
 };
 
-export function HeaderNav({ variant = 'marketing' }: HeaderNavProps) {
+export function HeaderNav({ variant = 'marketing', isAuthenticated = false }: HeaderNavProps) {
   const t = useTranslations('common');
   const isDark = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, getServerThemeSnapshot);
   const [isOpen, setIsOpen] = useState(false);
@@ -197,24 +202,43 @@ export function HeaderNav({ variant = 'marketing' }: HeaderNavProps) {
                     `data-testid` on the login link lets Playwright target
                     it directly without role/name globbing — `getByRole('link',
                     { name: /se connecter/i })` also matches the (hidden)
-                    desktop header CTA and `.first()` picks the wrong one. */}
+                    desktop header CTA and `.first()` picks the wrong one.
+
+                    When the visitor is already signed in, replace the
+                    login/signup pair with a single "My cockpit" link so the
+                    drawer stays consistent with the desktop CTA. Avoids the
+                    UX bug where a returning user lands on `/` and thinks
+                    their session expired. */}
                 <div className="border-border mt-2 space-y-2 border-t pt-2">
-                  <Link
-                    href="/login"
-                    onClick={handleDrawerClose}
-                    data-testid="drawer-login-link"
-                    className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-                  >
-                    {t('nav.login')}
-                  </Link>
-                  <Link
-                    href="/signup"
-                    onClick={handleDrawerClose}
-                    data-testid="drawer-signup-link"
-                    className="bg-brand-700 hover:bg-brand-800 focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-center text-sm font-medium text-white transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-                  >
-                    {t('nav.signup')}
-                  </Link>
+                  {isAuthenticated ? (
+                    <Link
+                      href="/app"
+                      onClick={handleDrawerClose}
+                      data-testid="drawer-cockpit-link"
+                      className="bg-brand-700 hover:bg-brand-800 focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-center text-sm font-medium text-white transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                    >
+                      {t('nav.myCockpit')}
+                    </Link>
+                  ) : (
+                    <>
+                      <Link
+                        href="/login"
+                        onClick={handleDrawerClose}
+                        data-testid="drawer-login-link"
+                        className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                      >
+                        {t('nav.login')}
+                      </Link>
+                      <Link
+                        href="/signup"
+                        onClick={handleDrawerClose}
+                        data-testid="drawer-signup-link"
+                        className="bg-brand-700 hover:bg-brand-800 focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-center text-sm font-medium text-white transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                      >
+                        {t('nav.signup')}
+                      </Link>
+                    </>
+                  )}
                 </div>
               </>
             )}

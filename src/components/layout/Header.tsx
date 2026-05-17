@@ -3,15 +3,25 @@ import { Link } from '@/i18n/navigation';
 import { BrandHomeLink } from '@/components/brand/BrandHomeLink';
 import { Button } from '@/components/ui/button';
 import { isAdmin } from '@/lib/auth/is-admin';
+import { getOptionalUser } from '@/lib/auth/require-user';
 import { HeaderNav } from './HeaderNav';
 
 type HeaderProps = {
   variant?: 'marketing' | 'app';
+  // Optional override. When omitted on the marketing variant, the Header
+  // auto-detects the session via `getOptionalUser` so every public page
+  // (FAQ, glossaire, legal/*, landing fallbacks) reflects the visitor's
+  // auth state without having to thread the prop through 6 call-sites.
+  // The app/layout still passes `isAuthenticated` explicitly to avoid a
+  // duplicate Supabase round-trip behind `requireUser`.
   isAuthenticated?: boolean;
 };
 
-export async function Header({ variant = 'marketing', isAuthenticated = false }: HeaderProps) {
+export async function Header({ variant = 'marketing', isAuthenticated }: HeaderProps) {
   const t = await getTranslations('common');
+
+  const resolvedAuth =
+    isAuthenticated ?? (variant === 'marketing' ? !!(await getOptionalUser()) : false);
 
   // PR-SEC-ADMIN — conditional admin link in app variant. `isAdmin()` reads
   // session + ANKORA_ADMIN_USER_IDS server-side; returns false for any
@@ -92,7 +102,7 @@ export async function Header({ variant = 'marketing', isAuthenticated = false }:
         )}
 
         <div className="ml-auto flex items-center gap-1 md:gap-2">
-          {variant === 'marketing' && !isAuthenticated && (
+          {variant === 'marketing' && !resolvedAuth && (
             <>
               <Button asChild variant="ghost" size="sm">
                 <Link href="/login">{t('nav.login')}</Link>
@@ -102,13 +112,13 @@ export async function Header({ variant = 'marketing', isAuthenticated = false }:
               </Button>
             </>
           )}
-          {variant === 'marketing' && isAuthenticated && (
+          {variant === 'marketing' && resolvedAuth && (
             <Button asChild size="sm">
               <Link href="/app">{t('nav.myCockpit')}</Link>
             </Button>
           )}
 
-          <HeaderNav variant={variant} />
+          <HeaderNav variant={variant} isAuthenticated={resolvedAuth} />
         </div>
       </div>
     </header>
