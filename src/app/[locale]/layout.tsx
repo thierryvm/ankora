@@ -87,9 +87,20 @@ export async function generateMetadata({ params }: LocaleParams): Promise<Metada
     },
     icons: {
       icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
-      apple: [{ url: '/apple-icon.svg' }],
+      // PR-D5 mobile-iOS: iOS only accepts PNG for the home-screen icon.
+      // The previous `/apple-icon.svg` reference produced a fallback grey
+      // tile after Add-to-Home-Screen. The PNG already exists in `public/icons/`.
+      apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
     },
     manifest: '/manifest.webmanifest',
+    // PR-D5 mobile-iOS: declare standalone PWA capability so iOS opens the
+    // app fullscreen (no Safari chrome) after Add-to-Home-Screen. The
+    // `black-translucent` status bar lets the brand teal extend behind it.
+    appleWebApp: {
+      capable: true,
+      title: SITE.name,
+      statusBarStyle: 'black-translucent',
+    },
   };
 }
 
@@ -159,7 +170,12 @@ export default async function LocaleLayout({
       <body className={`${inter.variable} max-w-full overflow-x-clip font-sans antialiased`}>
         <a
           href="#main"
-          className="focus:bg-primary focus:text-primary-foreground focus:ring-ring sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:px-4 focus:py-2 focus:shadow-lg focus:ring-2 focus:outline-none"
+          // PR-D5 a11y: `bg-primary`, `text-primary-foreground`, `ring-ring`
+          // are Tailwind-default tokens NOT declared in @theme of globals.css.
+          // Switched to Ankora design tokens (brand-700 background, white text,
+          // brand-600 ring) so the skip-link respects the actual design system
+          // and survives a token rename.
+          className="focus:bg-brand-700 focus:ring-brand-600 sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:px-4 focus:py-2 focus:text-white focus:shadow-lg focus:ring-2 focus:outline-none"
         >
           {t('a11y.skipToMain')}
         </a>
