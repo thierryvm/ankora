@@ -81,22 +81,49 @@ Source : [Supabase changelog 45329](https://supabase.com/changelog/45329-breakin
 
 ```sql
 create table if not exists public.<nom> (
-  -- colonnes
+  id uuid primary key default gen_random_uuid(),
+  workspace_id uuid not null references public.workspaces (id) on delete cascade,
+  created_at timestamptz not null default now()
+  -- ... autres colonnes
 );
 
 -- 1. RLS obligatoire
 alter table public.<nom> enable row level security;
--- ... policies ...
+
+-- Exemple pattern Ankora — workspace-scoped (à adapter selon l'agrégat)
+create policy "<nom>_select_own"
+  on public.<nom> for select
+  using (
+    workspace_id in (
+      select workspace_id
+      from public.workspace_members
+      where user_id = auth.uid()
+    )
+  );
+
+create policy "<nom>_insert_own"
+  on public.<nom> for insert
+  with check (
+    workspace_id in (
+      select workspace_id
+      from public.workspace_members
+      where user_id = auth.uid()
+    )
+  );
+
+-- (update / delete : mêmes patterns avec `using` + `with check`)
 
 -- 2. GRANT explicite (NOUVEAU — était implicite avant le 30/10/2026)
 grant select, insert, update, delete on table public.<nom>
   to anon, authenticated;
 ```
 
-**Exceptions valides** (pas de GRANT volontaire) :
+> ⚠️ **Toujours expliciter au moins une `policy` par opération CRUD nécessaire.** RLS activé sans policies = table fermée à tout le monde (sauf `service_role` qui bypass RLS via `bypassrls`). Le pattern `workspace_members` ci-dessus est le canon Ankora — toute déviation doit être justifiée dans la migration.
 
-- Tables audit log write-only (service_role uniquement)
-- Tables internes non exposées au client
+**Exceptions valides** (pas de GRANT volontaire à `anon` / `authenticated`) :
+
+- Tables audit log write-only (accès via `service_role` uniquement, jamais exposées à PostgREST)
+- Tables internes au domaine (queues, snapshots, projections) non exposées au client
 
 ### Pattern REVOKE FROM PUBLIC — fonctions privées
 
@@ -108,6 +135,22 @@ revoke execute on function public.<fn>() from public;
 ```
 
 Sans ce `REVOKE FROM PUBLIC`, la fonction reste exécutable même après un `REVOKE` ciblé. Source empirique : Terminal Learning migration 015 (16 mai 2026).
+
+#### Impact sur `service_role` et rôles custom
+
+`REVOKE EXECUTE ... FROM PUBLIC` retire le droit pour **tous les rôles** PostgreSQL, y compris `service_role` (qui hérite implicitement de `PUBLIC` même s'il bypass RLS sur les tables). Conséquence : un job interne, une Edge Function, un cron `pg_cron`, ou un script de migration qui exécutait la fonction via `service_role` **cassera silencieusement** après le REVOKE.
+
+Pattern correct quand la fonction reste nécessaire côté serveur :
+
+```sql
+-- Ordre obligatoire : REVOKE d'abord, GRANT ciblé ensuite
+revoke execute on function public.<fn>() from public;
+grant execute on function public.<fn>() to service_role;
+-- Si rôles custom (ex. `cron_runner`, `migration_runner`) :
+-- grant execute on function public.<fn>() to cron_runner;
+```
+
+À documenter dans le commentaire SQL de la fonction si elle a des consommateurs internes — sinon le `REVOKE FROM PUBLIC` d'une prochaine migration pourrait casser une Edge Function dont personne ne se souvient.
 
 ### Recommandation V2 — schema `api` dédié
 

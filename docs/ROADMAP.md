@@ -249,7 +249,7 @@ Mettre à jour le template migration Ankora pour intégrer `GRANT explicite` (Su
 - `@supabase/supabase-js` : `^2.103.3` (dans la fenêtre 2.101–2.105 stable)
 - `vercel.json` runtime : défaut Vercel (Node 24+)
 
-Convention canonique documentée dans [`docs/CONVENTIONS.md`](./CONVENTIONS.md#migrations-supabase--conventions-post-30-octobre-2026). Premier usage sur la prochaine migration créée — pas de ré-écriture rétroactive des migrations existantes (RLS + grants implicites conservés pour les tables d'avant la deadline).
+Convention canonique documentée dans [`docs/CONVENTIONS.md`](./CONVENTIONS.md#migrations-supabase--conventions-post-30-octobre-2026). Premier usage sur la prochaine migration créée — pas de réécriture rétroactive des migrations existantes (RLS + grants implicites conservés pour les tables d'avant la deadline).
 
 **Refs** :
 
