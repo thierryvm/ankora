@@ -1,20 +1,20 @@
 import * as React from 'react';
 
-export type CardPadding = 'sm' | 'md' | 'lg' | 'none';
-export type CardElevation = 'flat' | 'raised';
-export type CardTone = 'default' | 'soft' | 'brand' | 'accent' | 'warning' | 'danger';
+export type AnkCardPadding = 'sm' | 'md' | 'lg' | 'none';
+export type AnkCardElevation = 'flat' | 'raised';
+export type AnkCardTone = 'default' | 'soft' | 'brand' | 'accent' | 'warning' | 'danger';
 
-export interface CardProps extends Omit<React.HTMLAttributes<HTMLElement>, 'title'> {
-  readonly padding?: CardPadding;
-  readonly elevation?: CardElevation;
-  readonly tone?: CardTone;
+export interface AnkCardProps extends Omit<React.HTMLAttributes<HTMLElement>, 'title'> {
+  readonly padding?: AnkCardPadding;
+  readonly elevation?: AnkCardElevation;
+  readonly tone?: AnkCardTone;
   readonly eyebrow?: React.ReactNode;
   readonly title?: React.ReactNode;
   readonly footer?: React.ReactNode;
   readonly children?: React.ReactNode;
 }
 
-export function Card({
+export function AnkCard({
   padding = 'md',
   elevation = 'flat',
   tone = 'default',
@@ -24,7 +24,7 @@ export function Card({
   className,
   children,
   ...rest
-}: CardProps): React.JSX.Element {
+}: AnkCardProps): React.JSX.Element {
   const classes = [
     'atm-card',
     `atm-card--p-${padding}`,

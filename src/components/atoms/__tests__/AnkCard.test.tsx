@@ -1,17 +1,17 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
-import { Card } from '../Card';
+import { AnkCard } from '../AnkCard';
 
-describe('<Card />', () => {
+describe('<AnkCard />', () => {
   it('renders children inside <section>', () => {
-    const { container } = render(<Card>Content</Card>);
+    const { container } = render(<AnkCard>Content</AnkCard>);
     expect(container.querySelector('section')).toBeTruthy();
     expect(screen.getByText('Content')).toBeInTheDocument();
   });
 
   it('applies default padding=md, elevation=flat, tone=default', () => {
-    const { container } = render(<Card>X</Card>);
+    const { container } = render(<AnkCard>X</AnkCard>);
     const section = container.querySelector('section')!;
     expect(section.className).toContain('atm-card--p-md');
     expect(section.className).toContain('atm-card--flat');
@@ -24,7 +24,7 @@ describe('<Card />', () => {
     ['md', 'atm-card--p-md'],
     ['lg', 'atm-card--p-lg'],
   ] as const)('applies padding %s', (p, cls) => {
-    const { container } = render(<Card padding={p}>X</Card>);
+    const { container } = render(<AnkCard padding={p}>X</AnkCard>);
     expect(container.querySelector('section')!.className).toContain(cls);
   });
 
@@ -32,7 +32,7 @@ describe('<Card />', () => {
     ['flat', 'atm-card--flat'],
     ['raised', 'atm-card--raised'],
   ] as const)('applies elevation %s', (e, cls) => {
-    const { container } = render(<Card elevation={e}>X</Card>);
+    const { container } = render(<AnkCard elevation={e}>X</AnkCard>);
     expect(container.querySelector('section')!.className).toContain(cls);
   });
 
@@ -44,32 +44,32 @@ describe('<Card />', () => {
     ['warning', 'atm-card--tone-warning'],
     ['danger', 'atm-card--tone-danger'],
   ] as const)('applies tone %s', (t, cls) => {
-    const { container } = render(<Card tone={t}>X</Card>);
+    const { container } = render(<AnkCard tone={t}>X</AnkCard>);
     expect(container.querySelector('section')!.className).toContain(cls);
   });
 
   it('renders eyebrow + title in <header>', () => {
     render(
-      <Card eyebrow="EYEBROW" title="Title">
+      <AnkCard eyebrow="EYEBROW" title="Title">
         Body
-      </Card>,
+      </AnkCard>,
     );
     expect(screen.getByText('EYEBROW')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Title' })).toBeInTheDocument();
   });
 
   it('does not render <header> when neither eyebrow nor title', () => {
-    const { container } = render(<Card>X</Card>);
+    const { container } = render(<AnkCard>X</AnkCard>);
     expect(container.querySelector('header')).toBeNull();
   });
 
   it('renders footer in <footer>', () => {
-    render(<Card footer={<span>Foot</span>}>X</Card>);
+    render(<AnkCard footer={<span>Foot</span>}>X</AnkCard>);
     expect(screen.getByText('Foot')).toBeInTheDocument();
   });
 
   it('passes through className', () => {
-    const { container } = render(<Card className="custom">X</Card>);
+    const { container } = render(<AnkCard className="custom">X</AnkCard>);
     expect(container.querySelector('section')!.className).toContain('custom');
   });
 });

@@ -1,6 +1,6 @@
 'use client';
 import * as React from 'react';
-import { Button, EditDrawer, type DrawerField } from '@/components/atoms';
+import { AnkButton, EditDrawer, type DrawerField } from '@/components/atoms';
 
 const FIELDS: ReadonlyArray<DrawerField> = [
   { type: 'text', key: 'name', label: 'Nom', required: true, placeholder: 'Mon poste' },
@@ -22,7 +22,7 @@ export function DrawerDemo(): React.JSX.Element {
   const [open, setOpen] = React.useState(false);
   return (
     <>
-      <Button onClick={() => setOpen(true)}>Ouvrir le Drawer</Button>
+      <AnkButton onClick={() => setOpen(true)}>Ouvrir le Drawer</AnkButton>
       <EditDrawer
         open={open}
         title="Démo Drawer"

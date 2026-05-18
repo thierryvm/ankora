@@ -1,16 +1,16 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 
-import { Button } from '../Button';
+import { AnkButton } from '../AnkButton';
 
-describe('<Button /> (atom CD#3)', () => {
+describe('<AnkButton /> (atom CD#3)', () => {
   it('renders a <button> element', () => {
-    render(<Button>Click me</Button>);
+    render(<AnkButton>Click me</AnkButton>);
     expect(screen.getByRole('button', { name: 'Click me' }).tagName).toBe('BUTTON');
   });
 
   it('applies default variant=primary + size=md', () => {
-    render(<Button>Test</Button>);
+    render(<AnkButton>Test</AnkButton>);
     const btn = screen.getByRole('button');
     expect(btn.className).toContain('atm-btn--primary');
     expect(btn.className).toContain('atm-btn--md');
@@ -22,7 +22,7 @@ describe('<Button /> (atom CD#3)', () => {
     ['ghost', 'atm-btn--ghost'],
     ['destructive', 'atm-btn--destructive'],
   ] as const)('applies variant %s', (variant, cls) => {
-    render(<Button variant={variant}>X</Button>);
+    render(<AnkButton variant={variant}>X</AnkButton>);
     expect(screen.getByRole('button').className).toContain(cls);
   });
 
@@ -31,28 +31,28 @@ describe('<Button /> (atom CD#3)', () => {
     ['md', 'atm-btn--md'],
     ['lg', 'atm-btn--lg'],
   ] as const)('applies size %s', (size, cls) => {
-    render(<Button size={size}>X</Button>);
+    render(<AnkButton size={size}>X</AnkButton>);
     expect(screen.getByRole('button').className).toContain(cls);
   });
 
   it('shows spinner when loading', () => {
-    const { container } = render(<Button loading>Loading…</Button>);
+    const { container } = render(<AnkButton loading>Loading…</AnkButton>);
     expect(container.querySelector('.atm-btn-spin')).toBeTruthy();
   });
 
   it('disables button when loading', () => {
-    render(<Button loading>Loading…</Button>);
+    render(<AnkButton loading>Loading…</AnkButton>);
     expect(screen.getByRole('button')).toBeDisabled();
   });
 
   it('renders icon left and label', () => {
-    render(<Button icon={<span data-testid="icon-left">⬇</span>}>Save</Button>);
+    render(<AnkButton icon={<span data-testid="icon-left">⬇</span>}>Save</AnkButton>);
     expect(screen.getByTestId('icon-left')).toBeInTheDocument();
     expect(screen.getByText('Save')).toBeInTheDocument();
   });
 
   it('renders icon-only with aria-label', () => {
-    render(<Button icon={<span>⬇</span>} aria-label="Download" />);
+    render(<AnkButton icon={<span>⬇</span>} aria-label="Download" />);
     const btn = screen.getByRole('button', { name: 'Download' });
     expect(btn.className).toContain('atm-btn--icon-only');
   });
@@ -60,9 +60,9 @@ describe('<Button /> (atom CD#3)', () => {
   it('does not call onClick when disabled', () => {
     const onClick = vi.fn();
     render(
-      <Button disabled onClick={onClick}>
+      <AnkButton disabled onClick={onClick}>
         X
-      </Button>,
+      </AnkButton>,
     );
     fireEvent.click(screen.getByRole('button'));
     expect(onClick).not.toHaveBeenCalled();
@@ -71,9 +71,9 @@ describe('<Button /> (atom CD#3)', () => {
   it('does not call onClick when loading', () => {
     const onClick = vi.fn();
     render(
-      <Button loading onClick={onClick}>
+      <AnkButton loading onClick={onClick}>
         X
-      </Button>,
+      </AnkButton>,
     );
     fireEvent.click(screen.getByRole('button'));
     expect(onClick).not.toHaveBeenCalled();
@@ -81,13 +81,13 @@ describe('<Button /> (atom CD#3)', () => {
 
   it('forwards ref to <button>', () => {
     const ref = { current: null as HTMLButtonElement | null };
-    render(<Button ref={ref}>X</Button>);
+    render(<AnkButton ref={ref}>X</AnkButton>);
     expect(ref.current?.tagName).toBe('BUTTON');
   });
 
   it('calls onClick when active', () => {
     const onClick = vi.fn();
-    render(<Button onClick={onClick}>X</Button>);
+    render(<AnkButton onClick={onClick}>X</AnkButton>);
     fireEvent.click(screen.getByRole('button'));
     expect(onClick).toHaveBeenCalledTimes(1);
   });

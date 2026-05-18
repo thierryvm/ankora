@@ -1,21 +1,21 @@
 import * as React from 'react';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'destructive';
-export type ButtonSize = 'sm' | 'md' | 'lg';
+export type AnkButtonVariant = 'primary' | 'secondary' | 'ghost' | 'destructive';
+export type AnkButtonSize = 'sm' | 'md' | 'lg';
 
-export interface ButtonProps extends Omit<
+export interface AnkButtonProps extends Omit<
   React.ButtonHTMLAttributes<HTMLButtonElement>,
   'children'
 > {
-  readonly variant?: ButtonVariant;
-  readonly size?: ButtonSize;
+  readonly variant?: AnkButtonVariant;
+  readonly size?: AnkButtonSize;
   readonly icon?: React.ReactNode;
   readonly iconRight?: React.ReactNode;
   readonly loading?: boolean;
   readonly children?: React.ReactNode;
 }
 
-export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+export const AnkButton = React.forwardRef<HTMLButtonElement, AnkButtonProps>(function AnkButton(
   {
     variant = 'primary',
     size = 'md',
