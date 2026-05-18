@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useSyncExternalStore, useTransition } from 'react';
+import { useEffect, useState, useSyncExternalStore, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { Link } from '@/i18n/navigation';
@@ -86,8 +86,14 @@ function getSnapshot(): StoreSnapshot {
   return SNAPSHOT_REF.value;
 }
 
+// Frozen module-level constant for SSR: useSyncExternalStore requires
+// getServerSnapshot() to return a referentially stable value across calls,
+// otherwise React logs "The result of getServerSnapshot should be cached
+// to avoid an infinite loop" and may re-render in a tight loop.
+const SERVER_SNAPSHOT: StoreSnapshot = { stored: null, reopen: false };
+
 function getServerSnapshot(): StoreSnapshot {
-  return { stored: null, reopen: false };
+  return SERVER_SNAPSHOT;
 }
 
 const STORAGE_LISTENERS = new Set<() => void>();
@@ -128,6 +134,15 @@ export function __resetConsentCacheForTests(): void {
 }
 
 /**
+ * Test-only accessor that returns the SSR snapshot used by
+ * useSyncExternalStore. Exposed so a Vitest can assert referential
+ * stability without going through a real SSR render cycle.
+ */
+export function __getServerSnapshotForTests(): StoreSnapshot {
+  return getServerSnapshot();
+}
+
+/**
  * Programmatically requests the banner to re-open. Called from the Settings
  * "Reset choice" button and the Footer "Manage cookie preferences" link so
  * the user can revisit their decision from anywhere.
@@ -151,6 +166,16 @@ export function ConsentBanner() {
   const [analytics, setAnalytics] = useState(false);
   const [marketing, setMarketing] = useState(false);
   const [, startTransition] = useTransition();
+
+  // Post-hydration refresh: the module-level snapshot cache survives
+  // soft navigations within the SPA. If localStorage was written in
+  // another tab (multi-tab race) or in a previous route before this
+  // banner mounted, getSnapshot() may return a stale value taken from
+  // the first pre-hydration read. Forcing a notify() at mount re-reads
+  // localStorage and wakes up all subscribers (including this one).
+  useEffect(() => {
+    notify();
+  }, []);
 
   const hasDecided = snap.stored !== null;
   const shouldShow = !dismissed && (!hasDecided || snap.reopen);

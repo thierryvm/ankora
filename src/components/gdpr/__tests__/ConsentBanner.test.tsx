@@ -30,6 +30,7 @@ import {
   reopenConsentBanner,
   CONSENT_VERSION,
   __resetConsentCacheForTests,
+  __getServerSnapshotForTests,
 } from '../ConsentBanner';
 
 const STORAGE_KEY = 'ankora.consent.v1';
@@ -161,5 +162,46 @@ describe('<ConsentBanner /> — extended (PR-LEGAL-1)', () => {
     reopenConsentBanner();
     expect(window.localStorage.getItem(STORAGE_KEY)).toBeNull();
     expect(window.localStorage.getItem(REOPEN_KEY)).toBe('1');
+  });
+
+  it('getServerSnapshot returns a referentially stable value across calls (no React loop)', () => {
+    const first = __getServerSnapshotForTests();
+    const second = __getServerSnapshotForTests();
+    const third = __getServerSnapshotForTests();
+    expect(first).toBe(second);
+    expect(second).toBe(third);
+    expect(first.stored).toBeNull();
+    expect(first.reopen).toBe(false);
+  });
+
+  it('post-mount refresh picks up a decision written between renders (stale cache repro)', async () => {
+    // First render: no decision in localStorage → banner visible. This
+    // call also primes the module-level snapshot cache with
+    // {stored: null, reopen: false} (the bug scenario from issue #126).
+    const first = render(wrapped());
+    expect(screen.getByRole('button', { name: messages.consent.acceptAll })).toBeInTheDocument();
+    first.unmount();
+
+    // Simulate a multi-tab race: another tab persists a decision while
+    // this tab still has the stale module cache. We intentionally do
+    // NOT call __resetConsentCacheForTests() — the cache stays stale.
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        version: CONSENT_VERSION,
+        analytics: true,
+        marketing: true,
+        decidedAt: new Date().toISOString(),
+      }),
+    );
+
+    // Remount: the post-hydration useEffect must force a notify() that
+    // re-reads localStorage, so the banner should NOT render anymore.
+    render(wrapped());
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('button', { name: messages.consent.acceptAll }),
+      ).not.toBeInTheDocument();
+    });
   });
 });

@@ -24,26 +24,7 @@ test.describe('PR-LEGAL-1 — cookies consent flow', () => {
 
   test('Accept all dismisses the banner and persists analytics + marketing in localStorage', async ({
     page,
-    browserName,
   }) => {
-    // FIXME(@cc-ankora 2026-05-10): webkit-deterministic timing bug (Sub-task B
-    // investigation: 3/3 fail mobile-safari + 0/3 chromium en CI).
-    //
-    // Hypothèse root cause : ConsentBanner.tsx:148 utilise `useSyncExternalStore`
-    // avec `getServerSnapshot()` retournant `{stored: null, reopen: false}` →
-    // Server-render-empty puis Client-hydrate-snapshot. L'`accept()` flow
-    // (ligne 159-174) appelle synchroné `persist()` + `setDismissed()` + `notify()`
-    // puis async `startTransition(recordCookieConsentAction)`.
-    //
-    // Sur WebKit, le `page.waitForFunction((key) => !!localStorage.getItem(key))`
-    // poll voit `null` pendant 5s alors que `persist()` est synchrone — possible
-    // sandbox storage Playwright/WebKit isolé du contexte React, OU Server Action
-    // via useTransition produit un re-render qui interfère avec l'observabilité
-    // localStorage côté Playwright runner.
-    //
-    // Fix root cause > 30min — défer dédié (issue GH e2e-webkit-hydration-timing).
-    // Tracker conjoint avec :53 + error-boundaries:21 (même famille).
-    test.fixme(browserName === 'webkit', 'webkit hydration timing — see GH issue');
     await clearConsentStorage(page);
     await page.goto('/');
     await page.getByRole('button', { name: 'Tout accepter' }).click();
@@ -67,11 +48,7 @@ test.describe('PR-LEGAL-1 — cookies consent flow', () => {
 
   test('Customize → analytics on, marketing off → save persists granular choice', async ({
     page,
-    browserName,
   }) => {
-    // FIXME(@cc-ankora 2026-05-10): same webkit-deterministic timing bug as `:25`.
-    // Sub-task B investigation: 3/3 fail mobile-safari, root cause défer dédié.
-    test.fixme(browserName === 'webkit', 'webkit hydration timing — see GH issue');
     await clearConsentStorage(page);
     await page.goto('/');
     await page.getByRole('button', { name: 'Personnaliser' }).click();
@@ -90,20 +67,16 @@ test.describe('PR-LEGAL-1 — cookies consent flow', () => {
     expect(parsed.marketing).toBe(false);
   });
 
-  // FIXME(@cowork 2026-05-08): flaky in CI — `scrollIntoViewIfNeeded` times out
-  // at 10s on the footer button despite the explicit anchor (cf. PR-QA-1d).
-  // Reproducible on main (commits 9f0b400, 32e7683 also failed). Hypothèse :
-  // footer hydration delayed in CI prod build. À investiguer post-PR-A merge :
-  // (1) augmenter timeout à 20s, (2) waitForLoadState('networkidle') avant
-  // scrollIntoView, (3) vérifier viewport CI vs viewport local. Tracking issue
-  // à créer. Le test reste pertinent — ne pas le supprimer, juste fixme jusqu'à fix.
-  // FIXME(@cowork 2026-05-08, confirmed déterministe @cc-ankora 2026-05-10):
-  // 3/3 fail chromium-desktop ET mobile-safari en local. Confirmé pré-existant
-  // sur main (commits 9f0b400, 32e7683 also failed). Hypothèse : footer hydration
-  // delayed (`scrollIntoViewIfNeeded` times out at 10s), aggravé par cookies-consent
-  // pattern useSyncExternalStore (cf. note `:25`). À investiguer conjointement
-  // avec :25/:49 + error-boundaries:21 — possible root cause commune.
-  // Tracking issue GH e2e-webkit-hydration-timing (Sub-task B follow-up).
+  // FIXME(@cc-ankora 2026-05-18, PR-FIX-CONSENT): footer test still flaky
+  // after fixing the two ConsentBanner bugs (getServerSnapshot referential
+  // stability + post-mount notify). Confirmed failure on chromium-desktop
+  // (NOT a webkit-only bug — diagnostic differs from the 2 tests above).
+  // Symptom: `scrollIntoViewIfNeeded` on the footer button times out at
+  // 10s — the button never resolves in the DOM during the test window.
+  // This is a separate bug (likely Footer hydration / Suspense boundary /
+  // streaming order) that is out of scope for PR-FIX-CONSENT — needs its
+  // own diagnostic round with @cowork. Re-fixme'd to keep CI green while
+  // the 2 ConsentBanner fixes ship.
   test.fixme('Footer "Modifier mes préférences cookies" reopens the banner from any page', async ({
     page,
   }) => {
