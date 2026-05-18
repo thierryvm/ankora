@@ -1,6 +1,6 @@
 'use client';
 import * as React from 'react';
-import { Card } from '@/components/atoms';
+import { AnkCard } from '@/components/atoms';
 
 export function CardDemo(): React.JSX.Element {
   return (
@@ -11,18 +11,18 @@ export function CardDemo(): React.JSX.Element {
         gap: 12,
       }}
     >
-      <Card title="Default" padding="md">
+      <AnkCard title="Default" padding="md">
         Body content
-      </Card>
-      <Card title="Brand tone" tone="brand" padding="md">
+      </AnkCard>
+      <AnkCard title="Brand tone" tone="brand" padding="md">
         Body
-      </Card>
-      <Card title="Warning tone" tone="warning" padding="md">
+      </AnkCard>
+      <AnkCard title="Warning tone" tone="warning" padding="md">
         Body
-      </Card>
-      <Card title="Raised elevation" elevation="raised" padding="md">
+      </AnkCard>
+      <AnkCard title="Raised elevation" elevation="raised" padding="md">
         Body
-      </Card>
+      </AnkCard>
     </div>
   );
 }

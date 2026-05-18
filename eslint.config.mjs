@@ -16,6 +16,19 @@ const eslintConfig = defineConfig([
     files: ['src/**/*.ts', 'src/**/*.tsx'],
     rules: {
       'no-console': 'warn',
+      // ADR-020 — canonical frontier atoms/ (Ankora CD#3) vs ui/ (Radix infra).
+      // Force AnkButton/AnkCard usage from the barrel to prevent doublons regressions.
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/components/atoms/Button', '@/components/atoms/Card'],
+              message: 'Use AnkButton or AnkCard from @/components/atoms instead (cf. ADR-020).',
+            },
+          ],
+        },
+      ],
     },
   },
   {

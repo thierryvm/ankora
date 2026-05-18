@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Card } from '@/components/atoms';
+import { AnkCard } from '@/components/atoms';
 
 export interface PlaygroundSectionProps {
   readonly id: string;
@@ -13,8 +13,8 @@ export function PlaygroundSection({
   children,
 }: PlaygroundSectionProps): React.JSX.Element {
   return (
-    <Card padding="lg" elevation="raised" id={id} title={title}>
+    <AnkCard padding="lg" elevation="raised" id={id} title={title}>
       <div style={{ marginTop: 8 }}>{children}</div>
-    </Card>
+    </AnkCard>
   );
 }
