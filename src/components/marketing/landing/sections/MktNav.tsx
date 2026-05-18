@@ -12,7 +12,7 @@ import { ArrowRight } from '../icons';
  * Marketing navigation bar for the public landing page.
  *
  * Mirrors `Landing.jsx` cc-design `<MktNav>` — sticky top, backdrop blur,
- * logo + 5 nav links (lg+) + Login + Try-free CTAs. Mobile breakpoint
+ * logo + nav links (lg+) + Login + Try-free CTAs. Mobile breakpoint
  * collapses the link row and exposes the existing `<HeaderNav variant="marketing">`
  * drawer for navigation parity with the rest of the marketing surfaces.
  *
@@ -20,11 +20,10 @@ import { ArrowRight } from '../icons';
  * legal/*) keep `<Header />` so this component can iterate freely without
  * affecting them. The two coexist by design (cf. PR-3c-2 Q4 arbitrage).
  *
- * The links are placeholders pointing at hash anchors that will exist once
- * the matching sections are added in PR-3c-2 (`#simulator` arrives in
- * PR-3c-3 with the WhatIfDemo). External `/pricing`, `/security`, `/journal`
- * routes are out of scope — kept as anchor `#` until those pages exist,
- * which avoids a broken-link regression.
+ * PR-UX-1 (2026-05-18): dropped `security` + `journal` from the main nav
+ * — competitor benchmark (Monarch, YNAB, Copilot) confirms neither belongs
+ * at top level, and the disabled placeholders were misleading. Kept inside
+ * the footer (`footer.security`) where the FSMA/legal footprint lives.
  */
 export async function MktNav() {
   const t = await getTranslations('landing.mktnav');
@@ -36,15 +35,10 @@ export async function MktNav() {
   // them believe their session was lost (it wasn't — `/app` still worked).
   const isAuthenticated = !!(await getOptionalUser());
 
-  // `disabled` flags links to pages that don't exist yet (issues #79 + #80
-  // tracked for post-PR-3c). They render with aria-disabled + cursor-not-allowed
-  // so assistive tech and pointer users get clear "not available" feedback.
   const links = [
-    { key: 'product', href: '#principles', disabled: false },
-    { key: 'simulator', href: '#simulator', disabled: false },
-    { key: 'pricing', href: '#pricing', disabled: false },
-    { key: 'security', href: '#', disabled: true },
-    { key: 'journal', href: '#', disabled: true },
+    { key: 'product', href: '#principles' },
+    { key: 'simulator', href: '#simulator' },
+    { key: 'pricing', href: '#pricing' },
   ] as const;
 
   return (
@@ -61,25 +55,15 @@ export async function MktNav() {
         </Link>
 
         <nav aria-label={tCommon('nav.mainLabel')} className="hidden items-center gap-7 lg:flex">
-          {links.map((link) =>
-            link.disabled ? (
-              <span
-                key={link.key}
-                aria-disabled="true"
-                className="text-muted cursor-not-allowed rounded-md text-sm font-medium"
-              >
-                {t(`links.${link.key}`)}
-              </span>
-            ) : (
-              <a
-                key={link.key}
-                href={link.href}
-                className="text-muted-foreground hover:text-foreground focus-visible:ring-brand-600 rounded-md text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-              >
-                {t(`links.${link.key}`)}
-              </a>
-            ),
-          )}
+          {links.map((link) => (
+            <a
+              key={link.key}
+              href={link.href}
+              className="text-muted-foreground hover:text-foreground focus-visible:ring-brand-600 rounded-md text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+            >
+              {t(`links.${link.key}`)}
+            </a>
+          ))}
         </nav>
 
         <div className="ml-auto flex items-center gap-2">

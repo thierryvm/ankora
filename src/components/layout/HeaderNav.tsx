@@ -30,10 +30,22 @@ type HeaderNavProps = {
   // visitor already has a session — keeps the mobile UX consistent with
   // the desktop CTAs.
   isAuthenticated?: boolean;
+  // PR-UX-1 — surfaces the admin link inside the cockpit drawer when the
+  // signed-in user is an admin. Server-resolved upstream (`isAdmin()` in
+  // `Header.tsx`) so the client never trusts itself. Default `false`
+  // keeps marketing call-sites unchanged.
+  isAdmin?: boolean;
 };
 
-export function HeaderNav({ variant = 'marketing', isAuthenticated = false }: HeaderNavProps) {
+export function HeaderNav({
+  variant = 'marketing',
+  isAuthenticated = false,
+  isAdmin = false,
+}: HeaderNavProps) {
   const t = useTranslations('common');
+  // PR-UX-1 — marketing drawer reuses MktNav's link labels so the desktop
+  // and mobile nav match word-for-word.
+  const tMkt = useTranslations('landing.mktnav.links');
   const isDark = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, getServerThemeSnapshot);
   const [isOpen, setIsOpen] = useState(false);
   // PR-D5 a11y: replaced the previous `<label htmlFor="menu-toggle">` +
@@ -180,12 +192,30 @@ export function HeaderNav({ variant = 'marketing', isAuthenticated = false }: He
           <div className="space-y-2 p-4">
             {variant === 'marketing' && (
               <>
+                {/* PR-UX-1 — parity with MktNav desktop: Product / Simulator /
+                    Pricing point at on-page anchors; FAQ kept as the only
+                    cross-page entry. `#features` (previous target) never
+                    existed in the landing DOM — `#principles` is canonical. */}
                 <Link
-                  href="/#features"
+                  href="/#principles"
                   onClick={handleDrawerClose}
                   className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
                 >
-                  {t('nav.features')}
+                  {tMkt('product')}
+                </Link>
+                <Link
+                  href="/#simulator"
+                  onClick={handleDrawerClose}
+                  className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                >
+                  {tMkt('simulator')}
+                </Link>
+                <Link
+                  href="/#pricing"
+                  onClick={handleDrawerClose}
+                  className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                >
+                  {tMkt('pricing')}
                 </Link>
                 <Link
                   href="/faq"
@@ -287,6 +317,27 @@ export function HeaderNav({ variant = 'marketing', isAuthenticated = false }: He
                 >
                   {t('nav.settings')}
                 </Link>
+                {/* PR-UX-1 — admin entry mirrors the desktop cockpit nav
+                    (Header.tsx). Route is `/admin` (not `/app/admin`).
+                    Amber dot uses `bg-amber-700` for WCAG SC 1.4.11 parity
+                    in both themes (≈ 4.46:1 light, ≈ 3.32:1 dark). Bumped
+                    from amber-600 (failed AA in light mode at ≈ 2.91:1).
+                    `aria-label` carries the "founder only" context so AT
+                    users get the same hint as desktop. */}
+                {isAdmin && (
+                  <Link
+                    href="/admin"
+                    onClick={handleDrawerClose}
+                    aria-label={t('nav.adminAriaLabel')}
+                    className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                  >
+                    <span>{t('nav.admin')}</span>
+                    <span
+                      aria-hidden="true"
+                      className="inline-block h-1.5 w-1.5 rounded-full bg-amber-700"
+                    />
+                  </Link>
+                )}
               </>
             )}
           </div>

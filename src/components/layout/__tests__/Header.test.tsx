@@ -36,8 +36,21 @@ vi.mock('@/i18n/navigation', () => ({
 }));
 
 vi.mock('../HeaderNav', () => ({
-  HeaderNav: ({ variant }: { variant: string }) => (
-    <div data-testid="header-nav-mock" data-variant={variant} />
+  HeaderNav: ({
+    variant,
+    isAuthenticated,
+    isAdmin,
+  }: {
+    variant: string;
+    isAuthenticated?: boolean;
+    isAdmin?: boolean;
+  }) => (
+    <div
+      data-testid="header-nav-mock"
+      data-variant={variant}
+      data-is-authenticated={String(isAuthenticated ?? false)}
+      data-is-admin={String(isAdmin ?? false)}
+    />
   ),
 }));
 
@@ -172,6 +185,31 @@ describe('<Header />', () => {
     setIsAdmin(true);
     await renderHeader({ variant: 'marketing', isAuthenticated: true });
     expect(screen.queryByRole('link', { name: /Admin/ })).not.toBeInTheDocument();
+  });
+
+  // PR-UX-1 — admin parity desktop ↔ mobile drawer: Header must forward the
+  // server-resolved `isAdmin` flag into HeaderNav so the cockpit drawer
+  // mirrors the desktop admin link without a duplicate server round-trip.
+  it('app variant + isAdmin=true forwards isAdmin to HeaderNav (mobile drawer parity)', async () => {
+    setIsAdmin(true);
+    await renderHeader({ variant: 'app', isAuthenticated: true });
+    const drawer = screen.getByTestId('header-nav-mock');
+    expect(drawer).toHaveAttribute('data-variant', 'app');
+    expect(drawer).toHaveAttribute('data-is-admin', 'true');
+  });
+
+  it('app variant + isAdmin=false forwards isAdmin=false to HeaderNav', async () => {
+    setIsAdmin(false);
+    await renderHeader({ variant: 'app', isAuthenticated: true });
+    expect(screen.getByTestId('header-nav-mock')).toHaveAttribute('data-is-admin', 'false');
+  });
+
+  it('marketing variant never forwards isAdmin=true (server skips the check)', async () => {
+    setIsAdmin(true);
+    await renderHeader({ variant: 'marketing', isAuthenticated: true });
+    // Marketing pages are public — `showAdminLink` short-circuits before
+    // calling isAdmin(), so the drawer always gets isAdmin=false.
+    expect(screen.getByTestId('header-nav-mock')).toHaveAttribute('data-is-admin', 'false');
   });
 
   it('home link has the tactile press animation, gated on motion-safe (issue #95)', async () => {
