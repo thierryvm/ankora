@@ -3,7 +3,6 @@ import { Inter } from 'next/font/google';
 import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
 
-import { getNonce } from '@/lib/security/nonce';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getMessages, setRequestLocale, getTranslations } from 'next-intl/server';
 import { Analytics } from '@vercel/analytics/next';
@@ -15,6 +14,7 @@ import { ConsentBanner } from '@/components/gdpr/ConsentBanner';
 import { Toaster } from '@/components/ui/toast';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister';
+import { ThemeBootScript } from '@/components/theme/ThemeBootScript';
 
 import '../globals.css';
 
@@ -143,8 +143,6 @@ export default async function LocaleLayout({
   const themeCookie = cookieStore.get('theme')?.value;
   const dataTheme = themeCookie === 'dark' ? 'dark' : undefined;
 
-  const nonce = await getNonce();
-
   return (
     <html
       lang={locale}
@@ -161,13 +159,17 @@ export default async function LocaleLayout({
       className="overflow-x-clip"
       {...(dataTheme ? { 'data-theme': dataTheme } : {})}
     >
-      <script
-        nonce={nonce}
-        dangerouslySetInnerHTML={{
-          __html: `(function(){try{var t=localStorage.getItem('theme');if(!t){var m=window.matchMedia('(prefers-color-scheme: dark)').matches;t=m?'dark':'light';}if(t==='dark')document.documentElement.setAttribute('data-theme','dark');else document.documentElement.removeAttribute('data-theme');}catch(e){}})();`,
-        }}
-      />
       <body className={`${inter.variable} max-w-full overflow-x-clip font-sans antialiased`}>
+        {/* Theme bootstrap. Runs synchronously before paint to confirm or
+            override the SSR `data-theme` (cookie-seeded above) against the
+            visitor's localStorage and OS preference. Extracted to a Server
+            Component so its `nonce` attribute is preserved by React 19
+            streaming. Pre-2026-05-18 the inline script was inlined directly
+            between <html> and <body> AND the middleware set `x-nonce` AFTER
+            `handleI18nRouting` — Server Components saw `getNonce() ===
+            undefined`, the rendered <script> had no nonce, and the strict
+            CSP blocked execution. See ThemeBootScript JSDoc + proxy.ts. */}
+        <ThemeBootScript />
         <a
           href="#main"
           // PR-D5 a11y: `bg-primary`, `text-primary-foreground`, `ring-ring`
