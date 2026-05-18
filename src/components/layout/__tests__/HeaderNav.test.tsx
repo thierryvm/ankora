@@ -101,3 +101,52 @@ describe('<HeaderNav /> mobile drawer — auth CTAs', () => {
     expect(screen.getByRole('link', { name: 'Tableau de bord' })).toHaveAttribute('href', '/app');
   });
 });
+
+describe('<HeaderNav /> mobile drawer — PR-UX-1 marketing parity with desktop MktNav', () => {
+  it('exposes Product / Simulator / Pricing anchored at the canonical landing ids', async () => {
+    render(<HeaderNav variant="marketing" isAuthenticated={false} />);
+    await openDrawer();
+
+    expect(screen.getByRole('link', { name: 'Produit' })).toHaveAttribute('href', '/#principles');
+    expect(screen.getByRole('link', { name: 'Simulateur' })).toHaveAttribute(
+      'href',
+      '/#simulator',
+    );
+    expect(screen.getByRole('link', { name: 'Tarifs' })).toHaveAttribute('href', '/#pricing');
+  });
+
+  it('keeps FAQ as the only cross-page entry inside the marketing drawer', async () => {
+    render(<HeaderNav variant="marketing" isAuthenticated={false} />);
+    await openDrawer();
+    expect(screen.getByRole('link', { name: 'FAQ' })).toHaveAttribute('href', '/faq');
+  });
+});
+
+describe('<HeaderNav /> mobile drawer — PR-UX-1 admin entry in app variant', () => {
+  it('app variant + isAdmin=true exposes the Admin link mirrors with the desktop marker', async () => {
+    render(<HeaderNav variant="app" isAuthenticated isAdmin />);
+    await openDrawer();
+
+    // aria-label carries the "founder only" context (parity with desktop).
+    const adminLink = screen.getByRole('link', { name: 'Espace admin (réservé fondateur)' });
+    expect(adminLink).toHaveAttribute('href', '/admin');
+    // Visible label is the short "Admin".
+    expect(adminLink).toHaveTextContent('Admin');
+  });
+
+  it('app variant + isAdmin omitted hides the Admin link (fail-closed default)', async () => {
+    render(<HeaderNav variant="app" isAuthenticated />);
+    await openDrawer();
+    expect(
+      screen.queryByRole('link', { name: 'Espace admin (réservé fondateur)' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('marketing variant never exposes the Admin link, even if isAdmin=true', async () => {
+    render(<HeaderNav variant="marketing" isAuthenticated isAdmin />);
+    await openDrawer();
+    expect(
+      screen.queryByRole('link', { name: 'Espace admin (réservé fondateur)' }),
+    ).not.toBeInTheDocument();
+  });
+});

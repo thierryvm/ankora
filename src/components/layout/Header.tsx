@@ -27,6 +27,9 @@ export async function Header({ variant = 'marketing', isAuthenticated }: HeaderP
   // session + ANKORA_ADMIN_USER_IDS server-side; returns false for any
   // non-admin or unauthenticated visitor (fail-closed). Skipped for
   // marketing variant since marketing pages are public.
+  // PR-UX-1 — value is reused as the `isAdmin` prop on `HeaderNav` so the
+  // mobile cockpit drawer mirrors the desktop admin link (parity, single
+  // server round-trip).
   const showAdminLink = variant === 'app' && (await isAdmin());
 
   return (
@@ -49,8 +52,12 @@ export async function Header({ variant = 'marketing', isAuthenticated }: HeaderP
 
         {variant === 'marketing' ? (
           <nav aria-label={t('nav.mainLabel')} className="hidden items-center gap-1 lg:flex">
+            {/* PR-UX-1 — `/#features` previously pointed at an id that never
+                existed in the landing DOM (Principles section uses
+                `id="principles"`). Aligned across Header, HeaderNav drawer,
+                MktNav, and Feature CTA so a single anchor is canonical. */}
             <Link
-              href="/#features"
+              href="/#principles"
               className="text-muted-foreground hover:text-foreground rounded-md px-3 py-2 text-sm transition-colors"
             >
               {t('nav.features')}
@@ -87,13 +94,18 @@ export async function Header({ variant = 'marketing', isAuthenticated }: HeaderP
                 <Link href="/admin" className="flex items-center gap-1.5">
                   <span>{t('nav.admin')}</span>
                   {/* Subtle marker — signals "private zone" without screaming.
-                      `bg-amber-600` chosen over `amber-500` per dashboard-ux F3
-                      (WCAG SC 1.4.11 Non-text Contrast 3:1 — amber-500 ≈ 2.4:1
-                      vs background, amber-600 ≈ 3.5:1, aligned with token
-                      `--color-warning` locked @cowork 2026-04-25). */}
+                      `bg-amber-700` (#b45309): ≈ 4.46:1 on white (--color-card
+                      light) and ≈ 3.32:1 on navy (--color-card dark) per
+                      WebAIM, both pass WCAG SC 1.4.11 Non-text Contrast 3:1.
+                      Bumped from amber-600 (#d97706 ≈ 2.91:1 on white — fails
+                      AA in light mode). Kept distinct from `--color-warning`
+                      token (still amber-600 elsewhere @cowork 2026-04-25);
+                      this marker uses the deeper shade only because it
+                      doubles as the *only* visual indicator of the private
+                      zone. Mirrored in HeaderNav.tsx drawer (PR-UX-1). */}
                   <span
                     aria-hidden="true"
-                    className="inline-block h-1.5 w-1.5 rounded-full bg-amber-600"
+                    className="inline-block h-1.5 w-1.5 rounded-full bg-amber-700"
                   />
                 </Link>
               </Button>
@@ -118,7 +130,7 @@ export async function Header({ variant = 'marketing', isAuthenticated }: HeaderP
             </Button>
           )}
 
-          <HeaderNav variant={variant} isAuthenticated={resolvedAuth} />
+          <HeaderNav variant={variant} isAuthenticated={resolvedAuth} isAdmin={showAdminLink} />
         </div>
       </div>
     </header>

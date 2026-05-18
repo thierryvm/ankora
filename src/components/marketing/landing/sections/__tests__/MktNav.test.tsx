@@ -87,21 +87,15 @@ describe('<MktNav />', () => {
     expect(screen.getByRole('link', { name: 'Tarifs' })).toHaveAttribute('href', '#pricing');
   });
 
-  it('renders Sécurité + Journal as disabled spans (pages not built yet, issues #79 + #80)', async () => {
+  it('PR-UX-1: does NOT render Sécurité / Journal in the main nav (benchmark Monarch/YNAB/Copilot)', async () => {
     await renderMktNav();
-    // Not <a> — assistive tech announces them as disabled, not as navigation targets
+    // Removed entirely — disabled placeholders were misleading and competitors
+    // (Monarch, YNAB, Copilot) do not surface them at top level either. The
+    // FSMA/legal footprint stays in the footer via `footer.security`.
     expect(screen.queryByRole('link', { name: 'Sécurité' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Journal' })).not.toBeInTheDocument();
-
-    const security = screen.getByText('Sécurité');
-    expect(security.tagName).toBe('SPAN');
-    expect(security).toHaveAttribute('aria-disabled', 'true');
-    expect(security.className).toContain('cursor-not-allowed');
-
-    const journal = screen.getByText('Journal');
-    expect(journal.tagName).toBe('SPAN');
-    expect(journal).toHaveAttribute('aria-disabled', 'true');
-    expect(journal.className).toContain('cursor-not-allowed');
+    expect(screen.queryByText('Sécurité')).not.toBeInTheDocument();
+    expect(screen.queryByText('Journal')).not.toBeInTheDocument();
   });
 
   it('renders the Login + Signup CTAs for anonymous visitors', async () => {

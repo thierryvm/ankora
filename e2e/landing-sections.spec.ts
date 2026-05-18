@@ -101,17 +101,22 @@ test.describe('Landing — cc-design sections smoke', () => {
     expect(overflow.scrollWidth - overflow.clientWidth).toBeLessThanOrEqual(1);
   });
 
-  test('disabled MktNav links (Sécurité, Journal) expose aria-disabled on desktop viewport', async ({
+  test('PR-UX-1: MktNav main nav does NOT surface Sécurité / Journal (competitor benchmark)', async ({
     page,
   }) => {
+    // Previously these were rendered as `aria-disabled` placeholders. PR-UX-1
+    // removed them entirely after the @cowork 2026-05-18 benchmark on
+    // Monarch/YNAB/Copilot — disabled items in the top nav are misleading.
+    // The FSMA/legal footprint stays in the footer (`footer.security`).
+    // Forces desktop viewport so the `lg:flex` main nav is part of the DOM
+    // — `getByRole('navigation')` would also catch the mobile drawer otherwise.
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/');
 
-    const security = page.getByText('Sécurité').first();
-    await expect(security).toHaveAttribute('aria-disabled', 'true');
-
-    const journal = page.getByText('Journal').first();
-    await expect(journal).toHaveAttribute('aria-disabled', 'true');
+    // Scope strictly to the main nav — the footer keeps `footer.security`.
+    const mainNav = page.getByRole('navigation', { name: /navigation principale/i });
+    await expect(mainNav.getByText('Sécurité')).toHaveCount(0);
+    await expect(mainNav.getByText('Journal')).toHaveCount(0);
   });
 });
 
