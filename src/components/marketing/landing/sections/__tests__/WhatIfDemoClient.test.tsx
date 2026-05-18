@@ -124,11 +124,17 @@ describe('<WhatIfDemoClient />', () => {
     expect(line?.getAttribute('class')).toContain('motion-reduce:transition-none');
   });
 
-  it('drives the slider accent colour from var(--color-brand-400)', () => {
+  it('drives the slider accent colour via the .accent-brand-400 utility class', () => {
     render(<WhatIfDemoClient />);
     const slider = screen.getByRole('slider') as HTMLInputElement;
-    // jsdom serialises the inline accent-color as a CSS string
-    expect(slider.style.accentColor).toBe('var(--color-brand-400)');
+    // PR P0-V2 (2026-05-19): the inline `style="accent-color: var(...)"`
+    // was migrated to the `.accent-brand-400` utility class defined in
+    // `globals.css @layer utilities`. The strict CSP (`style-src 'self'
+    // 'nonce-XYZ'`, no `'unsafe-hashes'`) blocked the inline attribute in
+    // production. The visual remains identical — the test asserts the class
+    // is present rather than the inline style.
+    expect(slider.className).toContain('accent-brand-400');
+    expect(slider.style.accentColor).toBe('');
   });
 
   it('passes the active scenario label into the slider aria-label', () => {

@@ -172,8 +172,7 @@ export function WhatIfDemoClient() {
             aria-label={t('controls.slider_aria', {
               label: t(`scenarios.${scenarioId}.label`),
             })}
-            style={{ accentColor: 'var(--color-brand-400)' }}
-            className="h-6 w-full"
+            className="accent-brand-400 h-6 w-full"
           />
           <div className="text-muted-foreground mt-0.5 flex justify-between font-mono text-xs">
             <span>{scenario.min} €</span>
@@ -336,7 +335,7 @@ export function WhatIfDemoClient() {
                       fontWeight="600"
                       fill="var(--color-brand-text-strong)"
                       textAnchor={i === 0 ? 'start' : 'end'}
-                      style={{ fontVariantNumeric: 'tabular-nums' }}
+                      className="tabular-nums"
                     >
                       {v.toLocaleString(locale)} €
                     </text>

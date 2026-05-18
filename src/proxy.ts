@@ -115,6 +115,15 @@ export const config = {
      *   localizable page path and routes it to /_not-found (404). Symptom
      *   observed in prod on 2026-05-18: globals.css @font-face fallbacks
      *   failed to load. Cf. docs/audits/2026-05-18-prod-p0-bugs-diagnostic.md.
+     * - `/sw.js` ServiceWorker entry point. Without this exclusion next-intl
+     *   routes /sw.js to /_not-found (HTTP 404) and
+     *   `navigator.serviceWorker.register('/sw.js')` in
+     *   `ServiceWorkerRegister.tsx` silently fails. Worse, users who installed
+     *   the SW before this fix have a cached SW that the browser can never
+     *   UPDATE (the `update` request also 404s) — they stay on the old SW
+     *   indefinitely, which is the actual root cause of the iPhone Safari +
+     *   PWA "OTS parsing error: invalid sfntVersion: 168430090" font bug.
+     *   Cf. docs/audits/2026-05-19-prod-p0-v2-bugs-diagnostic.md.
      *
      * Note on RSC prefetches: previously excluded via `missing:` to avoid
      * caching a fresh CSP nonce across users. That was over-cautious — RSC
@@ -124,6 +133,6 @@ export const config = {
      * The middleware now runs on prefetches too; each prefetch gets its own
      * per-request nonce that is never shared with another user.
      */
-    '/((?!api|auth/callback|monitoring|_next/static|_next/image|_vercel|favicon.ico|icon.svg|apple-icon.svg|manifest.webmanifest|robots.txt|sitemap.xml|llms\\.txt|.*\\.(?:png|jpg|jpeg|gif|svg|webp|avif|ico|ttf|woff|woff2|otf|eot)).*)',
+    '/((?!api|auth/callback|monitoring|_next/static|_next/image|_vercel|favicon.ico|icon.svg|apple-icon.svg|manifest.webmanifest|sw\\.js|robots.txt|sitemap.xml|llms\\.txt|.*\\.(?:png|jpg|jpeg|gif|svg|webp|avif|ico|ttf|woff|woff2|otf|eot)).*)',
   ],
 };
