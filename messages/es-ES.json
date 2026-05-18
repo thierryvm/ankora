@@ -652,7 +652,8 @@
       "expensesCount": "{count, plural, =0 {Sin gastos este mes} one {1 gasto este mes} other {# gastos este mes}}",
       "expensesEmpty": "No hay gastos registrados este mes.",
       "expensesViewAll": "Ver todos los gastos →",
-      "accountsHeading": "Mis cuentas"
+      "accountsHeading": "Mis cuentas",
+      "provisionHealthSectionHeading": "Salud de las provisiones"
     },
     "charges": {
       "title": "Mis gastos fijos",
@@ -933,6 +934,19 @@
     },
     "daily": {
       "cta_set_plafond": "Configurar el límite diario"
+    },
+    "health": {
+      "title": "Salud de las provisiones",
+      "ratio": "Cobertura del objetivo",
+      "target": "Objetivo teórico",
+      "current": "Saldo actual",
+      "empty": "Sin gastos periódicos programados — nada para provisionar por ahora.",
+      "ariaLabel": "Salud de las provisiones: {percent}% del objetivo teórico",
+      "deficit": "Plan de recuperación a 3 meses: {amount}/mes",
+      "status": {
+        "a_jour": "Al día",
+        "deficit": "Déficit"
+      }
     }
   },
   "glossary": {

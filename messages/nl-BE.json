@@ -652,7 +652,8 @@
       "expensesCount": "{count, plural, =0 {Geen uitgaven deze maand} one {1 uitgave deze maand} other {# uitgaven deze maand}}",
       "expensesEmpty": "Geen uitgaven geregistreerd voor deze maand.",
       "expensesViewAll": "Alle uitgaven bekijken →",
-      "accountsHeading": "Mijn rekeningen"
+      "accountsHeading": "Mijn rekeningen",
+      "provisionHealthSectionHeading": "Gezondheid van de voorzieningen"
     },
     "charges": {
       "title": "Mijn vaste kosten",
@@ -933,6 +934,19 @@
     },
     "daily": {
       "cta_set_plafond": "Dagelijks plafond instellen"
+    },
+    "health": {
+      "title": "Gezondheid van de voorzieningen",
+      "ratio": "Dekking doel",
+      "target": "Theoretisch doel",
+      "current": "Huidig saldo",
+      "empty": "Geen periodieke kosten gepland — nog niets om voor te sparen.",
+      "ariaLabel": "Gezondheid van de voorzieningen: {percent}% van het theoretische doel",
+      "deficit": "Inhaalplan over 3 maanden: {amount}/maand",
+      "status": {
+        "a_jour": "Op koers",
+        "deficit": "Tekort"
+      }
     }
   },
   "glossary": {

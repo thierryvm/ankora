@@ -652,7 +652,8 @@
       "expensesCount": "{count, plural, =0 {Aucune dépense ce mois} one {1 dépense ce mois} other {# dépenses ce mois}}",
       "expensesEmpty": "Aucune dépense enregistrée pour ce mois.",
       "expensesViewAll": "Voir toutes les dépenses →",
-      "accountsHeading": "Mes comptes"
+      "accountsHeading": "Mes comptes",
+      "provisionHealthSectionHeading": "Santé des provisions"
     },
     "charges": {
       "title": "Mes charges",
@@ -933,6 +934,19 @@
     },
     "daily": {
       "cta_set_plafond": "Régler le plafond quotidien"
+    },
+    "health": {
+      "title": "Santé des provisions",
+      "ratio": "Couverture cible",
+      "target": "Cible théorique",
+      "current": "Solde actuel",
+      "empty": "Aucune charge périodique programmée — rien à provisionner pour l'instant.",
+      "ariaLabel": "Santé des provisions : {percent}% de la cible théorique",
+      "deficit": "Plan de rattrapage sur 3 mois : {amount}/mois",
+      "status": {
+        "a_jour": "À jour",
+        "deficit": "Déficit"
+      }
     }
   },
   "glossary": {
