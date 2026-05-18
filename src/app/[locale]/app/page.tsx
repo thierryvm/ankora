@@ -8,7 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { AccountCard } from '@/components/features/AccountCard';
 import { EffortFinancierCard } from '@/components/dashboard/EffortFinancierCard';
 import { CapaciteEpargneCard } from '@/components/dashboard/CapaciteEpargneCard';
+import { ProvisionHealthGaugeCard } from '@/components/dashboard/ProvisionHealthGaugeCard';
 import { Expenses, Transfer, money } from '@/lib/domain';
+import { paymentKey, type PaymentLedger } from '@/lib/domain/cockpit';
 import { getWorkspaceSnapshot, toCockpitCharges } from '@/lib/data/workspace-snapshot';
 import type { AccountType } from '@/lib/schemas/account';
 import type { Locale } from '@/i18n/routing';
@@ -58,6 +60,19 @@ export default async function DashboardPage() {
 
   // PR-D3 — Bloc 2 hero radar inputs.
   const cockpitCharges = toCockpitCharges(snapshot.charges);
+
+  // THI-190 — Santé Provisions inputs (ADR-011). The PaymentLedger maps
+  // `(chargeId, year, month) → true` for charges already settled this
+  // period, so `calculerSanteProvisions()` knows which entries to skip in
+  // its cycle math.
+  const provisionsAccount = snapshot.accounts.find((a) => a.accountType === 'provisions');
+  const soldeEpargneActuel = money(provisionsAccount?.balance ?? 0);
+  const paymentsLedger: PaymentLedger = new Map(
+    snapshot.currentMonthPayments.map((p) => [
+      paymentKey(p.chargeId, p.periodYear, p.periodMonth),
+      true,
+    ]),
+  );
   // Daily allowance not yet configured: surface the inline CTA on the
   // daily_card row so the user can complete the cockpit setup without
   // hunting through Settings.
@@ -90,6 +105,32 @@ export default async function DashboardPage() {
           revenus={monthlyIncome}
           charges={cockpitCharges}
           plafondQuotidien={vieCouranteTransferAmount}
+          locale={locale}
+        />
+      </section>
+
+      {/*
+        THI-190 — Santé des Provisions (cockpit v3 section #2 of 8).
+        Answers "am I saving the right amount each month so periodic
+        bills never catch me short?" — complements the hero radar which
+        answers "what is my real monthly burden?". Always visible (even
+        on an empty workspace) so the user sees the canonical narrative.
+        Layout grid-cols-1 lg:grid-cols-3 mirrors the bloc 1 account row
+        and keeps the card at ~1/3 width on desktop (the gauge is dense,
+        not wide).
+      */}
+      <section
+        aria-labelledby="provision-health-heading"
+        className="grid grid-cols-1 gap-4 lg:grid-cols-3"
+      >
+        <h2 id="provision-health-heading" className="sr-only">
+          {t('provisionHealthSectionHeading')}
+        </h2>
+        <ProvisionHealthGaugeCard
+          charges={cockpitCharges}
+          payments={paymentsLedger}
+          soldeEpargneActuel={soldeEpargneActuel}
+          period={snapshot.currentPeriod}
           locale={locale}
         />
       </section>

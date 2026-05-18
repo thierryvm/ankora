@@ -650,7 +650,8 @@
       "expensesCount": "{count, plural, =0 {Keine Ausgaben diesen Monat} one {1 Ausgabe diesen Monat} other {# Ausgaben diesen Monat}}",
       "expensesEmpty": "Keine Ausgaben für diesen Monat erfasst.",
       "expensesViewAll": "Alle Ausgaben anzeigen →",
-      "accountsHeading": "Meine Konten"
+      "accountsHeading": "Meine Konten",
+      "provisionHealthSectionHeading": "Gesundheit der Rücklagen"
     },
     "charges": {
       "title": "Meine Fixkosten",
@@ -931,6 +932,19 @@
     },
     "daily": {
       "cta_set_plafond": "Tägliches Limit festlegen"
+    },
+    "health": {
+      "title": "Gesundheit der Rücklagen",
+      "ratio": "Zielabdeckung",
+      "target": "Theoretisches Ziel",
+      "current": "Aktueller Saldo",
+      "empty": "Keine periodischen Kosten geplant — noch nichts anzusparen.",
+      "ariaLabel": "Gesundheit der Rücklagen: {percent}% des theoretischen Ziels",
+      "deficit": "3-Monats-Aufholplan: {amount}/Monat",
+      "status": {
+        "a_jour": "Auf Kurs",
+        "deficit": "Defizit"
+      }
     }
   },
   "glossary": {
