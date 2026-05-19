@@ -9,6 +9,7 @@ import { AccountCard } from '@/components/features/AccountCard';
 import { EffortFinancierCard } from '@/components/dashboard/EffortFinancierCard';
 import { CapaciteEpargneCard } from '@/components/dashboard/CapaciteEpargneCard';
 import { ProvisionHealthGaugeCard } from '@/components/dashboard/ProvisionHealthGaugeCard';
+import { ProchainesFacturesCard } from '@/components/dashboard/ProchainesFacturesCard';
 import { Expenses, Transfer, money } from '@/lib/domain';
 import { paymentKey, type PaymentLedger } from '@/lib/domain/cockpit';
 import { getWorkspaceSnapshot, toCockpitCharges } from '@/lib/data/workspace-snapshot';
@@ -60,6 +61,17 @@ export default async function DashboardPage() {
 
   // PR-D3 — Bloc 2 hero radar inputs.
   const cockpitCharges = toCockpitCharges(snapshot.charges);
+
+  // THI-192 — "Today" anchored to the canonical Europe/Brussels timezone so
+  // J-7/J-14/J-30 bucketing matches the user's wall-clock perception (rather
+  // than UTC, which drifts one day around midnight). `en-CA` formatter
+  // outputs ISO `YYYY-MM-DD`.
+  const todayIso = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Brussels',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
 
   // THI-190 — Santé Provisions inputs (ADR-011). The PaymentLedger maps
   // `(chargeId, year, month) → true` for charges already settled this
@@ -131,6 +143,26 @@ export default async function DashboardPage() {
           payments={paymentsLedger}
           soldeEpargneActuel={soldeEpargneActuel}
           period={snapshot.currentPeriod}
+          locale={locale}
+        />
+      </section>
+
+      {/*
+        THI-192 — Prochaines factures (cockpit v3 section #5 of 8).
+        Surfaces a 30-day horizon split into J-7 / J-14 / J-30 windows + a
+        separate overdue bucket. Reuses `snapshot.charges` (now carrying the
+        canonical `payment_months[]` + `payment_day` post-THI-192 debt fix)
+        and the same `paymentsLedger` Map as section #2 so a settled bill
+        for the current cycle never appears as overdue.
+      */}
+      <section aria-labelledby="upcoming-bills-heading" className="grid grid-cols-1 gap-4">
+        <h2 id="upcoming-bills-heading" className="sr-only">
+          {t('upcomingBillsSectionHeading')}
+        </h2>
+        <ProchainesFacturesCard
+          charges={snapshot.charges}
+          payments={paymentsLedger}
+          todayIso={todayIso}
           locale={locale}
         />
       </section>

@@ -62,6 +62,14 @@ export function SimulatorClient({ charges }: { charges: RawCharge[] }) {
         amount: money(c.amount),
         frequency: c.frequency as Charge['frequency'],
         dueMonth: c.dueMonth,
+        // The simulator client receives the trimmed `SimulatorCharge` shape
+        // from the server boundary (no schedule fields). For simulation
+        // arithmetic only `frequency`, `dueMonth` and `amount` matter, so
+        // we project a best-effort default for `paymentMonths` / `paymentDay`
+        // here. THI-192 will revisit the boundary if the simulator ever
+        // surfaces J-X bucketing.
+        paymentMonths: [c.dueMonth],
+        paymentDay: 1,
         categoryId: c.categoryId,
         isActive: c.isActive,
         paidFrom: c.paidFrom,
@@ -93,6 +101,10 @@ export function SimulatorClient({ charges }: { charges: RawCharge[] }) {
         amount: money(n),
         frequency: newFrequency,
         dueMonth: Number(newDueMonth),
+        // Same projection as the existing-charges branch above — the
+        // simulator UI does not yet capture per-charge schedule precision.
+        paymentMonths: [Number(newDueMonth)],
+        paymentDay: 1,
         categoryId: null,
         isActive: true,
         paidFrom: newFrequency === 'monthly' ? 'principal' : 'epargne',

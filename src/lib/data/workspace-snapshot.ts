@@ -27,8 +27,14 @@ export function toCockpitCharges(charges: readonly Charge[]): readonly CockpitCh
     label: c.label,
     amount: c.amount,
     frequency: c.frequency,
-    paymentMonths: [c.dueMonth] as readonly number[],
-    paymentDay: 1,
+    // PR THI-192 (2026-05-19): read the canonical `payment_months[]` /
+    // `payment_day` columns that PR-D1 migration `20260503000002` introduced.
+    // The previous stub (`paymentMonths: [dueMonth]`, `paymentDay: 1`) forced
+    // every charge to be treated as "due on the 1st of its due month",
+    // breaking `nextDueDateForCharge()` for THI-192 Prochaines factures and
+    // degrading the precision of cockpit Notifications + Santé Provisions.
+    paymentMonths: c.paymentMonths,
+    paymentDay: c.paymentDay,
     isActive: c.isActive,
   }));
 }
@@ -163,7 +169,14 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
         .maybeSingle(),
       supabase
         .from('charges')
-        .select('id, label, amount, frequency, due_month, category_id, is_active, notes, paid_from')
+        // PR THI-192 (2026-05-19): added `payment_day, payment_months` to
+        // the SELECT. The PR-D1 migration `20260503000002` shipped these
+        // columns with defaults but no code path was reading them — every
+        // downstream consumer (cockpit math, notifications, upcoming bills)
+        // was running on the stub `paymentDay: 1` set in `toCockpitCharges`.
+        .select(
+          'id, label, amount, frequency, due_month, payment_day, payment_months, category_id, is_active, notes, paid_from',
+        )
         .eq('workspace_id', workspaceId)
         .order('created_at', { ascending: true }),
       supabase
@@ -193,6 +206,13 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
     amount: Number(c.amount),
     frequency: c.frequency,
     dueMonth: c.due_month,
+    paymentDay: c.payment_day,
+    // Defensive `?? []`: the migration declared `payment_months` as
+    // NOT NULL DEFAULT [1..12], but the Supabase TypeScript types are still
+    // generated as `number[] | null` until `npm run supabase:types` is
+    // re-run post-migration. Guard so the row is structurally typed even if
+    // the codegen lags behind the schema.
+    paymentMonths: (c.payment_months ?? []) as readonly number[],
     categoryId: c.category_id,
     isActive: c.is_active,
     notes: c.notes,
@@ -205,6 +225,8 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
     amount: money(c.amount),
     frequency: c.frequency as Charge['frequency'],
     dueMonth: c.dueMonth,
+    paymentDay: c.paymentDay,
+    paymentMonths: c.paymentMonths,
     categoryId: c.categoryId,
     isActive: c.isActive,
     paidFrom: c.paidFrom,

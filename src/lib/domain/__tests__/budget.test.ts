@@ -22,6 +22,8 @@ const rent: Charge = {
   amount: money(900),
   frequency: 'monthly',
   dueMonth: 1,
+  paymentMonths: [1],
+  paymentDay: 1,
 };
 const insurance: Charge = {
   ...base,
@@ -30,6 +32,8 @@ const insurance: Charge = {
   amount: money(1200),
   frequency: 'annual',
   dueMonth: 3,
+  paymentMonths: [3],
+  paymentDay: 1,
 };
 const water: Charge = {
   ...base,
@@ -38,6 +42,8 @@ const water: Charge = {
   amount: money(90),
   frequency: 'quarterly',
   dueMonth: 2,
+  paymentMonths: [2],
+  paymentDay: 1,
 };
 const gym: Charge = {
   ...base,
@@ -46,6 +52,8 @@ const gym: Charge = {
   amount: money(40),
   frequency: 'semiannual',
   dueMonth: 6,
+  paymentMonths: [6],
+  paymentDay: 1,
 };
 const inactiveHeating: Charge = {
   ...base,
@@ -54,6 +62,8 @@ const inactiveHeating: Charge = {
   amount: money(100),
   frequency: 'monthly',
   dueMonth: 1,
+  paymentMonths: [1],
+  paymentDay: 1,
   isActive: false,
 };
 
