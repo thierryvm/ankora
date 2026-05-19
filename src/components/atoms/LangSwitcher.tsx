@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 
+import { LOCALES_VISIBLE } from '@/i18n/routing';
 import { cn } from '@/lib/utils';
 
 /**
@@ -46,10 +47,27 @@ export interface LangSwitcherProps {
   readonly ariaLabel?: string;
 }
 
-export const ANKORA_V1_LOCALES: readonly LangSwitcherLocale[] = [
-  { id: 'fr-BE', code: 'FR', flag: '🇧🇪', label: 'Français (Belgique)' },
-  { id: 'en', code: 'EN', flag: '🇬🇧', label: 'English' },
-];
+/**
+ * Per-locale display metadata (short code, flag emoji, native label).
+ *
+ * Keyed by `LOCALES_VISIBLE` so TypeScript enforces metadata coverage: adding
+ * a new locale to `LOCALES_VISIBLE` in `src/i18n/routing.ts` will fail
+ * compilation here until its flag/label entry is added — the doctrine cannot
+ * drift between the plain header `<select>` (which consumes the ID list) and
+ * this richer atom switcher (which consumes the same IDs + metadata).
+ */
+const LOCALE_DISPLAY_METADATA: Record<
+  (typeof LOCALES_VISIBLE)[number],
+  Omit<LangSwitcherLocale, 'id'>
+> = {
+  'fr-BE': { code: 'FR', flag: '🇧🇪', label: 'Français (Belgique)' },
+  en: { code: 'EN', flag: '🇬🇧', label: 'English' },
+};
+
+export const ANKORA_V1_LOCALES: readonly LangSwitcherLocale[] = LOCALES_VISIBLE.map((id) => ({
+  id,
+  ...LOCALE_DISPLAY_METADATA[id],
+}));
 
 export function LangSwitcher({
   current,
