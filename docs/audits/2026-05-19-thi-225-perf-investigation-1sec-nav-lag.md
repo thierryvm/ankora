@@ -1,4 +1,6 @@
-# THI-225 — Perf investigation : lenteur 1sec+ navigation prod (ankora.be)
+# THI-243 — Perf investigation : lenteur 1sec+ navigation prod (ankora.be)
+
+> **Note** : ticket Linear effectif = **[THI-243](https://linear.app/thierryvm/issue/THI-243/perf-investigation-lenteur-1sec-navigation-prod-145-mb-fonts-ttf-non)**. Le préfixe `thi-225` dans le nom du fichier était la prédiction du prompt @cowork — Linear auto-numérote séquentiellement et a attribué THI-243. Filename gardé tel quel (le date-stamp `2026-05-19-...` est l'identifiant canonique du document).
 
 | Champ          | Valeur                                                                   |
 | -------------- | ------------------------------------------------------------------------ |
@@ -192,16 +194,18 @@ Recommandation next-intl 4.x : passer `<NextIntlClientProvider messages={pick(me
 ## 8. Next steps (proposition @cowork)
 
 1. **@cowork** valide diagnostic + séquençage Phase A/B/C.
-2. **@cowork** crée Linear THI-225 (template ci-dessous) + assigne priorité High.
+2. **Linear THI-243** créé (priorité High, labels Bug + Tech Debt + frontend + Mobile). Template utilisé en Annexe A à titre de référence.
 3. **@cc-ankora** ouvre PR Phase A (F1+F2+F3) sur worktree dédié, ~1 h effort, **résout 70 % du problème probablement**.
 4. **@thierry** smoke test prod post-merge Phase A pour valider le ressenti avant d'engager Phase B.
 
 ---
 
-## Annexe A — Linear THI-225 template
+## Annexe A — Linear THI-243 (créé)
+
+> Ticket effectif : [THI-243](https://linear.app/thierryvm/issue/THI-243/perf-investigation-lenteur-1sec-navigation-prod-145-mb-fonts-ttf-non) — Priority: High · Labels: Bug, Tech Debt, frontend, Mobile · Status: Backlog
 
 ```
-Title: THI-225 Perf investigation — lenteur 1sec+ navigation prod (1.45 MB fonts TTF non cachées)
+Title: Perf investigation — lenteur 1sec+ navigation prod (1.45 MB fonts TTF non cachées + 3 RC)
 Priority: High (P2)
 Labels: Performance, Bug, Beta-blocker-soft
 
