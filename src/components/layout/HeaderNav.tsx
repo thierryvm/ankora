@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from '
 import { createPortal } from 'react-dom';
 import { Menu, Moon, Sun, X } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
+import { useIsClient } from '@/lib/hooks/useIsClient';
 import { LocaleSwitcher } from './LocaleSwitcher';
 
 function subscribeToTheme(callback: () => void) {
@@ -21,25 +22,6 @@ function getThemeSnapshot() {
 }
 
 function getServerThemeSnapshot() {
-  return false;
-}
-
-// SSR-safe `mounted` flag for the drawer portal. We use
-// `useSyncExternalStore` instead of `useState(false) + useEffect(() =>
-// setMounted(true), [])` so we don't trip the React 19 lint rule
-// `react-hooks/set-state-in-effect`. The store never actually changes between
-// renders on a given environment — server snapshot returns `false` (so the
-// portal never renders during SSR, where `document` is undefined), client
-// snapshot returns `true` (so the portal renders after hydration). The subscribe
-// function is a no-op because there is nothing to subscribe to: the mounted
-// state is intrinsic to the environment, not an external observable.
-function subscribeToMount() {
-  return () => {};
-}
-function getMountSnapshot() {
-  return true;
-}
-function getServerMountSnapshot() {
   return false;
 }
 
@@ -74,11 +56,11 @@ export function HeaderNav({
   // sticky` + `z-index` + `backdrop-filter` is a triple stacking-context
   // trigger that confined the drawer's z-40 to the header's painted region on
   // iOS Safari. Symptom: drawer rendered BELOW the page content on iPhone
-  // (works on Chromium emulation, breaks on real WebKit). `mounted` gates the
-  // portal so SSR doesn't try to access `document` (which doesn't exist
+  // (works on Chromium emulation, breaks on real WebKit). `isClient` gates
+  // the portal so SSR doesn't try to access `document` (which doesn't exist
   // server-side); the bare hamburger button still renders during the brief
   // pre-mount window so the trigger is always visible.
-  const mounted = useSyncExternalStore(subscribeToMount, getMountSnapshot, getServerMountSnapshot);
+  const isClient = useIsClient();
   // PR-D5 a11y: replaced the previous `<label htmlFor="menu-toggle">` +
   // `<input type="checkbox" hidden>` pattern by a real `<button aria-expanded
   // aria-controls>`. The label/input pair fooled AT (VoiceOver/NVDA
@@ -406,11 +388,11 @@ export function HeaderNav({
 
       {/* Bug #4 (PR P0-V2): overlay + drawer rendered via React Portal into
           <body> so they escape the parent <header sticky z-40 backdrop-blur>
-          stacking context. `mounted` guards SSR (document only exists
-          client-side). When the portal hasn't mounted yet, the trigger button
-          above still works — clicking it sets isOpen = true; the portal then
-          appears on the next render after the useEffect runs. */}
-      {mounted && drawerOverlayAndPanel && createPortal(drawerOverlayAndPanel, document.body)}
+          stacking context. `isClient` guards SSR (document only exists
+          client-side). When the portal hasn't activated yet, the trigger
+          button above still works — clicking it sets isOpen = true; the
+          portal then appears on the next render after the store flips. */}
+      {isClient && isOpen && createPortal(drawerOverlayAndPanel, document.body)}
 
       {/* Desktop theme toggle + locale switcher - visible on desktop only */}
       <div className="hidden items-center gap-2 lg:flex">

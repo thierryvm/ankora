@@ -8,10 +8,10 @@
 
 ## Résumé exécutif
 
-| Bug | Statut         | Root cause                                                   | Sévérité | Effort fix |
-| --- | -------------- | ------------------------------------------------------------ | -------- | ---------- |
-| #1bis CSP inline style | CONFIRMÉ | React `style={{...}}` rendu en HTML attribute, bloqué par `style-src 'self' 'nonce-XYZ'` strict | P0       | S          |
-| #2bis Fonts OTS parse  | CONFIRMÉ | ServiceWorker cache poisoned avec ancien HTML 404 pré-PR #169 — sert `0x0A0A0A0A` au lieu du TTF | P0       | XS         |
+| Bug                    | Statut   | Root cause                                                                                                          | Sévérité | Effort fix |
+| ---------------------- | -------- | ------------------------------------------------------------------------------------------------------------------- | -------- | ---------- |
+| #1bis CSP inline style | CONFIRMÉ | React `style={{...}}` rendu en HTML attribute, bloqué par `style-src 'self' 'nonce-XYZ'` strict                     | P0       | S          |
+| #2bis Fonts OTS parse  | CONFIRMÉ | ServiceWorker cache poisoned avec ancien HTML 404 pré-PR #169 — sert `0x0A0A0A0A` au lieu du TTF                    | P0       | XS         |
 | #4 Drawer mobile       | CONFIRMÉ | Parent `<header sticky z-40 backdrop-blur>` crée un stacking context iOS Safari qui confine le drawer enfant `z-40` | P0       | S          |
 
 **Recommandation @cc-ankora** : un seul PR multi-fix discipliné. Bug #2bis = 1 ligne sw.js (effort minimal, déblocage majeur). Bug #1bis = 3 sources factuelles identifiées, migration vers utility classes CSS sans toucher au CSP. Bug #4 = React Portal vers `document.body`.
@@ -54,11 +54,11 @@ Quoi qu'il en soit, **le cache SW contient une mauvaise réponse pour `/fonts/*`
 
 ### Options de fix
 
-| Option | Effort | Risque |
-| ------ | ------ | ------ |
+| Option                                                         | Effort        | Risque                                                                                |
+| -------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------- |
 | **A. Bump `CACHE_VERSION` + ajouter `/fonts/` à `isBypass()`** | XS (2 lignes) | Aucun — force invalidation + ne cache plus jamais les fonts (HTTP cache natif suffit) |
-| B. Bump `CACHE_VERSION` seul | XS (1 ligne) | Bas — réinvalide une fois, mais nouvelles caches /fonts/* possibles à l'avenir |
-| C. Ajouter validation TTF signature dans le SW avant de servir | M | Moyen — complexité accrue, risque effets de bord |
+| B. Bump `CACHE_VERSION` seul                                   | XS (1 ligne)  | Bas — réinvalide une fois, mais nouvelles caches /fonts/\* possibles à l'avenir       |
+| C. Ajouter validation TTF signature dans le SW avant de servir | M             | Moyen — complexité accrue, risque effets de bord                                      |
 
 **Recommandation @cc-ankora** : **Option A**. Bump version (`v2-20260519`) + exclure `/fonts/` du cache SW. Les fonts sont des assets statiques peu modifiés, le HTTP cache natif du browser + `Cache-Control` du serveur suffisent largement. Pas besoin du SW pour ça.
 
@@ -76,30 +76,32 @@ Quoi qu'il en soit, **le cache SW contient une mauvaise réponse pour `/fonts/*`
 
 3 violations DevTools console identifiées par @cowork, 3 sources factuelles confirmées :
 
-| # | Source | Ligne | Style |
-| - | ------ | ----- | ----- |
-| 1 | `src/components/marketing/landing/sections/Hero.tsx` | L50-53 | `background: 'radial-gradient(50% 60% at 50% 20%, color-mix(in oklab, var(--color-brand-400) 15%, transparent), transparent 70%)'` |
-| 2 | `src/components/marketing/landing/sections/WhatIfDemoClient.tsx` | L175 | `accentColor: 'var(--color-brand-400)'` |
-| 3 | `src/components/marketing/landing/sections/WhatIfDemoClient.tsx` | L339 | `fontVariantNumeric: 'tabular-nums'` |
+| #   | Source                                                           | Ligne  | Style                                                                                                                              |
+| --- | ---------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `src/components/marketing/landing/sections/Hero.tsx`             | L50-53 | `background: 'radial-gradient(50% 60% at 50% 20%, color-mix(in oklab, var(--color-brand-400) 15%, transparent), transparent 70%)'` |
+| 2   | `src/components/marketing/landing/sections/WhatIfDemoClient.tsx` | L175   | `accentColor: 'var(--color-brand-400)'`                                                                                            |
+| 3   | `src/components/marketing/landing/sections/WhatIfDemoClient.tsx` | L339   | `fontVariantNumeric: 'tabular-nums'`                                                                                               |
 
 Les autres `style={{...}}` du codebase (Avatar, Chip, ColorPicker, ProgressBar, design-playground, opengraph-image, error pages) :
+
 - soit ne sont pas sur des pages publiques (design-playground)
-- soit ont des valeurs **dynamiques runtime** (ProgressBar width, Avatar size) qui changent post-hydration — CSP applique côté SSR donc bloqué technically, mais @cowork n'a pas listé ces 7 violations spécifiquement
+- soit ont des valeurs **dynamiques runtime** (ProgressBar width, Avatar size) qui changent post-hydration — CSP applique côté SSR donc techniquement bloqué, mais @cowork n'a pas listé ces 7 violations spécifiquement
 - opengraph-image utilise next/og `ImageResponse` qui n'a pas la même contrainte CSP
 
 **Pourquoi ces 3 spécifiquement** : ils sont rendus SSR sur la landing page `/`, page la plus visitée + la plus visible.
 
 ### Options de fix
 
-| Option | Effort | Risque |
-| ------ | ------ | ------ |
-| A. Ajouter `'unsafe-hashes'` à `style-src` dans `proxy.ts` CSP | XS | **Moyen** — relâche la politique CSP, security-auditor doit valider, ouvre la voie à de futurs inline styles non audités |
-| **B. Migrer les 3 styles vers utility CSS classes (Tailwind + globals.css)** | S | Bas — pas de changement CSP, design intact, plus maintenable |
-| C. style.setProperty() via useEffect côté client | M | Élevé — anti-pattern SSR, FOUC possible, ne marche que sur composants client |
+| Option                                                                       | Effort | Risque                                                                                                                   |
+| ---------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------ |
+| A. Ajouter `'unsafe-hashes'` à `style-src` dans `proxy.ts` CSP               | XS     | **Moyen** — relâche la politique CSP, security-auditor doit valider, ouvre la voie à de futurs inline styles non audités |
+| **B. Migrer les 3 styles vers utility CSS classes (Tailwind + globals.css)** | S      | Bas — pas de changement CSP, design intact, plus maintenable                                                             |
+| C. style.setProperty() via useEffect côté client                             | M      | Élevé — anti-pattern SSR, FOUC possible, ne marche que sur composants client                                             |
 
 **Recommandation @cc-ankora** : **Option B**.
 
 Mapping fix :
+
 - **Style #3** (font-variant-numeric) → Tailwind class `tabular-nums` (déjà disponible)
 - **Style #2** (accent-color) → Tailwind arbitrary value `accent-[var(--color-brand-400)]` OU créer utility CSS `.accent-brand-400 { accent-color: var(--color-brand-400); }`
 - **Style #1** (hero radial gradient) → créer utility CSS `.hero-radial-glow { background: radial-gradient(...); }` dans `globals.css` `@layer utilities`
@@ -140,12 +142,14 @@ Sur pages cockpit (`/app/*`), même structure mais via `Header.tsx:41` (même cl
 **Pourquoi le drawer est confiné** :
 
 CSS spec — un élément crée un **stacking context** lorsque :
+
 - `position: sticky` AVEC `z-index !== auto` ✅ Header
 - `backdrop-filter` non-`none` ✅ Header (`backdrop-blur`)
 
 Un descendant `position: fixed` est positionné par rapport au viewport, MAIS **reste dans le stacking context de son ancêtre le plus proche qui en crée un**.
 
 Donc :
+
 - Le drawer (`fixed top-0 right-0 z-40`) est positioned au viewport ✅
 - Mais son **z-index 40 est interne au stacking context du header**
 - Le contenu `<main>` n'a pas de stacking context (z-auto implicite)
@@ -156,12 +160,12 @@ Pattern documenté pour iOS Safari : voir [Stack Overflow CSS stacking context b
 
 ### Options de fix
 
-| Option | Effort | Risque |
-| ------ | ------ | ------ |
-| A. Retirer `backdrop-blur` du header | XS | Élevé — perte du glassmorphism visuel signature de la marque |
-| B. Retirer `z-40` du header (utiliser `z-auto` ou no-z-index) | XS | Moyen — header n'est plus au-dessus du contenu lors du scroll, casse le sticky behavior |
-| **C. React Portal — porter le drawer (overlay + nav) vers `document.body` direct** | S | Bas — pattern standard React, échappe complètement au stacking context parent |
-| D. `isolation: isolate` sur le drawer | XS | Élevé — ne résout pas le problème (isolation ouvre un nouveau stacking context au lieu d'échapper au parent) |
+| Option                                                                             | Effort | Risque                                                                                                       |
+| ---------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------ |
+| A. Retirer `backdrop-blur` du header                                               | XS     | Élevé — perte du glassmorphism visuel signature de la marque                                                 |
+| B. Retirer `z-40` du header (utiliser `z-auto` ou no-z-index)                      | XS     | Moyen — header n'est plus au-dessus du contenu lors du scroll, casse le sticky behavior                      |
+| **C. React Portal — porter le drawer (overlay + nav) vers `document.body` direct** | S      | Bas — pattern standard React, échappe complètement au stacking context parent                                |
+| D. `isolation: isolate` sur le drawer                                              | XS     | Élevé — ne résout pas le problème (isolation ouvre un nouveau stacking context au lieu d'échapper au parent) |
 
 **Recommandation @cc-ankora** : **Option C**. React Portal vers `document.body` est le pattern canonique pour les overlays/modals/drawers qui doivent échapper au stacking context du composant qui les déclenche.
 
