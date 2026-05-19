@@ -97,6 +97,20 @@ const nextConfig: NextConfig = {
       //   Content-Security-Policy: frame-ancestors 'none' is enforced
       //     globally via the nonce-based CSP middleware; not duplicated here
       //     to avoid drift, only documented for clarity.
+      // THI-244 Phase A (perf): self-hosted variable fonts under /public/fonts/
+      // are content-addressable in practice (a new release would land at a new
+      // filename, never with the same name + different bytes), so we mark them
+      // immutable for one year. Eliminates the `max-age=0, must-revalidate`
+      // default that triggered a conditional revalidation on every navigation
+      // for ~1.45 MB of TTF (audit
+      // `docs/audits/2026-05-19-thi-225-perf-investigation-1sec-nav-lag.md`
+      // §RC #1). Combined with the TTF → WOFF2 migration shipped in this PR,
+      // first-load cost drops by ~66 % and every subsequent navigation pays 0
+      // font bytes until the next deploy that touches /fonts.
+      {
+        source: '/fonts/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
       {
         source: '/admin/:path*',
         headers: [

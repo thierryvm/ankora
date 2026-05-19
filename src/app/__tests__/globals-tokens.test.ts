@@ -139,10 +139,19 @@ describe('globals.css — Design System tokens (PR-3a, cc-design v1)', () => {
       expect(swapMatches?.length).toBe(3);
     });
 
-    it('points to /fonts/ public path for all three', () => {
-      expect(css).toMatch(/url\('\/fonts\/Inter-Variable\.ttf'\)/);
-      expect(css).toMatch(/url\('\/fonts\/Fraunces-Variable\.ttf'\)/);
-      expect(css).toMatch(/url\('\/fonts\/JetBrainsMono-Variable\.ttf'\)/);
+    it('points to /fonts/ public path in WOFF2 format for all three', () => {
+      // THI-244 Phase A perf fix (2026-05-19): migrated from TTF to WOFF2.
+      // WOFF2 has >97 % browser support and Brotli-compresses the variable
+      // fonts by ~60 % (Inter 879→343 KB, JetBrainsMono 300→114 KB). Fraunces
+      // is sourced directly as a WOFF2 from @fontsource-variable/fraunces
+      // (replacement for the previously corrupted local TTF — sfntVersion
+      // 0x0a0a0a0a, root cause of the iPhone OTS parsing error referenced in
+      // PR #171). Cf. docs/audits/2026-05-19-thi-225-perf-investigation-1sec-nav-lag.md.
+      expect(css).toMatch(/url\('\/fonts\/Inter-Variable\.woff2'\)\s*format\('woff2'\)/);
+      expect(css).toMatch(/url\('\/fonts\/Fraunces-Variable\.woff2'\)\s*format\('woff2'\)/);
+      expect(css).toMatch(/url\('\/fonts\/JetBrainsMono-Variable\.woff2'\)\s*format\('woff2'\)/);
+      // Defense-in-depth: no leftover TTF references anywhere in globals.css.
+      expect(css).not.toMatch(/\/fonts\/[A-Za-z]+-Variable\.ttf/);
     });
   });
 

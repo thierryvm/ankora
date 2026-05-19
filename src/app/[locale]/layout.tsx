@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
 import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
 
@@ -18,11 +17,14 @@ import { ThemeBootScript } from '@/components/theme/ThemeBootScript';
 
 import '../globals.css';
 
-const inter = Inter({
-  variable: '--font-sans',
-  subsets: ['latin'],
-  display: 'swap',
-});
+// Inter is loaded as a self-hosted variable font via `@font-face` in
+// `globals.css` and surfaced through the Tailwind v4 `@theme --font-sans`
+// token. The `next/font/google` Inter import was dropped on 2026-05-19
+// (THI-244 Phase A): it pulled a second copy of Inter from Google Fonts on
+// top of the self-hosted `/fonts/Inter-Variable.woff2`, adding ~25 KB of
+// duplicate font payload plus a third-party connection and a GDPR exposure
+// (Google logs visitor IPs). Single source of truth = the WOFF2 in
+// `/public/fonts/` served with a 1-year immutable Cache-Control header.
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -159,7 +161,7 @@ export default async function LocaleLayout({
       className="overflow-x-clip"
       {...(dataTheme ? { 'data-theme': dataTheme } : {})}
     >
-      <body className={`${inter.variable} max-w-full overflow-x-clip font-sans antialiased`}>
+      <body className="max-w-full overflow-x-clip font-sans antialiased">
         {/* Theme bootstrap. Runs synchronously before paint to confirm or
             override the SSR `data-theme` (cookie-seeded above) against the
             visitor's localStorage and OS preference. Extracted to a Server
