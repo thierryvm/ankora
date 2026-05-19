@@ -651,7 +651,8 @@
       "expensesEmpty": "Keine Ausgaben für diesen Monat erfasst.",
       "expensesViewAll": "Alle Ausgaben anzeigen →",
       "accountsHeading": "Meine Konten",
-      "provisionHealthSectionHeading": "Gesundheit der Rücklagen"
+      "provisionHealthSectionHeading": "Gesundheit der Rücklagen",
+      "upcomingBillsSectionHeading": "Anstehende Rechnungen"
     },
     "charges": {
       "title": "Meine Fixkosten",
@@ -944,6 +945,21 @@
       "status": {
         "a_jour": "Auf Kurs",
         "deficit": "Defizit"
+      }
+    },
+    "upcomingBills": {
+      "title": "Anstehende Rechnungen",
+      "viewAll": "Alle anzeigen",
+      "empty": "Keine Rechnungen in den nächsten 30 Tagen.",
+      "itemCount": "{count, plural, =1 {1 Rechnung} other {# Rechnungen}}",
+      "dueToday": "Heute",
+      "daysUntil": "In {days, plural, =1 {1 Tag} other {# Tagen}}",
+      "daysOverdue": "{days, plural, =1 {1 Tag überfällig} other {# Tage überfällig}}",
+      "buckets": {
+        "overdue": "Überfällig",
+        "j7": "Diese Woche",
+        "j14": "Diesen Monat",
+        "j30": "Nächsten Monat"
       }
     }
   },

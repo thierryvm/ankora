@@ -36,6 +36,12 @@ export const chargeArb: fc.Arbitrary<Charge> = fc.record({
     .map((n) => money(n.toFixed(2))),
   frequency: chargeFrequencyArb,
   dueMonth: fc.integer({ min: 1, max: 12 }),
+  // THI-192: `paymentMonths` mirrors the DB default `array[1..12]` for monthly
+  // charges. `paymentDay` is the day-of-month bill drop. Property-tests don't
+  // need to cross-check `dueMonth ∈ paymentMonths` here — it's a DB-level
+  // invariant maintained by `chargeUpdateSchema`.
+  paymentMonths: fc.constant([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as readonly number[]),
+  paymentDay: fc.integer({ min: 1, max: 31 }),
   categoryId: fc.option(fc.uuid(), { nil: null }),
   isActive: fc.boolean(),
   paidFrom: fc.constantFrom('principal', 'epargne'),
@@ -54,6 +60,9 @@ export const activeChargeArb: fc.Arbitrary<Charge> = fc.record({
     .map((n) => money(n.toFixed(2))),
   frequency: chargeFrequencyArb,
   dueMonth: fc.integer({ min: 1, max: 12 }),
+  // THI-192: same defaults as `chargeArb` — see comment there.
+  paymentMonths: fc.constant([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as readonly number[]),
+  paymentDay: fc.integer({ min: 1, max: 31 }),
   categoryId: fc.option(fc.uuid(), { nil: null }),
   isActive: fc.constant(true),
   paidFrom: fc.constantFrom('principal', 'epargne'),

@@ -3,12 +3,21 @@ import { describe, it, expect } from 'vitest';
 import { money, type Charge } from '@/lib/domain/types';
 import { computeMonthlyTransferPlan, projectedEpargneBalance } from '@/lib/domain/transfer';
 
+// THI-192: `paymentMonths` + `paymentDay` were added to `Charge`. For these
+// transfer tests (PR-D1 era) the schedule precision is irrelevant — the
+// transfer math reads only `frequency`, `dueMonth`, `amount`, `paidFrom` and
+// `isActive`. Defaults below mirror the DB `payment_months default array[1..12]`
+// + `payment_day default 1`.
+const DEFAULT_PAYMENT_MONTHS: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+
 const monthlyCharge = (over: Partial<Charge> = {}): Charge => ({
   id: 'm1',
   label: 'Loyer',
   amount: money(900),
   frequency: 'monthly',
   dueMonth: 1,
+  paymentMonths: DEFAULT_PAYMENT_MONTHS,
+  paymentDay: 1,
   categoryId: null,
   isActive: true,
   paidFrom: 'principal',
@@ -21,6 +30,8 @@ const annualSmoothed = (over: Partial<Charge> = {}): Charge => ({
   amount: money(1200),
   frequency: 'annual',
   dueMonth: 6,
+  paymentMonths: [6],
+  paymentDay: 1,
   categoryId: null,
   isActive: true,
   paidFrom: 'epargne',
@@ -33,6 +44,8 @@ const quarterlySmoothed = (over: Partial<Charge> = {}): Charge => ({
   amount: money(90),
   frequency: 'quarterly',
   dueMonth: 2,
+  paymentMonths: [2, 5, 8, 11],
+  paymentDay: 1,
   categoryId: null,
   isActive: true,
   paidFrom: 'epargne',
@@ -80,6 +93,8 @@ describe('computeMonthlyTransferPlan — "Virement Intelligent"', () => {
       amount: money(53),
       frequency: 'annual',
       dueMonth: 4,
+      paymentMonths: [4],
+      paymentDay: 1,
       categoryId: null,
       isActive: true,
       paidFrom: 'epargne',
@@ -92,6 +107,8 @@ describe('computeMonthlyTransferPlan — "Virement Intelligent"', () => {
       amount: money(655),
       frequency: 'annual',
       dueMonth: 10,
+      paymentMonths: [10],
+      paymentDay: 1,
       categoryId: null,
       isActive: true,
       paidFrom: 'epargne',

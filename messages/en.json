@@ -651,7 +651,8 @@
       "expensesEmpty": "No expenses recorded for this month.",
       "expensesViewAll": "View all expenses →",
       "accountsHeading": "My accounts",
-      "provisionHealthSectionHeading": "Provisions health"
+      "provisionHealthSectionHeading": "Provisions health",
+      "upcomingBillsSectionHeading": "Upcoming bills"
     },
     "charges": {
       "title": "My bills",
@@ -944,6 +945,21 @@
       "status": {
         "a_jour": "On track",
         "deficit": "Deficit"
+      }
+    },
+    "upcomingBills": {
+      "title": "Upcoming bills",
+      "viewAll": "View all",
+      "empty": "No bills due in the next 30 days.",
+      "itemCount": "{count, plural, =1 {1 bill} other {# bills}}",
+      "dueToday": "Today",
+      "daysUntil": "In {days, plural, =1 {1 day} other {# days}}",
+      "daysOverdue": "{days, plural, =1 {1 day overdue} other {# days overdue}}",
+      "buckets": {
+        "overdue": "Overdue",
+        "j7": "This week",
+        "j14": "This month",
+        "j30": "Next month"
       }
     }
   },

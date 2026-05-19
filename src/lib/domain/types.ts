@@ -23,6 +23,19 @@ export type Charge = {
   frequency: ChargeFrequency;
   /** Month (1-12) at which the charge is due. For quarterly/semiannual/annual — the reference month. */
   dueMonth: number;
+  /**
+   * Months (1-12) the charge falls due. Sorted ascending. Length ≥ 1.
+   * Drives cron-aware schedule resolution (THI-192 Prochaines factures).
+   * Backed by the `payment_months smallint[]` column added in
+   * `20260503000002_pr_d1_charges_enrichments.sql`.
+   */
+  paymentMonths: readonly number[];
+  /**
+   * Day of month (1-31) when the charge is due. Drives J-7/J-14/J-30
+   * bucketing + bell notifications. Backed by the `payment_day smallint`
+   * column added in `20260503000002_pr_d1_charges_enrichments.sql`.
+   */
+  paymentDay: number;
   categoryId: string | null;
   isActive: boolean;
   /** Which account settles the bill. Defaults to 'principal' in the DB;

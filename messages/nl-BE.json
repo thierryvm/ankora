@@ -651,7 +651,8 @@
       "expensesEmpty": "Geen uitgaven geregistreerd voor deze maand.",
       "expensesViewAll": "Alle uitgaven bekijken →",
       "accountsHeading": "Mijn rekeningen",
-      "provisionHealthSectionHeading": "Gezondheid van de voorzieningen"
+      "provisionHealthSectionHeading": "Gezondheid van de voorzieningen",
+      "upcomingBillsSectionHeading": "Aankomende facturen"
     },
     "charges": {
       "title": "Mijn vaste kosten",
@@ -944,6 +945,21 @@
       "status": {
         "a_jour": "Op koers",
         "deficit": "Tekort"
+      }
+    },
+    "upcomingBills": {
+      "title": "Aankomende facturen",
+      "viewAll": "Alles bekijken",
+      "empty": "Geen facturen in de komende 30 dagen.",
+      "itemCount": "{count, plural, =1 {1 factuur} other {# facturen}}",
+      "dueToday": "Vandaag",
+      "daysUntil": "Over {days, plural, =1 {1 dag} other {# dagen}}",
+      "daysOverdue": "{days, plural, =1 {1 dag te laat} other {# dagen te laat}}",
+      "buckets": {
+        "overdue": "Te laat",
+        "j7": "Deze week",
+        "j14": "Deze maand",
+        "j30": "Volgende maand"
       }
     }
   },

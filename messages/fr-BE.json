@@ -651,7 +651,8 @@
       "expensesEmpty": "Aucune dépense enregistrée pour ce mois.",
       "expensesViewAll": "Voir toutes les dépenses →",
       "accountsHeading": "Mes comptes",
-      "provisionHealthSectionHeading": "Santé des provisions"
+      "provisionHealthSectionHeading": "Santé des provisions",
+      "upcomingBillsSectionHeading": "Prochaines factures"
     },
     "charges": {
       "title": "Mes charges",
@@ -944,6 +945,21 @@
       "status": {
         "a_jour": "À jour",
         "deficit": "Déficit"
+      }
+    },
+    "upcomingBills": {
+      "title": "Prochaines factures",
+      "viewAll": "Voir toutes",
+      "empty": "Aucune facture à venir dans les 30 prochains jours.",
+      "itemCount": "{count, plural, =1 {1 facture} other {# factures}}",
+      "dueToday": "Aujourd'hui",
+      "daysUntil": "Dans {days, plural, =1 {1 jour} other {# jours}}",
+      "daysOverdue": "{days, plural, =1 {1 jour en retard} other {# jours en retard}}",
+      "buckets": {
+        "overdue": "En retard",
+        "j7": "Cette semaine",
+        "j14": "Ce mois-ci",
+        "j30": "Mois prochain"
       }
     }
   },
