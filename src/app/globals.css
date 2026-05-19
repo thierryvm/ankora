@@ -2,32 +2,35 @@
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
-/* ---------- Variable fonts — self-hosted ----------
+/* ---------- Variable fonts — self-hosted (WOFF2 only) ----------
    Inter wght 100..900 · Fraunces wght 100..900 · JetBrains Mono wght 100..800.
-   Source: cc-design Design System v1 (2026-04-25). */
+   Source: cc-design Design System v1 (2026-04-25).
+   WOFF2 migration (THI-244, Phase A perf fix 2026-05-19) drops the TTF
+   sources entirely: WOFF2 is supported by >97 % of installed browsers since
+   2019 and shrinks the variable fonts by ~60 % (Inter 879→343 KB,
+   JetBrainsMono 300→114 KB). Fraunces is sourced from
+   @fontsource-variable/fraunces (latin-ext+wght subset, 33 KB) — it replaces
+   a previously corrupted local TTF (sfntVersion 0x0a0a0a0a) which was the
+   true root cause of the iPhone PWA `OTS parsing error: invalid sfntVersion:
+   168430090` flagged in PR #171. Older browsers fall back to the system
+   font stack via the `font-display` strategy declared per face below. */
 @font-face {
   font-family: 'Inter';
-  src:
-    url('/fonts/Inter-Variable.ttf') format('truetype-variations'),
-    url('/fonts/Inter-Variable.ttf') format('truetype');
+  src: url('/fonts/Inter-Variable.woff2') format('woff2');
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: 'Fraunces';
-  src:
-    url('/fonts/Fraunces-Variable.ttf') format('truetype-variations'),
-    url('/fonts/Fraunces-Variable.ttf') format('truetype');
+  src: url('/fonts/Fraunces-Variable.woff2') format('woff2');
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: 'JetBrains Mono';
-  src:
-    url('/fonts/JetBrainsMono-Variable.ttf') format('truetype-variations'),
-    url('/fonts/JetBrainsMono-Variable.ttf') format('truetype');
+  src: url('/fonts/JetBrainsMono-Variable.woff2') format('woff2');
   font-weight: 100 800;
   font-style: normal;
   font-display: swap;
