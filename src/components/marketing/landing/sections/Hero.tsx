@@ -38,19 +38,16 @@ export async function Hero() {
       className="relative mx-auto max-w-6xl overflow-hidden px-4 pt-20 pb-16 text-center md:px-6 md:pt-28"
     >
       {/* Decorative radial glow (cc-design fidelity).
-          Inline `style.background` bypasses any potential cascade quirk where
-          a class-based `background` could be overridden by Tailwind utility
-          backgrounds — this guarantees the gradient renders. The colour pulls
-          from `--color-brand-400` via `color-mix` so it stays in sync with
-          the design system across light + dark + admin accent flips. */}
+          Uses the `.bg-brand-radial` utility (defined in globals.css
+          `@layer utilities`) so the style is applied via a stylesheet rule
+          rather than an inline `style="..."` attribute — the strict CSP
+          (`style-src 'self' 'nonce-XYZ'`, no `'unsafe-hashes'`) blocks inline
+          attributes outright. The gradient still pulls from --color-brand-400
+          via `color-mix` so it stays in sync with the design system. */}
       <div
         aria-hidden="true"
         data-testid="hero-radial-glow"
-        className="pointer-events-none absolute -inset-x-[20%] -top-[40%] z-0 h-[90%]"
-        style={{
-          background:
-            'radial-gradient(50% 60% at 50% 20%, color-mix(in oklab, var(--color-brand-400) 15%, transparent), transparent 70%)',
-        }}
+        className="bg-brand-radial pointer-events-none absolute -inset-x-[20%] -top-[40%] z-0 h-[90%]"
       />
 
       <div className="relative z-10 mx-auto max-w-3xl">

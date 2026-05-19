@@ -428,5 +428,32 @@ body > main {
   color: var(--color-brand-900);
 }
 
+/* ---------- Utility classes — replace inline style attributes ----------
+   Inline `style="..."` attributes in React components are rendered as HTML
+   attributes and blocked by the strict CSP (`style-src 'self' 'nonce-XYZ'`,
+   no `'unsafe-hashes'`). Each declaration here mirrors the original inline
+   style verbatim so the visual remains identical while staying CSP-compliant.
+   Added 2026-05-19 (PR P0-V2) — see docs/audits/2026-05-19-prod-p0-v2-bugs-diagnostic.md. */
+@layer utilities {
+  /* Hero radial glow — replaces inline gradient in Hero.tsx.
+     Pulls from --color-brand-400 via color-mix so it stays in sync with the
+     design system across light + dark + admin accent flips. */
+  .bg-brand-radial {
+    background: radial-gradient(
+      50% 60% at 50% 20%,
+      color-mix(in oklab, var(--color-brand-400) 15%, transparent),
+      transparent 70%
+    );
+  }
+
+  /* Custom accent color for native form controls (range slider thumb/track).
+     Replaces inline `style={{ accentColor: 'var(--color-brand-400)' }}` in
+     WhatIfDemoClient.tsx — Tailwind 4 does not yet ship a token-based
+     accent-* utility for design-system CSS variables. */
+  .accent-brand-400 {
+    accent-color: var(--color-brand-400);
+  }
+}
+
 /* ---------- Atoms (CD#3 — PR-D4-PHASE2-A) ---------- */
 @import '../components/atoms/atoms.css';

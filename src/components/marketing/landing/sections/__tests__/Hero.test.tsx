@@ -99,14 +99,18 @@ describe('<Hero />', () => {
     expect(reserve.className).toContain('text-brand-text-strong');
   });
 
-  it('renders the decorative radial glow as aria-hidden with an inline radial-gradient', async () => {
+  it('renders the decorative radial glow as aria-hidden via the .bg-brand-radial utility class', async () => {
     await renderHero();
     const glow = screen.getByTestId('hero-radial-glow');
     expect(glow).toHaveAttribute('aria-hidden', 'true');
-    // Inline style guarantees the gradient renders even if a class-based
-    // background were ever overridden by a Tailwind utility.
-    expect(glow.style.background).toContain('radial-gradient');
-    expect(glow.style.background).toContain('var(--color-brand-400)');
+    // PR P0-V2 (2026-05-19): the inline `style="background: radial-gradient(...)"`
+    // was migrated to the `.bg-brand-radial` utility class defined in
+    // `globals.css @layer utilities`. The strict CSP (`style-src 'self'
+    // 'nonce-XYZ'`, no `'unsafe-hashes'`) blocked the inline attribute in
+    // production. The visual remains identical — the test asserts the class
+    // is present rather than the inline style.
+    expect(glow.className).toContain('bg-brand-radial');
+    expect(glow.style.background).toBe('');
   });
 
   it('exposes the section as a named landmark via aria-labelledby="hero-heading"', async () => {
