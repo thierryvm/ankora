@@ -40,10 +40,7 @@ export default function ErrorBoundary({ error, reset }: ErrorProps) {
         >
           <AlertTriangle className="h-8 w-8" />
         </div>
-        <h1
-          className="text-foreground text-4xl font-bold tracking-tight md:text-5xl"
-          style={{ fontFamily: 'var(--font-display)' }}
-        >
+        <h1 className="text-foreground font-display text-4xl font-bold tracking-tight md:text-5xl">
           {t('title')}
         </h1>
         <p className="text-muted-foreground mt-4 text-base leading-relaxed">{t('description')}</p>

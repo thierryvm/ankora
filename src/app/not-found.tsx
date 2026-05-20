@@ -69,10 +69,7 @@ export default async function NotFound() {
             <p className="text-brand-700 font-mono text-sm font-medium tracking-widest uppercase">
               {copy.label}
             </p>
-            <h1
-              className="text-foreground mt-3 text-4xl font-bold tracking-tight md:text-5xl"
-              style={{ fontFamily: 'var(--font-display)' }}
-            >
+            <h1 className="text-foreground font-display mt-3 text-4xl font-bold tracking-tight md:text-5xl">
               {copy.title}
             </h1>
             <p className="text-muted-foreground mt-4 text-base leading-relaxed">

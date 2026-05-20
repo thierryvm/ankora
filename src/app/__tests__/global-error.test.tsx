@@ -80,6 +80,21 @@ describe('<GlobalError /> — root html/body error boundary', () => {
     expect(screen.getByRole('alert')).toBeInTheDocument();
   });
 
+  it('uses Fraunces for the title via font-display utility (no inline style — THI-249 CSP)', () => {
+    // THI-249 (2026-05-20): migrated from `style={{ fontFamily: 'var(--font-display)' }}`
+    // to the Tailwind 4 auto-generated `font-display` utility class so the
+    // strict CSP `style-src 'self' 'nonce-XXX'` no longer flags this surface.
+    // Mirrors the analogous guards in `not-found.test.tsx` and
+    // `[locale]/__tests__/error.test.tsx` — without this assertion a future
+    // edit could silently re-introduce an inline `style={{ ... }}` on the H1
+    // of `global-error.tsx` and only surface as a CSP console warning in prod.
+    // Flagged by `security-auditor` agent (asymmetric coverage finding).
+    renderInDoc('fr-BE');
+    const heading = screen.getByRole('heading', { level: 1 });
+    expect(heading.className).toContain('font-display');
+    expect(heading.hasAttribute('style')).toBe(false);
+  });
+
   it('emits <html lang="fr"> when the FR copy is shown (a11y/SEO — Sourcery #1)', () => {
     document.documentElement.lang = 'fr-BE';
     const html = renderToStaticMarkup(
