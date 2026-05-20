@@ -73,10 +73,17 @@ describe('<ErrorBoundary /> — error.tsx route-level', () => {
     expect(haystack).not.toContain('user@example.com leaked');
   });
 
-  it('uses Fraunces for the title (var(--font-display))', () => {
+  it('uses Fraunces for the title via font-display utility (no inline style — THI-249 CSP)', () => {
+    // THI-249 (2026-05-20): migrated from `style={{ fontFamily: 'var(--font-display)' }}`
+    // to the Tailwind 4 auto-generated `font-display` utility class so the
+    // strict CSP `style-src 'self' 'nonce-XXX'` no longer flags this surface.
+    // Element-level inline `style="..."` attributes are not covered by
+    // nonces; only `<style>` tags are. The utility class resolves the same
+    // `var(--font-display)` token statically through `globals.css @theme`.
     const { container } = renderBoundary();
     const heading = container.querySelector('h1');
-    expect(heading?.getAttribute('style')).toContain('var(--font-display)');
+    expect(heading?.className).toContain('font-display');
+    expect(heading?.hasAttribute('style')).toBe(false);
   });
 });
 

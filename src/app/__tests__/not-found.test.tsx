@@ -68,10 +68,18 @@ describe('<NotFound /> — root-level branded 404', () => {
     expect(container.textContent).toContain('Page introuvable');
   });
 
-  it('uses Fraunces (var(--font-display)) for the H1', async () => {
+  it('uses Fraunces (font-display utility) for the H1 without inline style (THI-249 CSP)', async () => {
+    // THI-249 (2026-05-20): migrated from `style={{ fontFamily: 'var(--font-display)' }}`
+    // to the Tailwind 4 auto-generated `font-display` utility class. The strict CSP
+    // `style-src 'self' 'nonce-XXX'` blocks any inline `style="..."` attribute
+    // even when the page itself carries a valid nonce on its <script>/<style>
+    // tags — nonces do not cover element-level style attributes. The utility
+    // class resolves the same `var(--font-display)` token statically through
+    // `globals.css @theme`, so visual rendering is identical.
     const { container } = await renderTree();
     const heading = container.querySelector('h1');
-    expect(heading?.getAttribute('style')).toContain('var(--font-display)');
+    expect(heading?.className).toContain('font-display');
+    expect(heading?.hasAttribute('style')).toBe(false);
   });
 
   it('exposes a noindex meta via generateMetadata', async () => {
