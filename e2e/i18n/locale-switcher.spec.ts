@@ -46,7 +46,11 @@ async function switchTo(page: import('@playwright/test').Page, value: 'fr-BE' | 
   // flaky on local dev runs without proving anything new about the prod
   // contract. Phase B will tighten this to < 500 ms once `cookies()` is
   // lifted out of `[locale]/layout.tsx`.
-  const langPrefix = value.split('-')[0];
+  // `noUncheckedIndexedAccess` (CLAUDE.md strict tsconfig) makes `[0]` return
+  // `string | undefined`; fall back to the full value in the impossible case
+  // where `split` returns an empty array so `waitForFunction` always gets a
+  // defined `string` argument.
+  const langPrefix = value.split('-')[0] ?? value;
   await page.waitForFunction(
     (expected) => document.documentElement.lang.startsWith(expected),
     langPrefix,
