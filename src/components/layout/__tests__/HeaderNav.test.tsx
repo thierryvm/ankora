@@ -207,7 +207,7 @@ describe('<HeaderNav /> mobile drawer — THI-250 iOS-robust scroll lock', () =>
 /**
  * THI-251 (PR-FIX-DRAWER, 2026-05-23): iOS PWA standalone safe-area inset on
  * the drawer wrapper. Without `pt-[env(safe-area-inset-top)]` the close X
- * button rendered behind the iPhone status bar (notch / dynamic island)
+ * button rendered behind the iPhone status bar (notch / Dynamic Island)
  * because the drawer lives inside a Portal child of <body> (PR #171) and
  * doesn't inherit the sticky header's inset. The site already declares
  * `viewport-fit=cover` in `[locale]/layout.tsx`, so the inset value is

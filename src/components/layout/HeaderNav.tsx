@@ -196,7 +196,7 @@ export function HeaderNav({
         aria-modal="true"
         aria-label={t('nav.mobileLabel')}
         // THI-251 (2026-05-23): `pt-[env(safe-area-inset-top)]` reserves the
-        // notch / dynamic island area in iOS PWA standalone (Add-to-Home-Screen)
+        // notch / Dynamic Island area in iOS PWA standalone (Add-to-Home-Screen)
         // and Safari with `viewport-fit=cover` set in layout.tsx. Before this
         // fix the X close button rendered behind the iPhone status bar on real
         // hardware (overlay invisible). The main page sticky header already
