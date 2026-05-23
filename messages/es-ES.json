@@ -80,7 +80,8 @@
         "en": "English",
         "es-ES": "Español",
         "de-DE": "Deutsch"
-      }
+      },
+      "switching": "Cambiando idioma…"
     },
     "action": {
       "submit": "Confirmar",
