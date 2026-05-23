@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Phase 2 MVP — complete end-to-end scope (auth, onboarding, dashboard, settings, PWA, GDPR).
 
+### 2026-05-23 — PR-FIX-DRAWER mobile bugs (THI-250 + THI-251)
+
+- **THI-250 fix(nav)** — drawer mobile: iOS-robust scroll lock via `position: fixed` + scrollY save/restore (pattern Stripe/Linear/Notion). The previous `document.body.style.overflow = 'hidden'` lock was silently ignored by WebKit on iOS — the page behind the overlay kept scrolling on swipe. Symptom flagged on iPhone real device + PWA standalone during smoke test 2026-05-19 post-merge of PR #173 + PR #174. 3 new Vitest specs + 3 new Playwright Chromium-mobile specs guard the contract (open pins body, close restores body + window.scrollY, Escape works too).
+- **THI-251 fix(nav)** — drawer mobile: `pt-[env(safe-area-inset-top)]` on the drawer wrapper aside so the close X button is no longer rendered behind the iPhone status bar (notch / dynamic island) in PWA standalone mode. The site already declared `viewport-fit=cover` in `[locale]/layout.tsx`; the drawer was missed because it lives inside a Portal child of `<body>` (PR #171) and didn't inherit the sticky header's inset. 1 new Vitest spec + 1 new Playwright spec assert the utility class is applied.
+
 ### 2026-05-09 — Clôture session marathon : design Ankora V1.0 entièrement figé
 
 - **Bloc E Session #5 Admin Panel V1 livré et validé** (Claude Design) : 4 sections complètes (Santé technique avec Upstash 84% + Sentry 3 erreurs / Santé produit MAU + Drop-off / Acquisition Top 5 sources + sparkline 12 signups 30j / Recommandations rule-based 5 patterns avec `pattern_id` traçables). R-02 FSMA-safe affiché explicitement en eyebrow « pattern engine · pas de LLM (R-02) ». R-06 anti-culpabilisation exemplaire sur reco rouge : « besoin d'un coup de pouce pour boucler son mois — pas d'un mail commercial » → voix Ankora à l'état pur, à utiliser comme template pour toutes les futures recos.

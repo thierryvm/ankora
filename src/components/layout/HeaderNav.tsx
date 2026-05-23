@@ -80,11 +80,24 @@ export function HeaderNav({
     firstFocusable?.focus();
   }, [isOpen]);
 
-  // Handle drawer open/close: scroll lock, keyboard events, focus trap
+  // Handle drawer open/close: iOS-robust scroll lock, keyboard events, focus trap.
+  //
+  // THI-250 (2026-05-23): the previous `document.body.style.overflow = 'hidden'`
+  // lock is ignored by iOS Safari WebKit — rubber-band scroll passes through
+  // and the page behind the overlay scrolls when the user swipes. Symptom
+  // observed in production smoke test 2026-05-19 on iPhone real device +
+  // PWA standalone. Pattern verified by Stripe / Linear / Notion: pin <body>
+  // with `position: fixed` and offset its top by the captured scrollY, then
+  // restore both the styles and the scroll position on cleanup. The
+  // `overflow: hidden` rule remains as the non-iOS fallback (Chromium/Firefox
+  // desktop honour it without the position-fixed contortion).
   useEffect(() => {
     if (!isOpen) return;
 
-    // Lock scroll
+    const { scrollY } = window;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
     document.body.style.overflow = 'hidden';
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -115,7 +128,18 @@ export function HeaderNav({
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
       document.body.style.overflow = '';
+      // `behavior: 'instant'` overrides the `data-scroll-behavior="smooth"`
+      // attribute applied to <html> in `[locale]/layout.tsx`. Without it the
+      // restore would animate from 0 → scrollY (the browser default `auto`
+      // honours CSS smooth scroll), producing a visible jank: as soon as the
+      // body styles are reset the viewport snaps to 0 (because the page is
+      // no longer pinned at -scrollY), then animates back to scrollY. With
+      // `instant` the user sees a single jump-cut back to where they were.
+      window.scrollTo({ top: scrollY, left: 0, behavior: 'instant' });
     };
   }, [isOpen]);
 
@@ -171,7 +195,15 @@ export function HeaderNav({
         role="dialog"
         aria-modal="true"
         aria-label={t('nav.mobileLabel')}
-        className="bg-card border-border fixed top-0 right-0 bottom-0 z-[70] w-80 overflow-y-auto border-l lg:hidden"
+        // THI-251 (2026-05-23): `pt-[env(safe-area-inset-top)]` reserves the
+        // notch / dynamic island area in iOS PWA standalone (Add-to-Home-Screen)
+        // and Safari with `viewport-fit=cover` set in layout.tsx. Before this
+        // fix the X close button rendered behind the iPhone status bar on real
+        // hardware (overlay invisible). The main page sticky header already
+        // applies the same inset (Header.tsx); the drawer was missed because
+        // it's rendered into a Portal child of <body> in PR #171 so it does
+        // not inherit the sticky-header context.
+        className="bg-card border-border fixed top-0 right-0 bottom-0 z-[70] w-80 overflow-y-auto border-l pt-[env(safe-area-inset-top)] lg:hidden"
       >
         {/* PR-D5: dropped `sticky top-0` — same Playwright iPhone 14 WebKit
               pointer-event interception as the footer below. Drawer content
