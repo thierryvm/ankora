@@ -171,12 +171,16 @@ export function HeaderNav({
   const drawerOverlayAndPanel = isOpen ? (
     <>
       {/* Drawer overlay - visible when drawer is open.
-          z-[60] on overlay + z-[70] on the panel keeps them above any sticky
+          z-60 on overlay + z-70 on the panel keeps them above any sticky
           header (z-40) when the portal lands them as direct children of
-          <body>. Using arbitrary values here (Tailwind has no z-60/z-70 step
-          by default) to stay unambiguously above z-50 modals/toasts. */}
+          <body>. Tailwind 4's intellisense lints `z-[60]` / `z-[70]`
+          arbitrary brackets as a canonical-class hint — v4 generates the
+          integer step inline, so the bracketed form is no longer required.
+          Migrating clears the IDE warning and trims one declaration each
+          from the compiled CSS. Layering rule unchanged: strictly above
+          z-50 (modals / toasts), strictly below any future z-100 ceiling. */}
       <div
-        className="fixed inset-0 z-[60] bg-black/50 lg:hidden"
+        className="fixed inset-0 z-60 bg-black/50 lg:hidden"
         onClick={handleDrawerClose}
         aria-hidden="true"
       />
@@ -203,7 +207,7 @@ export function HeaderNav({
         // applies the same inset (Header.tsx); the drawer was missed because
         // it's rendered into a Portal child of <body> in PR #171 so it does
         // not inherit the sticky-header context.
-        className="bg-card border-border fixed top-0 right-0 bottom-0 z-[70] w-80 overflow-y-auto border-l pt-[env(safe-area-inset-top)] lg:hidden"
+        className="bg-card border-border fixed top-0 right-0 bottom-0 z-70 w-80 overflow-y-auto border-l pt-[env(safe-area-inset-top)] lg:hidden"
       >
         {/* PR-D5: dropped `sticky top-0` — same Playwright iPhone 14 WebKit
               pointer-event interception as the footer below. Drawer content
