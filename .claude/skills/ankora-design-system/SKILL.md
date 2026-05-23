@@ -57,14 +57,14 @@ Source de vérité : [`docs/ankora-product-quality-bar-v1.md`](../../../docs/ank
 - **Capacité d'épargne réelle** (ADR-009 amendé 09/05) — KPI hero du cockpit, différenciateur n°1. "Ton vrai reste à vivre chaque mois, sans surprise." Décompose en : Reste disponible → Reste à vivre → Capacité d'épargne réelle (3 concepts UX distincts persona Thierry 662 / 500 / 162 €).
 - **Compte épargne · trois lectures** (NORTH_STAR) — Total Épargne / Provisions affectées / Réserve libre. Différenciateur n°1, jamais réduire à un montant unique.
 - **Provisions affectées** + **Réserve libre** — distinction obligatoire. Provisions = argent fléché pour facture future (taxe, vacances). Réserve = buffer libre sans contrainte.
-- **Reste à vivre** (variable mensuel ajustable, ex-`Plafond_Quotidien`) vs **Reste disponible** (= revenus − charges − provisions − virements auto). Ne jamais confondre.
+- **Reste à vivre** (variable mensuelle ajustable, ex-`Plafond_Quotidien`) vs **Reste disponible** (= revenus − charges − provisions − virements auto). Ne jamais confondre.
 - **Effort financier mensuel** (KPI Bloc 2 hero radar, PR-D3 mergée) — total charges fixes mensuelles + provisions mensuelles lissées.
 - **Lissage** — différenciateur Ankora vs YNAB/Monarch. Provisions mensualisées pour absorber les factures annuelles (taxe voiture 25 €/mois × 12 = 300 € au 28/05).
 - **Plan d'apurement** (ADR-017, table `installment_plans`) — échelonnement d'une dette (ex : 2 407 € / 11 mensualités). Génération auto N transactions pending.
 - **Assistant Virements** (ADR-012) — sub-section dashboard qui suggère le montant à virer ce mois + détail provisions item-par-item. Gradient bleu-vert + sub-card Santé.
 - **Ballet provisions** (ADR-018) — aller-retour bidirectionnel compte courant ↔ épargne, audit trail OUT (mensualisation) / IN (rapatriement avant échéance).
 - **Live decrement** (ADR-010, `useOptimistic`) — décompte temps réel du Quotidien restant. Le nombre TICKE (digit roll), jamais cross-fade.
-- **Détection déficit + rattrapage** (ADR-011) — plan rattrapage 3 mois si déficit Provisions détecté.
+- **Détection déficit + rattrapage** (ADR-011) — plan de rattrapage sur 3 mois si déficit Provisions détecté.
 - **Santé Provisions** (THI-190) — gauge condensée vert/jaune/rouge du statut Provisions.
 - **Prochaines factures J-7 / J-14 / J-30** (THI-192, PR #173) — bucket overdue inclus.
 - **Cashflow waterfall** (PR-3c-4 mergée) — visualisation 3 steps Revenus / Effort / Plafond.

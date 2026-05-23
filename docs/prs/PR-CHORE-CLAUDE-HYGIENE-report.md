@@ -16,7 +16,7 @@
 
 Audit `.claude/` réalisé par @cowork le 23/05 17h. Plusieurs anomalies + drifts détectés, dont le skill `ankora-design-system/SKILL.md` (dernière modif 26/04) significativement désynchronisé avec la vision produit verrouillée (NORTH_STAR + 20 ADRs + amendement ADR-009 du 09/05 + nouveau `docs/ankora-product-quality-bar-v1.md` créé 23/05).
 
-Cette PR consolide 5 fix dans un seul commit chore. **Sans cette PR, chaque future PR design devra refaire le cross-reference NORTH_STAR + ADRs manuellement.**
+Cette PR consolide 5 fixes dans un seul commit chore. **Sans cette PR, chaque future PR design devra refaire le cross-reference NORTH_STAR + ADRs manuellement.**
 
 ---
 
@@ -29,7 +29,7 @@ Le plus gros morceau. Refactor de 4 sections + ajout de 2 nouvelles :
 - **§4 Voice** → divisé en :
   - **§4.1 Vocabulaire recommandé** : ajout des 14 concepts différenciants verrouillés (Capacité d'épargne réelle, Compte épargne 3 lectures, Reste à vivre vs Reste disponible, Effort financier mensuel, Lissage, Plan d'apurement, Assistant Virements, Ballet provisions, Live decrement, Détection déficit + rattrapage, Santé Provisions, Prochaines factures J-7/14/30, Cashflow waterfall). Chaque entrée pointe vers son ADR / NORTH_STAR source.
   - **§4.2 Vocabulaire interdit (instant reject)** : 4 catégories — FSMA réglementaire, **R-06 anti-culpabilisation** (`tu dépenses trop`, `il faut économiser`, `mauvais comportement`, etc.), marketing trompeur, jargon corporate. Source : `docs/ankora-product-quality-bar-v1.md` §2.
-- **§9 numéros tabulaires** → corrigé : `font-variant-numeric: tabular-nums` (Tailwind utility) est la convention production. La legacy classe `.num` du ZIP mockup est marquée **déprécated**. Source : `src/app/[locale]/app/page.tsx:267` etc.
+- **§9 numéros tabulaires** → corrigé : `font-variant-numeric: tabular-nums` (Tailwind utility) est la convention production. La legacy classe `.num` du ZIP mockup est marquée **deprecated**. Source : `src/app/[locale]/app/page.tsx:267` etc.
 - **§10 Surfaces overview** → réécrit pour pointer vers les **composants React production** au lieu des `ui_kits/` archive :
   - Landing : `src/components/marketing/landing/sections/*`
   - Dashboard user : `src/app/[locale]/app/page.tsx` + `src/components/dashboard/*` + `src/components/features/AccountCard.tsx`
