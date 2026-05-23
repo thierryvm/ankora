@@ -9,6 +9,29 @@ Ce skill guide l'exécution d'une tâche i18n sans rien casser. Il s'applique
 au repo Ankora (fr-BE reference) et respecte le glossaire `docs/i18n-glossary.md`
 (version courante dans la table §Versioning).
 
+## Scope linguistique — v1.0 vs v1.1
+
+**Doctrine v1.0 Beta verrouillée** (cf. `CLAUDE.md` §"Cap v1.0 publique" +
+PR #172 LocaleSwitcher) :
+
+- **Visible v1.0 (Beta 10 juin 2026)** : `fr-BE` + `en` uniquement. Ce
+  sont les 2 locales exposées dans `LOCALES_VISIBLE` (`src/i18n/routing.ts`)
+  et dans le `<select>` du `LocaleSwitcher`. Les routes `/nl-BE/...`,
+  `/de-DE/...`, `/es-ES/...` restent résolvables côté next-intl middleware
+  pour ne pas casser les deep-links / QA bookmarks pré-existants — elles
+  sont simplement cachées de l'UI utilisateur.
+- **Backlog v1.1 post-launch** : `nl-BE` + `de-DE` + `es-ES`. Annoncées dans
+  `/roadmap` publique, livrées après revue native par locuteur natif.
+
+**Conséquence opérationnelle pour ce skill** : la **parité stricte des
+clés sur les 5 fichiers JSON est préservée** (§Principes intangibles n°2)
+pour faciliter la livraison v1.1 sans churn. Quand tu ajoutes / renommes
+une clé, tu mets à jour les 5 fichiers, même si seulement `fr-BE.json` +
+`en.json` recevront du contenu prêt-prod immédiatement. NL/DE/ES peuvent
+recevoir une traduction "best-effort" via glossaire — sera relue native
+en v1.1. Aucune clé manquante / orpheline tolérée dans aucun des 5
+fichiers (le test `tests/i18n/messages-parity.test.ts` garde le rail).
+
 ## Quand utiliser ce skill
 
 - Ajouter une nouvelle locale → traduire un `messages/<newLocale>.json`

@@ -1,6 +1,6 @@
 # Slash commands Claude Code pour Ankora
 
-Ce dossier contient 4 commandes custom pour Claude Code terminal qui pilotent l'exécution des PR de manière reproductible.
+Ce dossier contient **5 commandes custom** pour Claude Code terminal qui pilotent l'exécution des PR de manière reproductible.
 
 ## Installation
 
@@ -15,6 +15,7 @@ Copy-Item docs\claude-slash-commands\pr-status.md    .claude\commands\
 Copy-Item docs\claude-slash-commands\pr-start.md     .claude\commands\
 Copy-Item docs\claude-slash-commands\pr-next.md      .claude\commands\
 Copy-Item docs\claude-slash-commands\pr-audit.md     .claude\commands\
+Copy-Item docs\claude-slash-commands\i18n-audit.md   .claude\commands\
 ```
 
 **Bash (WSL / macOS / Linux)** :
@@ -23,18 +24,20 @@ Copy-Item docs\claude-slash-commands\pr-audit.md     .claude\commands\
 cd ~/PROJECTS/Apps/ankora   # adapter le chemin
 mkdir -p .claude/commands
 cp docs/claude-slash-commands/pr-{status,start,next,audit}.md .claude/commands/
+cp docs/claude-slash-commands/i18n-audit.md .claude/commands/
 ```
 
-Après copie, redémarre Claude Code — les commandes seront disponibles via `/pr-status`, `/pr-start`, `/pr-next`, `/pr-audit`.
+Après copie, redémarre Claude Code — les commandes seront disponibles via `/pr-status`, `/pr-start`, `/pr-next`, `/pr-audit`, `/i18n-audit`.
 
 ## Commandes disponibles
 
-| Commande            | Description                                                       |
-| ------------------- | ----------------------------------------------------------------- |
-| `/pr-status`        | Affiche l'état actuel du projet (PR mergées, en cours, prochaine) |
-| `/pr-next`          | Détermine automatiquement la prochaine PR à exécuter              |
-| `/pr-start <PR-ID>` | Lance une PR en suivant strictement son prompt (avec garde-fous)  |
-| `/pr-audit`         | Audit de conformité (budget 0 €, sécurité, cohérence ROADMAP)     |
+| Commande            | Description                                                                                                                               |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `/pr-status`        | Affiche l'état actuel du projet (PR mergées, en cours, prochaine)                                                                         |
+| `/pr-next`          | Détermine automatiquement la prochaine PR à exécuter                                                                                      |
+| `/pr-start <PR-ID>` | Lance une PR en suivant strictement son prompt (avec garde-fous)                                                                          |
+| `/pr-audit`         | Audit de conformité (budget 0 €, sécurité, cohérence ROADMAP)                                                                             |
+| `/i18n-audit`       | Audit i18n rapide — parité clés 5 locales, placeholders ICU, résidus FR dans NL/EN/DE/ES, pattern email-as-keyword, metadata locale-aware |
 
 ## Workflow type
 

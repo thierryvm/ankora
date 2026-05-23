@@ -48,9 +48,60 @@ Modern CSS features used by this design system:
 ## 4. Voice (FR-first, tutoiement)
 
 - French is the canonical language. Use `tu / ton / tes`, never `vous`.
-- Say `cockpit`, `provisions affectées`, `réserve libre`, `lissage`, `prédictif`. Never `savings`, `budget générique`, `forecast`, `nous recommandons`.
-- Never imply investment advice — banned phrasings include _"placement conseillé"_, _"rendement garanti"_, _"nous vous recommandons d'investir"_. FSMA-compliant means Ankora tells you **how much** to transfer toward savings, never **where** to put it.
 - Sentence case everywhere. No emoji in UI (footer `🇧🇪` only).
+
+### 4.1 Vocabulaire recommandé (concepts différenciants verrouillés)
+
+Source de vérité : [`docs/ankora-product-quality-bar-v1.md`](../../../docs/ankora-product-quality-bar-v1.md) §1 + NORTH_STAR + ADRs référencés.
+
+- **Capacité d'épargne réelle** (ADR-009 amendé 09/05) — KPI hero du cockpit, différenciateur n°1. "Ton vrai reste à vivre chaque mois, sans surprise." Décompose en : Reste disponible → Reste à vivre → Capacité d'épargne réelle (3 concepts UX distincts persona Thierry 662 / 500 / 162 €).
+- **Compte épargne · trois lectures** (NORTH_STAR) — Total Épargne / Provisions affectées / Réserve libre. Différenciateur n°1, jamais réduire à un montant unique.
+- **Provisions affectées** + **Réserve libre** — distinction obligatoire. Provisions = argent fléché pour facture future (taxe, vacances). Réserve = buffer libre sans contrainte.
+- **Reste à vivre** (variable mensuel ajustable, ex-`Plafond_Quotidien`) vs **Reste disponible** (= revenus − charges − provisions − virements auto). Ne jamais confondre.
+- **Effort financier mensuel** (KPI Bloc 2 hero radar, PR-D3 mergée) — total charges fixes mensuelles + provisions mensuelles lissées.
+- **Lissage** — différenciateur Ankora vs YNAB/Monarch. Provisions mensualisées pour absorber les factures annuelles (taxe voiture 25 €/mois × 12 = 300 € au 28/05).
+- **Plan d'apurement** (ADR-017, table `installment_plans`) — échelonnement d'une dette (ex : 2 407 € / 11 mensualités). Génération auto N transactions pending.
+- **Assistant Virements** (ADR-012) — sub-section dashboard qui suggère le montant à virer ce mois + détail provisions item-par-item. Gradient bleu-vert + sub-card Santé.
+- **Ballet provisions** (ADR-018) — aller-retour bidirectionnel compte courant ↔ épargne, audit trail OUT (mensualisation) / IN (rapatriement avant échéance).
+- **Live decrement** (ADR-010, `useOptimistic`) — décompte temps réel du Quotidien restant. Le nombre TICKE (digit roll), jamais cross-fade.
+- **Détection déficit + rattrapage** (ADR-011) — plan rattrapage 3 mois si déficit Provisions détecté.
+- **Santé Provisions** (THI-190) — gauge condensée vert/jaune/rouge du statut Provisions.
+- **Prochaines factures J-7 / J-14 / J-30** (THI-192, PR #173) — bucket overdue inclus.
+- **Cashflow waterfall** (PR-3c-4 mergée) — visualisation 3 steps Revenus / Effort / Plafond.
+
+Glossaire complet (formes verrouillées + flexions admises) : [`docs/i18n-glossary.md`](../../../docs/i18n-glossary.md).
+
+### 4.2 Vocabulaire interdit (instant reject)
+
+Source : [`docs/ankora-product-quality-bar-v1.md`](../../../docs/ankora-product-quality-bar-v1.md) §2.
+
+**Interdit FSMA (réglementaire — non négociable)** :
+
+- _"vous devriez investir"_, _"nous recommandons d'investir"_, _"placez vos économies"_
+- _"conseil financier"_, _"conseiller en placement"_, _"placement conseillé"_, _"rendement garanti"_, _"plus-value garantie"_
+- Toute formulation suggérant une promesse de gain ou un conseil personnalisé d'investissement
+
+**Interdit R-06 anti-culpabilisation (doctrine produit verrouillée)** :
+
+- _"tu dépenses trop"_ / _"vous dépensez trop"_
+- _"il faut économiser"_ / _"vous devriez économiser"_
+- _"tu as manqué ton objectif"_ / _"vous avez manqué votre objectif"_
+- _"mauvais comportement budgétaire"_
+- _"tu n'es pas raisonnable"_ / _"vous n'êtes pas raisonnable"_
+
+**Interdit marketing trompeur** :
+
+- _"le seul outil qui…"_, _"la meilleure app de…"_
+- _"économisez X € par mois"_ (impossible à garantir)
+- _"sans effort"_, _"automatiquement"_ (Ankora demande de la saisie, c'est assumé)
+- _"IA prédictive avancée"_, _"machine learning"_ (Phase 1 = règles déterministes)
+
+**Interdit jargon corporate** :
+
+- _"burn rate"_, _"runway"_, _"cash flow management"_, _"ROI"_, _"TCO"_, _"EBITDA"_ (jamais en UI)
+- _"cash flow"_ nu (préférer _"trésorerie"_ ou _"argent disponible"_)
+
+**Interdit vocabulaire générique faiblard** : `savings`, `budget générique`, `forecast`, `nous recommandons`. Préférer les concepts différenciants Ankora (cf. §4.1).
 
 ## 5. Icons
 
@@ -76,15 +127,47 @@ Modern CSS features used by this design system:
 ## 9. When the user asks for a new screen
 
 1. Pick the right accent (user → teal, admin → laiton).
-2. Start from the nearest existing kit in `ui_kits/` and extend — don't fork the tokens.
-3. Numbers go in `.num`. Status pills pick one of `.badge-{paid,scheduled,action,received,manual}`.
-4. Surface privacy/consent copy — Ankora is manual-entry only: _"Saisie manuelle · données hébergées en Belgique · export RGPD à tout moment."_ Never mention PSD2.
-5. If you need a new component shape, add it to `ui_kits/_shared/shell.css` so the next screen inherits it.
+2. Start from the nearest existing **React component** in `src/components/` (cf. §10) and extend — don't fork the tokens.
+3. **Numbers use `font-variant-numeric: tabular-nums`** (Tailwind utility `tabular-nums`). Source of truth in `src/app/[locale]/app/page.tsx` (e.g. line 267 stat blocks). The legacy `.num` class from the mockup ZIP is **deprecated**.
+4. Status pills pick one of `.badge-{paid,scheduled,action,received,manual}` (composed via `class-variance-authority` in `src/components/ui/`).
+5. Surface privacy/consent copy — Ankora is manual-entry only: _"Saisie manuelle · données hébergées en Belgique · export RGPD à tout moment."_ Never mention PSD2.
+6. If you need a new component shape, add it to `src/components/ui/` or `src/components/features/` with Tailwind v4 `@theme` tokens — never restyle existing primitives ad-hoc.
 
-## 10. Surfaces overview
+## 10. Surfaces overview — production React components
 
-- `ui_kits/index.html` — meta-index with live thumbnails.
-- `ui_kits/user_dashboard/` — the cockpit. Hero waterfall, health ring, timeline, envelopes, ⌘K palette, what-if drawer.
-- `ui_kits/admin_dashboard/` — operator console. DAU chart, users table, audit log, system health.
-- `ui_kits/landing_page/` — marketing site. Hero, three principles, feature block, pricing, RGPD footer.
-- `ui_kits/onboarding/` — 3-step wizard: choose account structure (3 comptes vs 1 compte) → add starter envelopes manually → add annual provisions manually. No bank connection, ever.
+> ⚠️ **Source de vérité production**, pas les mockups d'archive. Les anciens dossiers `ui_kits/user_dashboard/`, `ui_kits/admin_dashboard/`, `ui_kits/landing_page/`, `ui_kits/onboarding/` vivent désormais dans `ankora-mockups/` (HORS repo, archive @cc-design). Le code ci-dessous est ce qui rend en production sur `ankora.be`.
+
+- **Landing marketing** — `src/components/marketing/landing/sections/*` (Hero, Principles, Feature, WhatIfDemo, Pricing, FAQ, FooterCTA, MktNav, MktFooter). Composé dans `src/app/[locale]/(public)/page.tsx`.
+- **Dashboard user (cockpit)** — `src/app/[locale]/app/page.tsx` orchestre les surfaces, qui rendent via `src/components/dashboard/*` (CapaciteEpargneCard, EffortFinancierCard, ProvisionHealthGaugeCard, ProchainesFacturesCard) + `src/components/features/AccountCard.tsx` (compte épargne · trois lectures). Hero waterfall, Capacité d'épargne réelle (ADR-009 amd.), Santé Provisions (THI-190), Prochaines factures (THI-192), Assistant Virements (ADR-012).
+- **Admin panel** — `src/app/[locale]/admin/page.tsx` (RBAC `requireAdmin()` côté serveur). Bloc E sections : Santé technique, Santé produit, Acquisition, Recommandations rule-based. ⚠️ Vertical slice complet en branche **`feat/pr-b2-mock-vertical-slice`** (paused volontaire post-Beta).
+- **Onboarding** — `src/app/[locale]/onboarding/page.tsx` + `OnboardingWizard.tsx`. 3 étapes : structure compte → starter envelopes → provisions annuelles. Manual-entry only, jamais d'interface PSD2.
+- **Header / Nav** — `src/components/layout/Header.tsx` (Server Component) + `HeaderNav.tsx` (Client + drawer mobile via Portal stacking-context fix PR #171, scroll-lock iOS PR #176).
+- **LocaleSwitcher** — `src/components/layout/LocaleSwitcher.tsx`. Visible v1.0 = FR + EN seul. NL/DE/ES en backlog v1.1.
+
+## 11. Sources de vérité doctrine (à lire AVANT toute UI)
+
+Ces documents ont **priorité absolue** sur ce skill en cas de conflit. Ordre de priorité : NORTH_STAR > ADR > Quality Bar > ce SKILL.
+
+- [`docs/NORTH_STAR.md`](../../../docs/NORTH_STAR.md) — vision + cap v1.0 publique (12 semaines depuis 23/04/2026) + 5 piliers + 9 contraintes non négociables + cibles mesurables.
+- [`docs/ankora-product-quality-bar-v1.md`](../../../docs/ankora-product-quality-bar-v1.md) — référence unique décisions produit / UX / contenu jusqu'à v1.0. Vocabulaire recommandé + interdit + règles hiérarchie cognitive. **Créé 23/05/2026 par @cowork**.
+- [`docs/adr/ADR-008-*`](../../../docs/adr/) — Compte épargne · trois lectures (différenciateur n°1).
+- [`docs/adr/ADR-009-capacite-epargne-reelle.md`](../../../docs/adr/) + **amendement 09/05/2026** (Reste disponible / Reste à vivre / Capacité d'épargne réelle — 3 concepts UX distincts).
+- [`docs/adr/ADR-010-*`](../../../docs/adr/) — Live decrement (`useOptimistic`).
+- [`docs/adr/ADR-011-*`](../../../docs/adr/) — Détection déficit + rattrapage 3 mois.
+- [`docs/adr/ADR-012-assistant-virements.md`](../../../docs/adr/) — Assistant Virements (gradient bleu-vert).
+- [`docs/adr/ADR-017-plans-apurement.md`](../../../docs/adr/) — Plans d'apurement (table `installment_plans`).
+- [`docs/adr/ADR-018-provisions-bidirectionnelles-audit-trail.md`](../../../docs/adr/) — Ballet provisions OUT/IN.
+- [`docs/i18n-glossary.md`](../../../docs/i18n-glossary.md) — termes verrouillés (Ankora, cockpit, lissage, provisions, etc.) + don't-translate list.
+
+## 12. Agents QA visuels obligatoires (avant merge)
+
+Toute PR qui modifie une surface UI doit passer l'agent QA dédié AVANT merge :
+
+- **`dashboard-ux-auditor`** (`.claude/agents/dashboard-ux-auditor.md`) — toute modification de `src/app/[locale]/app/**` ou `src/components/dashboard/*`. Vérifie cohérence avec NORTH_STAR (Dashboard Excellence non négociable, niveau Monarch Money, 8 sections cockpit v3 obligatoires).
+- **`admin-dashboard-auditor`** (`.claude/agents/admin-dashboard-auditor.md`) — toute modification de `src/app/[locale]/admin/**`. Vérifie RBAC `requireAdmin()` côté serveur + 4 sections admin obligatoires.
+- **`ui-auditor`** — audit générique mobile-first WCAG 2.2 AA, viewport Chromium. Toute PR UI.
+- **`mobile-ios-auditor`** — toute modif layout / nav / forms / dashboard mobile / drawer / theme toggle. Procédure manuelle iPhone réelle : [`docs/runbooks/dev-on-iphone.md`](../../../docs/runbooks/dev-on-iphone.md).
+- **`i18n-auditor`** — toute édition `messages/*.json`, `src/i18n/`, ou Server Components avec `getTranslations`/`useTranslations`.
+- **`lighthouse-auditor`** — avant release candidate.
+
+Voir [`CLAUDE.md` §"Workflow agents"](../../../CLAUDE.md) pour la liste complète des 13 agents QA Ankora + leurs scopes respectifs.
