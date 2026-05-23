@@ -79,6 +79,12 @@ test.describe('LocaleSwitcher — THI-255 delayed apply / TICKET 7 coverage', ()
     await (await openSwitcher(page)).waitFor({ state: 'visible', timeout: 10_000 });
   });
 
+  // Unfixme in PR-FIX-I18N-PERF (Phase B) — `<html lang>` propagation > 15 s
+  // in `npm run dev` blocks the per-switch `toHaveAttribute('lang', …)`
+  // assertions. Root cause: `cookies()` in `[locale]/layout.tsx` forces every
+  // route into `ƒ Dynamic`, so each switch is a cold RSC refetch. See PR
+  // #177 body §"E2E fixme rationale" + Linear THI-255 + audit perf THI-243
+  // RC #2 / #4.
   test.fixme('1. four rapid successive switches FR→EN→FR→EN settle on the last selection', async ({
     page,
   }) => {
@@ -102,6 +108,11 @@ test.describe('LocaleSwitcher — THI-255 delayed apply / TICKET 7 coverage', ()
     await expect(page.locator('html')).toHaveAttribute('lang', /^fr/);
   });
 
+  // Unfixme in PR-FIX-I18N-PERF (Phase B) — `NEXT_LOCALE` cookie propagation
+  // race between `setLocaleAction` Set-Cookie response and the immediate
+  // `/faq` navigation. The cookie poll guard above mitigates one race, but
+  // the underlying refresh still exceeds the 15 s budget in dev mode. See
+  // PR #177 body + Linear THI-255 + audit perf THI-243 RC #2 / #4.
   test.fixme('2. locale survives a cross-page navigation (landing → /faq)', async ({ page }) => {
     await switchTo(page, 'en');
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
@@ -126,6 +137,11 @@ test.describe('LocaleSwitcher — THI-255 delayed apply / TICKET 7 coverage', ()
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   });
 
+  // Unfixme in PR-FIX-I18N-PERF (Phase B) — same root cause as scenarios 1
+  // and 2: the per-route `<html lang>` attr does not stabilise within the
+  // 15 s budget in dev because each navigation triggers a cold RSC render
+  // off the dynamic `[locale]/layout.tsx`. See PR #177 body + Linear
+  // THI-255 + audit perf THI-243 RC #2 / #4.
   test.fixme('3. i18n parity across main routes — `/`, `/faq`, `/glossaire` render in the active locale', async ({
     page,
   }) => {

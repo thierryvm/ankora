@@ -134,7 +134,17 @@ describe('<LocaleSwitcher /> — THI-252/255 Phase A pending UX', () => {
     expect(select).toBeDisabled();
     expect(select).toHaveAttribute('aria-busy', 'true');
     expect(screen.getByTestId('locale-switching-spinner')).toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveTextContent('Changement de langue…');
+    // Locale-agnostic assertion — read the expected copy straight from the
+    // same i18n source the component reads from, so future translation
+    // tweaks (or a default-locale change) don't break the spec. Per Sourcery
+    // overall comment on PR #177.
+    const expectedStatus = (frMessages as { ui: { localeSwitcher: { switching: string } } }).ui
+      .localeSwitcher.switching;
+    expect(screen.getByRole('status')).toHaveTextContent(expectedStatus);
+    // Defence-in-depth: the announced text MUST be non-empty (an empty
+    // status node would mute the announcement and silently regress the
+    // a11y contract).
+    expect(screen.getByRole('status').textContent?.trim()).not.toBe('');
 
     // Resolve inside `act` so React can flush the transition before the
     // test exits (avoids "act warning" noise in subsequent tests).
