@@ -133,4 +133,49 @@ test.describe('LocaleSwitcher — THI-255 delayed apply / TICKET 7 coverage', ()
     await page.goto('/glossaire', { waitUntil: 'load' });
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   });
+
+  /**
+   * THI-276 / PR-BETA-2bis (2026-05-24) — soft client navigation MUST
+   * also pick up the new locale.
+   *
+   * Scenarios 2 and 3 use `page.goto` which is a HARD navigation and
+   * bypasses Next 16's client-side router cache. The real user pain
+   * (TICKET 7 mobile, observed by @thierry on iPhone Safari) only
+   * surfaces on SOFT navigation: the user clicks a `<Link>` that
+   * Next has already prefetched in the old locale, and Next serves
+   * the cached payload from the client cache instead of hitting the
+   * server with the new `NEXT_LOCALE` cookie.
+   *
+   * The fix is `revalidatePath('/', 'layout')` server-side inside
+   * `setLocaleAction` (see `src/lib/actions/locale.ts`). This spec
+   * locks the contract from the user-visible side: click a Link,
+   * not goto.
+   */
+  test('4. soft navigation via <Link> picks up the new locale (RSC cache invalidated)', async ({
+    page,
+  }) => {
+    // Sanity start — default fr-BE.
+    await expect(page.locator('html')).toHaveAttribute('lang', /^fr/);
+
+    // Switch to EN. Wait for the html lang attribute to flip so we
+    // know the server action has settled (cookie write + revalidate).
+    await switchTo(page, 'en');
+
+    // The landing has a "FAQ" link in the header nav (both desktop
+    // and the marketing variant). Targeting by role + name keeps the
+    // selector robust to className refactors. Take the first hit —
+    // there can be one in MktNav (desktop header) and one in the
+    // mobile drawer; either is acceptable proof of the contract.
+    //
+    // Use a `<Link>` click — Next 16 hydrates `<Link>` into a soft
+    // client navigation that hits the router cache first. This is
+    // the codepath that was broken pre-fix.
+    const faqLink = page.getByRole('link', { name: /^FAQ$/i }).first();
+    await expect(faqLink).toBeVisible({ timeout: 5_000 });
+    await Promise.all([page.waitForURL(/\/(en\/)?faq/, { timeout: 5_000 }), faqLink.click()]);
+
+    // The critical assertion: the soft-navigated page MUST render in
+    // EN, not the cached FR prefetch.
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  });
 });

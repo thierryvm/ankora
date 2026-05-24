@@ -1,16 +1,16 @@
-# PR-BETA-2 — Rapport final (i18n perf Phase B + landing FR/EN drift)
+# PR-BETA-2 — Rapport final (i18n perf Phase B + landing FR/EN drift + iPhone Safari RSC cache fix)
 
-| Champ         | Valeur                                                                                                      |
-| ------------- | ----------------------------------------------------------------------------------------------------------- |
-| PR GitHub     | _à compléter à l'ouverture_                                                                                 |
-| Branche       | `feat/beta-2-i18n-perf-phase-b`                                                                             |
-| Linear        | [THI-266](https://linear.app/thierryvm/issue/THI-266) — couvre TICKET 4 (drawer) + TICKET 7 (delayed apply) |
-| Date          | 2026-05-24                                                                                                  |
-| Modèle        | Claude Opus 4.7 (épinglé via `.claude/settings.local.json`)                                                 |
-| Worktree      | `F:\PROJECTS\Apps\ankora-worktrees\feat-beta-2-i18n-perf-phase-b`                                           |
-| Sprint        | Beta — PR #2 / 5 (suite de PR-BETA-1 #179 mergée 24/05)                                                     |
-| Approche      | Minimaliste validée par @thierry (vs scope architectural initial du prompt @cowork) — cf. §3 ci-dessous     |
-| Durée session | ~1 h (Phase 0 + code verify + arbitrage + implementation + quality gates + report)                          |
+| Champ         | Valeur                                                                                                                                                                                             |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PR GitHub     | [#181](https://github.com/thierryvm/ankora/pull/181)                                                                                                                                               |
+| Branche       | `feat/beta-2-i18n-perf-phase-b`                                                                                                                                                                    |
+| Linear        | [THI-266](https://linear.app/thierryvm/issue/THI-266) — TICKET 4 (drawer) + TICKET 7 (delayed apply) desktop · [THI-276](https://linear.app/thierryvm/issue/THI-276) — iPhone Safari cache RSC fix |
+| Date          | 2026-05-24 (commit initial 18h30 · update `revalidatePath` 22h00)                                                                                                                                  |
+| Modèle        | Claude Opus 4.7 (épinglé via `.claude/settings.local.json`)                                                                                                                                        |
+| Worktree      | `F:\PROJECTS\Apps\ankora-worktrees\feat-beta-2-i18n-perf-phase-b`                                                                                                                                  |
+| Sprint        | Beta — PR #2 / 5 (suite de PR-BETA-1 #179 mergée 24/05)                                                                                                                                            |
+| Approche      | Minimaliste validée par @thierry + consolidation in-place après smoke iPhone (revalidatePath ajouté à la même PR plutôt que PR-BETA-2bis séparée — cf. §10)                                        |
+| Durée session | ~3 h cumulé (Phase 0 + impl PR-BETA-2 + CI verte + smoke iPhone @thierry + Phase 0 PR-BETA-2bis + diagnostic affiné cache RSC + impl `revalidatePath` + tests + report)                            |
 
 ---
 
@@ -205,8 +205,144 @@ Mesure suggérée : 5 essais répétés sur 3 device profiles (iPhone 14, Pixel 
 
 ## 9. Suite — sprint Beta
 
-Quand PR-BETA-2 mergée + CI verte + Sourcery silent + smoke iPhone @thierry OK → handoff @cowork pour **PR-BETA-3 (THI-267 Capacité tryptique ADR-009 amendement)**, #3 / 5 du sprint Beta. J-17 avant Beta 10 juin (cible).
+Quand PR-BETA-2 mergée + CI verte + Sourcery silent + smoke iPhone @thierry OK → handoff @cowork pour **PR-BETA-6 (THI-277 Bottom Tab Bar mobile + sheet "Plus")**, #3 / 5 du sprint Beta (ordre actualisé 24/05 post-incidents). J-17 avant Beta 10 juin (cible).
+
+Note ordre original (PR-BETA-3 Capacité tryptique → PR-BETA-4 Dashboard 3 couches → PR-BETA-5+7 Landing) maintenu après PR-BETA-6.
 
 ---
 
-_Rapport généré par @cc-ankora (Claude Opus 4.7) — 2026-05-24._
+## 10. Diagnostic affiné (CC Ankora 24/05 22h00) — cache RSC client Next 16 sur `<Link>` prefetched
+
+> Cette section documente l'**update PR-BETA-2bis intégrée à la même PR #181** suite au smoke test iPhone réel par @thierry (~21h30). Le scope additionnel a été tracé en **THI-276** sur Linear, mais le code vit dans le commit PR-BETA-2 plutôt que dans une PR séparée — décision @thierry validée 22h00 (cf. §11 ci-dessous).
+
+### 10.1 Repro confirmé par @thierry
+
+Sur preview Vercel PR #181 (Chromium + Safari iPhone réel), @thierry reproduit un bug de **persistance locale sur navigation interne** :
+
+1. Charger preview en FR (default)
+2. Sélectionner EN via LocaleSwitcher → page racine `<html lang>` devient EN ✅
+3. Click `<Link href="/faq">` (header marketing nav) → page `/faq` rendue **en FR** (régression silencieuse) ❌
+
+**Important** : le bug touche aussi les **pages publiques anonymes** (`/faq`, `/glossaire`, `/login`), donc **n'est pas lié à `users.locale` Supabase** (anonymous users n'ont pas d'user record). Cela invalide la branche "Supabase écrase le cookie" du diagnostic initial @cowork.
+
+### 10.2 Cause racine — router cache client Next 16
+
+Le diagnostic affiné émerge du code verify Phase 0 PR-BETA-2bis :
+
+| Fait observable                                                                                             | Conclusion                                                    |
+| ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `setLocaleAction` écrit déjà cookie NEXT_LOCALE avec attributs corrects (`src/lib/actions/locale.ts:23-29`) | Le cookie write n'est PAS la cause                            |
+| `src/i18n/request.ts:11-14` lit cookie en PREMIER, puis fallback Supabase, puis default                     | Priorité cookie déjà respectée — Supabase ne peut pas écraser |
+| Bug touche anonymous users (pas de row Supabase)                                                            | Exclut toute branche Supabase                                 |
+| E2E Chromium passaient avec `page.goto('/faq')` (hard navigation)                                           | Le serveur LIT bien le cookie correctement quand requêté      |
+| Bug visible iPhone Safari sur user click `<Link>` (soft navigation)                                         | Le problème est CÔTÉ CLIENT, dans le router cache Next        |
+
+**Mécanique du bug** :
+
+1. User arrive sur `/` en FR. Next 16 **prefetche automatiquement** les `<Link>` visibles dans le viewport (`/faq`, `/glossaire`, `/login`) — chaque prefetch produit un payload RSC **avec la locale courante FR** mis en cache **client**.
+2. User switch FR → EN via LocaleSwitcher :
+   - `setLocaleAction('en')` écrit cookie NEXT_LOCALE=en (server-side) ✅
+   - `router.replace(pathname, { locale: 'en' })` → URL devient `/en` (la route courante re-render avec EN) ✅
+   - **Les autres entries du cache RSC client (`/faq`, `/glossaire`, `/login` rendues en FR) ne sont PAS invalidées** ❌
+3. User click `<Link href="/faq">` → Next 16 sert la version **prefetched en FR** depuis le cache client, **sans round-trip serveur** → la page apparaît en FR malgré le cookie EN.
+
+**Pourquoi visible sur iPhone Safari et pas dans les E2E Chromium initiaux** :
+
+- E2E Chromium scénarios 2/3 : `page.goto('/faq')` = hard navigation, bypass cache RSC client → toujours fresh → lit cookie → FAQ en EN ✅
+- iPhone Safari user réel : click sur `<Link>` = soft client navigation → cache hit RSC FR ❌
+
+Avant PR-BETA-2 (`router.refresh()` présent) : le refresh invalidait l'intégralité du cache client → tout cohérent. Le retrait du refresh a exposé une dette architecturale latente.
+
+### 10.3 Solution — `revalidatePath('/', 'layout')` server-side
+
+```ts
+// src/lib/actions/locale.ts
+'use server';
+
+import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
+// ...
+
+export async function setLocaleAction(input: unknown): Promise<ActionResult> {
+  // 1. Validate input (Zod)
+  // 2. Write NEXT_LOCALE cookie
+  // 3. Update users.locale if authenticated
+  // 4. NEW — Invalidate RSC cache layout-wide
+  revalidatePath('/', 'layout');
+
+  return { ok: true };
+}
+```
+
+**Pourquoi c'est la bonne solution** :
+
+| Critère                                          | `revalidatePath('/', 'layout')` server    | `router.refresh()` client (PR-BETA-1 pre-fix) |
+| ------------------------------------------------ | ----------------------------------------- | --------------------------------------------- |
+| Invalide les entries cachées des Link prefetched | ✅ Toutes routes sous `/`                 | ✅ Toutes routes                              |
+| Drawer mobile reste ouvert pendant le switch     | ✅ Server-side, no client unmount         | ❌ Démonte HeaderNav (TICKET 4)               |
+| Compatible iOS Safari ITP / WebKit               | ✅ Indépendant browser                    | ✅ Compatible mais drawer KO                  |
+| Coût perf                                        | Lazy — refetch seulement si user navigate | Eager — refetch immédiat de la route courante |
+| Cohérent avec doctrine Next 16 App Router        | ✅ Pattern officiel pour Server Action    | ⚠️ Pattern hérité Pages Router                |
+
+L'invalidation est **lazy** : `revalidatePath` marque les entries comme stale, mais le refetch ne se déclenche que quand l'utilisateur navigue effectivement vers la route. Pas de coût immédiat sur la perception du switch.
+
+### 10.4 Tests ajoutés
+
+**Vitest** (`tests/actions/locale.test.ts`, 16 specs consolidés) :
+
+- Validation Zod : 5 unsupported locales + null/undefined/number rejetés
+- Cookie attributes : `name='NEXT_LOCALE', maxAge=1y, sameSite='lax', secure=NODE_ENV==='production', path='/'`
+- `users.locale` update conditionnel auth + clé `'id'` matchée à `user.id`
+- **`revalidatePath('/', 'layout')` appelé exactement 1 fois** — nouvel invariant architectural
+- **Ordre side-effects** anonymous : `cookie.set → supabase.getUser → revalidatePath`
+- **Ordre side-effects** auth : `cookie.set → supabase.update.eq → revalidatePath`
+- Refactor mock via `vi.hoisted()` pour exposer `revalidatePathMock`, `cookieSetMock`, etc. aux assertions
+
+**Playwright E2E** (`e2e/i18n/locale-switcher.spec.ts`, 4 scenarios actifs) :
+
+- Scénarios 1/2/3 préservés (unfixme'd PR-BETA-2 baseline)
+- **NOUVEAU scénario 4** : `soft navigation via <Link> picks up the new locale (RSC cache invalidated)`
+  - Goto `/` (FR)
+  - `switchTo('en')` via LocaleSwitcher
+  - Click `<Link>` "FAQ" (vrai click, pas `page.goto`) → soft client navigation
+  - Assert `<html lang>="en"`
+
+Le scenario 4 est le **test forensique** du contrat `revalidatePath` : sans le fix, ce test échoue (Next sert le `/faq` prefetched en FR depuis le cache client). Avec le fix, le cache est invalidé → click déclenche fetch fresh → assertion passe.
+
+---
+
+## 11. Décision @thierry — consolidation in-place (PR #181 conservée, PR-BETA-2bis évitée)
+
+Le prompt initial @cowork PR-BETA-2bis demandait : fermer PR #181, créer worktree dédié `feat-beta-2bis-cookie-persistence`, refaire les 3 fixes desktop + ajouter le fix mobile. Justification @cowork : "1 PR mergée = 1 user value complète".
+
+**Mon Phase 0 PR-BETA-2bis a révélé deux divergences** :
+
+1. **B.1 "setLocaleAction écrit le cookie"** : **déjà implémenté** sur main (lignes 23-29 actuelles)
+2. **B.2 "Priorité cookie > Supabase > Accept-Language"** : **déjà respectée** (URL > cookie > Supabase > default, `src/i18n/request.ts:42-46`)
+
+Le scope @cowork PR-BETA-2bis tel que rédigé aurait dupliqué du code existant sans résoudre le bug. La vraie cause (cache RSC client) n'était pas dans le scope.
+
+**Décision @thierry 22h00** (validée via AskUserQuestion) — **Option 1 : "Ajouter le fix sur PR #181 existante"** :
+
+- ✅ Conserve PR #181 (3 fixes desktop OK + tests E2E unfixme'd + CI verte + Sourcery silent confirmés à 18h30)
+- ✅ Ajoute `revalidatePath('/', 'layout')` dans setLocaleAction sur la même branche `feat/beta-2-i18n-perf-phase-b`
+- ✅ Rebaptise PR : `fix(i18n): router.refresh removal + revalidatePath for client cache invalidation (THI-266 + THI-276)`
+- ✅ 1 PR mergée = desktop fixes + mobile cache fix → user value complète
+- ✅ Linear THI-266 + THI-276 ferment **ensemble** par cette PR
+- ✅ CHANGELOG entrée enrichie (cf. ligne 14-21)
+
+**Avantage vs scope @cowork initial PR-BETA-2bis séparée** :
+
+| Critère                                  | Consolidation in-place (retenu)   | PR-BETA-2bis séparée (scope @cowork) |
+| ---------------------------------------- | --------------------------------- | ------------------------------------ |
+| Bruit Git history                        | 1 PR, 1 squash merge              | 2 PR, 2 squash merges                |
+| Risque d'incohérence partielle entre PRs | Zéro                              | Possible si PR-BETA-2 mergée seule   |
+| CI runs                                  | 1 rerun ajouté                    | 2 CI complets                        |
+| Code dupliqué (B.1/B.2 NOOP)             | Évité (diagnostic affiné Phase 0) | Présent (le scope demandait NOOP)    |
+| Discipline scope                         | Préservée                         | Forcée par le wording @cowork strict |
+
+**Discipline préservée** : aucun fichier hors-scope touché, pas de duplication code, pas de fermeture intempestive de la PR initiale CI verte.
+
+---
+
+_Rapport généré par @cc-ankora (Claude Opus 4.7) — 2026-05-24 (PR-BETA-2 18h30 · update PR-BETA-2bis intégrée 22h00)._
