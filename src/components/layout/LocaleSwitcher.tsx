@@ -20,9 +20,21 @@ import { setLocaleAction } from '@/lib/actions/locale';
  * THI-252 / THI-255 Phase A (2026-05-23): while the locale change is in
  * flight the `<select>` is disabled and a small `Loader2` spinner is
  * shown to acknowledge the action. `aria-busy` + a visually-hidden
- * `role="status"` text node announce the state to assistive tech. Phase B
- * (follow-up PR) will tackle the architectural drawer-stay-open + the
- * `< 500 ms` propagation budget (cf. audit perf THI-243 RC #2 / #4).
+ * `role="status"` text node announce the state to assistive tech.
+ *
+ * THI-266 / PR-BETA-2 Phase B (2026-05-24): `router.refresh()` removed
+ * from the switch handler. In `localePrefix: 'as-needed'` mode the URL
+ * pathname itself changes when `router.replace(pathname, { locale })`
+ * runs (`/` ↔ `/en`, `/dashboard` ↔ `/en/dashboard`), and that path
+ * change is enough for Next to re-render the matching Server Components
+ * with the new locale via `setRequestLocale()`. The explicit `refresh`
+ * was both redundant and destructive: it invalidated the entire RSC
+ * cache, unmounted the parent `HeaderNav` (closing the mobile drawer
+ * mid-switch — TICKET 4), and stretched the propagation budget past
+ * 15 s in `npm run dev` (TICKET 7). The cookie + DB write side-effects
+ * of `setLocaleAction` survive untouched because they happen server-side
+ * before the client-side navigation kicks in. See audit perf THI-243
+ * RC #2 / #4 + PR #177 §"E2E fixme rationale".
  */
 export function LocaleSwitcher() {
   const t = useTranslations('ui.localeSwitcher');
@@ -36,7 +48,6 @@ export function LocaleSwitcher() {
     startTransition(async () => {
       await setLocaleAction(next);
       router.replace(pathname, { locale: next });
-      router.refresh();
     });
   }
 

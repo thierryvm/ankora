@@ -16,8 +16,18 @@ import { setLocaleAction } from '@/lib/actions/locale';
  * in `messages/*.json`.
  */
 
+// Hoisted so the same mock fns are referenced both by the `vi.mock` factory
+// (which is hoisted to the top of the module by Vitest) AND by the
+// no-refresh contract tests below — without `vi.hoisted` the test file
+// would receive fresh `vi.fn()` instances per call and `toHaveBeenCalled`
+// assertions would always read empty.
+const { replaceMock, refreshMock } = vi.hoisted(() => ({
+  replaceMock: vi.fn(),
+  refreshMock: vi.fn(),
+}));
+
 vi.mock('@/i18n/navigation', () => ({
-  useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
+  useRouter: () => ({ replace: replaceMock, refresh: refreshMock }),
   usePathname: () => '/',
 }));
 
@@ -54,6 +64,8 @@ import { LocaleSwitcher } from '../LocaleSwitcher';
 
 beforeEach(() => {
   cleanup();
+  replaceMock.mockClear();
+  refreshMock.mockClear();
 });
 
 describe('<LocaleSwitcher /> — v1.0 doctrine FR + EN only', () => {
@@ -192,5 +204,71 @@ describe('<LocaleSwitcher /> — THI-252/255 Phase A pending UX', () => {
     await act(async () => {
       resolve({ ok: true });
     });
+  });
+});
+
+/**
+ * THI-266 / PR-BETA-2 Phase B (2026-05-24) — no-refresh contract.
+ *
+ * The switch handler MUST call `router.replace(pathname, { locale })` and
+ * MUST NOT call `router.refresh()`. The redundant refresh introduced in
+ * Phase A invalidated the entire RSC cache on every switch, unmounting
+ * the parent `HeaderNav` (closing the mobile drawer mid-switch —
+ * TICKET 4) and stretching propagation past 15 s in `npm run dev`
+ * (TICKET 7). In `localePrefix: 'as-needed'` mode the URL pathname itself
+ * changes on `router.replace`, so Next re-renders the matching Server
+ * Components via `setRequestLocale` without any explicit cache flush.
+ *
+ * These assertions lock the contract at unit level so a future regression
+ * cannot silently re-introduce the redundant call.
+ */
+describe('<LocaleSwitcher /> — THI-266 Phase B no-refresh contract', () => {
+  it('calls router.replace with the new locale + current pathname after setLocaleAction settles', async () => {
+    const user = userEvent.setup();
+    render(<LocaleSwitcher />);
+
+    await user.selectOptions(screen.getByRole('combobox'), 'en');
+
+    expect(setLocaleAction).toHaveBeenCalledWith('en');
+    expect(replaceMock).toHaveBeenCalledTimes(1);
+    expect(replaceMock).toHaveBeenCalledWith('/', { locale: 'en' });
+  });
+
+  it('does NOT call router.refresh — the URL change is sufficient to re-render Server Components', async () => {
+    const user = userEvent.setup();
+    render(<LocaleSwitcher />);
+
+    await user.selectOptions(screen.getByRole('combobox'), 'en');
+
+    // Architectural invariant — `router.refresh()` is destructive
+    // (full RSC cache invalidation) and unnecessary in `as-needed`
+    // locale-prefix mode. Any regression here would re-introduce the
+    // drawer-mid-switch close (TICKET 4) and the > 1 s propagation
+    // lag (TICKET 7). See PR-BETA-2 report + audit perf THI-243.
+    expect(refreshMock).not.toHaveBeenCalled();
+  });
+
+  it('orders side-effects: setLocaleAction THEN router.replace', async () => {
+    // The server action writes the `NEXT_LOCALE` cookie + persists the
+    // choice on the user row before the client navigates, so a hard
+    // refresh that follows resolves the right locale even if Playwright
+    // (or a real browser) reads the cookie before the navigation
+    // commits. The order matters — flipping it would race the cookie
+    // write against the navigation and reintroduce the `delayed apply`
+    // symptom on cross-page hard navigations (TICKET 7 scenario 2).
+    const callOrder: string[] = [];
+    vi.mocked(setLocaleAction).mockImplementationOnce(async () => {
+      callOrder.push('setLocaleAction');
+      return { ok: true };
+    });
+    replaceMock.mockImplementationOnce(() => {
+      callOrder.push('replace');
+    });
+
+    const user = userEvent.setup();
+    render(<LocaleSwitcher />);
+    await user.selectOptions(screen.getByRole('combobox'), 'en');
+
+    expect(callOrder).toEqual(['setLocaleAction', 'replace']);
   });
 });
