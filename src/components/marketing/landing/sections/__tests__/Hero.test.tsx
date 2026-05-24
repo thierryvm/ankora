@@ -72,7 +72,12 @@ describe('<Hero />', () => {
     await renderHero();
     expect(screen.getByText(/Données chiffrées en Belgique/i)).toBeInTheDocument();
     expect(screen.getByText(/Aucune vente de données/i)).toBeInTheDocument();
-    expect(screen.getByText(/FR · NL · EN/i)).toBeInTheDocument();
+    // THI-266 / PR-BETA-2: v1.0 doctrine restricts the public-facing locale
+    // list to FR + EN (cf. CLAUDE.md "Cap v1.0 publique — Langues v1.0"
+    // + NORTH_STAR.md). NL/DE/ES stay reachable as deep-link URLs but are
+    // hidden from the marketing trust line until each ships with a
+    // validated native review (post-launch v1.1).
+    expect(screen.getByText(/FR · EN/i)).toBeInTheDocument();
   });
 
   it('renders the mockup eyebrow "Aperçu cockpit" (illustratives KPIs disclaimer)', async () => {
