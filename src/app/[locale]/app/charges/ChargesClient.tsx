@@ -18,7 +18,7 @@ import {
 import { toast } from '@/components/ui/toast';
 import type { Locale } from '@/i18n/routing';
 import { createChargeAction, deleteChargeAction } from '@/lib/actions/charges';
-import { formatCurrency } from '@/lib/i18n/formatters';
+import { formatCurrency, formatMonth } from '@/lib/i18n/formatters';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 
 type Frequency = 'monthly' | 'quarterly' | 'semiannual' | 'annual';
@@ -165,23 +165,56 @@ export function ChargesClient({ charges }: { charges: RawCharge[] }) {
         </CardHeader>
         <CardContent>
           {charges.length === 0 ? (
-            <p className="text-muted-foreground text-sm">{t('emptyState')}</p>
+            <p data-testid="charges-empty-state" className="text-muted-foreground text-sm">
+              {t('emptyState')}
+            </p>
           ) : (
-            <ul className="divide-border divide-y">
+            <ul
+              role="list"
+              data-testid="charges-list"
+              className="md:divide-border/40 flex flex-col gap-3 md:flex-none md:gap-0 md:divide-y"
+            >
               {charges.map((c) => (
-                <li key={c.id} className="flex items-center justify-between gap-4 py-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{c.label}</p>
-                    <p className="text-muted-foreground text-xs">
-                      {t('referenceFormat', {
-                        frequency: tFreq(c.frequency as Frequency),
-                        month: tMonths(String(c.dueMonth) as '1'),
-                      })}
-                    </p>
+                <li
+                  key={c.id}
+                  data-testid={`charges-row-${c.id}`}
+                  className="bg-card border-border/60 md:hover:bg-surface-muted relative rounded-lg border p-4 pr-14 transition-colors md:grid md:grid-cols-[5rem_minmax(0,1fr)_auto_auto_auto] md:items-baseline md:gap-4 md:rounded-none md:border-0 md:bg-transparent md:px-2 md:py-3 md:pr-2"
+                >
+                  {/* Mobile: header row (month + amount on a single line, justify-between).
+                      Desktop: contents — projects month + amount as direct grid children. */}
+                  <div className="flex items-baseline justify-between gap-3 md:contents">
+                    <span
+                      data-testid="charges-row-month"
+                      className="text-muted-foreground text-xs font-medium tracking-wide uppercase md:order-1 md:text-sm"
+                    >
+                      {formatMonth(c.dueMonth, locale, 'short')}
+                    </span>
+                    <span
+                      data-testid="charges-row-amount"
+                      className="text-foreground shrink-0 text-base font-semibold tabular-nums md:order-4 md:text-right md:text-sm md:font-medium"
+                    >
+                      {formatCurrency(c.amount, locale)}
+                    </span>
                   </div>
-                  <p className="shrink-0 font-mono text-sm tabular-nums">
-                    {formatCurrency(c.amount, locale)}
-                  </p>
+
+                  {/* Mobile: body row (label + frequency chip, flex gap-2 mt-2).
+                      Desktop: contents — projects label + chip as cells 2 and 3. */}
+                  <div className="mt-2 flex items-center gap-2 md:mt-0 md:contents">
+                    <span
+                      data-testid="charges-row-label"
+                      className="text-foreground min-w-0 truncate text-sm font-medium md:order-2 md:text-base"
+                    >
+                      {c.label}
+                    </span>
+                    <span
+                      data-testid="charges-row-frequency"
+                      className="bg-surface-muted text-muted-foreground inline-flex w-fit shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-medium md:order-3"
+                    >
+                      {tFreq(c.frequency as Frequency)}
+                    </span>
+                  </div>
+
+                  {/* Delete: top-right tap target on mobile (44×44), inline cell 5 on desktop (36×36). */}
                   <Button
                     type="button"
                     variant="ghost"
@@ -189,6 +222,7 @@ export function ChargesClient({ charges }: { charges: RawCharge[] }) {
                     onClick={() => onDelete(c.id)}
                     disabled={isPending}
                     aria-label={t('deleteAria', { label: c.label })}
+                    className="absolute top-2 right-2 size-11 shrink-0 md:static md:order-5 md:size-9 md:self-center"
                   >
                     <Trash2 className="text-danger h-4 w-4" />
                   </Button>
