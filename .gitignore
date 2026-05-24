@@ -72,6 +72,10 @@ tmp/
 .claude/scheduled_tasks.lock
 .claude/tmp/
 .claude/logs/
+# Repertoire de worktrees temporaires interne (non utilise — la convention
+# canonique Ankora pour les git worktrees est `F:/PROJECTS/Apps/ankora-worktrees/`,
+# externe au repo). Gitignored par precaution si un outil tiers le recree.
+.claude/worktrees/
 
 # Tool-specific derivatives auto-générés depuis .claude/ (canonical source)
 # Ces dossiers sont créés par OpenAI Codex CLI et autres outils tiers.
