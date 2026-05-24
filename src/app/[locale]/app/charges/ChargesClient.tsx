@@ -165,7 +165,9 @@ export function ChargesClient({ charges }: { charges: RawCharge[] }) {
         </CardHeader>
         <CardContent>
           {charges.length === 0 ? (
-            <p className="text-muted-foreground text-sm">{t('emptyState')}</p>
+            <p data-testid="charges-empty-state" className="text-muted-foreground text-sm">
+              {t('emptyState')}
+            </p>
           ) : (
             <ul
               role="list"

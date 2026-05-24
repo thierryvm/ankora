@@ -167,7 +167,7 @@ Vitest 1194/1194 + typecheck + lint déjà validés en local avant push. Lancer 
 | Gate                         | Résultat                                                                 |
 | ---------------------------- | ------------------------------------------------------------------------ |
 | `npm run typecheck`          | ✅ 0 erreur                                                              |
-| `npm run lint`               | ✅ 0 erreur (6 warnings pré-existants, 0 nouvelle warning introduite)    |
+| `npm run lint`               | ✅ 0 erreur (6 warnings pré-existants, 0 nouveau warning introduit)      |
 | `npm run lint:use-server`    | ✅ Tous les fichiers `'use server'` ne contiennent que des exports async |
 | `npm run test`               | ✅ 99 test files, 1194 tests, all passing                                |
 | `npm run build`              | ✅ Build prod compile sans erreur                                        |

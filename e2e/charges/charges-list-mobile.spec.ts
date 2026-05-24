@@ -58,33 +58,27 @@ test.describe('Charges list — mobile layout (PR-BETA-1)', () => {
 
       const firstRow = liRows.first();
 
-      // Mobile card visual: rounded border + non-transparent background.
-      const cardStyles = await firstRow.evaluate((el) => {
-        const cs = window.getComputedStyle(el);
-        return {
-          borderTopWidth: parseFloat(cs.borderTopWidth),
-          borderRadius: parseFloat(cs.borderTopLeftRadius),
-          padding: parseFloat(cs.paddingTop),
-        };
-      });
-      expect(cardStyles.borderTopWidth, 'mobile card has a visible border').toBeGreaterThan(0);
-      expect(cardStyles.borderRadius, 'mobile card is rounded').toBeGreaterThan(0);
-      expect(cardStyles.padding, 'mobile card has internal padding').toBeGreaterThanOrEqual(12);
+      // Mobile card visual contract — assert Tailwind class layer (stable across font/spacing tweaks).
+      await expect(firstRow).toHaveClass(/rounded-lg/);
+      await expect(firstRow).toHaveClass(/border/);
+      await expect(firstRow).toHaveClass(/bg-card/);
+      await expect(firstRow).toHaveClass(/p-4/);
 
-      // Delete button satisfies the WCAG 2.5.5 (Level AAA) minimum target size
-      // of 44×44 CSS px — mandatory on touch (no hover affordance).
-      const deleteBox = await firstRow.getByRole('button', { name: /^Supprimer / }).boundingBox();
-      expect(deleteBox, 'delete button is rendered').not.toBeNull();
+      // Delete button — semantic class layer asserts the 44×44 touch target contract via `size-11`
+      // (the Button component's icon size). A single geometric backup catches breakage if the
+      // utility is overridden inline (defense in depth, kept light to avoid font-metric coupling).
+      const deleteButton = firstRow.getByRole('button', { name: /^Supprimer / });
+      await expect(deleteButton).toHaveClass(/size-11/);
+      const deleteBox = await deleteButton.boundingBox();
+      expect(deleteBox, 'delete button bounding box is rendered').not.toBeNull();
       expect(
-        deleteBox!.width,
-        `delete touch target width (${deleteBox!.width}px)`,
-      ).toBeGreaterThanOrEqual(44);
-      expect(
-        deleteBox!.height,
-        `delete touch target height (${deleteBox!.height}px)`,
+        Math.min(deleteBox!.width, deleteBox!.height),
+        `delete touch target is at least 44×44 CSS px (got ${deleteBox!.width}×${deleteBox!.height})`,
       ).toBeGreaterThanOrEqual(44);
 
-      // No horizontal overflow: the list container fits within the viewport.
+      // No horizontal overflow at the document level — a mobile card miss with `pr-14` overshoot
+      // would leak into <body> scrollWidth and break swipe scroll. Stays at document level rather
+      // than scoped to <ul> because the original prod bug (smoke test 24/05) was full-page overflow.
       const overflow = await page.evaluate(() => ({
         bodyScrollWidth: document.body.scrollWidth,
         clientWidth: document.documentElement.clientWidth,

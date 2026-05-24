@@ -68,40 +68,56 @@ test.describe('Charges list — desktop layout (PR-BETA-1)', () => {
       await expect(liRows).toHaveCount(3);
 
       const firstRow = liRows.first();
-      // Geometry: the four cells share a common baseline (within 2px) on desktop.
+
+      // Structural contract — the 4 cells are present and resolvable by testid (order in DOM
+      // reflects the markup: month + amount in the header wrapper, then label + frequency in
+      // the body wrapper, both flattened on desktop via `md:contents`).
+      const monthCell = firstRow.getByTestId('charges-row-month');
+      const labelCell = firstRow.getByTestId('charges-row-label');
+      const frequencyCell = firstRow.getByTestId('charges-row-frequency');
+      const amountCell = firstRow.getByTestId('charges-row-amount');
+      await expect(monthCell).toBeVisible();
+      await expect(labelCell).toBeVisible();
+      await expect(frequencyCell).toBeVisible();
+      await expect(amountCell).toBeVisible();
+
+      // Class layer — the layout primitives are present (md:items-baseline + amount text-right + chip shrink-0).
+      await expect(firstRow).toHaveClass(/md:items-baseline/);
+      await expect(amountCell).toHaveClass(/md:text-right/);
+      await expect(amountCell).toHaveClass(/tabular-nums/);
+      await expect(frequencyCell).toHaveClass(/shrink-0/);
+
+      // Computed CSS layer — guarantees the classes actually apply at the forced 1280×800 viewport.
+      const frequencyFlexShrink = await frequencyCell.evaluate(
+        (el) => window.getComputedStyle(el as HTMLElement).flexShrink,
+      );
+      expect(frequencyFlexShrink, 'frequency chip is shrink: 0').toBe('0');
+
+      // Geometry layer — defends against display:contents/grid-order regressions that classes alone
+      // would not catch (e.g. items reordered but classes still present).
       const tops = await firstRow.evaluate((row) => {
-        const month = row.querySelector('[data-testid="charges-row-month"]') as HTMLElement;
-        const label = row.querySelector('[data-testid="charges-row-label"]') as HTMLElement;
-        const freq = row.querySelector('[data-testid="charges-row-frequency"]') as HTMLElement;
-        const amount = row.querySelector('[data-testid="charges-row-amount"]') as HTMLElement;
+        const cell = (selector: string) =>
+          (row.querySelector(selector) as HTMLElement).getBoundingClientRect().bottom;
         return {
-          month: month.getBoundingClientRect().bottom,
-          label: label.getBoundingClientRect().bottom,
-          freq: freq.getBoundingClientRect().bottom,
-          amount: amount.getBoundingClientRect().bottom,
+          month: cell('[data-testid="charges-row-month"]'),
+          label: cell('[data-testid="charges-row-label"]'),
+          freq: cell('[data-testid="charges-row-frequency"]'),
+          amount: cell('[data-testid="charges-row-amount"]'),
         };
       });
-      const allBottoms = [tops.month, tops.label, tops.freq, tops.amount];
-      const spread = Math.max(...allBottoms) - Math.min(...allBottoms);
+      const spread =
+        Math.max(tops.month, tops.label, tops.freq, tops.amount) -
+        Math.min(tops.month, tops.label, tops.freq, tops.amount);
       expect(spread, `cells share a baseline (spread: ${spread}px)`).toBeLessThanOrEqual(6);
 
-      // Amount cell text-right: its right edge should be close to the parent <li> right edge.
-      const amountAlignment = await firstRow.evaluate((row) => {
-        const amount = row.querySelector('[data-testid="charges-row-amount"]') as HTMLElement;
-        const liRect = row.getBoundingClientRect();
-        const amountRect = amount.getBoundingClientRect();
-        return { liRight: liRect.right, amountRight: amountRect.right };
-      });
-      // Amount is right of the label column (i.e. positioned in the right half of the row).
-      expect(amountAlignment.amountRight, 'amount cell hugs the right edge').toBeGreaterThan(
-        (await firstRow.boundingBox())!.x + (await firstRow.boundingBox())!.width / 2,
+      // Amount cell visually positioned in the right half of the row (catches column-order regressions).
+      const rowBox = await firstRow.boundingBox();
+      expect(rowBox, 'row bounding box is rendered').not.toBeNull();
+      const amountBox = await amountCell.boundingBox();
+      expect(amountBox, 'amount cell bounding box is rendered').not.toBeNull();
+      expect(amountBox!.x, 'amount cell sits in the right half of the row').toBeGreaterThan(
+        rowBox!.x + rowBox!.width / 2,
       );
-
-      // Frequency chip stays on one line even with a long label — assert width <= 120px.
-      const chipWidth = await firstRow
-        .locator('[data-testid="charges-row-frequency"]')
-        .evaluate((el) => el.getBoundingClientRect().width);
-      expect(chipWidth, `frequency chip is shrink-0 (width: ${chipWidth}px)`).toBeLessThan(120);
     } finally {
       await deleteSeededUser(admin, user.userId);
     }

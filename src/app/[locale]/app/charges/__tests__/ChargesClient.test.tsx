@@ -73,7 +73,8 @@ describe('<ChargesClient /> — PR-BETA-1 visual refactor', () => {
 
   it('shows the empty-state copy when no charges are provided', () => {
     renderWithIntl(<ChargesClient charges={[]} />);
-    expect(screen.getByText("Aucune charge pour l'instant.")).toBeInTheDocument();
+    // Stable hook via data-testid (i18n-agnostic) — copy can evolve without breaking the test.
+    expect(screen.getByTestId('charges-empty-state')).toBeInTheDocument();
   });
 
   it('renders the charges list as a semantic <ul role="list"> with one <li> per charge', () => {
@@ -85,20 +86,26 @@ describe('<ChargesClient /> — PR-BETA-1 visual refactor', () => {
     expect(items).toHaveLength(sampleCharges.length);
   });
 
-  it('exposes the four visual cells for each row (month, label, frequency chip, amount)', () => {
+  it('renders each cell with the value derived from the charge data (month + amount + label + chip)', () => {
     renderWithIntl(<ChargesClient charges={sampleCharges} />);
-    const firstRow = screen.getByTestId('charges-row-a1');
 
-    // Month column — uses formatMonth(locale='fr-BE', 'short') → e.g. "Janv."
-    expect(within(firstRow).getByTestId('charges-row-month')).toBeInTheDocument();
-    // Label column — the user-provided charge label
+    // Row 1 — dueMonth: 1 (january) → "Janv." in fr-BE short, amount 1 200 €.
+    const firstRow = screen.getByTestId('charges-row-a1');
+    expect(within(firstRow).getByTestId('charges-row-month')).toHaveTextContent(/^janv\.?$/i);
     expect(within(firstRow).getByTestId('charges-row-label')).toHaveTextContent(
       'Loyer appartement',
     );
-    // Frequency chip
     expect(within(firstRow).getByTestId('charges-row-frequency')).toHaveTextContent(/mensuel/i);
-    // Amount column with tabular-nums
-    expect(within(firstRow).getByTestId('charges-row-amount')).toBeInTheDocument();
+    // Tolerate regular space or non-breaking space inserted by Intl.NumberFormat.
+    expect(within(firstRow).getByTestId('charges-row-amount')).toHaveTextContent(/1[  ]200/);
+
+    // Row 2 — dueMonth: 6 (june) → "Juin" in fr-BE short, amount 300 €.
+    // Locks the dueMonth → formatMonth wiring against silent regressions.
+    const secondRow = screen.getByTestId('charges-row-a2');
+    expect(within(secondRow).getByTestId('charges-row-month')).toHaveTextContent(/^juin$/i);
+    expect(within(secondRow).getByTestId('charges-row-label')).toHaveTextContent('Taxe voiture');
+    expect(within(secondRow).getByTestId('charges-row-frequency')).toHaveTextContent(/annuel/i);
+    expect(within(secondRow).getByTestId('charges-row-amount')).toHaveTextContent(/300/);
   });
 
   it('exposes an aria-label naming the charge on every delete button', () => {
