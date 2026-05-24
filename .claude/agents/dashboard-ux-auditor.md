@@ -1,5 +1,6 @@
 ---
 name: dashboard-ux-auditor
+model: sonnet
 description: |
   Audits user dashboard for design coherence, accessibility, and alignment with Ankora's design system (Tailwind + design tokens).
   Triggered on changes to dashboard user pages, layouts, and UI components.

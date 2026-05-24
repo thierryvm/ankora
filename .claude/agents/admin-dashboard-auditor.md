@@ -1,5 +1,6 @@
 ---
 name: admin-dashboard-auditor
+model: sonnet
 description: |
   Audits admin dashboard for security enforcement, data accuracy, query performance, and accessibility.
   Triggered on changes to admin pages, components, and migrations touching admin roles.
