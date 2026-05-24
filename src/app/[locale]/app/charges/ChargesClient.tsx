@@ -176,7 +176,7 @@ export function ChargesClient({ charges }: { charges: RawCharge[] }) {
                 <li
                   key={c.id}
                   data-testid={`charges-row-${c.id}`}
-                  className="bg-card border-border/60 md:hover:bg-muted/40 relative rounded-lg border p-4 pr-14 transition-colors md:grid md:grid-cols-[5rem_minmax(0,1fr)_auto_auto_auto] md:items-baseline md:gap-4 md:rounded-none md:border-0 md:bg-transparent md:px-2 md:py-3 md:pr-2"
+                  className="bg-card border-border/60 md:hover:bg-surface-muted relative rounded-lg border p-4 pr-14 transition-colors md:grid md:grid-cols-[5rem_minmax(0,1fr)_auto_auto_auto] md:items-baseline md:gap-4 md:rounded-none md:border-0 md:bg-transparent md:px-2 md:py-3 md:pr-2"
                 >
                   {/* Mobile: header row (month + amount on a single line, justify-between).
                       Desktop: contents — projects month + amount as direct grid children. */}
@@ -206,7 +206,7 @@ export function ChargesClient({ charges }: { charges: RawCharge[] }) {
                     </span>
                     <span
                       data-testid="charges-row-frequency"
-                      className="bg-muted text-muted-foreground inline-flex w-fit shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-medium md:order-3"
+                      className="bg-surface-muted text-muted-foreground inline-flex w-fit shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-medium md:order-3"
                     >
                       {tFreq(c.frequency as Frequency)}
                     </span>
