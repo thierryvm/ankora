@@ -39,19 +39,16 @@ vi.mock('../HeaderNav', () => ({
   HeaderNav: ({
     variant,
     isAuthenticated,
-    isAdmin,
     hideMobileTrigger,
   }: {
     variant: string;
     isAuthenticated?: boolean;
-    isAdmin?: boolean;
     hideMobileTrigger?: boolean;
   }) => (
     <div
       data-testid="header-nav-mock"
       data-variant={variant}
       data-is-authenticated={String(isAuthenticated ?? false)}
-      data-is-admin={String(isAdmin ?? false)}
       data-hide-mobile-trigger={String(hideMobileTrigger ?? false)}
     />
   ),
@@ -208,30 +205,12 @@ describe('<Header />', () => {
     expect(screen.queryByRole('link', { name: /Admin/ })).not.toBeInTheDocument();
   });
 
-  // PR-UX-1 — admin parity desktop ↔ mobile drawer: Header must forward the
-  // server-resolved `isAdmin` flag into HeaderNav so the cockpit drawer
-  // mirrors the desktop admin link without a duplicate server round-trip.
-  it('app variant + isAdmin=true forwards isAdmin to HeaderNav (mobile drawer parity)', async () => {
-    setIsAdmin(true);
-    await renderHeader({ variant: 'app', isAuthenticated: true });
-    const drawer = screen.getByTestId('header-nav-mock');
-    expect(drawer).toHaveAttribute('data-variant', 'app');
-    expect(drawer).toHaveAttribute('data-is-admin', 'true');
-  });
-
-  it('app variant + isAdmin=false forwards isAdmin=false to HeaderNav', async () => {
-    setIsAdmin(false);
-    await renderHeader({ variant: 'app', isAuthenticated: true });
-    expect(screen.getByTestId('header-nav-mock')).toHaveAttribute('data-is-admin', 'false');
-  });
-
-  it('marketing variant never forwards isAdmin=true (server skips the check)', async () => {
-    setIsAdmin(true);
-    await renderHeader({ variant: 'marketing', isAuthenticated: true });
-    // Marketing pages are public — `showAdminLink` short-circuits before
-    // calling isAdmin(), so the drawer always gets isAdmin=false.
-    expect(screen.getByTestId('header-nav-mock')).toHaveAttribute('data-is-admin', 'false');
-  });
+  // PR-BETA-CLEANUP (THI-279, 2026-05-25): the `isAdmin` prop forwarding to
+  // HeaderNav was removed — its sole consumer was the dead `variant === 'app'`
+  // drawer block (unreachable since BETA-6 hotfix #1). The desktop admin
+  // link covered above is now the only Header.tsx surface that needs
+  // `showAdminLink`; the mobile admin entry lives in the BottomTabBar's
+  // More sheet (`MoreSheet.test.tsx` / `more-sheet-link-admin`).
 
   // PR-BETA-6 hotfix #3 + hotfix #4 — duplicate-nav fix on mobile.
   // Header forwards `hideMobileTrigger` by delegating to

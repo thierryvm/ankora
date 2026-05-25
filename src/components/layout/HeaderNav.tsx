@@ -32,11 +32,6 @@ type HeaderNavProps = {
   // visitor already has a session — keeps the mobile UX consistent with
   // the desktop CTAs.
   isAuthenticated?: boolean;
-  // PR-UX-1 — surfaces the admin link inside the cockpit drawer when the
-  // signed-in user is an admin. Server-resolved upstream (`isAdmin()` in
-  // `Header.tsx`) so the client never trusts itself. Default `false`
-  // keeps marketing call-sites unchanged.
-  isAdmin?: boolean;
   // PR-BETA-6 hotfix #3 (THI-277, 2026-05-25) — duplicate-nav fix on
   // mobile. When `Header.tsx` knows the persistent BottomTabBar will
   // render for this request (authenticated visitor on a non-excluded
@@ -51,7 +46,6 @@ type HeaderNavProps = {
 export function HeaderNav({
   variant = 'marketing',
   isAuthenticated = false,
-  isAdmin = false,
   hideMobileTrigger = false,
 }: HeaderNavProps) {
   const t = useTranslations('common');
@@ -318,73 +312,17 @@ export function HeaderNav({
             </>
           )}
 
-          {variant === 'app' && (
-            <>
-              <Link
-                href="/app"
-                onClick={handleDrawerClose}
-                className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-              >
-                {t('nav.dashboard')}
-              </Link>
-              <Link
-                href="/app/accounts"
-                onClick={handleDrawerClose}
-                className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-              >
-                {t('nav.accounts')}
-              </Link>
-              <Link
-                href="/app/charges"
-                onClick={handleDrawerClose}
-                className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-              >
-                {t('nav.charges')}
-              </Link>
-              <Link
-                href="/app/expenses"
-                onClick={handleDrawerClose}
-                className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-              >
-                {t('nav.expenses')}
-              </Link>
-              <Link
-                href="/app/simulator"
-                onClick={handleDrawerClose}
-                className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-              >
-                {t('nav.simulator')}
-              </Link>
-              <Link
-                href="/app/settings"
-                onClick={handleDrawerClose}
-                className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-              >
-                {t('nav.settings')}
-              </Link>
-              {/* PR-UX-1 — admin entry mirrors the desktop cockpit nav
-                    (Header.tsx). Route is `/admin` (not `/app/admin`).
-                    Amber dot uses `bg-amber-700` for WCAG SC 1.4.11 parity
-                    in both themes (≈ 4.46:1 light, ≈ 3.32:1 dark). Bumped
-                    from amber-600 (failed AA in light mode at ≈ 2.91:1).
-                    `aria-label` carries the "founder only" context so AT
-                    users get the same hint as desktop. */}
-              {isAdmin && (
-                <Link
-                  href="/admin"
-                  onClick={handleDrawerClose}
-                  aria-label={t('nav.adminAriaLabel')}
-                  className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-                >
-                  <span>{t('nav.admin')}</span>
-                  <span
-                    aria-hidden="true"
-                    className="inline-block h-1.5 w-1.5 rounded-full bg-amber-700"
-                  />
-                </Link>
-              )}
-            </>
-          )}
+          {/*
+           * PR-BETA-CLEANUP (THI-279, 2026-05-25): the previous
+           * `{variant === 'app' && (…)}` block that mirrored the cockpit
+           * nav (Dashboard / Accounts / Charges / Expenses / Simulator /
+           * Settings / Admin) inside this drawer has been removed. Since
+           * PR-BETA-6 hotfix #1 the drawer + hamburger trigger are
+           * short-circuited for the app variant (`shouldRenderMobileTrigger`
+           * above), so this block was unreachable. The canonical
+           * authenticated mobile-nav surface is the persistent
+           * BottomTabBar + its More sheet — both live elsewhere.
+           */}
         </div>
 
         {/* Drawer footer - theme toggle + locale switcher.

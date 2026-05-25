@@ -1,5 +1,14 @@
 # Roadmap — Ankora
 
+**Update 25 mai 2026** : Sprint Beta J-16 — **PR-BETA-1 et PR-BETA-6 mergées**.
+
+- PR-BETA-1 (THI-265, commit [`5232dda`](https://github.com/thierryvm/ankora/commit/5232dda), PR [#179](https://github.com/thierryvm/ankora/pull/179)) : refactor visuel `/app/charges` — grid desktop + cards mobile.
+- PR-BETA-6 (THI-277, commit [`0cdf924`](https://github.com/thierryvm/ankora/commit/0cdf924), PR [#182](https://github.com/thierryvm/ankora/pull/182)) : Apple HIG Bottom Tab Bar mobile + persistente authenticated cross-destinations (cockpit / admin / faq / glossaire / legal). 5 commits squashés : v1 + Option A v3 persistence + addendum GDPR Cookie/Footer + hotfix #2 server-client boundary + hotfix #3 anti-doublon nav burger ↔ bar + hotfix #4 Footer nav hidden mobile + ScrollToTop lift. Cf. [`docs/prs/PR-BETA-6-bottom-tab-bar-report.md`](./prs/PR-BETA-6-bottom-tab-bar-report.md).
+
+Sprint Beta restantes : **3 PR** — PR-BETA-3 (THI-267 Capacité tryptique ADR-009), PR-BETA-4 (THI-268 Dashboard 3 couches, dépend mockups Claude Design #3), PR-BETA-5 (THI-269 Landing nav refactor — **scope réduit** à LocaleToggle FR/EN + Auth-aware CTAs : le burger marketing duplicate-nav est déjà neutralisé conditionnellement par BETA-6 hotfix #3).
+
+**Backlog Beta** : THI-279 i18n callback OAuth (~30 min, P3 medium — bug pré-existant, non régression BETA-6, traité dans `chore/beta-cleanup-roadmap-polish`).
+
 **Update 24 mai 2026** : Sprint Beta J-17 — **PR-BETA-2 mergée** (commit [`011401f`](https://github.com/thierryvm/ankora/commit/011401f), PR [#181](https://github.com/thierryvm/ankora/pull/181)). Couvre THI-266 (i18n perf desktop : retrait `router.refresh()` redondant + landing FR/EN drift + 3 E2E unfixme'd) **+** THI-276 intégrée in-place (iPhone Safari RSC cache fix : `revalidatePath('/', 'layout')` server-side dans `setLocaleAction`). Sprint Beta restantes après ce merge : **3 PR** — PR-BETA-6 (THI-277 Bottom Tab Bar mobile + sheet "Plus"), puis PR-BETA-3 (THI-267 Capacité tryptique ADR-009), puis PR-BETA-4 (THI-268 Dashboard 3 couches). PR-BETA-5+7 (THI-269 Landing nav refactor) **différable v1.0** fin juin si débordement Beta. Cf. CHANGELOG.md §"2026-05-24 — PR-BETA-2" + [`docs/prs/PR-BETA-2-i18n-perf-phase-b-report.md`](./prs/PR-BETA-2-i18n-perf-phase-b-report.md).
 
 **Update 17 mai 2026** : pivot scope explicite — **Beta (10 juin) = MVP fonctionnel utilisable**, **V1.0 publique (fin juin) = cible Monarch Money level**, **V1.1 post-launch = parité Monarch complète si gap résiduel**. Voir [§Trois jalons](#trois-jalons-verrouillés--v11-post-launch) et nouvelle section [§PR-D6/D7 candidates](#pr-d6d7--dashboard-cockpit-v10-candidates-post-pr-d5-mobile-ios) (17 tickets Linear capturés, projet Ankora créé).

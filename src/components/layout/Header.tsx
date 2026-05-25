@@ -146,10 +146,14 @@ export async function Header({ variant = 'marketing', isAuthenticated }: HeaderP
             </Button>
           )}
 
+          {/* PR-BETA-CLEANUP (THI-279, 2026-05-25): `isAdmin` no longer
+              flows into HeaderNav — the prop only fed the dead `variant
+              === 'app'` block of the drawer that BETA-6 hotfix #1 made
+              unreachable. The desktop admin link above still uses
+              `showAdminLink` directly. */}
           <HeaderNav
             variant={variant}
             isAuthenticated={resolvedAuth}
-            isAdmin={showAdminLink}
             hideMobileTrigger={hideMobileTrigger}
           />
         </div>

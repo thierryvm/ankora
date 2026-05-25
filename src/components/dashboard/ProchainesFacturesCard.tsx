@@ -190,11 +190,24 @@ function Bucket({
           {formatCurrency(total, locale)}
         </p>
       </header>
+      {/*
+       * PR-BETA-CLEANUP (THI-279, 2026-05-25): switched the row layout
+       * from `flex items-center justify-between` to a 3-column grid so
+       * the day-count chip and the amount line up vertically across
+       * every row. With the old flex layout, both the chip and the
+       * amount were `shrink-0` siblings of the `min-w-0` label block,
+       * so their X position drifted by the width of the surrounding
+       * content (long label vs short label, "In 365 days" vs "Today",
+       * "€9,999.00" vs "€12.50"). Smoke iPhone @thierry 2026-05-25
+       * showed visible mis-alignment on the cockpit /app "this week
+       * 15 bills" list. Fixed columns + min-w on chip + right-aligned
+       * amount lock the visual rhythm regardless of content width.
+       */}
       <ul className="divide-border divide-y rounded-md border">
         {items.map((item) => (
           <li
             key={`${item.charge.id}-${item.dueDateIso}`}
-            className="flex items-center justify-between gap-3 px-3 py-2"
+            className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 px-3 py-2"
             data-testid={`prochaines-factures-row-${item.charge.id}`}
           >
             <div className="min-w-0">
@@ -203,20 +216,18 @@ function Bucket({
                 {formatDate(item.dueDateIso, locale, 'medium')}
               </p>
             </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <span
-                className={`rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums ${classes.chip}`}
-              >
-                {item.daysUntilDue < 0
-                  ? t('daysOverdue', { days: Math.abs(item.daysUntilDue) })
-                  : item.daysUntilDue === 0
-                    ? t('dueToday')
-                    : t('daysUntil', { days: item.daysUntilDue })}
-              </span>
-              <span className="text-foreground text-sm font-semibold tabular-nums">
-                {formatCurrency(item.charge.amount, locale)}
-              </span>
-            </div>
+            <span
+              className={`inline-flex min-w-24 justify-center rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums ${classes.chip}`}
+            >
+              {item.daysUntilDue < 0
+                ? t('daysOverdue', { days: Math.abs(item.daysUntilDue) })
+                : item.daysUntilDue === 0
+                  ? t('dueToday')
+                  : t('daysUntil', { days: item.daysUntilDue })}
+            </span>
+            <span className="text-foreground min-w-18 text-right text-sm font-semibold tabular-nums">
+              {formatCurrency(item.charge.amount, locale)}
+            </span>
           </li>
         ))}
       </ul>
