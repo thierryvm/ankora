@@ -56,7 +56,16 @@ vi.mock('@/lib/actions/auth', () => ({
   logoutAction: vi.fn(async () => undefined),
 }));
 
-import { BottomTabBar } from '../BottomTabBar';
+vi.mock('@/components/gdpr/ConsentBanner', () => ({
+  reopenConsentBanner: vi.fn(),
+}));
+
+import {
+  BottomTabBar,
+  BOTTOM_TAB_BAR_EXCLUDED_ROUTES,
+  isExcludedRoute,
+  stripLocalePrefix,
+} from '../BottomTabBar';
 
 beforeEach(() => {
   cleanup();
@@ -245,6 +254,81 @@ describe('<BottomTabBar /> — More sheet content', () => {
     render(<BottomTabBar />);
     await user.click(screen.getByTestId('bottom-tab-more'));
     expect(screen.queryByTestId('more-sheet-link-admin')).not.toBeInTheDocument();
+  });
+});
+
+describe('BOTTOM_TAB_BAR_EXCLUDED_ROUTES + isExcludedRoute (Hotfix Option A v3, mount gating)', () => {
+  // The root layout (`[locale]/layout.tsx`) reads `x-pathname`, strips the
+  // locale prefix, then calls `isExcludedRoute` to decide whether to render
+  // the bar. These specs lock the allow-list so a future PR can't widen the
+  // scope by accident.
+  it('excludes the canonical landing + auth + onboarding + offline routes', () => {
+    expect(isExcludedRoute('/')).toBe(true);
+    expect(isExcludedRoute('/login')).toBe(true);
+    expect(isExcludedRoute('/signup')).toBe(true);
+    expect(isExcludedRoute('/forgot-password')).toBe(true);
+    expect(isExcludedRoute('/reset-password')).toBe(true);
+    expect(isExcludedRoute('/callback')).toBe(true);
+    expect(isExcludedRoute('/offline')).toBe(true);
+    expect(isExcludedRoute('/onboarding')).toBe(true);
+  });
+
+  it('does NOT exclude in-app destinations or resources pages', () => {
+    // Fixes the "Admin sans retour" trap on iPhone smoke 2026-05-25.
+    expect(isExcludedRoute('/app')).toBe(false);
+    expect(isExcludedRoute('/app/charges')).toBe(false);
+    expect(isExcludedRoute('/admin')).toBe(false);
+    expect(isExcludedRoute('/admin/users')).toBe(false);
+    // Fixes the disjointed-UX bug on resource pages.
+    expect(isExcludedRoute('/faq')).toBe(false);
+    expect(isExcludedRoute('/glossaire')).toBe(false);
+    expect(isExcludedRoute('/legal/cgu')).toBe(false);
+    expect(isExcludedRoute('/legal/privacy')).toBe(false);
+    expect(isExcludedRoute('/legal/cookies')).toBe(false);
+  });
+
+  it('exposes the readonly route list so external auditors can lock the allow-list', () => {
+    expect(BOTTOM_TAB_BAR_EXCLUDED_ROUTES).toContain('/');
+    expect(BOTTOM_TAB_BAR_EXCLUDED_ROUTES).toContain('/login');
+    expect(BOTTOM_TAB_BAR_EXCLUDED_ROUTES).toContain('/signup');
+    expect(BOTTOM_TAB_BAR_EXCLUDED_ROUTES).toHaveLength(8);
+  });
+});
+
+describe('stripLocalePrefix — locale-aware exclusion (Hotfix Option A v3)', () => {
+  const locales = ['fr-BE', 'nl-BE', 'en', 'es-ES', 'de-DE'] as const;
+
+  it('strips a leading /<locale>/ prefix and preserves the tail', () => {
+    expect(stripLocalePrefix('/en/app', locales)).toBe('/app');
+    expect(stripLocalePrefix('/de-DE/admin/users', locales)).toBe('/admin/users');
+    expect(stripLocalePrefix('/nl-BE/faq', locales)).toBe('/faq');
+  });
+
+  it('collapses the bare locale path to root', () => {
+    expect(stripLocalePrefix('/en', locales)).toBe('/');
+    expect(stripLocalePrefix('/es-ES', locales)).toBe('/');
+  });
+
+  it('returns the input unchanged when no locale prefix is present (default fr-BE)', () => {
+    // `localePrefix: 'as-needed'` keeps the default locale unprefixed.
+    expect(stripLocalePrefix('/app', locales)).toBe('/app');
+    expect(stripLocalePrefix('/login', locales)).toBe('/login');
+    expect(stripLocalePrefix('/', locales)).toBe('/');
+  });
+
+  it('does NOT mistake a prefix-like segment for a locale (e.g. /enrollment)', () => {
+    expect(stripLocalePrefix('/enrollment', locales)).toBe('/enrollment');
+    // The leading slash + locale + non-slash boundary protects against the
+    // false positive: `/enrollment` is not `/en/rollment`.
+  });
+});
+
+describe('<MoreSheet /> — Cookie Preferences (Hotfix Option A v3 / GDPR art. 7(3))', () => {
+  it('exposes the CookiePreferencesLink inside the preferences section', async () => {
+    const user = userEvent.setup();
+    render(<BottomTabBar />);
+    await user.click(screen.getByTestId('bottom-tab-more'));
+    expect(screen.getByTestId('more-sheet-cookie-preferences')).toBeInTheDocument();
   });
 });
 

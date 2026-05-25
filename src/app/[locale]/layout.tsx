@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { notFound } from 'next/navigation';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getMessages, setRequestLocale, getTranslations } from 'next-intl/server';
@@ -14,6 +14,9 @@ import { Toaster } from '@/components/ui/toast';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister';
 import { ThemeBootScript } from '@/components/theme/ThemeBootScript';
+import { BottomTabBar, isExcludedRoute, stripLocalePrefix } from '@/components/layout/BottomTabBar';
+import { getOptionalUser } from '@/lib/auth/require-user';
+import { isAdmin } from '@/lib/auth/is-admin';
 
 import '../globals.css';
 
@@ -145,6 +148,35 @@ export default async function LocaleLayout({
   const themeCookie = cookieStore.get('theme')?.value;
   const dataTheme = themeCookie === 'dark' ? 'dark' : undefined;
 
+  // PR-BETA-6 Hotfix Option A v3 (THI-277, 2026-05-25) — persistent
+  // BottomTabBar mount.
+  //
+  // The bar is rendered ONCE here at the locale root so it stays mounted
+  // across in-app navigation (cockpit → admin → faq → legal …). Two server-
+  // side gates decide whether to render:
+  //
+  //   1. `user` — visitors without a session never see the bar (landing,
+  //      anon FAQ/legal/glossary keep their marketing chrome). Fail-soft via
+  //      `getOptionalUser()` so transient Supabase blips never 500 the page.
+  //   2. `!isExcludedRoute(unprefixedPathname)` — focused full-screen flows
+  //      (login/signup/reset-password/onboarding/offline) and the landing
+  //      itself never show the bar.
+  //
+  // The pathname is read from the `x-pathname` request header that
+  // `src/proxy.ts` sets BEFORE next-intl runs (cf. proxy JSDoc + PR-SEC-
+  // ADMIN P1-A). `stripLocalePrefix` removes the optional `/<locale>/`
+  // prefix so the exclusion list works whatever locale the visitor uses.
+  const requestHeaders = await headers();
+  const rawPathname = requestHeaders.get('x-pathname') ?? '/';
+  const unprefixedPathname = stripLocalePrefix(rawPathname, routing.locales);
+  const user = await getOptionalUser();
+  const showBottomTabBar = !!user && !isExcludedRoute(unprefixedPathname);
+  // `isAdmin()` re-runs the Supabase `getUser()` round-trip inside the
+  // helper. Cheap (already cached server-side per-request by Supabase)
+  // and lets the helper stay self-contained — no need to pipe the user
+  // object into a new isAdminFor(user) variant just for this mount site.
+  const showAdminEntry = showBottomTabBar && (await isAdmin());
+
   return (
     <html
       lang={locale}
@@ -187,6 +219,7 @@ export default async function LocaleLayout({
           {children}
           <ConsentBanner />
           <Toaster />
+          {showBottomTabBar && <BottomTabBar isAdmin={showAdminEntry} />}
           <ServiceWorkerRegister />
           <JsonLd data={organizationJsonLd} />
           <Analytics />

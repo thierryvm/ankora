@@ -11,20 +11,29 @@ import { MoreSheet } from './MoreSheet';
 /**
  * PR-BETA-6 — Bottom Tab Bar mobile (Apple HIG, THI-277).
  *
- * Replaces the right-to-left drawer (HeaderNav) for the `app` variant on
+ * Replaces the right-to-left drawer (HeaderNav) for authenticated users on
  * mobile. Five tabs is the Apple HIG hard cap — anything else goes into the
  * "More" sheet (slide-up modal) so the bar stays scannable at a glance.
  *
- * Visibility rules:
+ * Visibility rules (Hotfix Option A v3, 2026-05-25 — Apple HIG iOS 18
+ * "persistent tab bar across in-app destinations"):
  * - Hidden ≥ 768px (`md:hidden`) — desktop keeps the top-of-page nav.
- * - Mounted ONLY in `/app/*` (driven by `src/app/[locale]/app/layout.tsx`)
- *   so the marketing surfaces (landing, FAQ, legal, glossary) preserve their
- *   existing mobile drawer until the marketing nav is reworked separately.
+ * - Mounted at the locale root `src/app/[locale]/layout.tsx` and gated by
+ *   `isAuthenticated && !isExcludedRoute(pathname)`. So the bar is present
+ *   on `/app/*`, `/admin/*`, `/faq`, `/glossaire`, `/legal/*` once the user
+ *   is signed in — fixes the "Admin sans retour" trap reported on iPhone
+ *   smoke 2026-05-25 and the disjointed UX on resources pages.
+ * - Excluded surfaces (`/`, `/login`, `/signup`, `/forgot-password`,
+ *   `/reset-password`, `/callback`, `/offline`, `/onboarding`): the bar is
+ *   not rendered. The landing keeps its marketing chrome; auth pages keep
+ *   their focused full-screen flow; onboarding stays distraction-free.
  *
  * Active-tab detection: strict `startsWith` against the localised pathname
  * with a special case for the root `/app` route (otherwise every sub-route
  * would light up the Cockpit tab AND its own). next-intl strips the locale
- * prefix from `usePathname()` so we compare against unprefixed paths.
+ * prefix from `usePathname()` so we compare against unprefixed paths. When
+ * the user is on a non-`/app/*` surface (admin, faq, legal) NO tab is
+ * marked active — the bar then acts as a "return to cockpit" surface.
  *
  * Touch targets: each tab is 44×44px minimum (Apple HIG accessibility) — the
  * outer button is `h-12` (48px) and stretches via `flex-1` so the total tap
@@ -39,6 +48,57 @@ import { MoreSheet } from './MoreSheet';
  * and on iOS Safari (Vibration API is Android-only at time of writing).
  * Wrapped in a guard so tests under jsdom don't blow up.
  */
+
+/**
+ * Routes where the persistent BottomTabBar must NOT render even if the
+ * visitor is authenticated. Landing keeps its marketing chrome; auth and
+ * onboarding pages stay focused full-screen flows; `/offline` is the PWA
+ * fallback (no nav makes sense without network); `/callback` is the OAuth
+ * roundtrip (also stripped by the next-intl matcher, but belt-and-
+ * suspenders). Compare against the locale-stripped pathname.
+ */
+export const BOTTOM_TAB_BAR_EXCLUDED_ROUTES = [
+  '/',
+  '/login',
+  '/signup',
+  '/forgot-password',
+  '/reset-password',
+  '/callback',
+  '/offline',
+  '/onboarding',
+] as const;
+
+/**
+ * Strip the optional `localePrefix: 'as-needed'` segment from a pathname so
+ * the exclusion check works regardless of the visitor's locale (default
+ * `fr-BE` renders unprefixed; every other locale prefixes the URL).
+ *
+ * Exported so the root layout can compute the unprefixed path once and pass
+ * it to `isExcludedRoute`. Lives next to the routes constant for cohesion
+ * with the rest of the bar's mounting contract.
+ */
+export function stripLocalePrefix(pathname: string, locales: readonly string[]): string {
+  for (const locale of locales) {
+    if (pathname === `/${locale}`) return '/';
+    if (pathname.startsWith(`/${locale}/`)) {
+      return pathname.slice(`/${locale}`.length);
+    }
+  }
+  return pathname;
+}
+
+/**
+ * Returns `true` when the bar must NOT render for the given unprefixed
+ * pathname. Driven by the `BOTTOM_TAB_BAR_EXCLUDED_ROUTES` allow-list and
+ * an explicit exact-match — sub-routes (e.g. `/reset-password/xxx`, if
+ * ever added) would need their own entry, deliberately to avoid hiding
+ * the bar by accident on a deep cockpit URL that happens to share a
+ * prefix.
+ */
+export function isExcludedRoute(unprefixedPathname: string): boolean {
+  return (BOTTOM_TAB_BAR_EXCLUDED_ROUTES as readonly string[]).includes(unprefixedPathname);
+}
+
 type TabId = 'cockpit' | 'bills' | 'expenses' | 'simulate' | 'more';
 
 type Tab = {

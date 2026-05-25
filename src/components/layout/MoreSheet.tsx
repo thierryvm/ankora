@@ -9,6 +9,7 @@ import { Link } from '@/i18n/navigation';
 import { useIsClient } from '@/lib/hooks/useIsClient';
 import { logoutAction } from '@/lib/actions/auth';
 import { LocaleSwitcher } from './LocaleSwitcher';
+import { CookiePreferencesLink } from './CookiePreferencesLink';
 
 /**
  * PR-BETA-6 — "More" sheet for the mobile Bottom Tab Bar (THI-277).
@@ -294,6 +295,25 @@ export function MoreSheet({ isOpen, onClose, isAdmin = false }: MoreSheetProps) 
             </button>
             <div className="px-3 py-1">
               <LocaleSwitcher />
+            </div>
+            {/*
+             * PR-BETA-6 Hotfix Option A v3 (THI-277, 2026-05-25, GDPR
+             * addendum): mirror the footer's `<CookiePreferencesLink />`
+             * inside the More sheet. Once the persistent BottomTabBar is
+             * mounted, an authenticated mobile visitor scrolling to the
+             * bottom of `/faq` / `/legal/*` can have the footer link
+             * obscured by the bar. RGPD art. 7(3) requires that
+             * withdrawing consent be as easy as giving it, so we surface
+             * the same affordance through the canonical mobile-nav
+             * surface. `CookiePreferencesLink` is the same Client
+             * Component used in `Footer.tsx` — single source of truth
+             * for the reopen-consent contract.
+             */}
+            <div
+              data-testid="more-sheet-cookie-preferences"
+              className="hover:bg-muted focus-within:ring-brand-600 rounded-md px-3 py-3 transition-colors focus-within:ring-2 focus-within:ring-offset-0"
+            >
+              <CookiePreferencesLink />
             </div>
           </section>
 

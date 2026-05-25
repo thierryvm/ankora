@@ -158,3 +158,129 @@ test.describe('BottomTabBar — iPhone Safari WebKit (PR-BETA-6 / THI-277)', () 
     }
   });
 });
+
+test.describe('BottomTabBar persistence — Hotfix Option A v3 (THI-277, 2026-05-25)', () => {
+  // Verifies the persistent-bar contract on the surfaces that the iPhone
+  // smoke 2026-05-25 flagged: /admin (admin sans retour) and the
+  // resources pages (/faq, /legal/*, /glossaire). Each spec navigates
+  // through the More sheet entries to the destination and asserts the
+  // bar survives the navigation.
+
+  test('Plus → FAQ keeps the bar visible on /faq', async ({ page, seededUser }) => {
+    await page.goto('/login');
+    await page.getByLabel('Email').fill(seededUser.email);
+    await page.getByLabel('Mot de passe').fill(seededUser.password);
+    await page.getByRole('button', { name: /^se connecter$/i }).click();
+    await page.waitForURL(/\/app\b/, { timeout: 15_000 });
+    await page.waitForLoadState('networkidle');
+
+    await page.getByTestId('bottom-tab-more').click();
+    await page.getByTestId('more-sheet-link-faq').click();
+    await page.waitForURL(/\/faq\b/, { timeout: 10_000 });
+
+    // The bar must STILL be mounted — this is the persistence contract
+    // that the iPhone smoke 2026-05-25 surfaced as broken on PR #182 v1.
+    await expect(page.getByTestId('bottom-tab-bar')).toBeVisible();
+    await expect(page.getByTestId('bottom-tab-cockpit')).toBeVisible();
+  });
+
+  test('Plus → Privacy keeps the bar visible AND tap Cockpit returns to /app', async ({
+    page,
+    seededUser,
+  }) => {
+    await page.goto('/login');
+    await page.getByLabel('Email').fill(seededUser.email);
+    await page.getByLabel('Mot de passe').fill(seededUser.password);
+    await page.getByRole('button', { name: /^se connecter$/i }).click();
+    await page.waitForURL(/\/app\b/, { timeout: 15_000 });
+    await page.waitForLoadState('networkidle');
+
+    await page.getByTestId('bottom-tab-more').click();
+    await page.getByTestId('more-sheet-link-legal-privacy').click();
+    await page.waitForURL(/\/legal\/privacy\b/, { timeout: 10_000 });
+    await expect(page.getByTestId('bottom-tab-bar')).toBeVisible();
+
+    // Return-to-cockpit affordance — the whole point of the persistent
+    // bar pattern. Without this, the user is trapped (the bug @thierry
+    // reported on 2026-05-25).
+    await page.getByTestId('bottom-tab-cockpit').click();
+    await page.waitForURL(/\/app\b/, { timeout: 10_000 });
+    await expect(page.getByTestId('bottom-tab-cockpit')).toHaveAttribute('aria-current', 'page');
+  });
+
+  test('Footer is NOT hidden by the bar on /faq mobile (GDPR art. 7(3) reachability)', async ({
+    page,
+    seededUser,
+  }) => {
+    await page.goto('/login');
+    await page.getByLabel('Email').fill(seededUser.email);
+    await page.getByLabel('Mot de passe').fill(seededUser.password);
+    await page.getByRole('button', { name: /^se connecter$/i }).click();
+    await page.waitForURL(/\/app\b/, { timeout: 15_000 });
+    await page.waitForLoadState('networkidle');
+
+    await page.goto('/faq');
+    await page.waitForLoadState('networkidle');
+
+    // Scroll to the bottom — the footer's CookiePreferencesLink must be
+    // reachable (RGPD art. 7(3)). If the BottomTabBar overlapped, the
+    // link would be hidden behind it.
+    await page.evaluate(() => window.scrollTo({ top: document.body.scrollHeight }));
+    await page.waitForTimeout(300);
+
+    const measurement = await page.evaluate(() => {
+      const footer = document.querySelector('footer');
+      const bar = document.querySelector('[data-testid="bottom-tab-bar"]');
+      if (!footer || !bar) return null;
+      const footerLinks = footer.querySelectorAll('a, button');
+      const barRect = bar.getBoundingClientRect();
+      const lastLink = footerLinks[footerLinks.length - 1];
+      const lastLinkRect = lastLink?.getBoundingClientRect();
+      return {
+        lastLinkBottom: lastLinkRect?.bottom ?? 0,
+        barTop: barRect.top,
+        // The footer's bottom-most interactive element must sit ABOVE the
+        // bar's top edge (allow a 4-px sub-pixel tolerance).
+        cleared: lastLinkRect ? lastLinkRect.bottom <= barRect.top + 4 : false,
+      };
+    });
+
+    expect(measurement).not.toBeNull();
+    if (measurement) {
+      expect(
+        measurement.cleared,
+        `Footer last link bottom=${measurement.lastLinkBottom}px must be ≤ bar top=${measurement.barTop}px`,
+      ).toBe(true);
+    }
+  });
+
+  test('More sheet exposes Cookie Preferences (GDPR mirror of the footer link)', async ({
+    page,
+    seededUser,
+  }) => {
+    await page.goto('/login');
+    await page.getByLabel('Email').fill(seededUser.email);
+    await page.getByLabel('Mot de passe').fill(seededUser.password);
+    await page.getByRole('button', { name: /^se connecter$/i }).click();
+    await page.waitForURL(/\/app\b/, { timeout: 15_000 });
+    await page.waitForLoadState('networkidle');
+
+    await page.getByTestId('bottom-tab-more').click();
+    await expect(page.getByTestId('more-sheet-cookie-preferences')).toBeVisible();
+  });
+
+  test('Anonymous visitor on /faq does NOT see the BottomTabBar', async ({ page }) => {
+    // No login — the visitor is anonymous. The bar must not render even
+    // though /faq is not in the excluded routes list, because the gate is
+    // `isAuthenticated && !isExcludedRoute(...)`.
+    await page.goto('/faq');
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByTestId('bottom-tab-bar')).toHaveCount(0);
+  });
+
+  test('Anonymous visitor on landing does NOT see the BottomTabBar', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByTestId('bottom-tab-bar')).toHaveCount(0);
+  });
+});

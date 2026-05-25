@@ -2,13 +2,104 @@
 
 **Linear** : THI-277 — PR-BETA-6 Bottom Tab Bar mobile Apple HIG
 **Branch** : `feat/pr-beta-6-bottom-tab-bar`
-**Date** : 2026-05-25
+**Date** : 2026-05-25 (v1 + Hotfix Option A v3 same-day)
 **Pilote** : @cc-ankora (Claude Opus 4.7)
 **Demandeur** : @thierry via @cowork brief — feedback iPhone réel 24/05 : drawer right-to-left perturbant.
 
 ---
 
-## TL;DR
+## Hotfix Option A v3 — Bottom Tab Bar persistente authenticated (25/05/2026)
+
+### Contexte
+
+Smoke iPhone réel @thierry sur preview Vercel de PR #182 v1 a révélé deux bugs UX :
+
+1. **🔴 Bloquant — Admin sans retour** : user tap Admin dans sheet « Plus » → arrive sur `/admin` → BottomTabBar disparaît (car mountée uniquement sur `/app/*`) → user piégé sans retour vers cockpit
+2. **🟡 UX disjointe — Pages resources** : tap FAQ/Glossaire/CGU/Privacy/Cookies → arrive sur layout marketing `(public)` avec burger menu ancien format → expérience visuellement incohérente entre auth et marketing chrome
+
+### Solution
+
+Pattern **Apple HIG iOS 18 « persistent tab bar across in-app destinations »**. BottomTabBar mountée au `src/app/[locale]/layout.tsx` racine, conditionnée par `isAuthenticated && !isExcludedRoute(unprefixedPathname)`.
+
+- Auth check : `getOptionalUser()` server-side (fail-soft, retourne `null` sans throw)
+- Pathname : lecture `headers().get('x-pathname')` (déjà setté par `src/proxy.ts`)
+- Locale prefix stripping : helper `stripLocalePrefix(pathname, routing.locales)` (next-intl `localePrefix: 'as-needed'`)
+- Exclusions : `BOTTOM_TAB_BAR_EXCLUDED_ROUTES = ['/', '/login', '/signup', '/forgot-password', '/reset-password', '/callback', '/offline', '/onboarding']`
+
+### Bugs résolus
+
+- ✅ `/admin/*` maintenant avec BottomTabBar persistante (retour Cockpit possible via tap tab)
+- ✅ `/faq`, `/glossaire`, `/legal/{cgu,privacy,cookies}` idem (cohérence UX authenticated)
+- ✅ Tab `Cockpit` ramène user vers `/app` depuis n'importe quelle surface
+
+### Addendum 2026-05-25 (post-audit cross-layouts) — Footer overlap + Cookie Pref GDPR
+
+Deux items ajoutés au scope par @cowork après audit nav cross-layouts :
+
+1. **Footer padding-bottom** (`src/components/layout/Footer.tsx`) : `pb-[calc(env(safe-area-inset-bottom)+3.5rem)] md:pb-10` sur le div interne. Sans ça, la BottomTabBar (`h-12` + safe-area) cache les liens footer sur mobile authenticated → liens GDPR inaccessibles. Desktop (≥md) garde `pb-10` car bar `md:hidden`.
+
+2. **CookiePreferencesLink dans MoreSheet** (`src/components/layout/MoreSheet.tsx` section preferences) : mirror du composant utilisé dans Footer, après LocaleSwitcher. Couvre **GDPR art. 7(3)** : « le retrait du consentement doit être aussi aisé que son obtention ». Si la barre cache temporairement le footer pendant scroll, le user a toujours accès aux préférences via le sheet « Plus ».
+
+### Fichiers modifiés (Hotfix v3 + addendum)
+
+- `src/components/layout/BottomTabBar.tsx` — exports `BOTTOM_TAB_BAR_EXCLUDED_ROUTES`, `isExcludedRoute`, `stripLocalePrefix`
+- `src/app/[locale]/layout.tsx` — mount conditionnel `<BottomTabBar isAdmin={…} />` après `<Toaster />` (4 nouveaux imports : `headers`, `getOptionalUser`, `isAdmin`, `BottomTabBar` + 2 helpers)
+- `src/app/[locale]/app/layout.tsx` — demount BottomTabBar + `isAdmin` (déplacés au root, évite double mount)
+- `src/components/layout/Footer.tsx` — padding-bottom safe-area + h-bar sur mobile
+- `src/components/layout/MoreSheet.tsx` — `<CookiePreferencesLink />` ajouté section preferences (data-testid `more-sheet-cookie-preferences`)
+
+### Fichiers explicitement NON touchés (anti scope-creep)
+
+- `src/app/[locale]/admin/layout.tsx` — le mount root suffit
+- `src/app/[locale]/(public)/layout.tsx` — burger menu marketing reste, coexistence acceptée jusqu'à PR-BETA-5 (cf. notes hors-scope)
+
+### Tests Vitest étendus (BottomTabBar.test.tsx : 19 → 32 specs, +13)
+
+- `BOTTOM_TAB_BAR_EXCLUDED_ROUTES + isExcludedRoute` : 3 specs (allow-list locked, in-app destinations, readonly export)
+- `stripLocalePrefix` : 4 specs (locale prefix strip, bare locale → root, no-prefix passthrough, false-positive guard `/enrollment`)
+- `<MoreSheet />` Cookie Preferences : 1 spec (GDPR art. 7(3) reachability)
+
+### Tests Playwright étendus (bottom-tab-bar.spec.ts : 6 → 12 specs, +6)
+
+- `Plus → FAQ` : bar visible sur `/faq` post-navigation
+- `Plus → Privacy` + retour Cockpit : flux complet « no trap »
+- `Footer NOT hidden by bar on /faq` : assert last footer link bottom ≤ bar top
+- `More sheet Cookie Preferences` : `more-sheet-cookie-preferences` visible
+- `Anonymous /faq` : bar absente (gating auth)
+- `Anonymous /` : bar absente (landing reste marketing pur)
+
+### Bugs hors-scope (suite PR-BETA-5)
+
+- Burger menu marketing visible sur pages `(public)` quand user authenticated → coexistence acceptable temporairement, harmonisation prévue PR-BETA-5 Landing nav consolidée
+- Labels footer EN « Terms » vs « CGU » : scope BETA-5 (i18n harmonization)
+- Glossaire dans Footer : scope BETA-5
+- Padding-bottom main sur `/admin/*` (AdminTopbar layout n'a pas pb-24) : non bloquant car admin desktop principalement + footer fournit l'air maintenant
+
+### Smoke test à faire @thierry AVANT merge sur preview Vercel iPhone réel
+
+- [ ] `/app` → bar visible 5 tabs
+- [ ] Tap Plus → tap Admin → assert bar toujours visible sur `/admin` + retour `/app` via tab Cockpit OK
+- [ ] Tap Plus → tap FAQ → assert bar visible sur `/faq` + scroll bottom + assert footer CookiePreferencesLink lisible (pas caché)
+- [ ] Tap Plus → tap CGU → assert bar visible sur `/legal/cgu` + retour `/app` via tab Cockpit OK
+- [ ] Tap Plus → assert section « Préférences » contient Cookie Preferences entry
+- [ ] Anonymous (déconnecté) → `/faq` → assert bar INVISIBLE
+- [ ] Anonymous → `/` → assert bar INVISIBLE
+- [ ] Sur `/app`, `/login`, `/signup`, `/onboarding` : bar visibilité conforme allow-list
+
+### Résultats locaux (2026-05-25)
+
+```text
+npm run lint              → 0 erreurs (6 warnings pré-existants, hors scope)
+npm run lint:use-server   → 0 erreurs
+npm run typecheck         → 0 erreurs
+npm run test (1236 tests) → 100% pass (+8 vs v1 — 100 files, 21.8 s)
+```
+
+E2E Playwright **non exécutés localement** : nécessitent Supabase service role key. Validation CI sur preview Vercel + smoke iPhone réel par @thierry.
+
+---
+
+## TL;DR (v1)
 
 Remplacement du drawer right-to-left mobile par un **Bottom Tab Bar Apple HIG** (5 tabs : Cockpit, Factures, Dépenses, Simuler, Plus) sur la surface `/app/*`. Sheet « Plus » slide-up qui agrège Comptes, Paramètres, Admin, FAQ, Glossaire, Légal, Thème, Langue, Déconnexion. Le drawer marketing (landing / FAQ / glossary / legal) reste inchangé jusqu'à la passe BETA-5 sur la nav marketing.
 
