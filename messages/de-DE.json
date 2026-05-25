@@ -69,6 +69,40 @@
       "annual": "Jährlich"
     }
   },
+  "layout": {
+    "bottomTab": {
+      "label": "Mobile Hauptnavigation",
+      "cockpit": "Cockpit",
+      "bills": "Rechnungen",
+      "expenses": "Ausgaben",
+      "simulate": "Simulieren",
+      "more": "Mehr"
+    },
+    "moreSheet": {
+      "title": "Mehr",
+      "close": "Schließen",
+      "sections": {
+        "cockpit": "Mein Cockpit",
+        "resources": "Ressourcen",
+        "preferences": "Einstellungen",
+        "account": "Konto"
+      },
+      "links": {
+        "accounts": "Konten",
+        "settings": "Einstellungen",
+        "admin": "Admin",
+        "adminAriaLabel": "Adminbereich (nur Gründer)",
+        "faq": "FAQ",
+        "glossary": "Glossar",
+        "legalCgu": "AGB",
+        "legalPrivacy": "Datenschutz",
+        "legalCookies": "Cookies",
+        "logout": "Abmelden",
+        "darkMode": "Dunkler Modus",
+        "lightMode": "Heller Modus"
+      }
+    }
+  },
   "ui": {
     "scrollToTop": "Nach oben scrollen",
     "localeSwitcher": {

@@ -4,6 +4,7 @@ import { BrandHomeLink } from '@/components/brand/BrandHomeLink';
 import { Button } from '@/components/ui/button';
 import { isAdmin } from '@/lib/auth/is-admin';
 import { getOptionalUser } from '@/lib/auth/require-user';
+import { shouldMountBottomTabBar } from '@/lib/layout/bottom-tab-bar-state';
 import { HeaderNav } from './HeaderNav';
 
 type HeaderProps = {
@@ -31,6 +32,21 @@ export async function Header({ variant = 'marketing', isAuthenticated }: HeaderP
   // mobile cockpit drawer mirrors the desktop admin link (parity, single
   // server round-trip).
   const showAdminLink = variant === 'app' && (await isAdmin());
+
+  // PR-BETA-6 hotfix #3 (THI-277, 2026-05-25) — duplicate-nav fix.
+  //
+  // When the persistent BottomTabBar will be rendered for this request
+  // (cf. `[locale]/layout.tsx` mount gate), the mobile hamburger trigger
+  // becomes a duplicate nav surface on `/faq`, `/glossaire`, `/legal/*`:
+  // the visitor sees BOTH the marketing burger top-right AND the bottom
+  // tab bar — a 2026 mobile-first anti-pattern (Apple HIG single
+  // navigation surface).
+  //
+  // `shouldMountBottomTabBar()` is the single source of truth for this
+  // decision (wrapped in React `cache()` so all four consumers — this
+  // Header, the locale root mount, the Footer nav, the ScrollToTop FAB
+  // — share a single per-request computation).
+  const hideMobileTrigger = await shouldMountBottomTabBar();
 
   return (
     // PR-D5 mobile-iOS: extend the sticky header below the iPhone notch in
@@ -130,7 +146,12 @@ export async function Header({ variant = 'marketing', isAuthenticated }: HeaderP
             </Button>
           )}
 
-          <HeaderNav variant={variant} isAuthenticated={resolvedAuth} isAdmin={showAdminLink} />
+          <HeaderNav
+            variant={variant}
+            isAuthenticated={resolvedAuth}
+            isAdmin={showAdminLink}
+            hideMobileTrigger={hideMobileTrigger}
+          />
         </div>
       </div>
     </header>

@@ -69,6 +69,40 @@
       "annual": "Jaarlijks"
     }
   },
+  "layout": {
+    "bottomTab": {
+      "label": "Mobiele hoofdnavigatie",
+      "cockpit": "Cockpit",
+      "bills": "Facturen",
+      "expenses": "Uitgaven",
+      "simulate": "Simuleren",
+      "more": "Meer"
+    },
+    "moreSheet": {
+      "title": "Meer",
+      "close": "Sluiten",
+      "sections": {
+        "cockpit": "Mijn cockpit",
+        "resources": "Bronnen",
+        "preferences": "Voorkeuren",
+        "account": "Account"
+      },
+      "links": {
+        "accounts": "Rekeningen",
+        "settings": "Instellingen",
+        "admin": "Admin",
+        "adminAriaLabel": "Adminzone (alleen oprichter)",
+        "faq": "FAQ",
+        "glossary": "Woordenlijst",
+        "legalCgu": "Voorwaarden",
+        "legalPrivacy": "Privacy",
+        "legalCookies": "Cookies",
+        "logout": "Afmelden",
+        "darkMode": "Donkere modus",
+        "lightMode": "Lichte modus"
+      }
+    }
+  },
   "ui": {
     "scrollToTop": "Terug naar boven",
     "localeSwitcher": {

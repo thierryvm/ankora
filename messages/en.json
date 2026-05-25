@@ -69,6 +69,40 @@
       "annual": "Annual"
     }
   },
+  "layout": {
+    "bottomTab": {
+      "label": "Mobile primary navigation",
+      "cockpit": "Cockpit",
+      "bills": "Bills",
+      "expenses": "Expenses",
+      "simulate": "Simulate",
+      "more": "More"
+    },
+    "moreSheet": {
+      "title": "More",
+      "close": "Close",
+      "sections": {
+        "cockpit": "My cockpit",
+        "resources": "Resources",
+        "preferences": "Preferences",
+        "account": "Account"
+      },
+      "links": {
+        "accounts": "Accounts",
+        "settings": "Settings",
+        "admin": "Admin",
+        "adminAriaLabel": "Admin area (founder only)",
+        "faq": "FAQ",
+        "glossary": "Glossary",
+        "legalCgu": "Terms",
+        "legalPrivacy": "Privacy",
+        "legalCookies": "Cookies",
+        "logout": "Sign out",
+        "darkMode": "Dark mode",
+        "lightMode": "Light mode"
+      }
+    }
+  },
   "ui": {
     "scrollToTop": "Scroll back to top",
     "localeSwitcher": {

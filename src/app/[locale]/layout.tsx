@@ -14,6 +14,9 @@ import { Toaster } from '@/components/ui/toast';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister';
 import { ThemeBootScript } from '@/components/theme/ThemeBootScript';
+import { BottomTabBar } from '@/components/layout/BottomTabBar';
+import { shouldMountBottomTabBar } from '@/lib/layout/bottom-tab-bar-state';
+import { isAdmin } from '@/lib/auth/is-admin';
 
 import '../globals.css';
 
@@ -145,6 +148,19 @@ export default async function LocaleLayout({
   const themeCookie = cookieStore.get('theme')?.value;
   const dataTheme = themeCookie === 'dark' ? 'dark' : undefined;
 
+  // PR-BETA-6 Hotfix Option A v3 (THI-277, 2026-05-25) — persistent
+  // BottomTabBar mount. Centralised in `shouldMountBottomTabBar()`
+  // (wrapped in React `cache()`) so this mount decision and the four
+  // satellite consumers (Header burger suppression, Footer nav hiding,
+  // ScrollToTop FAB lift, this mount) all collapse onto a single
+  // server-side computation per request.
+  const showBottomTabBar = await shouldMountBottomTabBar();
+  // `isAdmin()` re-runs the Supabase `getUser()` round-trip inside the
+  // helper. Cheap (already cached server-side per-request by Supabase)
+  // and lets the helper stay self-contained — no need to pipe the user
+  // object into a new isAdminFor(user) variant just for this mount site.
+  const showAdminEntry = showBottomTabBar && (await isAdmin());
+
   return (
     <html
       lang={locale}
@@ -187,6 +203,7 @@ export default async function LocaleLayout({
           {children}
           <ConsentBanner />
           <Toaster />
+          {showBottomTabBar && <BottomTabBar isAdmin={showAdminEntry} />}
           <ServiceWorkerRegister />
           <JsonLd data={organizationJsonLd} />
           <Analytics />

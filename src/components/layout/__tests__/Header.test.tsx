@@ -40,18 +40,34 @@ vi.mock('../HeaderNav', () => ({
     variant,
     isAuthenticated,
     isAdmin,
+    hideMobileTrigger,
   }: {
     variant: string;
     isAuthenticated?: boolean;
     isAdmin?: boolean;
+    hideMobileTrigger?: boolean;
   }) => (
     <div
       data-testid="header-nav-mock"
       data-variant={variant}
       data-is-authenticated={String(isAuthenticated ?? false)}
       data-is-admin={String(isAdmin ?? false)}
+      data-hide-mobile-trigger={String(hideMobileTrigger ?? false)}
     />
   ),
+}));
+
+// PR-BETA-6 hotfix #3 + hotfix #4 — Header reads
+// `shouldMountBottomTabBar()` to decide whether to suppress the mobile
+// hamburger (duplicate-nav fix against the persistent BottomTabBar).
+// The helper itself reads `next/headers` + `getOptionalUser` + the
+// exclusion list; mocking it directly here keeps each spec deterministic
+// without re-deriving the gating logic in the test. Default to `false`
+// so the existing specs keep their pre-hotfix semantics; tests that
+// need the helper to return true call `setBottomTabBarMounted(true)`.
+const bottomTabBarMountedRef = { value: false };
+vi.mock('@/lib/layout/bottom-tab-bar-state', () => ({
+  shouldMountBottomTabBar: async () => bottomTabBarMountedRef.value,
 }));
 
 // PR-SEC-ADMIN — `isAdmin()` reads env + Supabase session at runtime.
@@ -80,6 +96,10 @@ function setOptionalUser(value: null | { id: string }): void {
   optionalUserRef.value = value;
 }
 
+function setBottomTabBarMounted(value: boolean): void {
+  bottomTabBarMountedRef.value = value;
+}
+
 async function renderHeader(props: Parameters<typeof Header>[0] = {}) {
   const ui = await Header(props);
   return render(ui);
@@ -89,6 +109,7 @@ describe('<Header />', () => {
   beforeEach(() => {
     setIsAdmin(false);
     setOptionalUser(null);
+    setBottomTabBarMounted(false);
   });
 
   it('renders the marketing variant by default with login + signup CTAs', async () => {
@@ -210,6 +231,33 @@ describe('<Header />', () => {
     // Marketing pages are public — `showAdminLink` short-circuits before
     // calling isAdmin(), so the drawer always gets isAdmin=false.
     expect(screen.getByTestId('header-nav-mock')).toHaveAttribute('data-is-admin', 'false');
+  });
+
+  // PR-BETA-6 hotfix #3 + hotfix #4 — duplicate-nav fix on mobile.
+  // Header forwards `hideMobileTrigger` by delegating to
+  // `shouldMountBottomTabBar()` (single source of truth shared with the
+  // bar mount in `[locale]/layout.tsx`, the Footer nav hiding, and the
+  // ScrollToTop FAB lift). Mock the helper directly so the spec proves
+  // the wiring without re-deriving the auth+pathname matrix here (those
+  // are covered in bottom-tab-bar-state.test.ts).
+  describe('hideMobileTrigger forwarding (Hotfix #3 anti-duplicate-nav)', () => {
+    it('forwards hideMobileTrigger=true when shouldMountBottomTabBar() → true', async () => {
+      setBottomTabBarMounted(true);
+      await renderHeader({ variant: 'marketing', isAuthenticated: true });
+      expect(screen.getByTestId('header-nav-mock')).toHaveAttribute(
+        'data-hide-mobile-trigger',
+        'true',
+      );
+    });
+
+    it('keeps hideMobileTrigger=false when shouldMountBottomTabBar() → false', async () => {
+      setBottomTabBarMounted(false);
+      await renderHeader({ variant: 'marketing', isAuthenticated: true });
+      expect(screen.getByTestId('header-nav-mock')).toHaveAttribute(
+        'data-hide-mobile-trigger',
+        'false',
+      );
+    });
   });
 
   it('home link has the tactile press animation, gated on motion-safe (issue #95)', async () => {
