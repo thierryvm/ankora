@@ -405,30 +405,50 @@ export function HeaderNav({
     </>
   ) : null;
 
+  // PR-BETA-6 (THI-277) — the right-to-left hamburger drawer was replaced
+  // by the Apple-HIG Bottom Tab Bar on the `/app/*` surface (mobile only).
+  // For the `app` variant we therefore skip the hamburger trigger AND the
+  // portalled drawer entirely — the BottomTabBar's "More" sheet is the
+  // canonical secondary-nav surface for signed-in mobile users. The
+  // marketing variant keeps the legacy drawer (landing / FAQ / legal /
+  // glossary) until the marketing nav is reworked separately. Desktop
+  // (≥ lg) keeps the ThemeToggle + LocaleSwitcher pair for every variant
+  // — the bar is `md:hidden`, so it never overlaps the desktop chrome.
+  const isMarketing = variant === 'marketing';
+
   return (
     <>
-      {/* Hamburger menu - visible on mobile only.
-          PR-D5 a11y: native `<button>` with `aria-expanded` + `aria-controls`
-          replaces the old label+hidden-checkbox pattern (BUG-iOS-003). */}
-      <button
-        ref={triggerRef}
-        type="button"
-        onClick={() => setIsOpen((open) => !open)}
-        aria-expanded={isOpen}
-        aria-controls="mobile-nav-drawer"
-        aria-label={t('nav.menu')}
-        className="hover:bg-muted focus-visible:ring-brand-600 flex h-10 w-10 items-center justify-center rounded-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none lg:hidden"
-      >
-        {isOpen ? <X className="h-5 w-5" aria-hidden /> : <Menu className="h-5 w-5" aria-hidden />}
-      </button>
+      {isMarketing && (
+        <>
+          {/* Hamburger menu - visible on mobile only.
+              PR-D5 a11y: native `<button>` with `aria-expanded` + `aria-controls`
+              replaces the old label+hidden-checkbox pattern (BUG-iOS-003). */}
+          <button
+            ref={triggerRef}
+            type="button"
+            onClick={() => setIsOpen((open) => !open)}
+            aria-expanded={isOpen}
+            aria-controls="mobile-nav-drawer"
+            aria-label={t('nav.menu')}
+            data-testid="header-nav-trigger"
+            className="hover:bg-muted focus-visible:ring-brand-600 flex h-10 w-10 items-center justify-center rounded-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none lg:hidden"
+          >
+            {isOpen ? (
+              <X className="h-5 w-5" aria-hidden />
+            ) : (
+              <Menu className="h-5 w-5" aria-hidden />
+            )}
+          </button>
 
-      {/* Bug #4 (PR P0-V2): overlay + drawer rendered via React Portal into
-          <body> so they escape the parent <header sticky z-40 backdrop-blur>
-          stacking context. `isClient` guards SSR (document only exists
-          client-side). When the portal hasn't activated yet, the trigger
-          button above still works — clicking it sets isOpen = true; the
-          portal then appears on the next render after the store flips. */}
-      {isClient && isOpen && createPortal(drawerOverlayAndPanel, document.body)}
+          {/* Bug #4 (PR P0-V2): overlay + drawer rendered via React Portal into
+              <body> so they escape the parent <header sticky z-40 backdrop-blur>
+              stacking context. `isClient` guards SSR (document only exists
+              client-side). When the portal hasn't activated yet, the trigger
+              button above still works — clicking it sets isOpen = true; the
+              portal then appears on the next render after the store flips. */}
+          {isClient && isOpen && createPortal(drawerOverlayAndPanel, document.body)}
+        </>
+      )}
 
       {/* Desktop theme toggle + locale switcher - visible on desktop only */}
       <div className="hidden items-center gap-2 lg:flex">

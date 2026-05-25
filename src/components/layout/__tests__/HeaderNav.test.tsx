@@ -90,15 +90,20 @@ describe('<HeaderNav /> mobile drawer — auth CTAs', () => {
     expect(screen.queryByTestId('drawer-cockpit-link')).not.toBeInTheDocument();
   });
 
-  it('app variant ignores isAuthenticated — drawer shows the in-app nav, not auth CTAs', async () => {
+  it('app variant no longer renders the hamburger drawer (PR-BETA-6 / THI-277)', () => {
+    // PR-BETA-6 (THI-277, 2026-05-25): the right-to-left drawer was replaced
+    // by the Apple-HIG Bottom Tab Bar on the `/app/*` surface. HeaderNav now
+    // short-circuits the trigger + portal for `variant="app"`. The Bottom
+    // Tab Bar's "More" sheet is the canonical secondary-nav surface for
+    // signed-in mobile users.
     render(<HeaderNav variant="app" isAuthenticated />);
-    await openDrawer();
 
-    expect(screen.queryByTestId('drawer-login-link')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('drawer-signup-link')).not.toBeInTheDocument();
+    // No hamburger trigger and therefore no drawer can be opened.
+    expect(screen.queryByTestId('header-nav-trigger')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Menu' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Navigation mobile' })).not.toBeInTheDocument();
     expect(screen.queryByTestId('drawer-cockpit-link')).not.toBeInTheDocument();
-    // In-app nav links are present
-    expect(screen.getByRole('link', { name: 'Tableau de bord' })).toHaveAttribute('href', '/app');
+    expect(screen.queryByTestId('drawer-login-link')).not.toBeInTheDocument();
   });
 });
 
@@ -223,21 +228,16 @@ describe('<HeaderNav /> mobile drawer — THI-251 safe-area inset on PWA standal
   });
 });
 
-describe('<HeaderNav /> mobile drawer — PR-UX-1 admin entry in app variant', () => {
-  it('app variant + isAdmin=true exposes the Admin link mirrors with the desktop marker', async () => {
+describe('<HeaderNav /> mobile drawer — PR-UX-1 / PR-BETA-6 admin entry handoff', () => {
+  // PR-BETA-6 (THI-277): admin entry handoff. The app-variant drawer no
+  // longer renders an Admin link because the drawer itself is short-
+  // circuited; the admin entry is now surfaced through the BottomTabBar's
+  // "More" sheet (see BottomTabBar.test.tsx / MoreSheet covers). These two
+  // assertions guarantee the drawer-side never re-grows the entry by
+  // mistake.
+  it('app variant: drawer never rendered, no Admin entry to assert', () => {
     render(<HeaderNav variant="app" isAuthenticated isAdmin />);
-    await openDrawer();
-
-    // aria-label carries the "founder only" context (parity with desktop).
-    const adminLink = screen.getByRole('link', { name: 'Espace admin (réservé fondateur)' });
-    expect(adminLink).toHaveAttribute('href', '/admin');
-    // Visible label is the short "Admin".
-    expect(adminLink).toHaveTextContent('Admin');
-  });
-
-  it('app variant + isAdmin omitted hides the Admin link (fail-closed default)', async () => {
-    render(<HeaderNav variant="app" isAuthenticated />);
-    await openDrawer();
+    expect(screen.queryByTestId('header-nav-trigger')).not.toBeInTheDocument();
     expect(
       screen.queryByRole('link', { name: 'Espace admin (réservé fondateur)' }),
     ).not.toBeInTheDocument();
