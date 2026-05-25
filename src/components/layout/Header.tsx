@@ -1,13 +1,10 @@
-import { headers } from 'next/headers';
-
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { BrandHomeLink } from '@/components/brand/BrandHomeLink';
 import { Button } from '@/components/ui/button';
 import { isAdmin } from '@/lib/auth/is-admin';
 import { getOptionalUser } from '@/lib/auth/require-user';
-import { routing } from '@/i18n/routing';
-import { isExcludedRoute, stripLocalePrefix } from '@/components/layout/bottom-tab-bar.routes';
+import { shouldMountBottomTabBar } from '@/lib/layout/bottom-tab-bar-state';
 import { HeaderNav } from './HeaderNav';
 
 type HeaderProps = {
@@ -45,16 +42,11 @@ export async function Header({ variant = 'marketing', isAuthenticated }: HeaderP
   // tab bar — a 2026 mobile-first anti-pattern (Apple HIG single
   // navigation surface).
   //
-  // We mirror the exact same server-side condition as the bar mount
-  // (`isAuthenticated && !isExcludedRoute(unprefixedPathname)`) so the
-  // two surfaces are mutually exclusive. Anonymous visitors keep the
-  // marketing burger (no bar to compete with). Authenticated visitors
-  // on excluded routes (`/`, `/login`, `/signup`, etc.) also keep the
-  // burger because no bar will render.
-  const requestHeaders = await headers();
-  const rawPathname = requestHeaders.get('x-pathname') ?? '/';
-  const unprefixedPathname = stripLocalePrefix(rawPathname, routing.locales);
-  const hideMobileTrigger = resolvedAuth && !isExcludedRoute(unprefixedPathname);
+  // `shouldMountBottomTabBar()` is the single source of truth for this
+  // decision (wrapped in React `cache()` so all four consumers — this
+  // Header, the locale root mount, the Footer nav, the ScrollToTop FAB
+  // — share a single per-request computation).
+  const hideMobileTrigger = await shouldMountBottomTabBar();
 
   return (
     // PR-D5 mobile-iOS: extend the sticky header below the iPhone notch in

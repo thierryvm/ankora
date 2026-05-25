@@ -57,16 +57,17 @@ vi.mock('../HeaderNav', () => ({
   ),
 }));
 
-// PR-BETA-6 hotfix #3 — Header reads the `x-pathname` request header to
-// decide whether to suppress the mobile hamburger (duplicate-nav fix
-// against the persistent BottomTabBar). Default to `/` so the existing
-// specs keep their pre-hotfix semantics; tests that need a different
-// route call `setPathname()` below.
-const pathnameRef = { value: '/' };
-vi.mock('next/headers', () => ({
-  headers: async () => ({
-    get: (name: string) => (name === 'x-pathname' ? pathnameRef.value : null),
-  }),
+// PR-BETA-6 hotfix #3 + hotfix #4 — Header reads
+// `shouldMountBottomTabBar()` to decide whether to suppress the mobile
+// hamburger (duplicate-nav fix against the persistent BottomTabBar).
+// The helper itself reads `next/headers` + `getOptionalUser` + the
+// exclusion list; mocking it directly here keeps each spec deterministic
+// without re-deriving the gating logic in the test. Default to `false`
+// so the existing specs keep their pre-hotfix semantics; tests that
+// need the helper to return true call `setBottomTabBarMounted(true)`.
+const bottomTabBarMountedRef = { value: false };
+vi.mock('@/lib/layout/bottom-tab-bar-state', () => ({
+  shouldMountBottomTabBar: async () => bottomTabBarMountedRef.value,
 }));
 
 // PR-SEC-ADMIN — `isAdmin()` reads env + Supabase session at runtime.
@@ -95,8 +96,8 @@ function setOptionalUser(value: null | { id: string }): void {
   optionalUserRef.value = value;
 }
 
-function setPathname(value: string): void {
-  pathnameRef.value = value;
+function setBottomTabBarMounted(value: boolean): void {
+  bottomTabBarMountedRef.value = value;
 }
 
 async function renderHeader(props: Parameters<typeof Header>[0] = {}) {
@@ -108,7 +109,7 @@ describe('<Header />', () => {
   beforeEach(() => {
     setIsAdmin(false);
     setOptionalUser(null);
-    setPathname('/');
+    setBottomTabBarMounted(false);
   });
 
   it('renders the marketing variant by default with login + signup CTAs', async () => {
@@ -232,13 +233,16 @@ describe('<Header />', () => {
     expect(screen.getByTestId('header-nav-mock')).toHaveAttribute('data-is-admin', 'false');
   });
 
-  // PR-BETA-6 hotfix #3 — duplicate-nav fix on mobile. When the visitor is
-  // authenticated AND the route is NOT in `BOTTOM_TAB_BAR_EXCLUDED_ROUTES`
-  // (i.e. the persistent bar will mount), the Header must forward
-  // `hideMobileTrigger=true` so HeaderNav suppresses the hamburger.
+  // PR-BETA-6 hotfix #3 + hotfix #4 — duplicate-nav fix on mobile.
+  // Header forwards `hideMobileTrigger` by delegating to
+  // `shouldMountBottomTabBar()` (single source of truth shared with the
+  // bar mount in `[locale]/layout.tsx`, the Footer nav hiding, and the
+  // ScrollToTop FAB lift). Mock the helper directly so the spec proves
+  // the wiring without re-deriving the auth+pathname matrix here (those
+  // are covered in bottom-tab-bar-state.test.ts).
   describe('hideMobileTrigger forwarding (Hotfix #3 anti-duplicate-nav)', () => {
-    it('forwards hideMobileTrigger=true on /faq for an authenticated visitor', async () => {
-      setPathname('/faq');
+    it('forwards hideMobileTrigger=true when shouldMountBottomTabBar() → true', async () => {
+      setBottomTabBarMounted(true);
       await renderHeader({ variant: 'marketing', isAuthenticated: true });
       expect(screen.getByTestId('header-nav-mock')).toHaveAttribute(
         'data-hide-mobile-trigger',
@@ -246,49 +250,12 @@ describe('<Header />', () => {
       );
     });
 
-    it('forwards hideMobileTrigger=true on /legal/cgu for an authenticated visitor', async () => {
-      setPathname('/legal/cgu');
-      await renderHeader({ variant: 'marketing', isAuthenticated: true });
-      expect(screen.getByTestId('header-nav-mock')).toHaveAttribute(
-        'data-hide-mobile-trigger',
-        'true',
-      );
-    });
-
-    it('keeps hideMobileTrigger=false on the landing (excluded route)', async () => {
-      setPathname('/');
+    it('keeps hideMobileTrigger=false when shouldMountBottomTabBar() → false', async () => {
+      setBottomTabBarMounted(false);
       await renderHeader({ variant: 'marketing', isAuthenticated: true });
       expect(screen.getByTestId('header-nav-mock')).toHaveAttribute(
         'data-hide-mobile-trigger',
         'false',
-      );
-    });
-
-    it('keeps hideMobileTrigger=false on /login (auth route excluded)', async () => {
-      setPathname('/login');
-      await renderHeader({ variant: 'marketing', isAuthenticated: true });
-      expect(screen.getByTestId('header-nav-mock')).toHaveAttribute(
-        'data-hide-mobile-trigger',
-        'false',
-      );
-    });
-
-    it('keeps hideMobileTrigger=false for anonymous visitor on /faq', async () => {
-      setPathname('/faq');
-      await renderHeader({ variant: 'marketing', isAuthenticated: false });
-      // No bar to compete with → marketing burger stays.
-      expect(screen.getByTestId('header-nav-mock')).toHaveAttribute(
-        'data-hide-mobile-trigger',
-        'false',
-      );
-    });
-
-    it('strips the locale prefix before checking exclusion (e.g. /en/faq)', async () => {
-      setPathname('/en/faq');
-      await renderHeader({ variant: 'marketing', isAuthenticated: true });
-      expect(screen.getByTestId('header-nav-mock')).toHaveAttribute(
-        'data-hide-mobile-trigger',
-        'true',
       );
     });
   });

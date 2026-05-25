@@ -3,10 +3,25 @@ import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { BrandHomeLink } from '@/components/brand/BrandHomeLink';
 import { CookiePreferencesLink } from '@/components/layout/CookiePreferencesLink';
+import { shouldMountBottomTabBar } from '@/lib/layout/bottom-tab-bar-state';
 
 export async function Footer() {
   const t = await getTranslations('footer');
   const tCommon = await getTranslations('common');
+
+  // PR-BETA-6 hotfix #4 (THI-277, 2026-05-25, @thierry iPhone smoke):
+  // when the persistent BottomTabBar is rendered for this request, the
+  // footer's link `<nav>` (CGU / Privacy / Cookies / FAQ / Cookie
+  // Preferences) is fully redundant with the More sheet — the visitor
+  // sees the same five entries twice on mobile. Hide the nav on the
+  // mobile breakpoint when the bar will mount; keep it on desktop
+  // (≥ md, where the bar is `md:hidden`). Anonymous mobile visitors
+  // and authenticated visitors on excluded routes (/login, /signup,
+  // /onboarding) keep the full footer because no bar competes.
+  const bottomTabBarMounted = await shouldMountBottomTabBar();
+  const footerNavClass = bottomTabBarMounted
+    ? 'hidden flex-wrap gap-4 text-sm md:flex'
+    : 'flex flex-wrap gap-4 text-sm';
 
   return (
     <footer className="border-border bg-card border-t">
@@ -29,7 +44,11 @@ export async function Footer() {
             {t('copyrightNotice', { year: new Date().getFullYear() })}
           </span>
         </div>
-        <nav aria-label={tCommon('nav.footerLabel')} className="flex flex-wrap gap-4 text-sm">
+        <nav
+          aria-label={tCommon('nav.footerLabel')}
+          data-testid="footer-nav"
+          className={footerNavClass}
+        >
           <Link href="/legal/cgu" className="text-muted-foreground hover:underline">
             {t('cgu')}
           </Link>
