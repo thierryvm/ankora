@@ -60,12 +60,12 @@ vi.mock('@/components/gdpr/ConsentBanner', () => ({
   reopenConsentBanner: vi.fn(),
 }));
 
+import { BottomTabBar } from '../BottomTabBar';
 import {
-  BottomTabBar,
   BOTTOM_TAB_BAR_EXCLUDED_ROUTES,
   isExcludedRoute,
   stripLocalePrefix,
-} from '../BottomTabBar';
+} from '../bottom-tab-bar.routes';
 
 beforeEach(() => {
   cleanup();

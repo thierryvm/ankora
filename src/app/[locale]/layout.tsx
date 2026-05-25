@@ -14,7 +14,8 @@ import { Toaster } from '@/components/ui/toast';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister';
 import { ThemeBootScript } from '@/components/theme/ThemeBootScript';
-import { BottomTabBar, isExcludedRoute, stripLocalePrefix } from '@/components/layout/BottomTabBar';
+import { BottomTabBar } from '@/components/layout/BottomTabBar';
+import { isExcludedRoute, stripLocalePrefix } from '@/components/layout/bottom-tab-bar.routes';
 import { getOptionalUser } from '@/lib/auth/require-user';
 import { isAdmin } from '@/lib/auth/is-admin';
 
