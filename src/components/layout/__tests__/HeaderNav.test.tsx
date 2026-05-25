@@ -251,23 +251,22 @@ describe('<HeaderNav /> mobile drawer — THI-251 safe-area inset on PWA standal
   });
 });
 
-describe('<HeaderNav /> mobile drawer — PR-UX-1 / PR-BETA-6 admin entry handoff', () => {
-  // PR-BETA-6 (THI-277): admin entry handoff. The app-variant drawer no
-  // longer renders an Admin link because the drawer itself is short-
-  // circuited; the admin entry is now surfaced through the BottomTabBar's
-  // "More" sheet (see BottomTabBar.test.tsx / MoreSheet covers). These two
-  // assertions guarantee the drawer-side never re-grows the entry by
-  // mistake.
-  it('app variant: drawer never rendered, no Admin entry to assert', () => {
-    render(<HeaderNav variant="app" isAuthenticated isAdmin />);
+describe('<HeaderNav /> — PR-BETA-CLEANUP admin entry no longer in drawer', () => {
+  // PR-BETA-CLEANUP (THI-279, 2026-05-25): the `isAdmin` prop and the
+  // dead `variant === 'app'` drawer block were removed — the persistent
+  // BottomTabBar's More sheet is now the single mobile surface for the
+  // admin entry (MoreSheet.test.tsx covers it). These specs guarantee
+  // the drawer-side never re-grows the entry by mistake.
+  it('app variant: drawer never rendered (no trigger, no admin link)', () => {
+    render(<HeaderNav variant="app" isAuthenticated />);
     expect(screen.queryByTestId('header-nav-trigger')).not.toBeInTheDocument();
     expect(
       screen.queryByRole('link', { name: 'Espace admin (réservé fondateur)' }),
     ).not.toBeInTheDocument();
   });
 
-  it('marketing variant never exposes the Admin link, even if isAdmin=true', async () => {
-    render(<HeaderNav variant="marketing" isAuthenticated isAdmin />);
+  it('marketing variant drawer never exposes the Admin link', async () => {
+    render(<HeaderNav variant="marketing" isAuthenticated />);
     await openDrawer();
     expect(
       screen.queryByRole('link', { name: 'Espace admin (réservé fondateur)' }),
