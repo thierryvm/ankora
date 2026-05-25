@@ -37,12 +37,22 @@ type HeaderNavProps = {
   // `Header.tsx`) so the client never trusts itself. Default `false`
   // keeps marketing call-sites unchanged.
   isAdmin?: boolean;
+  // PR-BETA-6 hotfix #3 (THI-277, 2026-05-25) — duplicate-nav fix on
+  // mobile. When `Header.tsx` knows the persistent BottomTabBar will
+  // render for this request (authenticated visitor on a non-excluded
+  // route), it passes `hideMobileTrigger={true}` so this component
+  // skips the hamburger button + drawer portal on every variant. The
+  // two surfaces stay mutually exclusive and the visitor sees a single
+  // mobile-nav affordance (the bottom tab bar), as required by Apple
+  // HIG / Material 3 mobile-first 2026.
+  hideMobileTrigger?: boolean;
 };
 
 export function HeaderNav({
   variant = 'marketing',
   isAuthenticated = false,
   isAdmin = false,
+  hideMobileTrigger = false,
 }: HeaderNavProps) {
   const t = useTranslations('common');
   // PR-UX-1 — marketing drawer reuses MktNav's link labels so the desktop
@@ -409,16 +419,20 @@ export function HeaderNav({
   // by the Apple-HIG Bottom Tab Bar on the `/app/*` surface (mobile only).
   // For the `app` variant we therefore skip the hamburger trigger AND the
   // portalled drawer entirely — the BottomTabBar's "More" sheet is the
-  // canonical secondary-nav surface for signed-in mobile users. The
-  // marketing variant keeps the legacy drawer (landing / FAQ / legal /
-  // glossary) until the marketing nav is reworked separately. Desktop
-  // (≥ lg) keeps the ThemeToggle + LocaleSwitcher pair for every variant
-  // — the bar is `md:hidden`, so it never overlaps the desktop chrome.
-  const isMarketing = variant === 'marketing';
+  // canonical secondary-nav surface for signed-in mobile users.
+  //
+  // PR-BETA-6 hotfix #3 (2026-05-25): also skip the hamburger when the
+  // parent Header signals that the persistent BottomTabBar will mount
+  // (`hideMobileTrigger={true}` — authenticated visitor on /faq /
+  // /glossaire / /legal/*). Two nav surfaces side-by-side is an Apple
+  // HIG / Material 3 mobile-first 2026 anti-pattern. Desktop (≥ lg)
+  // keeps the ThemeToggle + LocaleSwitcher pair for every variant —
+  // the bar is `md:hidden`, so it never overlaps the desktop chrome.
+  const shouldRenderMobileTrigger = variant === 'marketing' && !hideMobileTrigger;
 
   return (
     <>
-      {isMarketing && (
+      {shouldRenderMobileTrigger && (
         <>
           {/* Hamburger menu - visible on mobile only.
               PR-D5 a11y: native `<button>` with `aria-expanded` + `aria-controls`

@@ -107,6 +107,29 @@ describe('<HeaderNav /> mobile drawer — auth CTAs', () => {
   });
 });
 
+describe('<HeaderNav /> hideMobileTrigger — PR-BETA-6 hotfix #3 duplicate-nav fix', () => {
+  // When the parent Header passes `hideMobileTrigger={true}` (authenticated
+  // visitor on a non-excluded route where the persistent BottomTabBar
+  // mounts), the hamburger trigger MUST be suppressed even for the
+  // marketing variant. Two mobile-nav surfaces side-by-side is an
+  // Apple HIG / Material 3 anti-pattern (THI-277 smoke 2026-05-25).
+  it('hides the hamburger trigger when hideMobileTrigger=true on marketing variant', () => {
+    render(<HeaderNav variant="marketing" isAuthenticated hideMobileTrigger />);
+    expect(screen.queryByTestId('header-nav-trigger')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Menu' })).not.toBeInTheDocument();
+  });
+
+  it('keeps the hamburger trigger by default (hideMobileTrigger=false) on marketing variant', () => {
+    render(<HeaderNav variant="marketing" isAuthenticated={false} />);
+    expect(screen.getByTestId('header-nav-trigger')).toBeInTheDocument();
+  });
+
+  it('app variant: hideMobileTrigger is redundant but does not regress (no trigger either way)', () => {
+    render(<HeaderNav variant="app" isAuthenticated hideMobileTrigger />);
+    expect(screen.queryByTestId('header-nav-trigger')).not.toBeInTheDocument();
+  });
+});
+
 describe('<HeaderNav /> mobile drawer — PR-UX-1 marketing parity with desktop MktNav', () => {
   it('exposes Product / Simulator / Pricing anchored at the canonical landing ids', async () => {
     render(<HeaderNav variant="marketing" isAuthenticated={false} />);

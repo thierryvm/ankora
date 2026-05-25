@@ -40,18 +40,33 @@ vi.mock('../HeaderNav', () => ({
     variant,
     isAuthenticated,
     isAdmin,
+    hideMobileTrigger,
   }: {
     variant: string;
     isAuthenticated?: boolean;
     isAdmin?: boolean;
+    hideMobileTrigger?: boolean;
   }) => (
     <div
       data-testid="header-nav-mock"
       data-variant={variant}
       data-is-authenticated={String(isAuthenticated ?? false)}
       data-is-admin={String(isAdmin ?? false)}
+      data-hide-mobile-trigger={String(hideMobileTrigger ?? false)}
     />
   ),
+}));
+
+// PR-BETA-6 hotfix #3 — Header reads the `x-pathname` request header to
+// decide whether to suppress the mobile hamburger (duplicate-nav fix
+// against the persistent BottomTabBar). Default to `/` so the existing
+// specs keep their pre-hotfix semantics; tests that need a different
+// route call `setPathname()` below.
+const pathnameRef = { value: '/' };
+vi.mock('next/headers', () => ({
+  headers: async () => ({
+    get: (name: string) => (name === 'x-pathname' ? pathnameRef.value : null),
+  }),
 }));
 
 // PR-SEC-ADMIN — `isAdmin()` reads env + Supabase session at runtime.
@@ -80,6 +95,10 @@ function setOptionalUser(value: null | { id: string }): void {
   optionalUserRef.value = value;
 }
 
+function setPathname(value: string): void {
+  pathnameRef.value = value;
+}
+
 async function renderHeader(props: Parameters<typeof Header>[0] = {}) {
   const ui = await Header(props);
   return render(ui);
@@ -89,6 +108,7 @@ describe('<Header />', () => {
   beforeEach(() => {
     setIsAdmin(false);
     setOptionalUser(null);
+    setPathname('/');
   });
 
   it('renders the marketing variant by default with login + signup CTAs', async () => {
@@ -210,6 +230,67 @@ describe('<Header />', () => {
     // Marketing pages are public — `showAdminLink` short-circuits before
     // calling isAdmin(), so the drawer always gets isAdmin=false.
     expect(screen.getByTestId('header-nav-mock')).toHaveAttribute('data-is-admin', 'false');
+  });
+
+  // PR-BETA-6 hotfix #3 — duplicate-nav fix on mobile. When the visitor is
+  // authenticated AND the route is NOT in `BOTTOM_TAB_BAR_EXCLUDED_ROUTES`
+  // (i.e. the persistent bar will mount), the Header must forward
+  // `hideMobileTrigger=true` so HeaderNav suppresses the hamburger.
+  describe('hideMobileTrigger forwarding (Hotfix #3 anti-duplicate-nav)', () => {
+    it('forwards hideMobileTrigger=true on /faq for an authenticated visitor', async () => {
+      setPathname('/faq');
+      await renderHeader({ variant: 'marketing', isAuthenticated: true });
+      expect(screen.getByTestId('header-nav-mock')).toHaveAttribute(
+        'data-hide-mobile-trigger',
+        'true',
+      );
+    });
+
+    it('forwards hideMobileTrigger=true on /legal/cgu for an authenticated visitor', async () => {
+      setPathname('/legal/cgu');
+      await renderHeader({ variant: 'marketing', isAuthenticated: true });
+      expect(screen.getByTestId('header-nav-mock')).toHaveAttribute(
+        'data-hide-mobile-trigger',
+        'true',
+      );
+    });
+
+    it('keeps hideMobileTrigger=false on the landing (excluded route)', async () => {
+      setPathname('/');
+      await renderHeader({ variant: 'marketing', isAuthenticated: true });
+      expect(screen.getByTestId('header-nav-mock')).toHaveAttribute(
+        'data-hide-mobile-trigger',
+        'false',
+      );
+    });
+
+    it('keeps hideMobileTrigger=false on /login (auth route excluded)', async () => {
+      setPathname('/login');
+      await renderHeader({ variant: 'marketing', isAuthenticated: true });
+      expect(screen.getByTestId('header-nav-mock')).toHaveAttribute(
+        'data-hide-mobile-trigger',
+        'false',
+      );
+    });
+
+    it('keeps hideMobileTrigger=false for anonymous visitor on /faq', async () => {
+      setPathname('/faq');
+      await renderHeader({ variant: 'marketing', isAuthenticated: false });
+      // No bar to compete with → marketing burger stays.
+      expect(screen.getByTestId('header-nav-mock')).toHaveAttribute(
+        'data-hide-mobile-trigger',
+        'false',
+      );
+    });
+
+    it('strips the locale prefix before checking exclusion (e.g. /en/faq)', async () => {
+      setPathname('/en/faq');
+      await renderHeader({ variant: 'marketing', isAuthenticated: true });
+      expect(screen.getByTestId('header-nav-mock')).toHaveAttribute(
+        'data-hide-mobile-trigger',
+        'true',
+      );
+    });
   });
 
   it('home link has the tactile press animation, gated on motion-safe (issue #95)', async () => {
