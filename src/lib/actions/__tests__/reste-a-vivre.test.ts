@@ -412,17 +412,48 @@ describe('updateResteAVivreOverrideAction — defensive failure modes (hotfix)',
     expect(revalidateSpy).not.toHaveBeenCalled();
   });
 
-  it('lets Next.js redirect() errors from requireUserWithWorkspace() propagate', async () => {
+  it('lets Next.js redirect() errors from requireUserWithWorkspace() propagate (outside try/catch path)', async () => {
     // Simulate the `redirect('/login')` that next/navigation throws when
     // the session is gone — Next.js relies on the throw to bubble up to
-    // its framework code. If our outer catch swallowed it, the user would
-    // see a generic "update failed" toast instead of being bounced to
-    // /login.
+    // its framework code. The action keeps `requireUserWithWorkspace()`
+    // OUTSIDE its try/catch precisely so this throw cannot be intercepted.
     const redirectMarker = Object.assign(new Error('NEXT_REDIRECT;replace;/login;307;'), {
       digest: 'NEXT_REDIRECT;replace;/login;307;',
     });
     requireUserSpy.mockRejectedValueOnce(redirectMarker);
 
     await expect(updateResteAVivreOverrideAction(VALID_INPUT)).rejects.toBe(redirectMarker);
+  });
+
+  it('re-throws NEXT_REDIRECT errors thrown FROM INSIDE the try/catch (hotfix #3 defense-in-depth)', async () => {
+    // The previous hotfix kept `requireUserWithWorkspace()` outside the
+    // try/catch — but a future refactor (or a helper called inside)
+    // might call `redirect()`. The outer catch MUST detect the Next.js
+    // sentinel and re-throw it; otherwise the framework never sees the
+    // bounce and the user is left on the dashboard with a toast.
+    // We trigger the throw via `createClient` (called inside the try
+    // block) so the redirect propagates through the catch path that
+    // previous tests didn't exercise.
+    const redirectMarker = Object.assign(new Error('NEXT_REDIRECT;replace;/login;307;'), {
+      digest: 'NEXT_REDIRECT;replace;/login;307;',
+    });
+    supa.client.from.mockImplementationOnce(() => {
+      throw redirectMarker;
+    });
+
+    await expect(updateResteAVivreOverrideAction(VALID_INPUT)).rejects.toBe(redirectMarker);
+    expect(auditSpy).not.toHaveBeenCalled();
+    expect(revalidateSpy).not.toHaveBeenCalled();
+  });
+
+  it('re-throws NEXT_NOT_FOUND errors thrown from inside the try/catch', async () => {
+    const notFoundMarker = Object.assign(new Error('NEXT_NOT_FOUND'), {
+      digest: 'NEXT_NOT_FOUND',
+    });
+    supa.client.from.mockImplementationOnce(() => {
+      throw notFoundMarker;
+    });
+
+    await expect(updateResteAVivreOverrideAction(VALID_INPUT)).rejects.toBe(notFoundMarker);
   });
 });

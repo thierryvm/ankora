@@ -8,6 +8,7 @@ import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
 import { rateLimit } from '@/lib/security/rate-limit';
 import { resteAVivreMonthOverrideSchema } from '@/lib/schemas/reste-a-vivre';
 import { revalidateDashboard } from '@/lib/actions/revalidate';
+import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
 import { log } from '@/lib/log';
 import type { ActionResult } from '@/lib/actions/types';
 
@@ -136,11 +137,19 @@ export async function updateResteAVivreOverrideAction(input: unknown): Promise<A
 
     return { ok: true };
   } catch (err) {
+    // PR-BETA-3 hotfix #3 — defense-in-depth: even though
+    // `requireUserWithWorkspace()` is kept outside the try/catch, a future
+    // refactor (or one of the helpers below) might introduce a `redirect()`
+    // or `notFound()` call inside the try block. Next.js implements these
+    // via thrown sentinel errors that the framework catches at the action
+    // boundary — swallowing them here would silently break the auth bounce.
+    if (isNextControlFlowError(err)) throw err;
+
     // Outer safety net for any unexpected throw inside the action body
     // (createClient init crash, headers() crash, Zod internal, etc.).
     // Without this catch, a thrown error would surface as a bare HTTP 5xx
     // the drawer cannot interpret — exactly the symptom that prompted
-    // this hotfix. Log everything we know so the next investigation has
+    // hotfix #1. Log everything we know so the next investigation has
     // a real stack trace to anchor on.
     log.error('updateResteAVivreOverrideAction unexpected crash', {
       user_id: user.id,

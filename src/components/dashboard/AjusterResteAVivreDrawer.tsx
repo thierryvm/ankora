@@ -6,6 +6,7 @@ import { Pencil, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { updateResteAVivreOverrideAction } from '@/lib/actions/reste-a-vivre';
+import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 import { toast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
@@ -131,6 +132,14 @@ export function AjusterResteAVivreDrawer({
           toast.error(translateError(result.errorCode) || t('drawer.errorGeneric'));
         }
       } catch (err) {
+        // PR-BETA-3 hotfix #3 — Next.js implements `redirect()` and
+        // `notFound()` via thrown sentinel errors that the framework
+        // intercepts to perform navigation. Catching them here (as the
+        // previous hotfix did) silently swallowed the auth bounce thrown
+        // by `requireUserWithWorkspace()` server-side: the user saw a
+        // generic "couldn't save" toast instead of being redirected to
+        // `/login`. Re-throw so React + Next.js can complete the bounce.
+        if (isNextControlFlowError(err)) throw err;
         // Log to the browser console so the user can copy-paste it for a
         // bug report; the toast keeps the UX recoverable.
         // eslint-disable-next-line no-console

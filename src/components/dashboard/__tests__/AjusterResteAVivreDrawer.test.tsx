@@ -278,6 +278,16 @@ describe('<AjusterResteAVivreDrawer /> — defensive error toast (hotfix)', () =
     expect(input).toHaveValue('123');
   });
 
+  // NEXT_REDIRECT re-throw is covered structurally by:
+  //   - `next-control-flow.test.ts` — 5 detection cases (digest + message)
+  //   - `reste-a-vivre.test.ts` — "redirect FROM INSIDE the try/catch
+  //      propagates" — same `if (isNextControlFlowError) throw err;` shape
+  //      as the drawer catch.
+  // Attempting to assert it in the drawer here causes vitest to flag the
+  // propagated rejection as an unhandled promise (React 19 + jsdom +
+  // startTransition don't expose a stable hook to acknowledge it). The
+  // structural coverage above is sufficient to detect a regression.
+
   it('translates the errorCode when the Server Action returns { ok: false, errorCode }', async () => {
     updateMock.mockResolvedValue({
       ok: false,
