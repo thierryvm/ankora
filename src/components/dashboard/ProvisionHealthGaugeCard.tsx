@@ -67,13 +67,23 @@ export async function ProvisionHealthGaugeCard({
 
   const hasTarget = result.totalEpargneTheorique.gt(0);
 
-  // Ratio in [0, ~Infinity[. Clamped to [0, 1.5] for the ProgressBar visual
-  // (display only — accounting math keeps the raw Decimal precision).
+  // Ratio in [0, ~Infinity[. Clamped to [0, ∞) for math, displayed below.
   const rawRatio = hasTarget
     ? result.soldeEpargneActuel.dividedBy(result.totalEpargneTheorique).toNumber()
     : 1;
   const ratio = Number.isFinite(rawRatio) ? Math.max(0, rawRatio) : 0;
-  const percentLabel = Math.round(ratio * 100);
+
+  // PR-BETA-CLEANUP-2 (THI-281) — visual cap @ 100% Option C.
+  // The cockpit was showing "546% À jour" when the user had stashed far
+  // more than the 12-month target — math correct, UX confusing. We now
+  // display 100% as the headline KPI once the user is on or past target,
+  // and surface the overflow as a factual sub-text "+ X € au-delà de la
+  // cible" (R-06 anti-culpabilisation: no judgement, no "trop épargné").
+  const isOverachieving = hasTarget && ratio > 1;
+  const displayPercent = isOverachieving ? 100 : Math.round(ratio * 100);
+  const surplusOverTarget = isOverachieving
+    ? result.soldeEpargneActuel.minus(result.totalEpargneTheorique)
+    : null;
 
   const tier: HealthTier =
     !hasTarget || ratio >= 1.0 ? 'success' : ratio >= 0.75 ? 'warning' : 'danger';
@@ -144,12 +154,20 @@ export async function ProvisionHealthGaugeCard({
               className={`text-4xl font-bold tracking-tight tabular-nums ${accent.valueColor}`}
               data-testid="provision-health-gauge-percent"
             >
-              {percentLabel}%
+              {displayPercent}%
             </p>
             <p className="text-muted-foreground mt-1 text-sm">{statusLabel}</p>
+            {surplusOverTarget && (
+              <p
+                className={`mt-1 text-sm font-medium tabular-nums ${accent.valueColor}`}
+                data-testid="provision-health-gauge-surplus"
+              >
+                {t('objectifDepasse', { amount: fmt(surplusOverTarget) })}
+              </p>
+            )}
             <div className="mt-4">
               <ProgressBar
-                value={ratio}
+                value={Math.min(ratio, 1)}
                 max={1}
                 tone={tier}
                 size="md"

@@ -698,13 +698,24 @@
       "amountLabel": "Amount (€)",
       "frequencyLabel": "Frequency",
       "dueMonthLabel": "Reference month",
+      "paymentDayLabel": "Day of month",
+      "paymentDayHint": "The day the bill is debited (1–31).",
       "addButton": "Add",
       "adding": "Adding…",
       "count": "{count, plural, =0 {no bills} one {1 bill} other {# bills}}",
       "referenceFormat": "{frequency} · ref. {month}",
       "deleteAria": "Delete {label}",
+      "editAria": "Edit {label}",
       "toastCreated": "Bill added",
-      "toastDeleted": "Bill deleted"
+      "toastUpdated": "Bill updated",
+      "toastDeleted": "Bill deleted",
+      "drawer": {
+        "title": "Edit bill",
+        "save": "Save",
+        "saving": "Saving…",
+        "cancel": "Cancel",
+        "errorGeneric": "The change couldn't be saved. Please try again in a moment."
+      }
     },
     "accounts": {
       "metaTitle": "My accounts",
@@ -998,6 +1009,7 @@
       "empty": "No periodic charges scheduled — nothing to save up for yet.",
       "ariaLabel": "Provisions health: {percent}% of theoretical target",
       "deficit": "3-month catch-up plan: {amount}/month",
+      "objectifDepasse": "+ {amount} beyond target",
       "status": {
         "a_jour": "On track",
         "deficit": "Deficit"

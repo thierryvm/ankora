@@ -102,6 +102,11 @@ export type WorkspaceSnapshot = {
     amount: number;
     frequency: string;
     dueMonth: number;
+    // PR-BETA-CLEANUP-2 (THI-281): expose the full schedule so the
+    // ChargesClient list can compute `nextDueDateForCharge()` and the
+    // form / edit drawer can edit the day-of-month precisely.
+    paymentDay: number;
+    paymentMonths: readonly number[];
     categoryId: string | null;
     isActive: boolean;
     notes: string | null;

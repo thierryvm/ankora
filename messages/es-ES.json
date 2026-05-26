@@ -698,13 +698,24 @@
       "amountLabel": "Importe (€)",
       "frequencyLabel": "Frecuencia",
       "dueMonthLabel": "Mes de referencia",
+      "paymentDayLabel": "Día del mes",
+      "paymentDayHint": "El día en que se cobra el gasto fijo (1–31).",
       "addButton": "Añadir",
       "adding": "Añadiendo…",
       "count": "{count, plural, =0 {ningún gasto fijo} one {1 gasto fijo} other {# gastos fijos}}",
       "referenceFormat": "{frequency} · ref. {month}",
       "deleteAria": "Eliminar {label}",
+      "editAria": "Modificar {label}",
       "toastCreated": "Gasto fijo añadido",
-      "toastDeleted": "Gasto fijo eliminado"
+      "toastUpdated": "Gasto fijo actualizado",
+      "toastDeleted": "Gasto fijo eliminado",
+      "drawer": {
+        "title": "Modificar gasto fijo",
+        "save": "Guardar",
+        "saving": "Guardando…",
+        "cancel": "Cancelar",
+        "errorGeneric": "El cambio no se ha podido guardar. Inténtalo de nuevo dentro de un momento."
+      }
     },
     "accounts": {
       "metaTitle": "Mis cuentas",
@@ -998,6 +1009,7 @@
       "empty": "Sin gastos periódicos programados — nada para provisionar por ahora.",
       "ariaLabel": "Salud de las provisiones: {percent}% del objetivo teórico",
       "deficit": "Plan de recuperación a 3 meses: {amount}/mes",
+      "objectifDepasse": "+ {amount} por encima del objetivo",
       "status": {
         "a_jour": "Al día",
         "deficit": "Déficit"

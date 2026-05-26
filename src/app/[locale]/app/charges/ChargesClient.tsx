@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { useMemo, useState, useTransition } from 'react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
@@ -18,8 +18,12 @@ import {
 import { toast } from '@/components/ui/toast';
 import type { Locale } from '@/i18n/routing';
 import { createChargeAction, deleteChargeAction } from '@/lib/actions/charges';
-import { formatCurrency, formatMonth } from '@/lib/i18n/formatters';
+import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
+import { nextDueDateForCharge, paymentMonthsFromFrequency } from '@/lib/domain/charges';
+import { formatCurrency, formatDate, formatMonth } from '@/lib/i18n/formatters';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
+
+import { ChargeEditDrawer, type ChargeEditDrawerCharge } from './ChargeEditDrawer';
 
 type Frequency = 'monthly' | 'quarterly' | 'semiannual' | 'annual';
 
@@ -32,10 +36,28 @@ type RawCharge = {
   amount: number;
   frequency: string;
   dueMonth: number;
+  paymentDay: number;
+  paymentMonths: readonly number[];
   categoryId: string | null;
   isActive: boolean;
   notes: string | null;
 };
+
+/**
+ * Today as an ISO `YYYY-MM-DD` string anchored to Europe/Brussels — same
+ * timezone the rest of the cockpit uses for due-date math (cf.
+ * `workspace-snapshot` and `dashboard/page`). Computing locally on the
+ * client is fine here because `nextDueDateForCharge()` is a pure function
+ * of the charge schedule + the reference ISO date.
+ */
+function todayBrusselsIso(): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Brussels',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
+}
 
 export function ChargesClient({ charges }: { charges: RawCharge[] }) {
   const t = useTranslations('app.charges');
@@ -49,38 +71,96 @@ export function ChargesClient({ charges }: { charges: RawCharge[] }) {
   const [amount, setAmount] = useState('');
   const [frequency, setFrequency] = useState<Frequency>('monthly');
   const [dueMonth, setDueMonth] = useState('1');
+  const [paymentDay, setPaymentDay] = useState('1');
+  const [editingCharge, setEditingCharge] = useState<ChargeEditDrawerCharge | null>(null);
+
+  const todayIso = useMemo(() => todayBrusselsIso(), []);
 
   function onCreate(e: React.FormEvent) {
     e.preventDefault();
+    const parsedAmount = Number(amount.replace(',', '.'));
+    if (!Number.isFinite(parsedAmount) || parsedAmount < 0) {
+      toast.error(translateError('errors.validation.generic'));
+      return;
+    }
+    const parsedDueMonth = Number(dueMonth);
+    const parsedPaymentDay = Number(paymentDay);
+    const computedPaymentMonths = paymentMonthsFromFrequency(frequency, parsedDueMonth);
+
     startTransition(async () => {
-      const result = await createChargeAction({
-        label: label.trim(),
-        amount: Number(amount),
-        frequency,
-        dueMonth: Number(dueMonth),
-        categoryId: null,
-        isActive: true,
-        notes: null,
-      });
-      if (result.ok) {
-        toast.success(t('toastCreated'));
-        setLabel('');
-        setAmount('');
-      } else {
-        toast.error(translateError(result.errorCode));
+      try {
+        const result = await createChargeAction({
+          label: label.trim(),
+          amount: parsedAmount,
+          frequency,
+          dueMonth: parsedDueMonth,
+          paymentDay: parsedPaymentDay,
+          paymentMonths: computedPaymentMonths,
+          categoryId: null,
+          isActive: true,
+          notes: null,
+        });
+        if (result.ok) {
+          toast.success(t('toastCreated'));
+          setLabel('');
+          setAmount('');
+        } else {
+          toast.error(translateError(result.errorCode));
+        }
+      } catch (err) {
+        if (isNextControlFlowError(err)) throw err;
+        // eslint-disable-next-line no-console
+        console.error('createChargeAction threw', err);
+        toast.error(translateError('errors.charges.createFailed'));
       }
     });
   }
 
   function onDelete(id: string) {
     startTransition(async () => {
-      const result = await deleteChargeAction(id);
-      if (result.ok) {
-        toast.success(t('toastDeleted'));
-      } else {
-        toast.error(translateError(result.errorCode));
+      try {
+        const result = await deleteChargeAction(id);
+        if (result.ok) {
+          toast.success(t('toastDeleted'));
+        } else {
+          toast.error(translateError(result.errorCode));
+        }
+      } catch (err) {
+        if (isNextControlFlowError(err)) throw err;
+        // eslint-disable-next-line no-console
+        console.error('deleteChargeAction threw', err);
+        toast.error(translateError('errors.charges.deleteFailed'));
       }
     });
+  }
+
+  function onEdit(c: RawCharge) {
+    setEditingCharge({
+      id: c.id,
+      label: c.label,
+      amount: c.amount,
+      frequency: c.frequency,
+      dueMonth: c.dueMonth,
+      paymentDay: c.paymentDay,
+    });
+  }
+
+  /**
+   * Compute the next due date label for a row.
+   * Falls back to `formatMonth(dueMonth)` if `nextDueDateForCharge` returns
+   * null (inactive charge or empty paymentMonths from legacy data).
+   */
+  function nextDueLabel(c: RawCharge): string {
+    const iso = nextDueDateForCharge(
+      {
+        isActive: c.isActive,
+        paymentMonths: c.paymentMonths,
+        paymentDay: c.paymentDay,
+      } as Parameters<typeof nextDueDateForCharge>[0],
+      todayIso,
+    );
+    if (iso) return formatDate(iso, locale, 'medium');
+    return formatMonth(c.dueMonth, locale, 'long');
   }
 
   return (
@@ -149,6 +229,20 @@ export function ChargesClient({ charges }: { charges: RawCharge[] }) {
                 </SelectContent>
               </Select>
             </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="paymentDay">{t('paymentDayLabel')}</Label>
+              <Input
+                id="paymentDay"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={31}
+                value={paymentDay}
+                onChange={(e) => setPaymentDay(e.target.value)}
+                required
+              />
+              <p className="text-muted-foreground text-xs">{t('paymentDayHint')}</p>
+            </div>
             <div className="md:col-span-2">
               <Button type="submit" disabled={isPending}>
                 <Plus className="h-4 w-4" />
@@ -178,16 +272,16 @@ export function ChargesClient({ charges }: { charges: RawCharge[] }) {
                 <li
                   key={c.id}
                   data-testid={`charges-row-${c.id}`}
-                  className="bg-card border-border/60 md:hover:bg-surface-muted relative rounded-lg border p-4 pr-14 transition-colors md:grid md:grid-cols-[5rem_minmax(0,1fr)_auto_auto_auto] md:items-baseline md:gap-4 md:rounded-none md:border-0 md:bg-transparent md:px-2 md:py-3 md:pr-2"
+                  className="bg-card border-border/60 md:hover:bg-surface-muted relative rounded-lg border p-4 pr-24 transition-colors md:grid md:grid-cols-[minmax(8rem,10rem)_minmax(0,1fr)_auto_auto_auto_auto] md:items-baseline md:gap-4 md:rounded-none md:border-0 md:bg-transparent md:px-2 md:py-3 md:pr-2"
                 >
-                  {/* Mobile: header row (month + amount on a single line, justify-between).
-                      Desktop: contents — projects month + amount as direct grid children. */}
+                  {/* Mobile: header row (next-due + amount on a single line).
+                      Desktop: contents — projects next-due + amount as grid cells 1 / 4. */}
                   <div className="flex items-baseline justify-between gap-3 md:contents">
                     <span
-                      data-testid="charges-row-month"
-                      className="text-muted-foreground text-xs font-medium tracking-wide uppercase md:order-1 md:text-sm"
+                      data-testid="charges-row-next-due"
+                      className="text-muted-foreground text-xs font-medium tracking-wide md:order-1 md:text-sm"
                     >
-                      {formatMonth(c.dueMonth, locale, 'short')}
+                      {nextDueLabel(c)}
                     </span>
                     <span
                       data-testid="charges-row-amount"
@@ -197,8 +291,8 @@ export function ChargesClient({ charges }: { charges: RawCharge[] }) {
                     </span>
                   </div>
 
-                  {/* Mobile: body row (label + frequency chip, flex gap-2 mt-2).
-                      Desktop: contents — projects label + chip as cells 2 and 3. */}
+                  {/* Mobile: body row (label + frequency chip).
+                      Desktop: contents — projects label + chip as cells 2 / 3. */}
                   <div className="mt-2 flex items-center gap-2 md:mt-0 md:contents">
                     <span
                       data-testid="charges-row-label"
@@ -214,7 +308,20 @@ export function ChargesClient({ charges }: { charges: RawCharge[] }) {
                     </span>
                   </div>
 
-                  {/* Delete: top-right tap target on mobile (44×44), inline cell 5 on desktop (36×36). */}
+                  {/* Edit + Delete: stacked top-right tap targets on mobile,
+                      inline cells 5 / 6 on desktop. */}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onEdit(c)}
+                    disabled={isPending}
+                    aria-label={t('editAria', { label: c.label })}
+                    data-testid={`charges-row-edit-${c.id}`}
+                    className="absolute top-2 right-14 size-11 shrink-0 md:static md:order-5 md:size-9 md:self-center"
+                  >
+                    <Pencil className="text-muted-foreground h-4 w-4" />
+                  </Button>
                   <Button
                     type="button"
                     variant="ghost"
@@ -222,7 +329,8 @@ export function ChargesClient({ charges }: { charges: RawCharge[] }) {
                     onClick={() => onDelete(c.id)}
                     disabled={isPending}
                     aria-label={t('deleteAria', { label: c.label })}
-                    className="absolute top-2 right-2 size-11 shrink-0 md:static md:order-5 md:size-9 md:self-center"
+                    data-testid={`charges-row-delete-${c.id}`}
+                    className="absolute top-2 right-2 size-11 shrink-0 md:static md:order-6 md:size-9 md:self-center"
                   >
                     <Trash2 className="text-danger h-4 w-4" />
                   </Button>
@@ -232,6 +340,8 @@ export function ChargesClient({ charges }: { charges: RawCharge[] }) {
           )}
         </CardContent>
       </Card>
+
+      <ChargeEditDrawer charge={editingCharge} onClose={() => setEditingCharge(null)} />
     </div>
   );
 }
