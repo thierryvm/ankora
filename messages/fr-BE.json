@@ -964,6 +964,26 @@
         "revenus": "Revenus",
         "effort": "Effort financier lissé",
         "plafond": "Plafond quotidien"
+      },
+      "subStats": {
+        "resteDisponible": "Reste disponible",
+        "resteAVivre": "Reste à vivre",
+        "capaciteEpargne": "Capacité épargne",
+        "ajusterCeMois": "Ajuster ce mois"
+      },
+      "ledePositif": "Tu peux mettre {amount} de côté ce mois en plus de tes virements automatiques. Tu décides combien tu y mets vraiment.",
+      "ledeNegatif": "Ton train de vie dépasse tes revenus ce mois. On peut regarder ensemble ce qui peut être ajusté.",
+      "tooltip": "Cette valeur soustrait tes charges fixes, tes provisions lissées sur l'année, ET ton estimation de vie courante ({resteAVivre}). C'est ce que tu peux choisir d'épargner en plus.",
+      "drawer": {
+        "title": "Ajuster le reste à vivre pour ce mois",
+        "inputLabel": "Combien tu dépenses pour vivre ce mois ?",
+        "inputHint": "Courses, sorties, loisirs, plaisir, imprévus quotidiens",
+        "helperCoherent": "Estimation cohérente avec un budget belge typique.",
+        "helperBas": "Estimation basse. Tu peux ajuster plus tard si besoin.",
+        "helperHaut": "Estimation haute. Ankora respecte ton budget — pas de jugement.",
+        "save": "Enregistrer",
+        "cancel": "Annuler",
+        "errorGeneric": "L'ajustement n'a pas pu être enregistré. Réessaye dans un instant."
       }
     },
     "daily": {

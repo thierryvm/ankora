@@ -1,5 +1,5 @@
 import Decimal from 'decimal.js';
-import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Info } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,51 +7,52 @@ import { capaciteEpargneReelle } from '@/lib/domain/cockpit';
 import type { CockpitCharge } from '@/lib/domain/cockpit/types';
 import { formatCurrency } from '@/lib/i18n/formatters';
 import type { Locale } from '@/i18n/routing';
+import { AjusterResteAVivreDrawer } from './AjusterResteAVivreDrawer';
 
 type Props = {
   revenus: Decimal;
   charges: readonly CockpitCharge[];
-  plafondQuotidien: Decimal;
+  resteAVivre: Decimal;
+  /** ISO `YYYY-MM` for the current month — drives the drawer override key. */
+  currentMonthYYYYMM: string;
   locale: Locale;
 };
 
 /**
- * Capacité d'Épargne Réelle — radar card #2 of cockpit Bloc 2 (ADR-009).
+ * Capacité d'Épargne Réelle — Bloc 2 hero radar #2 (ADR-009 + amendement
+ * 2026-05-09 — tryptique pédagogique).
  *
- * THE differentiating KPI: `revenus - effortFinancierLisse - plafondQuotidien`.
- * Stable mois-après-mois (the lissage absorbs the volatility of periodic
- * bills) and honest about whether the user's lifestyle fits inside their
- * income on a true annual basis. No competitor (Monarch, YNAB, Lunch Money,
- * Linxo, Bankin') ships this calculation.
+ * THE differentiating KPI of Ankora: `revenus − effortFinancierLisse −
+ * resteAVivre`. No competitor (Monarch, YNAB, Lunch Money, Linxo, Bankin')
+ * ships this calculation.
  *
- * PR-D3-bis pedagogy update — the bare big number that PR-D3 shipped was
- * opaque to anyone but @thierry: "+124 €" with no audit trail. We now
- * always show the waterfall breakdown above the big number so a new user
- * understands the calculation at first glance:
+ * PR-BETA-3 refactor: replaced the PR-D3-bis opaque waterfall by an explicit
+ * 3-concept tryptique surfaced under the hero number:
  *
- *     Revenus            2 500 €
- *   − Effort lissé     −1 876 €
- *   − Plafond quotidien  −500 €
- *   ────────────────────────
- *   Capacité réelle    +124 € ✓
+ *   ┌────────────────┬────────────────┬────────────────┐
+ *   │ Reste dispo    │ Reste à vivre  │ Capacité       │
+ *   │  662 €         │  500 € [Adj]   │  162 €         │
+ *   └────────────────┴────────────────┴────────────────┘
  *
- * Visual semantics:
- *  - emerald accent + CheckCircle2 + positive message when capacité ≥ 0
- *  - rose accent + AlertCircle + warning message when capacité < 0
- *  - decorative glow blob bottom-right matching the state colour
- *
- * Server Component (math + i18n only).
+ * Why kill the waterfall:
+ *   - "Revenus − Effort" was already implicit (the Effort card sits beside
+ *     this one on the dashboard and shows the breakdown).
+ *   - Three concepts collapsed into one "opaque big number" was the exact
+ *     pain ADR-009 amendement 2026-05-09 was filed to fix.
+ *   - The tryptique surfaces each concept distinctly and exposes the
+ *     "Ajuster ce mois" R-10 affordance inline.
  */
-export async function CapaciteEpargneCard({ revenus, charges, plafondQuotidien, locale }: Props) {
+export async function CapaciteEpargneCard({
+  revenus,
+  charges,
+  resteAVivre,
+  currentMonthYYYYMM,
+  locale,
+}: Props) {
   const t = await getTranslations('dashboard.capacite');
-  const result = capaciteEpargneReelle({ revenus, charges, plafondQuotidien });
+  const result = capaciteEpargneReelle({ revenus, charges, resteAVivre });
   const fmt = (value: Parameters<typeof formatCurrency>[0]) => formatCurrency(value, locale);
 
-  // PR-D5 tokens: replaced raw Tailwind palette (`emerald-*`, `rose-*`) +
-  // `dark:text-*` hacks (which bypassed our `[data-theme="dark"]` custom
-  // variant) by the semantic tokens `--color-success` / `--color-danger`.
-  // The card now follows the design system end-to-end and the dark variant
-  // is handled by the token layer rather than per-component overrides.
   const accent = result.isPositive
     ? {
         ringColor: 'ring-success/15',
@@ -60,7 +61,7 @@ export async function CapaciteEpargneCard({ revenus, charges, plafondQuotidien, 
         glowColor: 'bg-success/20',
         gradientFrom: 'from-success/8',
         Icon: CheckCircle2,
-        message: t('message_positive'),
+        lede: t('ledePositif', { amount: fmt(result.capacite) }),
       }
     : {
         ringColor: 'ring-danger/15',
@@ -69,7 +70,7 @@ export async function CapaciteEpargneCard({ revenus, charges, plafondQuotidien, 
         glowColor: 'bg-danger/20',
         gradientFrom: 'from-danger/8',
         Icon: AlertCircle,
-        message: t('message_negative'),
+        lede: t('ledeNegatif'),
       };
 
   // Force "+12,34 €" prefix on positive values so the affirmative framing is
@@ -77,32 +78,7 @@ export async function CapaciteEpargneCard({ revenus, charges, plafondQuotidien, 
   // default. Zero stays unsigned (still positive per `isPositive`).
   const formatted = fmt(result.capacite);
   const signed = result.capacite.gt(0) ? `+${formatted}` : formatted;
-
-  // The waterfall row data — order matches the ADR-009 formula left-to-right
-  // so the math is reconstructible by a reader who has never seen the app.
-  const showPlafondRow = plafondQuotidien.gt(0);
-  const breakdownRows: Array<{
-    key: string;
-    label: string;
-    value: string;
-    operator: '+' | '−';
-  }> = [
-    { key: 'revenus', label: t('breakdown.revenus'), value: fmt(revenus), operator: '+' },
-    {
-      key: 'effort',
-      label: t('breakdown.effort'),
-      value: fmt(result.effortFinancierLisse),
-      operator: '−',
-    },
-  ];
-  if (showPlafondRow) {
-    breakdownRows.push({
-      key: 'plafond',
-      label: t('breakdown.plafond'),
-      value: fmt(plafondQuotidien),
-      operator: '−',
-    });
-  }
+  const tooltipText = t('tooltip', { resteAVivre: fmt(result.resteAVivre) });
 
   return (
     <Card
@@ -128,36 +104,84 @@ export async function CapaciteEpargneCard({ revenus, charges, plafondQuotidien, 
           className={`h-6 w-6 shrink-0 ${accent.iconColor}`}
         />
       </CardHeader>
-      <CardContent className="relative">
-        <dl
-          className="text-muted-foreground mb-3 flex flex-col gap-1.5 text-sm"
-          data-testid="capacite-epargne-breakdown"
-        >
-          {breakdownRows.map((row) => (
-            <div key={row.key} className="flex items-baseline justify-between gap-3">
-              <dt className="flex items-center gap-2">
-                <span
-                  aria-hidden
-                  className="text-muted-foreground/70 inline-flex w-4 justify-center font-medium"
-                >
-                  {row.operator}
-                </span>
-                <span>{row.label}</span>
-              </dt>
-              <dd className="text-foreground/80 font-medium tabular-nums">{row.value}</dd>
-            </div>
-          ))}
-        </dl>
-        <div className="border-border/60 border-t pt-3">
+
+      <CardContent className="relative flex flex-col gap-4">
+        {/* Hero number + tooltip affordance */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-start gap-2">
+            <p
+              className={`text-4xl font-bold tracking-tight tabular-nums ${accent.valueColor}`}
+              data-testid="capacite-epargne-value"
+            >
+              {signed}
+            </p>
+            <span
+              className="text-muted-foreground/70 hover:text-foreground inline-flex h-6 w-6 shrink-0 cursor-help items-center justify-center rounded-full transition-colors"
+              title={tooltipText}
+              aria-label={tooltipText}
+              data-testid="capacite-epargne-tooltip"
+              tabIndex={0}
+            >
+              <Info className="h-4 w-4" strokeWidth={1.5} aria-hidden />
+            </span>
+          </div>
           <p
-            className={`text-4xl font-bold tracking-tight tabular-nums ${accent.valueColor}`}
-            data-testid="capacite-epargne-value"
+            className="text-muted-foreground text-sm leading-relaxed"
+            data-testid="capacite-epargne-lede"
           >
-            {signed}
+            {accent.lede}
           </p>
-          <p className="text-muted-foreground mt-3 text-sm leading-relaxed">{accent.message}</p>
         </div>
+
+        {/* Tryptique sub-stats — ADR-009 amendement 2026-05-09 */}
+        <dl
+          className="border-border/60 grid grid-cols-1 gap-3 border-t pt-4 sm:grid-cols-3 sm:gap-2"
+          data-testid="capacite-epargne-substats"
+        >
+          <SubStat
+            label={t('subStats.resteDisponible')}
+            value={fmt(result.resteDisponible)}
+            testId="substat-reste-disponible"
+          />
+          <SubStat
+            label={t('subStats.resteAVivre')}
+            value={fmt(result.resteAVivre)}
+            testId="substat-reste-a-vivre"
+            secondary={
+              <AjusterResteAVivreDrawer
+                currentMonthYYYYMM={currentMonthYYYYMM}
+                initialResteAVivre={result.resteAVivre.toNumber()}
+                monthlyIncome={revenus.toNumber()}
+                triggerLabel={t('subStats.ajusterCeMois')}
+              />
+            }
+          />
+          <SubStat
+            label={t('subStats.capaciteEpargne')}
+            value={signed}
+            valueClassName={accent.valueColor}
+            testId="substat-capacite"
+          />
+        </dl>
       </CardContent>
     </Card>
+  );
+}
+
+type SubStatProps = {
+  label: string;
+  value: string;
+  valueClassName?: string;
+  secondary?: React.ReactNode;
+  testId?: string;
+};
+
+function SubStat({ label, value, valueClassName, secondary, testId }: SubStatProps) {
+  return (
+    <div className="flex flex-col gap-0.5" data-testid={testId}>
+      <dt className="text-muted-foreground text-xs font-medium tracking-wide uppercase">{label}</dt>
+      <dd className={`text-lg font-semibold tabular-nums ${valueClassName ?? ''}`}>{value}</dd>
+      {secondary}
+    </div>
   );
 }

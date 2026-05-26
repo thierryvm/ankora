@@ -964,6 +964,26 @@
         "revenus": "Einkommen",
         "effort": "Geglätteter finanzieller Aufwand",
         "plafond": "Tägliches Limit"
+      },
+      "subStats": {
+        "resteDisponible": "Verfügbar",
+        "resteAVivre": "Lebenshaltung",
+        "capaciteEpargne": "Sparkapazität",
+        "ajusterCeMois": "Diesen Monat anpassen"
+      },
+      "ledePositif": "Du kannst diesen Monat {amount} zusätzlich zu deinen automatischen Überweisungen zur Seite legen. Du entscheidest, wie viel du wirklich sparst.",
+      "ledeNegatif": "Dein Lebensstil übersteigt diesen Monat dein Einkommen. Wir können gemeinsam schauen, was angepasst werden kann.",
+      "tooltip": "Dieser Wert zieht deine Fixkosten, deine jährlich geglätteten Rückstellungen und dein geschätztes Lebenshaltungsbudget ({resteAVivre}) ab. Es ist das, was du zusätzlich sparen kannst.",
+      "drawer": {
+        "title": "Lebenshaltungsbudget für diesen Monat anpassen",
+        "inputLabel": "Wie viel gibst du diesen Monat fürs Leben aus?",
+        "inputHint": "Einkäufe, Ausgehen, Freizeit, Vergnügen, alltägliche Überraschungen",
+        "helperCoherent": "Schätzung, die zu einem typisch belgischen Budget passt.",
+        "helperBas": "Niedrige Schätzung. Du kannst sie später anpassen, falls nötig.",
+        "helperHaut": "Hohe Schätzung. Ankora respektiert dein Budget — kein Urteil.",
+        "save": "Speichern",
+        "cancel": "Abbrechen",
+        "errorGeneric": "Die Anpassung konnte nicht gespeichert werden. Bitte versuche es gleich erneut."
       }
     },
     "daily": {

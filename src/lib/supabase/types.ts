@@ -532,6 +532,11 @@ export type Database = {
         Row: {
           months_tracked: number | null;
           provision_target: number | null;
+          // PR-BETA-3 (THI-267) — columns added by migration 20260526000001.
+          // Patched here manually; `npm run supabase:types` will re-emit
+          // these on the next regeneration against the remote project.
+          reste_a_vivre_default: number;
+          reste_a_vivre_overrides: Json;
           savings_balance: number | null;
           updated_at: string;
           workspace_id: string;
@@ -539,6 +544,8 @@ export type Database = {
         Insert: {
           months_tracked?: number | null;
           provision_target?: number | null;
+          reste_a_vivre_default?: number;
+          reste_a_vivre_overrides?: Json;
           savings_balance?: number | null;
           updated_at?: string;
           workspace_id: string;
@@ -546,6 +553,8 @@ export type Database = {
         Update: {
           months_tracked?: number | null;
           provision_target?: number | null;
+          reste_a_vivre_default?: number;
+          reste_a_vivre_overrides?: Json;
           savings_balance?: number | null;
           updated_at?: string;
           workspace_id?: string;

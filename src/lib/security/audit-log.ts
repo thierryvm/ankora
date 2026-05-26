@@ -23,6 +23,8 @@ export const AuditEvent = {
   WORKSPACE_CREATED: 'workspace.created',
   WORKSPACE_UPDATED: 'workspace.updated',
   WORKSPACE_DELETED: 'workspace.deleted',
+  // PR-BETA-3 (THI-267) — tryptique Capacité Épargne Réelle "Ajuster ce mois"
+  WORKSPACE_RESTE_A_VIVRE_UPDATED: 'workspace.reste_a_vivre_updated',
 
   // Financial data
   CHARGE_CREATED: 'charge.created',
@@ -88,6 +90,11 @@ const SAFE_METADATA_KEYS = new Set([
   // canonical `audit_log.user_id` column AND would survive deletion
   // pseudonymization (jsonb not cascaded by ON DELETE SET NULL).
   'path',
+  // PR-BETA-3 (THI-267) — "Ajuster ce mois" reste-à-vivre override.
+  // `period_yyyymm` = the calendar month targeted by the override
+  // (`YYYY-MM`). No amount stored — amounts are PII-adjacent in financial
+  // software (same rule as charge_payments which excludes `paid_amount`).
+  'period_yyyymm',
 ]);
 
 function sanitizeMetadata(metadata: Record<string, unknown> | undefined): Record<string, unknown> {

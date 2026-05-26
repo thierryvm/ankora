@@ -30,14 +30,14 @@ test.describe('PR-D3 — Bloc 2 hero radar (Effort Lissé + Capacité Réelle)',
       const card = page.getByTestId('capacite-epargne-card');
       await expect(card).toHaveAttribute('data-positive', 'true');
 
-      // PR-D3-bis — the waterfall breakdown must be visible alongside the
-      // big number so a new user understands the calculation at first
-      // glance. Assert all three rows render their localised labels.
-      const breakdown = page.getByTestId('capacite-epargne-breakdown');
-      await expect(breakdown).toBeVisible();
-      await expect(breakdown).toContainText('Revenus');
-      await expect(breakdown).toContainText('Effort financier lissé');
-      await expect(breakdown).toContainText('Plafond quotidien');
+      // PR-BETA-3 — the PR-D3-bis waterfall was replaced by the explicit
+      // tryptique (ADR-009 amendement 2026-05-09). Assert the 3 sub-stats
+      // render with their localised labels.
+      const substats = page.getByTestId('capacite-epargne-substats');
+      await expect(substats).toBeVisible();
+      await expect(substats).toContainText('Reste disponible');
+      await expect(substats).toContainText('Reste à vivre');
+      await expect(substats).toContainText('Capacité épargne');
     } finally {
       await deleteSeededUser(admin, user.userId);
     }
@@ -135,9 +135,11 @@ test.describe('PR-D3 — Bloc 2 hero radar (Effort Lissé + Capacité Réelle)',
       await expect(card).toBeVisible();
       await expect(card).toHaveAttribute('data-positive', 'false');
       const value = page.getByTestId('capacite-epargne-value');
-      // The value class string must include the rose accent.
+      // PR-D5 (2026-05-17) migrated `rose-*` raw Tailwind colours to the
+      // semantic `text-danger` token. PR-BETA-3 keeps this contract.
       const className = await value.getAttribute('class');
-      expect(className ?? '').toMatch(/rose/);
+      expect(className ?? '').toMatch(/text-danger/);
+      expect(className ?? '').not.toMatch(/rose/);
     } finally {
       await deleteSeededUser(admin, user.userId);
     }

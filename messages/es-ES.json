@@ -964,6 +964,26 @@
         "revenus": "Ingresos",
         "effort": "Esfuerzo financiero suavizado",
         "plafond": "Límite diario"
+      },
+      "subStats": {
+        "resteDisponible": "Disponible",
+        "resteAVivre": "Presupuesto vital",
+        "capaciteEpargne": "Capacidad de ahorro",
+        "ajusterCeMois": "Ajustar este mes"
+      },
+      "ledePositif": "Puedes apartar {amount} este mes además de tus transferencias automáticas. Tú decides cuánto ahorras realmente.",
+      "ledeNegatif": "Tu nivel de vida supera tus ingresos este mes. Podemos mirar juntos qué se puede ajustar.",
+      "tooltip": "Esta cifra resta tus gastos fijos, tus provisiones suavizadas a lo largo del año y tu presupuesto vital estimado ({resteAVivre}). Es lo que puedes elegir ahorrar además del resto.",
+      "drawer": {
+        "title": "Ajustar el presupuesto vital de este mes",
+        "inputLabel": "¿Cuánto vas a gastar para vivir este mes?",
+        "inputHint": "Compra, salidas, ocio, placer, imprevistos diarios",
+        "helperCoherent": "Estimación coherente con un presupuesto belga típico.",
+        "helperBas": "Estimación baja. Puedes ajustarla más adelante si lo necesitas.",
+        "helperHaut": "Estimación alta. Ankora respeta tu presupuesto — sin juicios.",
+        "save": "Guardar",
+        "cancel": "Cancelar",
+        "errorGeneric": "El ajuste no se ha podido guardar. Inténtalo de nuevo dentro de un momento."
       }
     },
     "daily": {
