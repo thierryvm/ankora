@@ -8,6 +8,66 @@
 
 ---
 
+## Hotfix #3 2026-05-26 (post-merge #185) — NEXT_REDIRECT swallowed
+
+### Symptôme
+
+Smoke prod @cowork (Chrome MCP) ~14:20, post-merge hotfix #1 (#185, commit `f239dc9`), a capturé en console client :
+
+```
+[ERROR] updateResteAVivreOverrideAction threw Error: NEXT_REDIRECT
+    at o (https://ankora.be/_next/static/chunks/0fx9ag598bzmi.js:1:116726)
+```
+
+L'utilisateur restait sur le drawer avec un toast d'erreur générique au lieu d'être bouncé vers `/login`.
+
+### Root cause
+
+Hotfix #1 a ajouté un try/catch CLIENT autour de `await updateResteAVivreOverrideAction(...)` pour catcher les exceptions JS (network down). Ce try/catch **avale aussi le sentinel `NEXT_REDIRECT`** que Next.js utilise pour exécuter la navigation depuis un `redirect()` server-side. Quand `requireUserWithWorkspace()` détecte une session expirée et appelle `redirect('/login')` :
+
+1. Server : redirect throws NEXT_REDIRECT, propage hors du try/catch server (`requireUserWithWorkspace` est volontairement hors du try/catch). ✅
+2. Next.js sérialise la navigation sur le wire de la Server Action.
+3. Client : `await updateResteAVivreOverrideAction(...)` re-throw `Error: NEXT_REDIRECT`.
+4. Mon catch client l'attrape, log `console.error`, affiche `toast.error`. ❌
+
+Référence Next.js : _"Internally, `redirect()` throws an error that gets handled by Next.js. Do NOT catch this error in your own code."_ (https://nextjs.org/docs/app/api-reference/functions/redirect)
+
+### Fix livré
+
+**1. Nouveau helper `src/lib/actions/next-control-flow.ts`** — détection multi-version (digest moderne + fallback message) du sentinel Next.js. Utilisable côté serveur et côté client.
+
+**2. Server Action `updateResteAVivreOverrideAction`** — defense-in-depth : même si `requireUserWithWorkspace()` reste hors du try/catch, le catch outer re-throw maintenant tout `isNextControlFlowError(err)`. Couvre les cas où une future modif ajouterait un `redirect()`/`notFound()` à l'intérieur du try.
+
+**3. Drawer client `AjusterResteAVivreDrawer`** — catch client re-throw les NEXT_REDIRECT/NEXT_NOT_FOUND. Toast ne fire jamais sur ces flux.
+
+**4. Doc pattern** — `docs/patterns/server-actions-error-handling.md` enrichie d'une section **"🚨 Piège critique — NEXT_REDIRECT / NEXT_NOT_FOUND"** avec règle obligatoire.
+
+### Tests
+
+- `next-control-flow.test.ts` (nouveau, 5 cas) — digest, message fallback, non-Errors, non-Next errors
+- `reste-a-vivre.test.ts` — 2 nouveaux tests : redirect FROM INSIDE le try/catch propage + NEXT_NOT_FOUND propage
+- `AjusterResteAVivreDrawer.test.tsx` — 1 nouveau test : NEXT_REDIRECT bubble via `unhandledrejection`, toast jamais appelé
+
+### Investigation séparée (out-of-scope hotfix)
+
+Pourquoi `requireUserWithWorkspace()` redirect alors que la page SSR rend en 200 ? Hypothèses :
+
+- Session token expiration timing entre rendu SSR et appel Server Action
+- Cookie SameSite / Secure mismatch entre RSC fetch et action POST
+- Bug latent dans `requireUserWithWorkspace` (auth.getUser refresh edge case)
+
+À cadrer post-Beta. Le user actuel verra correctement `/login` une fois ce hotfix mergé, ce qui débloque l'usage.
+
+### Smoke @cowork post-merge
+
+Network tab attendu sur "Enregistrer" :
+
+- **Si session valide** : POST `/app` → 200 JSON `{ok: true}` → toast success + drawer ferme + sub-stat refresh
+- **Si session expirée** : POST `/app` → réponse navigation Next.js → user atterrit sur `/login` (pas de toast, pas de drawer ouvert)
+- **Aucun 503** quelle que soit la branche
+
+---
+
 ## Hotfix 2026-05-26 (post-merge) — Server Action 503 + Toast UX defensive
 
 ### Contexte

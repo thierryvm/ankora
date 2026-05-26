@@ -65,6 +65,30 @@ export async function myMutationAction(input: unknown): Promise<ActionResult> {
 2. **`await logAuditEvent(...)`** sans `.catch()` — un échec d'audit fait crash toute l'action après la write.
 3. **`revalidatePath(...)` sans try/catch** — un blip d'infra Next.js annule la valeur ok côté client alors que la DB est OK.
 
+### 🚨 Piège critique — NEXT_REDIRECT / NEXT_NOT_FOUND
+
+`redirect()` et `notFound()` de `next/navigation` **lèvent une exception** que Next.js intercepte au boundary de la Server Action pour exécuter la navigation. **Un `catch` user-code avale cette exception** et la navigation n'a jamais lieu — l'utilisateur reste sur la page avec un toast d'erreur générique au lieu d'être bouncé.
+
+**Règle obligatoire** dans tout `catch` autour d'un await Server Action (côté serveur ET côté client) :
+
+```ts
+import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
+
+try {
+  // ... action body OR await action() côté client
+} catch (err) {
+  // NEXT_REDIRECT / NEXT_NOT_FOUND DOIVENT propager pour que Next.js
+  // puisse exécuter la navigation. Sans ça, le user voit un toast au
+  // lieu d'être bouncé vers /login.
+  if (isNextControlFlowError(err)) throw err;
+  // ... handling normal
+}
+```
+
+Référence : https://nextjs.org/docs/app/api-reference/functions/redirect — _"Internally, redirect() throws an error that gets handled by Next.js. Do NOT catch this error in your own code."_
+
+Incident d'origine : PR-BETA-3 hotfix #3 (2026-05-26) — `requireUserWithWorkspace()` redirect bouncing avalé par le try/catch CLIENT côté drawer "Ajuster ce mois", user voit un toast "couldn't save" au lieu d'arriver sur `/login`.
+
 ## Pattern côté client (drawer / form)
 
 ```tsx
