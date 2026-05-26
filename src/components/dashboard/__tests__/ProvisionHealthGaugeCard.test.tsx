@@ -154,6 +154,93 @@ describe('<ProvisionHealthGaugeCard /> (THI-190 cockpit v3 #2)', () => {
   });
 });
 
+// PR-BETA-CLEANUP-2 (THI-281) — Option C visual cap.
+// Before this PR the headline KPI showed e.g. "546% — À jour" when the
+// user had stashed well past the 12-month provisions target. Math was
+// correct but UX was confusing. We now cap the headline at 100% and
+// surface the surplus as "+ X € au-delà de la cible" — factual, R-06
+// anti-culpabilisation-safe wording.
+describe('<ProvisionHealthGaugeCard /> — Option C 100% cap (PR-BETA-CLEANUP-2)', () => {
+  it('caps the headline percent at 100% when soldeActuel > target', async () => {
+    // amount = 1200 € target, soldeActuel = 1766 € → raw ratio ≈ 1.47
+    await renderCard({
+      charges: [ANNUAL_CHARGE({})],
+      soldeEpargneActuel: new Decimal(1766),
+    });
+    const percent = screen.getByTestId('provision-health-gauge-percent');
+    // Must show 100%, never the raw ~147%.
+    expect(percent.textContent ?? '').toBe('100%');
+    // Tier stays 'success' (math says we are at or beyond target).
+    const card = screen.getByTestId('provision-health-gauge-card');
+    expect(card.getAttribute('data-tier')).toBe('success');
+  });
+
+  it('renders the "+ X € au-delà de la cible" surplus sub-text when overachieving', async () => {
+    // soldeActuel - target = 1766 - 1200 = 566 €.
+    await renderCard({
+      charges: [ANNUAL_CHARGE({})],
+      soldeEpargneActuel: new Decimal(1766),
+    });
+    const surplus = screen.getByTestId('provision-health-gauge-surplus');
+    expect(surplus).toBeInTheDocument();
+    expect(surplus.textContent ?? '').toMatch(/566/);
+    expect(surplus.className).toContain('text-success');
+    // Anti-culpabilisation contract — no judgement language.
+    expect(surplus.textContent ?? '').not.toMatch(/trop|économise|devrais/i);
+  });
+
+  it('does NOT render the surplus sub-text when ratio = 100% exactly', async () => {
+    // soldeActuel = target = 1200 → ratio = 1.0 exact, no overflow.
+    await renderCard({
+      charges: [ANNUAL_CHARGE({})],
+      soldeEpargneActuel: new Decimal(1200),
+    });
+    expect(screen.getByTestId('provision-health-gauge-percent').textContent ?? '').toBe('100%');
+    expect(screen.queryByTestId('provision-health-gauge-surplus')).toBeNull();
+  });
+
+  it('does NOT render the surplus sub-text when ratio < 100%', async () => {
+    // soldeActuel = 600, target = 1200 → ratio = 0.5, no overflow.
+    await renderCard({
+      charges: [ANNUAL_CHARGE({})],
+      soldeEpargneActuel: new Decimal(600),
+    });
+    expect(screen.getByTestId('provision-health-gauge-percent').textContent ?? '').toBe('50%');
+    expect(screen.queryByTestId('provision-health-gauge-surplus')).toBeNull();
+  });
+
+  it('reproduces the @thierry incident fixture (1766 / 323.58 → "100%" + "+ 1 442,42 €")', async () => {
+    // Smoke 2026-05-26 — the user saw "546%". Target reverse-engineered
+    // from the screenshot to 323.58 €.
+    await renderCard({
+      charges: [
+        ANNUAL_CHARGE({
+          amount: new Decimal('323.58'),
+          paymentMonths: [1],
+        }),
+      ],
+      soldeEpargneActuel: new Decimal('1766.00'),
+    });
+    expect(screen.getByTestId('provision-health-gauge-percent').textContent ?? '').toBe('100%');
+    const surplus = screen.getByTestId('provision-health-gauge-surplus');
+    // 1766.00 - 323.58 = 1442.42. The fr-BE formatter uses comma + NBSP for
+    // thousand separators, so accept the rendered shape "1 442,42 €".
+    expect(surplus.textContent ?? '').toMatch(/1[\s ]?442[,.]42/);
+  });
+
+  it('clamps the ProgressBar at value=1 when overachieving (visual safety)', async () => {
+    // ProgressBar's `value` prop is consumed as a [0..max] range. We must
+    // pass `Math.min(ratio, 1)` so the gauge fills exactly the bar — no
+    // overflow even though the raw ratio is >1.
+    await renderCard({
+      charges: [ANNUAL_CHARGE({})],
+      soldeEpargneActuel: new Decimal(2400),
+    });
+    const bar = document.querySelector('[role="progressbar"]');
+    expect(bar?.getAttribute('aria-valuenow')).toBe('100');
+  });
+});
+
 describe('dashboard.health — i18n parity (5 locales)', () => {
   it.each(['fr-BE', 'en', 'de-DE', 'es-ES', 'nl-BE'] as const)(
     'locale %s exposes title + ratio + target + current + empty + ariaLabel + deficit + status.{a_jour,deficit}',
@@ -168,6 +255,7 @@ describe('dashboard.health — i18n parity (5 locales)', () => {
             empty?: string;
             ariaLabel?: string;
             deficit?: string;
+            objectifDepasse?: string;
             status?: { a_jour?: string; deficit?: string };
           };
         };
@@ -183,6 +271,9 @@ describe('dashboard.health — i18n parity (5 locales)', () => {
       expect((h.ariaLabel ?? '').includes('{percent}')).toBe(true);
       expect(h.deficit).toBeTypeOf('string');
       expect((h.deficit ?? '').includes('{amount}')).toBe(true);
+      // PR-BETA-CLEANUP-2 (THI-281) — Option C overflow sub-text.
+      expect(h.objectifDepasse).toBeTypeOf('string');
+      expect((h.objectifDepasse ?? '').includes('{amount}')).toBe(true);
       expect(h.status?.a_jour).toBeTypeOf('string');
       expect(h.status?.deficit).toBeTypeOf('string');
     },
