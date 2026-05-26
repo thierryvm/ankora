@@ -964,6 +964,26 @@
         "revenus": "Inkomen",
         "effort": "Vereffende financiële inspanning",
         "plafond": "Dagelijks plafond"
+      },
+      "subStats": {
+        "resteDisponible": "Beschikbaar saldo",
+        "resteAVivre": "Leefbudget",
+        "capaciteEpargne": "Spaarcapaciteit",
+        "ajusterCeMois": "Deze maand aanpassen"
+      },
+      "ledePositif": "Je kan deze maand {amount} opzij zetten bovenop je automatische overschrijvingen. Je beslist zelf hoeveel je echt spaart.",
+      "ledeNegatif": "Je levensstijl overschrijdt deze maand je inkomen. We kunnen samen kijken wat aangepast kan worden.",
+      "tooltip": "Dit bedrag trekt je vaste lasten, je over het jaar uitgesmeerde provisies en je geraamde leefbudget ({resteAVivre}) af. Het is wat je extra kan kiezen te sparen.",
+      "drawer": {
+        "title": "Leefbudget voor deze maand aanpassen",
+        "inputLabel": "Hoeveel ga je deze maand uitgeven om te leven?",
+        "inputHint": "Boodschappen, uitgaan, vrije tijd, plezier, dagelijkse onverwachte uitgaven",
+        "helperCoherent": "Schatting die past bij een typisch Belgisch budget.",
+        "helperBas": "Lage schatting. Je kan dit later aanpassen als nodig.",
+        "helperHaut": "Hoge schatting. Ankora respecteert je budget — geen oordeel.",
+        "save": "Opslaan",
+        "cancel": "Annuleren",
+        "errorGeneric": "De aanpassing kon niet worden opgeslagen. Probeer het zo opnieuw."
       }
     },
     "daily": {

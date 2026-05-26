@@ -195,3 +195,79 @@ describe('capaciteEpargneReelle', () => {
     expect(out.isPositive).toBe(true);
   });
 });
+
+describe('capaciteEpargneReelle — PR-BETA-3 tryptique (ADR-009 amendement 2026-05-09)', () => {
+  it('exposes resteDisponible = revenus - effort, separate from capacite', () => {
+    const out = capaciteEpargneReelle({
+      revenus: new Decimal(2500),
+      charges: [charge({ amount: new Decimal(1838), frequency: 'monthly' })],
+      resteAVivre: new Decimal(500),
+    });
+    // resteDisponible should NOT include the reste-à-vivre subtraction.
+    expect(out.resteDisponible.toNumber()).toBe(662);
+    expect(out.resteAVivre.toNumber()).toBe(500);
+    expect(out.capacite.toNumber()).toBe(162);
+  });
+
+  it('reproduces the @thierry persona (662 / 500 / 162) — canonical fixture', () => {
+    // Cf. ADR-009 amendement lignes 252-256 + Athenaeum profil-financier.md.
+    // Effort = 1838 ≈ 1500 loyer + ~338 charges variées (lissées).
+    const out = capaciteEpargneReelle({
+      revenus: new Decimal(2500),
+      charges: [charge({ amount: new Decimal(1838), frequency: 'monthly' })],
+      resteAVivre: new Decimal(500),
+    });
+    expect(out.resteDisponible.toFixed(2)).toBe('662.00');
+    expect(out.resteAVivre.toFixed(2)).toBe('500.00');
+    expect(out.capacite.toFixed(2)).toBe('162.00');
+    expect(out.isPositive).toBe(true);
+  });
+
+  it('handles resteAVivre = 0 (capacite collapses to resteDisponible)', () => {
+    const out = capaciteEpargneReelle({
+      revenus: new Decimal(2000),
+      charges: [charge({ amount: new Decimal(800), frequency: 'monthly' })],
+      resteAVivre: new Decimal(0),
+    });
+    expect(out.resteDisponible.toNumber()).toBe(1200);
+    expect(out.capacite.toNumber()).toBe(1200);
+  });
+
+  it('returns negative capacite when resteAVivre exceeds resteDisponible', () => {
+    const out = capaciteEpargneReelle({
+      revenus: new Decimal(2000),
+      charges: [charge({ amount: new Decimal(1500), frequency: 'monthly' })],
+      resteAVivre: new Decimal(800),
+    });
+    expect(out.resteDisponible.toNumber()).toBe(500);
+    expect(out.capacite.toNumber()).toBe(-300);
+    expect(out.isPositive).toBe(false);
+  });
+
+  it('accepts the legacy plafondQuotidien input shape (back-compat)', () => {
+    // Existing call-sites (PR-D3 CapaciteEpargneCard) still pass
+    // `plafondQuotidien`. They must keep working until PR-BETA-3 lands.
+    const out = capaciteEpargneReelle({
+      revenus: new Decimal(2000),
+      charges: [charge({ amount: new Decimal(900), frequency: 'monthly' })],
+      plafondQuotidien: new Decimal(400),
+    });
+    expect(out.resteDisponible.toNumber()).toBe(1100);
+    expect(out.resteAVivre.toNumber()).toBe(400);
+    expect(out.capacite.toNumber()).toBe(700);
+  });
+
+  it('keeps decimal precision in resteDisponible across many annual provisions', () => {
+    // 53€/an × 12 = 53€ via lissage strict.
+    const charges = Array.from({ length: 12 }, () =>
+      charge({ amount: new Decimal(53), frequency: 'annual', paymentMonths: [4] }),
+    );
+    const out = capaciteEpargneReelle({
+      revenus: new Decimal(2000),
+      charges,
+      resteAVivre: new Decimal(0),
+    });
+    expect(out.resteDisponible.toFixed(6)).toBe('1947.000000');
+    expect(out.capacite.toFixed(6)).toBe('1947.000000');
+  });
+});

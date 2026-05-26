@@ -116,7 +116,8 @@ export default async function DashboardPage() {
         <CapaciteEpargneCard
           revenus={monthlyIncome}
           charges={cockpitCharges}
-          plafondQuotidien={vieCouranteTransferAmount}
+          resteAVivre={money(snapshot.resteAVivre)}
+          currentMonthYYYYMM={`${snapshot.currentPeriod.year}-${String(snapshot.currentPeriod.month).padStart(2, '0')}`}
           locale={locale}
         />
       </section>

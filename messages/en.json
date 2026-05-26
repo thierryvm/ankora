@@ -964,6 +964,26 @@
         "revenus": "Income",
         "effort": "Smoothed financial effort",
         "plafond": "Daily allowance"
+      },
+      "subStats": {
+        "resteDisponible": "Available leftover",
+        "resteAVivre": "Daily living budget",
+        "capaciteEpargne": "Saving capacity",
+        "ajusterCeMois": "Adjust this month"
+      },
+      "ledePositif": "You can set aside {amount} this month on top of your automatic transfers. You decide how much you actually save.",
+      "ledeNegatif": "Your lifestyle exceeds your income this month. We can look at what can be adjusted together.",
+      "tooltip": "This figure subtracts your fixed bills, your yearly-smoothed provisions, and your estimated daily living budget ({resteAVivre}). It is what you can choose to save on top of the rest.",
+      "drawer": {
+        "title": "Adjust the daily living budget for this month",
+        "inputLabel": "How much will you spend on day-to-day living this month?",
+        "inputHint": "Groceries, going out, leisure, fun, daily surprises",
+        "helperCoherent": "Estimate consistent with a typical Belgian budget.",
+        "helperBas": "Low estimate. You can adjust later if needed.",
+        "helperHaut": "High estimate. Ankora respects your budget — no judgement.",
+        "save": "Save",
+        "cancel": "Cancel",
+        "errorGeneric": "The adjustment couldn't be saved. Please try again in a moment."
       }
     },
     "daily": {
