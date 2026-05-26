@@ -6,6 +6,7 @@ import messages from '../../../../messages/fr-BE.json';
 
 const updateMock = vi.hoisted(() => vi.fn());
 const toastErrorMock = vi.hoisted(() => vi.fn());
+const toastSuccessMock = vi.hoisted(() => vi.fn());
 const routerRefreshMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/actions/reste-a-vivre', () => ({
@@ -13,7 +14,7 @@ vi.mock('@/lib/actions/reste-a-vivre', () => ({
 }));
 
 vi.mock('@/components/ui/toast', () => ({
-  toast: { error: toastErrorMock, success: vi.fn() },
+  toast: { error: toastErrorMock, success: toastSuccessMock },
 }));
 
 vi.mock('next/navigation', () => ({
@@ -40,6 +41,7 @@ describe('<AjusterResteAVivreDrawer /> — closed state', () => {
   beforeEach(() => {
     updateMock.mockReset();
     toastErrorMock.mockReset();
+    toastSuccessMock.mockReset();
     routerRefreshMock.mockReset();
   });
 
@@ -60,6 +62,7 @@ describe('<AjusterResteAVivreDrawer /> — open state', () => {
   beforeEach(() => {
     updateMock.mockReset();
     toastErrorMock.mockReset();
+    toastSuccessMock.mockReset();
     routerRefreshMock.mockReset();
   });
 
@@ -122,6 +125,7 @@ describe('<AjusterResteAVivreDrawer /> — submit flow', () => {
   beforeEach(() => {
     updateMock.mockReset();
     toastErrorMock.mockReset();
+    toastSuccessMock.mockReset();
     routerRefreshMock.mockReset();
   });
 
@@ -205,6 +209,7 @@ describe('<AjusterResteAVivreDrawer /> — keyboard + dismiss', () => {
   beforeEach(() => {
     updateMock.mockReset();
     toastErrorMock.mockReset();
+    toastSuccessMock.mockReset();
     routerRefreshMock.mockReset();
   });
 
@@ -217,5 +222,77 @@ describe('<AjusterResteAVivreDrawer /> — keyboard + dismiss', () => {
       expect(screen.queryByTestId('reste-a-vivre-drawer')).toBeNull();
     });
     expect(updateMock).not.toHaveBeenCalled();
+  });
+});
+
+// PR-BETA-3 hotfix 2026-05-26 — defensive UX. Before this change a Server
+// Action failure (HTTP 503, thrown exception, …) closed the drawer
+// silently and the user thought the save succeeded. The drawer now always
+// surfaces failures via a toast and stays open so retry is possible.
+describe('<AjusterResteAVivreDrawer /> — defensive error toast (hotfix)', () => {
+  beforeEach(() => {
+    updateMock.mockReset();
+    toastErrorMock.mockReset();
+    toastSuccessMock.mockReset();
+    routerRefreshMock.mockReset();
+  });
+
+  it('shows a success toast and closes the drawer on { ok: true }', async () => {
+    updateMock.mockResolvedValue({ ok: true });
+    renderWithIntl(<AjusterResteAVivreDrawer {...baseProps} />);
+    fireEvent.click(screen.getByTestId('reste-a-vivre-trigger'));
+    await screen.findByTestId('reste-a-vivre-drawer');
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('reste-a-vivre-save'));
+    });
+    await waitFor(() => {
+      expect(toastSuccessMock).toHaveBeenCalledTimes(1);
+    });
+    // Localised success copy comes through.
+    expect(toastSuccessMock.mock.calls[0]?.[0]).toBe(messages.dashboard.capacite.drawer.success);
+    // Drawer closes on success.
+    await waitFor(() => {
+      expect(screen.queryByTestId('reste-a-vivre-drawer')).toBeNull();
+    });
+  });
+
+  it('shows a toast error and keeps the drawer open when the Server Action throws (network down)', async () => {
+    updateMock.mockRejectedValue(new Error('Failed to fetch'));
+    renderWithIntl(<AjusterResteAVivreDrawer {...baseProps} />);
+    fireEvent.click(screen.getByTestId('reste-a-vivre-trigger'));
+    await screen.findByTestId('reste-a-vivre-drawer');
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('reste-a-vivre-save'));
+    });
+    await waitFor(() => {
+      expect(toastErrorMock).toHaveBeenCalledTimes(1);
+    });
+    // The drawer must stay open so the user can retry without losing
+    // their input.
+    expect(screen.getByTestId('reste-a-vivre-drawer')).toBeInTheDocument();
+    expect(routerRefreshMock).not.toHaveBeenCalled();
+    expect(toastSuccessMock).not.toHaveBeenCalled();
+  });
+
+  it('translates the errorCode when the Server Action returns { ok: false, errorCode }', async () => {
+    updateMock.mockResolvedValue({
+      ok: false,
+      errorCode: 'errors.settings.resteAVivreUpdateFailed',
+    });
+    renderWithIntl(<AjusterResteAVivreDrawer {...baseProps} />);
+    fireEvent.click(screen.getByTestId('reste-a-vivre-trigger'));
+    await screen.findByTestId('reste-a-vivre-drawer');
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('reste-a-vivre-save'));
+    });
+    await waitFor(() => {
+      expect(toastErrorMock).toHaveBeenCalledTimes(1);
+    });
+    // The toast message MUST be the translated copy, not the raw error code.
+    const toastMsg = toastErrorMock.mock.calls[0]?.[0] as string | undefined;
+    expect(toastMsg).toBeTypeOf('string');
+    expect(toastMsg ?? '').not.toContain('errors.');
+    expect((toastMsg ?? '').length).toBeGreaterThan(5);
+    expect(toastSuccessMock).not.toHaveBeenCalled();
   });
 });

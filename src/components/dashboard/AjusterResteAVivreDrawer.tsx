@@ -110,15 +110,32 @@ export function AjusterResteAVivreDrawer({
       return;
     }
     startTransition(async () => {
-      const result = await updateResteAVivreOverrideAction({
-        monthYYYYMM: currentMonthYYYYMM,
-        montant: parsedDraft,
-      });
-      if (result.ok) {
-        setOpen(false);
-        router.refresh();
-      } else {
-        toast.error(translateError(result.errorCode) || t('drawer.errorGeneric'));
+      // PR-BETA-3 hotfix 2026-05-26 — defensive error handling.
+      // Three failure modes are now surfaced as a visible toast (fail-loud):
+      //   1. Server Action returns `{ ok: false, errorCode }` — translate
+      //      via the i18n action-errors helper.
+      //   2. Server Action throws (network down, Vercel infra blip, …)
+      //      — show the generic drawer error toast.
+      // In every failure path the drawer stays OPEN so the user can retry
+      // without re-tapping the trigger and re-entering their amount.
+      try {
+        const result = await updateResteAVivreOverrideAction({
+          monthYYYYMM: currentMonthYYYYMM,
+          montant: parsedDraft,
+        });
+        if (result.ok) {
+          toast.success(t('drawer.success'));
+          setOpen(false);
+          router.refresh();
+        } else {
+          toast.error(translateError(result.errorCode) || t('drawer.errorGeneric'));
+        }
+      } catch (err) {
+        // Log to the browser console so the user can copy-paste it for a
+        // bug report; the toast keeps the UX recoverable.
+        // eslint-disable-next-line no-console
+        console.error('updateResteAVivreOverrideAction threw', err);
+        toast.error(t('drawer.errorGeneric'));
       }
     });
   }

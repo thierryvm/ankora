@@ -983,6 +983,7 @@
         "helperHaut": "Hoge schatting. Ankora respecteert je budget — geen oordeel.",
         "save": "Opslaan",
         "cancel": "Annuleren",
+        "success": "Leefbudget aangepast voor deze maand.",
         "errorGeneric": "De aanpassing kon niet worden opgeslagen. Probeer het zo opnieuw."
       }
     },
@@ -1229,7 +1230,8 @@
       "profileUpdateFailed": "Kan het profiel niet bijwerken.",
       "deletionRequestFailed": "Kan de verwijdering niet inplannen.",
       "deletionCancelFailed": "Kan de aanvraag niet annuleren.",
-      "exportLimited": "Export beperkt tot één keer per 5 minuten."
+      "exportLimited": "Export beperkt tot één keer per 5 minuten.",
+      "resteAVivreUpdateFailed": "Kon het leefbudget niet aanpassen. Probeer het zo opnieuw."
     },
     "onboarding": {
       "workspaceNotFound": "Workspace niet gevonden. Contacteer de support.",

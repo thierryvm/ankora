@@ -92,9 +92,41 @@ test.describe('PR-BETA-3 — Capacité tryptique (ADR-009 amendement)', () => {
       await input.fill('450');
       await page.getByTestId('reste-a-vivre-save').click();
 
+      // PR-BETA-3 hotfix — a success toast (sonner) is now shown before
+      // the drawer closes, so the user has positive confirmation rather
+      // than an ambiguous silent close.
+      await expect(page.getByText(/reste à vivre ajusté/i).first()).toBeVisible({
+        timeout: 5_000,
+      });
+
       // The drawer closes and the sub-stat updates.
       await expect(page.getByTestId('reste-a-vivre-drawer')).toBeHidden();
       await expect(page.getByTestId('substat-reste-a-vivre')).toContainText(/450/);
+    } finally {
+      await deleteSeededUser(admin, user.userId);
+    }
+  });
+
+  // PR-BETA-3 hotfix 2026-05-26 — fail-loud contract. We do not need a real
+  // Server Action failure to assert the toast wiring — the unit tests cover
+  // both `{ ok: false }` and `throws` paths. This E2E verifies the toast
+  // surface itself (sonner mount + i18n + position) is present and
+  // accessible from the dashboard, so a future regression in toast wiring
+  // would break this spec.
+  test('the toast surface is mounted on the dashboard for fail-loud UX', async ({ page }) => {
+    if (!admin) return;
+    const user = await seedOnboardedUser(admin);
+    try {
+      await page.goto('/login');
+      await page.getByLabel('Email').fill(user.email);
+      await page.getByLabel('Mot de passe').fill(user.password);
+      await page.getByRole('button', { name: /^se connecter$/i }).click();
+      await page.waitForURL(/\/app\b/, { timeout: 15_000 });
+
+      // The Toaster (sonner) renders an ARIA-live region with role="status"
+      // even when no toast is active — assert it's mounted so a Server
+      // Action failure CAN surface a toast.
+      await expect(page.locator('[aria-label="Notifications"]').first()).toBeAttached();
     } finally {
       await deleteSeededUser(admin, user.userId);
     }

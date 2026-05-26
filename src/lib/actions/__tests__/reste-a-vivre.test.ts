@@ -347,3 +347,82 @@ describe('updateResteAVivreOverrideAction — DB failures', () => {
     expect(revalidateSpy).not.toHaveBeenCalled();
   });
 });
+
+// PR-BETA-3 hotfix 2026-05-26 — resilience under transient failures.
+// These cases shipped silently as HTTP 503 before the hotfix; now they are
+// caught and surface as a translated `{ ok: false }` response or — for
+// non-critical post-write side effects — as a successful response with a
+// server-side error log.
+describe('updateResteAVivreOverrideAction — defensive failure modes (hotfix)', () => {
+  beforeEach(resetAll);
+  afterEach(() => vi.clearAllMocks());
+
+  it('still returns ok: true when logAuditEvent throws after the write succeeds', async () => {
+    supa.program({
+      table: 'workspace_settings',
+      op: 'select',
+      result: { data: { reste_a_vivre_overrides: {} }, error: null },
+    });
+    supa.program({
+      table: 'workspace_settings',
+      op: 'update',
+      result: { data: null, error: null },
+    });
+    // Audit log throws — must NOT undo the user write.
+    auditSpy.mockImplementationOnce(async () => {
+      throw new Error('audit_log insert blew up');
+    });
+
+    const r = await updateResteAVivreOverrideAction(VALID_INPUT);
+    expect(r).toEqual({ ok: true });
+    // Revalidation still fires — the write committed.
+    expect(revalidateSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('still returns ok: true when revalidateDashboard throws after the write succeeds', async () => {
+    supa.program({
+      table: 'workspace_settings',
+      op: 'select',
+      result: { data: { reste_a_vivre_overrides: {} }, error: null },
+    });
+    supa.program({
+      table: 'workspace_settings',
+      op: 'update',
+      result: { data: null, error: null },
+    });
+    revalidateSpy.mockImplementationOnce(() => {
+      throw new Error('next.js cache infra blip');
+    });
+
+    const r = await updateResteAVivreOverrideAction(VALID_INPUT);
+    expect(r).toEqual({ ok: true });
+  });
+
+  it('returns a translated errorCode when an unexpected throw occurs inside the action body', async () => {
+    // Make Supabase select throw outright (not return { error }) — emulates
+    // a createClient init crash or a transient network exception. The outer
+    // try/catch must convert this into `{ ok: false }`, never a bare 5xx.
+    supa.client.from.mockImplementationOnce(() => {
+      throw new Error('connect ECONNREFUSED');
+    });
+
+    const r = await updateResteAVivreOverrideAction(VALID_INPUT);
+    expect(r).toEqual({ ok: false, errorCode: 'errors.settings.resteAVivreUpdateFailed' });
+    expect(auditSpy).not.toHaveBeenCalled();
+    expect(revalidateSpy).not.toHaveBeenCalled();
+  });
+
+  it('lets Next.js redirect() errors from requireUserWithWorkspace() propagate', async () => {
+    // Simulate the `redirect('/login')` that next/navigation throws when
+    // the session is gone — Next.js relies on the throw to bubble up to
+    // its framework code. If our outer catch swallowed it, the user would
+    // see a generic "update failed" toast instead of being bounced to
+    // /login.
+    const redirectMarker = Object.assign(new Error('NEXT_REDIRECT;replace;/login;307;'), {
+      digest: 'NEXT_REDIRECT;replace;/login;307;',
+    });
+    requireUserSpy.mockRejectedValueOnce(redirectMarker);
+
+    await expect(updateResteAVivreOverrideAction(VALID_INPUT)).rejects.toBe(redirectMarker);
+  });
+});

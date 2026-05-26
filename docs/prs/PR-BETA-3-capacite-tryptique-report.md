@@ -8,6 +8,94 @@
 
 ---
 
+## Hotfix 2026-05-26 (post-merge) — Server Action 503 + Toast UX defensive
+
+### Contexte
+
+Smoke prod @cowork (Chrome MCP) ~13:00 sur `ankora.be/fr-BE/app` a capturé :
+
+```
+POST https://ankora.be/app           → 503  (Server Action call)
+GET  https://ankora.be/app?_rsc=...  → 503
+GET  https://ankora.be/?_rsc=...     → 503
+```
+
+Symptômes user : drawer "Ajuster ce mois" ferme silencieusement, pas de toast, `reste_a_vivre_overrides` non persisté. À 13:34 le site répond 200 OK : transient Vercel infra (cold start / edge worker crash) déjà résolu côté infra, mais **code Ankora pas robuste face à ce type d'incident**.
+
+### Challenge du diagnostic @cowork
+
+Hypothèse @cowork "migration non appliquée" éliminée : `supabase migration list --linked` confirme `20260526000001` appliquée en prod. Le 503 ne vient pas d'une colonne manquante. Hypothèse @cowork "fail-open rate-limit doctrine" rejetée : action classe 3 (impact 5+ Server Actions), à arbitrer séparément avec @thierry — hors-scope hotfix.
+
+### Hardening livré (utile dans TOUS les cas, pas seulement 503)
+
+**Server Action `updateResteAVivreOverrideAction`** :
+
+1. `requireUserWithWorkspace()` reste **hors du try/catch** — le `redirect('/login')` throws de Next.js doit propager (catcher avalerait l'auth bounce)
+2. **Outer try/catch** autour du reste de l'action → toute exception non prévue (createClient crash, headers crash, etc.) devient `{ ok: false, errorCode: 'errors.settings.resteAVivreUpdateFailed' }` avec log + stack trace serveur
+3. **`logAuditEvent` fire-and-forget** (`void logAuditEvent(...).catch(...)`) — un blip audit_log ne doit jamais undo une write user committée
+4. **`revalidateDashboard()` dans try/catch local** — si revalidate fail APRÈS write, la DB est consistente, on log warning et on retourne ok
+
+**Drawer client `AjusterResteAVivreDrawer`** :
+
+1. **try/catch JS** autour de l'`await updateResteAVivreOverrideAction(...)` → exceptions JS (network down, action throws) → toast erreur générique + drawer reste ouvert
+2. **Toast success** ajouté sur `{ ok: true }` (feedback positif "Reste à vivre ajusté")
+3. **Drawer reste ouvert** sur toute erreur — user peut retry sans re-saisir
+4. `console.error` (eslint-disabled) pour aider l'investigation devtools en cas d'exception
+
+**i18n parity** (5 locales) :
+
+- Nouvelles clés : `dashboard.capacite.drawer.success` + `errors.settings.resteAVivreUpdateFailed`
+- Test parity étendu dans `CapaciteEpargneCard.test.tsx` (assert présence + non-vacuité)
+
+**Documentation pattern** :
+
+- `docs/patterns/server-actions-error-handling.md` (nouveau) — pattern fail-loud à appliquer à toute future Server Action
+
+### Tests hotfix
+
+`src/lib/actions/__tests__/reste-a-vivre.test.ts` — 4 nouveaux tests :
+
+- `logAuditEvent` throws → action `{ ok: true }` (audit non-bloquant)
+- `revalidateDashboard` throws → action `{ ok: true }` (revalidate non-bloquant)
+- `createClient.from` throws → outer catch convertit en `{ ok: false }` (jamais 503)
+- `redirect()` de `requireUserWithWorkspace` propage (auth bounce intact)
+
+`src/components/dashboard/__tests__/AjusterResteAVivreDrawer.test.tsx` — 3 nouveaux tests :
+
+- `{ ok: true }` → toast success + drawer close
+- Action throws → toast error + drawer stays open + pas de `router.refresh`
+- `{ ok: false, errorCode }` → toast message traduit (pas raw errorCode)
+
+`e2e/dashboard-capacite-tryptique.spec.ts` — toast success assert + Toaster mount assert.
+
+### Quality gates hotfix ✅
+
+- `npm run lint` 0 err
+- `npm run lint:use-server` ✅
+- `npm run typecheck` 0 err
+- `npm run test` **1288 passing** (+7 nouveaux)
+- `npm run build` ✅
+
+### Hors-scope hotfix (à discuter séparément si besoin)
+
+- Doctrine `rateLimit` fail-open vs fail-closed prod — touche 5+ Server Actions, arbitrage sécurité dédié
+- Profiling Vercel timeout — non nécessaire avec le defensive hardening
+- Sentry wiring pour capture client-side throws — out-of-scope PR-BETA-3, ticket Linear séparé
+
+### Smoke @thierry post-merge hotfix
+
+1. Cockpit charge → sub-stats 662/500/162 (inchangé)
+2. Tap "Ajuster ce mois" → drawer ouvre
+3. Modifier 500 → 450 → Enregistrer
+   - ✅ Toast vert "Reste à vivre ajusté pour ce mois"
+   - ✅ Drawer ferme
+   - ✅ Sub-stat affiche 450 + capacité passe à 212
+4. Re-tap "Ajuster" → saisir 999999 (au-dessus du max 100k Zod)
+   - ✅ Toast rouge erreur traduit (pas raw errorCode)
+   - ✅ Drawer reste ouvert
+
+---
+
 ## Pourquoi cette PR
 
 ADR-009 amendement 2026-05-09 (validé @thierry, statut canonique) impose le passage du KPI "Capacité d'Épargne Réelle" d'un **waterfall opaque** (Revenus / Effort / Plafond → big number) à un **tryptique pédagogique 3 concepts** :

@@ -216,8 +216,18 @@ describe('dashboard.capacite — i18n parity (5 locales, tryptique keys)', () =>
               helperHaut?: string;
               save?: string;
               cancel?: string;
+              success?: string;
               errorGeneric?: string;
             };
+          };
+        };
+        // PR-BETA-3 hotfix — `errors.settings.resteAVivreUpdateFailed` is
+        // surfaced via the drawer toast when the Server Action returns
+        // ok:false. Tracked here so a missing locale fails the parity test
+        // rather than silently shipping a raw "errors.settings.…" string.
+        errors?: {
+          settings?: {
+            resteAVivreUpdateFailed?: string;
           };
         };
       };
@@ -244,6 +254,11 @@ describe('dashboard.capacite — i18n parity (5 locales, tryptique keys)', () =>
       expect(m.dashboard.capacite.drawer?.save).toBeTypeOf('string');
       expect(m.dashboard.capacite.drawer?.cancel).toBeTypeOf('string');
       expect(m.dashboard.capacite.drawer?.errorGeneric).toBeTypeOf('string');
+      // PR-BETA-3 hotfix — success copy + dedicated error code.
+      expect(m.dashboard.capacite.drawer?.success).toBeTypeOf('string');
+      expect((m.dashboard.capacite.drawer?.success ?? '').length).toBeGreaterThan(0);
+      expect(m.errors?.settings?.resteAVivreUpdateFailed).toBeTypeOf('string');
+      expect((m.errors?.settings?.resteAVivreUpdateFailed ?? '').length).toBeGreaterThan(0);
     },
   );
 });

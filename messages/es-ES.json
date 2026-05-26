@@ -983,6 +983,7 @@
         "helperHaut": "Estimación alta. Ankora respeta tu presupuesto — sin juicios.",
         "save": "Guardar",
         "cancel": "Cancelar",
+        "success": "Presupuesto vital ajustado para este mes.",
         "errorGeneric": "El ajuste no se ha podido guardar. Inténtalo de nuevo dentro de un momento."
       }
     },
@@ -1229,7 +1230,8 @@
       "profileUpdateFailed": "No se ha podido actualizar el perfil.",
       "deletionRequestFailed": "No se ha podido programar la eliminación.",
       "deletionCancelFailed": "No se ha podido cancelar la solicitud.",
-      "exportLimited": "Exportación limitada a una vez cada 5 minutos."
+      "exportLimited": "Exportación limitada a una vez cada 5 minutos.",
+      "resteAVivreUpdateFailed": "No se ha podido ajustar el presupuesto vital. Inténtalo de nuevo dentro de un momento."
     },
     "onboarding": {
       "workspaceNotFound": "Workspace no encontrado. Contacta con el soporte.",
