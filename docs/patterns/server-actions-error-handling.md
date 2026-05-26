@@ -63,7 +63,7 @@ export async function myMutationAction(input: unknown): Promise<ActionResult> {
 
 1. **Tout englober dans un try/catch monolithique** — incluant `requireUserWithWorkspace()`. Casse le bounce auth `/login`.
 2. **`await logAuditEvent(...)`** sans `.catch()` — un échec d'audit fait crash toute l'action après la write.
-3. **`revalidatePath(...)` sans try/catch** — une infra blip Next.js cache annule la valeur ok au client alors que la DB est OK.
+3. **`revalidatePath(...)` sans try/catch** — un blip d'infra Next.js annule la valeur ok côté client alors que la DB est OK.
 
 ## Pattern côté client (drawer / form)
 

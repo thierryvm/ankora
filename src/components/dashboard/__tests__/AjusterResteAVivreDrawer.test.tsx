@@ -256,11 +256,12 @@ describe('<AjusterResteAVivreDrawer /> — defensive error toast (hotfix)', () =
     });
   });
 
-  it('shows a toast error and keeps the drawer open when the Server Action throws (network down)', async () => {
+  it('shows a toast error, keeps the drawer open and preserves input when the Server Action throws (network down)', async () => {
     updateMock.mockRejectedValue(new Error('Failed to fetch'));
     renderWithIntl(<AjusterResteAVivreDrawer {...baseProps} />);
     fireEvent.click(screen.getByTestId('reste-a-vivre-trigger'));
-    await screen.findByTestId('reste-a-vivre-drawer');
+    const input = await screen.findByTestId('reste-a-vivre-input');
+    fireEvent.change(input, { target: { value: '123' } });
     await act(async () => {
       fireEvent.click(screen.getByTestId('reste-a-vivre-save'));
     });
@@ -272,6 +273,9 @@ describe('<AjusterResteAVivreDrawer /> — defensive error toast (hotfix)', () =
     expect(screen.getByTestId('reste-a-vivre-drawer')).toBeInTheDocument();
     expect(routerRefreshMock).not.toHaveBeenCalled();
     expect(toastSuccessMock).not.toHaveBeenCalled();
+    // Sourcery review: assert the typed amount is preserved across the
+    // failed submission so the retry doesn't force the user to re-key it.
+    expect(input).toHaveValue('123');
   });
 
   it('translates the errorCode when the Server Action returns { ok: false, errorCode }', async () => {
@@ -293,6 +297,11 @@ describe('<AjusterResteAVivreDrawer /> — defensive error toast (hotfix)', () =
     expect(toastMsg).toBeTypeOf('string');
     expect(toastMsg ?? '').not.toContain('errors.');
     expect((toastMsg ?? '').length).toBeGreaterThan(5);
+    // Sourcery review: symmetry with the throw path — the drawer must stay
+    // open and the route must NOT refresh so the user can retry without
+    // re-entering their amount.
+    expect(screen.getByTestId('reste-a-vivre-drawer')).toBeInTheDocument();
+    expect(routerRefreshMock).not.toHaveBeenCalled();
     expect(toastSuccessMock).not.toHaveBeenCalled();
   });
 });

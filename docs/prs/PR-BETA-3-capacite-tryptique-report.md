@@ -20,7 +20,7 @@ GET  https://ankora.be/app?_rsc=...  → 503
 GET  https://ankora.be/?_rsc=...     → 503
 ```
 
-Symptômes user : drawer "Ajuster ce mois" ferme silencieusement, pas de toast, `reste_a_vivre_overrides` non persisté. À 13:34 le site répond 200 OK : transient Vercel infra (cold start / edge worker crash) déjà résolu côté infra, mais **code Ankora pas robuste face à ce type d'incident**.
+Symptômes user : drawer "Ajuster ce mois" se ferme silencieusement, pas de toast, `reste_a_vivre_overrides` non persisté. À 13:34 le site répond 200 OK : transient Vercel infra (cold start / edge worker crash) déjà résolu côté infra, mais **code Ankora pas robuste face à ce type d'incident**.
 
 ### Challenge du diagnostic @cowork
 
