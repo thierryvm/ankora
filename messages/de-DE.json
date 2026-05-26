@@ -983,6 +983,7 @@
         "helperHaut": "Hohe Schätzung. Ankora respektiert dein Budget — kein Urteil.",
         "save": "Speichern",
         "cancel": "Abbrechen",
+        "success": "Lebenshaltungsbudget für diesen Monat angepasst.",
         "errorGeneric": "Die Anpassung konnte nicht gespeichert werden. Bitte versuche es gleich erneut."
       }
     },
@@ -1229,7 +1230,8 @@
       "profileUpdateFailed": "Profil konnte nicht aktualisiert werden.",
       "deletionRequestFailed": "Löschung konnte nicht geplant werden.",
       "deletionCancelFailed": "Antrag konnte nicht widerrufen werden.",
-      "exportLimited": "Export auf einmal alle 5 Minuten begrenzt."
+      "exportLimited": "Export auf einmal alle 5 Minuten begrenzt.",
+      "resteAVivreUpdateFailed": "Lebenshaltungsbudget konnte nicht angepasst werden. Bitte gleich erneut versuchen."
     },
     "onboarding": {
       "workspaceNotFound": "Workspace nicht gefunden. Kontaktiere den Support.",

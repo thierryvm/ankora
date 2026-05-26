@@ -983,6 +983,7 @@
         "helperHaut": "High estimate. Ankora respects your budget — no judgement.",
         "save": "Save",
         "cancel": "Cancel",
+        "success": "Daily living budget adjusted for this month.",
         "errorGeneric": "The adjustment couldn't be saved. Please try again in a moment."
       }
     },
@@ -1229,7 +1230,8 @@
       "profileUpdateFailed": "Unable to update the profile.",
       "deletionRequestFailed": "Unable to schedule the deletion.",
       "deletionCancelFailed": "Unable to cancel the request.",
-      "exportLimited": "Export limited to once every 5 minutes."
+      "exportLimited": "Export limited to once every 5 minutes.",
+      "resteAVivreUpdateFailed": "Couldn't adjust the daily living budget. Please try again in a moment."
     },
     "onboarding": {
       "workspaceNotFound": "Workspace not found. Contact support.",

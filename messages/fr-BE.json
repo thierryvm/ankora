@@ -983,6 +983,7 @@
         "helperHaut": "Estimation haute. Ankora respecte ton budget — pas de jugement.",
         "save": "Enregistrer",
         "cancel": "Annuler",
+        "success": "Reste à vivre ajusté pour ce mois.",
         "errorGeneric": "L'ajustement n'a pas pu être enregistré. Réessaye dans un instant."
       }
     },
@@ -1229,7 +1230,8 @@
       "profileUpdateFailed": "Impossible de mettre à jour le profil.",
       "deletionRequestFailed": "Impossible de programmer la suppression.",
       "deletionCancelFailed": "Impossible d'annuler la demande.",
-      "exportLimited": "Export limité à une fois toutes les 5 minutes."
+      "exportLimited": "Export limité à une fois toutes les 5 minutes.",
+      "resteAVivreUpdateFailed": "Impossible d'ajuster le reste à vivre. Réessaie dans un instant."
     },
     "onboarding": {
       "workspaceNotFound": "Workspace introuvable. Contacte le support.",
