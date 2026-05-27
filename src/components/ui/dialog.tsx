@@ -43,7 +43,11 @@ const DialogContent = React.forwardRef<
       {...props}
     >
       {children}
-      <DialogPrimitive.Close className="text-muted-foreground hover:text-foreground focus-visible:ring-brand-600 absolute top-4 right-4 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2">
+      <DialogPrimitive.Close
+        // PR-BETA-CLEANUP-3 (2026-05-27) — aligned on the Input.tsx F2 contract
+        // (ring-brand-500/30, no offset). See `src/components/ui/input.tsx`.
+        className="text-muted-foreground hover:text-foreground focus-visible:ring-brand-500/30 absolute top-4 right-4 rounded-md transition-colors focus:outline-none focus-visible:ring-2"
+      >
         <X className="h-4 w-4" />
         <span className="sr-only">Fermer</span>
       </DialogPrimitive.Close>

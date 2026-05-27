@@ -20,7 +20,12 @@ const SelectTrigger = React.forwardRef<
       // PR-D5 mobile-iOS: `ankora-form-control-16` enforces 16px font-size.
       // See `Input.tsx` + `globals.css` for the full triage.
       'ankora-form-control-16 border-border bg-card flex h-10 w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 shadow-sm',
-      'focus-visible:border-brand-500 focus-visible:ring-brand-600 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
+      // PR-BETA-CLEANUP-3 (2026-05-27) — aligned on the Input.tsx F2 contract:
+      // `ring-2 ring-offset-2 ring-brand-600` rendered as a thick white halo
+      // on dark theme (the offset uses `--color-background`, which inverts
+      // brand-600 into a hard outline). Softer ring + no offset matches the
+      // F2 fix shipped on Input on 2026-05-07. Same rule, same look.
+      'focus-visible:border-brand-500 focus-visible:ring-brand-500/30 focus-visible:ring-2 focus-visible:outline-none',
       'disabled:cursor-not-allowed disabled:opacity-50',
       'data-placeholder:text-muted',
       'aria-invalid:border-danger aria-invalid:focus-visible:ring-danger',

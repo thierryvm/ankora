@@ -785,8 +785,17 @@
       "emptyState": "Ningún gasto registrado.",
       "summary": "{count, plural, =0 {Ningún gasto} one {1 gasto · {total}} other {# gastos · {total}}}",
       "deleteAria": "Eliminar {label}",
+      "editAria": "Modificar {label}",
       "toastCreated": "Gasto añadido",
-      "toastDeleted": "Gasto eliminado"
+      "toastUpdated": "Gasto actualizado",
+      "toastDeleted": "Gasto eliminado",
+      "drawer": {
+        "title": "Modificar gasto",
+        "save": "Guardar",
+        "saving": "Guardando…",
+        "cancel": "Cancelar",
+        "errorGeneric": "El cambio no se ha podido guardar. Inténtalo de nuevo dentro de un momento."
+      }
     },
     "settings": {
       "metaTitle": "Ajustes",

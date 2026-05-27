@@ -785,8 +785,17 @@
       "emptyState": "Aucune dépense enregistrée.",
       "summary": "{count, plural, =0 {Aucune dépense} one {1 dépense · {total}} other {# dépenses · {total}}}",
       "deleteAria": "Supprimer {label}",
+      "editAria": "Modifier {label}",
       "toastCreated": "Dépense ajoutée",
-      "toastDeleted": "Dépense supprimée"
+      "toastUpdated": "Dépense mise à jour",
+      "toastDeleted": "Dépense supprimée",
+      "drawer": {
+        "title": "Modifier la dépense",
+        "save": "Enregistrer",
+        "saving": "Enregistrement…",
+        "cancel": "Annuler",
+        "errorGeneric": "La modification n'a pas pu être enregistrée. Réessaye dans un instant."
+      }
     },
     "settings": {
       "metaTitle": "Paramètres",

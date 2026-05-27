@@ -66,11 +66,30 @@ describe('<AjusterResteAVivreDrawer /> — open state', () => {
     routerRefreshMock.mockReset();
   });
 
-  it('opens the dialog with the input pre-filled with initialResteAVivre', async () => {
+  it('opens the dialog with the input pre-filled with initialResteAVivre (integer → no trailing .00)', async () => {
+    // PR-BETA-CLEANUP-3 (2026-05-27): integer values are rendered without
+    // the trailing `.00` to drop the visual noise @thierry flagged on the
+    // smoke 2026-05-26. 500 → "500", not "500.00".
     renderWithIntl(<AjusterResteAVivreDrawer {...baseProps} />);
     fireEvent.click(screen.getByTestId('reste-a-vivre-trigger'));
     const input = await screen.findByTestId('reste-a-vivre-input');
-    expect(input).toHaveValue('500.00');
+    expect(input).toHaveValue('500');
+  });
+
+  it('opens the dialog with two decimals when initialResteAVivre is fractional', async () => {
+    renderWithIntl(<AjusterResteAVivreDrawer {...baseProps} initialResteAVivre={425.5} />);
+    fireEvent.click(screen.getByTestId('reste-a-vivre-trigger'));
+    const input = await screen.findByTestId('reste-a-vivre-input');
+    // Fractional values keep `.toFixed(2)` semantics to preserve the cents
+    // for users who actually budget in decimals.
+    expect(input).toHaveValue('425.50');
+  });
+
+  it('opens the dialog with "0" when initialResteAVivre is zero (no trailing .00)', async () => {
+    renderWithIntl(<AjusterResteAVivreDrawer {...baseProps} initialResteAVivre={0} />);
+    fireEvent.click(screen.getByTestId('reste-a-vivre-trigger'));
+    const input = await screen.findByTestId('reste-a-vivre-input');
+    expect(input).toHaveValue('0');
   });
 
   it('renders the drawer title from i18n', async () => {
