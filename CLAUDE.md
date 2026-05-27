@@ -183,11 +183,40 @@ Avant d'exécuter un prompt (PR planifiée OU hotfix urgent), relis-le avec un �
 
 5. **Le fichier CLAUDE.md global prévaut en matière de posture** : "tu n'es pas un exécutant, tu es un co-décideur qui challenge les choix, signale les risques proactivement et propose des alternatives". Ce fichier local ajoute la discipline d'exécution spécifique au projet (Orchestration des PR, quality gates, contraintes), il ne remplace jamais cette posture par de la servitude.
 
-## Trio d'agents & handoff design (verrouillé 2026-04-24)
+## Résilience post-Cowork (verrouillé 2026-05-27)
+
+**Incident d'origine** : crash PC @thierry 2026-05-27 16:36 (BSOD `GUBootStartup.sys`). Claude Desktop / Cowork a perdu sa session locale et toute la mémoire de contexte cross-PR. Le trio @cowork ↔ @cc-ankora ↔ @thierry s'est retrouvé réduit à deux acteurs, sans le second avis IA qui doublait mes décisions. L'historique a été partiellement récupéré, mais la dépendance SPOF reste un risque structurel.
+
+### Doctrine — sub-agents Claude Code obligatoires
+
+Pour reconstruire les rôles @cowork sans dépendance Desktop, deux sub-agents vivent désormais dans `.claude/agents/` (versionnés Git, indépendants de toute instance Cowork) :
+
+- **`plan-reviewer`** (Opus) — invocation **OBLIGATOIRE** avant tout code > 50 lignes, ou tout changement touchant Server Actions, `package.json`, `proxy.ts`, `.husky/`, GHA workflows, `supabase/migrations/`, ou `.claude/settings.local.json`. Reçoit le plan rédigé par CC Ankora ou spec-translator, retourne un verdict (`✅ APPROVED` / `🟡 APPROVED WITH CHANGES` / `🔴 REJECTED`). Code interdit tant que le verdict n'est pas APPROVED.
+- **`spec-translator`** (Sonnet) — invocation **OBLIGATOIRE** quand @thierry envoie une demande informelle (langage naturel non structuré). Transforme la demande en spec Phase 0 + Scope + DoD. Strict séparation : spec-translator écrit la spec, CC Ankora exécute. Jamais le même agent qui spec ET code.
+
+Référence : `Athenaeum/10_Projects/ankora/cc-handoffs/2026-05-27-recovery-session-ankora-post-crash.md` (incident détaillé) + `Athenaeum/10_Projects/ankora/conventions/post-cowork-doctrine.md` (doctrine complète).
+
+### Banned list complémentaire (verrouillée 2026-05-27)
+
+Ces 5 items s'ajoutent aux interdictions historiques (`feedback_irreversibility_guardrails`, doctrine modèles agents) et sont vérifiés par `plan-reviewer` :
+
+1. **Scope étendu mid-PR sans nouveau plan écrit** — si le scope change après ouverture de la PR → STOP, nouveau plan via `spec-translator`, re-validation `plan-reviewer`, re-engagement @thierry.
+2. **Décision architecturale (lib, pattern, schéma DB) prise dans la même session que l'implémentation** — séparation stricte. Session N : décision écrite dans `docs/adr/ADR-XXX.md`. Session N+1 : exécution. Cooldown forcé.
+3. **Modification de `.claude/settings.local.json`, `.husky/`, GitHub Actions workflows, branch protection** dans une PR feature — c'est l'infrastructure de garde-fous, elle ne se modifie que dans une PR dédiée avec review humaine.
+4. **Suppression ou désactivation d'un agent QA** sans validation explicite @thierry — tentation de skip quand l'agent fail.
+5. **"Je vérifie quand même" sur Phase 0 Model Check downgrade Haiku/Sonnet** — si modèle non-Opus sur sécurité/architecture/RLS/CSP/migrations/prod, STOP immédiat, pas de "tâche triviale, je me lance". Référence incident Terminal Learning 2026-04-25.
+
+### Handoff cross-session obligatoire
+
+Chaque session CC Ankora **doit** écrire un handoff au format canonique `Athenaeum/10_Projects/ankora/cc-handoffs/YYYY-MM-DD-HHMM-<slug>.md` AVANT toute compaction de contexte OU fin de session. Le template impératif (8 sections) est documenté dans `Athenaeum/10_Projects/ankora/cc-handoffs/_template-handoff.md`.
+
+**Règle non négociable** : double redondance — fichier dans le vault Obsidian iCloud + commit miroir dans `docs/handoffs/` du repo Ankora. Si l'iCloud n'a pas sync (crash PC), le repo Git GitHub reste la source de vérité.
+
+## Trio d'agents & handoff design (verrouillé 2026-04-24, amendé 2026-05-27)
 
 Ankora est construit par un trio IA + Thierry (vision produit humaine) :
 
-- **@cowork** — vision, spec fonctionnelle, recherche, contenu, arbitrage, brief Claude Design, revue exports (Claude Opus dans Cowork desktop)
+- **@cowork** — vision, spec fonctionnelle, recherche, contenu, arbitrage, brief Claude Design, revue exports (Claude Opus dans Cowork desktop). **Fallback 2026-05-27** : si @cowork est indisponible (crash session, Desktop down), ses rôles sont reconstruits par les sub-agents `.claude/agents/spec-translator.md` (pré-traitement idée brute → spec) + `.claude/agents/plan-reviewer.md` (second avis IA sur plan technique). Voir section "Résilience post-Cowork" supra.
 - **@cc-design** — polish visuel, exploration UI, export React/Tailwind ou ZIP (Claude Opus 4.7 sur claude.ai/design, research preview)
 - **@cc-ankora** — code production, intégration Supabase/Next.js, tests, CI, PRs, merge (Claude Code terminal)
 
