@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { env } from '@/lib/env';
+import { log } from '@/lib/log';
 import type { Database } from '@/lib/supabase/types';
 
 export async function updateSession(
@@ -26,7 +27,23 @@ export async function updateSession(
   );
 
   // Refreshes the session cookie when the access token is close to expiry.
-  await supabase.auth.getUser();
+  //
+  // 503-diag (2026-05-27): the previous version let any thrown error from
+  // `getUser()` propagate to the proxy caller, which surfaced as a bare
+  // HTTP 5xx the Edge runtime cannot interpret. We now catch + log + swallow
+  // so the response is always returned and downstream Server Actions can
+  // observe the failure mode via `require-user` instrumentation. Filter
+  // Vercel logs on `[503-diag] middleware`.
+  try {
+    await supabase.auth.getUser();
+  } catch (e) {
+    log.error('[503-diag] middleware getUser threw', {
+      path: request.nextUrl.pathname,
+      ...(e instanceof Error
+        ? { name: e.name, msg: e.message, stack: e.stack }
+        : { msg: String(e) }),
+    });
+  }
 
   return response;
 }
