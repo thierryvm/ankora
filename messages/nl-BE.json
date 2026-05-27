@@ -785,8 +785,17 @@
       "emptyState": "Nog geen uitgaven geregistreerd.",
       "summary": "{count, plural, =0 {Geen uitgaven} one {1 uitgave · {total}} other {# uitgaven · {total}}}",
       "deleteAria": "{label} verwijderen",
+      "editAria": "{label} bewerken",
       "toastCreated": "Uitgave toegevoegd",
-      "toastDeleted": "Uitgave verwijderd"
+      "toastUpdated": "Uitgave bijgewerkt",
+      "toastDeleted": "Uitgave verwijderd",
+      "drawer": {
+        "title": "Uitgave bewerken",
+        "save": "Opslaan",
+        "saving": "Opslaan…",
+        "cancel": "Annuleren",
+        "errorGeneric": "De wijziging kon niet worden opgeslagen. Probeer het zo opnieuw."
+      }
     },
     "settings": {
       "metaTitle": "Instellingen",

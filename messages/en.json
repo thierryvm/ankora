@@ -785,8 +785,17 @@
       "emptyState": "No expenses recorded.",
       "summary": "{count, plural, =0 {No expenses} one {1 expense · {total}} other {# expenses · {total}}}",
       "deleteAria": "Delete {label}",
+      "editAria": "Edit {label}",
       "toastCreated": "Expense added",
-      "toastDeleted": "Expense deleted"
+      "toastUpdated": "Expense updated",
+      "toastDeleted": "Expense deleted",
+      "drawer": {
+        "title": "Edit expense",
+        "save": "Save",
+        "saving": "Saving…",
+        "cancel": "Cancel",
+        "errorGeneric": "The change couldn't be saved. Please try again in a moment."
+      }
     },
     "settings": {
       "metaTitle": "Settings",

@@ -20,8 +20,15 @@ import { cn } from '@/lib/utils';
  * elevate); same rule applies to `icon` size which keeps the elevation but
  * skips the shadow (icon buttons sit on existing surfaces).
  */
+// PR-BETA-CLEANUP-3 (2026-05-27) — focus ring aligned on the Input.tsx F2
+// contract: `ring-brand-500/30` at 30% opacity, no offset. The previous
+// `ring-2 ring-brand-600 ring-offset-2` combination rendered as a thick
+// white outline on dark theme because the offset took on the background
+// colour. Same root cause as the Select/Input fixes. See
+// `src/components/ui/input.tsx` for the F2 origin and the dark-theme
+// rationale.
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-[transform,background-color,box-shadow,color] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-[transform,background-color,box-shadow,color] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/30 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
   {
     variants: {
       variant: {

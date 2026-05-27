@@ -46,7 +46,7 @@ export function AjusterResteAVivreDrawer({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [open, setOpen] = useState(false);
-  const [draftStr, setDraftStr] = useState(initialResteAVivre.toFixed(2));
+  const [draftStr, setDraftStr] = useState(formatInitialAmount(initialResteAVivre));
   const [isPending, startTransition] = useTransition();
 
   // Autofocus the input when the drawer opens. The draft state is reset
@@ -59,7 +59,7 @@ export function AjusterResteAVivreDrawer({
   }, [open]);
 
   function openDrawer() {
-    setDraftStr(initialResteAVivre.toFixed(2));
+    setDraftStr(formatInitialAmount(initialResteAVivre));
     setOpen(true);
   }
 
@@ -267,4 +267,27 @@ export function AjusterResteAVivreDrawer({
       )}
     </>
   );
+}
+
+/**
+ * PR-BETA-CLEANUP-3 (2026-05-27) — Drop the trailing ".00" when the user's
+ * current value is already an integer. The previous `toFixed(2)` rendering
+ * surfaced "500.00" in the input on initial open, which @thierry flagged
+ * as visual noise (Belgian users don't write decimals on round euros).
+ *
+ * Contract:
+ *   - Integer values (500, 0, 1234) → "500", "0", "1234"
+ *   - Fractional values stay at 2 decimals → "425.50", "162.34"
+ *   - NaN / non-finite → "0" (defensive; should never happen since callers
+ *     pass `Decimal.toNumber()`)
+ *
+ * Does NOT touch `formatCurrency()` which the rest of the dashboard relies
+ * on for the "1 234,56 €" locale-aware display. This helper is INPUT-only:
+ * the value lives in an `<input type="text" inputMode="decimal">` that
+ * accepts user-typed digits with comma or dot, so we render with a dot
+ * (the form parser already normalises `.` and `,`).
+ */
+function formatInitialAmount(value: number): string {
+  if (!Number.isFinite(value)) return '0';
+  return Number.isInteger(value) ? String(value) : value.toFixed(2);
 }

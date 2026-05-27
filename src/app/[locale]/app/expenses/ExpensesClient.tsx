@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
@@ -11,8 +11,11 @@ import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/toast';
 import type { Locale } from '@/i18n/routing';
 import { createExpenseAction, deleteExpenseAction } from '@/lib/actions/expenses';
-import { formatCurrency } from '@/lib/i18n/formatters';
+import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
+import { formatCurrency, formatDate } from '@/lib/i18n/formatters';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
+
+import { ExpenseEditDrawer, type ExpenseEditDrawerExpense } from './ExpenseEditDrawer';
 
 type RawExpense = {
   id: string;
@@ -35,32 +38,58 @@ export function ExpensesClient({ expenses }: { expenses: RawExpense[] }) {
   const [label, setLabel] = useState('');
   const [amount, setAmount] = useState('');
   const [occurredOn, setOccurredOn] = useState(today());
+  const [editingExpense, setEditingExpense] = useState<ExpenseEditDrawerExpense | null>(null);
 
   function onCreate(e: React.FormEvent) {
     e.preventDefault();
     startTransition(async () => {
-      const result = await createExpenseAction({
-        label: label.trim(),
-        amount: Number(amount),
-        occurredOn,
-        categoryId: null,
-        note: null,
-      });
-      if (result.ok) {
-        toast.success(t('toastCreated'));
-        setLabel('');
-        setAmount('');
-      } else {
-        toast.error(translateError(result.errorCode));
+      try {
+        const result = await createExpenseAction({
+          label: label.trim(),
+          amount: Number(amount),
+          occurredOn,
+          categoryId: null,
+          note: null,
+        });
+        if (result.ok) {
+          toast.success(t('toastCreated'));
+          setLabel('');
+          setAmount('');
+        } else {
+          toast.error(translateError(result.errorCode));
+        }
+      } catch (err) {
+        // PR-BETA-3 hotfix #3 doctrine — never swallow Next.js control flow.
+        if (isNextControlFlowError(err)) throw err;
+        // eslint-disable-next-line no-console
+        console.error('createExpenseAction threw', err);
+        toast.error(translateError('errors.expenses.createFailed'));
       }
     });
   }
 
   function onDelete(id: string) {
     startTransition(async () => {
-      const result = await deleteExpenseAction(id);
-      if (result.ok) toast.success(t('toastDeleted'));
-      else toast.error(translateError(result.errorCode));
+      try {
+        const result = await deleteExpenseAction(id);
+        if (result.ok) toast.success(t('toastDeleted'));
+        else toast.error(translateError(result.errorCode));
+      } catch (err) {
+        if (isNextControlFlowError(err)) throw err;
+        // eslint-disable-next-line no-console
+        console.error('deleteExpenseAction threw', err);
+        toast.error(translateError('errors.expenses.deleteFailed'));
+      }
+    });
+  }
+
+  function onEdit(e: RawExpense) {
+    setEditingExpense({
+      id: e.id,
+      label: e.label,
+      amount: e.amount,
+      occurredOn: e.occurredOn,
+      note: e.note,
     });
   }
 
@@ -130,18 +159,42 @@ export function ExpensesClient({ expenses }: { expenses: RawExpense[] }) {
         </CardHeader>
         <CardContent>
           {expenses.length === 0 ? (
-            <p className="text-muted-foreground text-sm">{t('emptyState')}</p>
+            <p data-testid="expenses-empty-state" className="text-muted-foreground text-sm">
+              {t('emptyState')}
+            </p>
           ) : (
-            <ul className="divide-border divide-y">
+            <ul role="list" data-testid="expenses-list" className="divide-border divide-y">
               {expenses.map((e) => (
-                <li key={e.id} className="flex items-center justify-between gap-4 py-3">
+                <li
+                  key={e.id}
+                  data-testid={`expenses-row-${e.id}`}
+                  className="flex items-center justify-between gap-4 py-3"
+                >
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{e.label}</p>
-                    <p className="text-muted-foreground text-xs">{e.occurredOn}</p>
+                    <p data-testid="expenses-row-label" className="truncate font-medium">
+                      {e.label}
+                    </p>
+                    <p data-testid="expenses-row-date" className="text-muted-foreground text-xs">
+                      {formatDate(e.occurredOn, locale, 'medium')}
+                    </p>
                   </div>
-                  <p className="shrink-0 font-mono text-sm tabular-nums">
+                  <p
+                    data-testid="expenses-row-amount"
+                    className="shrink-0 font-mono text-sm tabular-nums"
+                  >
                     {formatCurrency(e.amount, locale)}
                   </p>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onEdit(e)}
+                    disabled={isPending}
+                    aria-label={t('editAria', { label: e.label })}
+                    data-testid={`expenses-row-edit-${e.id}`}
+                  >
+                    <Pencil className="text-muted-foreground h-4 w-4" />
+                  </Button>
                   <Button
                     type="button"
                     variant="ghost"
@@ -149,6 +202,7 @@ export function ExpensesClient({ expenses }: { expenses: RawExpense[] }) {
                     onClick={() => onDelete(e.id)}
                     disabled={isPending}
                     aria-label={t('deleteAria', { label: e.label })}
+                    data-testid={`expenses-row-delete-${e.id}`}
                   >
                     <Trash2 className="text-danger h-4 w-4" />
                   </Button>
@@ -158,6 +212,8 @@ export function ExpensesClient({ expenses }: { expenses: RawExpense[] }) {
           )}
         </CardContent>
       </Card>
+
+      <ExpenseEditDrawer expense={editingExpense} onClose={() => setEditingExpense(null)} />
     </div>
   );
 }

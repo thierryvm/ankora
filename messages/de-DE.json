@@ -785,8 +785,17 @@
       "emptyState": "Keine Ausgabe erfasst.",
       "summary": "{count, plural, =0 {Keine Ausgabe} one {1 Ausgabe · {total}} other {# Ausgaben · {total}}}",
       "deleteAria": "{label} löschen",
+      "editAria": "{label} bearbeiten",
       "toastCreated": "Ausgabe hinzugefügt",
-      "toastDeleted": "Ausgabe gelöscht"
+      "toastUpdated": "Ausgabe aktualisiert",
+      "toastDeleted": "Ausgabe gelöscht",
+      "drawer": {
+        "title": "Ausgabe bearbeiten",
+        "save": "Speichern",
+        "saving": "Speichern…",
+        "cancel": "Abbrechen",
+        "errorGeneric": "Die Änderung konnte nicht gespeichert werden. Bitte gleich erneut versuchen."
+      }
     },
     "settings": {
       "metaTitle": "Einstellungen",
