@@ -50,7 +50,9 @@ jobs:
   e2e:
     name: Playwright E2E
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # TEMP (PR #196): bumped 30 → 45 to break the cache cold-start vicious cycle.
+    # Revert to 30 once a successful cache-hit run is observed on main.
+    timeout-minutes: 45
     needs: quality
     env:
       NEXT_PUBLIC_APP_URL: http://localhost:3000
@@ -91,10 +93,44 @@ jobs:
             playwright-${{ runner.os }}-${{ runner.arch }}-${{ steps.playwright-version.outputs.version }}-
       - name: Install Playwright browsers (cache miss)
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium webkit
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            if timeout 12m npx playwright install --with-deps chromium webkit; then
+              echo "Playwright install succeeded on attempt $attempt"
+              exit 0
+            fi
+            rc=$?
+            if [ "$rc" -eq 124 ]; then
+              echo "::warning::Attempt $attempt timed out after 12m"
+            else
+              echo "::warning::Attempt $attempt failed (exit=$rc)"
+            fi
+            [ "$attempt" -lt 3 ] && sleep 10
+          done
+          echo "::error::Playwright install failed after 3 attempts"
+          exit 1
       - name: Install Playwright system deps (cache hit)
         if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium webkit
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            if timeout 6m npx playwright install-deps chromium webkit; then
+              echo "Playwright system deps installed on attempt $attempt"
+              exit 0
+            fi
+            rc=$?
+            if [ "$rc" -eq 124 ]; then
+              echo "::warning::Attempt $attempt timed out after 6m"
+            else
+              echo "::warning::Attempt $attempt failed (exit=$rc)"
+            fi
+            [ "$attempt" -lt 3 ] && sleep 10
+          done
+          echo "::error::Playwright system deps install failed after 3 attempts"
+          exit 1
       - run: npm run build
       - name: Start server
         run: npm run start &
