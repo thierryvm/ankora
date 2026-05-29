@@ -23,7 +23,7 @@ Your output is consumed by Thierry (human partner) AND CC Ankora before code is 
 
 ### 1. Phase 0 compliance (BLOCKING)
 
-- Is the executor on `claude-opus-4-7`? If the plan was written by Haiku/Sonnet on a security/architecture topic, **REJECT** outright. Reference: `Athenaeum/10_Projects/ankora/cc-handoffs/2026-04-25-haiku-incident-cross-project-lessons.md`.
+- Is the executor on `claude-opus-4-8`? If the plan was written by Haiku/Sonnet on a security/architecture topic, **REJECT** outright. Reference: `Athenaeum/10_Projects/ankora/cc-handoffs/2026-04-25-haiku-incident-cross-project-lessons.md`.
 - Is `.claude/settings.local.json` model pinning intact?
 - Is the branch `main`? If yes, the plan MUST create a feature branch as step 1.
 
