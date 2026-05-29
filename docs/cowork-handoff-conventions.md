@@ -1,6 +1,6 @@
 # Cowork ↔ CC Ankora Handoff Conventions
 
-> **Source canonique** des conventions de collaboration entre @cowork (Cowork desktop, Opus 4.7), @cc-ankora (Claude Code terminal, Opus 4.7 pinné) et @thierry (humain validateur). Tout prompt CC Ankora doit référencer ce document plutôt que de répéter ces conventions inline.
+> **Source canonique** des conventions de collaboration entre @cowork (Cowork desktop, Opus), @cc-ankora (Claude Code terminal, Opus 4.8 pinné) et @thierry (humain validateur). Tout prompt CC Ankora doit référencer ce document plutôt que de répéter ces conventions inline.
 
 **Verrouillé** : 2026-04-27. Modification = PR dédiée + ADR si changement structurel.
 

@@ -46,7 +46,7 @@ Reference: `Athenaeum/10_Projects/ankora/conventions/2026-05-25-code-verify-befo
 
 For CC Ankora to validate before any work:
 
-- Model: `claude-opus-4-7` confirmed via settings.local.json
+- Model: `claude-opus-4-8` confirmed via settings.local.json
 - Current branch: must NOT be `main` (force new feature branch)
 - Repo clean: `git status` shows no uncommitted work from prior session
 - Worktree: single CC Ankora session on this repo (no concurrent risk)
