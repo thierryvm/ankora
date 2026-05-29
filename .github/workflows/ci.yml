@@ -50,6 +50,12 @@ jobs:
   e2e:
     name: Playwright E2E
     runs-on: ubuntu-latest
+    # Pre-baked Playwright browsers eliminate the cdn.playwright.dev install
+    # hang observed in PR #196 (runs 26594675820 cache-only CANCELLED 30m,
+    # 26605442562 retry 3×12m FAILURE 38m). Image tag MUST match the
+    # @playwright/test version resolved in package-lock.json (currently 1.59.1).
+    container:
+      image: mcr.microsoft.com/playwright:v1.59.1-noble
     timeout-minutes: 30
     needs: quality
     env:
@@ -74,7 +80,6 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium webkit
       - run: npm run build
       - name: Start server
         run: npm run start &
