@@ -18,7 +18,7 @@ import type { Locale } from '@/i18n/routing';
 import { Simulation, money, type Charge, type ChargePaidFrom } from '@/lib/domain';
 import { formatCurrency } from '@/lib/i18n/formatters';
 
-type RawCharge = {
+export type RawCharge = {
   id: string;
   label: string;
   amount: number;
@@ -36,7 +36,20 @@ const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
 const FREQUENCIES: readonly Frequency[] = ['monthly', 'quarterly', 'semiannual', 'annual'];
 const MODES: readonly Mode[] = ['cancel', 'negotiate', 'add'];
 
-export function SimulatorClient({ charges }: { charges: RawCharge[] }) {
+/**
+ * @param hideHeader  Suppress the page `<header>` (h1 + subtitle) when the
+ *   simulator is rendered inside the dashboard drawer (THI-195). The drawer
+ *   supplies its own `<h2>` header, so rendering the `<h1>` here would create
+ *   a duplicate top-level heading. Defaults to `false` so the standalone
+ *   `/app/simulator` route keeps its full header untouched.
+ */
+export function SimulatorClient({
+  charges,
+  hideHeader = false,
+}: {
+  charges: RawCharge[];
+  hideHeader?: boolean;
+}) {
   const t = useTranslations('app.simulator');
   const locale = useLocale() as Locale;
   const fmtMoney = (value: Parameters<typeof formatCurrency>[0]) => formatCurrency(value, locale);
@@ -116,10 +129,12 @@ export function SimulatorClient({ charges }: { charges: RawCharge[] }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <header>
-        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{t('title')}</h1>
-        <p className="text-muted-foreground mt-1">{t('subtitle')}</p>
-      </header>
+      {!hideHeader && (
+        <header>
+          <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{t('title')}</h1>
+          <p className="text-muted-foreground mt-1">{t('subtitle')}</p>
+        </header>
+      )}
 
       <Card>
         <CardHeader>
