@@ -63,6 +63,33 @@ Verify that the user dashboard maintains **coherence in design tokens, micro-int
 - [ ] **What-if simulator link** — accessible from dashboard (drawer or modal)
 - [ ] **Recent activity** — transactions or events listed with timestamps
 
+### What-if Simulator v2 (Track B, locked 2026-05-30)
+
+The simulator is a **decision tool**, not a planning toy. The drawer
+(`src/components/dashboard/SimulatorDrawer.tsx`) wraps the shared
+`SimulatorClient` (`src/app/[locale]/app/simulator/SimulatorClient.tsx`) — both
+surfaces must stay coherent.
+
+- [ ] **Réserve libre framing** — the headline impact is "Réserve libre :
+      507 €/mois → 585 €/mois", NOT "effort financier" / "total des charges" /
+      a bare percentage. Metric = `resteDisponible` (Revenus − Effort lissé).
+- [ ] **Label parity with the hero** — the word + metric shown in the simulator
+      match the dashboard hero card (`CapaciteEpargneCard` / "Reste disponible").
+      No synonym drift that re-creates the audit §2 disconnect.
+- [ ] **No isolated-charge %** — the old "+37,26 %/mois" faux-ami is gone. No
+      green `+` percentage implying a recurring monthly gain.
+- [ ] **Anchored numbers** — "Actuel" is explicitly anchored (== dashboard
+      "Effort lissé"), never an unlabelled raw total.
+- [ ] **Realistic scenario chips (Option B)** — quick-pick chips (Télécom /
+      Énergie / Abonnement) pre-fill the scenario on the user's _real_ charge if
+      present; if absent, a soft CTA "Ajoute cette charge pour la simuler" (an
+      onboarding lever), NEVER hardcoded demo values.
+- [ ] **FSMA-safe copy** — no "tu devrais placer/investir", no suggested/market
+      amounts in P0. `negotiate` amount is user-entered. Strictly budget
+      organisation/education.
+- [ ] **Drawer a11y preserved** — focus trap, ESC + backdrop close, focus
+      returns to trigger, body scroll-lock (do not regress the #199 shell).
+
 ## Report Format
 
 ### GO (pass all checks)
