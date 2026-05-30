@@ -6,13 +6,16 @@ import { useTranslations } from 'next-intl';
 
 import { SimulatorClient, type RawCharge } from '@/app/[locale]/app/simulator/SimulatorClient';
 import { Button } from '@/components/ui/button';
-import type { Money } from '@/lib/domain';
 import { cn } from '@/lib/utils';
 
 type Props = {
   charges: RawCharge[];
-  /** Monthly income — drives the "Reste disponible" framing (THI-195). */
-  revenus: Money;
+  /**
+   * Monthly income as a raw `number` (not a `Decimal`). A Decimal loses its
+   * prototype crossing the RSC boundary into this client component, so the
+   * server passes the plain number and `SimulatorClient` re-wraps it.
+   */
+  revenus: number;
 };
 
 /**

@@ -4,7 +4,6 @@ import { NextIntlClientProvider } from 'next-intl';
 
 import messages from '../../../../messages/fr-BE.json';
 import { SimulatorDrawer } from '../SimulatorDrawer';
-import { money } from '@/lib/domain';
 import type { RawCharge } from '@/app/[locale]/app/simulator/SimulatorClient';
 
 // SimulatorClient pulls in the locale-aware `Link` (income-hint CTA). next-intl's
@@ -41,7 +40,11 @@ const charges: RawCharge[] = [
 ];
 
 const sim = messages.app.simulator;
-const revenus = money(2466);
+// Raw number, NOT money(2466): mirrors the real RSC boundary. A Decimal loses
+// its prototype when serialized into the client drawer, so production passes a
+// plain number — passing a Decimal here would mask the `.lte is not a function`
+// crash (regression guard for the revenus RSC-boundary hotfix).
+const revenus = 2466;
 
 describe('<SimulatorDrawer /> — closed state', () => {
   it('renders the trigger labelled "Simuler"', () => {
@@ -98,6 +101,17 @@ describe('<SimulatorDrawer /> — open state', () => {
     // Loyer" default is gone) — the guided placeholder shows and the impact
     // stays empty until the user picks their own charge.
     expect(screen.getByText(sim.fields.chargePlaceholder)).toBeInTheDocument();
+    expect(screen.getByText(sim.impact.empty)).toBeInTheDocument();
+  });
+
+  it('renders without crashing when revenus arrives as a raw number (RSC boundary)', async () => {
+    // Regression: `revenus` crosses server→client as a plain number; the client
+    // re-wraps it with money(). Passing a Decimal used to reach the client as a
+    // prototype-less object and crash at `revenus.lte(0)`. Opening the drawer
+    // forces that code path; the empty impact state proves a full render.
+    renderWithIntl(<SimulatorDrawer charges={charges} revenus={2466} />);
+    fireEvent.click(screen.getByTestId('simulator-drawer-trigger'));
+    await screen.findByTestId('simulator-drawer');
     expect(screen.getByText(sim.impact.empty)).toBeInTheDocument();
   });
 });

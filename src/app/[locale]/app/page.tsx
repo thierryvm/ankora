@@ -392,7 +392,9 @@ export default async function DashboardPage() {
         </Button>
         {/* THI-195: opens the what-if simulator in a drawer in-page.
             The /app/simulator route is preserved as a fallback. */}
-        <SimulatorDrawer charges={snapshot.rawCharges} revenus={monthlyIncome} />
+        {/* Pass income as a raw number — a Decimal can't cross the RSC
+            boundary into the client drawer (it loses its prototype). */}
+        <SimulatorDrawer charges={snapshot.rawCharges} revenus={snapshot.monthlyIncome ?? 0} />
       </div>
     </div>
   );
