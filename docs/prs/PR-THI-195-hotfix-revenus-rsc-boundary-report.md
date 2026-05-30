@@ -41,7 +41,7 @@ Faire traverser `revenus` en **`number`** brut, et le wrapper `money()` **à l'i
 - `charges` : `number` (OK). `revenus` : corrigé. Aucun autre Money vers `SimulatorDrawer`/`SimulatorClient`.
 - Convention confirmée : `CapaciteEpargneCard` → `AjusterResteAVivreDrawer` passe déjà des numbers (`revenus.toNumber()`, `initialResteAVivre.toNumber()`). Le fix s'aligne sur le pattern établi du repo.
 
-## Pourquoi pas de re-run agents QA
+## Pourquoi pas de re-run des agents QA
 
 Ce hotfix ne change **aucune formule** (`financial-formula-validator` : rien à auditer, math identique) ni **aucun rendu** (`dashboard-ux` : sortie identique). Le risque est purement la frontière de sérialisation, couvert par typecheck + test de reproduction + suite complète. `test-runner` = **1357 vitest verts**.
 
