@@ -140,6 +140,13 @@ test.describe('THI-195 — simulator drawer', () => {
       await expect(drawer.getByText('Reste disponible')).toBeVisible();
       // The "+37,26 % / mois" faux-ami is gone for good.
       await expect(drawer.getByText(/%\s*\/\s*mois/)).toHaveCount(0);
+
+      // Track B P1 lot 1 — cancelling a 40 €/month charge frees +40/month, so
+      // the 6-month projection sparkline (S3) and the human cumul (S4) render
+      // without crashing on real data (RSC-boundary smoke). 40 × 6 = 240.
+      await expect(drawer.getByTestId('simulator-projection')).toBeVisible();
+      await expect(drawer.getByTestId('simulator-cumul6m')).toBeVisible();
+      await expect(drawer.getByTestId('simulator-cumul6m')).toContainText('240');
     } finally {
       await deleteSeededUser(admin, user.userId);
     }

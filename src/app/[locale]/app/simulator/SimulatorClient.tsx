@@ -19,6 +19,8 @@ import type { Locale } from '@/i18n/routing';
 import { Simulation, money, type Charge, type ChargePaidFrom } from '@/lib/domain';
 import { formatCurrency } from '@/lib/i18n/formatters';
 
+import { SimulatorProjection } from './SimulatorProjection';
+
 export type RawCharge = {
   id: string;
   label: string;
@@ -353,6 +355,10 @@ export function SimulatorClient({
                   {fmtMoney(result.annualDelta)}
                 </p>
               </div>
+
+              {/* S3 + S4 — 6-month réserve-libre projection (cumul marginal) +
+                  human cumul sentence. Self-suppresses when monthlyDelta == 0. */}
+              <SimulatorProjection monthlyDelta={result.monthlyDelta} fmtMoney={fmtMoney} />
 
               {/* Anchor — demoted effort-lissé sub-text (== dashboard "Effort lissé"). */}
               <p className="text-muted-foreground border-border border-t pt-3 text-xs">
