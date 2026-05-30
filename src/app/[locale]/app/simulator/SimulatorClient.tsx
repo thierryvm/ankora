@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/select';
 import { Link } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
-import { Simulation, money, type Charge, type ChargePaidFrom, type Money } from '@/lib/domain';
+import { Simulation, money, type Charge, type ChargePaidFrom } from '@/lib/domain';
 import { formatCurrency } from '@/lib/i18n/formatters';
 
 export type RawCharge = {
@@ -50,8 +50,14 @@ export function SimulatorClient({
   hideHeader = false,
 }: {
   charges: RawCharge[];
-  /** Monthly income — drives the "Reste disponible" (réserve libre) framing. */
-  revenus: Money;
+  /**
+   * Monthly income as a raw `number` — drives the "Reste disponible" (réserve
+   * libre) framing. MUST stay a plain number: a `Decimal` loses its prototype
+   * crossing the RSC server→client boundary (`.lte`/`.minus` become undefined →
+   * runtime crash). It is re-wrapped with `money()` inside the client, exactly
+   * like `domainCharges` does with `money(c.amount)`.
+   */
+  revenus: number;
   hideHeader?: boolean;
 }) {
   const t = useTranslations('app.simulator');
@@ -134,12 +140,15 @@ export function SimulatorClient({
 
   // THI-195: reframe the impact on "Reste disponible" (réserve libre =
   // revenus − effort lissé), the cockpit hero metric — not on raw effort.
-  const reserveView = result ? Simulation.resteDisponibleView(revenus, result) : null;
+  // Re-wrap `revenus` (a raw number across the RSC boundary) into a Decimal
+  // here, mirroring `domainCharges`. Never let a Decimal cross the boundary.
+  const revenusMoney = money(revenus);
+  const reserveView = result ? Simulation.resteDisponibleView(revenusMoney, result) : null;
   const deltaPositive = result?.monthlyDelta.gt(0);
   // Income not configured (e.g. the standalone /app/simulator route has no
   // `missingSetup` guard): a "Reste disponible" computed from revenus = 0 is
   // misleading, so we surface a setup hint instead.
-  const incomeMissing = revenus.lte(0);
+  const incomeMissing = revenusMoney.lte(0);
 
   return (
     <div className="flex flex-col gap-6">
