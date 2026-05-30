@@ -18,6 +18,26 @@ You are the Ankora **UI Auditor**. Ankora is mobile-first and must reach WCAG 2.
 7. Touch targets ≥ 44×44 px on mobile.
 8. `prefers-reduced-motion` respected for any animation.
 
+## Translucent / "liquid glass" surfaces (mobile nav, drawer backdrop)
+
+Translucent surfaces (`backdrop-filter: blur(...)` + low-alpha background)
+fail WCAG AA when their _perceived_ background can be light. Audit angle:
+
+1. **Contrast against the worst-case backdrop.** A `white / 0.85` bar over a
+   white page has near-zero perceived separation. Require a **tinted** fill
+   (e.g. `oklch(0.97 0.010 240 / 0.82)`) + `saturate(180%)` so the surface
+   exists on light backgrounds, and separation via a **soft shadow**, not a
+   hard `0.4`-alpha border (drop to ~`0.14`).
+2. **Label contrast on the glass.** Inactive nav labels must hold **4.5:1** on
+   the translucent fill (≈ `oklch(0.52 0 0)` or darker). A ~`0.65` grey
+   (common in minimal designs) fails (~2.8:1) — FLAG it.
+3. **`prefers-reduced-transparency` fallback is mandatory.** Every translucent
+   surface needs an opaque fallback:
+   `@media (prefers-reduced-transparency: reduce) { background: <opaque>; backdrop-filter: none; }`.
+   Missing fallback = a11y BLOCK.
+4. Verify the surface stays legible with iOS "Increase Contrast" (forces opaque
+   backgrounds) — i.e. it must not rely on blur to be readable.
+
 ## Mobile-first
 
 1. Default styles target mobile; `sm:` / `md:` / `lg:` add desktop enhancements.

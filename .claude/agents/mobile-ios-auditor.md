@@ -143,6 +143,28 @@ relevant.
     persistence must rely on httpOnly cookies (server-side) for protected
     routes; `localStorage` is acceptable only as a non-critical cache.
 
+## Section 7b — Liquid Glass / Translucent Surfaces iOS 26 (4)
+
+Added 2026-05-30 (audit §5). iOS 26 popularised "Liquid Glass" bottom bars; the
+failure mode on Ankora is a translucent **white** bar over a **white** page.
+
+30a. **Tinted fill, not plain white translucency.** A `white / 0.85` +
+`blur(24px)` bar has ~null perceived contrast on a light page. Require a
+desaturated tint (`oklch(0.97 0.010 240 / 0.82)`) + `saturate(180%)` so the
+bar "captures" the colour behind it and reads as a distinct surface.
+30b. **Separation by soft shadow, not hard border.** Replace the `0.4`-alpha top
+border (visible yet ineffective) with a soft shadow
+(`box-shadow: 0 -1px 0 oklch(0 0 0 / 0.06), 0 -8px 32px oklch(0 0 0 / 0.08)`);
+if a hairline remains, drop it to ~`0.14` alpha.
+30c. **`prefers-reduced-transparency: reduce` fallback is mandatory** — opaque
+background + `backdrop-filter: none`. Also verify legibility under iOS
+"Increase Contrast" (forces opaque fills). Missing fallback = `ios-critical`.
+30d. **safe-area on the drawer _backdrop_, not just content** (known iOS 26
+Safari/Chrome bug, MUI #46953). `env(safe-area-inset-bottom)` must apply to
+the translucent overlay too, or a gap appears at the bottom of full-screen
+sheets. Inactive label contrast on the glass must hold 4.5:1
+(≈ `oklch(0.52 0 0)`); active label = emerald accent.
+
 ## Section 8 — Scroll & UI Patterns (3)
 
 31. Scroll-to-top button is positioned with `bottom: max(1rem, env(safe-area-inset-bottom) + 1rem)`
