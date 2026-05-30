@@ -14,11 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Link } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
-import { Simulation, money, type Charge, type ChargePaidFrom } from '@/lib/domain';
+import { Simulation, money, type Charge, type ChargePaidFrom, type Money } from '@/lib/domain';
 import { formatCurrency } from '@/lib/i18n/formatters';
 
-type RawCharge = {
+export type RawCharge = {
   id: string;
   label: string;
   amount: number;
@@ -36,7 +37,23 @@ const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
 const FREQUENCIES: readonly Frequency[] = ['monthly', 'quarterly', 'semiannual', 'annual'];
 const MODES: readonly Mode[] = ['cancel', 'negotiate', 'add'];
 
-export function SimulatorClient({ charges }: { charges: RawCharge[] }) {
+/**
+ * @param hideHeader  Suppress the page `<header>` (h1 + subtitle) when the
+ *   simulator is rendered inside the dashboard drawer (THI-195). The drawer
+ *   supplies its own `<h2>` header, so rendering the `<h1>` here would create
+ *   a duplicate top-level heading. Defaults to `false` so the standalone
+ *   `/app/simulator` route keeps its full header untouched.
+ */
+export function SimulatorClient({
+  charges,
+  revenus,
+  hideHeader = false,
+}: {
+  charges: RawCharge[];
+  /** Monthly income — drives the "Reste disponible" (réserve libre) framing. */
+  revenus: Money;
+  hideHeader?: boolean;
+}) {
   const t = useTranslations('app.simulator');
   const locale = useLocale() as Locale;
   const fmtMoney = (value: Parameters<typeof formatCurrency>[0]) => formatCurrency(value, locale);
@@ -48,7 +65,10 @@ export function SimulatorClient({ charges }: { charges: RawCharge[] }) {
   const tMonths = useTranslations('common.months');
 
   const [mode, setMode] = useState<Mode>('cancel');
-  const [chargeId, setChargeId] = useState<string>(charges[0]?.id ?? '');
+  // THI-195 (Q3): no auto-selection. A guided empty placeholder ("Choisis une
+  // charge…") avoids defaulting onto rent/tax (the audit's broken default) and
+  // stays FSMA-neutral — we never pre-pick what the user should cut.
+  const [chargeId, setChargeId] = useState<string>('');
   const [newAmount, setNewAmount] = useState('');
   const [newLabel, setNewLabel] = useState('');
   const [newFrequency, setNewFrequency] = useState<Frequency>('monthly');
@@ -112,14 +132,23 @@ export function SimulatorClient({ charges }: { charges: RawCharge[] }) {
     });
   }, [mode, chargeId, newAmount, newLabel, newFrequency, newDueMonth, domainCharges]);
 
+  // THI-195: reframe the impact on "Reste disponible" (réserve libre =
+  // revenus − effort lissé), the cockpit hero metric — not on raw effort.
+  const reserveView = result ? Simulation.resteDisponibleView(revenus, result) : null;
   const deltaPositive = result?.monthlyDelta.gt(0);
+  // Income not configured (e.g. the standalone /app/simulator route has no
+  // `missingSetup` guard): a "Reste disponible" computed from revenus = 0 is
+  // misleading, so we surface a setup hint instead.
+  const incomeMissing = revenus.lte(0);
 
   return (
     <div className="flex flex-col gap-6">
-      <header>
-        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{t('title')}</h1>
-        <p className="text-muted-foreground mt-1">{t('subtitle')}</p>
-      </header>
+      {!hideHeader && (
+        <header>
+          <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{t('title')}</h1>
+          <p className="text-muted-foreground mt-1">{t('subtitle')}</p>
+        </header>
+      )}
 
       <Card>
         <CardHeader>
@@ -159,6 +188,7 @@ export function SimulatorClient({ charges }: { charges: RawCharge[] }) {
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-muted-foreground text-xs">{tFields('chargeExample')}</p>
             </div>
           )}
 
@@ -244,38 +274,84 @@ export function SimulatorClient({ charges }: { charges: RawCharge[] }) {
           <CardTitle>{tImpact('title')}</CardTitle>
         </CardHeader>
         <CardContent>
-          {!result ? (
+          {/* `!reserveView` also narrows the type for the else branch; it is
+              null iff `!result`, so this never adds a reachable extra path. */}
+          {!result || !reserveView ? (
             <p className="text-muted-foreground text-sm">{tImpact('empty')}</p>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-3">
-              <div>
-                <p className="text-muted-foreground text-xs">{tImpact('currentMonthly')}</p>
-                <p className="mt-1 text-xl font-bold tabular-nums">
-                  {fmtMoney(result.currentMonthlyProvision)}
-                </p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-xs">{tImpact('projectedMonthly')}</p>
-                <p className="mt-1 text-xl font-bold tabular-nums">
-                  {fmtMoney(result.projectedMonthlyProvision)}
-                </p>
-              </div>
+          ) : incomeMissing ? (
+            // Income not configured → "Reste disponible" would be misleading.
+            // Show the annual saving only + a setup CTA.
+            <div className="flex flex-col gap-3">
               <div>
                 <p className="text-muted-foreground text-xs">{tImpact('annualSavings')}</p>
                 <p
-                  className={`mt-1 text-xl font-bold tabular-nums ${
+                  className={`mt-1 text-2xl font-bold tabular-nums ${
                     deltaPositive ? 'text-success' : 'text-danger'
                   }`}
+                  data-testid="simulator-annual-savings"
                 >
                   {fmtMoney(result.annualDelta)}
                 </p>
-                <p className="text-muted-foreground mt-1 text-xs">
-                  {tImpact('monthlyChange', {
-                    sign: result.changePercent > 0 ? '+' : '',
-                    percent: result.changePercent,
-                  })}
+              </div>
+              <p className="text-muted-foreground text-sm">{tImpact('incomeHint')}</p>
+              {/* min-h-11 lifts the tap target to 44px (WCAG 2.5.8) — `sm` is 36px. */}
+              <Button asChild variant="outline" size="sm" className="min-h-11 self-start px-4">
+                <Link href="/app/accounts">{tImpact('incomeHintCta')}</Link>
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {/* Hero — Reste disponible (réserve libre) actuel → projeté.
+                  Same metric + wording as the dashboard CapaciteEpargneCard
+                  "Reste disponible" sub-stat (anchoring, audit §2). */}
+              <div>
+                <p className="text-muted-foreground text-xs">{tImpact('resteDisponible')}</p>
+                <p
+                  className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-xl font-bold tabular-nums"
+                  data-testid="simulator-reserve"
+                >
+                  {/* Screen readers get one clean "de X à Y par mois" utterance;
+                      the visual "X → Y" sequence is aria-hidden (the bare arrow
+                      would otherwise be read as "flèche"). */}
+                  <span className="sr-only">
+                    {tImpact('resteDisponibleRange', {
+                      from: fmtMoney(reserveView.current),
+                      to: fmtMoney(reserveView.projected),
+                    })}
+                  </span>
+                  <span aria-hidden>{fmtMoney(reserveView.current)}</span>
+                  <span aria-hidden className="text-muted-foreground">
+                    →
+                  </span>
+                  <span aria-hidden className={deltaPositive ? 'text-success' : 'text-danger'}>
+                    {fmtMoney(reserveView.projected)}
+                  </span>
+                  <span aria-hidden className="text-muted-foreground text-xs font-normal">
+                    {tImpact('perMonth')}
+                  </span>
                 </p>
               </div>
+
+              {/* Secondary — annual saving. */}
+              <div>
+                <p className="text-muted-foreground text-xs">{tImpact('annualSavings')}</p>
+                <p
+                  className={`mt-1 text-lg font-semibold tabular-nums ${
+                    deltaPositive ? 'text-success' : 'text-danger'
+                  }`}
+                  data-testid="simulator-annual-savings"
+                >
+                  {fmtMoney(result.annualDelta)}
+                </p>
+              </div>
+
+              {/* Anchor — demoted effort-lissé sub-text (== dashboard "Effort lissé"). */}
+              <p className="text-muted-foreground border-border border-t pt-3 text-xs">
+                {tImpact('effortAnchor', {
+                  current: fmtMoney(result.currentMonthlyProvision),
+                  projected: fmtMoney(result.projectedMonthlyProvision),
+                })}
+              </p>
             </div>
           )}
         </CardContent>

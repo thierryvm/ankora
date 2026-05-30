@@ -888,7 +888,8 @@
       },
       "fields": {
         "charge": "Fixkosten",
-        "chargePlaceholder": "Auswählen…",
+        "chargePlaceholder": "Wähle einen Posten zum Simulieren",
+        "chargeExample": "z. B. deinen Handytarif neu verhandeln, ein Streaming-Abo kündigen…",
         "newAmount": "Neuer Betrag (€)",
         "label": "Bezeichnung",
         "amount": "Betrag (€)",
@@ -897,11 +898,14 @@
       },
       "impact": {
         "title": "Auswirkung",
-        "empty": "Vervollständige das Szenario, um die Auswirkung zu sehen.",
-        "currentMonthly": "Aktuell / Monat",
-        "projectedMonthly": "Prognose / Monat",
+        "empty": "Wähle einen Posten, um die Auswirkung zu sehen.",
+        "resteDisponible": "Verfügbar",
+        "resteDisponibleRange": "Verfügbar: von {from} auf {to} pro Monat",
+        "perMonth": "/ Monat",
         "annualSavings": "Jährliche Ersparnis",
-        "monthlyChange": "{sign}{percent}% / Monat"
+        "effortAnchor": "Geglätteter Aufwand: {current} → {projected}",
+        "incomeHint": "Füge dein Einkommen hinzu, um die Auswirkung auf dein verfügbares Budget zu sehen.",
+        "incomeHintCta": "Einkommen einrichten"
       }
     },
     "deletionStatus": {

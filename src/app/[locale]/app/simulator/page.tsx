@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 
+import { money } from '@/lib/domain';
 import { getWorkspaceSnapshot } from '@/lib/data/workspace-snapshot';
 import { SimulatorClient } from './SimulatorClient';
 
@@ -12,5 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function SimulatorPage() {
   const snapshot = await getWorkspaceSnapshot();
-  return <SimulatorClient charges={snapshot.rawCharges} />;
+  return (
+    <SimulatorClient charges={snapshot.rawCharges} revenus={money(snapshot.monthlyIncome ?? 0)} />
+  );
 }
