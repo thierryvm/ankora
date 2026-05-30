@@ -1,7 +1,7 @@
 import { describe, it } from 'vitest';
 import * as fc from 'fast-check';
 
-import { projectCumulative } from '../simulation';
+import { cumulativeReserveSeries, projectCumulative } from '../simulation';
 import { money } from '../types';
 
 /**
@@ -74,6 +74,38 @@ describe('projectCumulative — properties', () => {
           return combined.eq(split);
         },
       ),
+    );
+  });
+});
+
+describe('cumulativeReserveSeries — properties', () => {
+  it('has exactly `months` points', () => {
+    fc.assert(
+      fc.property(moneyArb, monthsArb, (delta, months) => {
+        return cumulativeReserveSeries(delta, months).length === months;
+      }),
+    );
+  });
+
+  it('each point equals the canonical projectCumulative(delta, i + 1)', () => {
+    fc.assert(
+      fc.property(moneyArb, fc.integer({ min: 1, max: 120 }), (delta, months) => {
+        const series = cumulativeReserveSeries(delta, months);
+        return series.every((point, i) => point.eq(projectCumulative(delta, i + 1)));
+      }),
+    );
+  });
+
+  it('throws RangeError on negative months', () => {
+    fc.assert(
+      fc.property(moneyArb, fc.integer({ min: -120, max: -1 }), (delta, months) => {
+        try {
+          cumulativeReserveSeries(delta, months);
+          return false;
+        } catch (error) {
+          return error instanceof RangeError;
+        }
+      }),
     );
   });
 });

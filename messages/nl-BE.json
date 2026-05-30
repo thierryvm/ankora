@@ -904,6 +904,13 @@
         "perMonth": "/ maand",
         "annualSavings": "Jaarlijkse besparing",
         "effortAnchor": "Vereffende inspanning: {current} → {projected}",
+        "projectionTitle": "Projectie 6 maanden",
+        "projectionAria": "Beschikbaar saldo geprojecteerd over 6 maanden: van {from} tot {to}",
+        "projectionBaselineLegend": "Zonder wijziging",
+        "projectionScenarioLegend": "Met deze keuze",
+        "cumul6mGain": "Over 6 maanden, +{amount} beschikbaar saldo",
+        "cumul6mLoss": "Over 6 maanden, −{amount} beschikbaar saldo",
+        "cumul6mNeutral": "Geen impact over 6 maanden",
         "incomeHint": "Voeg je inkomen toe om de impact op je beschikbaar saldo te zien.",
         "incomeHintCta": "Mijn inkomen instellen"
       }

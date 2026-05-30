@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { money } from '@/lib/domain/types';
-import { simulate, projectCumulative, resteDisponibleView } from '@/lib/domain/simulation';
+import {
+  simulate,
+  projectCumulative,
+  cumulativeReserveSeries,
+  resteDisponibleView,
+} from '@/lib/domain/simulation';
 import { monthlyProvisionTotal } from '@/lib/domain/budget';
 import { effortFinancierLisse } from '@/lib/domain/cockpit/effort-financier-lisse';
 import type { CockpitCharge } from '@/lib/domain/cockpit/types';
@@ -135,6 +140,51 @@ describe('projectCumulative', () => {
   });
   it('rejects negative months', () => {
     expect(() => projectCumulative(money(10), -1)).toThrow(RangeError);
+  });
+});
+
+describe('cumulativeReserveSeries (S3 projection 6 mois — marginal model)', () => {
+  it('builds the cumulative série: point m (1-based) = monthlyDelta × m', () => {
+    const series = cumulativeReserveSeries(money(20), 6);
+    expect(series.map((m) => m.toNumber())).toEqual([20, 40, 60, 80, 100, 120]);
+  });
+
+  it('preserves sign for a negative delta (e.g. adding a charge → descending)', () => {
+    const series = cumulativeReserveSeries(money(-15), 6);
+    expect(series.map((m) => m.toNumber())).toEqual([-15, -30, -45, -60, -75, -90]);
+  });
+
+  it('returns an all-zero série for a zero delta', () => {
+    const series = cumulativeReserveSeries(money(0), 6);
+    expect(series.every((m) => m.isZero())).toBe(true);
+    expect(series).toHaveLength(6);
+  });
+
+  it('returns an empty série for zero months', () => {
+    expect(cumulativeReserveSeries(money(50), 0)).toEqual([]);
+  });
+
+  it('rejects negative months', () => {
+    expect(() => cumulativeReserveSeries(money(10), -1)).toThrow(RangeError);
+  });
+
+  // Oracle lock (plan-reviewer point 4): the displayed S4 cumul (series[last])
+  // must never diverge from the canonical projectCumulative — guards against a
+  // future refactor of either changing one without the other.
+  it('last point equals projectCumulative(monthlyDelta, months)', () => {
+    const series = cumulativeReserveSeries(money(33.5), 6);
+    expect(series[5]!.eq(projectCumulative(money(33.5), 6))).toBe(true);
+  });
+
+  // RSC-boundary regression (#202 class): built from a re-wrapped money(number)
+  // exactly like the client does — every point stays a finite Decimal, no
+  // prototype loss masquerading as NaN.
+  it('stays finite when built from a re-wrapped money(number)', () => {
+    const delta = money(Number('18.40')); // mimics client re-wrap of a plain number
+    const series = cumulativeReserveSeries(delta, 6);
+    expect(series).toHaveLength(6);
+    expect(series.every((m) => Number.isFinite(m.toNumber()))).toBe(true);
+    expect(series[5]!.toNumber()).toBeCloseTo(110.4, 10);
   });
 });
 

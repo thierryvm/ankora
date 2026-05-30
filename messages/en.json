@@ -904,6 +904,13 @@
         "perMonth": "/ month",
         "annualSavings": "Annual savings",
         "effortAnchor": "Smoothed effort: {current} → {projected}",
+        "projectionTitle": "6-month projection",
+        "projectionAria": "Available leftover projected over 6 months: from {from} to {to}",
+        "projectionBaselineLegend": "No change",
+        "projectionScenarioLegend": "With this choice",
+        "cumul6mGain": "Over 6 months, +{amount} of available leftover",
+        "cumul6mLoss": "Over 6 months, −{amount} of available leftover",
+        "cumul6mNeutral": "No impact over 6 months",
         "incomeHint": "Add your income to see the impact on your available leftover.",
         "incomeHintCta": "Set up my income"
       }

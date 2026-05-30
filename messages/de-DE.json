@@ -904,6 +904,13 @@
         "perMonth": "/ Monat",
         "annualSavings": "Jährliche Ersparnis",
         "effortAnchor": "Geglätteter Aufwand: {current} → {projected}",
+        "projectionTitle": "6-Monats-Prognose",
+        "projectionAria": "Verfügbarer Betrag über 6 Monate projiziert: von {from} auf {to}",
+        "projectionBaselineLegend": "Ohne Änderung",
+        "projectionScenarioLegend": "Mit dieser Wahl",
+        "cumul6mGain": "In 6 Monaten, +{amount} verfügbar",
+        "cumul6mLoss": "In 6 Monaten, −{amount} verfügbar",
+        "cumul6mNeutral": "Keine Auswirkung über 6 Monate",
         "incomeHint": "Füge dein Einkommen hinzu, um die Auswirkung auf dein verfügbares Budget zu sehen.",
         "incomeHintCta": "Einkommen einrichten"
       }

@@ -904,6 +904,13 @@
         "perMonth": "/ mes",
         "annualSavings": "Ahorro anual",
         "effortAnchor": "Esfuerzo suavizado: {current} → {projected}",
+        "projectionTitle": "Proyección a 6 meses",
+        "projectionAria": "Disponible proyectado a 6 meses: de {from} a {to}",
+        "projectionBaselineLegend": "Sin cambios",
+        "projectionScenarioLegend": "Con esta elección",
+        "cumul6mGain": "En 6 meses, +{amount} de disponible",
+        "cumul6mLoss": "En 6 meses, −{amount} de disponible",
+        "cumul6mNeutral": "Sin impacto a 6 meses",
         "incomeHint": "Añade tus ingresos para ver el impacto en tu disponible.",
         "incomeHintCta": "Configurar mis ingresos"
       }

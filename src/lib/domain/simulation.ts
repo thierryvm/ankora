@@ -98,4 +98,23 @@ export function projectCumulative(monthlyDelta: Money, months: number): Money {
   return monthlyDelta.times(months);
 }
 
+/**
+ * Cumulative réserve-libre série over `months` for the simulator's 6-month
+ * projection (Track B P1 — "marginal model" locked 2026-05-30 with @thierry).
+ *
+ * Point at index `i` (0-based) is the cumulative saving banked after month
+ * `i + 1`, i.e. `monthlyDelta × (i + 1)` (delegated to `projectCumulative`).
+ * The curve's "Avec ce choix" line; "Sans changement" is the flat 0 baseline.
+ * Sign is preserved — a negative delta (e.g. adding a charge) yields a
+ * descending série (cumulative loss of réserve libre).
+ *
+ * Pure. Consumed CLIENT-SIDE only (SimulatorProjection) — the returned
+ * `Money[]` (Decimal) must never be serialised across the RSC boundary; the
+ * client computes it from a `monthlyDelta` already living in the browser.
+ */
+export function cumulativeReserveSeries(monthlyDelta: Money, months: number): Money[] {
+  if (months < 0) throw new RangeError('months must be >= 0');
+  return Array.from({ length: months }, (_, i) => projectCumulative(monthlyDelta, i + 1));
+}
+
 export const simulationHelpers = { money, zero };
