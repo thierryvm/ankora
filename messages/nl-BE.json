@@ -888,7 +888,8 @@
       },
       "fields": {
         "charge": "Vaste kost",
-        "chargePlaceholder": "Selecteer…",
+        "chargePlaceholder": "Kies een vaste kost om te simuleren",
+        "chargeExample": "bv. je gsm-abonnement heronderhandelen, een streamingdienst opzeggen…",
         "newAmount": "Nieuw bedrag (€)",
         "label": "Omschrijving",
         "amount": "Bedrag (€)",
@@ -897,11 +898,14 @@
       },
       "impact": {
         "title": "Impact",
-        "empty": "Vul het scenario aan om de impact te zien.",
-        "currentMonthly": "Huidig / maand",
-        "projectedMonthly": "Verwacht / maand",
+        "empty": "Kies een vaste kost om de impact te zien.",
+        "resteDisponible": "Beschikbaar saldo",
+        "resteDisponibleRange": "Beschikbaar saldo: van {from} tot {to} per maand",
+        "perMonth": "/ maand",
         "annualSavings": "Jaarlijkse besparing",
-        "monthlyChange": "{sign}{percent}% / maand"
+        "effortAnchor": "Vereffende inspanning: {current} → {projected}",
+        "incomeHint": "Voeg je inkomen toe om de impact op je beschikbaar saldo te zien.",
+        "incomeHintCta": "Mijn inkomen instellen"
       }
     },
     "deletionStatus": {

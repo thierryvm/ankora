@@ -888,7 +888,8 @@
       },
       "fields": {
         "charge": "Gasto fijo",
-        "chargePlaceholder": "Selecciona…",
+        "chargePlaceholder": "Elige un gasto fijo para simular",
+        "chargeExample": "p. ej. renegociar tu tarifa móvil, cancelar un streaming…",
         "newAmount": "Nuevo importe (€)",
         "label": "Etiqueta",
         "amount": "Importe (€)",
@@ -897,11 +898,14 @@
       },
       "impact": {
         "title": "Impacto",
-        "empty": "Completa el escenario para ver el impacto.",
-        "currentMonthly": "Actual / mes",
-        "projectedMonthly": "Proyectado / mes",
+        "empty": "Elige un gasto para ver el impacto.",
+        "resteDisponible": "Disponible",
+        "resteDisponibleRange": "Disponible: de {from} a {to} al mes",
+        "perMonth": "/ mes",
         "annualSavings": "Ahorro anual",
-        "monthlyChange": "{sign}{percent}% / mes"
+        "effortAnchor": "Esfuerzo suavizado: {current} → {projected}",
+        "incomeHint": "Añade tus ingresos para ver el impacto en tu disponible.",
+        "incomeHintCta": "Configurar mis ingresos"
       }
     },
     "deletionStatus": {

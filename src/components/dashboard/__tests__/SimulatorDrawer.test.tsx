@@ -1,10 +1,23 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 
 import messages from '../../../../messages/fr-BE.json';
 import { SimulatorDrawer } from '../SimulatorDrawer';
+import { money } from '@/lib/domain';
 import type { RawCharge } from '@/app/[locale]/app/simulator/SimulatorClient';
+
+// SimulatorClient pulls in the locale-aware `Link` (income-hint CTA). next-intl's
+// real `createNavigation` imports `next/navigation`, unresolvable under jsdom —
+// mock it to a plain anchor, same pattern as the sibling card tests.
+vi.mock('@/i18n/navigation', () => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Link: ({ href, children, ...rest }: any) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
+  ),
+}));
 
 function renderWithIntl(ui: React.ReactNode) {
   return render(
@@ -28,30 +41,31 @@ const charges: RawCharge[] = [
 ];
 
 const sim = messages.app.simulator;
+const revenus = money(2466);
 
 describe('<SimulatorDrawer /> — closed state', () => {
   it('renders the trigger labelled "Simuler"', () => {
-    renderWithIntl(<SimulatorDrawer charges={charges} />);
+    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} />);
     const trigger = screen.getByTestId('simulator-drawer-trigger');
     expect(trigger).toBeInTheDocument();
     expect(trigger.textContent ?? '').toContain(messages.app.dashboard.ctaSimulator);
   });
 
   it('does not render the dialog until the trigger is clicked', () => {
-    renderWithIntl(<SimulatorDrawer charges={charges} />);
+    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} />);
     expect(screen.queryByTestId('simulator-drawer')).toBeNull();
   });
 });
 
 describe('<SimulatorDrawer /> — open state', () => {
   it('opens the dialog on trigger click', async () => {
-    renderWithIntl(<SimulatorDrawer charges={charges} />);
+    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} />);
     fireEvent.click(screen.getByTestId('simulator-drawer-trigger'));
     expect(await screen.findByTestId('simulator-drawer')).toBeInTheDocument();
   });
 
   it('exposes role="dialog" and aria-modal on the open drawer', async () => {
-    renderWithIntl(<SimulatorDrawer charges={charges} />);
+    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} />);
     fireEvent.click(screen.getByTestId('simulator-drawer-trigger'));
     const dialog = await screen.findByTestId('simulator-drawer');
     expect(dialog).toHaveAttribute('role', 'dialog');
@@ -59,14 +73,14 @@ describe('<SimulatorDrawer /> — open state', () => {
   });
 
   it('renders the drawer title from i18n (app.simulator.title)', async () => {
-    renderWithIntl(<SimulatorDrawer charges={charges} />);
+    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} />);
     fireEvent.click(screen.getByTestId('simulator-drawer-trigger'));
     const heading = await screen.findByRole('heading', { name: sim.title });
     expect(heading.tagName).toBe('H2');
   });
 
   it('hides the SimulatorClient page header (hideHeader): subtitle is not rendered', async () => {
-    renderWithIntl(<SimulatorDrawer charges={charges} />);
+    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} />);
     fireEvent.click(screen.getByTestId('simulator-drawer-trigger'));
     await screen.findByTestId('simulator-drawer');
     // The standalone page renders a <p> subtitle; inside the drawer the
@@ -74,14 +88,17 @@ describe('<SimulatorDrawer /> — open state', () => {
     expect(screen.queryByText(sim.subtitle)).toBeNull();
   });
 
-  it('renders the SimulatorClient with the passed charges (mode pills + charge label visible)', async () => {
-    renderWithIntl(<SimulatorDrawer charges={charges} />);
+  it('mounts the calculator with a guided empty default (Q3: no charge auto-selected)', async () => {
+    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} />);
     fireEvent.click(screen.getByTestId('simulator-drawer-trigger'));
     await screen.findByTestId('simulator-drawer');
     // Mode pills come from SimulatorClient → proves the calculator mounted.
     expect(screen.getByRole('button', { name: sim.scenario.modes.cancel })).toBeInTheDocument();
-    // The charge passed in prop is selectable (no re-fetch needed).
-    expect(screen.getByText(/Assurance auto/)).toBeInTheDocument();
+    // THI-195 (Q3): no charge is pre-selected (the audit's broken "Annuler le
+    // Loyer" default is gone) — the guided placeholder shows and the impact
+    // stays empty until the user picks their own charge.
+    expect(screen.getByText(sim.fields.chargePlaceholder)).toBeInTheDocument();
+    expect(screen.getByText(sim.impact.empty)).toBeInTheDocument();
   });
 });
 
@@ -91,7 +108,7 @@ describe('<SimulatorDrawer /> — dismiss + focus management', () => {
   });
 
   it('closes the drawer when the backdrop is clicked', async () => {
-    renderWithIntl(<SimulatorDrawer charges={charges} />);
+    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} />);
     fireEvent.click(screen.getByTestId('simulator-drawer-trigger'));
     await screen.findByTestId('simulator-drawer');
     fireEvent.click(screen.getByTestId('simulator-drawer-backdrop'));
@@ -99,7 +116,7 @@ describe('<SimulatorDrawer /> — dismiss + focus management', () => {
   });
 
   it('closes the drawer when the X button is clicked', async () => {
-    renderWithIntl(<SimulatorDrawer charges={charges} />);
+    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} />);
     fireEvent.click(screen.getByTestId('simulator-drawer-trigger'));
     await screen.findByTestId('simulator-drawer');
     fireEvent.click(screen.getByTestId('simulator-drawer-close'));
@@ -107,7 +124,7 @@ describe('<SimulatorDrawer /> — dismiss + focus management', () => {
   });
 
   it('closes the drawer on Escape', async () => {
-    renderWithIntl(<SimulatorDrawer charges={charges} />);
+    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} />);
     fireEvent.click(screen.getByTestId('simulator-drawer-trigger'));
     await screen.findByTestId('simulator-drawer');
     fireEvent.keyDown(window, { key: 'Escape' });
@@ -115,7 +132,7 @@ describe('<SimulatorDrawer /> — dismiss + focus management', () => {
   });
 
   it('returns focus to the trigger after closing (WCAG 2.4.3)', async () => {
-    renderWithIntl(<SimulatorDrawer charges={charges} />);
+    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} />);
     const trigger = screen.getByTestId('simulator-drawer-trigger');
     fireEvent.click(trigger);
     await screen.findByTestId('simulator-drawer');
@@ -125,7 +142,7 @@ describe('<SimulatorDrawer /> — dismiss + focus management', () => {
   });
 
   it('pins the body (iOS-safe scroll lock) while open and restores it on close', async () => {
-    renderWithIntl(<SimulatorDrawer charges={charges} />);
+    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} />);
     fireEvent.click(screen.getByTestId('simulator-drawer-trigger'));
     await screen.findByTestId('simulator-drawer');
     // iOS-safe lock: body is pinned with position:fixed (rubber-band proof),

@@ -6,10 +6,13 @@ import { useTranslations } from 'next-intl';
 
 import { SimulatorClient, type RawCharge } from '@/app/[locale]/app/simulator/SimulatorClient';
 import { Button } from '@/components/ui/button';
+import type { Money } from '@/lib/domain';
 import { cn } from '@/lib/utils';
 
 type Props = {
   charges: RawCharge[];
+  /** Monthly income — drives the "Reste disponible" framing (THI-195). */
+  revenus: Money;
 };
 
 /**
@@ -33,7 +36,7 @@ type Props = {
  * No re-fetch on open: `charges` is passed down from the dashboard server
  * component (`snapshot.rawCharges`), already in memory.
  */
-export function SimulatorDrawer({ charges }: Props) {
+export function SimulatorDrawer({ charges, revenus }: Props) {
   const t = useTranslations('app.dashboard');
   const tSimulator = useTranslations('app.simulator');
   const tClose = useTranslations('ui.action');
@@ -188,7 +191,7 @@ export function SimulatorDrawer({ charges }: Props) {
             {/* `pb-safe`: reserve the iOS home-indicator inset so the last
                 result card is never hidden behind it on a full-screen PWA. */}
             <div className="flex-1 overflow-y-auto px-5 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-              <SimulatorClient hideHeader charges={charges} />
+              <SimulatorClient hideHeader charges={charges} revenus={revenus} />
             </div>
           </div>
         </div>

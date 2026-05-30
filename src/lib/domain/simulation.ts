@@ -11,13 +11,17 @@ export type SimulationResult = {
   projectedMonthlyProvision: Money;
   monthlyDelta: Money;
   annualDelta: Money;
-  /** Percent change, rounded to 2 decimals. */
-  changePercent: number;
 };
 
 /**
  * Estimate the monthly-savings impact of a what-if action.
  * Pure function — does not mutate input charges.
+ *
+ * Note: `currentMonthlyProvision` is the smoothed monthly effort
+ * (`monthlyProvisionTotal`), provably equal to the cockpit's
+ * `effortFinancierLisse` for the same charges — see the equivalence test in
+ * `simulation.test.ts`. The "Actuel" shown by the simulator therefore matches
+ * the dashboard's "Effort lissé" (anchoring, THI-195 audit §2).
  */
 export function simulate(charges: readonly Charge[], input: SimulationInput): SimulationResult {
   const current = monthlyProvisionTotal(charges);
@@ -26,16 +30,39 @@ export function simulate(charges: readonly Charge[], input: SimulationInput): Si
   const monthlyDelta = current.minus(projected);
   const annualDelta = monthlyDelta.times(12);
 
-  const changePercent = current.isZero()
-    ? 0
-    : Number(monthlyDelta.div(current).times(100).toFixed(2));
-
   return {
     currentMonthlyProvision: current,
     projectedMonthlyProvision: projected,
     monthlyDelta,
     annualDelta,
-    changePercent,
+  };
+}
+
+/**
+ * "Reste disponible" (réserve libre) view of a simulation — the signature
+ * metric of Ankora: `revenus − effort financier lissé`. THI-195 reframes the
+ * simulator on this (not on the raw "effort"/total charges) so the user sees
+ * the impact on the same number the cockpit hero shows.
+ *
+ *   resteDisponible = revenus − monthlyProvision (== revenus − effortFinancierLisse)
+ *
+ * `monthlyDelta` is invariant under the revenus shift (it cancels), so the
+ * projected/current gap equals `simulate(...).monthlyDelta`.
+ *
+ * Pure — no clamping. If `revenus` is 0 (income not configured), `current` is
+ * negative and the UI layer is responsible for the messaging.
+ */
+export type ResteDisponibleView = {
+  current: Money;
+  projected: Money;
+  monthlyDelta: Money;
+};
+
+export function resteDisponibleView(revenus: Money, result: SimulationResult): ResteDisponibleView {
+  return {
+    current: revenus.minus(result.currentMonthlyProvision),
+    projected: revenus.minus(result.projectedMonthlyProvision),
+    monthlyDelta: result.monthlyDelta,
   };
 }
 

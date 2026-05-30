@@ -888,7 +888,8 @@
       },
       "fields": {
         "charge": "Bill",
-        "chargePlaceholder": "Select…",
+        "chargePlaceholder": "Choose a bill to simulate",
+        "chargeExample": "e.g. renegotiate your phone plan, cut a streaming sub…",
         "newAmount": "New amount (€)",
         "label": "Label",
         "amount": "Amount (€)",
@@ -897,11 +898,14 @@
       },
       "impact": {
         "title": "Impact",
-        "empty": "Complete the scenario to see the impact.",
-        "currentMonthly": "Current / month",
-        "projectedMonthly": "Projected / month",
+        "empty": "Choose a bill to see the impact.",
+        "resteDisponible": "Available leftover",
+        "resteDisponibleRange": "Available leftover: from {from} to {to} per month",
+        "perMonth": "/ month",
         "annualSavings": "Annual savings",
-        "monthlyChange": "{sign}{percent}% / month"
+        "effortAnchor": "Smoothed effort: {current} → {projected}",
+        "incomeHint": "Add your income to see the impact on your available leftover.",
+        "incomeHintCta": "Set up my income"
       }
     },
     "deletionStatus": {

@@ -105,6 +105,76 @@ test.describe('THI-195 — simulator drawer', () => {
     }
   });
 
+  test('selecting a charge reframes the impact on "Reste disponible" (no faux-ami %)', async ({
+    page,
+  }) => {
+    if (!admin) return;
+    const user = await seedOnboardedUser(admin, [
+      {
+        label: 'Abonnement mobile',
+        amount: 40,
+        frequency: 'monthly',
+        dueMonth: 1,
+        paidFrom: 'principal',
+      },
+    ]);
+    try {
+      // THI-195: réserve libre = revenus − effort lissé. Seed income so the
+      // "Reste disponible" framing is shown (not the income-setup hint).
+      await admin.from('workspaces').update({ monthly_income: 2466 }).eq('id', user.workspaceId);
+
+      await login(page, user.email, user.password);
+      await page.getByTestId('simulator-drawer-trigger').click();
+      const drawer = page.getByTestId('simulator-drawer');
+      await expect(drawer).toBeVisible();
+
+      // Q3 guided default: no charge pre-selected → empty impact, no rent default.
+      await expect(drawer.getByText("Choisis une charge pour voir l'impact.")).toBeVisible();
+
+      // Select the seeded charge (Radix option renders in a portal).
+      await drawer.locator('#chargeId').click();
+      await page.getByRole('option', { name: /Abonnement mobile/ }).click();
+
+      // Impact is reframed on "Reste disponible" (the cockpit hero metric).
+      await expect(page.getByTestId('simulator-reserve')).toBeVisible();
+      await expect(drawer.getByText('Reste disponible')).toBeVisible();
+      // The "+37,26 % / mois" faux-ami is gone for good.
+      await expect(drawer.getByText(/%\s*\/\s*mois/)).toHaveCount(0);
+    } finally {
+      await deleteSeededUser(admin, user.userId);
+    }
+  });
+
+  test('with no income configured, the impact shows the income-setup hint', async ({ page }) => {
+    if (!admin) return;
+    const user = await seedOnboardedUser(admin, [
+      {
+        label: 'Forfait mobile',
+        amount: 40,
+        frequency: 'monthly',
+        dueMonth: 1,
+        paidFrom: 'principal',
+      },
+    ]);
+    try {
+      // No income seeded → snapshot.monthlyIncome is null → money(0) →
+      // incomeMissing: "Reste disponible" can't be framed, show the setup hint.
+      await login(page, user.email, user.password);
+      await page.getByTestId('simulator-drawer-trigger').click();
+      const drawer = page.getByTestId('simulator-drawer');
+      await expect(drawer).toBeVisible();
+      await drawer.locator('#chargeId').click();
+      await page.getByRole('option', { name: /Forfait mobile/ }).click();
+
+      // The income-setup CTA replaces the "Reste disponible" framing.
+      await expect(drawer.getByRole('link', { name: /revenus/i })).toBeVisible();
+      await expect(page.getByTestId('simulator-reserve')).toHaveCount(0);
+      await expect(page.getByTestId('simulator-annual-savings')).toBeVisible();
+    } finally {
+      await deleteSeededUser(admin, user.userId);
+    }
+  });
+
   test('the /app/simulator route fallback still renders its full header', async ({ page }) => {
     if (!admin) return;
     const user = await seedOnboardedUser(admin);
