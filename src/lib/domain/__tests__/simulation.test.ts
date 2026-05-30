@@ -1,7 +1,26 @@
 import { describe, it, expect } from 'vitest';
 import { money } from '@/lib/domain/types';
-import { simulate, projectCumulative } from '@/lib/domain/simulation';
+import { simulate, projectCumulative, resteDisponibleView } from '@/lib/domain/simulation';
+import { monthlyProvisionTotal } from '@/lib/domain/budget';
+import { effortFinancierLisse } from '@/lib/domain/cockpit/effort-financier-lisse';
+import type { CockpitCharge } from '@/lib/domain/cockpit/types';
 import type { Charge } from '@/lib/domain/types';
+
+/**
+ * Maps a domain `Charge` to the cockpit `CockpitCharge` shape, locally so the
+ * test stays free of the DB-bound `toCockpitCharges` snapshot helper.
+ */
+function toCockpit(c: Charge): CockpitCharge {
+  return {
+    id: c.id,
+    label: c.label,
+    amount: c.amount,
+    frequency: c.frequency,
+    paymentMonths: c.paymentMonths,
+    paymentDay: c.paymentDay,
+    isActive: c.isActive,
+  };
+}
 
 const charges: Charge[] = [
   {
@@ -37,7 +56,6 @@ describe('simulate / cancel', () => {
     expect(result.projectedMonthlyProvision.toNumber()).toBe(100);
     expect(result.monthlyDelta.toNumber()).toBe(50);
     expect(result.annualDelta.toNumber()).toBe(600);
-    expect(result.changePercent).toBeCloseTo((50 / 150) * 100, 2);
   });
 
   it('returns no change if chargeId is unknown', () => {
@@ -117,5 +135,80 @@ describe('projectCumulative', () => {
   });
   it('rejects negative months', () => {
     expect(() => projectCumulative(money(10), -1)).toThrow(RangeError);
+  });
+});
+
+describe('resteDisponibleView (réserve libre = revenus − effort lissé)', () => {
+  it('raises reste disponible when a charge is cancelled', () => {
+    const result = simulate(charges, { kind: 'cancel', chargeId: 'c1' });
+    const view = resteDisponibleView(money(2000), result);
+    // current = 2000 − 150 ; projected = 2000 − 100 (50 freed)
+    expect(view.current.toNumber()).toBe(1850);
+    expect(view.projected.toNumber()).toBe(1900);
+    expect(view.projected.gt(view.current)).toBe(true);
+    expect(view.monthlyDelta.toNumber()).toBe(50);
+  });
+
+  it('shifts reste disponible by the negotiated monthly gap', () => {
+    const result = simulate(charges, { kind: 'negotiate', chargeId: 'c1', newAmount: money(30) });
+    const view = resteDisponibleView(money(2000), result);
+    // 50 → 30 on a monthly charge frees 20/month of reste disponible.
+    expect(view.projected.minus(view.current).toNumber()).toBe(20);
+  });
+
+  it('lowers reste disponible when a charge is added', () => {
+    const result = simulate(charges, {
+      kind: 'add',
+      charge: {
+        label: 'Streaming',
+        amount: money(15),
+        frequency: 'monthly',
+        dueMonth: 1,
+        paymentMonths: [1],
+        paymentDay: 1,
+        categoryId: null,
+        isActive: true,
+        paidFrom: 'principal',
+      },
+    });
+    const view = resteDisponibleView(money(2000), result);
+    expect(view.projected.lt(view.current)).toBe(true);
+    expect(view.monthlyDelta.toNumber()).toBe(-15);
+  });
+
+  it('returns negative reste disponible when revenus is 0 (income not configured)', () => {
+    const result = simulate(charges, { kind: 'cancel', chargeId: 'c1' });
+    const view = resteDisponibleView(money(0), result);
+    // No clamping: −150 → −100. The UI layer surfaces the "configure income" hint.
+    expect(view.current.toNumber()).toBe(-150);
+    expect(view.projected.toNumber()).toBe(-100);
+  });
+
+  it('keeps monthlyDelta invariant under the revenus shift', () => {
+    const result = simulate(charges, { kind: 'cancel', chargeId: 'c1' });
+    expect(resteDisponibleView(money(2000), result).monthlyDelta.toNumber()).toBe(
+      result.monthlyDelta.toNumber(),
+    );
+  });
+});
+
+describe('anchoring (D3) — monthlyProvisionTotal ≡ effortFinancierLisse', () => {
+  it('matches for the mixed monthly + annual fixture', () => {
+    const budget = monthlyProvisionTotal(charges);
+    const cockpit = effortFinancierLisse(charges.map(toCockpit));
+    expect(budget.toNumber()).toBeCloseTo(cockpit.toNumber(), 10);
+  });
+
+  it('matches across every frequency, including inactive charges', () => {
+    const mixed: Charge[] = [
+      { ...charges[0]!, id: 'm', amount: money(53), frequency: 'monthly' },
+      { ...charges[0]!, id: 'q', amount: money(90), frequency: 'quarterly' },
+      { ...charges[0]!, id: 's', amount: money(120), frequency: 'semiannual' },
+      { ...charges[0]!, id: 'a', amount: money(1200), frequency: 'annual' },
+      { ...charges[0]!, id: 'x', amount: money(999), frequency: 'monthly', isActive: false },
+    ];
+    const budget = monthlyProvisionTotal(mixed);
+    const cockpit = effortFinancierLisse(mixed.map(toCockpit));
+    expect(budget.toNumber()).toBeCloseTo(cockpit.toNumber(), 10);
   });
 });

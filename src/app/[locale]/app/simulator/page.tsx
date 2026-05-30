@@ -12,5 +12,5 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function SimulatorPage() {
   const snapshot = await getWorkspaceSnapshot();
-  return <SimulatorClient charges={snapshot.rawCharges} />;
+  return <SimulatorClient charges={snapshot.rawCharges} revenus={snapshot.monthlyIncome ?? 0} />;
 }

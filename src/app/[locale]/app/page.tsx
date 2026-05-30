@@ -10,6 +10,7 @@ import { EffortFinancierCard } from '@/components/dashboard/EffortFinancierCard'
 import { CapaciteEpargneCard } from '@/components/dashboard/CapaciteEpargneCard';
 import { ProvisionHealthGaugeCard } from '@/components/dashboard/ProvisionHealthGaugeCard';
 import { ProchainesFacturesCard } from '@/components/dashboard/ProchainesFacturesCard';
+import { SimulatorDrawer } from '@/components/dashboard/SimulatorDrawer';
 import { Expenses, Transfer, money } from '@/lib/domain';
 import { paymentKey, type PaymentLedger } from '@/lib/domain/cockpit';
 import { getWorkspaceSnapshot, toCockpitCharges } from '@/lib/data/workspace-snapshot';
@@ -389,9 +390,11 @@ export default async function DashboardPage() {
         <Button asChild variant="outline" size="lg">
           <Link href="/app/expenses">{t('ctaExpenses')}</Link>
         </Button>
-        <Button asChild variant="outline" size="lg">
-          <Link href="/app/simulator">{t('ctaSimulator')}</Link>
-        </Button>
+        {/* THI-195: opens the what-if simulator in a drawer in-page.
+            The /app/simulator route is preserved as a fallback. */}
+        {/* Pass income as a raw number — a Decimal can't cross the RSC
+            boundary into the client drawer (it loses its prototype). */}
+        <SimulatorDrawer charges={snapshot.rawCharges} revenus={snapshot.monthlyIncome ?? 0} />
       </div>
     </div>
   );

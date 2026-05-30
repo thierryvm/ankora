@@ -888,7 +888,8 @@
       },
       "fields": {
         "charge": "Charge",
-        "chargePlaceholder": "Sélectionne…",
+        "chargePlaceholder": "Choisis une charge à simuler",
+        "chargeExample": "ex : renégocier ton forfait, couper un streaming…",
         "newAmount": "Nouveau montant (€)",
         "label": "Libellé",
         "amount": "Montant (€)",
@@ -897,11 +898,14 @@
       },
       "impact": {
         "title": "Impact",
-        "empty": "Complète le scénario pour voir l'impact.",
-        "currentMonthly": "Actuel / mois",
-        "projectedMonthly": "Projeté / mois",
+        "empty": "Choisis une charge pour voir l'impact.",
+        "resteDisponible": "Reste disponible",
+        "resteDisponibleRange": "Reste disponible : de {from} à {to} par mois",
+        "perMonth": "/ mois",
         "annualSavings": "Économie annuelle",
-        "monthlyChange": "{sign}{percent}% / mois"
+        "effortAnchor": "Effort lissé : {current} → {projected}",
+        "incomeHint": "Ajoute tes revenus pour voir l'impact sur ton reste disponible.",
+        "incomeHintCta": "Configurer mes revenus"
       }
     },
     "deletionStatus": {
