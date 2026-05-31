@@ -60,9 +60,10 @@ describe('<Select /> composition', () => {
 
   // PR-UI-1 (THI-298) — the trigger mirrors Input.tsx 1:1 on the "one signal
   // not two" field contract: full rest border + subtle brand hover, focus as
-  // the ring alone (transparent border + ring-offset-0), and a preserved
-  // aria-invalid danger border on focus. jsdom asserts class presence only;
-  // the cascade override is proven by the live-test.
+  // one coherent emerald signal (conformant `border-brand-700` + assorted soft
+  // `ring-brand-500/50`, no offset), and a preserved aria-invalid danger border
+  // on focus. jsdom asserts class presence only; the cascade override is proven
+  // by the live-test.
   it('mirrors the Input field contract on focus/hover/invalid', () => {
     render(
       <Select>
@@ -79,10 +80,12 @@ describe('<Select /> composition', () => {
     expect(trigger.className).toContain('border-border');
     expect(trigger.className).toContain('hover:border-brand-500/40');
     expect(trigger.className).toContain('transition-colors');
-    // focus = ring alone
-    expect(trigger.className).toContain('focus-visible:border-transparent');
+    // focus = conformant border + assorted soft ring
+    expect(trigger.className).toContain('focus-visible:border-brand-700');
+    expect(trigger.className).toContain('focus-visible:ring-brand-500/50');
     expect(trigger.className).toContain('focus-visible:ring-offset-0');
-    expect(trigger.className).toContain('focus-visible:ring-brand-500/30');
+    expect(trigger.className).not.toContain('focus-visible:border-transparent');
+    expect(trigger.className).not.toContain('focus-visible:ring-brand-500/30');
     expect(trigger.className).not.toContain('focus-visible:border-brand-500');
     // invalid preserved across focus
     expect(trigger.className).toContain('aria-invalid:border-danger');

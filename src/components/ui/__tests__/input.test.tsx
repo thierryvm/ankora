@@ -42,19 +42,20 @@ describe('<Input />', () => {
     expect(input.value).toBe('hello');
   });
 
-  // PR-UI-2 — focus ring should be subtle (brand-500 at 30%, no offset)
-  // instead of the full-opacity ring-brand-600 + ring-offset-2 that read as
-  // a thick white halo on dark theme.
-  // PR-UI-1 (THI-298) — focus is now the RING ALONE: transparent border +
-  // ring-offset-0. One signal, not two (the previous border-brand-500 stacked
-  // on the ring read as a "double border").
-  it('uses the soft focus ring alone (brand-500/30, transparent border, no offset)', () => {
+  // PR-UI-1 (THI-298) — focus is one coherent emerald signal: a conformant
+  // `border-brand-700` (WCAG 2.4.11) + an assorted soft `ring-brand-500/50`
+  // halo, no offset. NOT the old disparate `border-brand-500` + ring that read
+  // as a "double border", and NOT the rejected interim "ring alone" at /30
+  // (sole indicator below the 3:1 focus-appearance threshold).
+  it('uses the conformant focus border + assorted soft ring (brand-700 + brand-500/50, no offset)', () => {
     render(<Input placeholder="focus-test" />);
     const input = screen.getByPlaceholderText('focus-test');
-    expect(input.className).toContain('focus-visible:ring-brand-500/30');
+    expect(input.className).toContain('focus-visible:border-brand-700');
+    expect(input.className).toContain('focus-visible:ring-brand-500/50');
     expect(input.className).toContain('focus-visible:ring-2');
-    expect(input.className).toContain('focus-visible:border-transparent');
     expect(input.className).toContain('focus-visible:ring-offset-0');
+    expect(input.className).not.toContain('focus-visible:border-transparent');
+    expect(input.className).not.toContain('focus-visible:ring-brand-500/30');
     expect(input.className).not.toContain('focus-visible:border-brand-500');
     expect(input.className).not.toContain('focus-visible:ring-brand-600');
     expect(input.className).not.toContain('ring-offset-2');

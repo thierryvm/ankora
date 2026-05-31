@@ -24,10 +24,11 @@ const SelectTrigger = React.forwardRef<
       'ankora-form-control-16 border-border bg-card flex h-10 w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 shadow-sm transition-colors',
       // PR-UI-1 — subtle brand hint on hover, before focus engages.
       'hover:border-brand-500/40',
-      // PR-UI-1 (THI-298) — mirrors Input.tsx 1:1: focus is the RING ALONE
-      // (`border-transparent` + `ring-offset-0`), one signal not two. Keeps the
-      // F2 soft ring (brand-500 at 30%, no offset) shipped on 2026-05-07.
-      'focus-visible:ring-brand-500/30 focus-visible:border-transparent focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:outline-none',
+      // PR-UI-1 (THI-298) — mirrors Input.tsx 1:1: focus = one coherent emerald
+      // signal, a conformant `border-brand-700` (#0f766e, ≈5:1, WCAG 2.4.11)
+      // plus an assorted soft `ring-brand-500/50` halo, no offset. (An interim
+      // "ring alone" variant at /30 was rejected — sole indicator below 3:1.)
+      'focus-visible:border-brand-700 focus-visible:ring-brand-500/50 focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:outline-none',
       'disabled:cursor-not-allowed disabled:opacity-50',
       'data-placeholder:text-muted',
       // PR-UI-1 — preserve invalid across all states (see Input.tsx). The
