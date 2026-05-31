@@ -397,6 +397,35 @@ body > main {
   border-radius: 2px;
 }
 
+/* PR-UI-1 (THI-298) — form-field focus exception to the global outline above.
+   The global `*:focus-visible` outline is the right affordance for controls
+   WITHOUT their own border (buttons, links, tabs, checkboxes) — it stays.
+   But text fields (Input + Select trigger) already own a border, so a detached
+   2px outline stacked on top rendered as a "double border" (@thierry, live
+   2026-05-31). It could NOT be cancelled from the component: the primitives'
+   `focus-visible:outline-none` is a Tailwind utility (in `@layer utilities`),
+   and a NON-layered rule like the global one above always wins over layered
+   ones regardless of specificity — so the cancel must also be non-layered.
+   This companion is non-layered AND more specific, so it wins cleanly:
+     1. kill the detached outline on fields;
+     2. turn the field's own 1px border emerald + add a 1px same-colour
+        box-shadow → a single ~2px emerald edge, NO layout shift (border width
+        is unchanged → no reflow), following the field's `rounded-lg` radius.
+   `.ankora-form-control-16` is carried ONLY by the two field primitives
+   (Input + SelectTrigger), never by checkboxes/buttons — non-field controls
+   keep the global outline. The `:not([aria-invalid='true'])` carve-out leaves
+   the emerald signal OFF invalid fields, so their Tailwind danger border +
+   ring (`aria-invalid:focus-visible:*`) remain the sole, loud signal. Uses
+   `var(--color-brand-600)` exactly like the global rule, so the admin brass
+   accent remap (`[data-accent='admin']`) is honoured with no extra work. */
+.ankora-form-control-16:focus-visible {
+  outline: none;
+}
+.ankora-form-control-16:focus-visible:not([aria-invalid='true']) {
+  border-color: var(--color-brand-600);
+  box-shadow: 0 0 0 1px var(--color-brand-600);
+}
+
 /* PR-D5 mobile-iOS anti-Safari-auto-zoom — declared OUTSIDE `@layer` and
    without `var()` indirection so the rule survives every cascade quirk we
    observed:
