@@ -89,4 +89,26 @@ describe('<Select /> composition', () => {
     expect(trigger.className).toContain('aria-invalid:focus-visible:border-danger');
     expect(trigger.className).toContain('aria-invalid:focus-visible:ring-danger');
   });
+
+  // PR-UI-1 (THI-298) — mirror the Input end-to-end invalid test: the Tailwind
+  // `aria-invalid:*` variants only fire when the attribute reaches the DOM.
+  // `aria-invalid` goes on the SelectTrigger (which spreads props onto the
+  // underlying button), NOT on the Radix `Select` Root (not a DOM node).
+  it('forwards aria-invalid to the trigger and keeps the danger contract', () => {
+    render(
+      <Select>
+        <SelectTrigger aria-label="Invalid select" aria-invalid>
+          <SelectValue placeholder="x" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="x">x</SelectItem>
+        </SelectContent>
+      </Select>,
+    );
+    const trigger = screen.getByLabelText('Invalid select');
+    expect(trigger).toHaveAttribute('aria-invalid', 'true');
+    expect(trigger.className).toContain('aria-invalid:border-danger');
+    expect(trigger.className).toContain('aria-invalid:focus-visible:border-danger');
+    expect(trigger.className).toContain('aria-invalid:focus-visible:ring-danger');
+  });
 });

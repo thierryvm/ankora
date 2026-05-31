@@ -78,6 +78,9 @@ describe('<Input />', () => {
   it('preserves the aria-invalid danger border/ring across rest and focus', () => {
     render(<Input aria-invalid placeholder="invalid-test" />);
     const input = screen.getByPlaceholderText('invalid-test');
+    // The Tailwind variants only fire when aria-invalid is actually on the
+    // node — assert the attribute first so the test covers the state end-to-end.
+    expect(input).toHaveAttribute('aria-invalid', 'true');
     expect(input.className).toContain('aria-invalid:border-danger');
     expect(input.className).toContain('aria-invalid:focus-visible:border-danger');
     expect(input.className).toContain('aria-invalid:focus-visible:ring-danger');
