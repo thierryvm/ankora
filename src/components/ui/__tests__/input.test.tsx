@@ -45,13 +45,42 @@ describe('<Input />', () => {
   // PR-UI-2 — focus ring should be subtle (brand-500 at 30%, no offset)
   // instead of the full-opacity ring-brand-600 + ring-offset-2 that read as
   // a thick white halo on dark theme.
-  it('uses the soft focus ring (brand-500/30, no offset)', () => {
+  // PR-UI-1 (THI-298) — focus is now the RING ALONE: transparent border +
+  // ring-offset-0. One signal, not two (the previous border-brand-500 stacked
+  // on the ring read as a "double border").
+  it('uses the soft focus ring alone (brand-500/30, transparent border, no offset)', () => {
     render(<Input placeholder="focus-test" />);
     const input = screen.getByPlaceholderText('focus-test');
     expect(input.className).toContain('focus-visible:ring-brand-500/30');
     expect(input.className).toContain('focus-visible:ring-2');
+    expect(input.className).toContain('focus-visible:border-transparent');
+    expect(input.className).toContain('focus-visible:ring-offset-0');
+    expect(input.className).not.toContain('focus-visible:border-brand-500');
     expect(input.className).not.toContain('focus-visible:ring-brand-600');
     expect(input.className).not.toContain('ring-offset-2');
+  });
+
+  // PR-UI-1 (THI-298) — at rest the field keeps a full border (affordance),
+  // with a subtle brand hint on hover. Thinning the rest border was rejected
+  // (broke affordance on the dark shell).
+  it('keeps a full rest border with a subtle brand hover hint', () => {
+    render(<Input placeholder="rest-test" />);
+    const input = screen.getByPlaceholderText('rest-test');
+    expect(input.className).toContain('border-border');
+    expect(input.className).toContain('hover:border-brand-500/40');
+  });
+
+  // PR-UI-1 (THI-298) — the invalid state must survive the focus contract:
+  // `border-transparent` on focus must NOT erase the danger border. We assert
+  // the presence of all three invalid classes (anti-accidental-removal). The
+  // real cascade override is proven by the live-test, not jsdom (which does
+  // not compute source-order CSS specificity).
+  it('preserves the aria-invalid danger border/ring across rest and focus', () => {
+    render(<Input aria-invalid placeholder="invalid-test" />);
+    const input = screen.getByPlaceholderText('invalid-test');
+    expect(input.className).toContain('aria-invalid:border-danger');
+    expect(input.className).toContain('aria-invalid:focus-visible:border-danger');
+    expect(input.className).toContain('aria-invalid:focus-visible:ring-danger');
   });
 
   // PR-UI-2 — type="number" must hide the webkit spin buttons AND force

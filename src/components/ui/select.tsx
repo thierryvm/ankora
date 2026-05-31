@@ -19,16 +19,21 @@ const SelectTrigger = React.forwardRef<
     className={cn(
       // PR-D5 mobile-iOS: `ankora-form-control-16` enforces 16px font-size.
       // See `Input.tsx` + `globals.css` for the full triage.
-      'ankora-form-control-16 border-border bg-card flex h-10 w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 shadow-sm',
-      // PR-BETA-CLEANUP-3 (2026-05-27) — aligned on the Input.tsx F2 contract:
-      // `ring-2 ring-offset-2 ring-brand-600` rendered as a thick white halo
-      // on dark theme (the offset uses `--color-background`, which inverts
-      // brand-600 into a hard outline). Softer ring + no offset matches the
-      // F2 fix shipped on Input on 2026-05-07. Same rule, same look.
-      'focus-visible:border-brand-500 focus-visible:ring-brand-500/30 focus-visible:ring-2 focus-visible:outline-none',
+      // PR-UI-1 (THI-298) — `transition-colors` added for parity with Input so
+      // the border/ring change animates smoothly on hover/focus.
+      'ankora-form-control-16 border-border bg-card flex h-10 w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 shadow-sm transition-colors',
+      // PR-UI-1 — subtle brand hint on hover, before focus engages.
+      'hover:border-brand-500/40',
+      // PR-UI-1 (THI-298) — mirrors Input.tsx 1:1: focus is the RING ALONE
+      // (`border-transparent` + `ring-offset-0`), one signal not two. Keeps the
+      // F2 soft ring (brand-500 at 30%, no offset) shipped on 2026-05-07.
+      'focus-visible:ring-brand-500/30 focus-visible:border-transparent focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:outline-none',
       'disabled:cursor-not-allowed disabled:opacity-50',
       'data-placeholder:text-muted',
-      'aria-invalid:border-danger aria-invalid:focus-visible:ring-danger',
+      // PR-UI-1 — preserve invalid across all states (see Input.tsx). The
+      // `aria-invalid:focus-visible:*` rules come after the plain ones so
+      // source-order keeps the danger border/ring on a focused invalid field.
+      'aria-invalid:border-danger aria-invalid:focus-visible:border-danger aria-invalid:focus-visible:ring-danger',
       className,
     )}
     {...props}

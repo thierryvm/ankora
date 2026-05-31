@@ -57,4 +57,36 @@ describe('<Select /> composition', () => {
     const trigger = screen.getByLabelText('Disabled select');
     expect(trigger).toBeDisabled();
   });
+
+  // PR-UI-1 (THI-298) — the trigger mirrors Input.tsx 1:1 on the "one signal
+  // not two" field contract: full rest border + subtle brand hover, focus as
+  // the ring alone (transparent border + ring-offset-0), and a preserved
+  // aria-invalid danger border on focus. jsdom asserts class presence only;
+  // the cascade override is proven by the live-test.
+  it('mirrors the Input field contract on focus/hover/invalid', () => {
+    render(
+      <Select>
+        <SelectTrigger aria-label="Contract">
+          <SelectValue placeholder="x" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="x">x</SelectItem>
+        </SelectContent>
+      </Select>,
+    );
+    const trigger = screen.getByLabelText('Contract');
+    // rest + hover
+    expect(trigger.className).toContain('border-border');
+    expect(trigger.className).toContain('hover:border-brand-500/40');
+    expect(trigger.className).toContain('transition-colors');
+    // focus = ring alone
+    expect(trigger.className).toContain('focus-visible:border-transparent');
+    expect(trigger.className).toContain('focus-visible:ring-offset-0');
+    expect(trigger.className).toContain('focus-visible:ring-brand-500/30');
+    expect(trigger.className).not.toContain('focus-visible:border-brand-500');
+    // invalid preserved across focus
+    expect(trigger.className).toContain('aria-invalid:border-danger');
+    expect(trigger.className).toContain('aria-invalid:focus-visible:border-danger');
+    expect(trigger.className).toContain('aria-invalid:focus-visible:ring-danger');
+  });
 });

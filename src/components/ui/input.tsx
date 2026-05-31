@@ -19,6 +19,19 @@ import { cn } from '@/lib/utils';
  *   defaults to `color-scheme: light` and renders the calendar SVG in
  *   black-on-black on the `[data-theme="dark"]` shell. `dark:[color-scheme:dark]`
  *   propagates the right scheme so the icon is rendered with light pixels.
+ *
+ * PR-UI-1 (THI-298, 2026-05-31) — "un signal pas deux". At rest the field
+ * kept `border-border`, but on focus it stacked TWO signals: a coloured
+ * `border-brand-500` AND a `ring-2`. @thierry read this as a "double border".
+ * Fix: focus is now the RING ALONE — `border-transparent` + `ring-offset-0`,
+ * so a single emerald halo signals focus. A subtle `hover:border-brand-500/40`
+ * hints interactivity before focus. The rest border stays `border-border`
+ * (full) — thinning it broke field affordance on the dark shell (border
+ * `#1e293b` vs card `#111a2e` is already low-contrast). The `aria-invalid`
+ * state is preserved across all three states: `border-danger` at rest AND on
+ * focus (`aria-invalid:focus-visible:border-danger` re-asserts the danger
+ * border so `border-transparent` cannot erase the error), plus `ring-danger`.
+ * Select (`select.tsx`) mirrors this contract 1:1.
  */
 const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
   ({ className, type, ...props }, ref) => (
@@ -33,10 +46,18 @@ const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLI
         'ankora-form-control-16 border-border bg-card text-foreground flex h-10 w-full rounded-lg border px-3 py-2 shadow-sm transition-colors',
         'file:text-foreground file:border-0 file:bg-transparent file:text-sm file:font-medium',
         'placeholder:text-muted',
-        // F2 — softer focus ring (no offset, brand-500 at 30% opacity)
-        'focus-visible:border-brand-500 focus-visible:ring-brand-500/30 focus-visible:ring-2 focus-visible:outline-none',
+        // PR-UI-1 — subtle brand hint on hover, before focus engages.
+        'hover:border-brand-500/40',
+        // PR-UI-1 — focus is the RING ALONE: transparent border + F2 soft ring
+        // (brand-500 at 30%, no offset). One signal, not two.
+        'focus-visible:ring-brand-500/30 focus-visible:border-transparent focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:outline-none',
         'disabled:cursor-not-allowed disabled:opacity-50',
-        'aria-invalid:border-danger aria-invalid:focus-visible:ring-danger',
+        // PR-UI-1 — preserve the invalid state across all three states. The
+        // `aria-invalid:focus-visible:*` rules MUST come after the plain
+        // `focus-visible:*` ones so source-order wins: otherwise
+        // `border-transparent` would erase the danger border on a focused
+        // invalid field. Same mechanism as the existing ring-danger override.
+        'aria-invalid:border-danger aria-invalid:focus-visible:border-danger aria-invalid:focus-visible:ring-danger',
         // F4 — let native `<input type="date">` (and friends) pick the right
         // colour scheme so the calendar icon stays visible on dark theme.
         'dark:scheme-dark',
