@@ -58,12 +58,10 @@ describe('<Select /> composition', () => {
     expect(trigger).toBeDisabled();
   });
 
-  // PR-UI-1 (THI-298) — the trigger mirrors Input.tsx 1:1 on the "one signal
-  // not two" field contract: full rest border + subtle brand hover, focus as
-  // one coherent emerald signal (conformant `border-brand-700` + assorted soft
-  // `ring-brand-500/50`, no offset), and a preserved aria-invalid danger border
-  // on focus. jsdom asserts class presence only; the cascade override is proven
-  // by the live-test.
+  // PR-UI-1 (THI-298) — the trigger mirrors Input.tsx 1:1: full rest border +
+  // subtle brand hover, focus = a single thin `border-brand-600` (no ring), and
+  // a loud aria-invalid danger border + ring on invalid+focus. jsdom asserts
+  // class presence only; the cascade override is proven by the live-test.
   it('mirrors the Input field contract on focus/hover/invalid', () => {
     render(
       <Select>
@@ -76,21 +74,24 @@ describe('<Select /> composition', () => {
       </Select>,
     );
     const trigger = screen.getByLabelText('Contract');
+    const classes = trigger.className.split(/\s+/);
     // rest + hover
-    expect(trigger.className).toContain('border-border');
-    expect(trigger.className).toContain('hover:border-brand-500/40');
-    expect(trigger.className).toContain('transition-colors');
-    // focus = conformant border + assorted soft ring
-    expect(trigger.className).toContain('focus-visible:border-brand-700');
-    expect(trigger.className).toContain('focus-visible:ring-brand-500/50');
-    expect(trigger.className).toContain('focus-visible:ring-offset-0');
-    expect(trigger.className).not.toContain('focus-visible:border-transparent');
-    expect(trigger.className).not.toContain('focus-visible:ring-brand-500/30');
-    expect(trigger.className).not.toContain('focus-visible:border-brand-500');
-    // invalid preserved across focus
-    expect(trigger.className).toContain('aria-invalid:border-danger');
-    expect(trigger.className).toContain('aria-invalid:focus-visible:border-danger');
-    expect(trigger.className).toContain('aria-invalid:focus-visible:ring-danger');
+    expect(classes).toContain('border-border');
+    expect(classes).toContain('hover:border-brand-500/40');
+    expect(classes).toContain('transition-colors');
+    // focus = thin border only, no ring (token-exact: the danger ring shares
+    // the `focus-visible:ring-2` suffix, so check exact tokens not substrings)
+    expect(classes).toContain('focus-visible:border-brand-600');
+    expect(classes).toContain('focus-visible:outline-none');
+    expect(classes).not.toContain('focus-visible:ring-2');
+    expect(classes).not.toContain('focus-visible:ring-brand-500/50');
+    expect(classes).not.toContain('focus-visible:border-brand-700');
+    expect(classes).not.toContain('focus-visible:border-transparent');
+    // invalid stays loud: danger border + re-anchored danger ring on focus
+    expect(classes).toContain('aria-invalid:border-danger');
+    expect(classes).toContain('aria-invalid:focus-visible:border-danger');
+    expect(classes).toContain('aria-invalid:focus-visible:ring-2');
+    expect(classes).toContain('aria-invalid:focus-visible:ring-danger');
   });
 
   // PR-UI-1 (THI-298) — mirror the Input end-to-end invalid test: the Tailwind

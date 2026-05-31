@@ -24,17 +24,16 @@ const SelectTrigger = React.forwardRef<
       'ankora-form-control-16 border-border bg-card flex h-10 w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 shadow-sm transition-colors',
       // PR-UI-1 — subtle brand hint on hover, before focus engages.
       'hover:border-brand-500/40',
-      // PR-UI-1 (THI-298) — mirrors Input.tsx 1:1: focus = one coherent emerald
-      // signal, a conformant `border-brand-700` (#0f766e, ≈5:1, WCAG 2.4.11)
-      // plus an assorted soft `ring-brand-500/50` halo, no offset. (An interim
-      // "ring alone" variant at /30 was rejected — sole indicator below 3:1.)
-      'focus-visible:border-brand-700 focus-visible:ring-brand-500/50 focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:outline-none',
+      // PR-UI-1 (THI-298) — mirrors Input.tsx 1:1: focus = a single thin
+      // `border-brand-600` (#0d9488, ≥3:1 both themes, WCAG 2.4.11), no ring
+      // halo (@thierry: the 2px ring read as a thick frame).
+      'focus-visible:border-brand-600 focus-visible:outline-none',
       'disabled:cursor-not-allowed disabled:opacity-50',
       'data-placeholder:text-muted',
-      // PR-UI-1 — preserve invalid across all states (see Input.tsx). The
-      // `aria-invalid:focus-visible:*` rules come after the plain ones so
-      // source-order keeps the danger border/ring on a focused invalid field.
-      'aria-invalid:border-danger aria-invalid:focus-visible:border-danger aria-invalid:focus-visible:ring-danger',
+      // PR-UI-1 — invalid stays loud (see Input.tsx): the danger ring is
+      // re-anchored here (own `ring-2`) so an invalid + focused trigger keeps
+      // an unmistakable halo — the one place a ring remains.
+      'aria-invalid:border-danger aria-invalid:focus-visible:border-danger aria-invalid:focus-visible:ring-danger aria-invalid:focus-visible:ring-2',
       className,
     )}
     {...props}

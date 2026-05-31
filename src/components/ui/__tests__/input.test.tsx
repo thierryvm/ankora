@@ -42,23 +42,23 @@ describe('<Input />', () => {
     expect(input.value).toBe('hello');
   });
 
-  // PR-UI-1 (THI-298) — focus is one coherent emerald signal: a conformant
-  // `border-brand-700` (WCAG 2.4.11) + an assorted soft `ring-brand-500/50`
-  // halo, no offset. NOT the old disparate `border-brand-500` + ring that read
-  // as a "double border", and NOT the rejected interim "ring alone" at /30
-  // (sole indicator below the 3:1 focus-appearance threshold).
-  it('uses the conformant focus border + assorted soft ring (brand-700 + brand-500/50, no offset)', () => {
+  // PR-UI-1 (THI-298) — focus is a single thin `border-brand-600` (WCAG 2.4.11
+  // conformant as the sole indicator), NO ring halo (@thierry: the 2px ring
+  // read as a thick frame). Guards against the previous ring-based contracts.
+  it('uses a thin focus border only (brand-600, no ring)', () => {
     render(<Input placeholder="focus-test" />);
     const input = screen.getByPlaceholderText('focus-test');
-    expect(input.className).toContain('focus-visible:border-brand-700');
-    expect(input.className).toContain('focus-visible:ring-brand-500/50');
-    expect(input.className).toContain('focus-visible:ring-2');
-    expect(input.className).toContain('focus-visible:ring-offset-0');
-    expect(input.className).not.toContain('focus-visible:border-transparent');
-    expect(input.className).not.toContain('focus-visible:ring-brand-500/30');
-    expect(input.className).not.toContain('focus-visible:border-brand-500');
-    expect(input.className).not.toContain('focus-visible:ring-brand-600');
-    expect(input.className).not.toContain('ring-offset-2');
+    // Token-exact check: a ring on a *valid* focus would be the bare
+    // `focus-visible:ring-2` token. The danger ring is `aria-invalid:focus-...`
+    // so a substring check would false-positive — split into exact classes.
+    const classes = input.className.split(/\s+/);
+    expect(classes).toContain('focus-visible:border-brand-600');
+    expect(classes).toContain('focus-visible:outline-none');
+    expect(classes).not.toContain('focus-visible:ring-2');
+    expect(classes).not.toContain('focus-visible:ring-brand-500/50');
+    expect(classes).not.toContain('focus-visible:ring-brand-500/30');
+    expect(classes).not.toContain('focus-visible:border-brand-700');
+    expect(classes).not.toContain('focus-visible:border-transparent');
   });
 
   // PR-UI-1 (THI-298) — at rest the field keeps a full border (affordance),

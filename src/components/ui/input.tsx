@@ -20,26 +20,24 @@ import { cn } from '@/lib/utils';
  *   black-on-black on the `[data-theme="dark"]` shell. `dark:[color-scheme:dark]`
  *   propagates the right scheme so the icon is rendered with light pixels.
  *
- * PR-UI-1 (THI-298, 2026-05-31) — "un signal pas deux". The old focus stacked
- * TWO *disparate* signals: a `border-brand-500` AND a `ring-2`, read by
- * @thierry as a "double border". The fix is a single *coherent* signal: at
- * focus the border turns `brand-700` and the ring is `brand-500/50` of the
- * SAME teal family — one emerald affordance in two assorted layers, not two
- * mismatched outlines.
+ * PR-UI-1 (THI-298, 2026-05-31) — "un signal pas deux". The focus signal is a
+ * single thin coloured border, no ring halo. Earlier iterations stacked a
+ * coloured border AND a 2px ring (read by @thierry as a thick "double border"
+ * frame); the ring was dropped. At focus the border simply turns `brand-600`
+ * (#0d9488) — an affirmed cousin of the hover hint, one clean line.
  *
- * Note — an interim "ring alone" variant (`border-transparent` + ring `/30`)
- * was rejected before merge: with the border transparent the ring became the
- * sole focus indicator, and `brand-500/30` falls below the WCAG 2.4.11 (Focus
- * Appearance, AA 2.2) 3:1 threshold (~1.3:1 light, ~1.8:1 dark). `brand-700`
- * (#0f766e) as the focus border is ≈5:1 on card in both themes → conformant.
+ * Colour rationale: with no ring, the border is the SOLE focus indicator, so it
+ * must clear WCAG 2.4.11 (Focus Appearance, AA 2.2) 3:1 on its own. `brand-600`
+ * is ≥3:1 on card in BOTH themes (light ~3.9:1, dark ~3.8:1) — unlike
+ * `brand-700` which dips to ~2.97:1 on the dark card.
  *
  * The rest border stays `border-border` (full) — thinning it broke field
  * affordance on the dark shell (border `#1e293b` vs card `#111a2e` is already
  * low-contrast). A subtle `hover:border-brand-500/40` hints interactivity
- * before focus. The `aria-invalid` state is preserved across all three states:
- * `border-danger` at rest AND on focus (`aria-invalid:focus-visible:border-danger`
- * re-asserts the danger border so `border-brand-700` cannot mask the error),
- * plus `ring-danger`. Select (`select.tsx`) mirrors this contract 1:1.
+ * before focus. The `aria-invalid` state stays loud: `border-danger` at rest
+ * AND on focus, plus a danger `ring-2` re-anchored on invalid+focus only (the
+ * one place a ring remains) so an erroring field is unmistakable when active.
+ * Select (`select.tsx`) mirrors this contract 1:1.
  */
 const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
   ({ className, type, ...props }, ref) => (
@@ -56,18 +54,20 @@ const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLI
         'placeholder:text-muted',
         // PR-UI-1 — subtle brand hint on hover, before focus engages.
         'hover:border-brand-500/40',
-        // PR-UI-1 — focus = one coherent emerald signal: a conformant
-        // `border-brand-700` (#0f766e, ≈5:1, WCAG 2.4.11) plus a soft assorted
-        // `ring-brand-500/50` halo, no offset. Same teal family, not two
-        // mismatched outlines.
-        'focus-visible:border-brand-700 focus-visible:ring-brand-500/50 focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:outline-none',
+        // PR-UI-1 — focus = a single thin coloured border, no ring halo. The
+        // border turns `brand-600` (#0d9488, ≥3:1 on card in BOTH themes →
+        // WCAG 2.4.11 conformant as the sole indicator). A ring was dropped
+        // (@thierry: the 2px halo read as a thick frame); the border alone is
+        // the affordance, an affirmed cousin of the hover hint.
+        'focus-visible:border-brand-600 focus-visible:outline-none',
         'disabled:cursor-not-allowed disabled:opacity-50',
-        // PR-UI-1 — preserve the invalid state across all three states. The
-        // `aria-invalid:focus-visible:*` rules MUST come after the plain
-        // `focus-visible:*` ones so source-order wins: otherwise
-        // `border-brand-700` would mask the danger border on a focused invalid
-        // field. Same mechanism as the existing ring-danger override.
-        'aria-invalid:border-danger aria-invalid:focus-visible:border-danger aria-invalid:focus-visible:ring-danger',
+        // PR-UI-1 — invalid stays loud: `border-danger` at rest AND on focus
+        // (`aria-invalid:focus-visible:border-danger` comes after the plain
+        // focus border so source-order wins). Since valid focus no longer
+        // carries a ring, the danger ring is re-anchored HERE (with its own
+        // `ring-2` width) so an invalid + focused field still gets an
+        // unmistakable focus halo — the one place a ring remains.
+        'aria-invalid:border-danger aria-invalid:focus-visible:border-danger aria-invalid:focus-visible:ring-danger aria-invalid:focus-visible:ring-2',
         // F4 — let native `<input type="date">` (and friends) pick the right
         // colour scheme so the calendar icon stays visible on dark theme.
         'dark:scheme-dark',
