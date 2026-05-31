@@ -54,11 +54,14 @@ const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLI
         'placeholder:text-muted',
         // PR-UI-1 — subtle brand hint on hover, before focus engages.
         'hover:border-brand-500/40',
-        // PR-UI-1 — focus = a single thin coloured border, no ring halo. The
-        // border turns `brand-600` (#0d9488, ≥3:1 on card in BOTH themes →
-        // WCAG 2.4.11 conformant as the sole indicator). A ring was dropped
-        // (@thierry: the 2px halo read as a thick frame); the border alone is
-        // the affordance, an affirmed cousin of the hover hint.
+        // PR-UI-1 — focus = a single thin emerald edge, no detached outline,
+        // no ring halo (@thierry: the 2px halo/outline read as a thick frame).
+        // The ~2px thickness + the outline cancellation are applied CENTRALLY,
+        // non-layered, in `globals.css` (`.ankora-form-control-16:focus-visible`)
+        // because the global `*:focus-visible` outline is itself non-layered and
+        // cannot be cancelled from a Tailwind utility. These two classes set the
+        // border colour (cosmetic, matches the central rule) and are otherwise
+        // superseded there — see globals.css for the full mechanism.
         'focus-visible:border-brand-600 focus-visible:outline-none',
         'disabled:cursor-not-allowed disabled:opacity-50',
         // PR-UI-1 — invalid stays loud: `border-danger` at rest AND on focus

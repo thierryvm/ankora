@@ -24,9 +24,11 @@ const SelectTrigger = React.forwardRef<
       'ankora-form-control-16 border-border bg-card flex h-10 w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 shadow-sm transition-colors',
       // PR-UI-1 — subtle brand hint on hover, before focus engages.
       'hover:border-brand-500/40',
-      // PR-UI-1 (THI-298) — mirrors Input.tsx 1:1: focus = a single thin
-      // `border-brand-600` (#0d9488, ≥3:1 both themes, WCAG 2.4.11), no ring
-      // halo (@thierry: the 2px ring read as a thick frame).
+      // PR-UI-1 (THI-298) — mirrors Input.tsx 1:1: focus = a single thin emerald
+      // edge, no detached outline, no ring halo. The ~2px thickness + outline
+      // cancellation live CENTRALLY (non-layered) in `globals.css`
+      // (`.ankora-form-control-16:focus-visible`); these two classes are
+      // cosmetic colour and are superseded there — see globals.css.
       'focus-visible:border-brand-600 focus-visible:outline-none',
       'disabled:cursor-not-allowed disabled:opacity-50',
       'data-placeholder:text-muted',
