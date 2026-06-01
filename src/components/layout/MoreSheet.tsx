@@ -181,6 +181,28 @@ export function MoreSheet({ isOpen, onClose, isAdmin = false }: MoreSheetProps) 
         </div>
 
         <div className="space-y-4 p-4">
+          {/* PR-A — logout is the action a visitor reaches for when a session
+              must end, so the Account section now leads the sheet (was last,
+              4/4). No scroll required to sign out on mobile. */}
+          <section aria-labelledby="more-section-account" className="space-y-1">
+            <h3
+              id="more-section-account"
+              className="text-muted-foreground px-3 text-[11px] font-medium tracking-wider uppercase"
+            >
+              {tSections('account')}
+            </h3>
+            <form action={logoutAction}>
+              <button
+                type="submit"
+                data-testid="more-sheet-logout"
+                className="text-foreground hover:bg-muted focus-visible:ring-brand-600 flex w-full items-center justify-between rounded-md px-3 py-3 text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
+              >
+                <span>{tLinks('logout')}</span>
+                <LogOut className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </form>
+          </section>
+
           <section aria-labelledby="more-section-cockpit" className="space-y-1">
             <h3
               id="more-section-cockpit"
@@ -315,25 +337,6 @@ export function MoreSheet({ isOpen, onClose, isAdmin = false }: MoreSheetProps) 
             >
               <CookiePreferencesLink />
             </div>
-          </section>
-
-          <section aria-labelledby="more-section-account" className="space-y-1">
-            <h3
-              id="more-section-account"
-              className="text-muted-foreground px-3 text-[11px] font-medium tracking-wider uppercase"
-            >
-              {tSections('account')}
-            </h3>
-            <form action={logoutAction}>
-              <button
-                type="submit"
-                data-testid="more-sheet-logout"
-                className="text-foreground hover:bg-muted focus-visible:ring-brand-600 flex w-full items-center justify-between rounded-md px-3 py-3 text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
-              >
-                <span>{tLinks('logout')}</span>
-                <LogOut className="h-4 w-4" aria-hidden="true" />
-              </button>
-            </form>
           </section>
         </div>
       </div>

@@ -54,6 +54,15 @@ vi.mock('../HeaderNav', () => ({
   ),
 }));
 
+// PR-A — stub the AccountButton so the Header test does not pull the real
+// component's `logoutAction` import (auth.ts → env.ts validation throws under
+// vitest without env vars). The AccountButton has its own dedicated spec.
+vi.mock('../AccountButton', () => ({
+  AccountButton: ({ email }: { email: string }) => (
+    <div data-testid="account-button-mock" data-email={email} />
+  ),
+}));
+
 // PR-BETA-6 hotfix #3 + hotfix #4 — Header reads
 // `shouldMountBottomTabBar()` to decide whether to suppress the mobile
 // hamburger (duplicate-nav fix against the persistent BottomTabBar).
