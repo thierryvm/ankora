@@ -67,6 +67,12 @@
       "quarterly": "Driemaandelijks",
       "semiannual": "Halfjaarlijks",
       "annual": "Jaarlijks"
+    },
+    "frequencyAbbr": {
+      "monthly": "Mnd.",
+      "quarterly": "Kwart.",
+      "semiannual": "Halfj.",
+      "annual": "Jaarl."
     }
   },
   "layout": {
