@@ -30,16 +30,15 @@ import { test, expect } from '@playwright/test';
  */
 const DESKTOP_VIEWPORT = { width: 1280, height: 800 };
 
-async function openSwitcher(page: import('@playwright/test').Page) {
-  // The LocaleSwitcher renders a `<select>` with `aria-label` matching the
-  // `ui.localeSwitcher.aria` i18n key. We target by role + accessible name
-  // so the spec is robust to className refactors.
-  return page.getByRole('combobox', { name: /langue|language|taal|sprache|idioma/i }).first();
+function openSwitcher(page: import('@playwright/test').Page) {
+  // The LocaleSwitcher is an iOS-style segmented control (a `radiogroup` of
+  // `<button role="radio">`, 2026-06-01). Target by the stable data-testid so
+  // the spec is robust to className / markup refactors.
+  return page.getByTestId('locale-switcher');
 }
 
 async function switchTo(page: import('@playwright/test').Page, value: 'fr-BE' | 'en') {
-  const select = await openSwitcher(page);
-  await select.selectOption(value);
+  await page.getByTestId(`locale-option-${value}`).click();
   // Wait until the `<html lang>` attribute actually reflects the new locale.
   // Phase B (THI-266) removed the `router.refresh()` from the switch handler,
   // so propagation is now an URL-only navigation (`/` ↔ `/en`) without a full

@@ -12,7 +12,8 @@ export type Locale = (typeof LOCALES)[number];
  * post-launch." Mirrors `ANKORA_V1_LOCALES` in
  * `src/components/atoms/LangSwitcher.tsx` (same intent, different shape — the
  * atom carries flag + label metadata, this constant is just the ids for the
- * plain `<select>` consumer in `src/components/layout/LocaleSwitcher.tsx`).
+ * segmented-control (radiogroup) consumer in
+ * `src/components/layout/LocaleSwitcher.tsx`).
  *
  * Note on URL routing: the full `LOCALES` array stays the source of truth for
  * the next-intl middleware + request handler. Deep-links such as `/nl-BE/...`

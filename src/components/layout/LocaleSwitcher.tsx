@@ -95,11 +95,12 @@ export function LocaleSwitcher() {
                 // makes the global focus outline follow the pill shape.
                 'inline-flex min-h-11 items-center justify-center rounded-full px-3.5 transition-colors focus-visible:rounded-full disabled:cursor-progress',
                 isActive
-                  ? // Active in DARK: bg-card vs the surface-muted track is only
-                    // ~1.03:1, so the fill alone can't carry the state. The
-                    // `ring-border` edge + `font-semibold` weight make the active
-                    // segment legible in both themes (token-pure, no global change).
-                    'bg-card text-foreground ring-border font-semibold shadow-sm ring-1'
+                  ? // Active state. bg-card vs the surface-muted track is only
+                    // ~1.03:1 in dark, so the fill can't carry the state alone:
+                    // a brand-600 (teal) ring + font-semibold make the active
+                    // segment unmistakable in BOTH themes (≥3:1, WCAG 1.4.11)
+                    // while reading as the brand "selected" colour.
+                    'bg-card text-foreground ring-brand-600 font-semibold shadow-sm ring-1'
                   : 'text-muted-foreground hover:text-foreground font-medium',
               ].join(' ')}
             >
