@@ -90,10 +90,17 @@ export function LocaleSwitcher() {
               onClick={() => switchTo(code)}
               data-testid={`locale-option-${code}`}
               className={[
-                'rounded-full px-2.5 py-1 font-medium transition-colors disabled:cursor-progress',
+                // min-h-11 (44px) = Apple HIG / WCAG 2.5.5 touch target, aligned
+                // with the AccountButton trigger. `focus-visible:rounded-full`
+                // makes the global focus outline follow the pill shape.
+                'inline-flex min-h-11 items-center justify-center rounded-full px-3.5 transition-colors focus-visible:rounded-full disabled:cursor-progress',
                 isActive
-                  ? 'bg-card text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground',
+                  ? // Active in DARK: bg-card vs the surface-muted track is only
+                    // ~1.03:1, so the fill alone can't carry the state. The
+                    // `ring-border` edge + `font-semibold` weight make the active
+                    // segment legible in both themes (token-pure, no global change).
+                    'bg-card text-foreground ring-border font-semibold shadow-sm ring-1'
+                  : 'text-muted-foreground hover:text-foreground font-medium',
               ].join(' ')}
             >
               {short}
