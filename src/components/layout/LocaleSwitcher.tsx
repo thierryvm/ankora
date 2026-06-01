@@ -20,11 +20,19 @@ import { setLocaleAction } from '@/lib/actions/locale';
  *
  * Visible label = the short code (FR / EN); the full locale name stays the
  * accessible name via `aria-label`. CSP-safe (Tailwind only, no inline
- * style). a11y: `radiogroup` + `radio` + `aria-checked`; roving tabindex;
- * Arrow keys move focus between segments WITHOUT auto-switching — selection
- * does NOT follow focus because the switch triggers a navigation, so it is
- * activated explicitly via click / Enter / Space (APG note for radio groups
- * whose selection has consequences).
+ * style). a11y: `radiogroup` + `radio` + `aria-checked`; Arrow keys move
+ * focus between segments WITHOUT auto-switching — selection does NOT follow
+ * focus because the switch triggers a navigation, so it is activated
+ * explicitly via click / Enter / Space (APG note for radio groups whose
+ * selection has consequences).
+ *
+ * Both segments are tab-stops (`tabIndex={0}`), NOT a roving tabindex. A
+ * roving tabindex would set the inactive segment to `tabindex="-1"`, which the
+ * surrounding drawer focus-traps (`HeaderNav` + `MoreSheet`, which render this
+ * switcher) count as the "last focusable" via their bare `button` selector yet
+ * the browser skips on Tab — so the trap's wrap-around never fires and focus
+ * escapes the drawer (e2e `drawer-mobile-focus-trap`). Two tab-stops keep the
+ * trap's element list consistent with real Tab order.
  *
  * Switch side-effects unchanged from the previous `<select>`: persist the
  * locale (cookie + DB via `setLocaleAction`) then `router.replace(pathname,
@@ -85,7 +93,7 @@ export function LocaleSwitcher() {
               role="radio"
               aria-checked={isActive}
               aria-label={t(`options.${code}`)}
-              tabIndex={isActive ? 0 : -1}
+              tabIndex={0}
               disabled={pending}
               onClick={() => switchTo(code)}
               data-testid={`locale-option-${code}`}
