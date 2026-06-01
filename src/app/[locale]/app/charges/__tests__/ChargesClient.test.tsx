@@ -47,6 +47,34 @@ function renderWithIntl(ui: React.ReactNode) {
   );
 }
 
+type ChargesClientProps = React.ComponentProps<typeof ChargesClient>;
+
+const ZERO_SUBTOTALS: ChargesClientProps['subtotals'] = {
+  monthly: 0,
+  quarterly: 0,
+  semiannual: 0,
+  annual: 0,
+};
+
+/**
+ * Render the client with the server-computed money props. Totals default to 0
+ * (server-side concern, exercised explicitly by the totals tests below) so the
+ * existing structural tests stay focused on layout, not arithmetic.
+ */
+function renderCharges(
+  charges: ChargesClientProps['charges'],
+  overrides: Partial<Omit<ChargesClientProps, 'charges'>> = {},
+) {
+  return renderWithIntl(
+    <ChargesClient
+      charges={charges}
+      subtotals={overrides.subtotals ?? ZERO_SUBTOTALS}
+      monthlyProvisionTotal={overrides.monthlyProvisionTotal ?? 0}
+      annualTotal={overrides.annualTotal ?? 0}
+    />,
+  );
+}
+
 const sampleCharges = [
   {
     id: 'a1',
@@ -85,22 +113,28 @@ describe('<ChargesClient /> — PR-BETA-1 visual refactor', () => {
   });
 
   it('shows the empty-state copy when no charges are provided', () => {
-    renderWithIntl(<ChargesClient charges={[]} />);
+    renderCharges([]);
     // Stable hook via data-testid (i18n-agnostic) — copy can evolve without breaking the test.
     expect(screen.getByTestId('charges-empty-state')).toBeInTheDocument();
   });
 
-  it('renders the charges list as a semantic <ul role="list"> with one <li> per charge', () => {
-    renderWithIntl(<ChargesClient charges={sampleCharges} />);
+  it('renders exactly one listitem per charge across the grouped sections (no row hidden, no parasite)', () => {
+    renderCharges(sampleCharges);
     const list = screen.getByTestId('charges-list');
-    expect(list.tagName).toBe('UL');
-    expect(list).toHaveAttribute('role', 'list');
+    // PR-UI-3a (THI-300): `charges-list` is now a <div> wrapper holding one
+    // <section> per frequency group, each with its own <ul>. The load-bearing
+    // invariant is that the only listitems are the charge rows — group headings
+    // and the total footer must NOT introduce any — so the recursive count
+    // through the nested <ul>s still equals the number of charges.
     const items = within(list).getAllByRole('listitem');
     expect(items).toHaveLength(sampleCharges.length);
+    // The total footer sits outside the list wrapper and carries no listitem.
+    const total = screen.getByTestId('charges-total');
+    expect(within(total).queryAllByRole('listitem')).toHaveLength(0);
   });
 
   it('renders each cell with the value derived from the charge data (month + amount + label + chip)', () => {
-    renderWithIntl(<ChargesClient charges={sampleCharges} />);
+    renderCharges(sampleCharges);
 
     // Row 1 — dueMonth: 1 (january) → "Janv." in fr-BE short, amount 1 200 €.
     const firstRow = screen.getByTestId('charges-row-a1');
@@ -128,20 +162,20 @@ describe('<ChargesClient /> — PR-BETA-1 visual refactor', () => {
   });
 
   it('exposes an aria-label naming the charge on every delete button', () => {
-    renderWithIntl(<ChargesClient charges={sampleCharges} />);
+    renderCharges(sampleCharges);
     expect(screen.getByRole('button', { name: 'Supprimer Loyer appartement' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Supprimer Taxe voiture' })).toBeInTheDocument();
   });
 
   it('marks the amount cell with tabular-nums so digits align vertically across rows', () => {
-    renderWithIntl(<ChargesClient charges={sampleCharges} />);
+    renderCharges(sampleCharges);
     const firstRow = screen.getByTestId('charges-row-a1');
     const amount = within(firstRow).getByTestId('charges-row-amount');
     expect(amount.className).toMatch(/tabular-nums/);
   });
 
   it('preserves the add-form CRUD scaffolding (out-of-scope guard against accidental refactor)', () => {
-    renderWithIntl(<ChargesClient charges={[]} />);
+    renderCharges([]);
     // The 5 form fields + submit button stay reachable by their labels and roles.
     expect(screen.getByLabelText('Libellé')).toBeInTheDocument();
     expect(screen.getByLabelText(/Montant/)).toBeInTheDocument();
@@ -164,7 +198,7 @@ describe('<ChargesClient /> — PR-BETA-CLEANUP-2 list & form', () => {
   });
 
   it('renders the next-due column with a locale-aware date for active charges', () => {
-    renderWithIntl(<ChargesClient charges={sampleCharges} />);
+    renderCharges(sampleCharges);
     const cell = within(screen.getByTestId('charges-row-a1')).getByTestId('charges-row-next-due');
     // 4-digit year present (formatDate medium) — no longer just "JANV.".
     expect(cell.textContent ?? '').toMatch(/\d{4}/);
@@ -172,7 +206,7 @@ describe('<ChargesClient /> — PR-BETA-CLEANUP-2 list & form', () => {
   });
 
   it('renders both Modifier and Supprimer buttons on each row', () => {
-    renderWithIntl(<ChargesClient charges={sampleCharges} />);
+    renderCharges(sampleCharges);
     expect(screen.getByTestId('charges-row-edit-a1')).toBeInTheDocument();
     expect(screen.getByTestId('charges-row-delete-a1')).toBeInTheDocument();
     expect(screen.getByTestId('charges-row-edit-a2')).toBeInTheDocument();
@@ -181,7 +215,7 @@ describe('<ChargesClient /> — PR-BETA-CLEANUP-2 list & form', () => {
 
   it('passes paymentDay + computed paymentMonths to createChargeAction', async () => {
     createChargeMock.mockResolvedValue({ ok: true });
-    renderWithIntl(<ChargesClient charges={[]} />);
+    renderCharges([]);
     fireEvent.change(screen.getByLabelText('Libellé'), { target: { value: 'Assurance' } });
     fireEvent.change(screen.getByLabelText(/Montant/), { target: { value: '120' } });
     fireEvent.change(screen.getByLabelText(/jour du mois/i), { target: { value: '15' } });
@@ -209,14 +243,14 @@ describe('<ChargesClient /> — PR-BETA-CLEANUP-2 edit drawer', () => {
   });
 
   it('opens the drawer when the Modifier button is clicked', async () => {
-    renderWithIntl(<ChargesClient charges={sampleCharges} />);
+    renderCharges(sampleCharges);
     expect(screen.queryByTestId('charge-edit-drawer')).toBeNull();
     fireEvent.click(screen.getByTestId('charges-row-edit-a1'));
     expect(await screen.findByTestId('charge-edit-drawer')).toBeInTheDocument();
   });
 
   it('pre-fills the drawer fields with the row data', async () => {
-    renderWithIntl(<ChargesClient charges={sampleCharges} />);
+    renderCharges(sampleCharges);
     fireEvent.click(screen.getByTestId('charges-row-edit-a1'));
     await screen.findByTestId('charge-edit-drawer');
     expect(screen.getByTestId('charge-edit-label')).toHaveValue('Loyer appartement');
@@ -226,7 +260,7 @@ describe('<ChargesClient /> — PR-BETA-CLEANUP-2 edit drawer', () => {
 
   it('calls updateChargeAction with the modified amount on Save', async () => {
     updateChargeMock.mockResolvedValue({ ok: true });
-    renderWithIntl(<ChargesClient charges={sampleCharges} />);
+    renderCharges(sampleCharges);
     fireEvent.click(screen.getByTestId('charges-row-edit-a1'));
     await screen.findByTestId('charge-edit-drawer');
     fireEvent.change(screen.getByTestId('charge-edit-amount'), { target: { value: '1350' } });
@@ -241,7 +275,7 @@ describe('<ChargesClient /> — PR-BETA-CLEANUP-2 edit drawer', () => {
 
   it('keeps the drawer open and shows an error toast on update failure', async () => {
     updateChargeMock.mockResolvedValue({ ok: false, errorCode: 'errors.charges.updateFailed' });
-    renderWithIntl(<ChargesClient charges={sampleCharges} />);
+    renderCharges(sampleCharges);
     fireEvent.click(screen.getByTestId('charges-row-edit-a1'));
     await screen.findByTestId('charge-edit-drawer');
     await act(async () => {
@@ -253,9 +287,84 @@ describe('<ChargesClient /> — PR-BETA-CLEANUP-2 edit drawer', () => {
   });
 });
 
+// PR-UI-3a (THI-300) — frequency grouping, per-group subtotals, global total
+// footer, mobile flatten.
+describe('<ChargesClient /> — PR-UI-3a grouping & totals', () => {
+  beforeEach(() => {
+    createChargeMock.mockReset();
+    updateChargeMock.mockReset();
+    deleteChargeMock.mockReset();
+    toastSuccessMock.mockReset();
+    toastErrorMock.mockReset();
+    routerRefreshMock.mockReset();
+  });
+
+  it('renders one section per non-empty frequency group, in fixed order, hiding empty groups', () => {
+    renderCharges(sampleCharges);
+    // sampleCharges = 1 monthly (a1) + 1 annual (a2): only those two groups exist.
+    expect(screen.getByTestId('charges-group-monthly')).toBeInTheDocument();
+    expect(screen.getByTestId('charges-group-annual')).toBeInTheDocument();
+    expect(screen.queryByTestId('charges-group-quarterly')).toBeNull();
+    expect(screen.queryByTestId('charges-group-semiannual')).toBeNull();
+
+    // Fixed display order: monthly before annual, regardless of input order.
+    const list = screen.getByTestId('charges-list');
+    const sectionIds = Array.from(
+      list.querySelectorAll<HTMLElement>('section[data-testid^="charges-group-"]'),
+    ).map((el) => el.getAttribute('data-testid'));
+    expect(sectionIds).toEqual(['charges-group-monthly', 'charges-group-annual']);
+  });
+
+  it('places each charge row inside its frequency group', () => {
+    renderCharges(sampleCharges);
+    const monthly = screen.getByTestId('charges-group-monthly');
+    const annual = screen.getByTestId('charges-group-annual');
+    expect(within(monthly).getByTestId('charges-row-a1')).toBeInTheDocument();
+    expect(within(monthly).queryByTestId('charges-row-a2')).toBeNull();
+    expect(within(annual).getByTestId('charges-row-a2')).toBeInTheDocument();
+  });
+
+  it('shows the server-computed subtotal next to each group heading', () => {
+    renderCharges(sampleCharges, {
+      subtotals: { monthly: 1200, quarterly: 0, semiannual: 0, annual: 300 },
+    });
+    const monthlySub = screen.getByTestId('charges-group-subtotal-monthly');
+    expect(monthlySub).toHaveTextContent(/Sous-total/);
+    expect(monthlySub).toHaveTextContent(/1[  ]200/);
+    expect(screen.getByTestId('charges-group-subtotal-annual')).toHaveTextContent(/300/);
+  });
+
+  it('renders the global total footer with the smoothed monthly and annual figures', () => {
+    renderCharges(sampleCharges, { monthlyProvisionTotal: 1225, annualTotal: 14700 });
+    const total = screen.getByTestId('charges-total');
+    expect(total).toHaveTextContent('Effort lissé / mois');
+    expect(total).toHaveTextContent('Équivalent annuel');
+    expect(screen.getByTestId('charges-total-monthly')).toHaveTextContent(/1[  ]225/);
+    expect(screen.getByTestId('charges-total-annual')).toHaveTextContent(/14[  ]700/);
+  });
+
+  it('does not render the total footer when there are no charges', () => {
+    renderCharges([]);
+    expect(screen.queryByTestId('charges-total')).toBeNull();
+    expect(screen.queryByTestId('charges-list')).toBeNull();
+  });
+
+  it('flattens rows (no card chrome) so mobile shows plain divided lines, not fragmented cards', () => {
+    renderCharges(sampleCharges);
+    const firstRow = screen.getByTestId('charges-row-a1');
+    // Card chrome removed: the row is a flat list line separated by the group
+    // <ul>'s divide-y, not a bordered/rounded/filled card.
+    expect(firstRow.className).not.toMatch(/rounded-lg/);
+    expect(firstRow.className).not.toMatch(/bg-card/);
+    expect(firstRow.className).not.toMatch(/\bp-4\b/);
+    // The parent group list carries the divider.
+    expect(firstRow.closest('ul')?.className).toMatch(/divide-y/);
+  });
+});
+
 describe('app.charges — i18n parity (5 locales, PR-BETA-CLEANUP-2)', () => {
   it.each(['fr-BE', 'en', 'de-DE', 'es-ES', 'nl-BE'] as const)(
-    'locale %s exposes paymentDay + edit + drawer keys',
+    'locale %s exposes paymentDay + edit + drawer + total keys',
     async (locale) => {
       const m = (await import(`../../../../../../messages/${locale}.json`)).default as {
         app: {
@@ -264,6 +373,9 @@ describe('app.charges — i18n parity (5 locales, PR-BETA-CLEANUP-2)', () => {
             paymentDayHint?: string;
             editAria?: string;
             toastUpdated?: string;
+            subtotalLabel?: string;
+            totalMonthlyLabel?: string;
+            totalAnnualLabel?: string;
             drawer?: {
               title?: string;
               save?: string;
@@ -281,6 +393,10 @@ describe('app.charges — i18n parity (5 locales, PR-BETA-CLEANUP-2)', () => {
       expect(c.editAria).toBeTypeOf('string');
       expect((c.editAria ?? '').includes('{label}')).toBe(true);
       expect(c.toastUpdated).toBeTypeOf('string');
+      // PR-UI-3a (THI-300) — total recap labels.
+      expect((c.subtotalLabel ?? '').length).toBeGreaterThan(0);
+      expect((c.totalMonthlyLabel ?? '').length).toBeGreaterThan(0);
+      expect((c.totalAnnualLabel ?? '').length).toBeGreaterThan(0);
       expect(c.drawer?.title).toBeTypeOf('string');
       expect(c.drawer?.save).toBeTypeOf('string');
       expect(c.drawer?.saving).toBeTypeOf('string');
