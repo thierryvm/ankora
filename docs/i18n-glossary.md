@@ -141,6 +141,23 @@ Runtime formatter uses `Intl.NumberFormat(locale, { style: 'currency', currency:
 | Semestriel  | Halfjaarlijks   | Semi-annual | Halbjährlich    | Semestral  |
 | Annuel      | Jaarlijks       | Annual      | Jährlich        | Anual      |
 
+### Frequency abbreviations (`common.frequencyAbbr`)
+
+Compact labels for the charges-list frequency tag (THI-299). The full word above stays the accessible name (screen-reader `sr-only` + hover `title`); these are the visible shorthand only. Added 2026-06-01.
+
+| Enum         | fr-BE | nl-BE  | en    | de-DE   | es-ES |
+| ------------ | ----- | ------ | ----- | ------- | ----- |
+| `monthly`    | Mens. | Mnd.   | Mo.   | Mtl.    | Mens. |
+| `quarterly`  | Trim. | Kwart. | Qtr.  | Quartl. | Trim. |
+| `semiannual` | Sem.  | Halfj. | Semi. | Halbj.  | Sem.  |
+| `annual`     | Ann.  | Jaarl. | Ann.  | Jährl.  | Anual |
+
+**Decisions (i18n-auditor 2026-06-01):**
+
+- `Sem.` (fr-BE/es-ES) is mildly ambiguous (semestriel/semestral vs semaine/semana), accepted because the enum has only 4 values, all shown together, and the full word is always available. Not used for any weekly frequency (none exists).
+- de-DE `quarterly` = **`Quartl.`** (not `Vj.`): `Vj.` reads as _Vorjahr_ (prior year) in a financial context — replaced to remove the collision.
+- es-ES `annual` = `Anual` keeps no trailing dot: it is the full short word, not a truncation, so a period would be grammatically wrong.
+
 ---
 
 ## 5. Tone rules
@@ -178,9 +195,10 @@ Runtime formatter uses `Intl.NumberFormat(locale, { style: 'currency', currency:
 
 ## 7. Versioning
 
-| Version | Date       | Change                                                                                                     |
-| ------- | ---------- | ---------------------------------------------------------------------------------------------------------- |
-| 1.0     | 2026-04-20 | Initial glossary — Wave 1.5 "Opération Babel" translation.                                                 |
-| 1.1     | 2026-04-20 | Destructive confirmations switch to email-as-keyword pattern (§6). Drop SUPPRIMER/DELETE/LÖSCHEN/ELIMINAR. |
+| Version | Date       | Change                                                                                                            |
+| ------- | ---------- | ----------------------------------------------------------------------------------------------------------------- |
+| 1.0     | 2026-04-20 | Initial glossary — Wave 1.5 "Opération Babel" translation.                                                        |
+| 1.1     | 2026-04-20 | Destructive confirmations switch to email-as-keyword pattern (§6). Drop SUPPRIMER/DELETE/LÖSCHEN/ELIMINAR.        |
+| 1.2     | 2026-06-01 | Add `common.frequencyAbbr` abbreviation table (§4, THI-299). de-DE quarterly `Vj.`→`Quartl.` (Vorjahr collision). |
 
 Any new term, any register change, any account-name update **must** be logged here before landing in messages/\*.json.

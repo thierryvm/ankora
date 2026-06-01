@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useTransition } from 'react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Pencil, Plus, Repeat, Trash2 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
@@ -62,6 +62,7 @@ function todayBrusselsIso(): string {
 export function ChargesClient({ charges }: { charges: RawCharge[] }) {
   const t = useTranslations('app.charges');
   const tFreq = useTranslations('common.frequency');
+  const tFreqAbbr = useTranslations('common.frequencyAbbr');
   const tMonths = useTranslations('common.months');
   const locale = useLocale() as Locale;
   const translateError = useActionErrorTranslator();
@@ -300,11 +301,33 @@ export function ChargesClient({ charges }: { charges: RawCharge[] }) {
                     >
                       {c.label}
                     </span>
+                    {/* Frequency tag (THI-299): a neutral recurrence icon + the locale
+                        abbreviation in `text-foreground`. NOT colour-coded — colour stays
+                        reserved for the category `color_token` (@thierry locked). The
+                        previous pill used `bg-surface-muted` (~1.05:1 on the card →
+                        invisible) AND `text-muted-foreground` (identical to the next-due
+                        label). The fix carries visibility + distinction on three opaque,
+                        token-only signals instead of an invisible container: the icon, the
+                        `text-foreground` colour (vs muted next-due, AAA on card), and the
+                        abbreviated form. No border/fill, so no dependency on the
+                        undefined `--color-border-strong` token. a11y: the icon is
+                        decorative; the visible abbreviation is `aria-hidden` and the full
+                        word is exposed to screen readers via `sr-only` (robust across
+                        VoiceOver, which does not reliably announce `<abbr title>`), while
+                        sighted users still get the full word on hover via `title`. */}
                     <span
                       data-testid="charges-row-frequency"
-                      className="bg-surface-muted text-muted-foreground inline-flex w-fit shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-medium md:order-3"
+                      className="text-foreground inline-flex w-fit shrink-0 items-center gap-1 text-xs font-medium md:order-3"
                     >
-                      {tFreq(c.frequency as Frequency)}
+                      <Repeat aria-hidden="true" className="text-muted-foreground size-3" />
+                      <abbr
+                        title={tFreq(c.frequency as Frequency)}
+                        aria-hidden="true"
+                        className="no-underline"
+                      >
+                        {tFreqAbbr(c.frequency as Frequency)}
+                      </abbr>
+                      <span className="sr-only">{tFreq(c.frequency as Frequency)}</span>
                     </span>
                   </div>
 

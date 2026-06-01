@@ -110,7 +110,10 @@ describe('<ChargesClient /> — PR-BETA-1 visual refactor', () => {
     expect(within(firstRow).getByTestId('charges-row-label')).toHaveTextContent(
       'Loyer appartement',
     );
-    expect(within(firstRow).getByTestId('charges-row-frequency')).toHaveTextContent(/mensuel/i);
+    // THI-299: the badge now shows the locale abbreviation, with the full word
+    // kept accessible via the `<abbr title>`.
+    expect(within(firstRow).getByTestId('charges-row-frequency')).toHaveTextContent(/mens\./i);
+    expect(within(firstRow).getByTitle('Mensuel')).toBeInTheDocument();
     // Tolerate regular space or non-breaking space inserted by Intl.NumberFormat.
     expect(within(firstRow).getByTestId('charges-row-amount')).toHaveTextContent(/1[  ]200/);
 
@@ -119,7 +122,8 @@ describe('<ChargesClient /> — PR-BETA-1 visual refactor', () => {
     const secondRow = screen.getByTestId('charges-row-a2');
     // PR-BETA-CLEANUP-2: next-due asserted below; month-only cell removed.
     expect(within(secondRow).getByTestId('charges-row-label')).toHaveTextContent('Taxe voiture');
-    expect(within(secondRow).getByTestId('charges-row-frequency')).toHaveTextContent(/annuel/i);
+    expect(within(secondRow).getByTestId('charges-row-frequency')).toHaveTextContent(/ann\./i);
+    expect(within(secondRow).getByTitle('Annuel')).toBeInTheDocument();
     expect(within(secondRow).getByTestId('charges-row-amount')).toHaveTextContent(/300/);
   });
 

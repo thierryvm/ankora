@@ -1,5 +1,7 @@
 # Roadmap — Ankora
 
+**Update 31 mai 2026** : Lot UI lisibilité (audit @cowork 2026-05-30/31) en cours. **PR-UI-1 (THI-298) mergée** (squash [`4bc0bb3`](https://github.com/thierryvm/ankora/commit/4bc0bb3), PR [#205](https://github.com/thierryvm/ankora/pull/205)) : focus champ « un signal pas deux » — liseré émeraude unique `brand-600` + `box-shadow 1px` (no-reflow), outline global non-layered neutralisé sur les champs via exception compagne `globals.css:421`, carve-out `aria-invalid`. Le live-test runtime @cowork a attrapé un défaut de cascade CSS (outline global) invisible aux unit/e2e/`ui-auditor`. Rapport `docs/prs/PR-UI-1-report.md`. **Position actuelle** : prochain = **THI-299** (PR-UI-2 badge fréquence) → THI-300 (PR-UI-3a liste charges groupée + total) → THI-301 (DateField). Dette focus transverse tracée **THI-304** (Lots A/B/C/D dont `.drw-input` drawer atom). En parallèle backlog : Track B P1 lot 2 (simulateur S5 curseur + marché).
+
 **Update 25 mai 2026** : Sprint Beta J-16 — **PR-BETA-1 et PR-BETA-6 mergées**.
 
 - PR-BETA-1 (THI-265, commit [`5232dda`](https://github.com/thierryvm/ankora/commit/5232dda), PR [#179](https://github.com/thierryvm/ankora/pull/179)) : refactor visuel `/app/charges` — grid desktop + cards mobile.

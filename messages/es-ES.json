@@ -68,6 +68,12 @@
       "semiannual": "Semestral",
       "annual": "Anual"
     },
+    "frequencyAbbr": {
+      "monthly": "Mens.",
+      "quarterly": "Trim.",
+      "semiannual": "Sem.",
+      "annual": "Anual"
+    },
     "account": {
       "menuAria": "Menú de cuenta",
       "signedInAs": "Sesión iniciada como",

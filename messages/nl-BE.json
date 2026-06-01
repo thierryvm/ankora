@@ -68,6 +68,12 @@
       "semiannual": "Halfjaarlijks",
       "annual": "Jaarlijks"
     },
+    "frequencyAbbr": {
+      "monthly": "Mnd.",
+      "quarterly": "Kwart.",
+      "semiannual": "Halfj.",
+      "annual": "Jaarl."
+    },
     "account": {
       "menuAria": "Accountmenu",
       "signedInAs": "Aangemeld als",
