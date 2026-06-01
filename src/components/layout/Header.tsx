@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { isAdmin } from '@/lib/auth/is-admin';
 import { getOptionalUser } from '@/lib/auth/require-user';
 import { shouldMountBottomTabBar } from '@/lib/layout/bottom-tab-bar-state';
+import { AccountButton } from './AccountButton';
 import { HeaderNav } from './HeaderNav';
 
 type HeaderProps = {
@@ -16,13 +17,24 @@ type HeaderProps = {
   // The app/layout still passes `isAuthenticated` explicitly to avoid a
   // duplicate Supabase round-trip behind `requireUser`.
   isAuthenticated?: boolean;
+  // Signed-in identity for the AccountButton. The app layout passes it
+  // explicitly (it already holds the User from `requireUser` — no second
+  // round-trip). For the marketing variant the Header resolves it itself
+  // from the session lookup below. `null` = anonymous / not provided.
+  userEmail?: string | null;
 };
 
-export async function Header({ variant = 'marketing', isAuthenticated }: HeaderProps) {
+export async function Header({ variant = 'marketing', isAuthenticated, userEmail }: HeaderProps) {
   const t = await getTranslations('common');
 
-  const resolvedAuth =
-    isAuthenticated ?? (variant === 'marketing' ? !!(await getOptionalUser()) : false);
+  // Marketing pages have no upstream auth guard, so resolve the session here.
+  // Capture the User (not just a boolean) so the AccountButton can render the
+  // signed-in identity — Supabase dedupes `auth.getUser()` per request via
+  // cookies, so this does not add a round-trip over the existing boolean check.
+  const marketingUser =
+    isAuthenticated === undefined && variant === 'marketing' ? await getOptionalUser() : null;
+  const resolvedAuth = isAuthenticated ?? !!marketingUser;
+  const accountEmail = userEmail ?? marketingUser?.email ?? null;
 
   // PR-SEC-ADMIN — conditional admin link in app variant. `isAdmin()` reads
   // session + ANKORA_ADMIN_USER_IDS server-side; returns false for any
@@ -145,6 +157,15 @@ export async function Header({ variant = 'marketing', isAuthenticated }: HeaderP
               <Link href="/app">{t('nav.myCockpit')}</Link>
             </Button>
           )}
+
+          {/* PR-A — persistent account menu (identity + Settings + logout) for
+              authenticated visitors on tablet+desktop. Self-hides < 768px
+              (`hidden md:flex` inside the component), where the BottomTabBar +
+              MoreSheet own the secondary nav (THI-277). Resolves "no logout in
+              the chrome on desktop". The landing (`MktNav`) intentionally keeps
+              its conversion-first "Mon cockpit" CTA only — documented exception,
+              not an oversight. */}
+          {resolvedAuth && accountEmail && <AccountButton email={accountEmail} />}
 
           {/* PR-BETA-CLEANUP (THI-279, 2026-05-25): `isAdmin` no longer
               flows into HeaderNav — the prop only fed the dead `variant

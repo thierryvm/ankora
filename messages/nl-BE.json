@@ -67,6 +67,11 @@
       "quarterly": "Driemaandelijks",
       "semiannual": "Halfjaarlijks",
       "annual": "Jaarlijks"
+    },
+    "account": {
+      "menuAria": "Accountmenu",
+      "signedInAs": "Aangemeld als",
+      "logout": "Afmelden"
     }
   },
   "layout": {

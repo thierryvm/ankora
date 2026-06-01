@@ -4,7 +4,10 @@ import { AppBreadcrumbs } from '@/components/layout/AppBreadcrumbs';
 import { requireUser } from '@/lib/auth/require-user';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  await requireUser();
+  // `requireUser()` already runs the (cookie-deduped) Supabase session lookup
+  // and the redirect guard. Capture its User so the Header's AccountButton can
+  // show the signed-in identity without a second round-trip (PR-A).
+  const user = await requireUser();
   // PR-BETA-6 Hotfix Option A v3 (THI-277, 2026-05-25): the BottomTabBar is
   // now mounted ONCE at the locale root `src/app/[locale]/layout.tsx` so it
   // stays mounted across in-app navigation (cockpit → admin → faq → legal).
@@ -14,7 +17,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // mobile (the bar is `md:hidden`, so desktop keeps the original `py-12`).
   return (
     <>
-      <Header variant="app" isAuthenticated />
+      <Header variant="app" isAuthenticated userEmail={user.email ?? null} />
       <AppBreadcrumbs />
       <main id="main" className="mx-auto w-full max-w-6xl px-4 pt-8 pb-24 md:px-6 md:py-12">
         {children}

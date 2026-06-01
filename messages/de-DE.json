@@ -67,6 +67,11 @@
       "quarterly": "Vierteljährlich",
       "semiannual": "Halbjährlich",
       "annual": "Jährlich"
+    },
+    "account": {
+      "menuAria": "Kontomenü",
+      "signedInAs": "Angemeldet als",
+      "logout": "Abmelden"
     }
   },
   "layout": {

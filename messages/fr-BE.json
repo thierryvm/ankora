@@ -67,6 +67,11 @@
       "quarterly": "Trimestriel",
       "semiannual": "Semestriel",
       "annual": "Annuel"
+    },
+    "account": {
+      "menuAria": "Menu du compte",
+      "signedInAs": "Connecté en tant que",
+      "logout": "Se déconnecter"
     }
   },
   "layout": {
