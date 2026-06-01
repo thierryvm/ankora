@@ -67,6 +67,12 @@
       "quarterly": "Trimestriel",
       "semiannual": "Semestriel",
       "annual": "Annuel"
+    },
+    "frequencyAbbr": {
+      "monthly": "Mens.",
+      "quarterly": "Trim.",
+      "semiannual": "Sem.",
+      "annual": "Ann."
     }
   },
   "layout": {

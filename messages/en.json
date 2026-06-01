@@ -67,6 +67,12 @@
       "quarterly": "Quarterly",
       "semiannual": "Semi-annual",
       "annual": "Annual"
+    },
+    "frequencyAbbr": {
+      "monthly": "Mo.",
+      "quarterly": "Qtr.",
+      "semiannual": "Semi.",
+      "annual": "Ann."
     }
   },
   "layout": {
