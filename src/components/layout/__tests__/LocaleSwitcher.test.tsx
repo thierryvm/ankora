@@ -6,21 +6,17 @@ import frMessages from '../../../../messages/fr-BE.json';
 import { setLocaleAction } from '@/lib/actions/locale';
 
 /**
- * LocaleSwitcher is the `<select>` rendered inside the marketing + cockpit
- * headers. Doctrine (CLAUDE.md "Cap v1.0 publique") restricts the visible
- * locales to FR-BE + EN; the wider LOCALES set stays the source of truth for
- * the next-intl middleware so deep-link URLs to /nl-BE etc. keep working.
+ * LocaleSwitcher is the iOS-style segmented control (FR | EN) rendered in the
+ * marketing + cockpit headers (replaced the native `<select>` 2026-06-01).
+ * Doctrine (CLAUDE.md "Cap v1.0 publique") restricts the VISIBLE locales to
+ * FR-BE + EN; the wider LOCALES set stays the source of truth for the
+ * next-intl middleware so deep-link URLs to /nl-BE etc. keep working.
  *
- * These tests enforce the doctrine at the UI surface: the `<select>` must
- * only render FR + EN, never the partial NL/ES/DE locales currently shipped
- * in `messages/*.json`.
+ * These tests enforce: (1) only FR + EN segments render, (2) the active
+ * segment reflects the current locale, (3) the pending-state a11y contract,
+ * (4) the THI-266 no-refresh switch contract.
  */
 
-// Hoisted so the same mock fns are referenced both by the `vi.mock` factory
-// (which is hoisted to the top of the module by Vitest) AND by the
-// no-refresh contract tests below — without `vi.hoisted` the test file
-// would receive fresh `vi.fn()` instances per call and `toHaveBeenCalled`
-// assertions would always read empty.
 const { replaceMock, refreshMock } = vi.hoisted(() => ({
   replaceMock: vi.fn(),
   refreshMock: vi.fn(),
@@ -66,54 +62,43 @@ beforeEach(() => {
   cleanup();
   replaceMock.mockClear();
   refreshMock.mockClear();
+  // Clear call history between specs (keeps the default resolved impl) so the
+  // "does nothing" assertion isn't tripped by 'en' clicks from earlier tests.
+  vi.mocked(setLocaleAction).mockClear();
 });
 
 describe('<LocaleSwitcher /> — v1.0 doctrine FR + EN only', () => {
-  it('renders exactly two options in the select', () => {
+  it('renders exactly two segments (radios)', () => {
     render(<LocaleSwitcher />);
-    const options = screen.getAllByRole('option');
-    expect(options).toHaveLength(2);
+    expect(screen.getAllByRole('radio')).toHaveLength(2);
   });
 
-  it('exposes fr-BE and en as the only option values', () => {
+  it('renders the short codes FR + EN, with the full locale name as accessible name', () => {
     render(<LocaleSwitcher />);
-    const options = screen.getAllByRole('option') as HTMLOptionElement[];
-    const values = options.map((o) => o.value);
-    expect(values).toEqual(['fr-BE', 'en']);
+    const fr = screen.getByTestId('locale-option-fr-BE');
+    const en = screen.getByTestId('locale-option-en');
+    expect(fr).toHaveTextContent('FR');
+    expect(en).toHaveTextContent('EN');
+    // Full name stays the accessible name (aria-label) for screen readers.
+    expect(fr).toHaveAttribute('aria-label', frMessages.ui.localeSwitcher.options['fr-BE']);
+    expect(en).toHaveAttribute('aria-label', frMessages.ui.localeSwitcher.options.en);
+  });
+
+  it('marks the current locale (fr-BE) as the checked segment', () => {
+    render(<LocaleSwitcher />);
+    expect(screen.getByTestId('locale-option-fr-BE')).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByTestId('locale-option-en')).toHaveAttribute('aria-checked', 'false');
   });
 
   it('does NOT expose nl-BE, es-ES or de-DE (partial translations not yet doctrine-approved)', () => {
     render(<LocaleSwitcher />);
-    const options = screen.getAllByRole('option') as HTMLOptionElement[];
-    const values = options.map((o) => o.value);
-    expect(values).not.toContain('nl-BE');
-    expect(values).not.toContain('es-ES');
-    expect(values).not.toContain('de-DE');
+    expect(screen.queryByTestId('locale-option-nl-BE')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('locale-option-es-ES')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('locale-option-de-DE')).not.toBeInTheDocument();
   });
 });
 
-/**
- * THI-252 / THI-255 (PR-FIX-I18N-UX Phase A, 2026-05-23) — pending-state UX.
- *
- * The `<select>` already wraps its onChange in `startTransition`, so the
- * `pending` boolean is React-managed; this suite asserts the visual /
- * a11y contract during the transition:
- *   - select disabled + `aria-busy="true"`
- *   - `Loader2` spinner visible (and gone at rest)
- *   - `role="status"` text reads the i18n `ui.localeSwitcher.switching`
- *     label so screen readers announce the action
- *
- * To exercise the pending window deterministically we override the
- * mocked `setLocaleAction` with a deferred promise — without it the
- * default `.mockResolvedValue(undefined)` flushes too fast for the
- * pending state to be observable from a test.
- *
- * Phase B (next PR) will tackle the architectural side (drawer
- * stay-open + `< 500 ms` propagation budget, cf. audit perf THI-243
- * RC #2 / #4); this PR is visual / a11y only and does NOT change the
- * `startTransition` logic itself.
- */
-describe('<LocaleSwitcher /> — THI-252/255 Phase A pending UX', () => {
+describe('<LocaleSwitcher /> — pending-state a11y', () => {
   function deferred<T>(): { promise: Promise<T>; resolve: (value: T) => void } {
     let resolve!: (value: T) => void;
     const promise = new Promise<T>((r) => {
@@ -122,44 +107,29 @@ describe('<LocaleSwitcher /> — THI-252/255 Phase A pending UX', () => {
     return { promise, resolve };
   }
 
-  it('select is enabled, aria-busy=false, spinner hidden at rest', () => {
+  it('at rest: segments enabled, radiogroup aria-busy=false, status empty', () => {
     render(<LocaleSwitcher />);
-    const select = screen.getByRole('combobox');
-    expect(select).not.toBeDisabled();
-    expect(select).toHaveAttribute('aria-busy', 'false');
-    expect(screen.queryByTestId('locale-switching-spinner')).not.toBeInTheDocument();
-    // role="status" node exists but is empty at rest.
+    expect(screen.getByTestId('locale-option-en')).not.toBeDisabled();
+    expect(screen.getByRole('radiogroup')).toHaveAttribute('aria-busy', 'false');
     expect(screen.getByRole('status')).toHaveTextContent('');
   });
 
-  it('disables select + sets aria-busy=true + reveals spinner + announces status during transition', async () => {
+  it('during transition: segments disabled, aria-busy=true, status announces switching', async () => {
     const { promise, resolve } = deferred<{ ok: true }>();
     vi.mocked(setLocaleAction).mockReturnValueOnce(promise as ReturnType<typeof setLocaleAction>);
 
     const user = userEvent.setup();
     render(<LocaleSwitcher />);
+    await user.click(screen.getByTestId('locale-option-en'));
 
-    const select = screen.getByRole('combobox');
-    await user.selectOptions(select, 'en');
-
-    // Transition is in flight — setLocaleAction has not resolved yet.
-    expect(select).toBeDisabled();
-    expect(select).toHaveAttribute('aria-busy', 'true');
-    expect(screen.getByTestId('locale-switching-spinner')).toBeInTheDocument();
-    // Locale-agnostic assertion — read the expected copy straight from the
-    // same i18n source the component reads from, so future translation
-    // tweaks (or a default-locale change) don't break the spec. Per Sourcery
-    // overall comment on PR #177.
+    expect(screen.getByTestId('locale-option-en')).toBeDisabled();
+    expect(screen.getByTestId('locale-option-fr-BE')).toBeDisabled();
+    expect(screen.getByRole('radiogroup')).toHaveAttribute('aria-busy', 'true');
     const expectedStatus = (frMessages as { ui: { localeSwitcher: { switching: string } } }).ui
       .localeSwitcher.switching;
     expect(screen.getByRole('status')).toHaveTextContent(expectedStatus);
-    // Defence-in-depth: the announced text MUST be non-empty (an empty
-    // status node would mute the announcement and silently regress the
-    // a11y contract).
     expect(screen.getByRole('status').textContent?.trim()).not.toBe('');
 
-    // Resolve inside `act` so React can flush the transition before the
-    // test exits (avoids "act warning" noise in subsequent tests).
     await act(async () => {
       resolve({ ok: true });
     });
@@ -171,91 +141,21 @@ describe('<LocaleSwitcher /> — THI-252/255 Phase A pending UX', () => {
 
     const user = userEvent.setup();
     render(<LocaleSwitcher />);
-
-    const select = screen.getByRole('combobox');
-    await user.selectOptions(select, 'en');
-    expect(select).toBeDisabled();
+    await user.click(screen.getByTestId('locale-option-en'));
+    expect(screen.getByTestId('locale-option-en')).toBeDisabled();
 
     await act(async () => {
       resolve({ ok: true });
     });
 
-    expect(select).not.toBeDisabled();
-    expect(select).toHaveAttribute('aria-busy', 'false');
-    expect(screen.queryByTestId('locale-switching-spinner')).not.toBeInTheDocument();
+    expect(screen.getByTestId('locale-option-en')).not.toBeDisabled();
+    expect(screen.getByRole('radiogroup')).toHaveAttribute('aria-busy', 'false');
     expect(screen.getByRole('status')).toHaveTextContent('');
-  });
-
-  it('Loader2 spinner is aria-hidden so only the role="status" text is announced', async () => {
-    const { promise, resolve } = deferred<{ ok: true }>();
-    vi.mocked(setLocaleAction).mockReturnValueOnce(promise as ReturnType<typeof setLocaleAction>);
-
-    const user = userEvent.setup();
-    render(<LocaleSwitcher />);
-    await user.selectOptions(screen.getByRole('combobox'), 'en');
-
-    const spinner = screen.getByTestId('locale-switching-spinner');
-    // Decorative icon — assistive tech reads the role=status text instead.
-    expect(spinner).toHaveAttribute('aria-hidden', 'true');
-    // Status node has `aria-live="polite"` so screen readers announce
-    // the label without interrupting the user.
-    expect(screen.getByRole('status')).toHaveAttribute('aria-live', 'polite');
-
-    await act(async () => {
-      resolve({ ok: true });
-    });
   });
 });
 
-/**
- * THI-266 / PR-BETA-2 Phase B (2026-05-24) — no-refresh contract.
- *
- * The switch handler MUST call `router.replace(pathname, { locale })` and
- * MUST NOT call `router.refresh()`. The redundant refresh introduced in
- * Phase A invalidated the entire RSC cache on every switch, unmounting
- * the parent `HeaderNav` (closing the mobile drawer mid-switch —
- * TICKET 4) and stretching propagation past 15 s in `npm run dev`
- * (TICKET 7). In `localePrefix: 'as-needed'` mode the URL pathname itself
- * changes on `router.replace`, so Next re-renders the matching Server
- * Components via `setRequestLocale` without any explicit cache flush.
- *
- * These assertions lock the contract at unit level so a future regression
- * cannot silently re-introduce the redundant call.
- */
-describe('<LocaleSwitcher /> — THI-266 Phase B no-refresh contract', () => {
-  it('calls router.replace with the new locale + current pathname after setLocaleAction settles', async () => {
-    const user = userEvent.setup();
-    render(<LocaleSwitcher />);
-
-    await user.selectOptions(screen.getByRole('combobox'), 'en');
-
-    expect(setLocaleAction).toHaveBeenCalledWith('en');
-    expect(replaceMock).toHaveBeenCalledTimes(1);
-    expect(replaceMock).toHaveBeenCalledWith('/', { locale: 'en' });
-  });
-
-  it('does NOT call router.refresh — the URL change is sufficient to re-render Server Components', async () => {
-    const user = userEvent.setup();
-    render(<LocaleSwitcher />);
-
-    await user.selectOptions(screen.getByRole('combobox'), 'en');
-
-    // Architectural invariant — `router.refresh()` is destructive
-    // (full RSC cache invalidation) and unnecessary in `as-needed`
-    // locale-prefix mode. Any regression here would re-introduce the
-    // drawer-mid-switch close (TICKET 4) and the > 1 s propagation
-    // lag (TICKET 7). See PR-BETA-2 report + audit perf THI-243.
-    expect(refreshMock).not.toHaveBeenCalled();
-  });
-
-  it('orders side-effects: setLocaleAction THEN router.replace', async () => {
-    // The server action writes the `NEXT_LOCALE` cookie + persists the
-    // choice on the user row before the client navigates, so a hard
-    // refresh that follows resolves the right locale even if Playwright
-    // (or a real browser) reads the cookie before the navigation
-    // commits. The order matters — flipping it would race the cookie
-    // write against the navigation and reintroduce the `delayed apply`
-    // symptom on cross-page hard navigations (TICKET 7 scenario 2).
+describe('<LocaleSwitcher /> — THI-266 no-refresh switch contract', () => {
+  it('calls setLocaleAction(next) THEN router.replace(pathname, {locale}); never router.refresh', async () => {
     const callOrder: string[] = [];
     vi.mocked(setLocaleAction).mockImplementationOnce(async () => {
       callOrder.push('setLocaleAction');
@@ -267,8 +167,21 @@ describe('<LocaleSwitcher /> — THI-266 Phase B no-refresh contract', () => {
 
     const user = userEvent.setup();
     render(<LocaleSwitcher />);
-    await user.selectOptions(screen.getByRole('combobox'), 'en');
+    await user.click(screen.getByTestId('locale-option-en'));
 
+    expect(setLocaleAction).toHaveBeenCalledWith('en');
+    expect(replaceMock).toHaveBeenCalledTimes(1);
+    expect(replaceMock).toHaveBeenCalledWith('/', { locale: 'en' });
+    expect(refreshMock).not.toHaveBeenCalled();
     expect(callOrder).toEqual(['setLocaleAction', 'replace']);
+  });
+
+  it('clicking the already-active segment does nothing (no switch)', async () => {
+    const user = userEvent.setup();
+    render(<LocaleSwitcher />);
+    await user.click(screen.getByTestId('locale-option-fr-BE'));
+
+    expect(setLocaleAction).not.toHaveBeenCalled();
+    expect(replaceMock).not.toHaveBeenCalled();
   });
 });
