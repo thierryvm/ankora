@@ -5,12 +5,14 @@
  * RLS and session freshness.
  */
 
-// Bumped 2026-05-19 (PR P0-V2) to purge caches poisoned with the HTML 404 that
-// /fonts/*.ttf used to return before PR #169 fixed the middleware matcher. The
-// `activate` handler below deletes any cache whose key doesn't start with the
-// current `CACHE_VERSION`, so bumping this constant is the canonical way to
-// force a clean slate across all returning visitors on first SW activation.
-const CACHE_VERSION = 'ankora-v2-20260519';
+// Bumped 2026-06-02 (THI-324) to purge caches poisoned with authenticated,
+// locale-prefixed pages (`/en/app/*`, `/admin`, `/login`, …) that the old
+// locale-blind `isBypass` let through — see the `isBypass` note below. The
+// `activate` handler deletes any cache whose key doesn't start with the current
+// `CACHE_VERSION`, so bumping this constant is the canonical way to force a
+// clean slate across all returning visitors on first SW activation.
+// (Previous bump 2026-05-19 / PR P0-V2 purged the /fonts/*.ttf HTML-404 poison.)
+const CACHE_VERSION = 'ankora-v3-20260602';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 
 const PRECACHE_URLS = [
@@ -42,13 +44,33 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Authenticated / credential-bearing page surfaces, matched WITH OR WITHOUT a
+// leading next-intl locale segment (`en`, `fr-BE`, `nl-BE`, `de-DE`, `es-ES`).
+//
+// THI-324: the previous `startsWith('/app')` was locale-BLIND. The default
+// locale (`fr-BE`) is unprefixed, so `/app` matched — but `/en/app`, `/nl-BE/app`
+// etc. did NOT, slipped past the bypass, and got network-first-CACHED, poisoning
+// authenticated non-default-locale pages (the FR→EN revert on navigation). The
+// same blind spot left `/admin` (requireAdmin) and the `(auth)` group pages
+// (`/login`, `/signup`, `/forgot-password`, `/reset-password`) cacheable too —
+// a pre-existing leak this regex also closes.
+//
+// Slugs are the REAL resolved paths: the `(auth)` route group adds no URL
+// segment, so the auth pages are `/login` … not `/auth/*`. The only `/auth/*`
+// path is the non-localized OAuth callback (`src/app/auth/callback`), kept via a
+// plain `startsWith('/auth')` below. Over-bypassing (network-first) is the SAFE
+// direction; under-bypassing (caching auth) is the dangerous one.
+const PROTECTED_LOCALED =
+  /^\/(?:[a-z]{2}(?:-[A-Z]{2})?\/)?(?:app|admin|onboarding|login|signup|forgot-password|reset-password)(?:\/|$)/;
+
 function isBypass(url) {
   return (
-    url.pathname.startsWith('/app') ||
-    url.pathname.startsWith('/auth') ||
+    // Locale-prefixable authenticated page surfaces (with or without locale).
+    PROTECTED_LOCALED.test(url.pathname) ||
+    // Non-localized surfaces — never carry a locale prefix.
+    url.pathname.startsWith('/auth') || // OAuth callback (route handler)
     url.pathname.startsWith('/api') ||
     url.pathname.startsWith('/_next/data') ||
-    url.pathname.startsWith('/onboarding') ||
     // Self-hosted variable fonts. The browser HTTP cache + Vercel
     // Cache-Control already handle them efficiently; routing them through the
     // SW cache risked serving a stale HTML 404 from before PR #169 (when the
