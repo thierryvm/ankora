@@ -45,6 +45,17 @@
 
 ---
 
+## Known stale refs (hors scope — PR `.claude/` dédiée)
+
+La suppression de `EffortFinancierCard`/`CapaciteEpargneCard` rend stale deux références dans l'infra de garde-fous, **à NE PAS éditer dans cette PR** (`.claude/` = infra, banned-list item 3 — modif réservée à une PR `.claude/` dédiée avec review humaine) :
+
+- `.claude/agents/dashboard-ux-auditor.md` (« match the dashboard hero card `CapaciteEpargneCard` ») → deviendra `SituationDuMoisHero`.
+- `.claude/skills/ankora-design-system/SKILL.md` (liste `CapaciteEpargneCard, EffortFinancierCard`).
+
+Acté ici pour que `dashboard-ux-auditor` Layer 0 ne produise pas de faux négatif (chercher un composant disparu). À corriger dans une PR `.claude/` séparée.
+
+---
+
 ## Task 1: Domaine — `calculerSituationDuMois`
 
 **Files:**
@@ -183,6 +194,8 @@ describe('calculerSituationDuMois', () => {
       ref: REF,
     });
     expect(out.chargesFixes.toNumber()).toBe(900);
+    // Whole-chain proof: the inactive 800 must not leak past chargesFixes.
+    expect(out.resteDisponible.toNumber()).toBe(1100); // 2000 − 900 − 0
   });
 
   it('statut vert on an empty workspace with budgetVieCourante only', () => {
@@ -1091,6 +1104,8 @@ import { calculerSituationDuMois, paymentKey, type PaymentLedger } from '@/lib/d
 // THI-327 Phase 0 — unified "Situation du mois" hero. Reuses the same
 // cockpit primitives as the (now removed) Effort + Capacité cards.
 const situation = calculerSituationDuMois({
+  // Distinct from `monthlyIncome` above (the Transfer plan coerces null→0).
+  // The situation needs the genuine null to drive the THI-335 incomplet state.
   revenus: snapshot.monthlyIncome === null ? null : money(snapshot.monthlyIncome),
   charges: cockpitCharges,
   budgetVieCourante: money(snapshot.resteAVivre),
@@ -1100,18 +1115,26 @@ const situation = calculerSituationDuMois({
 });
 
 // Days remaining in the current month (Europe/Brussels) for the "≈ X/jour"
-// line on the living-budget row.
+// living-budget hint. `currentPeriod` is, by the snapshot invariant
+// (workspace-snapshot derives it from `new Date()` in this same TZ), always
+// the current calendar month. We still guard defensively: if it ever
+// diverged, `joursRestants = 0` suppresses the per-day hint (the Hero treats
+// joursRestants <= 0 as "no per-day").
+const brusselsNow = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'Europe/Brussels',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+}).format(new Date()); // "YYYY-MM-DD"
+const [bYear, bMonth, bDay] = brusselsNow.split('-').map(Number);
+const isCurrentPeriod =
+  bYear === snapshot.currentPeriod.year && bMonth === snapshot.currentPeriod.month;
 const daysInMonth = new Date(
   snapshot.currentPeriod.year,
   snapshot.currentPeriod.month, // month is 1..12 → Date(y, m, 0) = last day of (m)
   0,
 ).getDate();
-const todayDay = Number(
-  new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Brussels', day: '2-digit' }).format(
-    new Date(),
-  ),
-);
-const joursRestants = Math.max(1, daysInMonth - todayDay + 1);
+const joursRestants = isCurrentPeriod ? Math.max(1, daysInMonth - (bDay ?? 1) + 1) : 0;
 ```
 
 4. Replace the whole `<section aria-label={...} className="grid gap-4 md:grid-cols-2"> … </section>` block (the one rendering `<EffortFinancierCard />` + `<CapaciteEpargneCard />`, L112-124) with:
