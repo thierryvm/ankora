@@ -313,8 +313,8 @@ export function SimulatorClient({
           ) : (
             <div className="flex flex-col gap-4">
               {/* Hero — Reste disponible (réserve libre) actuel → projeté.
-                  Same metric + wording as the dashboard CapaciteEpargneCard
-                  "Reste disponible" sub-stat (anchoring, audit §2). */}
+                  Same metric + wording as the dashboard SituationDuMoisHero
+                  "Reste disponible" line (anchoring, audit §2). */}
               <div>
                 <p className="text-muted-foreground text-xs">{tImpact('resteDisponible')}</p>
                 <p

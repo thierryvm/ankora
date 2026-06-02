@@ -6,13 +6,12 @@ import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AccountCard } from '@/components/features/AccountCard';
-import { EffortFinancierCard } from '@/components/dashboard/EffortFinancierCard';
-import { CapaciteEpargneCard } from '@/components/dashboard/CapaciteEpargneCard';
+import { SituationDuMoisHero } from '@/components/dashboard/SituationDuMoisHero';
 import { ProvisionHealthGaugeCard } from '@/components/dashboard/ProvisionHealthGaugeCard';
 import { ProchainesFacturesCard } from '@/components/dashboard/ProchainesFacturesCard';
 import { SimulatorDrawer } from '@/components/dashboard/SimulatorDrawer';
 import { Expenses, Transfer, money } from '@/lib/domain';
-import { paymentKey, type PaymentLedger } from '@/lib/domain/cockpit';
+import { calculerSituationDuMois, paymentKey, type PaymentLedger } from '@/lib/domain/cockpit';
 import { getWorkspaceSnapshot, toCockpitCharges } from '@/lib/data/workspace-snapshot';
 import type { AccountType } from '@/lib/schemas/account';
 import type { Locale } from '@/i18n/routing';
@@ -93,6 +92,41 @@ export default async function DashboardPage() {
     snapshot.vieCouranteMonthlyTransfer === null || snapshot.vieCouranteMonthlyTransfer === 0;
   const tDaily = await getTranslations('dashboard.daily');
 
+  // THI-327 Phase 0 — unified "Situation du mois" hero. Reuses the same
+  // cockpit primitives as the (now removed) Effort + Capacité cards.
+  const situation = calculerSituationDuMois({
+    // Distinct from `monthlyIncome` above (the Transfer plan coerces null→0).
+    // The situation needs the genuine null to drive the THI-335 incomplet state.
+    revenus: snapshot.monthlyIncome === null ? null : money(snapshot.monthlyIncome),
+    charges: cockpitCharges,
+    budgetVieCourante: money(snapshot.resteAVivre),
+    soldeEpargneActuel,
+    payments: paymentsLedger,
+    ref: snapshot.currentPeriod,
+  });
+
+  // Days remaining in the current month (Europe/Brussels) for the "≈ X/jour"
+  // living-budget hint. `currentPeriod` is, by the snapshot invariant
+  // (workspace-snapshot derives it from `new Date()` in this same TZ), always
+  // the current calendar month. We still guard defensively: if it ever
+  // diverged, `joursRestants = 0` suppresses the per-day hint (the Hero treats
+  // joursRestants <= 0 as "no per-day").
+  const brusselsNow = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Brussels',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date()); // "YYYY-MM-DD"
+  const [bYear, bMonth, bDay] = brusselsNow.split('-').map(Number);
+  const isCurrentPeriod =
+    bYear === snapshot.currentPeriod.year && bMonth === snapshot.currentPeriod.month;
+  const daysInMonth = new Date(
+    snapshot.currentPeriod.year,
+    snapshot.currentPeriod.month,
+    0,
+  ).getDate();
+  const joursRestants = isCurrentPeriod ? Math.max(1, daysInMonth - (bDay ?? 1) + 1) : 0;
+
   return (
     <div className="flex flex-col gap-8">
       <header>
@@ -103,21 +137,25 @@ export default async function DashboardPage() {
       </header>
 
       {/*
-        PR-D3 — Bloc 2 hero radar (Voie D 3/8).
-        Always visible (even on an empty workspace, where Effort = 0 and
-        Capacité = revenus - plafond) so the user always sees the canonical
-        cockpit narrative. The Capacité card is the differentiating KPI;
-        the Effort card sits beside it as the breakdown that justifies it.
+        THI-327 Phase 0 — unified "Situation du mois" hero (NORTH_STAR #1
+        cashflow waterfall). Subsumes the former Effort + Capacité card pair
+        into one calm narration: status + "Reste disponible" headline +
+        allocation bar + waterfall flow + FSMA-safe nudge. The incomplet state
+        guards the no-income case (THI-335).
       */}
-      <section
-        aria-label={t('headerTitle', { month: monthLabel })}
-        className="grid gap-4 md:grid-cols-2"
-      >
-        <EffortFinancierCard charges={cockpitCharges} locale={locale} />
-        <CapaciteEpargneCard
-          revenus={monthlyIncome}
-          charges={cockpitCharges}
-          resteAVivre={money(snapshot.resteAVivre)}
+      <section aria-label={t('headerTitle', { month: monthLabel })}>
+        <SituationDuMoisHero
+          statut={situation.statut}
+          revenus={situation.revenus.toNumber()}
+          chargesFixes={situation.chargesFixes.toNumber()}
+          provisionsLissees={situation.provisionsLissees.toNumber()}
+          resteDisponible={situation.resteDisponible.toNumber()}
+          budgetVieCourante={situation.budgetVieCourante.toNumber()}
+          capacite={situation.capacite.toNumber()}
+          deficitEpargne={situation.deficitEpargne.toNumber()}
+          rattrapageMensuel={situation.rattrapageMensuel.toNumber()}
+          provisionsAJour={situation.provisionsAJour}
+          joursRestants={joursRestants}
           currentMonthYYYYMM={`${snapshot.currentPeriod.year}-${String(snapshot.currentPeriod.month).padStart(2, '0')}`}
           locale={locale}
         />

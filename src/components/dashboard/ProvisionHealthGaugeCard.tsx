@@ -27,8 +27,8 @@ type HealthTier = 'success' | 'warning' | 'danger';
 /**
  * Health score for provisions — cockpit v3 section #2 of 8 (THI-190, Beta P1).
  *
- * Cards #1 (EffortFinancierCard) and #2 (CapaciteEpargneCard) answer
- * "what is my real monthly burden?". This card answers a different question:
+ * The unified `SituationDuMoisHero` answers "what is my real monthly burden
+ * and what's left?". This card answers a different question:
  * "given the periodic charges (annual/quarterly/semiannual) due over the
  * next 12 months, am I saving the right amount each month so I'm never
  * caught short when a bill lands?".
