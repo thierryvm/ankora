@@ -162,51 +162,54 @@ export async function SituationDuMoisHero(props: Props) {
         aria-hidden
         className={`pointer-events-none absolute inset-0 bg-linear-to-br ${accent.from} to-transparent`}
       />
-      <CardContent className="relative flex flex-col gap-5 py-6">
-        {/* Status pill (icon + text — never colour alone). */}
-        <div className="flex items-center gap-2">
-          <accent.Icon
-            aria-hidden
-            strokeWidth={1.5}
-            className={`h-5 w-5 shrink-0 ${accent.icon}`}
-          />
-          <p className="text-sm font-semibold tracking-tight">{statusTitle}</p>
-        </div>
-
-        {/* Hero number. */}
-        <div className="flex flex-col gap-1">
-          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-            {t('heroLabel')}
-          </p>
-          <p
-            className="text-foreground text-4xl font-bold tracking-tight tabular-nums"
-            data-testid="situation-hero-value"
-          >
-            {fmt(props.resteDisponible)}
-          </p>
-          <p className="text-muted-foreground text-sm">{t('heroSubtitle')}</p>
-        </div>
-
-        {/* Allocation bar (supplementary visual anchor). */}
-        <AllocationBar segments={segments} ariaLabel={barAria} />
-
-        {/* Nudge (orange/rouge only) + plan link. */}
-        {nudge && (
-          <div className="border-border/60 flex flex-col gap-1.5 border-t pt-4">
-            <p className="text-muted-foreground text-sm leading-relaxed">{nudge}</p>
-            <Link
-              href="/app#plan-heading"
-              className="text-brand-text-strong inline-flex items-center gap-1 text-sm font-medium underline underline-offset-2"
-              data-testid="situation-nudge-link"
-            >
-              {t('voirPlan')}
-              <ArrowRight className="h-3.5 w-3.5" aria-hidden />
-            </Link>
+      <CardContent className="relative grid gap-x-10 gap-y-6 py-6 md:grid-cols-2">
+        {/* Left column — status + hero number + allocation bar + nudge. */}
+        <div className="flex flex-col gap-5">
+          {/* Status pill (icon + text — never colour alone). */}
+          <div className="flex items-center gap-2">
+            <accent.Icon
+              aria-hidden
+              strokeWidth={1.5}
+              className={`h-5 w-5 shrink-0 ${accent.icon}`}
+            />
+            <p className="text-sm font-semibold tracking-tight">{statusTitle}</p>
           </div>
-        )}
 
-        {/* Waterfall flow. */}
-        <dl className="border-border/60 flex flex-col gap-2 border-t pt-4 text-sm">
+          {/* Hero number. */}
+          <div className="flex flex-col gap-1">
+            <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+              {t('heroLabel')}
+            </p>
+            <p
+              className="text-foreground text-4xl font-bold tracking-tight tabular-nums"
+              data-testid="situation-hero-value"
+            >
+              {fmt(props.resteDisponible)}
+            </p>
+            <p className="text-muted-foreground text-sm">{t('heroSubtitle')}</p>
+          </div>
+
+          {/* Allocation bar (supplementary visual anchor). */}
+          <AllocationBar segments={segments} ariaLabel={barAria} />
+
+          {/* Nudge (orange/rouge only) + plan link. */}
+          {nudge && (
+            <div className="border-border/60 flex flex-col gap-1.5 border-t pt-4">
+              <p className="text-muted-foreground text-sm leading-relaxed">{nudge}</p>
+              <Link
+                href="/app#plan-heading"
+                className="text-brand-text-strong inline-flex items-center gap-1 text-sm font-medium underline underline-offset-2"
+                data-testid="situation-nudge-link"
+              >
+                {t('voirPlan')}
+                <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+              </Link>
+            </div>
+          )}
+        </div>
+
+        {/* Right column — waterfall flow. Divider: top on mobile, left on desktop. */}
+        <dl className="border-border/60 flex flex-col justify-center gap-2 border-t pt-6 text-sm md:border-t-0 md:border-l md:pt-0 md:pl-10">
           <FlowRow label={t('flow.revenus')} value={fmt(props.revenus)} />
           <FlowRow label={t('flow.chargesFixes')} value={`− ${fmt(props.chargesFixes)}`} muted />
           <FlowRow label={t('flow.provisions')} value={`− ${fmt(props.provisionsLissees)}`} muted />
