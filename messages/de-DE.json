@@ -996,6 +996,38 @@
     }
   },
   "dashboard": {
+    "situation": {
+      "heroLabel": "Reste disponible",
+      "heroSubtitle": "Ce qu'il te reste après tes charges et provisions",
+      "voirPlan": "Voir le plan",
+      "statut": {
+        "vert": "Tu gères bien ce mois-ci",
+        "orangeCapacite": "À ajuster ce mois-ci",
+        "orangeProvisions": "Provisions à renflouer",
+        "rouge": "Tes charges dépassent tes revenus"
+      },
+      "nudge": {
+        "orangeCapacite": "Ton épargne passe sous zéro ({capacite}). Regarde le plan pour rééquilibrer.",
+        "orangeProvisions": "Il manque {deficit} pour couvrir tes charges à venir. Rattrapage suggéré : {rattrapage}/mois.",
+        "rouge": "Tes charges et provisions ({obligations}) dépassent tes revenus ({revenus}). On regarde ensemble ce qui peut bouger."
+      },
+      "incomplet": {
+        "title": "Complète ta situation",
+        "body": "Ajoute tes revenus pour voir ton reste disponible ce mois.",
+        "cta": "Configurer mes revenus"
+      },
+      "flow": {
+        "revenus": "Revenus",
+        "chargesFixes": "Charges fixes",
+        "provisions": "Provisions lissées",
+        "resteDisponible": "Reste disponible",
+        "resteAVivre": "Reste à vivre",
+        "capaciteEpargne": "Capacité épargne",
+        "ajuster": "Ajuster ce mois",
+        "parJour": "≈ {amount}/jour"
+      },
+      "barAria": "Répartition de tes revenus : {charges} de charges, {provisions} de provisions, {vieCourante} de vie courante, {epargne} d'épargne possible."
+    },
     "effort": {
       "title": "Geglätteter finanzieller Aufwand",
       "charges_fixes": "Fixe Ausgaben",
