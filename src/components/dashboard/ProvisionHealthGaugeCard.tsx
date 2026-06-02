@@ -149,23 +149,28 @@ export async function ProvisionHealthGaugeCard({
       </CardHeader>
       <CardContent className="relative">
         {hasTarget ? (
-          <>
-            <p
-              className={`text-4xl font-bold tracking-tight tabular-nums ${accent.valueColor}`}
-              data-testid="provision-health-gauge-percent"
-            >
-              {displayPercent}%
-            </p>
-            <p className="text-muted-foreground mt-1 text-sm">{statusLabel}</p>
-            {surplusOverTarget && (
+          // Two columns on desktop so the dense gauge fills the card width
+          // (left: headline %, right: coverage bar + breakdown) instead of
+          // leaving a large empty right gutter (@thierry review 2026-06-02).
+          <div className="md:grid md:grid-cols-2 md:items-center md:gap-8">
+            <div>
               <p
-                className={`mt-1 text-sm font-medium tabular-nums ${accent.valueColor}`}
-                data-testid="provision-health-gauge-surplus"
+                className={`text-4xl font-bold tracking-tight tabular-nums ${accent.valueColor}`}
+                data-testid="provision-health-gauge-percent"
               >
-                {t('objectifDepasse', { amount: fmt(surplusOverTarget) })}
+                {displayPercent}%
               </p>
-            )}
-            <div className="mt-4">
+              <p className="text-muted-foreground mt-1 text-sm">{statusLabel}</p>
+              {surplusOverTarget && (
+                <p
+                  className={`mt-1 text-sm font-medium tabular-nums ${accent.valueColor}`}
+                  data-testid="provision-health-gauge-surplus"
+                >
+                  {t('objectifDepasse', { amount: fmt(surplusOverTarget) })}
+                </p>
+              )}
+            </div>
+            <div className="mt-4 md:mt-0">
               <ProgressBar
                 value={Math.min(ratio, 1)}
                 max={1}
@@ -174,33 +179,33 @@ export async function ProvisionHealthGaugeCard({
                 label={ratioLabel}
                 showValue={false}
               />
-            </div>
-            <dl
-              className="mt-4 grid grid-cols-2 gap-3 text-xs"
-              data-testid="provision-health-gauge-breakdown"
-            >
-              <div>
-                <dt className="text-muted-foreground">{t('target')}</dt>
-                <dd className="text-foreground mt-0.5 font-semibold tabular-nums">
-                  {fmt(result.totalEpargneTheorique)}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">{t('current')}</dt>
-                <dd className="text-foreground mt-0.5 font-semibold tabular-nums">
-                  {fmt(result.soldeEpargneActuel)}
-                </dd>
-              </div>
-            </dl>
-            {result.statut === 'deficit' && result.rattrapageMensuel.gt(0) && (
-              <p
-                className="text-muted-foreground mt-3 text-sm leading-relaxed"
-                data-testid="provision-health-gauge-rattrapage"
+              <dl
+                className="mt-4 grid grid-cols-2 gap-3 text-xs"
+                data-testid="provision-health-gauge-breakdown"
               >
-                {t('deficit', { amount: fmt(result.rattrapageMensuel) })}
-              </p>
-            )}
-          </>
+                <div>
+                  <dt className="text-muted-foreground">{t('target')}</dt>
+                  <dd className="text-foreground mt-0.5 font-semibold tabular-nums">
+                    {fmt(result.totalEpargneTheorique)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">{t('current')}</dt>
+                  <dd className="text-foreground mt-0.5 font-semibold tabular-nums">
+                    {fmt(result.soldeEpargneActuel)}
+                  </dd>
+                </div>
+              </dl>
+              {result.statut === 'deficit' && result.rattrapageMensuel.gt(0) && (
+                <p
+                  className="text-muted-foreground mt-3 text-sm leading-relaxed"
+                  data-testid="provision-health-gauge-rattrapage"
+                >
+                  {t('deficit', { amount: fmt(result.rattrapageMensuel) })}
+                </p>
+              )}
+            </div>
+          </div>
         ) : (
           <p
             className="text-muted-foreground text-sm leading-relaxed"

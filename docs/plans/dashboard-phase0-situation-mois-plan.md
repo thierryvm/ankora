@@ -1249,6 +1249,18 @@ Voie LOURDE (touche le domaine) — lancer après le build :
 
 ---
 
+## Addendum 2026-06-02 (revue visuelle @thierry — scope élargi « dashboard Phase 0 clean »)
+
+@thierry a validé l'élargissement de CETTE PR pour livrer un dashboard Phase 0 **propre** (1 PR, 1 merge). Ajouts (voie LÉGÈRE — UI only, pas de domaine/auth/CSP-policy) :
+
+- **Décimales app-wide** (FAIT) : `formatCurrency` → `trailingZeroDisplay: 'stripIfInteger'` (500,00 € → 500 €, décimales réelles conservées). Commit `2ee6497`.
+- **Hero 2-col reverté** (FAIT) : mauvais ciblage — @thierry visait la carte Santé en dessous. Commit `7170ab4`. Hero reste mono-colonne.
+- **THI-322 — ProgressBar CSP-safe** : la carte Santé rend `ProgressBar` qui utilise `style={{ width }}`/`style={{ height }}` inline → violations `style-src` réelles sur /app. Fix : hauteur via classe de taille (`atm-pbar--sm/md/lg`) + remplissage via SVG `<rect>` (géométrie en attributs, `fill` via classe). Réécrire `ProgressBar.test.tsx` (assertions `style.width` → attribut `width` du rect ; `className` → `getAttribute('class')`). Bénéficie à tous les consommateurs.
+- **Carte Santé — vide à droite** : `ProvisionHealthGaugeCard` est coincée en 1/3 (`lg:grid-cols-3`, 1 carte) → 2/3 vides. Fix layout dans `page.tsx`.
+- **Note** : les autres erreurs console = toolbar **preview Vercel** (`vercel.live/feedback`), absentes en prod, hors de notre contrôle.
+
+Gate avant agents (exigence @thierry) : console /app propre (hors bruit Vercel preview) + lighthouse. Puis QA agents voie LOURDE + DoD5.
+
 ## Self-Review (rempli après écriture)
 
 **1. Spec coverage :**

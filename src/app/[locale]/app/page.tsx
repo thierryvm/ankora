@@ -171,10 +171,7 @@ export default async function DashboardPage() {
         and keeps the card at ~1/3 width on desktop (the gauge is dense,
         not wide).
       */}
-      <section
-        aria-labelledby="provision-health-heading"
-        className="grid grid-cols-1 gap-4 lg:grid-cols-3"
-      >
+      <section aria-labelledby="provision-health-heading" className="grid grid-cols-1 gap-4">
         <h2 id="provision-health-heading" className="sr-only">
           {t('provisionHealthSectionHeading')}
         </h2>
