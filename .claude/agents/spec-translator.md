@@ -53,7 +53,7 @@ For CC Ankora to validate before any work:
 
 ### 4. Scope (NON-NEGOTIABLE)
 
-**Bullet list of files to modify**, with the WHY for each. Cap the scope: if the spec balloons past 15 files, propose a split into 2 PRs instead.
+**Bullet list of files**, with the WHY for each. **Tag every file `[CREATE]` or `[MODIFY]`.** This is not cosmetic: the downstream `plan-reviewer` is stateless and may be re-invoked fresh — an untagged file it can't find in the repo gets misread as a phantom reference and triggers a false 🔴 (incident: THI-300, 2026-06-01). `[CREATE]` tells it the file is *expected absent*; `[MODIFY]` tells it the file *must* exist and is fair game for a verify-and-reject. Cap the scope: if the spec balloons past 15 files, propose a split into 2 PRs instead.
 
 Explicitly state **what is OUT of scope**. Banned items that have leaked into past specs:
 
@@ -136,6 +136,8 @@ PM-grade clarity, zero ambiguity. Every claim about code is backed by a file pat
 Ask yourself:
 
 - Did I read the actual files I cite, or am I inferring?
+- Is every Scope file tagged `[CREATE]` or `[MODIFY]`, so a stateless plan-reviewer never mistakes a to-be-created file for a phantom reference?
+- Is the spec fully self-contained — could a fresh, stateless plan-reviewer with zero prior context review it without inferring missing rounds?
 - Is the scope tight enough that plan-reviewer won't flag scope creep?
 - Did I propose the 2-option arbitration on every architectural choice?
 - If a banned doctrinal item is touched (encryption key, migration prod, paid dep), did I gate it explicitly?
