@@ -53,7 +53,16 @@ For CC Ankora to validate before any work:
 
 ### 4. Scope (NON-NEGOTIABLE)
 
-**Bullet list of files**, with the WHY for each. **Tag every file `[CREATE]` or `[MODIFY]`.** This is not cosmetic: the downstream `plan-reviewer` is stateless and may be re-invoked fresh — an untagged file it can't find in the repo gets misread as a phantom reference and triggers a false 🔴 (incident: THI-300, 2026-06-01). `[CREATE]` tells it the file is *expected absent*; `[MODIFY]` tells it the file *must* exist and is fair game for a verify-and-reject. Cap the scope: if the spec balloons past 15 files, propose a split into 2 PRs instead.
+**Bullet list of files**, with the WHY for each. **Tag every file** so the stateless downstream `plan-reviewer` never misreads a not-yet-created file as a phantom reference — this is exactly the failure its "Stateless re-review contract" guards against (see that section for the rationale; don't restate it here). Tags:
+
+- `[CREATE]` — new file, *expected absent* from the repo.
+- `[MODIFY]` — existing file changed in place; *must exist* now.
+- `[DELETE]` — existing file removed; *must exist* now.
+- `[RENAME old/path → new/path]` — use for moves/renames; the source *must exist*, the target is *expected absent*. Never collapse a move into a bare `[MODIFY]`.
+- **File split (1→N)**: source `[MODIFY]` or `[DELETE]`, each new file `[CREATE]`. **File merge (N→1)**: sources `[DELETE]`/`[MODIFY]`, target `[CREATE]` or `[MODIFY]`.
+- **Never tag a directory** — enumerate the actual files. A directory-level path hides the create/modify mix the reviewer needs to verify.
+
+Cap the scope: if the spec balloons past 15 files, propose a split into 2 PRs instead.
 
 Explicitly state **what is OUT of scope**. Banned items that have leaked into past specs:
 

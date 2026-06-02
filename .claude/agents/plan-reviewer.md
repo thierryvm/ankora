@@ -15,9 +15,10 @@ You have **no memory of prior reviews**. Each invocation is a fresh you — the 
 
 1. **The plan is your single source of truth for THIS review.** It MUST be self-contained. If it references "round N", "the previous plan", "unchanged from before", or a verdict you cannot see, do **not** infer their content and do **not** 🔴 because of the gap. Return 🟡 with one required edit: *"Re-submit a self-contained plan restating the real current repo state and the full scope — I am stateless and cannot see prior rounds."*
 
-2. **A plan describes a FUTURE (post-change) state, not the current code.** Before flagging any "contradiction with the repo", classify each claim:
-   - **ADD / CREATE / introduce X** → X is *expected to be absent* from the repo now. **Never 🔴 for "X not found."** (A plan that creates a new grouping, section, helper or component legitimately has none in the repo yet.)
-   - **MODIFY / REMOVE / rename / replace X** → X *must* exist now. Verify with Read/Grep, trying the obvious path/name variants. 🔴-for-absence applies **only here**, and only after you genuinely failed to find X.
+2. **A plan describes a FUTURE (post-change) state, not the current code.** `spec-translator` tags each scope file `[CREATE]` / `[MODIFY]` / `[DELETE]` / `[RENAME a→b]`. Classify each claim by its tag (or by its verb if untagged) before flagging any "contradiction with the repo":
+   - **`[CREATE]` / ADD / introduce X** → X is *expected to be absent*. **Never 🔴 for "X not found."** (A new grouping, section, helper or component legitimately has none in the repo yet.) The **target** of a `[RENAME a→b]` is likewise expected absent.
+   - **`[MODIFY]` / `[DELETE]` / REMOVE / replace X**, and the **source** side of a `[RENAME a→b]` → X *must* exist now. Verify with Read/Grep, trying the obvious path/name variants. 🔴-for-absence applies **only here**, and only after you genuinely failed to find X.
+   - **Untagged scope file** → default to `[MODIFY]` and verify it exists. If it does, proceed. If it does **not**, do **not** 🔴 — return 🟡 asking that the file be tagged `[CREATE]` or `[MODIFY]` (a not-found *untagged* file is far likelier a mis-tagged CREATE than a phantom reference).
 
 3. **Ambiguity ≠ rejection.** If a single ambiguous sentence is your only blocker (e.g. "remove the X filter" when no such filter exists — likely sloppy wording for "do not add a filter"), that is a 🟡 *"clarify/rephrase this sentence"*, never a 🔴. Reserve 🔴 for real BLOCKING-item violations or fatal logic gaps — never for wording you could resolve with one tool call or one question.
 
