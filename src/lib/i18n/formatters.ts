@@ -24,6 +24,10 @@ function getCurrencyFormatter(locale: Locale, currency: string): Intl.NumberForm
       style: 'currency',
       currency,
       maximumFractionDigits: 2,
+      // Whole euros render without ".00" (500,00 € → 500 €) while fractional
+      // amounts keep both decimals (17,24 € stays, 1 234,50 € stays). Belgian
+      // users don't write decimals on round euros (@thierry review 2026-06-02).
+      trailingZeroDisplay: 'stripIfInteger',
     });
     currencyFormatterCache.set(key, formatter);
   }

@@ -34,7 +34,7 @@ describe('formatCurrency', () => {
   });
 
   it('handles zero and negative amounts', () => {
-    expect(squash(formatCurrency(0, 'fr-BE'))).toBe('0,00 €');
+    expect(squash(formatCurrency(0, 'fr-BE'))).toBe('0 €');
     expect(squash(formatCurrency(-42.75, 'fr-BE'))).toBe('-42,75 €');
   });
 
@@ -42,8 +42,16 @@ describe('formatCurrency', () => {
     expect(squash(formatCurrency(1_234_567.89, 'fr-BE'))).toBe('1 234 567,89 €');
   });
 
+  it('strips trailing ,00 on whole euros but keeps real decimals (stripIfInteger)', () => {
+    expect(squash(formatCurrency(500, 'fr-BE'))).toBe('500 €');
+    expect(squash(formatCurrency(1817, 'fr-BE'))).toBe('1 817 €');
+    expect(squash(formatCurrency(17.24, 'fr-BE'))).toBe('17,24 €');
+    // A genuine half-euro keeps both decimals (only all-zero fractions strip).
+    expect(squash(formatCurrency(1234.5, 'fr-BE'))).toBe('1 234,50 €');
+  });
+
   it('supports a non-default currency', () => {
-    expect(squash(formatCurrency(100, 'en', 'USD'))).toBe('$100.00');
+    expect(squash(formatCurrency(100, 'en', 'USD'))).toBe('$100');
   });
 });
 
