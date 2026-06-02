@@ -208,14 +208,25 @@ export async function SituationDuMoisHero(props: Props) {
         {/* Waterfall flow. */}
         <dl className="border-border/60 flex flex-col gap-2 border-t pt-4 text-sm">
           <FlowRow label={t('flow.revenus')} value={fmt(props.revenus)} />
-          <FlowRow label={t('flow.chargesFixes')} value={`− ${fmt(props.chargesFixes)}`} muted />
-          <FlowRow label={t('flow.provisions')} value={`− ${fmt(props.provisionsLissees)}`} muted />
+          <FlowRow
+            label={t('flow.chargesFixes')}
+            value={`− ${fmt(props.chargesFixes)}`}
+            muted
+            dotClass="bg-info"
+          />
+          <FlowRow
+            label={t('flow.provisions')}
+            value={`− ${fmt(props.provisionsLissees)}`}
+            muted
+            dotClass="bg-brand-500"
+          />
           <div className="border-border mt-1 border-t pt-2">
             <FlowRow label={t('flow.resteDisponible')} value={fmt(props.resteDisponible)} strong />
           </div>
           <div className="text-muted-foreground flex items-center justify-between gap-2 pl-3 text-xs">
             <dt className="flex items-center gap-2">
-              <span>· {t('flow.resteAVivre')}</span>
+              <span aria-hidden className="bg-accent-400 h-2 w-2 shrink-0 rounded-full" />
+              <span>{t('flow.resteAVivre')}</span>
               <AjusterResteAVivreDrawer
                 currentMonthYYYYMM={props.currentMonthYYYYMM}
                 initialResteAVivre={props.budgetVieCourante}
@@ -229,7 +240,10 @@ export async function SituationDuMoisHero(props: Props) {
             </dd>
           </div>
           <div className="text-muted-foreground flex items-center justify-between gap-2 pl-3 text-xs">
-            <dt>· {t('flow.capaciteEpargne')}</dt>
+            <dt className="flex items-center gap-2">
+              <span aria-hidden className="bg-success h-2 w-2 shrink-0 rounded-full" />
+              {t('flow.capaciteEpargne')}
+            </dt>
             <dd className="tabular-nums">{fmt(Math.max(0, props.capacite))}</dd>
           </div>
         </dl>
@@ -243,15 +257,23 @@ function FlowRow({
   value,
   muted = false,
   strong = false,
+  dotClass,
 }: {
   label: string;
   value: string;
   muted?: boolean;
   strong?: boolean;
+  /** Tailwind bg-* class matching this row's AllocationBar segment colour. */
+  dotClass?: string;
 }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <dt className={muted ? 'text-muted-foreground' : 'text-foreground'}>{label}</dt>
+      <dt
+        className={`flex items-center gap-2 ${muted ? 'text-muted-foreground' : 'text-foreground'}`}
+      >
+        {dotClass && <span aria-hidden className={`h-2 w-2 shrink-0 rounded-full ${dotClass}`} />}
+        {label}
+      </dt>
       <dd className={`tabular-nums ${strong ? 'font-bold' : 'font-medium'} text-foreground`}>
         {value}
       </dd>
