@@ -16,3 +16,4 @@ export * from './sante-provisions';
 export * from './notifications';
 export * from './previsions';
 export * from './simulateur';
+export * from './situation-mois';
