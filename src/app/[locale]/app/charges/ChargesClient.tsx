@@ -209,7 +209,7 @@ export function ChargesClient({
         // absolute edit/delete buttons (top-2 + size-11 = 52px) now that the
         // card padding (`p-4`) is gone — prevents the tap targets overflowing
         // onto the next row on very short content (mobile-ios-auditor F3).
-        className="md:hover:bg-surface-muted relative min-h-13 py-3 pr-24 transition-colors md:grid md:min-h-0 md:grid-cols-[minmax(8rem,10rem)_minmax(0,1fr)_auto_auto_auto_auto] md:items-baseline md:gap-4 md:px-2 md:py-3 md:pr-2"
+        className="md:hover:bg-surface-muted relative min-h-13 py-3 pr-24 transition-colors md:grid md:min-h-0 md:grid-cols-[minmax(8rem,10rem)_minmax(0,1fr)_4.5rem_7rem_auto_auto] md:items-baseline md:gap-4 md:px-2 md:py-3 md:pr-2"
       >
         {/* Mobile: header row (next-due + amount on a single line).
             Desktop: contents — projects next-due + amount as grid cells 1 / 4. */}
