@@ -53,16 +53,24 @@ test.describe('Charges list — mobile layout (PR-BETA-1)', () => {
       await page.goto('/fr-BE/app/charges');
       await expect(page.getByTestId('charges-list')).toBeVisible();
 
-      const liRows = page.locator('ul[data-testid="charges-list"] > li');
+      // PR-UI-3a (THI-300): rows are descendant <li> of the grouped sections.
+      const liRows = page.locator('[data-testid="charges-list"] li');
       await expect(liRows).toHaveCount(2);
 
       const firstRow = liRows.first();
 
-      // Mobile card visual contract — assert Tailwind class layer (stable across font/spacing tweaks).
-      await expect(firstRow).toHaveClass(/rounded-lg/);
-      await expect(firstRow).toHaveClass(/border/);
-      await expect(firstRow).toHaveClass(/bg-card/);
-      await expect(firstRow).toHaveClass(/p-4/);
+      // PR-UI-3a flatten: the mobile cards (rounded-lg border bg-card p-4) were
+      // replaced by plain divided lines so the list reads as one column instead
+      // of fragmented cards. Assert the card chrome is GONE and the row sits in a
+      // `divide-y` group list.
+      await expect(firstRow).not.toHaveClass(/rounded-lg/);
+      await expect(firstRow).not.toHaveClass(/bg-card/);
+      await expect(firstRow).not.toHaveClass(/\bp-4\b/);
+      const groupList = firstRow.locator('xpath=ancestor::ul[1]');
+      await expect(groupList).toHaveClass(/divide-y/);
+
+      // The global total footer is the headline @thierry asked for.
+      await expect(page.getByTestId('charges-total')).toBeVisible();
 
       // Delete button — semantic class layer asserts the 44×44 touch target contract via `size-11`
       // (the Button component's icon size). A single geometric backup catches breakage if the

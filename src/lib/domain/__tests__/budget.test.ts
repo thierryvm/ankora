@@ -6,6 +6,7 @@ import {
   billsDueInMonth,
   suggestedTransfer,
   annualTotal,
+  subtotalByFrequency,
 } from '@/lib/domain/budget';
 import type { Charge } from '@/lib/domain/types';
 
@@ -150,5 +151,58 @@ describe('annualTotal', () => {
   });
   it('ignores inactive charges', () => {
     expect(annualTotal([inactiveHeating]).toNumber()).toBe(0);
+  });
+});
+
+describe('subtotalByFrequency', () => {
+  it('buckets raw amounts by their native frequency (no smoothing)', () => {
+    const result = subtotalByFrequency([rent, insurance, water, gym]);
+    expect(result.monthly.toNumber()).toBe(900);
+    expect(result.quarterly.toNumber()).toBe(90);
+    expect(result.semiannual.toNumber()).toBe(40);
+    expect(result.annual.toNumber()).toBe(1200);
+  });
+
+  it('sums several charges sharing the same frequency', () => {
+    const rent2: Charge = { ...rent, id: 'c1b', label: 'Loyer garage', amount: money(150) };
+    const result = subtotalByFrequency([rent, rent2]);
+    expect(result.monthly.toNumber()).toBe(1050);
+    expect(result.annual.toNumber()).toBe(0);
+  });
+
+  it('skips inactive charges so buckets reconcile with the global totals', () => {
+    const result = subtotalByFrequency([rent, inactiveHeating]);
+    // inactiveHeating is monthly/100 but inactive → excluded.
+    expect(result.monthly.toNumber()).toBe(900);
+  });
+
+  it('returns zero in every bucket for an empty list', () => {
+    const result = subtotalByFrequency([]);
+    expect(result.monthly.toNumber()).toBe(0);
+    expect(result.quarterly.toNumber()).toBe(0);
+    expect(result.semiannual.toNumber()).toBe(0);
+    expect(result.annual.toNumber()).toBe(0);
+  });
+
+  it('reconciles with annualTotal once re-annualised (active-only cross-check)', () => {
+    // Cross-helper invariant: re-annualising the per-cadence subtotals must
+    // equal the independent annualTotal. Guards against a future drift where
+    // one of the three helpers changes its inactive-skip policy without the
+    // others following. Includes an inactive charge to exercise the skip.
+    const charges = [rent, insurance, water, gym, inactiveHeating];
+    const sub = subtotalByFrequency(charges);
+    const reannualised = sub.monthly
+      .times(12)
+      .plus(sub.quarterly.times(4))
+      .plus(sub.semiannual.times(2))
+      .plus(sub.annual.times(1));
+    expect(reannualised.toNumber()).toBe(annualTotal(charges).toNumber());
+  });
+
+  it('stays exact on repeated cent-level amounts (Decimal, no float drift)', () => {
+    const a: Charge = { ...rent, id: 'd1', amount: money('19.99') };
+    const b: Charge = { ...rent, id: 'd2', amount: money('19.99') };
+    const c: Charge = { ...rent, id: 'd3', amount: money('19.99') };
+    expect(subtotalByFrequency([a, b, c]).monthly.toNumber()).toBe(59.97);
   });
 });

@@ -1,5 +1,12 @@
 import { money, zero, type Charge, type ChargeFrequency, type Money } from '@/lib/domain/types';
 
+export const FREQUENCIES: readonly ChargeFrequency[] = [
+  'monthly',
+  'quarterly',
+  'semiannual',
+  'annual',
+];
+
 export const FREQUENCY_DIVISOR: Record<ChargeFrequency, number> = {
   monthly: 1,
   quarterly: 3,
@@ -57,6 +64,33 @@ export function billsDueInMonth(charges: readonly Charge[], month: number): Mone
  */
 export function suggestedTransfer(charges: readonly Charge[], month: number): Money {
   return monthlyProvisionTotal(charges).minus(billsDueInMonth(charges, month));
+}
+
+/**
+ * Raw amount summed per frequency bucket, across active charges only.
+ *
+ * Unlike {@link monthlyProvisionTotal} (which smooths every charge onto a
+ * monthly cadence) this keeps each charge at its native cadence: the
+ * `annual` bucket sums the once-a-year amounts as billed, the `monthly`
+ * bucket sums the recurring monthly amounts, etc. Summing within a single
+ * cadence is financially coherent (no cross-cadence aggregation), which is
+ * exactly what the charges list shows as a per-group subtotal.
+ *
+ * Inactive charges are skipped so the buckets reconcile with the global
+ * {@link monthlyProvisionTotal} / {@link annualTotal} totals (both active-only).
+ */
+export function subtotalByFrequency(charges: readonly Charge[]): Record<ChargeFrequency, Money> {
+  const acc: Record<ChargeFrequency, Money> = {
+    monthly: zero(),
+    quarterly: zero(),
+    semiannual: zero(),
+    annual: zero(),
+  };
+  for (const charge of charges) {
+    if (!charge.isActive) continue;
+    acc[charge.frequency] = acc[charge.frequency].plus(charge.amount);
+  }
+  return acc;
 }
 
 /**

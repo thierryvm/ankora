@@ -63,16 +63,26 @@ test.describe('Charges list — desktop layout (PR-BETA-1)', () => {
       await page.goto('/fr-BE/app/charges');
       await expect(page.getByTestId('charges-list')).toBeVisible();
 
-      // The 3 seeded charges render as direct <li> children of the list.
-      const liRows = page.locator('ul[data-testid="charges-list"] > li');
+      // PR-UI-3a (THI-300): `charges-list` is now a wrapper of per-frequency
+      // <section>s; the rows are descendant <li> (no longer direct children).
+      const liRows = page.locator('[data-testid="charges-list"] li');
       await expect(liRows).toHaveCount(3);
+
+      // Grouping: 1 monthly (Loyer) + 2 annual (Taxe, Assurance) → two sections,
+      // each with a subtotal, plus the global total footer @thierry asked for.
+      await expect(page.getByTestId('charges-group-monthly')).toBeVisible();
+      await expect(page.getByTestId('charges-group-annual')).toBeVisible();
+      await expect(page.getByTestId('charges-group-quarterly')).toHaveCount(0);
+      await expect(page.getByTestId('charges-group-subtotal-monthly')).toBeVisible();
+      await expect(page.getByTestId('charges-group-subtotal-annual')).toBeVisible();
+      await expect(page.getByTestId('charges-total')).toBeVisible();
 
       const firstRow = liRows.first();
 
       // Structural contract — the 4 cells are present and resolvable by testid (order in DOM
-      // reflects the markup: month + amount in the header wrapper, then label + frequency in
+      // reflects the markup: next-due + amount in the header wrapper, then label + frequency in
       // the body wrapper, both flattened on desktop via `md:contents`).
-      const monthCell = firstRow.getByTestId('charges-row-month');
+      const monthCell = firstRow.getByTestId('charges-row-next-due');
       const labelCell = firstRow.getByTestId('charges-row-label');
       const frequencyCell = firstRow.getByTestId('charges-row-frequency');
       const amountCell = firstRow.getByTestId('charges-row-amount');
@@ -99,7 +109,7 @@ test.describe('Charges list — desktop layout (PR-BETA-1)', () => {
         const cell = (selector: string) =>
           (row.querySelector(selector) as HTMLElement).getBoundingClientRect().bottom;
         return {
-          month: cell('[data-testid="charges-row-month"]'),
+          month: cell('[data-testid="charges-row-next-due"]'),
           label: cell('[data-testid="charges-row-label"]'),
           freq: cell('[data-testid="charges-row-frequency"]'),
           amount: cell('[data-testid="charges-row-amount"]'),
