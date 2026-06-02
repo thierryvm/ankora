@@ -148,7 +148,10 @@ export function SimulatorProjection({
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
         role="img"
         aria-label={ariaLabel}
-        className="block h-auto w-full"
+        // Compact sparkline: full width on mobile, capped on desktop so the
+        // 240×64 viewBox is not stretched into a giant triangle on a wide card
+        // (@thierry PROD review 2026-06-02 — "barre énorme, pas pro").
+        className="block h-auto w-full max-w-md"
       >
         {/* Flat 0 baseline — "Sans changement". */}
         <line
