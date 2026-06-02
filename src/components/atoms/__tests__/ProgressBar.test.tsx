@@ -3,6 +3,12 @@ import { render, screen } from '@testing-library/react';
 
 import { ProgressBar } from '../ProgressBar';
 
+// The fill is now an SVG <rect>; its width is a viewBox-unit attribute (0..100),
+// not an inline `style={{ width }}` (CSP-safe — THI-322). SVG elements expose
+// `className` as an SVGAnimatedString, so we read `getAttribute('class')`.
+const fillOf = (container: HTMLElement) =>
+  container.querySelector('.atm-pbar-fill') as SVGRectElement | null;
+
 describe('<ProgressBar /> (atom CD#3)', () => {
   it('renders progressbar role with default aria attributes', () => {
     render(<ProgressBar value={0.5} />);
@@ -13,36 +19,35 @@ describe('<ProgressBar /> (atom CD#3)', () => {
     expect(bar).toHaveAttribute('aria-label', 'Progression');
   });
 
-  it('renders width 0% when value=0', () => {
+  it('renders fill width 0 when value=0 (CSP-safe SVG rect, no inline style)', () => {
     const { container } = render(<ProgressBar value={0} />);
-    const fill = container.querySelector('.atm-pbar-fill') as HTMLElement | null;
+    const fill = fillOf(container);
     expect(fill).not.toBeNull();
-    expect(fill?.style.width).toBe('0%');
+    expect(fill?.getAttribute('width')).toBe('0');
+    // Strict style-src compliance: no inline style attribute anywhere.
+    expect(container.querySelector('[style]')).toBeNull();
   });
 
-  it('renders width 100% when value equals max', () => {
+  it('renders fill width 100 when value equals max', () => {
     const { container } = render(<ProgressBar value={1} max={1} />);
-    const fill = container.querySelector('.atm-pbar-fill') as HTMLElement | null;
-    expect(fill?.style.width).toBe('100%');
+    expect(fillOf(container)?.getAttribute('width')).toBe('100');
   });
 
-  it('caps width at 100% when value > max and applies danger tone (auto)', () => {
+  it('caps width at 100 when value > max and applies danger tone (auto)', () => {
     const { container } = render(<ProgressBar value={1.5} max={1} />);
-    const fill = container.querySelector('.atm-pbar-fill') as HTMLElement | null;
-    expect(fill?.style.width).toBe('100%');
-    expect(fill?.className).toContain('atm-pbar--danger');
+    const fill = fillOf(container);
+    expect(fill?.getAttribute('width')).toBe('100');
+    expect(fill?.getAttribute('class')).toContain('atm-pbar--danger');
   });
 
   it('applies warning tone (auto) when ratio > 0.85 and ≤ 1', () => {
     const { container } = render(<ProgressBar value={0.86} max={1} />);
-    const fill = container.querySelector('.atm-pbar-fill') as HTMLElement | null;
-    expect(fill?.className).toContain('atm-pbar--warning');
+    expect(fillOf(container)?.getAttribute('class')).toContain('atm-pbar--warning');
   });
 
   it('applies brand tone (auto) when ratio < 0.85', () => {
     const { container } = render(<ProgressBar value={0.5} max={1} />);
-    const fill = container.querySelector('.atm-pbar-fill') as HTMLElement | null;
-    expect(fill?.className).toContain('atm-pbar--brand');
+    expect(fillOf(container)?.getAttribute('class')).toContain('atm-pbar--brand');
   });
 
   it.each([
@@ -52,8 +57,7 @@ describe('<ProgressBar /> (atom CD#3)', () => {
     ['danger', 'atm-pbar--danger'],
   ] as const)('explicit tone %s overrides auto-tone', (tone, cls) => {
     const { container } = render(<ProgressBar value={0.5} tone={tone} />);
-    const fill = container.querySelector('.atm-pbar-fill') as HTMLElement | null;
-    expect(fill?.className).toContain(cls);
+    expect(fillOf(container)?.getAttribute('class')).toContain(cls);
   });
 
   it('renders 2 fill segments in split mode with default tones', () => {
@@ -62,10 +66,10 @@ describe('<ProgressBar /> (atom CD#3)', () => {
     );
     const fills = container.querySelectorAll('.atm-pbar-fill');
     expect(fills.length).toBe(2);
-    expect((fills[0] as HTMLElement).className).toContain('atm-pbar--brand');
-    expect((fills[0] as HTMLElement).style.width).toBe('60%');
-    expect((fills[1] as HTMLElement).className).toContain('atm-pbar--accent');
-    expect((fills[1] as HTMLElement).style.width).toBe('20%');
+    expect(fills[0]?.getAttribute('class')).toContain('atm-pbar--brand');
+    expect(fills[0]?.getAttribute('width')).toBe('60');
+    expect(fills[1]?.getAttribute('class')).toContain('atm-pbar--accent');
+    expect(fills[1]?.getAttribute('width')).toBe('20');
   });
 
   it('respects explicit affectedTone / freeTone in split mode', () => {
@@ -77,8 +81,8 @@ describe('<ProgressBar /> (atom CD#3)', () => {
       />,
     );
     const fills = container.querySelectorAll('.atm-pbar-fill');
-    expect((fills[0] as HTMLElement).className).toContain('atm-pbar--warning');
-    expect((fills[1] as HTMLElement).className).toContain('atm-pbar--success');
+    expect(fills[0]?.getAttribute('class')).toContain('atm-pbar--warning');
+    expect(fills[1]?.getAttribute('class')).toContain('atm-pbar--success');
   });
 
   it('renders percentage when showValue is true', () => {
@@ -100,10 +104,12 @@ describe('<ProgressBar /> (atom CD#3)', () => {
     ['sm', 6],
     ['md', 8],
     ['lg', 12],
-  ] as const)('applies size %s with height %d px (inline style)', (size, height) => {
+  ] as const)('applies size %s via class + viewBox height %d (no inline style)', (size, height) => {
     const { container } = render(<ProgressBar value={0.5} size={size} />);
-    const bar = container.querySelector('.atm-pbar') as HTMLElement | null;
-    expect(bar?.style.height).toBe(`${height}px`);
+    const bar = container.querySelector('.atm-pbar');
+    expect(bar?.getAttribute('class')).toContain(`atm-pbar--${size}`);
+    const svg = container.querySelector('.atm-pbar-svg');
+    expect(svg?.getAttribute('viewBox')).toBe(`0 0 100 ${height}`);
   });
 
   it('renders label and sub when provided', () => {
@@ -117,9 +123,8 @@ describe('<ProgressBar /> (atom CD#3)', () => {
     expect(screen.getByRole('progressbar')).toHaveAttribute('aria-label', 'Provisions logement');
   });
 
-  it('clamps negative value to 0%', () => {
+  it('clamps negative value to 0', () => {
     const { container } = render(<ProgressBar value={-0.5} />);
-    const fill = container.querySelector('.atm-pbar-fill') as HTMLElement | null;
-    expect(fill?.style.width).toBe('0%');
+    expect(fillOf(container)?.getAttribute('width')).toBe('0');
   });
 });
