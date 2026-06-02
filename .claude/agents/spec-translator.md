@@ -53,7 +53,16 @@ For CC Ankora to validate before any work:
 
 ### 4. Scope (NON-NEGOTIABLE)
 
-**Bullet list of files to modify**, with the WHY for each. Cap the scope: if the spec balloons past 15 files, propose a split into 2 PRs instead.
+**Bullet list of files**, with the WHY for each. **Tag every file** so the stateless downstream `plan-reviewer` never misreads a not-yet-created file as a phantom reference — this is exactly the failure its "Stateless re-review contract" guards against (see that section for the rationale; don't restate it here). Tags:
+
+- `[CREATE]` — new file, *expected absent* from the repo.
+- `[MODIFY]` — existing file changed in place; *must exist* now.
+- `[DELETE]` — existing file removed; *must exist* now.
+- `[RENAME old/path → new/path]` — use for moves/renames; the source *must exist*, the target is *expected absent*. Never collapse a move into a bare `[MODIFY]`.
+- **File split (1→N)**: source `[MODIFY]` or `[DELETE]`, each new file `[CREATE]`. **File merge (N→1)**: sources `[DELETE]`/`[MODIFY]`, target `[CREATE]` or `[MODIFY]`.
+- **Never tag a directory** — enumerate the actual files. A directory-level path hides the create/modify mix the reviewer needs to verify.
+
+Cap the scope: if the spec balloons past 15 files, propose a split into 2 PRs instead.
 
 Explicitly state **what is OUT of scope**. Banned items that have leaked into past specs:
 
@@ -136,6 +145,8 @@ PM-grade clarity, zero ambiguity. Every claim about code is backed by a file pat
 Ask yourself:
 
 - Did I read the actual files I cite, or am I inferring?
+- Is every Scope file tagged `[CREATE]` or `[MODIFY]`, so a stateless plan-reviewer never mistakes a to-be-created file for a phantom reference?
+- Is the spec fully self-contained — could a fresh, stateless plan-reviewer with zero prior context review it without inferring missing rounds?
 - Is the scope tight enough that plan-reviewer won't flag scope creep?
 - Did I propose the 2-option arbitration on every architectural choice?
 - If a banned doctrinal item is touched (encryption key, migration prod, paid dep), did I gate it explicitly?
