@@ -1100,6 +1100,7 @@
       "dueToday": "Vandaag",
       "daysUntil": "Over {days, plural, =1 {1 dag} other {# dagen}}",
       "daysOverdue": "{days, plural, =1 {1 dag te laat} other {# dagen te laat}}",
+      "moreCount": "+ {count, plural, =1 {1 andere} other {# andere}}",
       "buckets": {
         "overdue": "Te laat",
         "j7": "Deze week",

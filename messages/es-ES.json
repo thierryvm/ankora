@@ -1100,6 +1100,7 @@
       "dueToday": "Hoy",
       "daysUntil": "En {days, plural, =1 {1 día} other {# días}}",
       "daysOverdue": "{days, plural, =1 {1 día de retraso} other {# días de retraso}}",
+      "moreCount": "+ {count, plural, =1 {1 más} other {# más}}",
       "buckets": {
         "overdue": "Atrasadas",
         "j7": "Esta semana",
