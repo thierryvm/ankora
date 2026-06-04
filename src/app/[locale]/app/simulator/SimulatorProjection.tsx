@@ -67,6 +67,10 @@ export function SimulatorProjection({
     // Guard for environments without ResizeObserver (jsdom) — falls back to
     // the default width, which still renders a valid chart.
     if (node && typeof ResizeObserver !== 'undefined') {
+      // Synchronous initial measure (the callback ref runs post-layout, pre-paint)
+      // — avoids a flash at the default width before the observer first fires.
+      const initialW = node.getBoundingClientRect().width;
+      if (initialW > 0) setWidth(initialW);
       const ro = new ResizeObserver((entries) => {
         const w = entries[0]?.contentRect.width;
         if (w && w > 0) setWidth(w);
@@ -129,11 +133,20 @@ export function SimulatorProjection({
   const showEveryMonth = width >= 540;
 
   const lineColor = positive ? 'var(--color-success)' : 'var(--color-danger)';
-  const ariaLabel = t('projectionAria', { from: fmtMoney(0), to: fmtMoney(cumul) });
+  const ariaLabel = t('projectionAria', {
+    from: fmtMoney(base),
+    to: fmtMoney(scenario[months]!),
+  });
   const cumulText = positive
     ? t('cumul6mGain', { amount: fmtMoney(cumul.abs()) })
     : t('cumul6mLoss', { amount: fmtMoney(cumul.abs()) });
   const endLabel = `${positive ? '+' : '−'}${fmtMoney(cumul.abs())}`;
+  // Place the endpoint value to the right of the dot, or above it when the
+  // right gutter is too narrow (iPhone SE / large amounts) — avoids clipping.
+  const labelRoomRight = width - (endX + 10) >= endLabel.length * 7.5;
+  const labelX = labelRoomRight ? endX + 9 : endX;
+  const labelY = labelRoomRight ? endY + 4 : endY - 10;
+  const labelAnchor = labelRoomRight ? 'start' : 'middle';
 
   return (
     <div
@@ -273,7 +286,14 @@ export function SimulatorProjection({
           stroke={lineColor}
           strokeWidth="2"
         />
-        <text x={endX + 9} y={endY + 4} fontSize="13" fontWeight="700" fill={lineColor}>
+        <text
+          x={labelX}
+          y={labelY}
+          textAnchor={labelAnchor}
+          fontSize="13"
+          fontWeight="700"
+          fill={lineColor}
+        >
           {endLabel}
         </text>
       </svg>

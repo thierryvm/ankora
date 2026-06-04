@@ -199,6 +199,7 @@ export function SimulatorClient({
                 type="button"
                 variant={mode === key ? 'default' : 'outline'}
                 size="sm"
+                className="min-h-11"
                 onClick={() => setMode(key)}
                 // PR-D5 a11y: announce active state to AT (visual cue is
                 // variant-only otherwise — silent for VoiceOver/NVDA).
@@ -234,6 +235,7 @@ export function SimulatorClient({
               <Input
                 id="newAmount"
                 type="number"
+                autoComplete="off"
                 inputMode="decimal"
                 min={0}
                 step="0.01"
@@ -249,6 +251,7 @@ export function SimulatorClient({
                 <Label htmlFor="newLabel">{tFields('label')}</Label>
                 <Input
                   id="newLabel"
+                  autoComplete="off"
                   value={newLabel}
                   onChange={(e) => setNewLabel(e.target.value)}
                 />
@@ -258,6 +261,7 @@ export function SimulatorClient({
                 <Input
                   id="newAmountAdd"
                   type="number"
+                  autoComplete="off"
                   inputMode="decimal"
                   min={0}
                   step="0.01"
@@ -265,7 +269,7 @@ export function SimulatorClient({
                   onChange={(e) => setNewAmount(e.target.value)}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid min-w-0 grid-cols-2 gap-3">
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="newFrequency">{tFields('frequency')}</Label>
                   <Select
