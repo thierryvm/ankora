@@ -728,6 +728,7 @@
       "markPaidAria": "Mark {label} as paid",
       "unmarkPaidAria": "Mark {label} as to pay",
       "paidSummary": "Paid this month: {paid}/{total} · {remaining} left",
+      "paidHint": "Tick the bills you've already paid this month.",
       "drawer": {
         "title": "Edit bill",
         "save": "Save",

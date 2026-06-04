@@ -728,6 +728,7 @@
       "markPaidAria": "Marcar {label} como pagada",
       "unmarkPaidAria": "Marcar {label} como por pagar",
       "paidSummary": "Pagadas este mes: {paid}/{total} · quedan {remaining}",
+      "paidHint": "Marca las facturas que ya has pagado este mes.",
       "drawer": {
         "title": "Modificar gasto fijo",
         "save": "Guardar",

@@ -728,6 +728,7 @@
       "markPaidAria": "Marquer {label} comme payée",
       "unmarkPaidAria": "Marquer {label} comme à payer",
       "paidSummary": "Payées ce mois : {paid}/{total} · reste {remaining}",
+      "paidHint": "Coche les factures que tu as déjà payées ce mois.",
       "drawer": {
         "title": "Modifier la charge",
         "save": "Enregistrer",

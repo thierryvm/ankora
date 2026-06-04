@@ -432,6 +432,11 @@ describe('Factures Phase 2 — Payé toggle', () => {
     renderCharges([monthlyCharge], { currentPeriod: { year: 2026, month: 1 } });
     expect(screen.getByTestId('charges-paid-summary')).toBeInTheDocument();
   });
+
+  it('renders the paid-toggle hint when charges are due this month', () => {
+    renderCharges([monthlyCharge], { currentPeriod: { year: 2026, month: 1 } });
+    expect(screen.getByTestId('charges-paid-hint')).toBeInTheDocument();
+  });
 });
 
 describe('app.charges — i18n parity (5 locales, PR-BETA-CLEANUP-2)', () => {
@@ -453,6 +458,7 @@ describe('app.charges — i18n parity (5 locales, PR-BETA-CLEANUP-2)', () => {
             markPaidAria?: string;
             unmarkPaidAria?: string;
             paidSummary?: string;
+            paidHint?: string;
             drawer?: {
               title?: string;
               save?: string;
@@ -487,6 +493,7 @@ describe('app.charges — i18n parity (5 locales, PR-BETA-CLEANUP-2)', () => {
       expect((c.paidSummary ?? '').includes('{paid}')).toBe(true);
       expect((c.paidSummary ?? '').includes('{total}')).toBe(true);
       expect((c.paidSummary ?? '').includes('{remaining}')).toBe(true);
+      expect((c.paidHint ?? '').length).toBeGreaterThan(0);
     },
   );
 });

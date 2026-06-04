@@ -728,6 +728,7 @@
       "markPaidAria": "{label} als bezahlt markieren",
       "unmarkPaidAria": "{label} als zu zahlen markieren",
       "paidSummary": "Diesen Monat bezahlt: {paid}/{total} · noch {remaining}",
+      "paidHint": "Hake die Rechnungen ab, die du diesen Monat schon bezahlt hast.",
       "drawer": {
         "title": "Fixkosten bearbeiten",
         "save": "Speichern",

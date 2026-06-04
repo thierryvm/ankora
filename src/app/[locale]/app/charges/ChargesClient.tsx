@@ -489,6 +489,13 @@ export function ChargesClient({
             </p>
           ) : (
             <>
+              {/* One-time hint teaching the Payé toggle convention
+                  (dashboard-ux F2) — only when a charge is due this month. */}
+              {dueThisMonth.length > 0 && (
+                <p className="text-muted-foreground mb-4 text-xs" data-testid="charges-paid-hint">
+                  {t('paidHint')}
+                </p>
+              )}
               {/* `charges-list` is now a wrapper holding one <section> per
                   non-empty frequency group. The only `listitem`s remain the
                   charge rows inside each group's <ul>, so the total count
