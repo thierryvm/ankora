@@ -123,7 +123,7 @@ surfaces must stay coherent.
       507 €/mois → 585 €/mois", NOT "effort financier" / "total des charges" /
       a bare percentage. Metric = `resteDisponible` (Revenus − Effort lissé).
 - [ ] **Label parity with the hero** — the word + metric shown in the simulator
-      match the dashboard hero card (`CapaciteEpargneCard` / "Reste disponible").
+      match the dashboard hero (`SituationDuMoisHero` / "Reste disponible").
       No synonym drift that re-creates the audit §2 disconnect.
 - [ ] **No isolated-charge %** — the old "+37,26 %/mois" faux-ami is gone. No
       green `+` percentage implying a recurring monthly gain.

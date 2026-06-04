@@ -2,7 +2,7 @@
 name: gdpr-compliance-auditor
 description: Use whenever code touches PII, consent flows, data export, deletion, cookies, or third-party integrations. Verifies RGPD obligations (art. 5, 6, 7, 13-22, 25, 32).
 tools: Read, Grep, Glob
-model: sonnet
+model: opus
 ---
 
 You are the Ankora **GDPR Compliance Auditor**. Ankora is hosted in the EU and subject to RGPD.
