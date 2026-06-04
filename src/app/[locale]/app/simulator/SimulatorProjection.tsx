@@ -1,56 +1,88 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useCallback, useId, useRef, useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 
 import { Simulation, type Money } from '@/lib/domain';
+import type { Locale } from '@/i18n/routing';
 import type { formatCurrency } from '@/lib/i18n/formatters';
 
 /**
- * SimulatorProjection — 6-month "réserve libre" projection inside the simulator
- * Impact card (Track B P1 lot 1, model locked 2026-05-30: "cumul marginal").
+ * SimulatorProjection — 6-month comparative projection inside the simulator
+ * Impact card (model: "scenario impact over time").
  *
- * - S3: a light inline SVG sparkline. Two reads — a flat **0 baseline** ("Sans
- *   changement") and the **scenario line** = `monthlyDelta × month` ("Avec ce
- *   choix"). The growing gap IS the cumulative saving. No hardcoded absolute
- *   baseline (the landing's `RESERVE_BASELINE_6M` is fabricated demo data and
- *   stays out of the authenticated cockpit).
- * - S4: a human cumul sentence — "En 6 mois, +X € en réserve libre".
+ * Two lines (validated design @thierry 2026-06-04):
+ *   - "Sans changement" = flat dashed baseline at the current réserve libre.
+ *   - "Avec ce choix"    = baseline + cumulative monthly delta (rises/falls).
+ *   - Soft gradient area between them = the cumulative gain/loss.
+ *   - Discrete € y-axis, locale month labels, endpoint value, no heavy grid.
  *
- * FSMA: pure arithmetic on the entered scenario, zero behavioural assumption
- * (we never claim the user banks their broader réserve). RSC boundary: this is
- * a `'use client'` leaf; `cumulativeReserveSeries` runs in the browser from a
- * `monthlyDelta` already client-side — no `Money`/`Decimal` is serialised.
+ * **Responsive container, 1:1 pixels** (fix 2026-06-04): the SVG is rendered at
+ * the measured container width with a matching pixel `viewBox`, so fonts and
+ * the line keep a CONSTANT size at any width (a fixed 380-unit viewBox stretched
+ * to a wide card blew text/stroke up ~2.5×). A `ResizeObserver` (callback ref)
+ * tracks the width — re-attaches correctly even when the chart appears after a
+ * zero-delta state.
  *
- * When `monthlyDelta` is zero (e.g. negotiating to the same amount) there is
- * nothing to plot, so the sparkline is suppressed and a neutral line is shown —
- * the hero already surfaces the unchanged "X → X /mois".
+ * **CSP-safe by construction** (SVG geometry attributes + `fill`/`stroke` +
+ * a `<linearGradient>` def — never an inline `style`), zero chart lib (budget
+ * 0 €, bundle 0). Colour adapts: success (gain) / danger (loss). Zero delta →
+ * the chart is suppressed (neutral line).
+ *
+ * FSMA: pure arithmetic on the entered scenario. Both `monthlyDelta` and
+ * `baseline` are `Money` passed client→client (no RSC boundary crossed).
  */
 
-// Compact, mobile-first sparkline geometry (viewBox units, scales with width).
-const VIEW_W = 240;
-const VIEW_H = 64;
-const PAD = 6;
+const HEIGHT = 196;
+const MARGIN = { left: 48, right: 54, top: 16, bottom: 28 };
+const PLOT_H = HEIGHT - MARGIN.top - MARGIN.bottom;
 const DEFAULT_MONTHS = 6;
 
 export function SimulatorProjection({
   monthlyDelta,
+  baseline,
   fmtMoney,
   months = DEFAULT_MONTHS,
 }: {
   monthlyDelta: Money;
+  /** Current réserve libre — the flat "Sans changement" reference line. */
+  baseline: Money;
   /**
-   * Locale-aware currency formatter from the parent. Typed off `formatCurrency`
-   * so it accepts `Money | number` (plan-reviewer note 1) — passing a function
-   * client→client crosses no RSC boundary.
+   * Locale-aware currency formatter from the parent (accepts `Money | number`).
+   * Passing a function client→client crosses no RSC boundary.
    */
   fmtMoney: (value: Parameters<typeof formatCurrency>[0]) => string;
   months?: number;
 }) {
   const t = useTranslations('app.simulator.impact');
+  const locale = useLocale() as Locale;
+  const gradId = useId();
+
+  // Measure the available width so the SVG renders at 1:1 px (no text/stroke
+  // scaling). Callback ref re-attaches the observer if the node remounts.
+  const [width, setWidth] = useState(640);
+  const observerRef = useRef<ResizeObserver | null>(null);
+  const setContainer = useCallback((node: HTMLDivElement | null) => {
+    observerRef.current?.disconnect();
+    // Guard for environments without ResizeObserver (jsdom) — falls back to
+    // the default width, which still renders a valid chart.
+    if (node && typeof ResizeObserver !== 'undefined') {
+      // Synchronous initial measure (the callback ref runs post-layout, pre-paint)
+      // — avoids a flash at the default width before the observer first fires.
+      const initialW = node.getBoundingClientRect().width;
+      if (initialW > 0) setWidth(initialW);
+      const ro = new ResizeObserver((entries) => {
+        const w = entries[0]?.contentRect.width;
+        if (w && w > 0) setWidth(w);
+      });
+      ro.observe(node);
+      observerRef.current = ro;
+    }
+  }, []);
 
   const isZero = monthlyDelta.isZero();
   const positive = monthlyDelta.gt(0);
-  const cumul = Simulation.projectCumulative(monthlyDelta, months);
+  const cumul = Simulation.projectCumulative(monthlyDelta, months); // Money
 
   if (isZero) {
     return (
@@ -63,45 +95,63 @@ export function SimulatorProjection({
     );
   }
 
-  // Real cumulative values (Money), then `.toNumber()` ONLY for pixel geometry —
-  // every displayed amount still goes through `fmtMoney(Money)`.
-  const series = Simulation.cumulativeReserveSeries(monthlyDelta, months);
-  // Prepend a 0 origin so both lines start together at month 0 and visibly
-  // diverge — matches the "de 0 € à {to}" narrative read to screen readers.
-  const points = [0, ...series.map((m) => m.toNumber())];
-  const end = points[points.length - 1]!;
+  const plotW = Math.max(120, width - MARGIN.left - MARGIN.right);
+  const base = baseline.toNumber();
+  const delta = monthlyDelta.toNumber();
+  const scenario = Array.from({ length: months + 1 }, (_, k) => base + delta * k);
 
-  const lo = Math.min(0, end);
-  const hi = Math.max(0, end);
-  const range = hi - lo; // > 0 here (isZero short-circuited above)
-  const plotW = VIEW_W - PAD * 2;
-  const plotH = VIEW_H - PAD * 2;
+  const dataMin = Math.min(base, ...scenario);
+  const dataMax = Math.max(base, ...scenario);
+  const span = dataMax - dataMin || Math.max(1, Math.abs(base) * 0.1);
+  const lo = dataMin - span * 0.55;
+  const hi = dataMax + span * 0.55;
 
-  const xAt = (i: number) => PAD + (i / (points.length - 1)) * plotW;
-  const yAt = (v: number) => {
-    // Defensive: a degenerate [0,0] domain would yield NaN (plan-reviewer
-    // point 3). Unreachable while `isZero` short-circuits, kept for safety.
-    if (range === 0) return PAD + plotH / 2;
-    return PAD + plotH - ((v - lo) / range) * plotH;
-  };
+  const xAt = (i: number) => MARGIN.left + (i / months) * plotW;
+  const yAt = (v: number) => MARGIN.top + PLOT_H - ((v - lo) / (hi - lo)) * PLOT_H;
 
-  const baselineY = yAt(0);
-  const scenarioPath = points
+  const baselineY = yAt(base);
+  const endX = xAt(months);
+  const endY = yAt(scenario[months]!);
+
+  const scenarioPath = scenario
     .map((v, i) => `${i === 0 ? 'M' : 'L'} ${xAt(i).toFixed(1)} ${yAt(v).toFixed(1)}`)
     .join(' ');
   const areaPath =
-    `${scenarioPath} L ${xAt(points.length - 1).toFixed(1)} ${baselineY.toFixed(1)}` +
+    `${scenarioPath} L ${endX.toFixed(1)} ${baselineY.toFixed(1)}` +
     ` L ${xAt(0).toFixed(1)} ${baselineY.toFixed(1)} Z`;
 
+  const yTicks = [lo, (lo + hi) / 2, hi];
+
+  // Locale month labels (current month + k). Thin out on narrow widths.
+  const now = new Date();
+  const monthFmt = new Intl.DateTimeFormat(locale, { month: 'short' });
+  const monthLabel = (k: number) => {
+    const d = new Date(now.getFullYear(), now.getMonth() + k, 1);
+    const s = monthFmt.format(d).replace('.', '');
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  };
+  const showEveryMonth = width >= 540;
+
   const lineColor = positive ? 'var(--color-success)' : 'var(--color-danger)';
-  const ariaLabel = t('projectionAria', { from: fmtMoney(0), to: fmtMoney(cumul) });
+  const ariaLabel = t('projectionAria', {
+    from: fmtMoney(base),
+    to: fmtMoney(scenario[months]!),
+  });
   const cumulText = positive
     ? t('cumul6mGain', { amount: fmtMoney(cumul.abs()) })
     : t('cumul6mLoss', { amount: fmtMoney(cumul.abs()) });
+  const endLabel = `${positive ? '+' : '−'}${fmtMoney(cumul.abs())}`;
+  // Place the endpoint value to the right of the dot, or above it when the
+  // right gutter is too narrow (iPhone SE / large amounts) — avoids clipping.
+  const labelRoomRight = width - (endX + 10) >= endLabel.length * 7.5;
+  const labelX = labelRoomRight ? endX + 9 : endX;
+  const labelY = labelRoomRight ? endY + 4 : endY - 10;
+  const labelAnchor = labelRoomRight ? 'start' : 'middle';
 
   return (
     <div
-      className="border-border flex flex-col gap-2.5 border-t pt-3"
+      ref={setContainer}
+      className="border-border flex w-full flex-col gap-2.5 border-t pt-3"
       data-testid="simulator-projection"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
@@ -110,34 +160,30 @@ export function SimulatorProjection({
           <li className="flex items-center gap-1.5">
             <svg
               aria-hidden="true"
-              width="10"
-              height="2"
+              width="14"
+              height="3"
               className="text-muted-foreground inline-block"
             >
               <line
                 x1="0"
-                y1="1"
-                x2="10"
-                y2="1"
+                y1="1.5"
+                x2="14"
+                y2="1.5"
                 stroke="currentColor"
                 strokeWidth="2"
-                strokeDasharray="3 3"
+                strokeDasharray="3 2"
               />
             </svg>
             <span className="text-muted-foreground">{t('projectionBaselineLegend')}</span>
           </li>
           <li className="flex items-center gap-1.5">
-            {/* The swatch (graphical object, WCAG 1.4.11 → 3:1) carries the
-                scenario colour; the LABEL stays muted-foreground so the small
-                text meets 4.5:1 in both themes (success #059669 is sub-AA for
-                small text on the light card; danger #dc2626 on the dark card). */}
             <svg
               aria-hidden="true"
-              width="10"
-              height="2"
+              width="14"
+              height="3"
               className={`inline-block ${positive ? 'text-success' : 'text-danger'}`}
             >
-              <line x1="0" y1="1" x2="10" y2="1" stroke="currentColor" strokeWidth="2" />
+              <line x1="0" y1="1.5" x2="14" y2="1.5" stroke="currentColor" strokeWidth="2" />
             </svg>
             <span className="text-muted-foreground">{t('projectionScenarioLegend')}</span>
           </li>
@@ -145,27 +191,74 @@ export function SimulatorProjection({
       </div>
 
       <svg
-        viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
+        width={width}
+        height={HEIGHT}
+        viewBox={`0 0 ${width} ${HEIGHT}`}
         role="img"
         aria-label={ariaLabel}
-        // Compact sparkline: full width on mobile, capped on desktop so the
-        // 240×64 viewBox is not stretched into a giant triangle on a wide card
-        // (@thierry PROD review 2026-06-02 — "barre énorme, pas pro").
-        className="block h-auto w-full max-w-md"
+        className="block max-w-full"
       >
-        {/* Flat 0 baseline — "Sans changement". */}
+        <defs>
+          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={lineColor} stopOpacity="0.2" />
+            <stop offset="100%" stopColor={lineColor} stopOpacity="0.03" />
+          </linearGradient>
+        </defs>
+
+        {/* Discrete y-axis: faint gridline + muted € label per tick. */}
+        {yTicks.map((v, i) => (
+          <g key={`y${i}`}>
+            <line
+              x1={MARGIN.left}
+              x2={width - MARGIN.right}
+              y1={yAt(v)}
+              y2={yAt(v)}
+              stroke="var(--color-border)"
+              strokeWidth="1"
+              strokeOpacity="0.5"
+            />
+            <text
+              x={MARGIN.left - 8}
+              y={yAt(v) + 3}
+              textAnchor="end"
+              fontSize="10"
+              fill="var(--color-muted-foreground)"
+            >
+              {fmtMoney(Math.round(v))}
+            </text>
+          </g>
+        ))}
+
+        {/* Locale month labels. */}
+        {scenario.map((_, i) =>
+          showEveryMonth || i % 2 === 0 ? (
+            <text
+              key={`x${i}`}
+              x={xAt(i)}
+              y={HEIGHT - 9}
+              textAnchor="middle"
+              fontSize="10"
+              fill="var(--color-muted-foreground)"
+            >
+              {monthLabel(i)}
+            </text>
+          ) : null,
+        )}
+
+        {/* Baseline "Sans changement" — dashed reference. */}
         <line
-          x1={xAt(0)}
-          x2={xAt(points.length - 1)}
+          x1={MARGIN.left}
+          x2={width - MARGIN.right}
           y1={baselineY}
           y2={baselineY}
           stroke="var(--color-muted-foreground)"
           strokeWidth="1.5"
-          strokeDasharray="3 3"
+          strokeDasharray="5 4"
           strokeOpacity="0.6"
         />
-        {/* Scenario area + line — "Avec ce choix". */}
-        <path d={areaPath} fill={lineColor} fillOpacity="0.12" />
+
+        {/* Scenario area + line "Avec ce choix". */}
+        <path d={areaPath} fill={`url(#${gradId})`} />
         <path
           d={scenarioPath}
           fill="none"
@@ -174,20 +267,37 @@ export function SimulatorProjection({
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        {/* End marker. */}
+
+        {/* Start dot (baseline) + endpoint halo/dot + value. */}
         <circle
-          cx={xAt(points.length - 1)}
-          cy={yAt(end)}
-          r="2.5"
+          cx={xAt(0)}
+          cy={baselineY}
+          r="3.5"
+          fill="var(--color-card)"
+          stroke="var(--color-muted-foreground)"
+          strokeWidth="2"
+        />
+        <circle cx={endX} cy={endY} r="6" fill={lineColor} fillOpacity="0.18" />
+        <circle
+          cx={endX}
+          cy={endY}
+          r="3.5"
           fill="var(--color-card)"
           stroke={lineColor}
           strokeWidth="2"
         />
+        <text
+          x={labelX}
+          y={labelY}
+          textAnchor={labelAnchor}
+          fontSize="13"
+          fontWeight="700"
+          fill={lineColor}
+        >
+          {endLabel}
+        </text>
       </svg>
 
-      {/* Cumul sentence in `text-foreground` (AAA both themes) — the gain/loss
-          colour lives in the sparkline (large graphical, ≥3:1). Colouring this
-          small text success/danger would breach 4.5:1 (see legend note). */}
       <p
         className="text-foreground text-sm font-medium tabular-nums"
         data-testid="simulator-cumul6m"

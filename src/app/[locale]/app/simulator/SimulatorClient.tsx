@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
+import { AlertCircle, CheckCircle2, Minus, TrendingDown, TrendingUp } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -152,6 +153,30 @@ export function SimulatorClient({
   // misleading, so we surface a setup hint instead.
   const incomeMissing = revenusMoney.lte(0);
 
+  // Adaptive impact tone (gain / loss / neutral) driving the header icon +
+  // pedagogical takeaway. `result` is null until a scenario is picked.
+  const impactTone: 'gain' | 'loss' | 'neutral' = !result
+    ? 'neutral'
+    : result.monthlyDelta.gt(0)
+      ? 'gain'
+      : result.monthlyDelta.lt(0)
+        ? 'loss'
+        : 'neutral';
+  const ImpactIcon =
+    impactTone === 'gain' ? TrendingUp : impactTone === 'loss' ? TrendingDown : Minus;
+  const impactIconClass =
+    impactTone === 'gain'
+      ? 'text-success'
+      : impactTone === 'loss'
+        ? 'text-danger'
+        : 'text-muted-foreground';
+  const impactIconBg =
+    impactTone === 'gain'
+      ? 'bg-success/10'
+      : impactTone === 'loss'
+        ? 'bg-danger/10'
+        : 'bg-surface-muted';
+
   return (
     <div className="flex flex-col gap-6">
       {!hideHeader && (
@@ -174,6 +199,7 @@ export function SimulatorClient({
                 type="button"
                 variant={mode === key ? 'default' : 'outline'}
                 size="sm"
+                className="min-h-11"
                 onClick={() => setMode(key)}
                 // PR-D5 a11y: announce active state to AT (visual cue is
                 // variant-only otherwise — silent for VoiceOver/NVDA).
@@ -209,6 +235,7 @@ export function SimulatorClient({
               <Input
                 id="newAmount"
                 type="number"
+                autoComplete="off"
                 inputMode="decimal"
                 min={0}
                 step="0.01"
@@ -224,6 +251,7 @@ export function SimulatorClient({
                 <Label htmlFor="newLabel">{tFields('label')}</Label>
                 <Input
                   id="newLabel"
+                  autoComplete="off"
                   value={newLabel}
                   onChange={(e) => setNewLabel(e.target.value)}
                 />
@@ -233,6 +261,7 @@ export function SimulatorClient({
                 <Input
                   id="newAmountAdd"
                   type="number"
+                  autoComplete="off"
                   inputMode="decimal"
                   min={0}
                   step="0.01"
@@ -240,7 +269,7 @@ export function SimulatorClient({
                   onChange={(e) => setNewAmount(e.target.value)}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid min-w-0 grid-cols-2 gap-3">
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="newFrequency">{tFields('frequency')}</Label>
                   <Select
@@ -282,7 +311,14 @@ export function SimulatorClient({
 
       <Card>
         <CardHeader>
-          <CardTitle>{tImpact('title')}</CardTitle>
+          <div className="flex items-center gap-2.5">
+            <span
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${impactIconBg}`}
+            >
+              <ImpactIcon aria-hidden strokeWidth={1.75} className={`h-4 w-4 ${impactIconClass}`} />
+            </span>
+            <CardTitle>{tImpact('title')}</CardTitle>
+          </div>
         </CardHeader>
         <CardContent>
           {/* `!reserveView` also narrows the type for the else branch; it is
@@ -356,9 +392,45 @@ export function SimulatorClient({
                 </p>
               </div>
 
-              {/* S3 + S4 — 6-month réserve-libre projection (cumul marginal) +
-                  human cumul sentence. Self-suppresses when monthlyDelta == 0. */}
-              <SimulatorProjection monthlyDelta={result.monthlyDelta} fmtMoney={fmtMoney} />
+              {/* 6-month comparative projection (baseline vs scenario) + human
+                  cumul sentence. Self-suppresses when monthlyDelta == 0. */}
+              <SimulatorProjection
+                monthlyDelta={result.monthlyDelta}
+                baseline={reserveView.current}
+                fmtMoney={fmtMoney}
+              />
+
+              {/* Adaptive pedagogical takeaway (R-06: never culpabilising). */}
+              {impactTone !== 'neutral' && (
+                <div
+                  className={`flex items-start gap-2.5 rounded-lg p-3 ${impactTone === 'gain' ? 'bg-success/10' : 'bg-danger/10'}`}
+                  data-testid="simulator-pedago"
+                >
+                  {impactTone === 'gain' ? (
+                    <CheckCircle2
+                      aria-hidden
+                      strokeWidth={1.75}
+                      className="text-success mt-0.5 h-5 w-5 shrink-0"
+                    />
+                  ) : (
+                    <AlertCircle
+                      aria-hidden
+                      strokeWidth={1.75}
+                      className="text-danger mt-0.5 h-5 w-5 shrink-0"
+                    />
+                  )}
+                  <p className="text-foreground text-sm leading-relaxed">
+                    <span className="font-semibold">
+                      {impactTone === 'gain'
+                        ? tImpact('pedago.gainTitle')
+                        : tImpact('pedago.lossTitle')}
+                    </span>{' '}
+                    {impactTone === 'gain'
+                      ? tImpact('pedago.gainBody')
+                      : tImpact('pedago.lossBody')}
+                  </p>
+                </div>
+              )}
 
               {/* Anchor — demoted effort-lissé sub-text (== dashboard "Effort lissé"). */}
               <p className="text-muted-foreground border-border border-t pt-3 text-xs">

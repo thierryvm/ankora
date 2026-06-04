@@ -926,7 +926,13 @@
         "cumul6mLoss": "En 6 mois, −{amount} de réserve libre",
         "cumul6mNeutral": "Aucun impact sur 6 mois",
         "incomeHint": "Ajoute tes revenus pour voir l'impact sur ton reste disponible.",
-        "incomeHintCta": "Configurer mes revenus"
+        "incomeHintCta": "Configurer mes revenus",
+        "pedago": {
+          "gainTitle": "Bon choix.",
+          "gainBody": "Ce scénario améliore ta réserve libre sans toucher à tes provisions.",
+          "lossTitle": "Impact à considérer.",
+          "lossBody": "Ce scénario réduit ta réserve libre. À toi de voir si ça en vaut la peine."
+        }
       }
     },
     "deletionStatus": {
