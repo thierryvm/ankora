@@ -45,15 +45,22 @@ export function AllocationBar({ segments, ariaLabel }: Props) {
 
   return (
     <div
-      className="bg-surface-muted h-1.5 w-full overflow-hidden rounded-full"
+      className="bg-surface-muted block w-full overflow-hidden rounded-full"
       data-testid="allocation-bar"
     >
+      {/* Height via the SVG `height` attribute (explicit 6px) rather than a
+          Tailwind `h-1.5` → `h-full` chain: on Safari iOS < 17.4 a child SVG
+          `height:100%` resolved against a parent height built from a CSS
+          custom property (calc(var(--spacing)*1.5)) can collapse to 0, making
+          the bar invisible. A literal attribute sidesteps it — and stays
+          CSP-safe (attribute, not inline style). */}
       <svg
         viewBox="0 0 100 6"
         preserveAspectRatio="none"
         role="img"
         aria-label={ariaLabel}
-        className="block h-full w-full"
+        height={6}
+        className="block w-full"
       >
         {rects.map((r) => (
           <rect

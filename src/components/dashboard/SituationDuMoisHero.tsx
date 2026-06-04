@@ -196,7 +196,7 @@ export async function SituationDuMoisHero(props: Props) {
             <p className="text-muted-foreground text-sm leading-relaxed">{nudge}</p>
             <Link
               href="/app#plan-heading"
-              className="text-brand-text-strong inline-flex items-center gap-1 text-sm font-medium underline underline-offset-2"
+              className="text-brand-text-strong focus-visible:ring-brand-700 inline-flex min-h-11 items-center gap-1 self-start rounded-md text-sm font-medium underline underline-offset-2 transition-[color,text-underline-offset] hover:underline-offset-4 focus-visible:ring-2 focus-visible:outline-none"
               data-testid="situation-nudge-link"
             >
               {t('voirPlan')}

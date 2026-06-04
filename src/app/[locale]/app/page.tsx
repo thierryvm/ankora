@@ -131,7 +131,7 @@ export default async function DashboardPage() {
     <div className="flex flex-col gap-8">
       <header>
         <p className="text-muted-foreground text-sm">{snapshot.workspaceName}</p>
-        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
+        <h1 id="dashboard-heading" className="text-3xl font-bold tracking-tight md:text-4xl">
           {t('headerTitle', { month: monthLabel })}
         </h1>
       </header>
@@ -143,7 +143,7 @@ export default async function DashboardPage() {
         allocation bar + waterfall flow + FSMA-safe nudge. The incomplet state
         guards the no-income case (THI-335).
       */}
-      <section aria-label={t('headerTitle', { month: monthLabel })}>
+      <section aria-labelledby="dashboard-heading">
         <SituationDuMoisHero
           statut={situation.statut}
           revenus={situation.revenus.toNumber()}
