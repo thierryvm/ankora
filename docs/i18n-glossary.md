@@ -41,21 +41,24 @@ These terms have marketing weight and must match the decisions below in every lo
 
 ### Core concepts
 
-| FR concept                  | nl-BE           | en             | de-DE          | es-ES               | Notes                                             |
-| --------------------------- | --------------- | -------------- | -------------- | ------------------- | ------------------------------------------------- |
-| lissage (n.)                | spreiding       | smoothing      | Verteilung     | distribución        | "Bill smoothing" is established EN fintech.       |
-| lisser (v.)                 | spreiden        | to smooth      | verteilen      | distribuir          |                                                   |
-| charge (facture récurrente) | vaste kost      | bill           | Fixkosten (pl) | gasto fijo          | NL "kost" > "uitgave" here. EN "bill" > "charge". |
-| dépense (spontanée)         | uitgave         | expense        | Ausgabe        | gasto               | For non-recurring spend (groceries, dining).      |
-| virement                    | overschrijving  | transfer       | Überweisung    | transferencia       | NL-BE standard bank term.                         |
-| revenu (mensuel net)        | nettoloon       | net income     | Nettoeinkommen | ingreso neto        | Keep "net" explicit.                              |
-| épargne                     | spaargeld       | savings        | Ersparnisse    | ahorro              |                                                   |
-| provision                   | voorziening     | reserve        | Rücklage       | reserva             | Financial reserve, not "provision" (ambiguous).   |
-| enveloppe (budget)          | envelop         | envelope       | Umschlag       | sobre               | Envelope-budgeting method (established).          |
-| pot partagé                 | gedeelde pot    | shared pocket  | geteilter Topf | bolsillo compartido | Future feature — roommates / joint projects.      |
-| compte Principal            | Hoofdrekening   | Main account   | Hauptkonto     | cuenta Principal    | Account receiving salary.                         |
-| Vie Courante                | Dagelijks Leven | Daily Spending | Alltag         | Día a Día           | Daily spending account.                           |
-| Épargne (acct name)         | Spaarrekening   | Savings        | Sparen         | Ahorro              | Savings account.                                  |
+| FR concept                  | nl-BE                   | en                  | de-DE               | es-ES                 | Notes                                                                               |
+| --------------------------- | ----------------------- | ------------------- | ------------------- | --------------------- | ----------------------------------------------------------------------------------- |
+| lissage (n.)                | spreiding               | smoothing           | Verteilung          | distribución          | "Bill smoothing" is established EN fintech.                                         |
+| lisser (v.)                 | spreiden                | to smooth           | verteilen           | distribuir            |                                                                                     |
+| charge (facture récurrente) | vaste kost              | bill                | Fixkosten (pl)      | gasto fijo            | NL "kost" > "uitgave" here. EN "bill" > "charge".                                   |
+| dépense (spontanée)         | uitgave                 | expense             | Ausgabe             | gasto                 | For non-recurring spend (groceries, dining).                                        |
+| virement                    | overschrijving          | transfer            | Überweisung         | transferencia         | NL-BE standard bank term.                                                           |
+| revenu (mensuel net)        | nettoloon               | net income          | Nettoeinkommen      | ingreso neto          | Keep "net" explicit.                                                                |
+| épargne                     | spaargeld               | savings             | Ersparnisse         | ahorro                |                                                                                     |
+| provision                   | voorziening             | reserve             | Rücklage            | reserva               | Financial reserve, not "provision" (ambiguous).                                     |
+| enveloppe (budget)          | envelop                 | envelope            | Umschlag            | sobre                 | Envelope-budgeting method (established).                                            |
+| pot partagé                 | gedeelde pot            | shared pocket       | geteilter Topf      | bolsillo compartido   | Future feature — roommates / joint projects.                                        |
+| compte Principal            | Hoofdrekening           | Main account        | Hauptkonto          | cuenta Principal      | Account receiving salary.                                                           |
+| Vie Courante                | Dagelijks Leven         | Daily Spending      | Alltag              | Día a Día             | Daily spending account.                                                             |
+| Épargne (acct name)         | Spaarrekening           | Savings             | Sparen              | Ahorro                | Savings account.                                                                    |
+| Reste disponible (hero KPI) | Beschikbaar saldo       | Available leftover  | Verfügbarer Betrag  | Disponible            | revenus − charges − provisions. Chiffre-héros cockpit (THI-327). Parité simulateur. |
+| Provisions lissées          | Gespreide voorzieningen | Smoothed provisions | Verteilte Rücklagen | Reservas distribuidas | Provisions étalées sur leur cycle (annuel/12…).                                     |
+| Reste à vivre (budget)      | Dagelijks leven         | Living budget       | Alltag              | Día a día             | = budget mensuel Vie Courante (cohérent avec le compte).                            |
 
 ### UX micro-terms
 
