@@ -723,6 +723,12 @@
       "toastCreated": "Charge ajoutée",
       "toastUpdated": "Charge mise à jour",
       "toastDeleted": "Charge supprimée",
+      "toastMarkedPaid": "Facture marquée payée",
+      "toastMarkedUnpaid": "Facture marquée à payer",
+      "markPaidAria": "Marquer {label} comme payée",
+      "unmarkPaidAria": "Marquer {label} comme à payer",
+      "paidSummary": "Payées ce mois : {paid}/{total} · reste {remaining}",
+      "paidHint": "Coche les factures que tu as déjà payées ce mois.",
       "drawer": {
         "title": "Modifier la charge",
         "save": "Enregistrer",
@@ -1095,6 +1101,7 @@
       "dueToday": "Aujourd'hui",
       "daysUntil": "Dans {days, plural, =1 {1 jour} other {# jours}}",
       "daysOverdue": "{days, plural, =1 {1 jour en retard} other {# jours en retard}}",
+      "moreCount": "+ {count, plural, =1 {1 autre} other {# autres}}",
       "buckets": {
         "overdue": "En retard",
         "j7": "Cette semaine",

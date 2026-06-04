@@ -139,6 +139,20 @@ describe('<ProchainesFacturesCard /> (THI-192 cockpit v3 #5)', () => {
     expect(rows[2]?.textContent).toContain('A');
   });
 
+  it('caps a bucket at 4 visible rows and surfaces a "+N autres" link', async () => {
+    // 6 charges all falling in j7 (today=2026-05-10, paymentDay 11..16 → 1..6d).
+    const charges = [11, 12, 13, 14, 15, 16].map((day, i) =>
+      makeCharge({ id: `j7-${i}`, label: `Bill ${i}`, paymentDay: day }),
+    );
+    await renderCard({ charges });
+    const bucket = screen.getByTestId('prochaines-factures-bucket-j7');
+    expect(bucket.querySelectorAll('li')).toHaveLength(4);
+    expect(screen.getByTestId('prochaines-factures-more-j7')).toHaveAttribute(
+      'href',
+      '/app/charges',
+    );
+  });
+
   it('renders a per-bucket total amount in EUR', async () => {
     await renderCard({
       charges: [

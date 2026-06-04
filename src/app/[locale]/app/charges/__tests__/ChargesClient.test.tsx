@@ -22,11 +22,16 @@ const deleteChargeMock = vi.hoisted(() => vi.fn());
 const toastSuccessMock = vi.hoisted(() => vi.fn());
 const toastErrorMock = vi.hoisted(() => vi.fn());
 const routerRefreshMock = vi.hoisted(() => vi.fn());
+const togglePaymentMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/actions/charges', () => ({
   createChargeAction: createChargeMock,
   updateChargeAction: updateChargeMock,
   deleteChargeAction: deleteChargeMock,
+}));
+
+vi.mock('@/lib/actions/charge-payments', () => ({
+  togglePaymentAction: togglePaymentMock,
 }));
 
 vi.mock('@/components/ui/toast', () => ({
@@ -71,6 +76,8 @@ function renderCharges(
       subtotals={overrides.subtotals ?? ZERO_SUBTOTALS}
       monthlyProvisionTotal={overrides.monthlyProvisionTotal ?? 0}
       annualTotal={overrides.annualTotal ?? 0}
+      paidChargeIds={overrides.paidChargeIds ?? []}
+      currentPeriod={overrides.currentPeriod ?? { year: 2026, month: 1 }}
     />,
   );
 }
@@ -110,6 +117,7 @@ describe('<ChargesClient /> — PR-BETA-1 visual refactor', () => {
     toastSuccessMock.mockReset();
     toastErrorMock.mockReset();
     routerRefreshMock.mockReset();
+    togglePaymentMock.mockReset();
   });
 
   it('shows the empty-state copy when no charges are provided', () => {
@@ -195,6 +203,7 @@ describe('<ChargesClient /> — PR-BETA-CLEANUP-2 list & form', () => {
     toastSuccessMock.mockReset();
     toastErrorMock.mockReset();
     routerRefreshMock.mockReset();
+    togglePaymentMock.mockReset();
   });
 
   it('renders the next-due column with a locale-aware date for active charges', () => {
@@ -240,6 +249,7 @@ describe('<ChargesClient /> — PR-BETA-CLEANUP-2 edit drawer', () => {
     toastSuccessMock.mockReset();
     toastErrorMock.mockReset();
     routerRefreshMock.mockReset();
+    togglePaymentMock.mockReset();
   });
 
   it('opens the drawer when the Modifier button is clicked', async () => {
@@ -297,6 +307,7 @@ describe('<ChargesClient /> — PR-UI-3a grouping & totals', () => {
     toastSuccessMock.mockReset();
     toastErrorMock.mockReset();
     routerRefreshMock.mockReset();
+    togglePaymentMock.mockReset();
   });
 
   it('renders one section per non-empty frequency group, in fixed order, hiding empty groups', () => {
@@ -362,6 +373,72 @@ describe('<ChargesClient /> — PR-UI-3a grouping & totals', () => {
   });
 });
 
+describe('Factures Phase 2 — Payé toggle', () => {
+  const monthlyCharge = sampleCharges[0]!; // paymentMonths 1..12 → due every month
+
+  it('hides the toggle for a charge not due in the current period', () => {
+    const annualJune = {
+      ...monthlyCharge,
+      id: 'an1',
+      frequency: 'annual',
+      paymentMonths: [6] as readonly number[],
+    };
+    renderCharges([annualJune], { currentPeriod: { year: 2026, month: 1 } });
+    expect(screen.queryByTestId('charges-row-paid-an1')).not.toBeInTheDocument();
+  });
+
+  it('reflects the seeded paid state via aria-pressed', () => {
+    renderCharges([monthlyCharge], {
+      paidChargeIds: [monthlyCharge.id],
+      currentPeriod: { year: 2026, month: 1 },
+    });
+    expect(screen.getByTestId(`charges-row-paid-${monthlyCharge.id}`)).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+
+  it('toggles paid optimistically and calls the action with the current period', async () => {
+    togglePaymentMock.mockResolvedValue({ ok: true, data: { paid: true, paidAmount: 1200 } });
+    renderCharges([monthlyCharge], { currentPeriod: { year: 2026, month: 3 } });
+    const toggle = screen.getByTestId(`charges-row-paid-${monthlyCharge.id}`);
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    await act(async () => {
+      fireEvent.click(toggle);
+    });
+    await waitFor(() =>
+      expect(togglePaymentMock).toHaveBeenCalledWith({
+        chargeId: monthlyCharge.id,
+        periodYear: 2026,
+        periodMonth: 3,
+      }),
+    );
+    await waitFor(() => expect(toastSuccessMock).toHaveBeenCalled());
+  });
+
+  it('shows an error toast when the toggle fails', async () => {
+    togglePaymentMock.mockResolvedValue({
+      ok: false,
+      errorCode: 'errors.charges.payments.toggleFailed',
+    });
+    renderCharges([monthlyCharge], { currentPeriod: { year: 2026, month: 1 } });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`charges-row-paid-${monthlyCharge.id}`));
+    });
+    await waitFor(() => expect(toastErrorMock).toHaveBeenCalled());
+  });
+
+  it('renders the "ce mois" paid summary when charges are due', () => {
+    renderCharges([monthlyCharge], { currentPeriod: { year: 2026, month: 1 } });
+    expect(screen.getByTestId('charges-paid-summary')).toBeInTheDocument();
+  });
+
+  it('renders the paid-toggle hint when charges are due this month', () => {
+    renderCharges([monthlyCharge], { currentPeriod: { year: 2026, month: 1 } });
+    expect(screen.getByTestId('charges-paid-hint')).toBeInTheDocument();
+  });
+});
+
 describe('app.charges — i18n parity (5 locales, PR-BETA-CLEANUP-2)', () => {
   it.each(['fr-BE', 'en', 'de-DE', 'es-ES', 'nl-BE'] as const)(
     'locale %s exposes paymentDay + edit + drawer + total keys',
@@ -376,6 +453,12 @@ describe('app.charges — i18n parity (5 locales, PR-BETA-CLEANUP-2)', () => {
             subtotalLabel?: string;
             totalMonthlyLabel?: string;
             totalAnnualLabel?: string;
+            toastMarkedPaid?: string;
+            toastMarkedUnpaid?: string;
+            markPaidAria?: string;
+            unmarkPaidAria?: string;
+            paidSummary?: string;
+            paidHint?: string;
             drawer?: {
               title?: string;
               save?: string;
@@ -402,6 +485,15 @@ describe('app.charges — i18n parity (5 locales, PR-BETA-CLEANUP-2)', () => {
       expect(c.drawer?.saving).toBeTypeOf('string');
       expect(c.drawer?.cancel).toBeTypeOf('string');
       expect(c.drawer?.errorGeneric).toBeTypeOf('string');
+      // Factures Phase 2 (Payé toggle) — keys present + placeholder integrity.
+      expect((c.toastMarkedPaid ?? '').length).toBeGreaterThan(0);
+      expect((c.toastMarkedUnpaid ?? '').length).toBeGreaterThan(0);
+      expect((c.markPaidAria ?? '').includes('{label}')).toBe(true);
+      expect((c.unmarkPaidAria ?? '').includes('{label}')).toBe(true);
+      expect((c.paidSummary ?? '').includes('{paid}')).toBe(true);
+      expect((c.paidSummary ?? '').includes('{total}')).toBe(true);
+      expect((c.paidSummary ?? '').includes('{remaining}')).toBe(true);
+      expect((c.paidHint ?? '').length).toBeGreaterThan(0);
     },
   );
 });

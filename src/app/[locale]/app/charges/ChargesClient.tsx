@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
-import { Pencil, Plus, Repeat, Trash2 } from 'lucide-react';
+import { useMemo, useOptimistic, useState, useTransition } from 'react';
+import { Check, Pencil, Plus, Repeat, Trash2 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ import {
 import { toast } from '@/components/ui/toast';
 import type { Locale } from '@/i18n/routing';
 import { createChargeAction, deleteChargeAction } from '@/lib/actions/charges';
+import { togglePaymentAction } from '@/lib/actions/charge-payments';
 import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
 import { nextDueDateForCharge, paymentMonthsFromFrequency } from '@/lib/domain/charges';
 import { formatCurrency, formatDate, formatMonth } from '@/lib/i18n/formatters';
@@ -68,6 +69,10 @@ type ChargesClientProps = {
   monthlyProvisionTotal: number;
   /** Annual equivalent of all active charges. */
   annualTotal: number;
+  /** Charge IDs already settled for `currentPeriod` (seeds the Payé toggle). */
+  paidChargeIds: string[];
+  /** Current period (Europe/Brussels), the toggle's write target. */
+  currentPeriod: { year: number; month: number };
 };
 
 export function ChargesClient({
@@ -75,6 +80,8 @@ export function ChargesClient({
   subtotals,
   monthlyProvisionTotal,
   annualTotal,
+  paidChargeIds,
+  currentPeriod,
 }: ChargesClientProps) {
   const t = useTranslations('app.charges');
   const tFreq = useTranslations('common.frequency');
@@ -105,6 +112,52 @@ export function ChargesClient({
       })).filter((group) => group.rows.length > 0),
     [charges],
   );
+
+  // Optimistic "Payé" state (plan-reviewer CR-1): `useOptimistic` seeds from
+  // the server `paidChargeIds` and reconciles automatically once the action's
+  // `revalidateAppPath('charges')` re-renders the page — no double source of
+  // truth. On a failed toggle the DB is unchanged, so the base stays the same
+  // and the optimistic flip rolls back when the transition settles.
+  const paidBase = useMemo(() => new Set(paidChargeIds), [paidChargeIds]);
+  const [optimisticPaid, applyOptimisticPaid] = useOptimistic(
+    paidBase,
+    (current: ReadonlySet<string>, chargeId: string) => {
+      const next = new Set(current);
+      if (next.has(chargeId)) next.delete(chargeId);
+      else next.add(chargeId);
+      return next;
+    },
+  );
+
+  // Active charges due in the current period — the only ones exposing a toggle
+  // (Phase 2 limit: a charge not due this month has no toggle, cf. plan CR-2).
+  const dueThisMonth = useMemo(
+    () => charges.filter((c) => c.isActive && c.paymentMonths.includes(currentPeriod.month)),
+    [charges, currentPeriod.month],
+  );
+
+  function onTogglePaid(c: RawCharge) {
+    startTransition(async () => {
+      applyOptimisticPaid(c.id);
+      try {
+        const result = await togglePaymentAction({
+          chargeId: c.id,
+          periodYear: currentPeriod.year,
+          periodMonth: currentPeriod.month,
+        });
+        if (result.ok) {
+          toast.success(result.data.paid ? t('toastMarkedPaid') : t('toastMarkedUnpaid'));
+        } else {
+          toast.error(translateError(result.errorCode));
+        }
+      } catch (err) {
+        if (isNextControlFlowError(err)) throw err;
+        // eslint-disable-next-line no-console
+        console.error('togglePaymentAction threw', err);
+        toast.error(translateError('errors.charges.payments.toggleFailed'));
+      }
+    });
+  }
 
   function onCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -201,6 +254,8 @@ export function ChargesClient({
    * (`pr-24` reserves their space) and become inline cells 5/6 on desktop.
    */
   function renderChargeRow(c: RawCharge) {
+    const isDue = c.isActive && c.paymentMonths.includes(currentPeriod.month);
+    const paid = optimisticPaid.has(c.id);
     return (
       <li
         key={c.id}
@@ -209,8 +264,34 @@ export function ChargesClient({
         // absolute edit/delete buttons (top-2 + size-11 = 52px) now that the
         // card padding (`p-4`) is gone — prevents the tap targets overflowing
         // onto the next row on very short content (mobile-ios-auditor F3).
-        className="md:hover:bg-surface-muted relative min-h-13 py-3 pr-24 transition-colors md:grid md:min-h-0 md:grid-cols-[minmax(8rem,10rem)_minmax(0,1fr)_4.5rem_7rem_auto_auto] md:items-baseline md:gap-4 md:px-2 md:py-3 md:pr-2"
+        // Due-this-month rows reserve left room (`pl-14`/`md:pl-12`) for the
+        // absolutely-positioned Payé toggle — keeps the 6-col desktop grid and
+        // its baseline contract untouched (plan-reviewer CR-3).
+        className={`md:hover:bg-surface-muted relative min-h-14 py-3 pr-24 transition-colors md:grid md:min-h-0 md:grid-cols-[minmax(8rem,10rem)_minmax(0,1fr)_4.5rem_7rem_auto_auto] md:items-baseline md:gap-4 md:py-3 md:pr-2 ${isDue ? 'pl-14 md:pl-12' : 'px-3 md:px-4'}`}
       >
+        {/* Payé toggle — absolute left for due-this-month charges. Lives
+            outside the grid + the mobile flow so it never disturbs the four
+            baseline-measured cells. 44px touch target on mobile. */}
+        {isDue && (
+          <button
+            type="button"
+            onClick={() => onTogglePaid(c)}
+            disabled={isPending}
+            aria-pressed={paid}
+            aria-label={
+              paid ? t('unmarkPaidAria', { label: c.label }) : t('markPaidAria', { label: c.label })
+            }
+            data-testid={`charges-row-paid-${c.id}`}
+            className={`focus-visible:ring-brand-600 absolute top-2 left-2 flex size-11 cursor-pointer items-center justify-center rounded-full border-2 transition-colors [-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:top-1/2 md:left-3 md:size-7 md:-translate-y-1/2 ${
+              paid
+                ? 'border-brand-600 bg-brand-600 text-white'
+                : 'border-border hover:border-brand-600 text-transparent'
+            }`}
+          >
+            <Check className="h-4 w-4 md:h-3.5 md:w-3.5" strokeWidth={3} aria-hidden />
+          </button>
+        )}
+
         {/* Mobile: header row (next-due + amount on a single line).
             Desktop: contents — projects next-due + amount as grid cells 1 / 4. */}
         <div className="flex items-baseline justify-between gap-3 md:contents">
@@ -222,7 +303,7 @@ export function ChargesClient({
           </span>
           <span
             data-testid="charges-row-amount"
-            className="text-foreground shrink-0 text-base font-semibold tabular-nums md:order-4 md:text-right md:text-sm md:font-medium"
+            className={`shrink-0 text-base font-semibold tabular-nums md:order-4 md:text-right md:text-sm md:font-medium ${paid ? 'text-muted-foreground line-through' : 'text-foreground'}`}
           >
             {formatCurrency(c.amount, locale)}
           </span>
@@ -297,6 +378,13 @@ export function ChargesClient({
     );
   }
 
+  // "Ce mois" summary, derived from the optimistic paid set so it updates the
+  // instant a toggle is hit (distinct from the smoothed "Effort lissé" total).
+  const paidThisMonthCount = dueThisMonth.filter((c) => optimisticPaid.has(c.id)).length;
+  const remainingThisMonth = dueThisMonth
+    .filter((c) => !optimisticPaid.has(c.id))
+    .reduce((sum, c) => sum + c.amount, 0);
+
   return (
     <div className="flex flex-col gap-6">
       <header>
@@ -314,6 +402,7 @@ export function ChargesClient({
               <Label htmlFor="label">{t('labelLabel')}</Label>
               <Input
                 id="label"
+                autoComplete="off"
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
                 required
@@ -325,6 +414,7 @@ export function ChargesClient({
               <Input
                 id="amount"
                 type="number"
+                autoComplete="off"
                 inputMode="decimal"
                 min={0}
                 step="0.01"
@@ -368,6 +458,7 @@ export function ChargesClient({
               <Input
                 id="paymentDay"
                 type="number"
+                autoComplete="off"
                 inputMode="numeric"
                 min={1}
                 max={31}
@@ -398,6 +489,13 @@ export function ChargesClient({
             </p>
           ) : (
             <>
+              {/* One-time hint teaching the Payé toggle convention
+                  (dashboard-ux F2) — only when a charge is due this month. */}
+              {dueThisMonth.length > 0 && (
+                <p className="text-muted-foreground mb-4 text-xs" data-testid="charges-paid-hint">
+                  {t('paidHint')}
+                </p>
+              )}
               {/* `charges-list` is now a wrapper holding one <section> per
                   non-empty frequency group. The only `listitem`s remain the
                   charge rows inside each group's <ul>, so the total count
@@ -412,27 +510,56 @@ export function ChargesClient({
                       data-testid={`charges-group-${freq}`}
                       aria-labelledby={headingId}
                     >
-                      <div className="border-border/40 flex items-baseline justify-between gap-3 border-b pb-2">
-                        <h2
-                          id={headingId}
-                          className="text-muted-foreground text-sm font-semibold tracking-wide"
-                        >
-                          {tFreq(freq)}
-                        </h2>
-                        <span
-                          data-testid={`charges-group-subtotal-${freq}`}
-                          className="text-muted-foreground text-sm tabular-nums"
-                        >
-                          {t('subtotalLabel')} {formatCurrency(subtotals[freq], locale)}
+                      {/* Group header — neutral recurrence icon + frequency +
+                          item count, adopting the cockpit "Prochaines factures"
+                          card language. The subtotal moves BELOW the list
+                          (validated @thierry 2026-06-04: total read after the
+                          rows, coloured for impact). */}
+                      <h2
+                        id={headingId}
+                        className="text-muted-foreground mb-2 flex items-center gap-2 text-xs font-semibold tracking-wide uppercase"
+                      >
+                        <Repeat aria-hidden strokeWidth={1.5} className="h-4 w-4" />
+                        {tFreq(freq)}
+                        <span className="text-muted-foreground/70 ml-0.5 text-[11px] font-medium normal-case">
+                          {t('count', { count: rows.length })}
                         </span>
-                      </div>
-                      <ul role="list" className="divide-border/40 divide-y">
+                      </h2>
+                      <ul
+                        role="list"
+                        className="border-border divide-border/60 divide-y overflow-hidden rounded-xl border"
+                      >
                         {rows.map((c) => renderChargeRow(c))}
                       </ul>
+                      {/* Subtotal — below the list, coloured brand for impact. */}
+                      <p
+                        data-testid={`charges-group-subtotal-${freq}`}
+                        className="mt-2 flex items-baseline justify-end gap-1.5 px-1"
+                      >
+                        <span className="text-muted-foreground text-xs">{t('subtotalLabel')}</span>
+                        <span className="text-brand-700 text-sm font-semibold tabular-nums">
+                          {formatCurrency(subtotals[freq], locale)}
+                        </span>
+                      </p>
                     </section>
                   );
                 })}
               </div>
+
+              {/* "Ce mois" payment summary — paid count + remaining cash due
+                  this period. Distinct from the smoothed effort total below. */}
+              {dueThisMonth.length > 0 && (
+                <p
+                  data-testid="charges-paid-summary"
+                  className="bg-surface-muted text-muted-foreground mt-6 rounded-lg px-3 py-2.5 text-sm"
+                >
+                  {t('paidSummary', {
+                    paid: paidThisMonthCount,
+                    total: dueThisMonth.length,
+                    remaining: formatCurrency(remainingThisMonth, locale),
+                  })}
+                </p>
+              )}
 
               {/* Global total — the headline @thierry asked for ("on ne voit
                   jamais le total des factures en bas"). The smoothed monthly

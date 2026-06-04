@@ -723,6 +723,12 @@
       "toastCreated": "Gasto fijo añadido",
       "toastUpdated": "Gasto fijo actualizado",
       "toastDeleted": "Gasto fijo eliminado",
+      "toastMarkedPaid": "Factura marcada como pagada",
+      "toastMarkedUnpaid": "Factura marcada como por pagar",
+      "markPaidAria": "Marcar {label} como pagada",
+      "unmarkPaidAria": "Marcar {label} como por pagar",
+      "paidSummary": "Pagadas este mes: {paid}/{total} · quedan {remaining}",
+      "paidHint": "Marca las facturas que ya has pagado este mes.",
       "drawer": {
         "title": "Modificar gasto fijo",
         "save": "Guardar",
@@ -1095,6 +1101,7 @@
       "dueToday": "Hoy",
       "daysUntil": "En {days, plural, =1 {1 día} other {# días}}",
       "daysOverdue": "{days, plural, =1 {1 día de retraso} other {# días de retraso}}",
+      "moreCount": "+ {count, plural, =1 {1 más} other {# más}}",
       "buckets": {
         "overdue": "Atrasadas",
         "j7": "Esta semana",

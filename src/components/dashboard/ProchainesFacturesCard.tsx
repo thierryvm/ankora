@@ -67,7 +67,7 @@ export async function ProchainesFacturesCard({ charges, payments, todayIso, loca
         </div>
         <Link
           href="/app/charges"
-          className="text-brand-700 hover:text-brand-800 focus-visible:ring-brand-600 inline-flex shrink-0 items-center gap-1 rounded-md text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+          className="text-brand-700 hover:text-brand-800 focus-visible:ring-brand-600 inline-flex min-h-11 shrink-0 items-center gap-1 rounded-md text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
           data-testid="prochaines-factures-link-all"
         >
           {t('viewAll')}
@@ -130,6 +130,13 @@ export async function ProchainesFacturesCard({ charges, payments, todayIso, loca
 type BucketTone = 'danger' | 'warning' | 'info' | 'success';
 type BucketKey = keyof UpcomingByBucket;
 type LucideIcon = typeof AlertCircle;
+
+/**
+ * Cap the rows rendered per bucket — the "Mois prochain" (J-30) window can list
+ * a dozen bills, which buries the actionable near-term ones. Overflow collapses
+ * to a "+N autres" link to the full /app/charges page (@thierry 2026-06-04).
+ */
+const MAX_VISIBLE_PER_BUCKET = 4;
 
 const TONE_CLASSES: Record<BucketTone, { text: string; bg: string; chip: string }> = {
   danger: {
@@ -204,7 +211,7 @@ function Bucket({
        * amount lock the visual rhythm regardless of content width.
        */}
       <ul className="divide-border divide-y rounded-md border">
-        {items.map((item) => (
+        {items.slice(0, MAX_VISIBLE_PER_BUCKET).map((item) => (
           <li
             key={`${item.charge.id}-${item.dueDateIso}`}
             className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 px-3 py-2"
@@ -231,6 +238,15 @@ function Bucket({
           </li>
         ))}
       </ul>
+      {items.length > MAX_VISIBLE_PER_BUCKET && (
+        <Link
+          href="/app/charges"
+          className="text-brand-700 hover:text-brand-800 focus-visible:ring-brand-600 mt-1.5 inline-flex min-h-11 items-center rounded-md px-1 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none"
+          data-testid={`prochaines-factures-more-${bucket}`}
+        >
+          {t('moreCount', { count: items.length - MAX_VISIBLE_PER_BUCKET })}
+        </Link>
+      )}
     </section>
   );
 }
