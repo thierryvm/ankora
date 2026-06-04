@@ -9,6 +9,12 @@ import * as React from 'react';
  * Mode `split` : affiche deux segments (affected + free) pour pattern
  * Reste disponible / provisions / budget enveloppe (ADR-002 split-aware).
  *
+ * CSP-safe (THI-322) : la largeur de remplissage et la hauteur ne passent
+ * JAMAIS par un `style={{…}}` inline (bloqué par la CSP stricte
+ * `style-src 'self' 'nonce-…'`). Le remplissage est un SVG `<rect>` dont la
+ * géométrie (`x`/`width`) est en unités viewBox (0..100), et la hauteur est
+ * pilotée par une classe de taille (`atm-pbar--{size}`).
+ *
  * Server Component compatible — pas de `'use client'` (purement présentationnel).
  *
  * Source: design_handoff_ankora_v1/atoms/05-ProgressBar.jsx
@@ -65,6 +71,12 @@ export function ProgressBar({
   const ariaValueNow = Math.round(pct * 100);
   const ariaLabel = label ?? 'Progression';
 
+  // CSP-safe geometry: widths are SVG <rect> attributes in viewBox units
+  // (0..100 = percent of the bar), never inline `style={{ width }}`.
+  const affectedW = split ? Math.max(0, Math.min(100, (split.affected / max) * 100)) : 0;
+  const freeW = split ? Math.max(0, Math.min(100 - affectedW, (split.free / max) * 100)) : 0;
+  const fillW = Math.min(100, pct * 100);
+
   return (
     <div className="atm-pbar-wrap">
       {(label || showValue) && (
@@ -76,31 +88,46 @@ export function ProgressBar({
         </div>
       )}
       <div
-        className="atm-pbar"
-        style={{ height: h }}
+        className={`atm-pbar atm-pbar--${size}`}
         role="progressbar"
         aria-valuenow={ariaValueNow}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-label={ariaLabel}
       >
-        {split ? (
-          <>
-            <div
-              className={`atm-pbar-fill atm-pbar--${split.affectedTone ?? 'brand'}`}
-              style={{ width: `${Math.min(100, (split.affected / max) * 100)}%` }}
+        <svg
+          className="atm-pbar-svg"
+          viewBox={`0 0 100 ${h}`}
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          {split ? (
+            <>
+              <rect
+                className={`atm-pbar-fill atm-pbar--${split.affectedTone ?? 'brand'}`}
+                x={0}
+                y={0}
+                width={affectedW}
+                height={h}
+              />
+              <rect
+                className={`atm-pbar-fill atm-pbar--${split.freeTone ?? 'accent'}`}
+                x={affectedW}
+                y={0}
+                width={freeW}
+                height={h}
+              />
+            </>
+          ) : (
+            <rect
+              className={`atm-pbar-fill atm-pbar--${finalTone}`}
+              x={0}
+              y={0}
+              width={fillW}
+              height={h}
             />
-            <div
-              className={`atm-pbar-fill atm-pbar--${split.freeTone ?? 'accent'}`}
-              style={{ width: `${Math.min(100, (split.free / max) * 100)}%` }}
-            />
-          </>
-        ) : (
-          <div
-            className={`atm-pbar-fill atm-pbar--${finalTone}`}
-            style={{ width: `${Math.min(100, pct * 100)}%` }}
-          />
-        )}
+          )}
+        </svg>
         {showCap && <div className="atm-pbar-cap" aria-hidden="true" />}
       </div>
       {sub && <div className="atm-pbar-sub">{sub}</div>}

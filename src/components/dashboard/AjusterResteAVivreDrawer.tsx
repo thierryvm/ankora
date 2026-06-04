@@ -44,6 +44,7 @@ export function AjusterResteAVivreDrawer({
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const [open, setOpen] = useState(false);
   const [draftStr, setDraftStr] = useState(formatInitialAmount(initialResteAVivre));
@@ -84,6 +85,16 @@ export function AjusterResteAVivreDrawer({
     return () => {
       document.body.style.overflow = previous;
     };
+  }, [open]);
+
+  // WCAG 2.4.3 — return focus to the trigger whenever the drawer closes
+  // (covers ESC, backdrop, X, cancel, and submit-success paths uniformly).
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    if (wasOpen.current && !open) {
+      requestAnimationFrame(() => triggerRef.current?.focus());
+    }
+    wasOpen.current = open;
   }, [open]);
 
   const parsedDraft = useMemo(() => {
@@ -152,9 +163,10 @@ export function AjusterResteAVivreDrawer({
   return (
     <>
       <button
+        ref={triggerRef}
         type="button"
         onClick={openDrawer}
-        className="text-muted-foreground hover:text-foreground focus-visible:ring-brand-700 inline-flex items-center gap-1 rounded-md px-1 py-0.5 text-xs underline underline-offset-2 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+        className="text-muted-foreground hover:text-foreground focus-visible:ring-brand-700 inline-flex min-h-11 items-center gap-1 rounded-md px-2 py-0.5 text-xs underline underline-offset-2 transition-colors focus-visible:ring-2 focus-visible:outline-none"
         data-testid="reste-a-vivre-trigger"
         aria-label={triggerLabel ?? t('subStats.ajusterCeMois')}
       >
@@ -214,6 +226,7 @@ export function AjusterResteAVivreDrawer({
                   id={inputId}
                   type="text"
                   inputMode="decimal"
+                  autoComplete="off"
                   value={draftStr}
                   onChange={(e) => setDraftStr(e.target.value.replace(/[^0-9.,]/g, ''))}
                   onKeyDown={(e) => {

@@ -996,6 +996,38 @@
     }
   },
   "dashboard": {
+    "situation": {
+      "heroLabel": "Available leftover",
+      "heroSubtitle": "What's left after your charges and provisions",
+      "voirPlan": "See the plan",
+      "statut": {
+        "vert": "You're on track this month",
+        "orangeCapacite": "Needs adjusting this month",
+        "orangeProvisions": "Provisions to top up",
+        "rouge": "Your charges exceed your income"
+      },
+      "nudge": {
+        "orangeCapacite": "Your savings dip below zero ({capacite}). Check the plan to rebalance.",
+        "orangeProvisions": "You're short {deficit} to cover upcoming charges. Suggested catch-up: {rattrapage}/month.",
+        "rouge": "Your charges and provisions ({obligations}) exceed your income ({revenus}). Let's look at what can move."
+      },
+      "incomplet": {
+        "title": "Complete your setup",
+        "body": "Add your income to see your available leftover this month.",
+        "cta": "Set up my income"
+      },
+      "flow": {
+        "revenus": "Income",
+        "chargesFixes": "Fixed charges",
+        "provisions": "Smoothed provisions",
+        "resteDisponible": "Available leftover",
+        "resteAVivre": "Living budget",
+        "capaciteEpargne": "Savings capacity",
+        "ajuster": "Adjust this month",
+        "parJour": "≈ {amount}/day"
+      },
+      "barAria": "Breakdown of your income: {charges} charges, {provisions} provisions, {vieCourante} living budget, {epargne} potential savings."
+    },
     "effort": {
       "title": "Smoothed financial effort",
       "charges_fixes": "Fixed charges",

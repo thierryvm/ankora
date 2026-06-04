@@ -996,6 +996,38 @@
     }
   },
   "dashboard": {
+    "situation": {
+      "heroLabel": "Verfügbarer Betrag",
+      "heroSubtitle": "Was dir nach Fixkosten und Rücklagen bleibt",
+      "voirPlan": "Plan ansehen",
+      "statut": {
+        "vert": "Du hast diesen Monat gut im Griff",
+        "orangeCapacite": "Diesen Monat anpassen",
+        "orangeProvisions": "Rücklagen auffüllen",
+        "rouge": "Deine Fixkosten übersteigen dein Einkommen"
+      },
+      "nudge": {
+        "orangeCapacite": "Deine Ersparnisse rutschen unter null ({capacite}). Sieh dir den Plan an, um auszugleichen.",
+        "orangeProvisions": "Es fehlen {deficit}, um deine kommenden Kosten zu decken. Vorgeschlagener Ausgleich: {rattrapage}/Monat.",
+        "rouge": "Deine Fixkosten und Rücklagen ({obligations}) übersteigen dein Einkommen ({revenus}). Wir sehen uns gemeinsam an, was sich bewegen lässt."
+      },
+      "incomplet": {
+        "title": "Vervollständige deine Übersicht",
+        "body": "Füge dein Einkommen hinzu, um deinen verfügbaren Betrag diesen Monat zu sehen.",
+        "cta": "Mein Einkommen einrichten"
+      },
+      "flow": {
+        "revenus": "Einkommen",
+        "chargesFixes": "Fixkosten",
+        "provisions": "Verteilte Rücklagen",
+        "resteDisponible": "Verfügbarer Betrag",
+        "resteAVivre": "Alltag",
+        "capaciteEpargne": "Sparpotenzial",
+        "ajuster": "Diesen Monat anpassen",
+        "parJour": "≈ {amount}/Tag"
+      },
+      "barAria": "Aufteilung deines Einkommens: {charges} Fixkosten, {provisions} Rücklagen, {vieCourante} Alltag, {epargne} mögliche Ersparnisse."
+    },
     "effort": {
       "title": "Geglätteter finanzieller Aufwand",
       "charges_fixes": "Fixe Ausgaben",

@@ -996,6 +996,38 @@
     }
   },
   "dashboard": {
+    "situation": {
+      "heroLabel": "Disponible",
+      "heroSubtitle": "Lo que te queda después de tus gastos fijos y reservas",
+      "voirPlan": "Ver el plan",
+      "statut": {
+        "vert": "Llevas bien este mes",
+        "orangeCapacite": "Ajustar este mes",
+        "orangeProvisions": "Reponer reservas",
+        "rouge": "Tus gastos superan tus ingresos"
+      },
+      "nudge": {
+        "orangeCapacite": "Tu ahorro cae por debajo de cero ({capacite}). Mira el plan para reequilibrar.",
+        "orangeProvisions": "Faltan {deficit} para cubrir tus próximos gastos. Recuperación sugerida: {rattrapage}/mes.",
+        "rouge": "Tus gastos y reservas ({obligations}) superan tus ingresos ({revenus}). Vemos juntos qué se puede mover."
+      },
+      "incomplet": {
+        "title": "Completa tu situación",
+        "body": "Añade tus ingresos para ver tu disponible este mes.",
+        "cta": "Configurar mis ingresos"
+      },
+      "flow": {
+        "revenus": "Ingresos",
+        "chargesFixes": "Gastos fijos",
+        "provisions": "Reservas distribuidas",
+        "resteDisponible": "Disponible",
+        "resteAVivre": "Día a día",
+        "capaciteEpargne": "Capacidad de ahorro",
+        "ajuster": "Ajustar este mes",
+        "parJour": "≈ {amount}/día"
+      },
+      "barAria": "Distribución de tus ingresos: {charges} de gastos fijos, {provisions} de reservas, {vieCourante} de día a día, {epargne} de ahorro posible."
+    },
     "effort": {
       "title": "Esfuerzo financiero suavizado",
       "charges_fixes": "Gastos fijos",

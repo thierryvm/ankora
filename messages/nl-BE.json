@@ -996,6 +996,38 @@
     }
   },
   "dashboard": {
+    "situation": {
+      "heroLabel": "Beschikbaar saldo",
+      "heroSubtitle": "Wat je overhoudt na je vaste kosten en voorzieningen",
+      "voirPlan": "Bekijk het plan",
+      "statut": {
+        "vert": "Je houdt deze maand goed overzicht",
+        "orangeCapacite": "Deze maand bijsturen",
+        "orangeProvisions": "Voorzieningen aanvullen",
+        "rouge": "Je vaste kosten overstijgen je inkomen"
+      },
+      "nudge": {
+        "orangeCapacite": "Je spaargeld zakt onder nul ({capacite}). Bekijk het plan om bij te sturen.",
+        "orangeProvisions": "Er ontbreekt {deficit} om je komende kosten te dekken. Voorgestelde inhaalbeweging: {rattrapage}/maand.",
+        "rouge": "Je vaste kosten en voorzieningen ({obligations}) overstijgen je inkomen ({revenus}). We bekijken samen wat kan bewegen."
+      },
+      "incomplet": {
+        "title": "Vervolledig je situatie",
+        "body": "Voeg je inkomen toe om je beschikbaar saldo deze maand te zien.",
+        "cta": "Mijn inkomen instellen"
+      },
+      "flow": {
+        "revenus": "Inkomen",
+        "chargesFixes": "Vaste kosten",
+        "provisions": "Gespreide voorzieningen",
+        "resteDisponible": "Beschikbaar saldo",
+        "resteAVivre": "Dagelijks leven",
+        "capaciteEpargne": "Spaarcapaciteit",
+        "ajuster": "Deze maand aanpassen",
+        "parJour": "≈ {amount}/dag"
+      },
+      "barAria": "Verdeling van je inkomen: {charges} vaste kosten, {provisions} voorzieningen, {vieCourante} dagelijks leven, {epargne} mogelijk spaargeld."
+    },
     "effort": {
       "title": "Vereffende financiële inspanning",
       "charges_fixes": "Vaste kosten",
