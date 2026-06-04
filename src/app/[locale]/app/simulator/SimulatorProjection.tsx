@@ -1,6 +1,6 @@
 'use client';
 
-import { useId } from 'react';
+import { useCallback, useId, useRef, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { Simulation, type Money } from '@/lib/domain';
@@ -17,20 +17,25 @@ import type { formatCurrency } from '@/lib/i18n/formatters';
  *   - Soft gradient area between them = the cumulative gain/loss.
  *   - Discrete € y-axis, locale month labels, endpoint value, no heavy grid.
  *
+ * **Responsive container, 1:1 pixels** (fix 2026-06-04): the SVG is rendered at
+ * the measured container width with a matching pixel `viewBox`, so fonts and
+ * the line keep a CONSTANT size at any width (a fixed 380-unit viewBox stretched
+ * to a wide card blew text/stroke up ~2.5×). A `ResizeObserver` (callback ref)
+ * tracks the width — re-attaches correctly even when the chart appears after a
+ * zero-delta state.
+ *
  * **CSP-safe by construction** (SVG geometry attributes + `fill`/`stroke` +
  * a `<linearGradient>` def — never an inline `style`), zero chart lib (budget
- * 0 €, bundle 0, SSR/RSC-friendly). Colour adapts: success (gain) / danger
- * (loss). When the delta is zero the chart is suppressed (neutral line).
+ * 0 €, bundle 0). Colour adapts: success (gain) / danger (loss). Zero delta →
+ * the chart is suppressed (neutral line).
  *
  * FSMA: pure arithmetic on the entered scenario. Both `monthlyDelta` and
  * `baseline` are `Money` passed client→client (no RSC boundary crossed).
  */
 
-const VIEW_W = 380;
-const VIEW_H = 190;
-const MARGIN = { left: 44, right: 48, top: 14, bottom: 26 };
-const PLOT_W = VIEW_W - MARGIN.left - MARGIN.right;
-const PLOT_H = VIEW_H - MARGIN.top - MARGIN.bottom;
+const HEIGHT = 196;
+const MARGIN = { left: 48, right: 54, top: 16, bottom: 28 };
+const PLOT_H = HEIGHT - MARGIN.top - MARGIN.bottom;
 const DEFAULT_MONTHS = 6;
 
 export function SimulatorProjection({
@@ -53,6 +58,24 @@ export function SimulatorProjection({
   const locale = useLocale() as Locale;
   const gradId = useId();
 
+  // Measure the available width so the SVG renders at 1:1 px (no text/stroke
+  // scaling). Callback ref re-attaches the observer if the node remounts.
+  const [width, setWidth] = useState(640);
+  const observerRef = useRef<ResizeObserver | null>(null);
+  const setContainer = useCallback((node: HTMLDivElement | null) => {
+    observerRef.current?.disconnect();
+    // Guard for environments without ResizeObserver (jsdom) — falls back to
+    // the default width, which still renders a valid chart.
+    if (node && typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver((entries) => {
+        const w = entries[0]?.contentRect.width;
+        if (w && w > 0) setWidth(w);
+      });
+      ro.observe(node);
+      observerRef.current = ro;
+    }
+  }, []);
+
   const isZero = monthlyDelta.isZero();
   const positive = monthlyDelta.gt(0);
   const cumul = Simulation.projectCumulative(monthlyDelta, months); // Money
@@ -68,9 +91,9 @@ export function SimulatorProjection({
     );
   }
 
+  const plotW = Math.max(120, width - MARGIN.left - MARGIN.right);
   const base = baseline.toNumber();
   const delta = monthlyDelta.toNumber();
-  // Scenario = baseline + cumulative delta, month by month (k = 0..months).
   const scenario = Array.from({ length: months + 1 }, (_, k) => base + delta * k);
 
   const dataMin = Math.min(base, ...scenario);
@@ -79,7 +102,7 @@ export function SimulatorProjection({
   const lo = dataMin - span * 0.55;
   const hi = dataMax + span * 0.55;
 
-  const xAt = (i: number) => MARGIN.left + (i / months) * PLOT_W;
+  const xAt = (i: number) => MARGIN.left + (i / months) * plotW;
   const yAt = (v: number) => MARGIN.top + PLOT_H - ((v - lo) / (hi - lo)) * PLOT_H;
 
   const baselineY = yAt(base);
@@ -93,10 +116,9 @@ export function SimulatorProjection({
     `${scenarioPath} L ${endX.toFixed(1)} ${baselineY.toFixed(1)}` +
     ` L ${xAt(0).toFixed(1)} ${baselineY.toFixed(1)} Z`;
 
-  // Discrete y-axis: 3 ticks (lo / mid / hi), rounded to a clean step.
   const yTicks = [lo, (lo + hi) / 2, hi];
 
-  // Locale month labels (current month + k forward).
+  // Locale month labels (current month + k). Thin out on narrow widths.
   const now = new Date();
   const monthFmt = new Intl.DateTimeFormat(locale, { month: 'short' });
   const monthLabel = (k: number) => {
@@ -104,6 +126,7 @@ export function SimulatorProjection({
     const s = monthFmt.format(d).replace('.', '');
     return s.charAt(0).toUpperCase() + s.slice(1);
   };
+  const showEveryMonth = width >= 540;
 
   const lineColor = positive ? 'var(--color-success)' : 'var(--color-danger)';
   const ariaLabel = t('projectionAria', { from: fmtMoney(0), to: fmtMoney(cumul) });
@@ -114,7 +137,8 @@ export function SimulatorProjection({
 
   return (
     <div
-      className="border-border flex flex-col gap-2.5 border-t pt-3"
+      ref={setContainer}
+      className="border-border flex w-full flex-col gap-2.5 border-t pt-3"
       data-testid="simulator-projection"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
@@ -154,10 +178,12 @@ export function SimulatorProjection({
       </div>
 
       <svg
-        viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
+        width={width}
+        height={HEIGHT}
+        viewBox={`0 0 ${width} ${HEIGHT}`}
         role="img"
         aria-label={ariaLabel}
-        className="block h-auto w-full"
+        className="block max-w-full"
       >
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
@@ -171,7 +197,7 @@ export function SimulatorProjection({
           <g key={`y${i}`}>
             <line
               x1={MARGIN.left}
-              x2={VIEW_W - MARGIN.right}
+              x2={width - MARGIN.right}
               y1={yAt(v)}
               y2={yAt(v)}
               stroke="var(--color-border)"
@@ -182,9 +208,8 @@ export function SimulatorProjection({
               x={MARGIN.left - 8}
               y={yAt(v) + 3}
               textAnchor="end"
-              fontSize="9.5"
+              fontSize="10"
               fill="var(--color-muted-foreground)"
-              opacity="0.85"
             >
               {fmtMoney(Math.round(v))}
             </text>
@@ -192,24 +217,25 @@ export function SimulatorProjection({
         ))}
 
         {/* Locale month labels. */}
-        {scenario.map((_, i) => (
-          <text
-            key={`x${i}`}
-            x={xAt(i)}
-            y={VIEW_H - 8}
-            textAnchor="middle"
-            fontSize="9.5"
-            fill="var(--color-muted-foreground)"
-            opacity="0.85"
-          >
-            {monthLabel(i)}
-          </text>
-        ))}
+        {scenario.map((_, i) =>
+          showEveryMonth || i % 2 === 0 ? (
+            <text
+              key={`x${i}`}
+              x={xAt(i)}
+              y={HEIGHT - 9}
+              textAnchor="middle"
+              fontSize="10"
+              fill="var(--color-muted-foreground)"
+            >
+              {monthLabel(i)}
+            </text>
+          ) : null,
+        )}
 
         {/* Baseline "Sans changement" — dashed reference. */}
         <line
           x1={MARGIN.left}
-          x2={VIEW_W - MARGIN.right}
+          x2={width - MARGIN.right}
           y1={baselineY}
           y2={baselineY}
           stroke="var(--color-muted-foreground)"
@@ -224,30 +250,30 @@ export function SimulatorProjection({
           d={scenarioPath}
           fill="none"
           stroke={lineColor}
-          strokeWidth="2.5"
+          strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
 
-        {/* Start dot (on baseline) + endpoint halo/dot + value. */}
+        {/* Start dot (baseline) + endpoint halo/dot + value. */}
         <circle
           cx={xAt(0)}
           cy={baselineY}
-          r="3.2"
+          r="3.5"
           fill="var(--color-card)"
           stroke="var(--color-muted-foreground)"
           strokeWidth="2"
         />
-        <circle cx={endX} cy={endY} r="5.5" fill={lineColor} fillOpacity="0.18" />
+        <circle cx={endX} cy={endY} r="6" fill={lineColor} fillOpacity="0.18" />
         <circle
           cx={endX}
           cy={endY}
-          r="3.4"
+          r="3.5"
           fill="var(--color-card)"
           stroke={lineColor}
           strokeWidth="2"
         />
-        <text x={endX + 8} y={endY + 3} fontSize="12" fontWeight="700" fill={lineColor}>
+        <text x={endX + 9} y={endY + 4} fontSize="13" fontWeight="700" fill={lineColor}>
           {endLabel}
         </text>
       </svg>
