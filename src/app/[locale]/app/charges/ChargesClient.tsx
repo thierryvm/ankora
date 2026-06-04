@@ -209,7 +209,7 @@ export function ChargesClient({
         // absolute edit/delete buttons (top-2 + size-11 = 52px) now that the
         // card padding (`p-4`) is gone — prevents the tap targets overflowing
         // onto the next row on very short content (mobile-ios-auditor F3).
-        className="md:hover:bg-surface-muted relative min-h-13 py-3 pr-24 transition-colors md:grid md:min-h-0 md:grid-cols-[minmax(8rem,10rem)_minmax(0,1fr)_4.5rem_7rem_auto_auto] md:items-baseline md:gap-4 md:px-2 md:py-3 md:pr-2"
+        className="md:hover:bg-surface-muted relative min-h-13 px-3 py-3 pr-24 transition-colors md:grid md:min-h-0 md:grid-cols-[minmax(8rem,10rem)_minmax(0,1fr)_4.5rem_7rem_auto_auto] md:items-baseline md:gap-4 md:px-4 md:py-3 md:pr-2"
       >
         {/* Mobile: header row (next-due + amount on a single line).
             Desktop: contents — projects next-due + amount as grid cells 1 / 4. */}
@@ -412,23 +412,37 @@ export function ChargesClient({
                       data-testid={`charges-group-${freq}`}
                       aria-labelledby={headingId}
                     >
-                      <div className="border-border/40 flex items-baseline justify-between gap-3 border-b pb-2">
-                        <h2
-                          id={headingId}
-                          className="text-muted-foreground text-sm font-semibold tracking-wide"
-                        >
-                          {tFreq(freq)}
-                        </h2>
-                        <span
-                          data-testid={`charges-group-subtotal-${freq}`}
-                          className="text-muted-foreground text-sm tabular-nums"
-                        >
-                          {t('subtotalLabel')} {formatCurrency(subtotals[freq], locale)}
+                      {/* Group header — neutral recurrence icon + frequency +
+                          item count, adopting the cockpit "Prochaines factures"
+                          card language. The subtotal moves BELOW the list
+                          (validated @thierry 2026-06-04: total read after the
+                          rows, coloured for impact). */}
+                      <h2
+                        id={headingId}
+                        className="text-muted-foreground mb-2 flex items-center gap-2 text-xs font-semibold tracking-wide uppercase"
+                      >
+                        <Repeat aria-hidden strokeWidth={1.5} className="h-4 w-4" />
+                        {tFreq(freq)}
+                        <span className="text-muted-foreground/70 ml-0.5 text-[11px] font-medium normal-case">
+                          {t('count', { count: rows.length })}
                         </span>
-                      </div>
-                      <ul role="list" className="divide-border/40 divide-y">
+                      </h2>
+                      <ul
+                        role="list"
+                        className="border-border divide-border/60 divide-y overflow-hidden rounded-xl border"
+                      >
                         {rows.map((c) => renderChargeRow(c))}
                       </ul>
+                      {/* Subtotal — below the list, coloured brand for impact. */}
+                      <p
+                        data-testid={`charges-group-subtotal-${freq}`}
+                        className="mt-2 flex items-baseline justify-end gap-1.5 px-1"
+                      >
+                        <span className="text-muted-foreground text-xs">{t('subtotalLabel')}</span>
+                        <span className="text-brand-700 text-sm font-semibold tabular-nums">
+                          {formatCurrency(subtotals[freq], locale)}
+                        </span>
+                      </p>
                     </section>
                   );
                 })}
