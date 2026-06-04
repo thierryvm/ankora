@@ -21,6 +21,55 @@ Run this agent after modifications to:
 
 Verify that the user dashboard maintains **coherence in design tokens, micro-interactions, state handling, and visual feedback**. Prevent regressions in UX consistency and align new components with Ankora's design vision (Monarch Money level of polish).
 
+## Layer 0 — Decision-cockpit narrative & cross-page coherence (HIGHEST PRIORITY)
+
+> Added 2026-06-02 after @thierry + an external UX review found the dashboard
+> reads as "a stack of accounting cards", not "a decision cockpit". The
+> component-level checklist below passed while the **product experience failed**.
+> This layer audits the EXPERIENCE, not the components. A surface can pass every
+> token/a11y check and still FAIL here — and that is a NO-GO.
+
+- [ ] **One primary answer ("réponse principale")** — within 5 seconds, the page
+      answers ONE central question. For `/app`: _"Is my month under control, and
+      what do I do now?"_ There is a single dominant hero, not 4 equal-weight
+      cards competing for the eye. If everything is the same visual weight →
+      FAIL.
+- [ ] **Information hierarchy** — order is: (1) month status, (2) recommended
+      action, (3) upcoming risk, (4) explorable detail. A bare KPI without
+      "what it means + what to do" is a FAIL.
+- [ ] **Hero is the cashflow waterfall (NORTH_STAR #1)** — the hero shows the
+      narrative salaire → charges → provisions → reste-à-vivre → capacité with a
+      vert/orange/rouge state, NOT a lone "Effort financier lissé" number.
+- [ ] **Lists never dominate** — a long itemised list (e.g. all recurring bills)
+      must NOT be the visual center. Show a bucket SUMMARY (cette semaine / ce
+      mois / mois prochain + nearest item), full list behind "Voir tout" or on
+      its dedicated page. > ~6 raw rows visible at top level → FAIL.
+- [ ] **Empty / zero / no-income state sanity** — a fresh user (charges but no
+      income/accounts yet) must NOT see an alarming red negative (e.g. capacité
+      "-1 711 €"). Zero/empty states show a calm onboarding nudge, never a
+      scary computed deficit. (Found live 2026-06-02.)
+- [ ] **Cross-page grammar coherence** — `/app`, `/app/charges`, `/app/expenses`
+      share the SAME visual grammar (summary-first → form/detail). Charges must
+      not be a heavy grouped table while Dépenses is a clean form+list. Each page
+      opens with a decision summary before any CRUD form.
+- [ ] **Per-page mission** — Dashboard = "mois maîtrisé ?", Charges = "coût fixe + lissage + échéances", Dépenses = "rythme de vie courante", Comptes = "où
+      est l'argent", Simulateur = "impact d'une décision". A page that is just
+      "form + list" with no decision framing → FAIL.
+- [ ] **Human copy in the lead, jargon in tooltips** — primary reading is human
+      ("Tu peux mettre 124 € de côté ce mois-ci"); technical terms ("effort
+      financier lissé", "ratio de couverture") live in tooltips/secondary text.
+- [ ] **FSMA-safe "actions"** — recommended actions = the user's OWN computed
+      transfer plan (ADR-012), framed as organisation, never investment advice.
+- [ ] **landing↔app coherence** — the connected app feels like the same product
+      as the (more mature) public landing: respirant, éditorial, mini-viz, not an
+      admin panel.
+
+**Verification method (ground-truth, not guessing):** audit against REAL
+rendered screens, not assumptions. Use the seeded Playwright screenshot harness
+(THI-331 — `seedOnboardedUser` + `fillLogin`, captures `/app`, `/app/charges`,
+`/app/expenses` desktop + mobile) so this layer is judged on the actual product,
+including the empty/no-income state.
+
 ## Checklist (≥15 points verified)
 
 ### Design Tokens & Styling
