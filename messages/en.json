@@ -723,6 +723,11 @@
       "toastCreated": "Bill added",
       "toastUpdated": "Bill updated",
       "toastDeleted": "Bill deleted",
+      "toastMarkedPaid": "Bill marked as paid",
+      "toastMarkedUnpaid": "Bill marked as to pay",
+      "markPaidAria": "Mark {label} as paid",
+      "unmarkPaidAria": "Mark {label} as to pay",
+      "paidSummary": "Paid this month: {paid}/{total} · {remaining} left",
       "drawer": {
         "title": "Edit bill",
         "save": "Save",

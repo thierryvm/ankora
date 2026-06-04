@@ -723,6 +723,11 @@
       "toastCreated": "Charge ajoutée",
       "toastUpdated": "Charge mise à jour",
       "toastDeleted": "Charge supprimée",
+      "toastMarkedPaid": "Facture marquée payée",
+      "toastMarkedUnpaid": "Facture marquée à payer",
+      "markPaidAria": "Marquer {label} comme payée",
+      "unmarkPaidAria": "Marquer {label} comme à payer",
+      "paidSummary": "Payées ce mois : {paid}/{total} · reste {remaining}",
       "drawer": {
         "title": "Modifier la charge",
         "save": "Enregistrer",

@@ -723,6 +723,11 @@
       "toastCreated": "Vaste kost toegevoegd",
       "toastUpdated": "Vaste kost bijgewerkt",
       "toastDeleted": "Vaste kost verwijderd",
+      "toastMarkedPaid": "Factuur als betaald gemarkeerd",
+      "toastMarkedUnpaid": "Factuur als te betalen gemarkeerd",
+      "markPaidAria": "{label} als betaald markeren",
+      "unmarkPaidAria": "{label} als te betalen markeren",
+      "paidSummary": "Deze maand betaald: {paid}/{total} · nog {remaining}",
       "drawer": {
         "title": "Vaste kost bewerken",
         "save": "Opslaan",

@@ -723,6 +723,11 @@
       "toastCreated": "Gasto fijo añadido",
       "toastUpdated": "Gasto fijo actualizado",
       "toastDeleted": "Gasto fijo eliminado",
+      "toastMarkedPaid": "Factura marcada como pagada",
+      "toastMarkedUnpaid": "Factura marcada como por pagar",
+      "markPaidAria": "Marcar {label} como pagada",
+      "unmarkPaidAria": "Marcar {label} como por pagar",
+      "paidSummary": "Pagadas este mes: {paid}/{total} · quedan {remaining}",
       "drawer": {
         "title": "Modificar gasto fijo",
         "save": "Guardar",

@@ -21,6 +21,13 @@ export default async function ChargesPage() {
   // per-group subtotals reconcile with the global smoothed/annual totals.
   const subtotals = subtotalByFrequency(snapshot.charges);
 
+  // Charge IDs already settled for the current period — seeds the "Payé"
+  // toggle. `currentMonthPayments` is already scoped server-side to the current
+  // Europe/Brussels month (same period the toggle writes to). The action
+  // re-verifies workspace ownership before any write — these IDs are not
+  // trusted authz input, just optimistic-UI seed data the user already owns.
+  const paidChargeIds = snapshot.currentMonthPayments.map((p) => p.chargeId);
+
   return (
     <ChargesClient
       charges={snapshot.rawCharges}
@@ -32,6 +39,8 @@ export default async function ChargesPage() {
       }}
       monthlyProvisionTotal={monthlyProvisionTotal(snapshot.charges).toNumber()}
       annualTotal={annualTotal(snapshot.charges).toNumber()}
+      paidChargeIds={paidChargeIds}
+      currentPeriod={snapshot.currentPeriod}
     />
   );
 }
