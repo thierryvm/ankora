@@ -67,7 +67,7 @@ export async function ProchainesFacturesCard({ charges, payments, todayIso, loca
         </div>
         <Link
           href="/app/charges"
-          className="text-brand-700 hover:text-brand-800 focus-visible:ring-brand-600 inline-flex shrink-0 items-center gap-1 rounded-md text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+          className="text-brand-700 hover:text-brand-800 focus-visible:ring-brand-600 inline-flex min-h-11 shrink-0 items-center gap-1 rounded-md text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
           data-testid="prochaines-factures-link-all"
         >
           {t('viewAll')}
@@ -241,7 +241,7 @@ function Bucket({
       {items.length > MAX_VISIBLE_PER_BUCKET && (
         <Link
           href="/app/charges"
-          className="text-brand-700 hover:text-brand-800 focus-visible:ring-brand-600 mt-1.5 inline-flex rounded-md text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none"
+          className="text-brand-700 hover:text-brand-800 focus-visible:ring-brand-600 mt-1.5 inline-flex min-h-11 items-center rounded-md px-1 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none"
           data-testid={`prochaines-factures-more-${bucket}`}
         >
           {t('moreCount', { count: items.length - MAX_VISIBLE_PER_BUCKET })}

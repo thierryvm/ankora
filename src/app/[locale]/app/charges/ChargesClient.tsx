@@ -267,7 +267,7 @@ export function ChargesClient({
         // Due-this-month rows reserve left room (`pl-14`/`md:pl-12`) for the
         // absolutely-positioned Payé toggle — keeps the 6-col desktop grid and
         // its baseline contract untouched (plan-reviewer CR-3).
-        className={`md:hover:bg-surface-muted relative min-h-13 py-3 pr-24 transition-colors md:grid md:min-h-0 md:grid-cols-[minmax(8rem,10rem)_minmax(0,1fr)_4.5rem_7rem_auto_auto] md:items-baseline md:gap-4 md:py-3 md:pr-2 ${isDue ? 'pl-14 md:pl-12' : 'px-3 md:px-4'}`}
+        className={`md:hover:bg-surface-muted relative min-h-14 py-3 pr-24 transition-colors md:grid md:min-h-0 md:grid-cols-[minmax(8rem,10rem)_minmax(0,1fr)_4.5rem_7rem_auto_auto] md:items-baseline md:gap-4 md:py-3 md:pr-2 ${isDue ? 'pl-14 md:pl-12' : 'px-3 md:px-4'}`}
       >
         {/* Payé toggle — absolute left for due-this-month charges. Lives
             outside the grid + the mobile flow so it never disturbs the four
@@ -282,7 +282,7 @@ export function ChargesClient({
               paid ? t('unmarkPaidAria', { label: c.label }) : t('markPaidAria', { label: c.label })
             }
             data-testid={`charges-row-paid-${c.id}`}
-            className={`absolute top-2 left-2 flex size-11 items-center justify-center rounded-full border-2 transition-colors md:top-1/2 md:left-3 md:size-7 md:-translate-y-1/2 ${
+            className={`focus-visible:ring-brand-600 absolute top-2 left-2 flex size-11 cursor-pointer items-center justify-center rounded-full border-2 transition-colors [-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:top-1/2 md:left-3 md:size-7 md:-translate-y-1/2 ${
               paid
                 ? 'border-brand-600 bg-brand-600 text-white'
                 : 'border-border hover:border-brand-600 text-transparent'
@@ -402,6 +402,7 @@ export function ChargesClient({
               <Label htmlFor="label">{t('labelLabel')}</Label>
               <Input
                 id="label"
+                autoComplete="off"
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
                 required
@@ -413,6 +414,7 @@ export function ChargesClient({
               <Input
                 id="amount"
                 type="number"
+                autoComplete="off"
                 inputMode="decimal"
                 min={0}
                 step="0.01"
@@ -456,6 +458,7 @@ export function ChargesClient({
               <Input
                 id="paymentDay"
                 type="number"
+                autoComplete="off"
                 inputMode="numeric"
                 min={1}
                 max={31}
