@@ -926,7 +926,13 @@
         "cumul6mLoss": "Over 6 maanden, −{amount} beschikbaar saldo",
         "cumul6mNeutral": "Geen impact over 6 maanden",
         "incomeHint": "Voeg je inkomen toe om de impact op je beschikbaar saldo te zien.",
-        "incomeHintCta": "Mijn inkomen instellen"
+        "incomeHintCta": "Mijn inkomen instellen",
+        "pedago": {
+          "gainTitle": "Goede keuze.",
+          "gainBody": "Dit scenario verbetert je beschikbaar saldo zonder je voorzieningen aan te raken.",
+          "lossTitle": "Om te overwegen.",
+          "lossBody": "Dit scenario verlaagt je beschikbaar saldo. Aan jou om te bepalen of het de moeite waard is."
+        }
       }
     },
     "deletionStatus": {

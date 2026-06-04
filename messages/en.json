@@ -926,7 +926,13 @@
         "cumul6mLoss": "Over 6 months, −{amount} of available leftover",
         "cumul6mNeutral": "No impact over 6 months",
         "incomeHint": "Add your income to see the impact on your available leftover.",
-        "incomeHintCta": "Set up my income"
+        "incomeHintCta": "Set up my income",
+        "pedago": {
+          "gainTitle": "Good move.",
+          "gainBody": "This scenario improves your available leftover without touching your provisions.",
+          "lossTitle": "Worth weighing.",
+          "lossBody": "This scenario lowers your available leftover. It's up to you whether it's worth it."
+        }
       }
     },
     "deletionStatus": {

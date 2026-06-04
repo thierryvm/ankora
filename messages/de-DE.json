@@ -926,7 +926,13 @@
         "cumul6mLoss": "In 6 Monaten, −{amount} verfügbar",
         "cumul6mNeutral": "Keine Auswirkung über 6 Monate",
         "incomeHint": "Füge dein Einkommen hinzu, um die Auswirkung auf dein verfügbares Budget zu sehen.",
-        "incomeHintCta": "Einkommen einrichten"
+        "incomeHintCta": "Einkommen einrichten",
+        "pedago": {
+          "gainTitle": "Gute Wahl.",
+          "gainBody": "Dieses Szenario verbessert deinen verfügbaren Betrag, ohne deine Rücklagen anzutasten.",
+          "lossTitle": "Abzuwägen.",
+          "lossBody": "Dieses Szenario senkt deinen verfügbaren Betrag. Du entscheidest, ob es sich lohnt."
+        }
       }
     },
     "deletionStatus": {

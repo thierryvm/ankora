@@ -926,7 +926,13 @@
         "cumul6mLoss": "En 6 meses, −{amount} de disponible",
         "cumul6mNeutral": "Sin impacto a 6 meses",
         "incomeHint": "Añade tus ingresos para ver el impacto en tu disponible.",
-        "incomeHintCta": "Configurar mis ingresos"
+        "incomeHintCta": "Configurar mis ingresos",
+        "pedago": {
+          "gainTitle": "Buena decisión.",
+          "gainBody": "Este escenario mejora tu disponible sin tocar tus reservas.",
+          "lossTitle": "A considerar.",
+          "lossBody": "Este escenario reduce tu disponible. Tú decides si vale la pena."
+        }
       }
     },
     "deletionStatus": {
