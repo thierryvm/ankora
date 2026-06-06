@@ -1,7 +1,6 @@
 import type { Money } from '@/lib/domain/types';
 
-import { nextDueDateForCharge } from './next-due-date';
-import type { ChargeRecord } from './types';
+import { nextUnpaidDueDate } from './next-unpaid-due-date';
 
 /**
  * Bucket assignment for `getUpcomingCharges()`.
@@ -88,31 +87,27 @@ export function getUpcomingCharges(input: GetUpcomingChargesInput): UpcomingByBu
   for (const charge of input.charges) {
     if (!charge.isActive) continue;
 
-    const dueDateIso = nextDueDateForCharge(
-      // `nextDueDateForCharge` accepts `ChargeRecord`; only `isActive`,
-      // `paymentMonths` and `paymentDay` are read. The wider record fields
-      // are inert here — casting to the structural minimum keeps the helper
-      // callable from places that don't construct a full `ChargeRecord`.
-      charge as unknown as ChargeRecord,
-      input.todayIso,
-    );
-    if (dueDateIso === null) continue;
+    // Payment-aware (THI-329): the next UNPAID occurrence. Skips occurrences
+    // already paid for their period and surfaces a passed-but-unpaid
+    // current-month occurrence as overdue (instead of rolling a year ahead).
+    const due = nextUnpaidDueDate(charge, input.payments, input.todayIso);
+    if (due === null) continue;
 
-    const daysUntilDue = diffInDays(input.todayIso, dueDateIso);
+    const daysUntilDue = diffInDays(input.todayIso, due.dueDateIso);
     if (daysUntilDue > 30) continue;
 
-    const [yearStr, monthStr] = dueDateIso.split('-');
-    const dueYear = Number(yearStr);
-    const dueMonth = Number(monthStr);
-    const isPaid = input.payments.get(paymentKeyFor(charge.id, dueYear, dueMonth)) === true;
+    // `nextUnpaidDueDate` only returns unpaid occurrences → isPaid is false by
+    // construction (kept on the item for the type/UI contract).
+    const item: UpcomingItem = {
+      charge,
+      dueDateIso: due.dueDateIso,
+      daysUntilDue,
+      isPaid: false,
+    };
 
-    const item: UpcomingItem = { charge, dueDateIso, daysUntilDue, isPaid };
-
-    if (daysUntilDue < 0) {
-      // Overdue but already paid → drop. The user has nothing actionable to
-      // do; the notification surface already cleared. This mirrors the
-      // `genererNotifications()` behaviour for `charge_overdue`.
-      if (isPaid) continue;
+    // Single source of truth for "late": the resolver's `isOverdue` (equivalent
+    // to `daysUntilDue < 0` by construction, but avoids a duplicated definition).
+    if (due.isOverdue) {
       buckets.overdue.push(item);
     } else if (daysUntilDue <= 7) {
       buckets.j7.push(item);
@@ -164,8 +159,4 @@ function diffInDays(fromIso: string, toIso: string): number {
 function utcMidnight(iso: string): number {
   const [y, m, d] = iso.split('-').map(Number) as [number, number, number];
   return Date.UTC(y, m - 1, d);
-}
-
-function paymentKeyFor(chargeId: string, year: number, month: number): string {
-  return `${chargeId}-${year}-${month}`;
 }

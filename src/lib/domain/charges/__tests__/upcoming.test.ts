@@ -123,74 +123,37 @@ describe('getUpcomingCharges — bucketing rules (THI-192)', () => {
   });
 });
 
-describe('getUpcomingCharges — overdue handling', () => {
-  it('places an unpaid past-due charge into overdue', () => {
-    // paymentDay=5, today=10 → nextDue rolls forward to next month.
-    // To test overdue, we need the next-due-date to be in the past. That can
-    // only happen if `nextDueDateForCharge` returns a past date, which it
-    // doesn't (it always rolls forward). So overdue means: nextDue is today
-    // (daysUntilDue = 0) but NOT paid AND we want a "past" feel.
-    //
-    // Practical scenario for THI-192: a monthly charge whose paymentDay is
-    // in the past relative to today, and the user has NOT paid for the
-    // current period. `nextDueDateForCharge` will then return the NEXT
-    // month's due date (positive daysUntilDue), so it goes into j7/j14/j30,
-    // not overdue.
-    //
-    // The "overdue" bucket only fires when caller explicitly passes a
-    // historical due date — that is uncommon. We still test the branch via
-    // a synthetic scenario: a charge whose `paymentMonths` includes only a
-    // past month relative to `todayIso`. With `paymentMonths` purely
-    // historical, `nextDueDateForCharge` will roll forward by 12 months and
-    // land out of the 30-day horizon — so we explicitly need a payment day
-    // that the date helper would compute as past.
-    //
-    // We model overdue via a paymentDay in the current month before today,
-    // where the helper effectively returns nextDue = today's day in current
-    // month minus 1. But `nextDueDateForCharge` strictly returns
-    // `day >= refDay`, so the only way to model a true overdue is when the
-    // helper returned the requested past date elsewhere. For the unit test
-    // we therefore use the public path: a charge whose due date is computed
-    // as today (daysUntilDue=0) but unpaid is the closest practical
-    // approximation to "overdue this billing cycle".
-    //
-    // The strictly-overdue branch (negative daysUntilDue) is reachable when
-    // a caller pre-computes due dates externally and stuffs them through
-    // a custom path. To exercise it directly, we use a manual ledger trick:
-    // set today AFTER the paymentDay in a month not in paymentMonths but
-    // adjacent — the helper rolls forward, never backward. Conclusion:
-    // negative daysUntilDue is **structurally unreachable** through the
-    // public API as wired today, which is the intended invariant.
-    //
-    // We therefore document this expectation via the test below: any unpaid
-    // charge whose dueDate matches today gets bucketed into j7 (not overdue),
-    // because `nextDueDateForCharge` cannot produce a past date.
-    const charge = makeCharge({ paymentDay: 10 });
+describe('getUpcomingCharges — overdue handling (THI-329 payment-aware)', () => {
+  it('places a passed-but-unpaid current-month occurrence into overdue', () => {
+    // paymentDay=5, today=May 10 → May 5 has passed and is unpaid → overdue.
+    // (The old "always roll forward" logic hid this a month/year ahead;
+    // payment-aware `nextUnpaidDueDate` surfaces it.)
+    const charge = makeCharge({ paymentDay: 5 });
     const result = getUpcomingCharges({
       charges: [charge],
       payments: NO_PAYMENTS,
       todayIso: '2026-05-10',
     });
-    expect(result.overdue).toHaveLength(0);
-    expect(result.j7[0]!.daysUntilDue).toBe(0);
-    expect(result.j7[0]!.isPaid).toBe(false);
+    expect(result.overdue).toHaveLength(1);
+    expect(result.overdue[0]!.dueDateIso).toBe('2026-05-05');
+    expect(result.overdue[0]!.daysUntilDue).toBe(-5);
+    expect(result.j7).toHaveLength(0);
   });
 
-  it('drops an overdue charge that has been paid', () => {
-    // Setup: monthly charge paymentDay=15, today=2026-05-10. nextDue=2026-05-15 (j7).
-    // Mark it as paid for 2026-05 → it stays in j7 because dueDate is still
-    // in the future. Then advance today to 2026-05-16, nextDue rolls to
-    // 2026-06-15 (j30). The "paid for May" entry no longer matches June.
+  it('skips a paid current-month occurrence (rolls forward, never overdue)', () => {
+    // paymentDay=15, today=May 20 (May 15 passed) but MAY is paid → skip it,
+    // roll to the next unpaid occurrence June 15 (26d → j30). Not overdue.
     const charge = makeCharge({ id: 'paidC', paymentDay: 15 });
-    const payments: UpcomingPaymentLedger = new Map([[`paidC-2026-5`, true]]);
-
+    const payments: UpcomingPaymentLedger = new Map([['paidC-2026-5', true]]);
     const result = getUpcomingCharges({
       charges: [charge],
       payments,
-      todayIso: '2026-05-10',
+      todayIso: '2026-05-20',
     });
-    expect(result.j7).toHaveLength(1);
-    expect(result.j7[0]!.isPaid).toBe(true);
+    expect(result.overdue).toHaveLength(0);
+    expect(result.j30).toHaveLength(1);
+    expect(result.j30[0]!.dueDateIso).toBe('2026-06-15');
+    expect(result.j30[0]!.isPaid).toBe(false);
   });
 });
 
@@ -205,7 +168,7 @@ describe('getUpcomingCharges — filtering', () => {
     expect(result.j7).toHaveLength(0);
   });
 
-  it('skips charges where nextDueDateForCharge returns null (empty paymentMonths)', () => {
+  it('skips charges where nextUnpaidDueDate returns null (empty paymentMonths)', () => {
     const charge = makeCharge({ paymentMonths: [] });
     const result = getUpcomingCharges({
       charges: [charge],
@@ -245,9 +208,10 @@ describe('getUpcomingCharges — sorting', () => {
 });
 
 describe('getUpcomingCharges — calendar edge cases', () => {
-  it('handles month boundary correctly (May → June)', () => {
-    // today = last of May, charge paymentDay=2 → next due 2026-06-02 (2d → j7)
-    const charge = makeCharge({ paymentDay: 2 });
+  it('handles month boundary correctly (annual charge due next month)', () => {
+    // Annual June charge, today = end of May → next due 2026-06-02 (2d → j7).
+    // (Monthly would surface the past May occurrence as overdue, not roll.)
+    const charge = makeCharge({ paymentMonths: [6], paymentDay: 2 });
     const result = getUpcomingCharges({
       charges: [charge],
       payments: NO_PAYMENTS,
@@ -258,8 +222,9 @@ describe('getUpcomingCharges — calendar edge cases', () => {
     expect(result.j7[0]!.daysUntilDue).toBe(2);
   });
 
-  it('handles year boundary correctly (Dec → Jan)', () => {
-    const charge = makeCharge({ paymentDay: 5 });
+  it('handles year boundary correctly (annual charge due next January)', () => {
+    // Annual January charge, today = end of Dec → next due 2027-01-05 (6d → j7).
+    const charge = makeCharge({ paymentMonths: [1], paymentDay: 5 });
     const result = getUpcomingCharges({
       charges: [charge],
       payments: NO_PAYMENTS,
@@ -312,36 +277,41 @@ describe('getUpcomingCharges — calendar edge cases', () => {
   });
 });
 
-describe('getUpcomingCharges — paid lookup', () => {
-  it('marks an upcoming charge as paid when ledger contains its (year, month)', () => {
+describe('getUpcomingCharges — payment-aware skip (THI-329)', () => {
+  it('skips a paid current-month occurrence and rolls past the 30-day horizon', () => {
+    // rent due 15th, today May 10 (15th still ahead) but MAY already paid →
+    // skip May, roll to June 15 (36d) → out of the 30-day horizon → dropped.
     const charge = makeCharge({ id: 'rent', paymentDay: 15 });
-    const payments: UpcomingPaymentLedger = new Map([[`rent-2026-5`, true]]);
+    const payments: UpcomingPaymentLedger = new Map([['rent-2026-5', true]]);
     const result = getUpcomingCharges({
       charges: [charge],
       payments,
       todayIso: '2026-05-10',
     });
-    expect(result.j7[0]!.isPaid).toBe(true);
+    expect(result.j7).toHaveLength(0);
+    expect(result.overdue).toHaveLength(0);
   });
 
-  it('marks an upcoming charge as unpaid when ledger entry is false', () => {
+  it('does NOT skip when the ledger entry is false (treats as unpaid)', () => {
     const charge = makeCharge({ id: 'rent', paymentDay: 15 });
-    const payments: UpcomingPaymentLedger = new Map([[`rent-2026-5`, false]]);
+    const payments: UpcomingPaymentLedger = new Map([['rent-2026-5', false]]);
     const result = getUpcomingCharges({
       charges: [charge],
       payments,
       todayIso: '2026-05-10',
     });
-    expect(result.j7[0]!.isPaid).toBe(false);
+    expect(result.j7).toHaveLength(1);
+    expect(result.j7[0]!.dueDateIso).toBe('2026-05-15');
   });
 
-  it('marks an upcoming charge as unpaid when ledger has no entry at all', () => {
+  it('does NOT skip when the ledger has no entry (unpaid)', () => {
     const charge = makeCharge({ id: 'rent', paymentDay: 15 });
     const result = getUpcomingCharges({
       charges: [charge],
       payments: NO_PAYMENTS,
       todayIso: '2026-05-10',
     });
-    expect(result.j7[0]!.isPaid).toBe(false);
+    expect(result.j7).toHaveLength(1);
+    expect(result.j7[0]!.dueDateIso).toBe('2026-05-15');
   });
 });
