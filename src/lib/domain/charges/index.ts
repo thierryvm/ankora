@@ -6,6 +6,12 @@ export {
   type PaymentAwareCharge,
   type NextUnpaidDueResult,
 } from './next-unpaid-due-date';
+export {
+  currentPeriodDueDate,
+  type CurrentPeriodCharge,
+  type ChargePeriodStatus,
+  type CurrentPeriodDueResult,
+} from './current-period-due-date';
 export { chargeMatchesMonth } from './match-month';
 export { paymentMonthsFromFrequency } from './payment-months-from-frequency';
 export {

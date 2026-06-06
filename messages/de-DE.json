@@ -723,6 +723,13 @@
       "toastCreated": "Fixkosten hinzugefügt",
       "toastUpdated": "Fixkosten aktualisiert",
       "toastDeleted": "Fixkosten gelöscht",
+      "toastMarkedPaid": "Rechnung als bezahlt markiert",
+      "toastMarkedUnpaid": "Rechnung als zu zahlen markiert",
+      "markPaidAria": "{label} als bezahlt markieren",
+      "unmarkPaidAria": "{label} als zu zahlen markieren",
+      "paidSummary": "Diesen Monat bezahlt: {paid}/{total} · noch {remaining}",
+      "paidHint": "Hake die Rechnungen ab, die du diesen Monat schon bezahlt hast.",
+      "statusOverdue": "Überfällig",
       "drawer": {
         "title": "Fixkosten bearbeiten",
         "save": "Speichern",
