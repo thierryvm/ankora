@@ -506,6 +506,33 @@ export function ChargesClient({
             </p>
           ) : (
             <>
+              {/* Live "reste à payer" headline — promoted to the TOP of the list
+                  (dashboard-ux M2: the old bottom summary was invisible after 16
+                  rows). Derived from `optimisticPaid`, so the amount counts down
+                  the instant a bill is ticked. Distinct from the smoothed
+                  "Effort lissé" total below (which intentionally never moves). */}
+              {dueThisMonth.length > 0 && (
+                <div
+                  data-testid="charges-paid-summary"
+                  className="bg-surface-muted mb-4 flex items-center justify-between gap-3 rounded-lg px-4 py-3"
+                >
+                  <div className="min-w-0">
+                    <p className="text-muted-foreground text-xs font-medium">
+                      {t('remainingLabel')}
+                    </p>
+                    <p
+                      data-testid="charges-remaining-amount"
+                      aria-live="polite"
+                      className="text-foreground text-xl font-bold tabular-nums"
+                    >
+                      {formatCurrency(remainingThisMonth, locale)}
+                    </p>
+                  </div>
+                  <span className="text-muted-foreground shrink-0 text-sm tabular-nums">
+                    {t('paidCount', { paid: paidThisMonthCount, total: dueThisMonth.length })}
+                  </span>
+                </div>
+              )}
               {/* One-time hint teaching the Payé toggle convention
                   (dashboard-ux F2) — only when a charge is due this month. */}
               {dueThisMonth.length > 0 && (
@@ -562,21 +589,6 @@ export function ChargesClient({
                   );
                 })}
               </div>
-
-              {/* "Ce mois" payment summary — paid count + remaining cash due
-                  this period. Distinct from the smoothed effort total below. */}
-              {dueThisMonth.length > 0 && (
-                <p
-                  data-testid="charges-paid-summary"
-                  className="bg-surface-muted text-muted-foreground mt-6 rounded-lg px-3 py-2.5 text-sm"
-                >
-                  {t('paidSummary', {
-                    paid: paidThisMonthCount,
-                    total: dueThisMonth.length,
-                    remaining: formatCurrency(remainingThisMonth, locale),
-                  })}
-                </p>
-              )}
 
               {/* Global total — the headline @thierry asked for ("on ne voit
                   jamais le total des factures en bas"). The smoothed monthly
