@@ -516,13 +516,16 @@ export function ChargesClient({
                   data-testid="charges-paid-summary"
                   className="bg-surface-muted mb-4 flex items-center justify-between gap-3 rounded-lg px-4 py-3"
                 >
-                  <div className="min-w-0">
+                  {/* aria-live sits on the container (label + amount) with
+                      aria-atomic, so screen readers announce "Reste à payer ce
+                      mois 45 €" as one utterance on each tick — not the bare
+                      currency value (Sourcery review). */}
+                  <div className="min-w-0" aria-live="polite" role="status" aria-atomic="true">
                     <p className="text-muted-foreground text-xs font-medium">
                       {t('remainingLabel')}
                     </p>
                     <p
                       data-testid="charges-remaining-amount"
-                      aria-live="polite"
                       className="text-foreground text-xl font-bold tabular-nums"
                     >
                       {formatCurrency(remainingThisMonth, locale)}
