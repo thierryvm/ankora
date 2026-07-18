@@ -550,16 +550,26 @@ describe('Factures Phase 2 — Payé toggle', () => {
   });
 
   it('seeds the watch button state from isWatched, flips optimistically, and calls toggleWatchAction', async () => {
-    toggleWatchMock.mockResolvedValue({ ok: true, data: { watched: true } });
+    // Deferred action: the optimistic flip is only observable while the
+    // server call is PENDING (React 19 reconciles useOptimistic back to the
+    // base once the transition settles in the test harness).
+    let resolveAction!: (v: { ok: true; data: { watched: boolean } }) => void;
+    toggleWatchMock.mockImplementation(
+      () =>
+        new Promise((res) => {
+          resolveAction = res;
+        }),
+    );
     renderCharges([monthlyCharge], { currentPeriod: { year: 2026, month: 1 } });
     const watchBtn = screen.getByTestId(`charges-row-watch-${monthlyCharge.id}`);
     expect(watchBtn).toHaveAttribute('aria-pressed', 'false');
+    fireEvent.click(watchBtn);
+    // Optimistic state visible before the server responds.
+    await waitFor(() => expect(watchBtn).toHaveAttribute('aria-pressed', 'true'));
+    expect(toggleWatchMock).toHaveBeenCalledWith(monthlyCharge.id);
     await act(async () => {
-      fireEvent.click(watchBtn);
-      // useOptimistic flips the pressed state immediately, before the server responds.
-      expect(watchBtn).toHaveAttribute('aria-pressed', 'true');
+      resolveAction({ ok: true, data: { watched: true } });
     });
-    await waitFor(() => expect(toggleWatchMock).toHaveBeenCalledWith(monthlyCharge.id));
     await waitFor(() => expect(toastSuccessMock).toHaveBeenCalled());
   });
 
