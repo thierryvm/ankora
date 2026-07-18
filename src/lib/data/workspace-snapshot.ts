@@ -109,6 +109,8 @@ export type WorkspaceSnapshot = {
     paymentMonths: readonly number[];
     categoryId: string | null;
     isActive: boolean;
+    /** Manual "à surveiller" dashboard marker (THI-329 PR-C). */
+    isWatched: boolean;
     notes: string | null;
     paidFrom: ChargePaidFrom;
   }>;
@@ -194,7 +196,7 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
         // downstream consumer (cockpit math, notifications, upcoming bills)
         // was running on the stub `paymentDay: 1` set in `toCockpitCharges`.
         .select(
-          'id, label, amount, frequency, due_month, payment_day, payment_months, category_id, is_active, notes, paid_from',
+          'id, label, amount, frequency, due_month, payment_day, payment_months, category_id, is_active, is_watched, notes, paid_from',
         )
         .eq('workspace_id', workspaceId)
         .order('created_at', { ascending: true }),
@@ -234,6 +236,7 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
     paymentMonths: (c.payment_months ?? []) as readonly number[],
     categoryId: c.category_id,
     isActive: c.is_active,
+    isWatched: c.is_watched,
     notes: c.notes,
     paidFrom: c.paid_from as ChargePaidFrom,
   }));
@@ -248,6 +251,7 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
     paymentMonths: c.paymentMonths,
     categoryId: c.categoryId,
     isActive: c.isActive,
+    isWatched: c.isWatched,
     paidFrom: c.paidFrom,
   }));
 

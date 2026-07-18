@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useOptimistic, useState, useTransition } from 'react';
-import { Check, Pencil, Plus, Repeat, Trash2 } from 'lucide-react';
+import { Bookmark, Check, Pencil, Plus, Repeat, Trash2 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from '@/components/ui/toast';
 import type { Locale } from '@/i18n/routing';
-import { createChargeAction, deleteChargeAction } from '@/lib/actions/charges';
+import { createChargeAction, deleteChargeAction, toggleWatchAction } from '@/lib/actions/charges';
 import { togglePaymentAction } from '@/lib/actions/charge-payments';
 import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
 import { currentPeriodDueDate, paymentMonthsFromFrequency } from '@/lib/domain/charges';
@@ -52,6 +52,8 @@ type RawCharge = {
   paymentMonths: readonly number[];
   categoryId: string | null;
   isActive: boolean;
+  /** Manual "à surveiller" dashboard marker (THI-329 PR-C). */
+  isWatched: boolean;
   notes: string | null;
 };
 
@@ -162,6 +164,41 @@ export function ChargesClient({
     () => charges.filter((c) => c.isActive && c.paymentMonths.includes(currentPeriod.month)),
     [charges, currentPeriod.month],
   );
+
+  // Optimistic "à surveiller" set — same seeding/reconciliation contract as
+  // `optimisticPaid` above (server truth via revalidateAppPath on success).
+  const watchedBase = useMemo(
+    () => new Set(charges.filter((c) => c.isWatched).map((c) => c.id)),
+    [charges],
+  );
+  const [optimisticWatched, applyOptimisticWatched] = useOptimistic(
+    watchedBase,
+    (current: ReadonlySet<string>, chargeId: string) => {
+      const next = new Set(current);
+      if (next.has(chargeId)) next.delete(chargeId);
+      else next.add(chargeId);
+      return next;
+    },
+  );
+
+  function onToggleWatch(c: RawCharge) {
+    startTransition(async () => {
+      applyOptimisticWatched(c.id);
+      try {
+        const result = await toggleWatchAction(c.id);
+        if (result.ok) {
+          toast.success(result.data.watched ? t('toastWatched') : t('toastUnwatched'));
+        } else {
+          toast.error(translateError(result.errorCode));
+        }
+      } catch (err) {
+        if (isNextControlFlowError(err)) throw err;
+        // eslint-disable-next-line no-console
+        console.error('toggleWatchAction threw', err);
+        toast.error(translateError('errors.charges.watchFailed'));
+      }
+    });
+  }
 
   function onTogglePaid(c: RawCharge) {
     startTransition(async () => {
@@ -289,6 +326,7 @@ export function ChargesClient({
   function renderChargeRow(c: RawCharge) {
     const isDue = c.isActive && c.paymentMonths.includes(currentPeriod.month);
     const paid = optimisticPaid.has(c.id);
+    const watched = optimisticWatched.has(c.id);
     const { label: dueLabel, isOverdue } = periodDueFor(c, paid);
     return (
       <li
@@ -301,7 +339,7 @@ export function ChargesClient({
         // Due-this-month rows reserve left room (`pl-14`/`md:pl-12`) for the
         // absolutely-positioned Payé toggle — keeps the 6-col desktop grid and
         // its baseline contract untouched (plan-reviewer CR-3).
-        className={`md:hover:bg-surface-muted relative min-h-14 py-3 pr-24 transition-colors md:grid md:min-h-0 md:grid-cols-[minmax(8rem,10rem)_minmax(0,1fr)_4.5rem_7rem_auto_auto] md:items-baseline md:gap-4 md:py-3 md:pr-2 ${isDue ? 'pl-14 md:pl-12' : 'px-3 md:px-4'}`}
+        className={`md:hover:bg-surface-muted relative min-h-14 py-3 pr-36 transition-colors md:grid md:min-h-0 md:grid-cols-[minmax(8rem,10rem)_minmax(0,1fr)_4.5rem_7rem_auto_auto_auto] md:items-baseline md:gap-4 md:py-3 md:pr-2 ${isDue ? 'pl-14 md:pl-12' : 'px-3 md:px-4'}`}
       >
         {/* Payé toggle — absolute left for due-this-month charges. Lives
             outside the grid + the mobile flow so it never disturbs the four
@@ -395,8 +433,27 @@ export function ChargesClient({
           </span>
         </div>
 
-        {/* Edit + Delete: stacked top-right tap targets on mobile,
-            inline cells 5 / 6 on desktop. */}
+        {/* Watch + Edit + Delete: stacked top-right tap targets on mobile,
+            inline cells 5 / 6 / 7 on desktop. The Bookmark fills brand when
+            the charge is flagged "à surveiller" (dashboard section). */}
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={() => onToggleWatch(c)}
+          disabled={isPending}
+          aria-pressed={watched}
+          aria-label={
+            watched ? t('unwatchAria', { label: c.label }) : t('watchAria', { label: c.label })
+          }
+          data-testid={`charges-row-watch-${c.id}`}
+          className="absolute top-2 right-26 size-11 shrink-0 md:static md:order-5 md:size-9 md:self-center"
+        >
+          <Bookmark
+            className={`h-4 w-4 ${watched ? 'text-brand-text' : 'text-muted-foreground'}`}
+            fill={watched ? 'currentColor' : 'none'}
+          />
+        </Button>
         <Button
           type="button"
           variant="ghost"
@@ -405,7 +462,7 @@ export function ChargesClient({
           disabled={isPending}
           aria-label={t('editAria', { label: c.label })}
           data-testid={`charges-row-edit-${c.id}`}
-          className="absolute top-2 right-14 size-11 shrink-0 md:static md:order-5 md:size-9 md:self-center"
+          className="absolute top-2 right-14 size-11 shrink-0 md:static md:order-6 md:size-9 md:self-center"
         >
           <Pencil className="text-muted-foreground h-4 w-4" />
         </Button>
@@ -417,7 +474,7 @@ export function ChargesClient({
           disabled={isPending}
           aria-label={t('deleteAria', { label: c.label })}
           data-testid={`charges-row-delete-${c.id}`}
-          className="absolute top-2 right-2 size-11 shrink-0 md:static md:order-6 md:size-9 md:self-center"
+          className="absolute top-2 right-2 size-11 shrink-0 md:static md:order-7 md:size-9 md:self-center"
         >
           <Trash2 className="text-danger h-4 w-4" />
         </Button>

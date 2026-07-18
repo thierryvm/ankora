@@ -1,9 +1,22 @@
+/**
+ * ProchainesFacturesCard — THI-329 PR-C contract.
+ *
+ * Two sections replace the former J-7/J-14/J-30 buckets:
+ *  - « Ce mois-ci »: unpaid bills due this month (anchored, overdue surfaced),
+ *    sorted by date, capped at 5, headed by the live "reste à payer".
+ *  - « À surveiller »: flagged (`isWatched`) bills not due this month, with
+ *    their real next unpaid occurrence.
+ *
+ * Server Component testing pattern: render `await Component(props)` with a
+ * minimal getTranslations mock walking the real fr-BE messages (ICU plurals
+ * render raw — tests assert on testids/amounts, not on plural chips).
+ */
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 
 import messages from '../../../../messages/fr-BE.json';
 import { money, type Charge } from '@/lib/domain/types';
-import type { PaymentLedger } from '@/lib/domain/cockpit';
+import { paymentKey, type PaymentLedger } from '@/lib/domain/cockpit';
 
 vi.mock('@/i18n/navigation', () => ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -35,7 +48,12 @@ vi.mock('next-intl/server', () => ({
 
 import { ProchainesFacturesCard } from '../ProchainesFacturesCard';
 
+/** Reference "today": 18 July 2026 (Europe/Brussels anchoring is upstream). */
+const TODAY = '2026-07-18';
 const NO_PAYMENTS: PaymentLedger = new Map();
+
+const paid = (ids: string[]): PaymentLedger =>
+  new Map(ids.map((id) => [paymentKey(id, 2026, 7), true]));
 
 function makeCharge(over: Partial<Charge> = {}): Charge {
   return {
@@ -43,112 +61,129 @@ function makeCharge(over: Partial<Charge> = {}): Charge {
     label: 'Loyer',
     amount: money('900'),
     frequency: 'monthly',
-    dueMonth: 5,
+    dueMonth: 7,
     paymentMonths: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-    paymentDay: 15,
+    paymentDay: 20,
     categoryId: null,
     isActive: true,
+    isWatched: false,
     paidFrom: 'principal',
     ...over,
   };
 }
 
-async function renderCard(input: { charges: Charge[]; todayIso?: string }) {
+async function renderCard(input: {
+  charges: Charge[];
+  payments?: PaymentLedger;
+  todayIso?: string;
+}) {
   return render(
     await ProchainesFacturesCard({
       charges: input.charges,
-      payments: NO_PAYMENTS,
-      todayIso: input.todayIso ?? '2026-05-10',
+      payments: input.payments ?? NO_PAYMENTS,
+      todayIso: input.todayIso ?? TODAY,
       locale: 'fr-BE',
     }),
   );
 }
 
-describe('<ProchainesFacturesCard /> (THI-192 cockpit v3 #5)', () => {
-  it('renders the FR title from dashboard.upcomingBills', async () => {
-    await renderCard({ charges: [] });
-    expect(screen.getByTestId('prochaines-factures-card')).toBeInTheDocument();
-    // The empty state copy is doctrine-locked to fr-BE for this test.
-    expect(screen.getByTestId('prochaines-factures-empty')).toHaveTextContent(/aucune facture/i);
-  });
-
-  it('exposes a "Voir toutes" link to /app/charges (a11y-safe header CTA)', async () => {
+describe('<ProchainesFacturesCard /> — THI-329 PR-C', () => {
+  it('renders the FR title and the view-all link', async () => {
     await renderCard({ charges: [makeCharge()] });
-    const link = screen.getByTestId('prochaines-factures-link-all');
-    expect(link).toHaveAttribute('href', '/app/charges');
+    expect(screen.getByText('Prochaines factures')).toBeInTheDocument();
+    expect(screen.getByTestId('prochaines-factures-link-all')).toHaveAttribute(
+      'href',
+      '/app/charges',
+    );
   });
 
-  it('groups a charge due in 5 days into bucket j7', async () => {
-    // today=2026-05-10 + paymentDay=15 → 5d
-    await renderCard({ charges: [makeCharge({ id: 'rent', paymentDay: 15 })] });
-    expect(screen.getByTestId('prochaines-factures-bucket-j7')).toBeInTheDocument();
-    expect(screen.queryByTestId('prochaines-factures-bucket-j14')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('prochaines-factures-bucket-j30')).not.toBeInTheDocument();
-    expect(screen.getByTestId('prochaines-factures-row-rent')).toHaveTextContent('Loyer');
+  it('lists an unpaid due-this-month bill in « Ce mois-ci » with the live remaining amount', async () => {
+    await renderCard({ charges: [makeCharge({ id: 'c1', paymentDay: 25 })] });
+    const section = screen.getByTestId('prochaines-factures-this-month');
+    expect(within(section).getByTestId('prochaines-factures-row-c1')).toBeInTheDocument();
+    expect(screen.getByTestId('prochaines-factures-remaining')).toHaveTextContent(/900/);
+    // Not overdue (day 25 > today 18) → no badge.
+    expect(screen.queryByTestId('prochaines-factures-overdue-c1')).toBeNull();
   });
 
-  it('groups a charge due in 12 days into bucket j14', async () => {
-    await renderCard({ charges: [makeCharge({ id: 'water', paymentDay: 22 })] });
-    expect(screen.getByTestId('prochaines-factures-bucket-j14')).toBeInTheDocument();
-    expect(screen.queryByTestId('prochaines-factures-bucket-j7')).not.toBeInTheDocument();
-  });
-
-  it('groups a charge due in 25 days into bucket j30', async () => {
-    // 2026-05-10 + 25d → 2026-06-04. paymentDay=4, paymentMonths=[6].
+  it('surfaces a passed-but-unpaid bill as overdue, sorted first, with a dark-safe solid badge (THI-348)', async () => {
     await renderCard({
       charges: [
-        makeCharge({
-          id: 'electricity',
-          paymentMonths: [6],
-          paymentDay: 4,
-          frequency: 'annual',
-        }),
+        makeCharge({ id: 'later', paymentDay: 25 }),
+        makeCharge({ id: 'late', paymentDay: 3 }),
       ],
     });
-    expect(screen.getByTestId('prochaines-factures-bucket-j30')).toBeInTheDocument();
+    const badge = screen.getByTestId('prochaines-factures-overdue-late');
+    expect(badge).toHaveTextContent('En retard');
+    // a11y lock: white on SOLID danger (4.84:1 both themes), never
+    // text-danger on a translucent tint (fails AA on the dark card).
+    expect(badge.className).toMatch(/bg-danger/);
+    expect(badge.className).toMatch(/text-white/);
+    expect(badge.className).not.toMatch(/bg-danger\//);
+    // Overdue (day 3) sorts before upcoming (day 25).
+    const rows = within(screen.getByTestId('prochaines-factures-this-month'))
+      .getAllByRole('listitem')
+      .map((el) => el.getAttribute('data-testid'));
+    expect(rows).toEqual(['prochaines-factures-row-late', 'prochaines-factures-row-later']);
   });
 
-  it('skips charges beyond the 30-day horizon (empty state visible if alone)', async () => {
-    // Annual charge in July → 2026-07-15 (66d). Out of horizon.
+  it('drops a paid bill from « Ce mois-ci » and shows the success state when all are paid', async () => {
+    await renderCard({
+      charges: [makeCharge({ id: 'c1', paymentDay: 3 })],
+      payments: paid(['c1']),
+    });
+    expect(screen.queryByTestId('prochaines-factures-row-c1')).toBeNull();
+    expect(screen.getByTestId('prochaines-factures-all-paid')).toHaveTextContent(
+      'Tout est payé ce mois',
+    );
+    expect(screen.queryByTestId('prochaines-factures-remaining')).toBeNull();
+  });
+
+  it('caps « Ce mois-ci » at 5 rows while the remaining amount covers ALL unpaid bills', async () => {
+    const charges = Array.from({ length: 7 }, (_, i) =>
+      makeCharge({ id: `c${i}`, paymentDay: 20 + i, amount: money('100') }),
+    );
+    await renderCard({ charges });
+    const rows = within(screen.getByTestId('prochaines-factures-this-month')).getAllByRole(
+      'listitem',
+    );
+    expect(rows).toHaveLength(5);
+    // 7 × 100 € — the headline is the full month, not just the 5 visible.
+    expect(screen.getByTestId('prochaines-factures-remaining')).toHaveTextContent(/700/);
+  });
+
+  it('lists a flagged bill NOT due this month in « À surveiller » with its real next occurrence', async () => {
     await renderCard({
       charges: [
-        makeCharge({
-          paymentMonths: [7],
-          paymentDay: 15,
-          frequency: 'annual',
-        }),
+        makeCharge({ id: 'quarterly', isWatched: true, paymentMonths: [1, 4, 10], paymentDay: 5 }),
       ],
     });
+    const watched = screen.getByTestId('prochaines-factures-watched');
+    expect(within(watched).getByTestId('prochaines-factures-row-quarterly')).toBeInTheDocument();
+    // Next occurrence after July = 5 Oct 2026.
+    expect(within(watched).getByText(/5 oct\. 2026/i)).toBeInTheDocument();
+  });
+
+  it('does NOT duplicate a flagged bill already listed in « Ce mois-ci »', async () => {
+    await renderCard({
+      charges: [makeCharge({ id: 'both', isWatched: true, paymentDay: 25 })],
+    });
+    expect(
+      within(screen.getByTestId('prochaines-factures-this-month')).getByTestId(
+        'prochaines-factures-row-both',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId('prochaines-factures-watched')).toBeNull();
+  });
+
+  it('shows the educational hint when nothing is flagged', async () => {
+    await renderCard({ charges: [makeCharge({ id: 'c1' })] });
+    expect(screen.getByTestId('prochaines-factures-watched-hint')).toBeInTheDocument();
+  });
+
+  it('renders the global empty state when there is no active charge', async () => {
+    await renderCard({ charges: [makeCharge({ id: 'off', isActive: false })] });
     expect(screen.getByTestId('prochaines-factures-empty')).toBeInTheDocument();
-  });
-
-  it('sorts charges intra-bucket by ascending urgency', async () => {
-    await renderCard({
-      charges: [
-        makeCharge({ id: 'a', label: 'A', paymentDay: 17 }), // 7d
-        makeCharge({ id: 'b', label: 'B', paymentDay: 12 }), // 2d
-        makeCharge({ id: 'c', label: 'C', paymentDay: 14 }), // 4d
-      ],
-    });
-    const bucket = screen.getByTestId('prochaines-factures-bucket-j7');
-    const rows = bucket.querySelectorAll('li');
-    expect(rows).toHaveLength(3);
-    // Smallest daysUntilDue first
-    expect(rows[0]?.textContent).toContain('B');
-    expect(rows[1]?.textContent).toContain('C');
-    expect(rows[2]?.textContent).toContain('A');
-  });
-
-  it('renders a per-bucket total amount in EUR', async () => {
-    await renderCard({
-      charges: [
-        makeCharge({ id: 'a', label: 'A', amount: money('100'), paymentDay: 12 }),
-        makeCharge({ id: 'b', label: 'B', amount: money('50'), paymentDay: 14 }),
-      ],
-    });
-    const bucket = screen.getByTestId('prochaines-factures-bucket-j7');
-    // The Bucket header carries the total; the per-row amount also appears
-    // for each charge. We only assert the header amount is present.
-    expect(bucket).toHaveTextContent(/150/);
+    expect(screen.queryByTestId('prochaines-factures-this-month')).toBeNull();
   });
 });

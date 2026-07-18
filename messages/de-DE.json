@@ -742,6 +742,10 @@
         "annual": "/Jahr"
       },
       "statusOverdue": "Überfällig",
+      "watchAria": "{label} im Blick behalten",
+      "unwatchAria": "{label} nicht mehr verfolgen",
+      "toastWatched": "Zu „Im Blick“ hinzugefügt",
+      "toastUnwatched": "Aus „Im Blick“ entfernt",
       "drawer": {
         "title": "Fixkosten bearbeiten",
         "save": "Speichern",
@@ -1109,16 +1113,20 @@
     "upcomingBills": {
       "title": "Anstehende Rechnungen",
       "viewAll": "Alle anzeigen",
-      "empty": "Keine Rechnungen in den nächsten 30 Tagen.",
+      "empty": "Noch keine aktiven Fixkosten.",
       "itemCount": "{count, plural, =1 {1 Rechnung} other {# Rechnungen}}",
       "dueToday": "Heute",
       "daysUntil": "In {days, plural, =1 {1 Tag} other {# Tagen}}",
       "daysOverdue": "{days, plural, =1 {1 Tag überfällig} other {# Tage überfällig}}",
+      "thisMonth": "Diesen Monat",
+      "thisMonthHint": "Rechnungen dieses Monats, die noch zu zahlen sind — hake sie auf der Fixkosten-Seite ab.",
+      "thisMonthEmpty": "Diesen Monat ist alles bezahlt",
+      "remainingLabel": "Noch zu zahlen",
+      "watched": "Im Blick",
+      "watchedHint": "Deine markierten Rechnungen, um sie kommen zu sehen.",
+      "watchedEmptyHint": "Tipp: Markiere eine Rechnung auf der Fixkosten-Seite als „im Blick“, um sie hier zu verfolgen.",
       "buckets": {
-        "overdue": "Überfällig",
-        "j7": "Diese Woche",
-        "j14": "Diesen Monat",
-        "j30": "Nächsten Monat"
+        "overdue": "Überfällig"
       }
     }
   },
@@ -1311,6 +1319,7 @@
       "createFailed": "Fixkosten konnten nicht erstellt werden.",
       "updateFailed": "Fixkosten konnten nicht aktualisiert werden.",
       "deleteFailed": "Fixkosten konnten nicht gelöscht werden.",
+      "watchFailed": "Die Markierung der Rechnung konnte nicht geändert werden.",
       "notFound": "Diese Fixkosten wurden nicht gefunden.",
       "payments": {
         "toggleFailed": "Fixkosten konnten nicht als bezahlt markiert werden."

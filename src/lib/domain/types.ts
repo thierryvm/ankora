@@ -38,6 +38,12 @@ export type Charge = {
   paymentDay: number;
   categoryId: string | null;
   isActive: boolean;
+  /**
+   * Manual "à surveiller" dashboard marker (THI-329 PR-C). Pure UI metadata —
+   * never read by domain math, hence optional so domain-math test fixtures
+   * don't have to carry it. The snapshot mapping always sets it.
+   */
+  isWatched?: boolean;
   /** Which account settles the bill. Defaults to 'principal' in the DB;
    *  periodic charges normally use 'epargne' to be smoothed. */
   paidFrom: ChargePaidFrom;
