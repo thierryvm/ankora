@@ -7,7 +7,13 @@ export type Money = Decimal;
 export const money = (value: number | string | Decimal): Money => new Decimal(value);
 export const zero = (): Money => new Decimal(0);
 
-export type ChargeFrequency = 'monthly' | 'quarterly' | 'semiannual' | 'annual';
+/**
+ * Single source of truth for the supported cadences (Sourcery #228): every
+ * UI list (CadenceField, charges forms) derives from this — the type below
+ * is inferred from it, so adding a frequency updates all call-sites at once.
+ */
+export const CHARGE_FREQUENCIES = ['monthly', 'quarterly', 'semiannual', 'annual'] as const;
+export type ChargeFrequency = (typeof CHARGE_FREQUENCIES)[number];
 
 /** Physical account that settles a charge or an expense. */
 export type AccountKind = 'principal' | 'vie_courante' | 'epargne';

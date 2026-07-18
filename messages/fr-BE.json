@@ -711,6 +711,15 @@
       "dueMonthLabel": "Mois de référence",
       "paymentDayLabel": "Jour du mois",
       "paymentDayHint": "Le jour où la charge est prélevée (1 à 31).",
+      "cadence": {
+        "frequencyLabel": "Fréquence",
+        "dayLabel": "Jour du mois",
+        "anchorMonthLabel": "À partir de",
+        "lastDayOption": "Dernier jour du mois",
+        "daySummaryLast": "dernier jour",
+        "summaryMonthly": "Prélevé le {day} de chaque mois",
+        "summaryRecurring": "Prélevé le {day} : {months}"
+      },
       "addButton": "Ajouter",
       "adding": "Ajout…",
       "count": "{count, plural, =0 {aucune charge} one {1 charge} other {# charges}}",

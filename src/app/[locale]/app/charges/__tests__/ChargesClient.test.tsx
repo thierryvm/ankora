@@ -196,7 +196,12 @@ describe('<ChargesClient /> — PR-BETA-1 visual refactor', () => {
     expect(screen.getByLabelText('Libellé')).toBeInTheDocument();
     expect(screen.getByLabelText(/Montant/)).toBeInTheDocument();
     expect(screen.getByLabelText('Fréquence')).toBeInTheDocument();
-    expect(screen.getByLabelText('Mois de référence')).toBeInTheDocument();
+    // THI-301: the anchor-month select is intentionally HIDDEN for monthly
+    // (the default) — the CadenceField summary line proves the cluster is
+    // mounted AND narrates the default cadence (day 1, monthly).
+    expect(screen.getByTestId('create-charge-summary')).toHaveTextContent(
+      'Prélevé le 1 de chaque mois',
+    );
     expect(screen.getByLabelText(/jour du mois/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^ajouter$/i })).toBeInTheDocument();
   });
@@ -274,7 +279,19 @@ describe('<ChargesClient /> — PR-BETA-CLEANUP-2 edit drawer', () => {
     await screen.findByTestId('charge-edit-drawer');
     expect(screen.getByTestId('charge-edit-label')).toHaveValue('Loyer appartement');
     expect(screen.getByTestId('charge-edit-amount')).toHaveValue(1200);
-    expect(screen.getByTestId('charge-edit-payment-day')).toHaveValue(5);
+    // THI-301: native <select> in CadenceField → string value.
+    expect(screen.getByTestId('edit-charge-day')).toHaveValue('5');
+  });
+
+  it('pre-fills the cadence cluster for a NON-monthly charge (anchor month visible)', async () => {
+    // a2 = Taxe voiture: annual, dueMonth 6, paymentDay 15.
+    renderCharges(sampleCharges);
+    fireEvent.click(screen.getByTestId('charges-row-edit-a2'));
+    await screen.findByTestId('charge-edit-drawer');
+    expect(screen.getByTestId('edit-charge-frequency')).toHaveValue('annual');
+    expect(screen.getByTestId('edit-charge-month')).toHaveValue('6');
+    expect(screen.getByTestId('edit-charge-day')).toHaveValue('15');
+    expect(screen.getByTestId('edit-charge-summary')).toHaveTextContent(/juin/i);
   });
 
   it('calls updateChargeAction with the modified amount on Save', async () => {

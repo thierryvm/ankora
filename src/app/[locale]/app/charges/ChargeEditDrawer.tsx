@@ -8,24 +8,17 @@ import { useTranslations } from 'next-intl';
 import { updateChargeAction } from '@/lib/actions/charges';
 import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
 import { paymentMonthsFromFrequency } from '@/lib/domain/charges';
+import { CHARGE_FREQUENCIES, type ChargeFrequency } from '@/lib/domain/types';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 import { toast } from '@/components/ui/toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
-type Frequency = 'monthly' | 'quarterly' | 'semiannual' | 'annual';
+import { CadenceField } from './CadenceField';
 
-const MONTH_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
-const FREQUENCIES: readonly Frequency[] = ['monthly', 'quarterly', 'semiannual', 'annual'];
+type Frequency = ChargeFrequency;
 
 export type ChargeEditDrawerCharge = {
   id: string;
@@ -58,16 +51,11 @@ type Props = {
  */
 export function ChargeEditDrawer({ charge, onClose }: Props) {
   const t = useTranslations('app.charges');
-  const tFreq = useTranslations('common.frequency');
-  const tMonths = useTranslations('common.months');
   const translateError = useActionErrorTranslator();
   const router = useRouter();
 
   const labelId = useId();
   const amountId = useId();
-  const frequencyId = useId();
-  const dueMonthId = useId();
-  const paymentDayId = useId();
   const titleId = useId();
 
   // Seed the form state from the charge BEFORE first render via a `key`-like
@@ -216,50 +204,23 @@ export function ChargeEditDrawer({ charge, onClose }: Props) {
               data-testid="charge-edit-amount"
             />
           </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor={frequencyId}>{t('frequencyLabel')}</Label>
-            <Select value={frequency} onValueChange={(v) => setFrequency(v as Frequency)}>
-              <SelectTrigger id={frequencyId} data-testid="charge-edit-frequency">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {FREQUENCIES.map((key) => (
-                  <SelectItem key={key} value={key}>
-                    {tFreq(key)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor={dueMonthId}>{t('dueMonthLabel')}</Label>
-            <Select value={dueMonth} onValueChange={setDueMonth}>
-              <SelectTrigger id={dueMonthId} data-testid="charge-edit-due-month">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {MONTH_KEYS.map((n) => (
-                  <SelectItem key={n} value={String(n)}>
-                    {tMonths(String(n) as '1')}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor={paymentDayId}>{t('paymentDayLabel')}</Label>
-            <Input
-              id={paymentDayId}
-              type="number"
-              inputMode="numeric"
-              min={1}
-              max={31}
-              value={paymentDay}
-              onChange={(e) => setPaymentDay(e.target.value)}
-              data-testid="charge-edit-payment-day"
-            />
-            <p className="text-muted-foreground text-xs">{t('paymentDayHint')}</p>
-          </div>
+          {/* THI-301: unified cadence cluster replaces the 3 separate fields.
+              submit() still reads Number(dueMonth) / Number(paymentDay) +
+              paymentMonthsFromFrequency — unchanged. */}
+          <CadenceField
+            idPrefix="edit-charge"
+            value={{
+              frequency,
+              dueMonth: Number(dueMonth),
+              paymentDay: Number(paymentDay) || 1,
+            }}
+            disabled={isPending}
+            onChange={(next) => {
+              setFrequency(next.frequency);
+              setDueMonth(String(next.dueMonth));
+              setPaymentDay(String(next.paymentDay));
+            }}
+          />
         </div>
 
         <footer className="border-border bg-card flex items-center justify-end gap-2 border-t px-5 py-4">
@@ -287,5 +248,7 @@ export function ChargeEditDrawer({ charge, onClose }: Props) {
 }
 
 function normalizeFrequency(value: string): Frequency {
-  return (FREQUENCIES as readonly string[]).includes(value) ? (value as Frequency) : 'monthly';
+  return (CHARGE_FREQUENCIES as readonly string[]).includes(value)
+    ? (value as Frequency)
+    : 'monthly';
 }

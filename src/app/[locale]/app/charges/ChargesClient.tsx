@@ -8,28 +8,23 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { toast } from '@/components/ui/toast';
 import type { Locale } from '@/i18n/routing';
 import { createChargeAction, deleteChargeAction, toggleWatchAction } from '@/lib/actions/charges';
 import { togglePaymentAction } from '@/lib/actions/charge-payments';
 import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
 import { currentPeriodDueDate, paymentMonthsFromFrequency } from '@/lib/domain/charges';
+import { CHARGE_FREQUENCIES, type ChargeFrequency } from '@/lib/domain/types';
 import { formatCurrency, formatDate, formatMonth } from '@/lib/i18n/formatters';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 
+import { CadenceField } from './CadenceField';
 import { ChargeEditDrawer, type ChargeEditDrawerCharge } from './ChargeEditDrawer';
 
-type Frequency = 'monthly' | 'quarterly' | 'semiannual' | 'annual';
+type Frequency = ChargeFrequency;
 
-const MONTH_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
-const FREQUENCIES: readonly Frequency[] = ['monthly', 'quarterly', 'semiannual', 'annual'];
+// Domain single source of truth — adding a frequency updates every call-site.
+const FREQUENCIES = CHARGE_FREQUENCIES;
 
 // Literal key map keeps next-intl's typed `t()` happy on a per-frequency key.
 // The unit suffix disambiguates the group subtotals: the monthly one is
@@ -99,7 +94,6 @@ export function ChargesClient({
   const t = useTranslations('app.charges');
   const tFreq = useTranslations('common.frequency');
   const tFreqAbbr = useTranslations('common.frequencyAbbr');
-  const tMonths = useTranslations('common.months');
   const locale = useLocale() as Locale;
   const translateError = useActionErrorTranslator();
 
@@ -546,50 +540,24 @@ export function ChargesClient({
                   required
                 />
               </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="frequency">{t('frequencyLabel')}</Label>
-                <Select value={frequency} onValueChange={(v) => setFrequency(v as Frequency)}>
-                  <SelectTrigger id="frequency">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {FREQUENCIES.map((key) => (
-                      <SelectItem key={key} value={key}>
-                        {tFreq(key)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="dueMonth">{t('dueMonthLabel')}</Label>
-                <Select value={dueMonth} onValueChange={setDueMonth}>
-                  <SelectTrigger id="dueMonth">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MONTH_KEYS.map((n) => (
-                      <SelectItem key={n} value={String(n)}>
-                        {tMonths(String(n) as '1')}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="paymentDay">{t('paymentDayLabel')}</Label>
-                <Input
-                  id="paymentDay"
-                  type="number"
-                  autoComplete="off"
-                  inputMode="numeric"
-                  min={1}
-                  max={31}
-                  value={paymentDay}
-                  onChange={(e) => setPaymentDay(e.target.value)}
-                  required
+              {/* THI-301: unified cadence cluster replaces the 3 separate
+                  fields (frequency / anchor month / day). The parent state and
+                  onCreate submit logic are unchanged — conversion happens at
+                  the component boundary. */}
+              <div className="md:col-span-2">
+                <CadenceField
+                  idPrefix="create-charge"
+                  value={{
+                    frequency,
+                    dueMonth: Number(dueMonth),
+                    paymentDay: Number(paymentDay) || 1,
+                  }}
+                  onChange={(next) => {
+                    setFrequency(next.frequency);
+                    setDueMonth(String(next.dueMonth));
+                    setPaymentDay(String(next.paymentDay));
+                  }}
                 />
-                <p className="text-muted-foreground text-xs">{t('paymentDayHint')}</p>
               </div>
               <div className="md:col-span-2">
                 <Button type="submit" disabled={isPending}>
