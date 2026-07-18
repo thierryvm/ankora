@@ -148,6 +148,54 @@ export async function updateChargeAction(id: string, input: unknown): Promise<Ac
   return { ok: true };
 }
 
+/**
+ * Flip the manual "à surveiller" marker on a charge (THI-329 PR-C).
+ *
+ * Read-then-write toggle: the pre-fetch doubles as the workspace-ownership
+ * check (RLS + explicit `workspace_id` filter — same belt-and-braces as
+ * update/delete above). Last-write-wins on a concurrent double-tap, which is
+ * acceptable for a boolean UI marker (the revalidated page reconciles).
+ */
+export async function toggleWatchAction(id: string): Promise<ActionResult<{ watched: boolean }>> {
+  if (!uuidSchema.safeParse(id).success) {
+    return { ok: false, errorCode: 'errors.validation.generic' };
+  }
+
+  const ctx = await authorizedWorkspace();
+  if (!ctx.ok) return ctx;
+
+  const rl = await rateLimit('mutation', `user:${ctx.userId}`);
+  if (!rl.success) return { ok: false, errorCode: 'errors.session.rateLimited' };
+
+  const supabase = await createClient();
+  const { data: charge, error: readError } = await supabase
+    .from('charges')
+    .select('is_watched')
+    .eq('id', id)
+    .eq('workspace_id', ctx.workspaceId)
+    .maybeSingle();
+
+  if (readError || !charge) return { ok: false, errorCode: 'errors.charges.watchFailed' };
+
+  const watched = !charge.is_watched;
+  const { error } = await supabase
+    .from('charges')
+    .update({ is_watched: watched })
+    .eq('id', id)
+    .eq('workspace_id', ctx.workspaceId);
+
+  if (error) return { ok: false, errorCode: 'errors.charges.watchFailed' };
+
+  await logAuditEvent(AuditEvent.CHARGE_WATCH_TOGGLED, {
+    userId: ctx.userId,
+    workspaceId: ctx.workspaceId,
+  });
+
+  revalidateDashboard();
+  revalidateAppPath('charges');
+  return { ok: true, data: { watched } };
+}
+
 export async function deleteChargeAction(id: string): Promise<ActionResult> {
   if (!uuidSchema.safeParse(id).success) {
     return { ok: false, errorCode: 'errors.validation.generic' };

@@ -742,6 +742,10 @@
         "annual": "/year"
       },
       "statusOverdue": "Overdue",
+      "watchAria": "Watch {label}",
+      "unwatchAria": "Stop watching {label}",
+      "toastWatched": "Added to “Watching”",
+      "toastUnwatched": "Removed from “Watching”",
       "drawer": {
         "title": "Edit bill",
         "save": "Save",
@@ -1109,16 +1113,20 @@
     "upcomingBills": {
       "title": "Upcoming bills",
       "viewAll": "View all",
-      "empty": "No bills due in the next 30 days.",
+      "empty": "No active bills yet.",
       "itemCount": "{count, plural, =1 {1 bill} other {# bills}}",
       "dueToday": "Today",
       "daysUntil": "In {days, plural, =1 {1 day} other {# days}}",
       "daysOverdue": "{days, plural, =1 {1 day overdue} other {# days overdue}}",
+      "thisMonth": "This month",
+      "thisMonthHint": "This month's bills still to pay — tick them on the Charges page.",
+      "thisMonthEmpty": "Everything is paid this month",
+      "remainingLabel": "Left to pay",
+      "watched": "Watching",
+      "watchedHint": "Your flagged bills, to see them coming.",
+      "watchedEmptyHint": "Tip: flag a bill as “watching” on the Charges page to track it here.",
       "buckets": {
-        "overdue": "Overdue",
-        "j7": "This week",
-        "j14": "This month",
-        "j30": "Next month"
+        "overdue": "Overdue"
       }
     }
   },
@@ -1311,6 +1319,7 @@
       "createFailed": "Unable to create the bill.",
       "updateFailed": "Unable to update the bill.",
       "deleteFailed": "Unable to delete the bill.",
+      "watchFailed": "Unable to update the bill's watch marker.",
       "notFound": "This bill could not be found.",
       "payments": {
         "toggleFailed": "Unable to mark the bill as paid."

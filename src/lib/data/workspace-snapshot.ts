@@ -109,6 +109,8 @@ export type WorkspaceSnapshot = {
     paymentMonths: readonly number[];
     categoryId: string | null;
     isActive: boolean;
+    /** Manual "à surveiller" dashboard marker (THI-329 PR-C). */
+    isWatched: boolean;
     notes: string | null;
     paidFrom: ChargePaidFrom;
   }>;
@@ -188,14 +190,14 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
         .maybeSingle(),
       supabase
         .from('charges')
-        // PR THI-192 (2026-05-19): added `payment_day, payment_months` to
-        // the SELECT. The PR-D1 migration `20260503000002` shipped these
-        // columns with defaults but no code path was reading them — every
-        // downstream consumer (cockpit math, notifications, upcoming bills)
-        // was running on the stub `paymentDay: 1` set in `toCockpitCharges`.
-        .select(
-          'id, label, amount, frequency, due_month, payment_day, payment_months, category_id, is_active, notes, paid_from',
-        )
+        // `select('*')` on purpose (incident 2026-07-18): an explicit column
+        // list containing a NOT-YET-MIGRATED column (`is_watched` preview vs
+        // prod schema) makes the WHOLE query fail → the dashboard + charges
+        // page silently render empty and look like data loss. `*` returns
+        // whatever columns exist, and the mapping defaults the missing ones —
+        // the page can never go blank because of a deploy/migration window.
+        // Over-fetch is negligible (a few metadata columns on ~20 rows).
+        .select('*')
         .eq('workspace_id', workspaceId)
         .order('created_at', { ascending: true }),
       supabase
@@ -219,6 +221,15 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
 
   if (wsRes.error || !wsRes.data) redirect('/onboarding');
 
+  // Never swallow a charges read failure silently again (incident 2026-07-18:
+  // the `?? []` fallback made a failing SELECT look like an empty workspace).
+  if (chargesRes.error) {
+    log.error('Failed to load charges for dashboard', {
+      workspace_id: workspaceId,
+      error_code: chargesRes.error.code ?? 'unknown',
+    });
+  }
+
   const rawCharges = (chargesRes.data ?? []).map((c) => ({
     id: c.id,
     label: c.label,
@@ -234,6 +245,9 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
     paymentMonths: (c.payment_months ?? []) as readonly number[],
     categoryId: c.category_id,
     isActive: c.is_active,
+    // `?? false`: tolerate a prod schema where the 20260718000001 migration
+    // has not landed yet (deploy/migration ordering window).
+    isWatched: c.is_watched ?? false,
     notes: c.notes,
     paidFrom: c.paid_from as ChargePaidFrom,
   }));
@@ -248,6 +262,7 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
     paymentMonths: c.paymentMonths,
     categoryId: c.categoryId,
     isActive: c.isActive,
+    isWatched: c.isWatched,
     paidFrom: c.paidFrom,
   }));
 

@@ -742,6 +742,10 @@
         "annual": "/jaar"
       },
       "statusOverdue": "Te laat",
+      "watchAria": "{label} in het oog houden",
+      "unwatchAria": "{label} niet langer volgen",
+      "toastWatched": "Toegevoegd aan 'In het oog houden'",
+      "toastUnwatched": "Verwijderd uit 'In het oog houden'",
       "drawer": {
         "title": "Vaste kost bewerken",
         "save": "Opslaan",
@@ -1109,16 +1113,20 @@
     "upcomingBills": {
       "title": "Aankomende facturen",
       "viewAll": "Alles bekijken",
-      "empty": "Geen facturen in de komende 30 dagen.",
+      "empty": "Nog geen actieve vaste kosten.",
       "itemCount": "{count, plural, =1 {1 factuur} other {# facturen}}",
       "dueToday": "Vandaag",
       "daysUntil": "Over {days, plural, =1 {1 dag} other {# dagen}}",
       "daysOverdue": "{days, plural, =1 {1 dag te laat} other {# dagen te laat}}",
+      "thisMonth": "Deze maand",
+      "thisMonthHint": "Facturen van deze maand die nog te betalen zijn — vink ze af op de pagina Vaste kosten.",
+      "thisMonthEmpty": "Alles is betaald deze maand",
+      "remainingLabel": "Nog te betalen",
+      "watched": "In het oog houden",
+      "watchedHint": "Je gemarkeerde facturen, om ze te zien aankomen.",
+      "watchedEmptyHint": "Tip: markeer een factuur als 'in het oog houden' op de pagina Vaste kosten om ze hier te volgen.",
       "buckets": {
-        "overdue": "Te laat",
-        "j7": "Deze week",
-        "j14": "Deze maand",
-        "j30": "Volgende maand"
+        "overdue": "Te laat"
       }
     }
   },
@@ -1311,6 +1319,7 @@
       "createFailed": "Kan de vaste kost niet aanmaken.",
       "updateFailed": "Kan de vaste kost niet bijwerken.",
       "deleteFailed": "Kan de vaste kost niet verwijderen.",
+      "watchFailed": "Kan de markering van de factuur niet bijwerken.",
       "notFound": "Deze vaste kost is niet gevonden.",
       "payments": {
         "toggleFailed": "Kan de vaste kost niet als betaald markeren."

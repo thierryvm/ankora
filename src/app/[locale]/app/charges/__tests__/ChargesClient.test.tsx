@@ -23,11 +23,13 @@ const toastSuccessMock = vi.hoisted(() => vi.fn());
 const toastErrorMock = vi.hoisted(() => vi.fn());
 const routerRefreshMock = vi.hoisted(() => vi.fn());
 const togglePaymentMock = vi.hoisted(() => vi.fn());
+const toggleWatchMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/actions/charges', () => ({
   createChargeAction: createChargeMock,
   updateChargeAction: updateChargeMock,
   deleteChargeAction: deleteChargeMock,
+  toggleWatchAction: toggleWatchMock,
 }));
 
 vi.mock('@/lib/actions/charge-payments', () => ({
@@ -93,6 +95,7 @@ const sampleCharges = [
     paymentMonths: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const,
     categoryId: null,
     isActive: true,
+    isWatched: false,
     notes: null,
   },
   {
@@ -105,6 +108,7 @@ const sampleCharges = [
     paymentMonths: [6] as const,
     categoryId: null,
     isActive: true,
+    isWatched: false,
     notes: null,
   },
 ];
@@ -545,6 +549,60 @@ describe('Factures Phase 2 — Payé toggle', () => {
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
   });
 
+  it('seeds the watch button state from isWatched, flips optimistically, and calls toggleWatchAction', async () => {
+    // Deferred action: the optimistic flip is only observable while the
+    // server call is PENDING (React 19 reconciles useOptimistic back to the
+    // base once the transition settles in the test harness).
+    let resolveAction!: (v: { ok: true; data: { watched: boolean } }) => void;
+    toggleWatchMock.mockImplementation(
+      () =>
+        new Promise((res) => {
+          resolveAction = res;
+        }),
+    );
+    renderCharges([monthlyCharge], { currentPeriod: { year: 2026, month: 1 } });
+    const watchBtn = screen.getByTestId(`charges-row-watch-${monthlyCharge.id}`);
+    expect(watchBtn).toHaveAttribute('aria-pressed', 'false');
+    fireEvent.click(watchBtn);
+    // Optimistic state visible before the server responds.
+    await waitFor(() => expect(watchBtn).toHaveAttribute('aria-pressed', 'true'));
+    expect(toggleWatchMock).toHaveBeenCalledWith(monthlyCharge.id);
+    await act(async () => {
+      resolveAction({ ok: true, data: { watched: true } });
+    });
+    await waitFor(() => expect(toastSuccessMock).toHaveBeenCalled());
+  });
+
+  it('shows the watchFailed toast when toggleWatchAction throws (catch path)', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    toggleWatchMock.mockRejectedValueOnce(new Error('network error'));
+    renderCharges([monthlyCharge], { currentPeriod: { year: 2026, month: 1 } });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`charges-row-watch-${monthlyCharge.id}`));
+    });
+    await waitFor(() => expect(toastErrorMock).toHaveBeenCalled());
+    consoleSpy.mockRestore();
+  });
+
+  it('renders a pressed watch button for a charge already flagged', () => {
+    renderCharges([{ ...monthlyCharge, isWatched: true }], {
+      currentPeriod: { year: 2026, month: 1 },
+    });
+    expect(screen.getByTestId(`charges-row-watch-${monthlyCharge.id}`)).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+
+  it('shows an error toast when the watch toggle fails', async () => {
+    toggleWatchMock.mockResolvedValue({ ok: false, errorCode: 'errors.charges.watchFailed' });
+    renderCharges([monthlyCharge], { currentPeriod: { year: 2026, month: 1 } });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`charges-row-watch-${monthlyCharge.id}`));
+    });
+    await waitFor(() => expect(toastErrorMock).toHaveBeenCalled());
+  });
+
   it('keeps the sort order stable when a bill is ticked (no reorder under the finger)', async () => {
     togglePaymentMock.mockResolvedValue({ ok: true, data: { paid: true, paidAmount: 1200 } });
     const late = { ...monthlyCharge, id: 'late', label: 'Late bill', paymentDay: 20 };
@@ -673,6 +731,17 @@ describe('app.charges — i18n parity (5 locales, PR-BETA-CLEANUP-2)', () => {
       expect((c.paidHint ?? '').length).toBeGreaterThan(0);
       // THI-329 (PR-B) — overdue status badge.
       expect((c.statusOverdue ?? '').length).toBeGreaterThan(0);
+      // THI-329 (PR-C) — watch marker keys.
+      const cw = c as typeof c & {
+        watchAria?: string;
+        unwatchAria?: string;
+        toastWatched?: string;
+        toastUnwatched?: string;
+      };
+      expect((cw.watchAria ?? '').includes('{label}')).toBe(true);
+      expect((cw.unwatchAria ?? '').includes('{label}')).toBe(true);
+      expect((cw.toastWatched ?? '').length).toBeGreaterThan(0);
+      expect((cw.toastUnwatched ?? '').length).toBeGreaterThan(0);
     },
   );
 });

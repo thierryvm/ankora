@@ -125,6 +125,7 @@ vi.mock('@/lib/security/audit-log', () => ({
     CHARGE_UPDATED: 'charge.updated',
     CHARGE_DELETED: 'charge.deleted',
     CHARGE_PAYMENT_TOGGLED: 'charge.payment_toggled',
+    CHARGE_WATCH_TOGGLED: 'charge.watch_toggled',
     EXPENSE_CREATED: 'expense.created',
     EXPENSE_UPDATED: 'expense.updated',
     EXPENSE_DELETED: 'expense.deleted',
@@ -140,7 +141,7 @@ vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
 }));
 
-import { updateChargeAction, createChargeAction } from '../charges';
+import { updateChargeAction, createChargeAction, toggleWatchAction } from '../charges';
 
 const CHARGE_ID = '10dccda9-7e0f-4b4e-9c7d-23f3c1b7e8a9';
 
@@ -368,6 +369,69 @@ describe('updateChargeAction — happy path + audit', () => {
     });
     const r = await updateChargeAction(CHARGE_ID, { label: 'X' });
     expect(r).toEqual({ ok: false, errorCode: 'errors.charges.updateFailed' });
+    expect(auditSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe('toggleWatchAction — THI-329 PR-C', () => {
+  it('flips is_watched, returns the new state, and emits the audit event', async () => {
+    programMembership();
+    supa.program({
+      table: 'charges',
+      op: 'select',
+      result: { data: { is_watched: false }, error: null },
+    });
+    supa.program({ table: 'charges', op: 'update', result: { data: null, error: null } });
+    const r = await toggleWatchAction(CHARGE_ID);
+    expect(r).toEqual({ ok: true, data: { watched: true } });
+    expect(supa.lastUpdatePayload()).toEqual({ is_watched: true });
+    expect(auditSpy).toHaveBeenCalledWith('charge.watch_toggled', {
+      userId: 'user-1',
+      workspaceId: 'ws-1',
+    });
+  });
+
+  it('unwatches an already-watched charge', async () => {
+    programMembership();
+    supa.program({
+      table: 'charges',
+      op: 'select',
+      result: { data: { is_watched: true }, error: null },
+    });
+    supa.program({ table: 'charges', op: 'update', result: { data: null, error: null } });
+    const r = await toggleWatchAction(CHARGE_ID);
+    expect(r).toEqual({ ok: true, data: { watched: false } });
+    expect(supa.lastUpdatePayload()).toEqual({ is_watched: false });
+  });
+
+  it('rejects a malformed id before any DB access', async () => {
+    const r = await toggleWatchAction('not-a-uuid');
+    expect(r).toEqual({ ok: false, errorCode: 'errors.validation.generic' });
+  });
+
+  it('returns watchFailed when the charge is not in the caller workspace (authz)', async () => {
+    programMembership();
+    // RLS + workspace_id filter → no row visible for a foreign charge.
+    supa.program({ table: 'charges', op: 'select', result: { data: null, error: null } });
+    const r = await toggleWatchAction(CHARGE_ID);
+    expect(r).toEqual({ ok: false, errorCode: 'errors.charges.watchFailed' });
+    expect(auditSpy).not.toHaveBeenCalled();
+  });
+
+  it('returns watchFailed on a DB error during the update', async () => {
+    programMembership();
+    supa.program({
+      table: 'charges',
+      op: 'select',
+      result: { data: { is_watched: false }, error: null },
+    });
+    supa.program({
+      table: 'charges',
+      op: 'update',
+      result: { data: null, error: { message: 'rls denied' } },
+    });
+    const r = await toggleWatchAction(CHARGE_ID);
+    expect(r).toEqual({ ok: false, errorCode: 'errors.charges.watchFailed' });
     expect(auditSpy).not.toHaveBeenCalled();
   });
 });

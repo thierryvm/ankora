@@ -742,6 +742,10 @@
         "annual": "/año"
       },
       "statusOverdue": "Atrasadas",
+      "watchAria": "Seguir {label}",
+      "unwatchAria": "Dejar de seguir {label}",
+      "toastWatched": "Añadida a «En seguimiento»",
+      "toastUnwatched": "Eliminada de «En seguimiento»",
       "drawer": {
         "title": "Modificar gasto fijo",
         "save": "Guardar",
@@ -1109,16 +1113,20 @@
     "upcomingBills": {
       "title": "Próximas facturas",
       "viewAll": "Ver todas",
-      "empty": "No hay facturas en los próximos 30 días.",
+      "empty": "Aún no hay gastos fijos activos.",
       "itemCount": "{count, plural, =1 {1 factura} other {# facturas}}",
       "dueToday": "Hoy",
       "daysUntil": "En {days, plural, =1 {1 día} other {# días}}",
       "daysOverdue": "{days, plural, =1 {1 día de retraso} other {# días de retraso}}",
+      "thisMonth": "Este mes",
+      "thisMonthHint": "Facturas del mes aún por pagar — márcalas en la página de Gastos fijos.",
+      "thisMonthEmpty": "Todo está pagado este mes",
+      "remainingLabel": "Pendiente de pagar",
+      "watched": "En seguimiento",
+      "watchedHint": "Tus facturas marcadas, para verlas venir.",
+      "watchedEmptyHint": "Consejo: marca una factura «en seguimiento» en la página de Gastos fijos para seguirla aquí.",
       "buckets": {
-        "overdue": "Atrasadas",
-        "j7": "Esta semana",
-        "j14": "Este mes",
-        "j30": "Próximo mes"
+        "overdue": "Atrasadas"
       }
     }
   },
@@ -1311,6 +1319,7 @@
       "createFailed": "No se ha podido crear el gasto fijo.",
       "updateFailed": "No se ha podido actualizar el gasto fijo.",
       "deleteFailed": "No se ha podido eliminar el gasto fijo.",
+      "watchFailed": "No se ha podido actualizar el marcador de la factura.",
       "notFound": "No se ha encontrado este gasto fijo.",
       "payments": {
         "toggleFailed": "No se ha podido marcar el gasto fijo como pagado."

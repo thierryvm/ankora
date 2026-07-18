@@ -247,6 +247,7 @@ export type Database = {
           frequency: string;
           id: string;
           is_active: boolean;
+          is_watched: boolean;
           label: string;
           notes: string | null;
           paid_from: string;
@@ -265,6 +266,7 @@ export type Database = {
           frequency: string;
           id?: string;
           is_active?: boolean;
+          is_watched?: boolean;
           label: string;
           notes?: string | null;
           paid_from?: string;
@@ -283,6 +285,7 @@ export type Database = {
           frequency?: string;
           id?: string;
           is_active?: boolean;
+          is_watched?: boolean;
           label?: string;
           notes?: string | null;
           paid_from?: string;

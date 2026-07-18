@@ -31,6 +31,7 @@ export const AuditEvent = {
   CHARGE_UPDATED: 'charge.updated',
   CHARGE_DELETED: 'charge.deleted',
   CHARGE_PAYMENT_TOGGLED: 'charge.payment_toggled',
+  CHARGE_WATCH_TOGGLED: 'charge.watch_toggled',
   EXPENSE_CREATED: 'expense.created',
   EXPENSE_UPDATED: 'expense.updated',
   EXPENSE_DELETED: 'expense.deleted',

@@ -742,6 +742,10 @@
         "annual": "/an"
       },
       "statusOverdue": "En retard",
+      "watchAria": "Surveiller {label}",
+      "unwatchAria": "Ne plus surveiller {label}",
+      "toastWatched": "Ajoutée à « À surveiller »",
+      "toastUnwatched": "Retirée de « À surveiller »",
       "drawer": {
         "title": "Modifier la charge",
         "save": "Enregistrer",
@@ -1109,16 +1113,20 @@
     "upcomingBills": {
       "title": "Prochaines factures",
       "viewAll": "Voir toutes",
-      "empty": "Aucune facture à venir dans les 30 prochains jours.",
+      "empty": "Aucune charge active pour le moment.",
       "itemCount": "{count, plural, =1 {1 facture} other {# factures}}",
       "dueToday": "Aujourd'hui",
       "daysUntil": "Dans {days, plural, =1 {1 jour} other {# jours}}",
       "daysOverdue": "{days, plural, =1 {1 jour en retard} other {# jours en retard}}",
+      "thisMonth": "Ce mois-ci",
+      "thisMonthHint": "Factures du mois encore à payer — coche-les depuis la page Charges.",
+      "thisMonthEmpty": "Tout est payé ce mois",
+      "remainingLabel": "Reste à payer",
+      "watched": "À surveiller",
+      "watchedHint": "Tes factures marquées, pour les voir venir.",
+      "watchedEmptyHint": "Astuce : marque une facture « à surveiller » depuis la page Charges pour la suivre ici.",
       "buckets": {
-        "overdue": "En retard",
-        "j7": "Cette semaine",
-        "j14": "Ce mois-ci",
-        "j30": "Mois prochain"
+        "overdue": "En retard"
       }
     }
   },
@@ -1311,6 +1319,7 @@
       "createFailed": "Impossible de créer la charge.",
       "updateFailed": "Impossible de mettre à jour la charge.",
       "deleteFailed": "Impossible de supprimer la charge.",
+      "watchFailed": "Impossible de modifier la surveillance de la facture.",
       "notFound": "Cette charge est introuvable.",
       "payments": {
         "toggleFailed": "Impossible de marquer la charge comme payée."
