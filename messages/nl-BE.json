@@ -731,6 +731,7 @@
       "paidHint": "Vink de facturen aan die je deze maand al betaald hebt.",
       "remainingLabel": "Nog te betalen deze maand",
       "paidCount": "{paid}/{total} betaald",
+      "groupRemaining": "nog {amount}",
       "statusOverdue": "Te laat",
       "drawer": {
         "title": "Vaste kost bewerken",

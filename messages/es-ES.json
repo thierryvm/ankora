@@ -731,6 +731,7 @@
       "paidHint": "Marca las facturas que ya has pagado este mes.",
       "remainingLabel": "Pendiente de pagar este mes",
       "paidCount": "{paid}/{total} pagadas",
+      "groupRemaining": "quedan {amount}",
       "statusOverdue": "Atrasadas",
       "drawer": {
         "title": "Modificar gasto fijo",

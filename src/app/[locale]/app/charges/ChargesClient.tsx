@@ -551,6 +551,19 @@ export function ChargesClient({
               <div data-testid="charges-list" className="flex flex-col gap-6">
                 {groups.map(({ freq, rows }) => {
                   const headingId = `charges-group-${freq}-heading`;
+                  // Live per-group countdown: cash still due THIS month in this
+                  // group (due-this-month rows not ticked). Derived from the
+                  // optimistic paid set, so it drops the instant a bill is
+                  // ticked — unlike the subtotal, which documents the group's
+                  // full recurring cost and intentionally never moves.
+                  const groupRemaining = rows
+                    .filter(
+                      (c) =>
+                        c.isActive &&
+                        c.paymentMonths.includes(currentPeriod.month) &&
+                        !optimisticPaid.has(c.id),
+                    )
+                    .reduce((sum, c) => sum + c.amount, 0);
                   return (
                     <section
                       key={freq}
@@ -587,6 +600,17 @@ export function ChargesClient({
                         <span className="text-brand-text text-sm font-semibold tabular-nums">
                           {formatCurrency(subtotals[freq], locale)}
                         </span>
+                        {groupRemaining > 0 && (
+                          <span
+                            data-testid={`charges-group-remaining-${freq}`}
+                            className="text-foreground text-sm font-medium tabular-nums"
+                          >
+                            ·{' '}
+                            {t('groupRemaining', {
+                              amount: formatCurrency(groupRemaining, locale),
+                            })}
+                          </span>
+                        )}
                       </p>
                     </section>
                   );

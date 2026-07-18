@@ -731,6 +731,7 @@
       "paidHint": "Coche les factures que tu as déjà payées ce mois.",
       "remainingLabel": "Reste à payer ce mois",
       "paidCount": "{paid}/{total} payées",
+      "groupRemaining": "reste {amount}",
       "statusOverdue": "En retard",
       "drawer": {
         "title": "Modifier la charge",

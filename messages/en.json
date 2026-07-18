@@ -731,6 +731,7 @@
       "paidHint": "Tick the bills you've already paid this month.",
       "remainingLabel": "Left to pay this month",
       "paidCount": "{paid}/{total} paid",
+      "groupRemaining": "{amount} left",
       "statusOverdue": "Overdue",
       "drawer": {
         "title": "Edit bill",

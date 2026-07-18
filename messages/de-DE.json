@@ -731,6 +731,7 @@
       "paidHint": "Hake die Rechnungen ab, die du diesen Monat schon bezahlt hast.",
       "remainingLabel": "Diesen Monat noch zu zahlen",
       "paidCount": "{paid}/{total} bezahlt",
+      "groupRemaining": "noch {amount}",
       "statusOverdue": "Überfällig",
       "drawer": {
         "title": "Fixkosten bearbeiten",
