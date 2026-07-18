@@ -14,15 +14,17 @@ import { createChargeAction, deleteChargeAction, toggleWatchAction } from '@/lib
 import { togglePaymentAction } from '@/lib/actions/charge-payments';
 import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
 import { currentPeriodDueDate, paymentMonthsFromFrequency } from '@/lib/domain/charges';
+import { CHARGE_FREQUENCIES, type ChargeFrequency } from '@/lib/domain/types';
 import { formatCurrency, formatDate, formatMonth } from '@/lib/i18n/formatters';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 
 import { CadenceField } from './CadenceField';
 import { ChargeEditDrawer, type ChargeEditDrawerCharge } from './ChargeEditDrawer';
 
-type Frequency = 'monthly' | 'quarterly' | 'semiannual' | 'annual';
+type Frequency = ChargeFrequency;
 
-const FREQUENCIES: readonly Frequency[] = ['monthly', 'quarterly', 'semiannual', 'annual'];
+// Domain single source of truth — adding a frequency updates every call-site.
+const FREQUENCIES = CHARGE_FREQUENCIES;
 
 // Literal key map keeps next-intl's typed `t()` happy on a per-frequency key.
 // The unit suffix disambiguates the group subtotals: the monthly one is

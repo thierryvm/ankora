@@ -3,9 +3,7 @@
 import { useTranslations } from 'next-intl';
 
 import { paymentMonthsFromFrequency } from '@/lib/domain/charges';
-import type { Charge } from '@/lib/domain/types';
-
-type ChargeFrequency = Charge['frequency'];
+import { CHARGE_FREQUENCIES, type ChargeFrequency } from '@/lib/domain/types';
 
 export interface CadenceValue {
   frequency: ChargeFrequency;
@@ -24,7 +22,6 @@ interface CadenceFieldProps {
   disabled?: boolean;
 }
 
-const FREQUENCIES: readonly ChargeFrequency[] = ['monthly', 'quarterly', 'semiannual', 'annual'];
 const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
 const NUMERIC_DAYS = Array.from({ length: 30 }, (_, i) => i + 1); // 1..30
 const LAST_DAY = 31;
@@ -80,7 +77,7 @@ export function CadenceField({ idPrefix, value, onChange, disabled }: CadenceFie
           disabled={disabled}
           onChange={(e) => onChange({ ...value, frequency: e.target.value as ChargeFrequency })}
         >
-          {FREQUENCIES.map((f) => (
+          {CHARGE_FREQUENCIES.map((f) => (
             <option key={f} value={f}>
               {tFreq(f)}
             </option>

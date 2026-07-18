@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl';
 import { updateChargeAction } from '@/lib/actions/charges';
 import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
 import { paymentMonthsFromFrequency } from '@/lib/domain/charges';
+import { CHARGE_FREQUENCIES, type ChargeFrequency } from '@/lib/domain/types';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 import { toast } from '@/components/ui/toast';
 import { Button } from '@/components/ui/button';
@@ -17,11 +18,7 @@ import { cn } from '@/lib/utils';
 
 import { CadenceField } from './CadenceField';
 
-type Frequency = 'monthly' | 'quarterly' | 'semiannual' | 'annual';
-
-// Still needed by `normalizeFrequency` (guards legacy/foreign values when
-// seeding the form from a row) even though the Select UI moved to CadenceField.
-const FREQUENCIES: readonly Frequency[] = ['monthly', 'quarterly', 'semiannual', 'annual'];
+type Frequency = ChargeFrequency;
 
 export type ChargeEditDrawerCharge = {
   id: string;
@@ -251,5 +248,7 @@ export function ChargeEditDrawer({ charge, onClose }: Props) {
 }
 
 function normalizeFrequency(value: string): Frequency {
-  return (FREQUENCIES as readonly string[]).includes(value) ? (value as Frequency) : 'monthly';
+  return (CHARGE_FREQUENCIES as readonly string[]).includes(value)
+    ? (value as Frequency)
+    : 'monthly';
 }
