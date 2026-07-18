@@ -732,6 +732,15 @@
       "remainingLabel": "Nog te betalen deze maand",
       "paidCount": "{paid}/{total} betaald",
       "groupRemaining": "nog {amount}",
+      "groupAllPaid": "alles betaald",
+      "allPaidTitle": "Alles is betaald deze maand",
+      "dueCount": "{due, plural, =1 {1 te betalen deze maand} other {# te betalen deze maand}}",
+      "subtotalUnit": {
+        "monthly": "/maand",
+        "quarterly": "/kwartaal",
+        "semiannual": "/halfjaar",
+        "annual": "/jaar"
+      },
       "statusOverdue": "Te laat",
       "drawer": {
         "title": "Vaste kost bewerken",

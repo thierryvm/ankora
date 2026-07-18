@@ -732,6 +732,15 @@
       "remainingLabel": "Left to pay this month",
       "paidCount": "{paid}/{total} paid",
       "groupRemaining": "{amount} left",
+      "groupAllPaid": "all paid",
+      "allPaidTitle": "Everything is paid this month",
+      "dueCount": "{due, plural, =1 {1 due this month} other {# due this month}}",
+      "subtotalUnit": {
+        "monthly": "/month",
+        "quarterly": "/quarter",
+        "semiannual": "/half-year",
+        "annual": "/year"
+      },
       "statusOverdue": "Overdue",
       "drawer": {
         "title": "Edit bill",

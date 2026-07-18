@@ -732,6 +732,15 @@
       "remainingLabel": "Reste à payer ce mois",
       "paidCount": "{paid}/{total} payées",
       "groupRemaining": "reste {amount}",
+      "groupAllPaid": "tout payé",
+      "allPaidTitle": "Tout est payé ce mois",
+      "dueCount": "{due, plural, =1 {1 due ce mois} other {# dues ce mois}}",
+      "subtotalUnit": {
+        "monthly": "/mois",
+        "quarterly": "/trimestre",
+        "semiannual": "/semestre",
+        "annual": "/an"
+      },
       "statusOverdue": "En retard",
       "drawer": {
         "title": "Modifier la charge",

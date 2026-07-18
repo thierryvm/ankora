@@ -732,6 +732,15 @@
       "remainingLabel": "Pendiente de pagar este mes",
       "paidCount": "{paid}/{total} pagadas",
       "groupRemaining": "quedan {amount}",
+      "groupAllPaid": "todo pagado",
+      "allPaidTitle": "Todo está pagado este mes",
+      "dueCount": "{due, plural, =1 {1 vence este mes} other {# vencen este mes}}",
+      "subtotalUnit": {
+        "monthly": "/mes",
+        "quarterly": "/trimestre",
+        "semiannual": "/semestre",
+        "annual": "/año"
+      },
       "statusOverdue": "Atrasadas",
       "drawer": {
         "title": "Modificar gasto fijo",

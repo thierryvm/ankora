@@ -31,6 +31,17 @@ type Frequency = 'monthly' | 'quarterly' | 'semiannual' | 'annual';
 const MONTH_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
 const FREQUENCIES: readonly Frequency[] = ['monthly', 'quarterly', 'semiannual', 'annual'];
 
+// Literal key map keeps next-intl's typed `t()` happy on a per-frequency key.
+// The unit suffix disambiguates the group subtotals: the monthly one is
+// per MONTH, the annual one per YEAR — same label, different time units,
+// a real source of confusion without it (@thierry 2026-07-18).
+const SUBTOTAL_UNIT_KEY = {
+  monthly: 'subtotalUnit.monthly',
+  quarterly: 'subtotalUnit.quarterly',
+  semiannual: 'subtotalUnit.semiannual',
+  annual: 'subtotalUnit.annual',
+} as const;
+
 type RawCharge = {
   id: string;
   label: string;
@@ -97,6 +108,10 @@ export function ChargesClient({
   const [dueMonth, setDueMonth] = useState('1');
   const [paymentDay, setPaymentDay] = useState('1');
   const [editingCharge, setEditingCharge] = useState<ChargeEditDrawerCharge | null>(null);
+  // The add form is collapsed by default: the monthly workflow is ticking
+  // bills, not adding charges — the list must own the first screen
+  // (dashboard-ux M1, scope validated @thierry 2026-07-18).
+  const [showAddForm, setShowAddForm] = useState(false);
 
   const todayIso = useMemo(() => todayBrusselsIso(), []);
 
@@ -104,14 +119,26 @@ export function ChargesClient({
   // dropped so the list never shows a heading with no rows. The list stays
   // exhaustive — every charge is rendered (no active/inactive filter here);
   // only the money totals (server-side) skip inactive charges.
-  const groups = useMemo(
-    () =>
-      FREQUENCIES.map((freq) => ({
-        freq,
-        rows: charges.filter((c) => c.frequency === freq),
-      })).filter((group) => group.rows.length > 0),
-    [charges],
-  );
+  // Rows are sorted by resolved due date ascending — a STABLE order (ticking a
+  // bill never reorders rows under the user's finger, unlike unpaid-first).
+  // The resolver is paid-independent for the date, so `isPaid: false` is fine.
+  const groups = useMemo(() => {
+    const dueIsoOf = (c: RawCharge): string =>
+      currentPeriodDueDate(
+        { isActive: c.isActive, paymentMonths: c.paymentMonths, paymentDay: c.paymentDay },
+        currentPeriod,
+        todayIso,
+        false,
+      )?.dueDateIso ?? '9999-12-31';
+    return FREQUENCIES.map((freq) => ({
+      freq,
+      rows: charges
+        .filter((c) => c.frequency === freq)
+        .map((c) => ({ c, dueIso: dueIsoOf(c) }))
+        .sort((a, b) => (a.dueIso < b.dueIso ? -1 : a.dueIso > b.dueIso ? 1 : 0))
+        .map(({ c }) => c),
+    })).filter((group) => group.rows.length > 0);
+  }, [charges, currentPeriod, todayIso]);
 
   // Optimistic "Payé" state (plan-reviewer CR-1): `useOptimistic` seeds from
   // the server `paidChargeIds` and reconciles automatically once the action's
@@ -187,6 +214,9 @@ export function ChargesClient({
           toast.success(t('toastCreated'));
           setLabel('');
           setAmount('');
+          // Collapse after a successful add — the revalidated list (with the
+          // new charge) becomes the confirmation; the toggle stays for more.
+          setShowAddForm(false);
         } else {
           toast.error(translateError(result.errorCode));
         }
@@ -401,103 +431,133 @@ export function ChargesClient({
   const remainingThisMonth = dueThisMonth
     .filter((c) => !optimisticPaid.has(c.id))
     .reduce((sum, c) => sum + c.amount, 0);
+  // Count-based (not amount-based) so a 0 € bill still has to be ticked.
+  const allPaidThisMonth = dueThisMonth.length > 0 && paidThisMonthCount === dueThisMonth.length;
 
   return (
     <div className="flex flex-col gap-6">
-      <header>
-        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{t('title')}</h1>
-        <p className="text-muted-foreground mt-1">{t('subtitle')}</p>
+      {/* Header owns the add-form toggle: adding a charge is the RARE action
+          (~once a month), ticking bills is the routine one — so the form is
+          collapsed and the list gets the first screen (dashboard-ux M1). */}
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{t('title')}</h1>
+          <p className="text-muted-foreground mt-1">{t('subtitle')}</p>
+        </div>
+        <Button
+          type="button"
+          variant={showAddForm ? 'outline' : 'default'}
+          onClick={() => setShowAddForm((v) => !v)}
+          aria-expanded={showAddForm}
+          aria-controls="charges-add-form"
+          data-testid="charges-add-toggle"
+        >
+          <Plus className="h-4 w-4" />
+          {t('addFormTitle')}
+        </Button>
       </header>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('addFormTitle')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={onCreate} className="grid gap-4 md:grid-cols-2">
-            <div className="flex flex-col gap-2 md:col-span-2">
-              <Label htmlFor="label">{t('labelLabel')}</Label>
-              <Input
-                id="label"
-                autoComplete="off"
-                value={label}
-                onChange={(e) => setLabel(e.target.value)}
-                required
-                maxLength={120}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="amount">{t('amountLabel')}</Label>
-              <Input
-                id="amount"
-                type="number"
-                autoComplete="off"
-                inputMode="decimal"
-                min={0}
-                step="0.01"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                required
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="frequency">{t('frequencyLabel')}</Label>
-              <Select value={frequency} onValueChange={(v) => setFrequency(v as Frequency)}>
-                <SelectTrigger id="frequency">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {FREQUENCIES.map((key) => (
-                    <SelectItem key={key} value={key}>
-                      {tFreq(key)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="dueMonth">{t('dueMonthLabel')}</Label>
-              <Select value={dueMonth} onValueChange={setDueMonth}>
-                <SelectTrigger id="dueMonth">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {MONTH_KEYS.map((n) => (
-                    <SelectItem key={n} value={String(n)}>
-                      {tMonths(String(n) as '1')}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="paymentDay">{t('paymentDayLabel')}</Label>
-              <Input
-                id="paymentDay"
-                type="number"
-                autoComplete="off"
-                inputMode="numeric"
-                min={1}
-                max={31}
-                value={paymentDay}
-                onChange={(e) => setPaymentDay(e.target.value)}
-                required
-              />
-              <p className="text-muted-foreground text-xs">{t('paymentDayHint')}</p>
-            </div>
-            <div className="md:col-span-2">
-              <Button type="submit" disabled={isPending}>
-                <Plus className="h-4 w-4" />
-                {isPending ? t('adding') : t('addButton')}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+      {showAddForm && (
+        <Card id="charges-add-form">
+          <CardHeader>
+            <CardTitle>{t('addFormTitle')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={onCreate} className="grid gap-4 md:grid-cols-2">
+              <div className="flex flex-col gap-2 md:col-span-2">
+                <Label htmlFor="label">{t('labelLabel')}</Label>
+                <Input
+                  id="label"
+                  autoComplete="off"
+                  value={label}
+                  onChange={(e) => setLabel(e.target.value)}
+                  required
+                  maxLength={120}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="amount">{t('amountLabel')}</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  autoComplete="off"
+                  inputMode="decimal"
+                  min={0}
+                  step="0.01"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="frequency">{t('frequencyLabel')}</Label>
+                <Select value={frequency} onValueChange={(v) => setFrequency(v as Frequency)}>
+                  <SelectTrigger id="frequency">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FREQUENCIES.map((key) => (
+                      <SelectItem key={key} value={key}>
+                        {tFreq(key)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="dueMonth">{t('dueMonthLabel')}</Label>
+                <Select value={dueMonth} onValueChange={setDueMonth}>
+                  <SelectTrigger id="dueMonth">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MONTH_KEYS.map((n) => (
+                      <SelectItem key={n} value={String(n)}>
+                        {tMonths(String(n) as '1')}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="paymentDay">{t('paymentDayLabel')}</Label>
+                <Input
+                  id="paymentDay"
+                  type="number"
+                  autoComplete="off"
+                  inputMode="numeric"
+                  min={1}
+                  max={31}
+                  value={paymentDay}
+                  onChange={(e) => setPaymentDay(e.target.value)}
+                  required
+                />
+                <p className="text-muted-foreground text-xs">{t('paymentDayHint')}</p>
+              </div>
+              <div className="md:col-span-2">
+                <Button type="submit" disabled={isPending}>
+                  <Plus className="h-4 w-4" />
+                  {isPending ? t('adding') : t('addButton')}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
-          <CardTitle>{t('count', { count: charges.length })}</CardTitle>
+          <CardTitle>
+            {t('count', { count: charges.length })}
+            {/* Explains the "19 charges vs 16/16 paid" gap: charges not due
+                this month (e.g. annual bills anchored elsewhere) have no
+                toggle and are excluded from the paid countdown. */}
+            {dueThisMonth.length > 0 && (
+              <span className="text-muted-foreground ml-2 text-sm font-normal">
+                · {t('dueCount', { due: dueThisMonth.length })}
+              </span>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {charges.length === 0 ? (
@@ -514,19 +574,31 @@ export function ChargesClient({
               {dueThisMonth.length > 0 && (
                 <div
                   data-testid="charges-paid-summary"
-                  className="bg-surface-muted mb-4 flex items-center justify-between gap-3 rounded-lg px-4 py-3"
+                  className={`mb-4 flex items-center justify-between gap-3 rounded-lg px-4 py-3 ${
+                    allPaidThisMonth ? 'bg-brand-600/10' : 'bg-surface-muted'
+                  }`}
                 >
                   {/* aria-live sits on the container (label + amount) with
                       aria-atomic, so screen readers announce "Reste à payer ce
                       mois 45 €" as one utterance on each tick — not the bare
-                      currency value (Sourcery review). */}
+                      currency value (Sourcery review). All-paid flips the banner
+                      to a success state: the month's micro-reward. */}
                   <div className="min-w-0" aria-live="polite" role="status" aria-atomic="true">
-                    <p className="text-muted-foreground text-xs font-medium">
-                      {t('remainingLabel')}
+                    <p
+                      className={`flex items-center gap-1.5 text-xs font-medium ${
+                        allPaidThisMonth ? 'text-brand-text' : 'text-muted-foreground'
+                      }`}
+                    >
+                      {allPaidThisMonth && (
+                        <Check aria-hidden className="h-3.5 w-3.5" strokeWidth={3} />
+                      )}
+                      {allPaidThisMonth ? t('allPaidTitle') : t('remainingLabel')}
                     </p>
                     <p
                       data-testid="charges-remaining-amount"
-                      className="text-foreground text-xl font-bold tabular-nums"
+                      className={`text-xl font-bold tabular-nums ${
+                        allPaidThisMonth ? 'text-brand-text' : 'text-foreground'
+                      }`}
                     >
                       {formatCurrency(remainingThisMonth, locale)}
                     </p>
@@ -537,8 +609,9 @@ export function ChargesClient({
                 </div>
               )}
               {/* One-time hint teaching the Payé toggle convention
-                  (dashboard-ux F2) — only when a charge is due this month. */}
-              {dueThisMonth.length > 0 && (
+                  (dashboard-ux F2) — shown only while there is still something
+                  to tick; once the month is fully paid it is pure noise. */}
+              {dueThisMonth.length > 0 && !allPaidThisMonth && (
                 <p className="text-muted-foreground mb-4 text-xs" data-testid="charges-paid-hint">
                   {t('paidHint')}
                 </p>
@@ -556,14 +629,14 @@ export function ChargesClient({
                   // optimistic paid set, so it drops the instant a bill is
                   // ticked — unlike the subtotal, which documents the group's
                   // full recurring cost and intentionally never moves.
-                  const groupRemaining = rows
-                    .filter(
-                      (c) =>
-                        c.isActive &&
-                        c.paymentMonths.includes(currentPeriod.month) &&
-                        !optimisticPaid.has(c.id),
-                    )
+                  const groupDue = rows.filter(
+                    (c) => c.isActive && c.paymentMonths.includes(currentPeriod.month),
+                  );
+                  const groupRemaining = groupDue
+                    .filter((c) => !optimisticPaid.has(c.id))
                     .reduce((sum, c) => sum + c.amount, 0);
+                  const groupAllPaid =
+                    groupDue.length > 0 && groupDue.every((c) => optimisticPaid.has(c.id));
                   return (
                     <section
                       key={freq}
@@ -599,7 +672,24 @@ export function ChargesClient({
                         <span className="text-muted-foreground text-xs">{t('subtotalLabel')}</span>
                         <span className="text-brand-text text-sm font-semibold tabular-nums">
                           {formatCurrency(subtotals[freq], locale)}
+                          <span className="text-muted-foreground text-xs font-normal">
+                            {t(SUBTOTAL_UNIT_KEY[freq])}
+                          </span>
                         </span>
+                        {/* Payment state of the group's due-this-month bills:
+                            live countdown while unpaid, then a persistent
+                            "tout payé" check — never a silent disappearance
+                            that leaves the static subtotal posing as an
+                            amount still owed (@thierry 2026-07-18). */}
+                        {groupAllPaid && (
+                          <span
+                            data-testid={`charges-group-allpaid-${freq}`}
+                            className="text-brand-text inline-flex items-center gap-1 text-xs font-medium"
+                          >
+                            <Check aria-hidden className="h-3.5 w-3.5" strokeWidth={3} />
+                            {t('groupAllPaid')}
+                          </span>
+                        )}
                         {groupRemaining > 0 && (
                           <span
                             data-testid={`charges-group-remaining-${freq}`}
