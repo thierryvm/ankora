@@ -549,16 +549,29 @@ describe('Factures Phase 2 — Payé toggle', () => {
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('seeds the watch button state from isWatched and calls toggleWatchAction on tap', async () => {
+  it('seeds the watch button state from isWatched, flips optimistically, and calls toggleWatchAction', async () => {
     toggleWatchMock.mockResolvedValue({ ok: true, data: { watched: true } });
     renderCharges([monthlyCharge], { currentPeriod: { year: 2026, month: 1 } });
     const watchBtn = screen.getByTestId(`charges-row-watch-${monthlyCharge.id}`);
     expect(watchBtn).toHaveAttribute('aria-pressed', 'false');
     await act(async () => {
       fireEvent.click(watchBtn);
+      // useOptimistic flips the pressed state immediately, before the server responds.
+      expect(watchBtn).toHaveAttribute('aria-pressed', 'true');
     });
     await waitFor(() => expect(toggleWatchMock).toHaveBeenCalledWith(monthlyCharge.id));
     await waitFor(() => expect(toastSuccessMock).toHaveBeenCalled());
+  });
+
+  it('shows the watchFailed toast when toggleWatchAction throws (catch path)', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    toggleWatchMock.mockRejectedValueOnce(new Error('network error'));
+    renderCharges([monthlyCharge], { currentPeriod: { year: 2026, month: 1 } });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`charges-row-watch-${monthlyCharge.id}`));
+    });
+    await waitFor(() => expect(toastErrorMock).toHaveBeenCalled());
+    consoleSpy.mockRestore();
   });
 
   it('renders a pressed watch button for a charge already flagged', () => {
