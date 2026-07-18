@@ -498,12 +498,65 @@ describe('Factures Phase 2 — Payé toggle', () => {
     expect(ids).toEqual(['charges-row-early', 'charges-row-late']);
   });
 
-  it('labels each group subtotal with its cadence unit', () => {
-    renderCharges(sampleCharges, {
-      subtotals: { monthly: 1200, quarterly: 0, semiannual: 0, annual: 300 },
+  it('labels every cadence unit and shows the due-this-month count in the title', () => {
+    const quarterly = {
+      ...sampleCharges[0]!,
+      id: 'q1',
+      frequency: 'quarterly',
+      paymentMonths: [1, 4, 7, 10] as readonly number[],
+    };
+    const semiannual = {
+      ...sampleCharges[0]!,
+      id: 's1',
+      frequency: 'semiannual',
+      paymentMonths: [1, 7] as readonly number[],
+    };
+    renderCharges([...sampleCharges, quarterly, semiannual], {
+      subtotals: { monthly: 1200, quarterly: 100, semiannual: 200, annual: 300 },
+      currentPeriod: { year: 2026, month: 1 },
     });
     expect(screen.getByTestId('charges-group-subtotal-monthly')).toHaveTextContent('/mois');
+    expect(screen.getByTestId('charges-group-subtotal-quarterly')).toHaveTextContent('/trimestre');
+    expect(screen.getByTestId('charges-group-subtotal-semiannual')).toHaveTextContent('/semestre');
     expect(screen.getByTestId('charges-group-subtotal-annual')).toHaveTextContent('/an');
+    // Due in January: monthly a1 + quarterly q1 + semiannual s1 (annual a2 is June).
+    expect(screen.getByText(/3 dues ce mois/)).toBeInTheDocument();
+  });
+
+  it('collapses the add form after a successful creation', async () => {
+    createChargeMock.mockResolvedValue({ ok: true });
+    renderCharges([]);
+    fireEvent.click(screen.getByTestId('charges-add-toggle'));
+    fireEvent.change(screen.getByLabelText('Libellé'), { target: { value: 'Assurance' } });
+    fireEvent.change(screen.getByLabelText(/Montant/), { target: { value: '10' } });
+    await act(async () => {
+      fireEvent.submit(screen.getByRole('button', { name: /^ajouter$/i }).closest('form')!);
+    });
+    await waitFor(() => expect(screen.queryByLabelText('Libellé')).toBeNull());
+  });
+
+  it('reflects the collapsed/expanded state on the add toggle via aria-expanded', () => {
+    renderCharges([]);
+    const toggle = screen.getByTestId('charges-add-toggle');
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('keeps the sort order stable when a bill is ticked (no reorder under the finger)', async () => {
+    togglePaymentMock.mockResolvedValue({ ok: true, data: { paid: true, paidAmount: 1200 } });
+    const late = { ...monthlyCharge, id: 'late', label: 'Late bill', paymentDay: 20 };
+    const early = { ...monthlyCharge, id: 'early', label: 'Early bill', paymentDay: 3 };
+    renderCharges([late, early], { currentPeriod: { year: 2026, month: 1 } });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('charges-row-paid-early'));
+    });
+    const ids = within(screen.getByTestId('charges-group-monthly'))
+      .getAllByRole('listitem')
+      .map((el) => el.getAttribute('data-testid'));
+    expect(ids).toEqual(['charges-row-early', 'charges-row-late']);
   });
 
   it('renders the paid-toggle hint when charges are due this month', () => {
