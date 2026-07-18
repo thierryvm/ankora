@@ -732,6 +732,15 @@
       "remainingLabel": "Diesen Monat noch zu zahlen",
       "paidCount": "{paid}/{total} bezahlt",
       "groupRemaining": "noch {amount}",
+      "groupAllPaid": "alles bezahlt",
+      "allPaidTitle": "Diesen Monat ist alles bezahlt",
+      "dueCount": "{due, plural, =1 {1 diesen Monat fällig} other {# diesen Monat fällig}}",
+      "subtotalUnit": {
+        "monthly": "/Monat",
+        "quarterly": "/Quartal",
+        "semiannual": "/Halbjahr",
+        "annual": "/Jahr"
+      },
       "statusOverdue": "Überfällig",
       "drawer": {
         "title": "Fixkosten bearbeiten",

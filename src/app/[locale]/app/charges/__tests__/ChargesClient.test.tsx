@@ -184,6 +184,10 @@ describe('<ChargesClient /> — PR-BETA-1 visual refactor', () => {
 
   it('preserves the add-form CRUD scaffolding (out-of-scope guard against accidental refactor)', () => {
     renderCharges([]);
+    // Coherence pass 2026-07: the form is collapsed by default (the list owns
+    // the first screen) and opens through the header toggle.
+    expect(screen.queryByLabelText('Libellé')).toBeNull();
+    fireEvent.click(screen.getByTestId('charges-add-toggle'));
     // The 5 form fields + submit button stay reachable by their labels and roles.
     expect(screen.getByLabelText('Libellé')).toBeInTheDocument();
     expect(screen.getByLabelText(/Montant/)).toBeInTheDocument();
@@ -225,6 +229,7 @@ describe('<ChargesClient /> — PR-BETA-CLEANUP-2 list & form', () => {
   it('passes paymentDay + computed paymentMonths to createChargeAction', async () => {
     createChargeMock.mockResolvedValue({ ok: true });
     renderCharges([]);
+    fireEvent.click(screen.getByTestId('charges-add-toggle'));
     fireEvent.change(screen.getByLabelText('Libellé'), { target: { value: 'Assurance' } });
     fireEvent.change(screen.getByLabelText(/Montant/), { target: { value: '120' } });
     fireEvent.change(screen.getByLabelText(/jour du mois/i), { target: { value: '15' } });
@@ -449,19 +454,56 @@ describe('Factures Phase 2 — Payé toggle', () => {
     expect(screen.getByTestId('charges-paid-summary')).toHaveTextContent('1/1');
   });
 
-  it('shows a live per-group remaining next to the subtotal, gone once the group is paid', () => {
+  it('shows a live per-group remaining next to the subtotal, replaced by "tout payé" once settled', () => {
     // Unpaid due-this-month bill → the group line shows "reste 1 200 €".
     const { unmount } = renderCharges([monthlyCharge], {
       currentPeriod: { year: 2026, month: 1 },
     });
     expect(screen.getByTestId('charges-group-remaining-monthly')).toHaveTextContent(/1[  ]200/);
+    expect(screen.queryByTestId('charges-group-allpaid-monthly')).toBeNull();
     unmount();
-    // Seeded paid → nothing left in the group, the chip disappears.
+    // Seeded paid → the countdown never silently disappears: it flips to a
+    // persistent "tout payé" state so the static subtotal cannot be misread
+    // as an amount still owed.
     renderCharges([monthlyCharge], {
       currentPeriod: { year: 2026, month: 1 },
       paidChargeIds: [monthlyCharge.id],
     });
     expect(screen.queryByTestId('charges-group-remaining-monthly')).toBeNull();
+    expect(screen.getByTestId('charges-group-allpaid-monthly')).toHaveTextContent(/tout payé/i);
+  });
+
+  it('flips the banner to the all-paid success state and hides the hint', () => {
+    const { unmount } = renderCharges([monthlyCharge], {
+      currentPeriod: { year: 2026, month: 1 },
+    });
+    expect(screen.getByTestId('charges-paid-summary')).toHaveTextContent('Reste à payer ce mois');
+    expect(screen.getByTestId('charges-paid-hint')).toBeInTheDocument();
+    unmount();
+    renderCharges([monthlyCharge], {
+      currentPeriod: { year: 2026, month: 1 },
+      paidChargeIds: [monthlyCharge.id],
+    });
+    expect(screen.getByTestId('charges-paid-summary')).toHaveTextContent('Tout est payé ce mois');
+    expect(screen.queryByTestId('charges-paid-hint')).toBeNull();
+  });
+
+  it('sorts rows by resolved due date ascending within a group (stable under ticking)', () => {
+    const late = { ...monthlyCharge, id: 'late', label: 'Late bill', paymentDay: 20 };
+    const early = { ...monthlyCharge, id: 'early', label: 'Early bill', paymentDay: 3 };
+    renderCharges([late, early], { currentPeriod: { year: 2026, month: 1 } });
+    const ids = within(screen.getByTestId('charges-group-monthly'))
+      .getAllByRole('listitem')
+      .map((el) => el.getAttribute('data-testid'));
+    expect(ids).toEqual(['charges-row-early', 'charges-row-late']);
+  });
+
+  it('labels each group subtotal with its cadence unit', () => {
+    renderCharges(sampleCharges, {
+      subtotals: { monthly: 1200, quarterly: 0, semiannual: 0, annual: 300 },
+    });
+    expect(screen.getByTestId('charges-group-subtotal-monthly')).toHaveTextContent('/mois');
+    expect(screen.getByTestId('charges-group-subtotal-annual')).toHaveTextContent('/an');
   });
 
   it('renders the paid-toggle hint when charges are due this month', () => {
