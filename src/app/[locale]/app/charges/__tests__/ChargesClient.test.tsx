@@ -433,6 +433,37 @@ describe('Factures Phase 2 — Payé toggle', () => {
     expect(screen.getByTestId('charges-paid-summary')).toBeInTheDocument();
   });
 
+  it('shows the remaining amount headline: full when unpaid, zero once seeded paid', () => {
+    // Unpaid: remaining = the bill's full amount (1 200 €).
+    const { unmount } = renderCharges([monthlyCharge], {
+      currentPeriod: { year: 2026, month: 1 },
+    });
+    expect(screen.getByTestId('charges-remaining-amount')).toHaveTextContent(/1[  ]200/);
+    unmount();
+    // Seeded paid: the countdown reflects it — remaining drops to 0, count 1/1.
+    renderCharges([monthlyCharge], {
+      currentPeriod: { year: 2026, month: 1 },
+      paidChargeIds: [monthlyCharge.id],
+    });
+    expect(screen.getByTestId('charges-remaining-amount')).toHaveTextContent(/^0/);
+    expect(screen.getByTestId('charges-paid-summary')).toHaveTextContent('1/1');
+  });
+
+  it('shows a live per-group remaining next to the subtotal, gone once the group is paid', () => {
+    // Unpaid due-this-month bill → the group line shows "reste 1 200 €".
+    const { unmount } = renderCharges([monthlyCharge], {
+      currentPeriod: { year: 2026, month: 1 },
+    });
+    expect(screen.getByTestId('charges-group-remaining-monthly')).toHaveTextContent(/1[  ]200/);
+    unmount();
+    // Seeded paid → nothing left in the group, the chip disappears.
+    renderCharges([monthlyCharge], {
+      currentPeriod: { year: 2026, month: 1 },
+      paidChargeIds: [monthlyCharge.id],
+    });
+    expect(screen.queryByTestId('charges-group-remaining-monthly')).toBeNull();
+  });
+
   it('renders the paid-toggle hint when charges are due this month', () => {
     renderCharges([monthlyCharge], { currentPeriod: { year: 2026, month: 1 } });
     expect(screen.getByTestId('charges-paid-hint')).toBeInTheDocument();
