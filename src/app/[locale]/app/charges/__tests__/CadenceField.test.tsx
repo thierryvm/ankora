@@ -5,10 +5,10 @@ import { describe, it, expect, vi } from 'vitest';
 import messages from '../../../../../../messages/fr-BE.json';
 import { CadenceField, type CadenceValue } from '../CadenceField';
 
-function renderField(value: CadenceValue, onChange = vi.fn()) {
+function renderField(value: CadenceValue, onChange = vi.fn(), disabled = false) {
   render(
     <NextIntlClientProvider locale="fr-BE" messages={messages} timeZone="Europe/Brussels">
-      <CadenceField idPrefix="t" value={value} onChange={onChange} />
+      <CadenceField idPrefix="t" value={value} onChange={onChange} disabled={disabled} />
     </NextIntlClientProvider>,
   );
   return onChange;
@@ -66,6 +66,20 @@ describe('<CadenceField />', () => {
     const onChange = renderField(quarterly);
     fireEvent.change(screen.getByTestId('t-month'), { target: { value: '6' } });
     expect(onChange).toHaveBeenCalledWith({ frequency: 'quarterly', dueMonth: 6, paymentDay: 15 });
+  });
+
+  it('shows "dernier jour" in the recurring summary too (non-monthly + day 31)', () => {
+    renderField({ frequency: 'quarterly', dueMonth: 3, paymentDay: 31 });
+    const summary = screen.getByTestId('t-summary');
+    expect(summary).toHaveTextContent(/dernier jour/i);
+    expect(summary).toHaveTextContent(/mars/i);
+  });
+
+  it('disables every control when disabled', () => {
+    renderField(quarterly, vi.fn(), true);
+    expect(screen.getByTestId('t-frequency')).toBeDisabled();
+    expect(screen.getByTestId('t-day')).toBeDisabled();
+    expect(screen.getByTestId('t-month')).toBeDisabled();
   });
 
   it('associates each select with a <label> (a11y)', () => {

@@ -540,7 +540,7 @@ git commit -m "chore(playground): CadenceField demo (THI-301)"
 
 ### Task 7 : QA agents + DoD final
 
-- [ ] **Step 1 : Agents QA ciblés (voie lourde, par ce que le diff touche)**
+- [ ] **Step 1 : Agents QA ciblés (voie lourde, parce que le diff touche)**
 
 - `ui-auditor` (nouveaux selects natifs, labels, contraste tokens, mobile-first)
 - `mobile-ios-auditor` (selects natifs iOS, focus rings, tap targets ≥ 44px, safe-area)

@@ -64,10 +64,10 @@ interface CadenceFieldProps {
 
 ```
 MENSUEL                              TRIMESTRIEL
- Frequence ( Mensuel   v )            Frequence ( Trimestriel v )
- Preleve le [ 15 v ] de chaque mois   Preleve le [15 v] a partir de [mars v]
+ Fréquence ( Mensuel   v )            Fréquence ( Trimestriel v )
+ Prélevé le [ 15 v ] de chaque mois   Prélevé le [15 v] à partir de [mars v]
    (... 1..28, 'Dernier jour')          (jour: 1..28, 'Dernier jour')
- -> 'le 15 de chaque mois'            -> 'le 15 : mars, juin, sept, dec'
+ -> 'le 15 de chaque mois'            -> 'le 15 : mars, juin, sept., déc.'
                                         (changer ancre/freq = tout bouge)
 ```
 
