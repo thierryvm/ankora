@@ -711,6 +711,15 @@
       "dueMonthLabel": "Reference month",
       "paymentDayLabel": "Day of month",
       "paymentDayHint": "The day the bill is debited (1–31).",
+      "cadence": {
+        "frequencyLabel": "Frequency",
+        "dayLabel": "Day of month",
+        "anchorMonthLabel": "Starting",
+        "lastDayOption": "Last day of the month",
+        "daySummaryLast": "last day",
+        "summaryMonthly": "Charged on the {day} of every month",
+        "summaryRecurring": "Charged on the {day}: {months}"
+      },
       "addButton": "Add",
       "adding": "Adding…",
       "count": "{count, plural, =0 {no bills} one {1 bill} other {# bills}}",

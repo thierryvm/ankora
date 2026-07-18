@@ -196,7 +196,10 @@ describe('<ChargesClient /> — PR-BETA-1 visual refactor', () => {
     expect(screen.getByLabelText('Libellé')).toBeInTheDocument();
     expect(screen.getByLabelText(/Montant/)).toBeInTheDocument();
     expect(screen.getByLabelText('Fréquence')).toBeInTheDocument();
-    expect(screen.getByLabelText('Mois de référence')).toBeInTheDocument();
+    // THI-301: the anchor-month select is intentionally HIDDEN for monthly
+    // (the default) — the CadenceField summary line proves the cluster is
+    // mounted instead.
+    expect(screen.getByTestId('create-charge-summary')).toBeInTheDocument();
     expect(screen.getByLabelText(/jour du mois/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^ajouter$/i })).toBeInTheDocument();
   });
@@ -274,7 +277,8 @@ describe('<ChargesClient /> — PR-BETA-CLEANUP-2 edit drawer', () => {
     await screen.findByTestId('charge-edit-drawer');
     expect(screen.getByTestId('charge-edit-label')).toHaveValue('Loyer appartement');
     expect(screen.getByTestId('charge-edit-amount')).toHaveValue(1200);
-    expect(screen.getByTestId('charge-edit-payment-day')).toHaveValue(5);
+    // THI-301: native <select> in CadenceField → string value.
+    expect(screen.getByTestId('edit-charge-day')).toHaveValue('5');
   });
 
   it('calls updateChargeAction with the modified amount on Save', async () => {

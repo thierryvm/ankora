@@ -711,6 +711,15 @@
       "dueMonthLabel": "Referenzmonat",
       "paymentDayLabel": "Tag im Monat",
       "paymentDayHint": "Der Tag, an dem die Fixkost abgebucht wird (1–31).",
+      "cadence": {
+        "frequencyLabel": "Frequenz",
+        "dayLabel": "Tag im Monat",
+        "anchorMonthLabel": "Ab",
+        "lastDayOption": "Letzter Tag des Monats",
+        "daySummaryLast": "letzter Tag",
+        "summaryMonthly": "Abgebucht am {day} jedes Monats",
+        "summaryRecurring": "Abgebucht am {day}: {months}"
+      },
       "addButton": "Hinzufügen",
       "adding": "Hinzufügen…",
       "count": "{count, plural, =0 {keine Fixkosten} one {1 Fixkosten-Eintrag} other {# Fixkosten-Einträge}}",
