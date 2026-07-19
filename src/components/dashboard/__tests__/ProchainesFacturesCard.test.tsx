@@ -20,11 +20,18 @@ import { paymentKey, type PaymentLedger } from '@/lib/domain/cockpit';
 
 vi.mock('@/i18n/navigation', () => ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Link: ({ href, children, ...rest }: any) => (
-    <a href={href} {...rest}>
-      {children}
-    </a>
-  ),
+  Link: ({ href, children, ...rest }: any) => {
+    // Serialize object hrefs ({pathname, query}) like next-intl would.
+    const url =
+      typeof href === 'string'
+        ? href
+        : `${href.pathname}?${new URLSearchParams(href.query).toString()}`;
+    return (
+      <a href={url} {...rest}>
+        {children}
+      </a>
+    );
+  },
 }));
 
 vi.mock('next-intl/server', () => ({
@@ -70,7 +77,7 @@ async function renderCard(input: {
   charges: Charge[];
   payments?: PaymentLedger;
   todayIso?: string;
-  forgotten?: { labels: readonly string[]; monthLabel: string };
+  forgotten?: { labels: readonly string[]; monthLabel: string; periodParam: string };
 }) {
   return render(
     await ProchainesFacturesCard({
@@ -180,17 +187,31 @@ describe('<ProchainesFacturesCard /> — THI-329 PR-C', () => {
   it('names the forgotten bills in the alert (plural form)', async () => {
     await renderCard({
       charges: [makeCharge()],
-      forgotten: { labels: ['Taxe voiture', 'S.W.D.E'], monthLabel: 'juin' },
+      forgotten: {
+        labels: ['Taxe voiture', 'S.W.D.E'],
+        monthLabel: 'juin',
+        periodParam: '2026-06',
+      },
     });
     expect(screen.getByTestId('prochaines-factures-forgotten')).toHaveTextContent(
       /Jamais cochées en juin : Taxe voiture, S\.W\.D\.E/,
     );
   });
 
+  it('links the forgotten alert to the month-history view of the concerned month', async () => {
+    await renderCard({
+      charges: [makeCharge()],
+      forgotten: { labels: ['Taxe voiture'], monthLabel: 'juin', periodParam: '2026-06' },
+    });
+    const link = screen.getByTestId('prochaines-factures-forgotten-link');
+    expect(link).toHaveTextContent('Voir juin');
+    expect(link.getAttribute('href')).toContain('period=2026-06');
+  });
+
   it('uses the singular form for a single forgotten bill', async () => {
     await renderCard({
       charges: [makeCharge()],
-      forgotten: { labels: ['Taxe voiture'], monthLabel: 'juin' },
+      forgotten: { labels: ['Taxe voiture'], monthLabel: 'juin', periodParam: '2026-06' },
     });
     expect(screen.getByTestId('prochaines-factures-forgotten')).toHaveTextContent(
       /Jamais cochée en juin : Taxe voiture — vérifie qu'elle a bien été payée/,

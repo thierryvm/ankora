@@ -739,6 +739,14 @@
       "paidSummary": "Payées ce mois : {paid}/{total} · reste {remaining}",
       "paidHint": "Coche les factures que tu as déjà payées ce mois.",
       "remainingLabel": "Reste à payer ce mois",
+      "remainingLabelPeriod": "Reste à payer en {month}",
+      "allPaidPeriod": "Tout est payé pour {month}",
+      "periodNav": {
+        "navAria": "Navigation par mois",
+        "prevAria": "Mois précédent",
+        "nextAria": "Mois suivant",
+        "backToCurrent": "Revenir à {month}"
+      },
       "paidCount": "{paid}/{total} payées",
       "groupRemaining": "reste {amount}",
       "groupAllPaid": "tout payé",
@@ -1135,6 +1143,7 @@
       "watchedHint": "Tes factures marquées, pour les voir venir.",
       "watchedEmptyHint": "Astuce : marque une facture « à surveiller » depuis la page Charges pour la suivre ici.",
       "forgottenAlert": "Jamais {count, plural, =1 {cochée} other {cochées}} en {month} : {labels} — vérifie {count, plural, =1 {qu'elle a bien été payée} other {qu'elles ont bien été payées}}.",
+      "forgottenSee": "Voir {month}",
       "buckets": {
         "overdue": "En retard"
       }

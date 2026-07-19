@@ -44,6 +44,23 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: routerRefreshMock, push: vi.fn(), replace: vi.fn() }),
 }));
 
+vi.mock('@/i18n/navigation', () => ({
+  // Minimal Link stub (the real one needs the next-intl routing context);
+  // serializes object hrefs ({pathname, query}) so tests can assert URLs.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Link: ({ href, children, ...rest }: any) => {
+    const url =
+      typeof href === 'string'
+        ? href
+        : `${href.pathname}?${new URLSearchParams(href.query).toString()}`;
+    return (
+      <a href={url} {...rest}>
+        {children}
+      </a>
+    );
+  },
+}));
+
 import { ChargesClient } from '../ChargesClient';
 
 function renderWithIntl(ui: React.ReactNode) {
@@ -80,6 +97,15 @@ function renderCharges(
       annualTotal={overrides.annualTotal ?? 0}
       paidChargeIds={overrides.paidChargeIds ?? []}
       currentPeriod={overrides.currentPeriod ?? { year: 2026, month: 1 }}
+      periodNav={
+        overrides.periodNav ?? {
+          label: 'janvier 2026',
+          prevParam: null,
+          nextParam: null,
+          isCurrent: true,
+          currentLabel: 'janvier 2026',
+        }
+      }
     />,
   );
 }
@@ -687,6 +713,67 @@ describe('<ChargesClient /> — THI-329 current-period date & overdue badge', ()
     renderCharges([monthly], { currentPeriod: { year: 2020, month: 6 }, paidChargeIds: ['a1'] });
     expect(screen.queryByTestId('charges-row-overdue-a1')).toBeNull();
     expect(screen.getByTestId('charges-row-paid-a1')).toHaveAttribute('aria-pressed', 'true');
+  });
+});
+
+// Month-history navigation (@thierry priority 2026-07-19).
+describe('<ChargesClient /> — month-history navigator', () => {
+  const monthly = sampleCharges[0]!;
+
+  it('shows the viewed period label without a back-link when on the current month', () => {
+    renderCharges([monthly]);
+    expect(screen.getByTestId('charges-period-label')).toHaveTextContent('janvier 2026');
+    expect(screen.queryByTestId('charges-period-back')).toBeNull();
+    expect(screen.queryByTestId('charges-period-next')).toBeNull();
+  });
+
+  it('renders prev/next links from the nav params', () => {
+    renderCharges([monthly], {
+      periodNav: {
+        label: 'juin 2026',
+        prevParam: '2026-05',
+        nextParam: '2026-07',
+        isCurrent: false,
+        currentLabel: 'juillet 2026',
+      },
+    });
+    expect(screen.getByTestId('charges-period-prev')).toBeInTheDocument();
+    expect(screen.getByTestId('charges-period-next')).toBeInTheDocument();
+  });
+
+  it('in a past month: back-link visible and the banner names the period', () => {
+    renderCharges([monthly], {
+      currentPeriod: { year: 2026, month: 6 },
+      periodNav: {
+        label: 'juin 2026',
+        prevParam: '2026-05',
+        nextParam: '2026-07',
+        isCurrent: false,
+        currentLabel: 'juillet 2026',
+      },
+    });
+    expect(screen.getByTestId('charges-period-back')).toHaveTextContent('Revenir à juillet 2026');
+    // Unpaid june bill → period-scoped remaining label.
+    expect(screen.getByTestId('charges-paid-summary')).toHaveTextContent(
+      'Reste à payer en juin 2026',
+    );
+  });
+
+  it('in a past month fully paid: period-scoped success copy', () => {
+    renderCharges([monthly], {
+      currentPeriod: { year: 2026, month: 6 },
+      paidChargeIds: [monthly.id],
+      periodNav: {
+        label: 'juin 2026',
+        prevParam: '2026-05',
+        nextParam: '2026-07',
+        isCurrent: false,
+        currentLabel: 'juillet 2026',
+      },
+    });
+    expect(screen.getByTestId('charges-paid-summary')).toHaveTextContent(
+      'Tout est payé pour juin 2026',
+    );
   });
 });
 

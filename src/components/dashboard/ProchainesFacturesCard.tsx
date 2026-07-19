@@ -25,7 +25,12 @@ type Props = {
    * on the previous period's ledger; `monthLabel` is the localized previous
    * month (e.g. « juin »).
    */
-  forgotten?: { labels: readonly string[]; monthLabel: string };
+  forgotten?: {
+    labels: readonly string[];
+    monthLabel: string;
+    /** `YYYY-MM` of the previous period — links the alert to the month-history view. */
+    periodParam: string;
+  };
 };
 
 type Row = Readonly<{
@@ -149,7 +154,7 @@ export async function ProchainesFacturesCard({
                 stays `text-foreground` (AA both themes); the warning tint is
                 decorative only (same dark-safety rule as the overdue badge). */}
             {forgotten && forgotten.labels.length > 0 && (
-              <p
+              <div
                 className="border-warning/40 bg-warning/10 text-foreground flex items-start gap-2 rounded-lg border px-3 py-2.5 text-sm"
                 data-testid="prochaines-factures-forgotten"
               >
@@ -158,12 +163,21 @@ export async function ProchainesFacturesCard({
                   className="text-warning mt-0.5 h-4 w-4 shrink-0"
                   strokeWidth={2}
                 />
-                {t('forgottenAlert', {
-                  count: forgotten.labels.length,
-                  month: forgotten.monthLabel,
-                  labels: forgotten.labels.join(', '),
-                })}
-              </p>
+                <span className="min-w-0">
+                  {t('forgottenAlert', {
+                    count: forgotten.labels.length,
+                    month: forgotten.monthLabel,
+                    labels: forgotten.labels.join(', '),
+                  })}{' '}
+                  <Link
+                    href={{ pathname: '/app/charges', query: { period: forgotten.periodParam } }}
+                    className="text-brand-text hover:text-brand-text-strong font-medium underline underline-offset-2"
+                    data-testid="prochaines-factures-forgotten-link"
+                  >
+                    {t('forgottenSee', { month: forgotten.monthLabel })}
+                  </Link>
+                </span>
+              </div>
             )}
             {/* ── Ce mois-ci ─────────────────────────────────────────── */}
             <section aria-label={t('thisMonth')} data-testid="prochaines-factures-this-month">

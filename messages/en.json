@@ -739,6 +739,14 @@
       "paidSummary": "Paid this month: {paid}/{total} · {remaining} left",
       "paidHint": "Tick the bills you've already paid this month.",
       "remainingLabel": "Left to pay this month",
+      "remainingLabelPeriod": "Left to pay in {month}",
+      "allPaidPeriod": "Everything is paid for {month}",
+      "periodNav": {
+        "navAria": "Month navigation",
+        "prevAria": "Previous month",
+        "nextAria": "Next month",
+        "backToCurrent": "Back to {month}"
+      },
       "paidCount": "{paid}/{total} paid",
       "groupRemaining": "{amount} left",
       "groupAllPaid": "all paid",
@@ -1135,6 +1143,7 @@
       "watchedHint": "Your flagged bills, to see them coming.",
       "watchedEmptyHint": "Tip: flag a bill as “watching” on the Charges page to track it here.",
       "forgottenAlert": "Never ticked in {month}: {labels} — check {count, plural, =1 {it was} other {they were}} actually paid.",
+      "forgottenSee": "View {month}",
       "buckets": {
         "overdue": "Overdue"
       }
