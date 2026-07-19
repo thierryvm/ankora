@@ -723,7 +723,6 @@
       "addButton": "Toevoegen",
       "adding": "Toevoegen…",
       "count": "{count, plural, =0 {geen vaste kosten} one {1 vaste kost} other {# vaste kosten}}",
-      "subtotalLabel": "Subtotaal",
       "totalMonthlyLabel": "Gespreid per maand",
       "totalAnnualLabel": "Jaarlijks equivalent",
       "referenceFormat": "{frequency} · ref. {month}",
@@ -748,16 +747,10 @@
         "backToCurrent": "Terug naar {month}"
       },
       "paidCount": "{paid}/{total} betaald",
-      "groupRemaining": "nog {amount}",
-      "groupAllPaid": "alles betaald",
+      "groupRemainingLabel": "Nog te betalen",
+      "groupNothingDue": "Niets te betalen deze maand",
       "allPaidTitle": "Alles is betaald deze maand",
       "dueCount": "{due, plural, =1 {1 te betalen deze maand} other {# te betalen deze maand}}",
-      "subtotalUnit": {
-        "monthly": "/maand",
-        "quarterly": "/kwartaal",
-        "semiannual": "/halfjaar",
-        "annual": "/jaar"
-      },
       "statusOverdue": "Te laat",
       "watchAria": "{label} in het oog houden",
       "unwatchAria": "{label} niet langer volgen",

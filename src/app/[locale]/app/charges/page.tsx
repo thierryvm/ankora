@@ -3,7 +3,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 
 import { createClient } from '@/lib/supabase/server';
 import { getWorkspaceSnapshot } from '@/lib/data/workspace-snapshot';
-import { annualTotal, monthlyProvisionTotal, subtotalByFrequency } from '@/lib/domain/budget';
+import { annualTotal, monthlyProvisionTotal } from '@/lib/domain/budget';
 import { formatMonth } from '@/lib/i18n/formatters';
 import { log } from '@/lib/log';
 import type { Locale } from '@/i18n/routing';
@@ -21,20 +21,26 @@ type Period = { year: number; month: number };
 const PERIOD_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
 /** No payment data can exist before the app's first release month. */
 const PERIOD_FLOOR: Period = { year: 2026, month: 1 };
+/** Forward horizon (@thierry 2026-07-19): browse up to a year ahead to see
+ *  what's coming — due dates render for that month, ledger is simply empty. */
+const FUTURE_SPAN_MONTHS = 12;
 
 const ordinal = (p: Period): number => p.year * 12 + p.month;
 
 /**
  * Month-history navigation (@thierry priority 2026-07-19): `?period=YYYY-MM`
- * selects which month's payment ledger the page shows. Invalid, future, or
- * pre-floor values silently fall back to the current period — the URL is
+ * selects which month's payment ledger the page shows. Invalid, pre-floor, or
+ * beyond-horizon values silently fall back to the current period — the URL is
  * user-controlled input, never trusted.
  */
 function parseViewedPeriod(raw: string | undefined, current: Period): Period {
   if (!raw || !PERIOD_RE.test(raw)) return current;
   const [y, m] = raw.split('-').map(Number) as [number, number];
   const candidate = { year: y, month: m };
-  if (ordinal(candidate) > ordinal(current) || ordinal(candidate) < ordinal(PERIOD_FLOOR)) {
+  if (
+    ordinal(candidate) > ordinal(current) + FUTURE_SPAN_MONTHS ||
+    ordinal(candidate) < ordinal(PERIOD_FLOOR)
+  ) {
     return current;
   }
   return candidate;
@@ -61,12 +67,6 @@ export default async function ChargesPage({
   const current = snapshot.currentPeriod;
   const viewed = parseViewedPeriod(params.period, current);
   const isCurrent = ordinal(viewed) === ordinal(current);
-
-  // Money totals are computed in the pure domain (Decimal) and crossed to the
-  // client as plain `number` — Decimal must never traverse the RSC boundary
-  // (cf. project_decimal_rsc_boundary). All three skip inactive charges, so the
-  // per-group subtotals reconcile with the global smoothed/annual totals.
-  const subtotals = subtotalByFrequency(snapshot.charges);
 
   // Paid charge ids for the VIEWED period. Current month comes free with the
   // snapshot; a past month needs one extra RLS-scoped read. The toggle action
@@ -95,14 +95,10 @@ export default async function ChargesPage({
   const next = shift(viewed, 1);
 
   return (
+    // Money totals stay pure-domain Decimal server-side, crossed as plain
+    // `number` — Decimal never traverses the RSC boundary.
     <ChargesClient
       charges={snapshot.rawCharges}
-      subtotals={{
-        monthly: subtotals.monthly.toNumber(),
-        quarterly: subtotals.quarterly.toNumber(),
-        semiannual: subtotals.semiannual.toNumber(),
-        annual: subtotals.annual.toNumber(),
-      }}
       monthlyProvisionTotal={monthlyProvisionTotal(snapshot.charges).toNumber()}
       annualTotal={annualTotal(snapshot.charges).toNumber()}
       paidChargeIds={paidChargeIds}
@@ -110,7 +106,7 @@ export default async function ChargesPage({
       periodNav={{
         label: monthLabel(viewed),
         prevParam: ordinal(prev) >= ordinal(PERIOD_FLOOR) ? toParam(prev) : null,
-        nextParam: isCurrent ? null : toParam(next),
+        nextParam: ordinal(next) <= ordinal(current) + FUTURE_SPAN_MONTHS ? toParam(next) : null,
         isCurrent,
         currentLabel: monthLabel(current),
       }}

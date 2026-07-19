@@ -73,13 +73,6 @@ function renderWithIntl(ui: React.ReactNode) {
 
 type ChargesClientProps = React.ComponentProps<typeof ChargesClient>;
 
-const ZERO_SUBTOTALS: ChargesClientProps['subtotals'] = {
-  monthly: 0,
-  quarterly: 0,
-  semiannual: 0,
-  annual: 0,
-};
-
 /**
  * Render the client with the server-computed money props. Totals default to 0
  * (server-side concern, exercised explicitly by the totals tests below) so the
@@ -92,7 +85,6 @@ function renderCharges(
   return renderWithIntl(
     <ChargesClient
       charges={charges}
-      subtotals={overrides.subtotals ?? ZERO_SUBTOTALS}
       monthlyProvisionTotal={overrides.monthlyProvisionTotal ?? 0}
       annualTotal={overrides.annualTotal ?? 0}
       paidChargeIds={overrides.paidChargeIds ?? []}
@@ -387,14 +379,15 @@ describe('<ChargesClient /> — PR-UI-3a grouping & totals', () => {
     expect(within(annual).getByTestId('charges-row-a2')).toBeInTheDocument();
   });
 
-  it('shows the server-computed subtotal next to each group heading', () => {
-    renderCharges(sampleCharges, {
-      subtotals: { monthly: 1200, quarterly: 0, semiannual: 0, annual: 300 },
-    });
-    const monthlySub = screen.getByTestId('charges-group-subtotal-monthly');
-    expect(monthlySub).toHaveTextContent(/Sous-total/);
-    expect(monthlySub).toHaveTextContent(/1[  ]200/);
-    expect(screen.getByTestId('charges-group-subtotal-annual')).toHaveTextContent(/300/);
+  it('shows a live remaining-to-pay group footer, and "nothing due" for off-month groups', () => {
+    // viewedPeriod month 1: monthly a1 (1 200 €) is due; annual a2 ([6]) is not.
+    renderCharges(sampleCharges);
+    const monthlyFooter = screen.getByTestId('charges-group-subtotal-monthly');
+    expect(monthlyFooter).toHaveTextContent(/Reste à payer/);
+    expect(monthlyFooter).toHaveTextContent(/1[  ]200/);
+    expect(screen.getByTestId('charges-group-subtotal-annual')).toHaveTextContent(
+      'Rien à payer ce mois',
+    );
   });
 
   it('renders the global total footer with the smoothed monthly and annual figures', () => {
@@ -501,23 +494,23 @@ describe('Factures Phase 2 — Payé toggle', () => {
     expect(screen.getByTestId('charges-paid-summary')).toHaveTextContent('1/1');
   });
 
-  it('shows a live per-group remaining next to the subtotal, replaced by "tout payé" once settled', () => {
-    // Unpaid due-this-month bill → the group line shows "reste 1 200 €".
+  it('counts the group footer down and lands on ✓ 0 € once everything is ticked', () => {
+    // Unpaid due-this-month bill → the footer shows the remaining 1 200 €.
     const { unmount } = renderCharges([monthlyCharge], {
       viewedPeriod: { year: 2026, month: 1 },
     });
     expect(screen.getByTestId('charges-group-remaining-monthly')).toHaveTextContent(/1[  ]200/);
     expect(screen.queryByTestId('charges-group-allpaid-monthly')).toBeNull();
     unmount();
-    // Seeded paid → the countdown never silently disappears: it flips to a
-    // persistent "tout payé" state so the static subtotal cannot be misread
-    // as an amount still owed.
+    // Seeded paid → the countdown reaches an explicit ✓ 0 € (@thierry
+    // 2026-07-19: the visible figure must decrement down to zero, never a
+    // static subtotal posing as an amount still owed).
     renderCharges([monthlyCharge], {
       viewedPeriod: { year: 2026, month: 1 },
       paidChargeIds: [monthlyCharge.id],
     });
     expect(screen.queryByTestId('charges-group-remaining-monthly')).toBeNull();
-    expect(screen.getByTestId('charges-group-allpaid-monthly')).toHaveTextContent(/tout payé/i);
+    expect(screen.getByTestId('charges-group-allpaid-monthly')).toHaveTextContent(/0/);
   });
 
   it('flips the banner to the all-paid success state and hides the hint', () => {
@@ -545,7 +538,7 @@ describe('Factures Phase 2 — Payé toggle', () => {
     expect(ids).toEqual(['charges-row-early', 'charges-row-late']);
   });
 
-  it('labels every cadence unit and shows the due-this-month count in the title', () => {
+  it('shows the due-count in the title and a live footer on every group', () => {
     const quarterly = {
       ...sampleCharges[0]!,
       id: 'q1',
@@ -559,15 +552,17 @@ describe('Factures Phase 2 — Payé toggle', () => {
       paymentMonths: [1, 7] as readonly number[],
     };
     renderCharges([...sampleCharges, quarterly, semiannual], {
-      subtotals: { monthly: 1200, quarterly: 100, semiannual: 200, annual: 300 },
       viewedPeriod: { year: 2026, month: 1 },
     });
-    expect(screen.getByTestId('charges-group-subtotal-monthly')).toHaveTextContent('/mois');
-    expect(screen.getByTestId('charges-group-subtotal-quarterly')).toHaveTextContent('/trimestre');
-    expect(screen.getByTestId('charges-group-subtotal-semiannual')).toHaveTextContent('/semestre');
-    expect(screen.getByTestId('charges-group-subtotal-annual')).toHaveTextContent('/an');
     // Due in January: monthly a1 + quarterly q1 + semiannual s1 (annual a2 is June).
     expect(screen.getByText(/3 dues ce mois/)).toBeInTheDocument();
+    // Every due group carries a live footer; the off-month annual group says so.
+    expect(screen.getByTestId('charges-group-remaining-monthly')).toBeInTheDocument();
+    expect(screen.getByTestId('charges-group-remaining-quarterly')).toBeInTheDocument();
+    expect(screen.getByTestId('charges-group-remaining-semiannual')).toBeInTheDocument();
+    expect(screen.getByTestId('charges-group-subtotal-annual')).toHaveTextContent(
+      'Rien à payer ce mois',
+    );
   });
 
   it('collapses the add form after a successful creation', async () => {
@@ -788,7 +783,8 @@ describe('app.charges — i18n parity (5 locales, PR-BETA-CLEANUP-2)', () => {
             paymentDayHint?: string;
             editAria?: string;
             toastUpdated?: string;
-            subtotalLabel?: string;
+            groupRemainingLabel?: string;
+            groupNothingDue?: string;
             totalMonthlyLabel?: string;
             totalAnnualLabel?: string;
             toastMarkedPaid?: string;
@@ -816,7 +812,8 @@ describe('app.charges — i18n parity (5 locales, PR-BETA-CLEANUP-2)', () => {
       expect((c.editAria ?? '').includes('{label}')).toBe(true);
       expect(c.toastUpdated).toBeTypeOf('string');
       // PR-UI-3a (THI-300) — total recap labels.
-      expect((c.subtotalLabel ?? '').length).toBeGreaterThan(0);
+      expect((c.groupRemainingLabel ?? '').length).toBeGreaterThan(0);
+      expect((c.groupNothingDue ?? '').length).toBeGreaterThan(0);
       expect((c.totalMonthlyLabel ?? '').length).toBeGreaterThan(0);
       expect((c.totalAnnualLabel ?? '').length).toBeGreaterThan(0);
       expect(c.drawer?.title).toBeTypeOf('string');

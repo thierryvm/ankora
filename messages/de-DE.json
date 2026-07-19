@@ -723,7 +723,6 @@
       "addButton": "Hinzufügen",
       "adding": "Hinzufügen…",
       "count": "{count, plural, =0 {keine Fixkosten} one {1 Fixkosten-Eintrag} other {# Fixkosten-Einträge}}",
-      "subtotalLabel": "Zwischensumme",
       "totalMonthlyLabel": "Monatlich verteilt",
       "totalAnnualLabel": "Jährliches Äquivalent",
       "referenceFormat": "{frequency} · Ref. {month}",
@@ -748,16 +747,10 @@
         "backToCurrent": "Zurück zu {month}"
       },
       "paidCount": "{paid}/{total} bezahlt",
-      "groupRemaining": "noch {amount}",
-      "groupAllPaid": "alles bezahlt",
+      "groupRemainingLabel": "Noch zu zahlen",
+      "groupNothingDue": "Diesen Monat nichts zu zahlen",
       "allPaidTitle": "Diesen Monat ist alles bezahlt",
       "dueCount": "{due, plural, =1 {1 diesen Monat fällig} other {# diesen Monat fällig}}",
-      "subtotalUnit": {
-        "monthly": "/Monat",
-        "quarterly": "/Quartal",
-        "semiannual": "/Halbjahr",
-        "annual": "/Jahr"
-      },
       "statusOverdue": "Überfällig",
       "watchAria": "{label} im Blick behalten",
       "unwatchAria": "{label} nicht mehr verfolgen",
