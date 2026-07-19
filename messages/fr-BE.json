@@ -1134,6 +1134,7 @@
       "watched": "À surveiller",
       "watchedHint": "Tes factures marquées, pour les voir venir.",
       "watchedEmptyHint": "Astuce : marque une facture « à surveiller » depuis la page Charges pour la suivre ici.",
+      "forgottenAlert": "{count, plural, =1 {1 facture de {month} n'a jamais été cochée} other {# factures de {month} n'ont jamais été cochées}} — vérifie qu'elles ont bien été payées.",
       "buckets": {
         "overdue": "En retard"
       }

@@ -12,6 +12,7 @@ export {
   type ChargePeriodStatus,
   type CurrentPeriodDueResult,
 } from './current-period-due-date';
+export { countUnpaidForPeriod, type UnpaidCountCharge } from './unpaid-count';
 export { chargeMatchesMonth } from './match-month';
 export { paymentMonthsFromFrequency } from './payment-months-from-frequency';
 export {

@@ -28,21 +28,15 @@ vi.mock('@/i18n/navigation', () => ({
 }));
 
 vi.mock('next-intl/server', () => ({
+  // Real ICU engine (plurals, nested args) instead of a naive regex mock —
+  // lets tests assert the actual user-facing copy ('2 factures de juin…').
   getTranslations: async (namespace: string) => {
-    const walk = (root: unknown, path: string[]): unknown =>
-      path.reduce<unknown>((acc, key) => {
-        if (typeof acc === 'object' && acc !== null && key in acc) {
-          return (acc as Record<string, unknown>)[key];
-        }
-        return undefined;
-      }, root);
-    const sub = walk(messages, namespace.split('.'));
-    return (key: string, values?: Record<string, unknown>) => {
-      const value = walk(sub, key.split('.'));
-      if (typeof value !== 'string') return key;
-      if (!values) return value;
-      return value.replace(/\{(\w+)\}/g, (_, k) => String(values[k] ?? ''));
-    };
+    const { createTranslator } = await import('next-intl');
+    return createTranslator({
+      locale: 'fr-BE',
+      messages: messages as never,
+      namespace: namespace as never,
+    });
   },
 }));
 
@@ -76,6 +70,8 @@ async function renderCard(input: {
   charges: Charge[];
   payments?: PaymentLedger;
   todayIso?: string;
+  forgottenCount?: number;
+  forgottenMonthLabel?: string;
 }) {
   return render(
     await ProchainesFacturesCard({
@@ -83,6 +79,8 @@ async function renderCard(input: {
       payments: input.payments ?? NO_PAYMENTS,
       todayIso: input.todayIso ?? TODAY,
       locale: 'fr-BE',
+      forgottenCount: input.forgottenCount ?? 0,
+      forgottenMonthLabel: input.forgottenMonthLabel ?? '',
     }),
   );
 }
@@ -179,6 +177,33 @@ describe('<ProchainesFacturesCard /> — THI-329 PR-C', () => {
   it('shows the educational hint when nothing is flagged', async () => {
     await renderCard({ charges: [makeCharge({ id: 'c1' })] });
     expect(screen.getByTestId('prochaines-factures-watched-hint')).toBeInTheDocument();
+  });
+
+  it('renders the forgotten-bills alert with the dynamic count and month label', async () => {
+    await renderCard({
+      charges: [makeCharge()],
+      forgottenCount: 2,
+      forgottenMonthLabel: 'juin',
+    });
+    expect(screen.getByTestId('prochaines-factures-forgotten')).toHaveTextContent(
+      /2 factures de juin n'ont jamais été cochées/,
+    );
+  });
+
+  it('uses the singular form for a single forgotten bill', async () => {
+    await renderCard({
+      charges: [makeCharge()],
+      forgottenCount: 1,
+      forgottenMonthLabel: 'juin',
+    });
+    expect(screen.getByTestId('prochaines-factures-forgotten')).toHaveTextContent(
+      /1 facture de juin n'a jamais été cochée/,
+    );
+  });
+
+  it('renders no forgotten alert when nothing was left unticked', async () => {
+    await renderCard({ charges: [makeCharge()] });
+    expect(screen.queryByTestId('prochaines-factures-forgotten')).toBeNull();
   });
 
   it('renders the global empty state when there is no active charge', async () => {

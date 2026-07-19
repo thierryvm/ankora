@@ -1,5 +1,5 @@
 import Decimal from 'decimal.js';
-import { ArrowRight, Bookmark, Calendar, Check } from 'lucide-react';
+import { AlertTriangle, ArrowRight, Bookmark, Calendar, Check } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
 import { Link } from '@/i18n/navigation';
@@ -16,6 +16,15 @@ type Props = {
   /** "Today" in ISO `YYYY-MM-DD` (Europe/Brussels, computed upstream). */
   todayIso: string;
   locale: Locale;
+  /**
+   * Bills due LAST month that were never ticked (the per-period ledger resets
+   * naturally on month rollover, hiding them). > 0 renders the "forgotten
+   * bills" alert so the user checks they were actually paid. Computed
+   * upstream via `countUnpaidForPeriod` on the previous period's ledger.
+   */
+  forgottenCount?: number;
+  /** Localized label of the previous month (e.g. « juin »), for the alert copy. */
+  forgottenMonthLabel?: string;
 };
 
 type Row = Readonly<{
@@ -44,7 +53,14 @@ type Row = Readonly<{
  * a white-on-solid-danger badge (4.84:1 both themes, pattern validated on the
  * charges page) and day chips are neutral surface tokens.
  */
-export async function ProchainesFacturesCard({ charges, payments, todayIso, locale }: Props) {
+export async function ProchainesFacturesCard({
+  charges,
+  payments,
+  todayIso,
+  locale,
+  forgottenCount = 0,
+  forgottenMonthLabel = '',
+}: Props) {
   const t = await getTranslations('dashboard.upcomingBills');
 
   const [yearStr, monthStr] = todayIso.split('-');
@@ -129,6 +145,22 @@ export async function ProchainesFacturesCard({ charges, payments, todayIso, loca
           </p>
         ) : (
           <div className="flex flex-col gap-6">
+            {/* Forgotten-bills alert — factual, calm, FSMA-safe. The copy text
+                stays `text-foreground` (AA both themes); the warning tint is
+                decorative only (same dark-safety rule as the overdue badge). */}
+            {forgottenCount > 0 && (
+              <p
+                className="border-warning/40 bg-warning/10 text-foreground flex items-start gap-2 rounded-lg border px-3 py-2.5 text-sm"
+                data-testid="prochaines-factures-forgotten"
+              >
+                <AlertTriangle
+                  aria-hidden
+                  className="text-warning mt-0.5 h-4 w-4 shrink-0"
+                  strokeWidth={2}
+                />
+                {t('forgottenAlert', { count: forgottenCount, month: forgottenMonthLabel })}
+              </p>
+            )}
             {/* ── Ce mois-ci ─────────────────────────────────────────── */}
             <section aria-label={t('thisMonth')} data-testid="prochaines-factures-this-month">
               <header className="mb-1 flex items-baseline justify-between gap-3">

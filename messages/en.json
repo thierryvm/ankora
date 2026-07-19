@@ -1134,6 +1134,7 @@
       "watched": "Watching",
       "watchedHint": "Your flagged bills, to see them coming.",
       "watchedEmptyHint": "Tip: flag a bill as “watching” on the Charges page to track it here.",
+      "forgottenAlert": "{count, plural, =1 {1 bill from {month} was never ticked} other {# bills from {month} were never ticked}} — check they were actually paid.",
       "buckets": {
         "overdue": "Overdue"
       }
