@@ -202,12 +202,14 @@ export default async function DashboardPage() {
           payments={paymentsLedger}
           todayIso={todayIso}
           locale={locale}
-          forgottenLabels={unpaidChargesForPeriod(
-            snapshot.charges,
-            new Set(snapshot.previousMonthPaidChargeIds),
-            snapshot.previousPeriod,
-          ).map((c) => c.label)}
-          forgottenMonthLabel={formatMonth(snapshot.previousPeriod.month, locale)}
+          forgotten={{
+            labels: unpaidChargesForPeriod(
+              snapshot.charges,
+              new Set(snapshot.previousMonthPaidChargeIds),
+              snapshot.previousPeriod,
+            ).map((c) => c.label),
+            monthLabel: formatMonth(snapshot.previousPeriod.month, locale),
+          }}
         />
       </section>
 
