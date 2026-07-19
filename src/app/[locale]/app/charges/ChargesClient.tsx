@@ -37,17 +37,6 @@ type Frequency = ChargeFrequency;
 // Domain single source of truth — adding a frequency updates every call-site.
 const FREQUENCIES = CHARGE_FREQUENCIES;
 
-// Literal key map keeps next-intl's typed `t()` happy on a per-frequency key.
-// The unit suffix disambiguates the group subtotals: the monthly one is
-// per MONTH, the annual one per YEAR — same label, different time units,
-// a real source of confusion without it (@thierry 2026-07-18).
-const SUBTOTAL_UNIT_KEY = {
-  monthly: 'subtotalUnit.monthly',
-  quarterly: 'subtotalUnit.quarterly',
-  semiannual: 'subtotalUnit.semiannual',
-  annual: 'subtotalUnit.annual',
-} as const;
-
 type RawCharge = {
   id: string;
   label: string;
@@ -81,9 +70,6 @@ function todayBrusselsIso(): string {
 
 type ChargesClientProps = {
   charges: RawCharge[];
-  /** Raw amount summed per frequency bucket (active charges only), computed
-   *  server-side in the pure domain and crossed as `number`. */
-  subtotals: Record<Frequency, number>;
   /** Smoothed monthly provisioning effort across all active charges. */
   monthlyProvisionTotal: number;
   /** Annual equivalent of all active charges. */
@@ -112,7 +98,6 @@ type ChargesClientProps = {
 
 export function ChargesClient({
   charges,
-  subtotals,
   monthlyProvisionTotal,
   annualTotal,
   paidChargeIds,
@@ -778,42 +763,42 @@ export function ChargesClient({
                       >
                         {rows.map((c) => renderChargeRow(c))}
                       </ul>
-                      {/* Subtotal — below the list, coloured brand for impact. */}
+                      {/* Group footer — ONE live figure (@thierry 2026-07-19):
+                          the remaining amount to pay in this group this month,
+                          counting down to ✓ 0 € as bills are ticked. The old
+                          static recurring-cost subtotal was redundant with the
+                          global totals below, and its "reste" chip duplicated
+                          the top banner. Groups with nothing due this month
+                          say so (keeps the footer — and its e2e-asserted
+                          testid — always present). */}
                       <p
                         data-testid={`charges-group-subtotal-${freq}`}
                         className="mt-2 flex items-baseline justify-end gap-1.5 px-1"
                       >
-                        <span className="text-muted-foreground text-xs">{t('subtotalLabel')}</span>
-                        <span className="text-brand-text text-sm font-semibold tabular-nums">
-                          {formatCurrency(subtotals[freq], locale)}
-                          <span className="text-muted-foreground text-xs font-normal">
-                            {t(SUBTOTAL_UNIT_KEY[freq])}
+                        {groupDue.length === 0 ? (
+                          <span className="text-muted-foreground text-xs">
+                            {t('groupNothingDue')}
                           </span>
-                        </span>
-                        {/* Payment state of the group's due-this-month bills:
-                            live countdown while unpaid, then a persistent
-                            "tout payé" check — never a silent disappearance
-                            that leaves the static subtotal posing as an
-                            amount still owed (@thierry 2026-07-18). */}
-                        {groupAllPaid && (
+                        ) : groupAllPaid ? (
                           <span
                             data-testid={`charges-group-allpaid-${freq}`}
-                            className="text-brand-text inline-flex items-center gap-1 text-xs font-medium"
+                            className="text-brand-text inline-flex items-center gap-1 text-sm font-semibold tabular-nums"
                           >
                             <Check aria-hidden className="h-3.5 w-3.5" strokeWidth={3} />
-                            {t('groupAllPaid')}
+                            {formatCurrency(0, locale)}
                           </span>
-                        )}
-                        {groupRemaining > 0 && (
-                          <span
-                            data-testid={`charges-group-remaining-${freq}`}
-                            className="text-foreground text-sm font-medium tabular-nums"
-                          >
-                            ·{' '}
-                            {t('groupRemaining', {
-                              amount: formatCurrency(groupRemaining, locale),
-                            })}
-                          </span>
+                        ) : (
+                          <>
+                            <span className="text-muted-foreground text-xs">
+                              {t('groupRemainingLabel')}
+                            </span>
+                            <span
+                              data-testid={`charges-group-remaining-${freq}`}
+                              className="text-foreground text-sm font-semibold tabular-nums"
+                            >
+                              {formatCurrency(groupRemaining, locale)}
+                            </span>
+                          </>
                         )}
                       </p>
                     </section>

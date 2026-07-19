@@ -723,7 +723,6 @@
       "addButton": "Ajouter",
       "adding": "Ajout…",
       "count": "{count, plural, =0 {aucune charge} one {1 charge} other {# charges}}",
-      "subtotalLabel": "Sous-total",
       "totalMonthlyLabel": "Effort lissé / mois",
       "totalAnnualLabel": "Équivalent annuel",
       "referenceFormat": "{frequency} · ref. {month}",
@@ -748,16 +747,10 @@
         "backToCurrent": "Revenir à {month}"
       },
       "paidCount": "{paid}/{total} payées",
-      "groupRemaining": "reste {amount}",
-      "groupAllPaid": "tout payé",
+      "groupRemainingLabel": "Reste à payer",
+      "groupNothingDue": "Rien à payer ce mois",
       "allPaidTitle": "Tout est payé ce mois",
       "dueCount": "{due, plural, =1 {1 due ce mois} other {# dues ce mois}}",
-      "subtotalUnit": {
-        "monthly": "/mois",
-        "quarterly": "/trimestre",
-        "semiannual": "/semestre",
-        "annual": "/an"
-      },
       "statusOverdue": "En retard",
       "watchAria": "Surveiller {label}",
       "unwatchAria": "Ne plus surveiller {label}",

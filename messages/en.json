@@ -723,7 +723,6 @@
       "addButton": "Add",
       "adding": "Adding…",
       "count": "{count, plural, =0 {no bills} one {1 bill} other {# bills}}",
-      "subtotalLabel": "Subtotal",
       "totalMonthlyLabel": "Smoothed monthly amount",
       "totalAnnualLabel": "Annual equivalent",
       "referenceFormat": "{frequency} · ref. {month}",
@@ -748,16 +747,10 @@
         "backToCurrent": "Back to {month}"
       },
       "paidCount": "{paid}/{total} paid",
-      "groupRemaining": "{amount} left",
-      "groupAllPaid": "all paid",
+      "groupRemainingLabel": "Left to pay",
+      "groupNothingDue": "Nothing to pay this month",
       "allPaidTitle": "Everything is paid this month",
       "dueCount": "{due, plural, =1 {1 due this month} other {# due this month}}",
-      "subtotalUnit": {
-        "monthly": "/month",
-        "quarterly": "/quarter",
-        "semiannual": "/half-year",
-        "annual": "/year"
-      },
       "statusOverdue": "Overdue",
       "watchAria": "Watch {label}",
       "unwatchAria": "Stop watching {label}",
