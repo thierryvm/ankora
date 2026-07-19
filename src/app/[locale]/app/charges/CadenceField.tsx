@@ -65,28 +65,31 @@ export function CadenceField({ idPrefix, value, onChange, disabled }: CadenceFie
 
   return (
     <div className="flex flex-col gap-3" data-testid={`${idPrefix}-field`}>
-      <div className="flex flex-col gap-2">
-        <label htmlFor={freqId} className="text-sm font-medium">
-          {t('frequencyLabel')}
-        </label>
-        <select
-          id={freqId}
-          data-testid={`${idPrefix}-frequency`}
-          className={selectClass}
-          value={value.frequency}
-          disabled={disabled}
-          onChange={(e) => onChange({ ...value, frequency: e.target.value as ChargeFrequency })}
-        >
-          {CHARGE_FREQUENCIES.map((f) => (
-            <option key={f} value={f}>
-              {tFreq(f)}
-            </option>
-          ))}
-        </select>
-      </div>
+      {/* Compact control row (@thierry 2026-07-19: full-width stacked fields
+          were oversized). Mobile keeps the vertical stack; ≥md the three
+          selects share one line. */}
+      <div className="grid gap-3 md:grid-cols-3 md:items-end">
+        <div className="flex flex-col gap-2">
+          <label htmlFor={freqId} className="text-sm font-medium">
+            {t('frequencyLabel')}
+          </label>
+          <select
+            id={freqId}
+            data-testid={`${idPrefix}-frequency`}
+            className={selectClass}
+            value={value.frequency}
+            disabled={disabled}
+            onChange={(e) => onChange({ ...value, frequency: e.target.value as ChargeFrequency })}
+          >
+            {CHARGE_FREQUENCIES.map((f) => (
+              <option key={f} value={f}>
+                {tFreq(f)}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="flex min-w-32 flex-1 flex-col gap-2">
+        <div className="flex flex-col gap-2">
           <label htmlFor={dayId} className="text-sm font-medium">
             {t('dayLabel')}
           </label>
@@ -108,10 +111,7 @@ export function CadenceField({ idPrefix, value, onChange, disabled }: CadenceFie
         </div>
 
         {!isMonthly && (
-          <div
-            className="flex min-w-32 flex-1 flex-col gap-2"
-            data-testid={`${idPrefix}-month-wrap`}
-          >
+          <div className="flex flex-col gap-2" data-testid={`${idPrefix}-month-wrap`}>
             <label htmlFor={monthId} className="text-sm font-medium">
               {t('anchorMonthLabel')}
             </label>

@@ -515,7 +515,9 @@ export function ChargesClient({
           </CardHeader>
           <CardContent>
             <form onSubmit={onCreate} className="grid gap-4 md:grid-cols-2">
-              <div className="flex flex-col gap-2 md:col-span-2">
+              {/* Compact layout (@thierry 2026-07-19): label + amount share one
+                  row on ≥md — no more oversized full-width stacked fields. */}
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="label">{t('labelLabel')}</Label>
                 <Input
                   id="label"

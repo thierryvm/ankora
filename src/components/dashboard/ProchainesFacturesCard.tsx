@@ -18,13 +18,14 @@ type Props = {
   locale: Locale;
   /**
    * Bills due LAST month that were never ticked (the per-period ledger resets
-   * naturally on month rollover, hiding them). > 0 renders the "forgotten
-   * bills" alert so the user checks they were actually paid. Computed
-   * upstream via `countUnpaidForPeriod` on the previous period's ledger.
+   * naturally on month rollover, hiding them). Non-empty `labels` renders the
+   * "forgotten bills" alert NAMING the bills so the user checks they were
+   * actually paid. Single object so labels can never appear without their
+   * month (Sourcery #230). Computed upstream via `unpaidChargesForPeriod`
+   * on the previous period's ledger; `monthLabel` is the localized previous
+   * month (e.g. « juin »).
    */
-  forgottenCount?: number;
-  /** Localized label of the previous month (e.g. « juin »), for the alert copy. */
-  forgottenMonthLabel?: string;
+  forgotten?: { labels: readonly string[]; monthLabel: string };
 };
 
 type Row = Readonly<{
@@ -58,8 +59,7 @@ export async function ProchainesFacturesCard({
   payments,
   todayIso,
   locale,
-  forgottenCount = 0,
-  forgottenMonthLabel = '',
+  forgotten,
 }: Props) {
   const t = await getTranslations('dashboard.upcomingBills');
 
@@ -148,7 +148,7 @@ export async function ProchainesFacturesCard({
             {/* Forgotten-bills alert — factual, calm, FSMA-safe. The copy text
                 stays `text-foreground` (AA both themes); the warning tint is
                 decorative only (same dark-safety rule as the overdue badge). */}
-            {forgottenCount > 0 && (
+            {forgotten && forgotten.labels.length > 0 && (
               <p
                 className="border-warning/40 bg-warning/10 text-foreground flex items-start gap-2 rounded-lg border px-3 py-2.5 text-sm"
                 data-testid="prochaines-factures-forgotten"
@@ -158,7 +158,11 @@ export async function ProchainesFacturesCard({
                   className="text-warning mt-0.5 h-4 w-4 shrink-0"
                   strokeWidth={2}
                 />
-                {t('forgottenAlert', { count: forgottenCount, month: forgottenMonthLabel })}
+                {t('forgottenAlert', {
+                  count: forgotten.labels.length,
+                  month: forgotten.monthLabel,
+                  labels: forgotten.labels.join(', '),
+                })}
               </p>
             )}
             {/* ── Ce mois-ci ─────────────────────────────────────────── */}

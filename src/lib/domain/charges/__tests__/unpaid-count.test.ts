@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest';
 
-import { countUnpaidForPeriod, type UnpaidCountCharge } from '../unpaid-count';
+import {
+  countUnpaidForPeriod,
+  unpaidChargesForPeriod,
+  type UnpaidCountCharge,
+} from '../unpaid-count';
 
 const charge = (over: Partial<UnpaidCountCharge> = {}): UnpaidCountCharge => ({
   id: 'c1',
@@ -36,5 +40,14 @@ describe('countUnpaidForPeriod', () => {
       charge({ id: 'inactive', isActive: false }),
     ];
     expect(countUnpaidForPeriod(charges, new Set(['paid']), { month: 6 })).toBe(1);
+  });
+
+  it('returns the charges themselves (generic), preserving caller-side fields', () => {
+    const charges = [
+      { ...charge({ id: 'paid' }), label: 'Loyer' },
+      { ...charge({ id: 'unpaid' }), label: 'Taxe voiture' },
+    ];
+    const result = unpaidChargesForPeriod(charges, new Set(['paid']), { month: 6 });
+    expect(result.map((c) => c.label)).toEqual(['Taxe voiture']);
   });
 });
