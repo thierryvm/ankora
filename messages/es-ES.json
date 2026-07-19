@@ -739,6 +739,14 @@
       "paidSummary": "Pagadas este mes: {paid}/{total} · quedan {remaining}",
       "paidHint": "Marca las facturas que ya has pagado este mes.",
       "remainingLabel": "Pendiente de pagar este mes",
+      "remainingLabelPeriod": "Pendiente de pagar en {month}",
+      "allPaidPeriod": "Todo está pagado para {month}",
+      "periodNav": {
+        "navAria": "Navegación por meses",
+        "prevAria": "Mes anterior",
+        "nextAria": "Mes siguiente",
+        "backToCurrent": "Volver a {month}"
+      },
       "paidCount": "{paid}/{total} pagadas",
       "groupRemaining": "quedan {amount}",
       "groupAllPaid": "todo pagado",
@@ -1135,6 +1143,7 @@
       "watchedHint": "Tus facturas marcadas, para verlas venir.",
       "watchedEmptyHint": "Consejo: marca una factura «en seguimiento» en la página de Gastos fijos para seguirla aquí.",
       "forgottenAlert": "Nunca {count, plural, =1 {marcada} other {marcadas}} en {month}: {labels} — comprueba que realmente se {count, plural, =1 {pagó} other {pagaron}}.",
+      "forgottenSee": "Ver {month}",
       "buckets": {
         "overdue": "Atrasadas"
       }

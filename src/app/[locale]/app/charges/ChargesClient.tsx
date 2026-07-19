@@ -1,8 +1,19 @@
 'use client';
 
 import { useMemo, useOptimistic, useState, useTransition } from 'react';
-import { Bookmark, Check, Pencil, Plus, Repeat, Trash2 } from 'lucide-react';
+import {
+  Bookmark,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Pencil,
+  Plus,
+  Repeat,
+  Trash2,
+} from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
+
+import { Link } from '@/i18n/navigation';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -77,10 +88,26 @@ type ChargesClientProps = {
   monthlyProvisionTotal: number;
   /** Annual equivalent of all active charges. */
   annualTotal: number;
-  /** Charge IDs already settled for `currentPeriod` (seeds the Payé toggle). */
+  /** Charge IDs already settled for `viewedPeriod` (seeds the Payé toggle). */
   paidChargeIds: string[];
-  /** Current period (Europe/Brussels), the toggle's write target. */
-  currentPeriod: { year: number; month: number };
+  /**
+   * The period IN VIEW (month-history navigation) — the ledger `paidChargeIds`
+   * belongs to it and the Payé toggle writes to it. Usually today's month;
+   * a past month when the user navigates back (`?period=YYYY-MM`).
+   */
+  viewedPeriod: { year: number; month: number };
+  /** Month-history navigation state, computed server-side from `?period`. */
+  periodNav: {
+    /** Localized label of the viewed period (e.g. « juillet 2026 »). */
+    label: string;
+    /** `YYYY-MM` of the previous month, or null at the history floor. */
+    prevParam: string | null;
+    /** `YYYY-MM` of the next month, or null when viewing the current one. */
+    nextParam: string | null;
+    isCurrent: boolean;
+    /** Localized label of today's month (the "back to" link target). */
+    currentLabel: string;
+  };
 };
 
 export function ChargesClient({
@@ -89,7 +116,8 @@ export function ChargesClient({
   monthlyProvisionTotal,
   annualTotal,
   paidChargeIds,
-  currentPeriod,
+  viewedPeriod,
+  periodNav,
 }: ChargesClientProps) {
   const t = useTranslations('app.charges');
   const tFreq = useTranslations('common.frequency');
@@ -122,7 +150,7 @@ export function ChargesClient({
     const dueIsoOf = (c: RawCharge): string =>
       currentPeriodDueDate(
         { isActive: c.isActive, paymentMonths: c.paymentMonths, paymentDay: c.paymentDay },
-        currentPeriod,
+        viewedPeriod,
         todayIso,
         false,
       )?.dueDateIso ?? '9999-12-31';
@@ -134,7 +162,7 @@ export function ChargesClient({
         .sort((a, b) => (a.dueIso < b.dueIso ? -1 : a.dueIso > b.dueIso ? 1 : 0))
         .map(({ c }) => c),
     })).filter((group) => group.rows.length > 0);
-  }, [charges, currentPeriod, todayIso]);
+  }, [charges, viewedPeriod, todayIso]);
 
   // Optimistic "Payé" state (plan-reviewer CR-1): `useOptimistic` seeds from
   // the server `paidChargeIds` and reconciles automatically once the action's
@@ -155,8 +183,8 @@ export function ChargesClient({
   // Active charges due in the current period — the only ones exposing a toggle
   // (Phase 2 limit: a charge not due this month has no toggle, cf. plan CR-2).
   const dueThisMonth = useMemo(
-    () => charges.filter((c) => c.isActive && c.paymentMonths.includes(currentPeriod.month)),
-    [charges, currentPeriod.month],
+    () => charges.filter((c) => c.isActive && c.paymentMonths.includes(viewedPeriod.month)),
+    [charges, viewedPeriod.month],
   );
 
   // Optimistic "à surveiller" set — same seeding/reconciliation contract as
@@ -200,8 +228,8 @@ export function ChargesClient({
       try {
         const result = await togglePaymentAction({
           chargeId: c.id,
-          periodYear: currentPeriod.year,
-          periodMonth: currentPeriod.month,
+          periodYear: viewedPeriod.year,
+          periodMonth: viewedPeriod.month,
         });
         if (result.ok) {
           toast.success(result.data.paid ? t('toastMarkedPaid') : t('toastMarkedUnpaid'));
@@ -299,7 +327,7 @@ export function ChargesClient({
   function periodDueFor(c: RawCharge, paid: boolean): { label: string; isOverdue: boolean } {
     const due = currentPeriodDueDate(
       { isActive: c.isActive, paymentMonths: c.paymentMonths, paymentDay: c.paymentDay },
-      currentPeriod,
+      viewedPeriod,
       todayIso,
       paid,
     );
@@ -318,7 +346,7 @@ export function ChargesClient({
    * (`pr-24` reserves their space) and become inline cells 5/6 on desktop.
    */
   function renderChargeRow(c: RawCharge) {
-    const isDue = c.isActive && c.paymentMonths.includes(currentPeriod.month);
+    const isDue = c.isActive && c.paymentMonths.includes(viewedPeriod.month);
     const paid = optimisticPaid.has(c.id);
     const watched = optimisticWatched.has(c.id);
     const { label: dueLabel, isOverdue } = periodDueFor(c, paid);
@@ -593,6 +621,59 @@ export function ChargesClient({
             </p>
           ) : (
             <>
+              {/* Month-history navigator (@thierry priority 2026-07-19): browse
+                  any past month's paid/unpaid state; ticks stay editable so a
+                  forgotten June bill can be settled from July. */}
+              <nav
+                aria-label={t('periodNav.navAria')}
+                className="mb-4 flex flex-wrap items-center justify-between gap-3"
+              >
+                <div className="flex items-center gap-1">
+                  {periodNav.prevParam ? (
+                    <Link
+                      href={{ pathname: '/app/charges', query: { period: periodNav.prevParam } }}
+                      aria-label={t('periodNav.prevAria')}
+                      data-testid="charges-period-prev"
+                      className="hover:bg-surface-muted focus-visible:ring-brand-600 text-muted-foreground flex size-9 items-center justify-center rounded-md transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                    >
+                      <ChevronLeft aria-hidden className="h-4 w-4" />
+                    </Link>
+                  ) : (
+                    <span className="text-muted-foreground/30 flex size-9 items-center justify-center">
+                      <ChevronLeft aria-hidden className="h-4 w-4" />
+                    </span>
+                  )}
+                  <span
+                    data-testid="charges-period-label"
+                    className="text-foreground min-w-32 text-center text-sm font-semibold capitalize"
+                  >
+                    {periodNav.label}
+                  </span>
+                  {periodNav.nextParam ? (
+                    <Link
+                      href={{ pathname: '/app/charges', query: { period: periodNav.nextParam } }}
+                      aria-label={t('periodNav.nextAria')}
+                      data-testid="charges-period-next"
+                      className="hover:bg-surface-muted focus-visible:ring-brand-600 text-muted-foreground flex size-9 items-center justify-center rounded-md transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                    >
+                      <ChevronRight aria-hidden className="h-4 w-4" />
+                    </Link>
+                  ) : (
+                    <span className="text-muted-foreground/30 flex size-9 items-center justify-center">
+                      <ChevronRight aria-hidden className="h-4 w-4" />
+                    </span>
+                  )}
+                </div>
+                {!periodNav.isCurrent && (
+                  <Link
+                    href="/app/charges"
+                    data-testid="charges-period-back"
+                    className="text-brand-text hover:text-brand-text-strong focus-visible:ring-brand-600 rounded-md text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                  >
+                    {t('periodNav.backToCurrent', { month: periodNav.currentLabel })}
+                  </Link>
+                )}
+              </nav>
               {/* Live "reste à payer" headline — promoted to the TOP of the list
                   (dashboard-ux M2: the old bottom summary was invisible after 16
                   rows). Derived from `optimisticPaid`, so the amount counts down
@@ -619,7 +700,13 @@ export function ChargesClient({
                       {allPaidThisMonth && (
                         <Check aria-hidden className="h-3.5 w-3.5" strokeWidth={3} />
                       )}
-                      {allPaidThisMonth ? t('allPaidTitle') : t('remainingLabel')}
+                      {allPaidThisMonth
+                        ? periodNav.isCurrent
+                          ? t('allPaidTitle')
+                          : t('allPaidPeriod', { month: periodNav.label })
+                        : periodNav.isCurrent
+                          ? t('remainingLabel')
+                          : t('remainingLabelPeriod', { month: periodNav.label })}
                     </p>
                     <p
                       data-testid="charges-remaining-amount"
@@ -657,7 +744,7 @@ export function ChargesClient({
                   // ticked — unlike the subtotal, which documents the group's
                   // full recurring cost and intentionally never moves.
                   const groupDue = rows.filter(
-                    (c) => c.isActive && c.paymentMonths.includes(currentPeriod.month),
+                    (c) => c.isActive && c.paymentMonths.includes(viewedPeriod.month),
                   );
                   const groupRemaining = groupDue
                     .filter((c) => !optimisticPaid.has(c.id))

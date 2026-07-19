@@ -209,6 +209,7 @@ export default async function DashboardPage() {
               snapshot.previousPeriod,
             ).map((c) => c.label),
             monthLabel: formatMonth(snapshot.previousPeriod.month, locale),
+            periodParam: `${snapshot.previousPeriod.year}-${String(snapshot.previousPeriod.month).padStart(2, '0')}`,
           }}
         />
       </section>

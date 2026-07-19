@@ -739,6 +739,14 @@
       "paidSummary": "Diesen Monat bezahlt: {paid}/{total} · noch {remaining}",
       "paidHint": "Hake die Rechnungen ab, die du diesen Monat schon bezahlt hast.",
       "remainingLabel": "Diesen Monat noch zu zahlen",
+      "remainingLabelPeriod": "Noch zu zahlen im {month}",
+      "allPaidPeriod": "Alles ist bezahlt für {month}",
+      "periodNav": {
+        "navAria": "Monatsnavigation",
+        "prevAria": "Vormonat",
+        "nextAria": "Nächster Monat",
+        "backToCurrent": "Zurück zu {month}"
+      },
       "paidCount": "{paid}/{total} bezahlt",
       "groupRemaining": "noch {amount}",
       "groupAllPaid": "alles bezahlt",
@@ -1135,6 +1143,7 @@
       "watchedHint": "Deine markierten Rechnungen, um sie kommen zu sehen.",
       "watchedEmptyHint": "Tipp: Markiere eine Rechnung auf der Fixkosten-Seite als „im Blick“, um sie hier zu verfolgen.",
       "forgottenAlert": "In {month} nie abgehakt: {labels} — prüfe, ob {count, plural, =1 {sie wirklich bezahlt wurde} other {sie wirklich bezahlt wurden}}.",
+      "forgottenSee": "{month} ansehen",
       "buckets": {
         "overdue": "Überfällig"
       }
