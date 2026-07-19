@@ -131,6 +131,14 @@ export type WorkspaceSnapshot = {
   }>;
   /** Reference period used by `currentMonthPayments`. Same TZ as cashflow boundaries. */
   currentPeriod: { year: number; month: number };
+  /** The period right before `currentPeriod` (year-wrap aware). */
+  previousPeriod: { year: number; month: number };
+  /**
+   * Charge ids ticked as paid for `previousPeriod` — feeds the "forgotten
+   * bills" alert (a bill due last month with no ledger entry was never
+   * ticked; the user should check it was actually paid).
+   */
+  previousMonthPaidChargeIds: string[];
 };
 
 /**
@@ -169,55 +177,73 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
   const [yearStr, monthStr] = startOfMonth.split('-');
   const currentYear = Number(yearStr);
   const currentMonth = Number(monthStr);
+  // Previous period (year-wrap aware) — feeds the "forgotten bills" alert:
+  // the ledger is per-period, so last month's unticked bills are invisible
+  // unless we read that period too.
+  const previousMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+  const previousYear = currentMonth === 1 ? currentYear - 1 : currentYear;
 
-  const [wsRes, settingsRes, chargesRes, accountsRes, monthlyExpensesRes, currentMonthPaymentsRes] =
-    await Promise.all([
-      supabase
-        .from('workspaces')
-        .select('id, name, monthly_income, vie_courante_monthly_transfer')
-        .eq('id', workspaceId)
-        .single(),
-      supabase
-        .from('workspace_settings')
-        .select(
-          // PR-BETA-3 (THI-267) added `reste_a_vivre_default` +
-          // `reste_a_vivre_overrides` for the Capacité tryptique. Read both
-          // here so the dashboard can resolve the current-month value in a
-          // single round-trip (no extra query in the page component).
-          'savings_balance, months_tracked, reste_a_vivre_default, reste_a_vivre_overrides',
-        )
-        .eq('workspace_id', workspaceId)
-        .maybeSingle(),
-      supabase
-        .from('charges')
-        // `select('*')` on purpose (incident 2026-07-18): an explicit column
-        // list containing a NOT-YET-MIGRATED column (`is_watched` preview vs
-        // prod schema) makes the WHOLE query fail → the dashboard + charges
-        // page silently render empty and look like data loss. `*` returns
-        // whatever columns exist, and the mapping defaults the missing ones —
-        // the page can never go blank because of a deploy/migration window.
-        // Over-fetch is negligible (a few metadata columns on ~20 rows).
-        .select('*')
-        .eq('workspace_id', workspaceId)
-        .order('created_at', { ascending: true }),
-      supabase
-        .from('accounts')
-        .select('kind, label, account_type, display_name, balance')
-        .eq('workspace_id', workspaceId),
-      supabase
-        .from('expenses')
-        .select('id, label, amount, occurred_on, category_id, note, paid_from')
-        .eq('workspace_id', workspaceId)
-        .gte('occurred_on', startOfMonth)
-        .lt('occurred_on', startOfNextMonth)
-        .order('occurred_on', { ascending: false }),
-      supabase
-        .from('charge_payments')
-        .select('charge_id, period_year, period_month, paid_amount, paid_at')
-        .eq('workspace_id', workspaceId)
-        .eq('period_year', currentYear)
-        .eq('period_month', currentMonth),
-    ]);
+  const [
+    wsRes,
+    settingsRes,
+    chargesRes,
+    accountsRes,
+    monthlyExpensesRes,
+    currentMonthPaymentsRes,
+    previousMonthPaymentsRes,
+  ] = await Promise.all([
+    supabase
+      .from('workspaces')
+      .select('id, name, monthly_income, vie_courante_monthly_transfer')
+      .eq('id', workspaceId)
+      .single(),
+    supabase
+      .from('workspace_settings')
+      .select(
+        // PR-BETA-3 (THI-267) added `reste_a_vivre_default` +
+        // `reste_a_vivre_overrides` for the Capacité tryptique. Read both
+        // here so the dashboard can resolve the current-month value in a
+        // single round-trip (no extra query in the page component).
+        'savings_balance, months_tracked, reste_a_vivre_default, reste_a_vivre_overrides',
+      )
+      .eq('workspace_id', workspaceId)
+      .maybeSingle(),
+    supabase
+      .from('charges')
+      // `select('*')` on purpose (incident 2026-07-18): an explicit column
+      // list containing a NOT-YET-MIGRATED column (`is_watched` preview vs
+      // prod schema) makes the WHOLE query fail → the dashboard + charges
+      // page silently render empty and look like data loss. `*` returns
+      // whatever columns exist, and the mapping defaults the missing ones —
+      // the page can never go blank because of a deploy/migration window.
+      // Over-fetch is negligible (a few metadata columns on ~20 rows).
+      .select('*')
+      .eq('workspace_id', workspaceId)
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('accounts')
+      .select('kind, label, account_type, display_name, balance')
+      .eq('workspace_id', workspaceId),
+    supabase
+      .from('expenses')
+      .select('id, label, amount, occurred_on, category_id, note, paid_from')
+      .eq('workspace_id', workspaceId)
+      .gte('occurred_on', startOfMonth)
+      .lt('occurred_on', startOfNextMonth)
+      .order('occurred_on', { ascending: false }),
+    supabase
+      .from('charge_payments')
+      .select('charge_id, period_year, period_month, paid_amount, paid_at')
+      .eq('workspace_id', workspaceId)
+      .eq('period_year', currentYear)
+      .eq('period_month', currentMonth),
+    supabase
+      .from('charge_payments')
+      .select('charge_id')
+      .eq('workspace_id', workspaceId)
+      .eq('period_year', previousYear)
+      .eq('period_month', previousMonth),
+  ]);
 
   if (wsRes.error || !wsRes.data) redirect('/onboarding');
 
@@ -306,6 +332,14 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
     paidAt: p.paid_at,
   }));
 
+  if (previousMonthPaymentsRes.error) {
+    log.warn('Failed to load previous-month charge payments for dashboard', {
+      workspace_id: workspaceId,
+      error_code: previousMonthPaymentsRes.error.code ?? 'unknown',
+    });
+  }
+  const previousMonthPaidChargeIds = (previousMonthPaymentsRes.data ?? []).map((p) => p.charge_id);
+
   // PR-BETA-3 (THI-267) — resolve the current-month reste-à-vivre using
   // overrides[YYYY-MM] ?? default. Supabase's generated types may still
   // type the new JSONB column as `Json | null` until `supabase:types` is
@@ -342,6 +376,8 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
     monthlyExpenses,
     currentMonthPayments,
     currentPeriod: { year: currentYear, month: currentMonth },
+    previousPeriod: { year: previousYear, month: previousMonth },
+    previousMonthPaidChargeIds,
   };
 }
 

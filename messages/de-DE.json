@@ -1134,6 +1134,7 @@
       "watched": "Im Blick",
       "watchedHint": "Deine markierten Rechnungen, um sie kommen zu sehen.",
       "watchedEmptyHint": "Tipp: Markiere eine Rechnung auf der Fixkosten-Seite als „im Blick“, um sie hier zu verfolgen.",
+      "forgottenAlert": "{count, plural, =1 {1 Rechnung von {month} wurde nie abgehakt} other {# Rechnungen von {month} wurden nie abgehakt}} — prüfe, ob sie wirklich bezahlt wurden.",
       "buckets": {
         "overdue": "Überfällig"
       }
