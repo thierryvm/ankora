@@ -88,14 +88,14 @@ type ChargesClientProps = {
   monthlyProvisionTotal: number;
   /** Annual equivalent of all active charges. */
   annualTotal: number;
-  /** Charge IDs already settled for `currentPeriod` (seeds the Payé toggle). */
+  /** Charge IDs already settled for `viewedPeriod` (seeds the Payé toggle). */
   paidChargeIds: string[];
   /**
    * The period IN VIEW (month-history navigation) — the ledger `paidChargeIds`
    * belongs to it and the Payé toggle writes to it. Usually today's month;
    * a past month when the user navigates back (`?period=YYYY-MM`).
    */
-  currentPeriod: { year: number; month: number };
+  viewedPeriod: { year: number; month: number };
   /** Month-history navigation state, computed server-side from `?period`. */
   periodNav: {
     /** Localized label of the viewed period (e.g. « juillet 2026 »). */
@@ -116,7 +116,7 @@ export function ChargesClient({
   monthlyProvisionTotal,
   annualTotal,
   paidChargeIds,
-  currentPeriod,
+  viewedPeriod,
   periodNav,
 }: ChargesClientProps) {
   const t = useTranslations('app.charges');
@@ -150,7 +150,7 @@ export function ChargesClient({
     const dueIsoOf = (c: RawCharge): string =>
       currentPeriodDueDate(
         { isActive: c.isActive, paymentMonths: c.paymentMonths, paymentDay: c.paymentDay },
-        currentPeriod,
+        viewedPeriod,
         todayIso,
         false,
       )?.dueDateIso ?? '9999-12-31';
@@ -162,7 +162,7 @@ export function ChargesClient({
         .sort((a, b) => (a.dueIso < b.dueIso ? -1 : a.dueIso > b.dueIso ? 1 : 0))
         .map(({ c }) => c),
     })).filter((group) => group.rows.length > 0);
-  }, [charges, currentPeriod, todayIso]);
+  }, [charges, viewedPeriod, todayIso]);
 
   // Optimistic "Payé" state (plan-reviewer CR-1): `useOptimistic` seeds from
   // the server `paidChargeIds` and reconciles automatically once the action's
@@ -183,8 +183,8 @@ export function ChargesClient({
   // Active charges due in the current period — the only ones exposing a toggle
   // (Phase 2 limit: a charge not due this month has no toggle, cf. plan CR-2).
   const dueThisMonth = useMemo(
-    () => charges.filter((c) => c.isActive && c.paymentMonths.includes(currentPeriod.month)),
-    [charges, currentPeriod.month],
+    () => charges.filter((c) => c.isActive && c.paymentMonths.includes(viewedPeriod.month)),
+    [charges, viewedPeriod.month],
   );
 
   // Optimistic "à surveiller" set — same seeding/reconciliation contract as
@@ -228,8 +228,8 @@ export function ChargesClient({
       try {
         const result = await togglePaymentAction({
           chargeId: c.id,
-          periodYear: currentPeriod.year,
-          periodMonth: currentPeriod.month,
+          periodYear: viewedPeriod.year,
+          periodMonth: viewedPeriod.month,
         });
         if (result.ok) {
           toast.success(result.data.paid ? t('toastMarkedPaid') : t('toastMarkedUnpaid'));
@@ -327,7 +327,7 @@ export function ChargesClient({
   function periodDueFor(c: RawCharge, paid: boolean): { label: string; isOverdue: boolean } {
     const due = currentPeriodDueDate(
       { isActive: c.isActive, paymentMonths: c.paymentMonths, paymentDay: c.paymentDay },
-      currentPeriod,
+      viewedPeriod,
       todayIso,
       paid,
     );
@@ -346,7 +346,7 @@ export function ChargesClient({
    * (`pr-24` reserves their space) and become inline cells 5/6 on desktop.
    */
   function renderChargeRow(c: RawCharge) {
-    const isDue = c.isActive && c.paymentMonths.includes(currentPeriod.month);
+    const isDue = c.isActive && c.paymentMonths.includes(viewedPeriod.month);
     const paid = optimisticPaid.has(c.id);
     const watched = optimisticWatched.has(c.id);
     const { label: dueLabel, isOverdue } = periodDueFor(c, paid);
@@ -744,7 +744,7 @@ export function ChargesClient({
                   // ticked — unlike the subtotal, which documents the group's
                   // full recurring cost and intentionally never moves.
                   const groupDue = rows.filter(
-                    (c) => c.isActive && c.paymentMonths.includes(currentPeriod.month),
+                    (c) => c.isActive && c.paymentMonths.includes(viewedPeriod.month),
                   );
                   const groupRemaining = groupDue
                     .filter((c) => !optimisticPaid.has(c.id))

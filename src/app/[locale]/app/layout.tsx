@@ -1,6 +1,5 @@
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
-import { AppBreadcrumbs } from '@/components/layout/AppBreadcrumbs';
 import { requireUser } from '@/lib/auth/require-user';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -17,8 +16,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // mobile (the bar is `md:hidden`, so desktop keeps the original `py-12`).
   return (
     <>
+      {/* AppBreadcrumbs removed (@thierry 2026-07-19): with the header nav
+          already marking the active page, the breadcrumb bar read as a
+          confusing "double menu" on every app page. The public glossary keeps
+          its own breadcrumb (deep SEO pages, different context). */}
       <Header variant="app" isAuthenticated userEmail={user.email ?? null} />
-      <AppBreadcrumbs />
       <main id="main" className="mx-auto w-full max-w-6xl px-4 pt-8 pb-24 md:px-6 md:py-12">
         {children}
       </main>

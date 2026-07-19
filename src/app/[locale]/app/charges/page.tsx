@@ -106,7 +106,7 @@ export default async function ChargesPage({
       monthlyProvisionTotal={monthlyProvisionTotal(snapshot.charges).toNumber()}
       annualTotal={annualTotal(snapshot.charges).toNumber()}
       paidChargeIds={paidChargeIds}
-      currentPeriod={viewed}
+      viewedPeriod={viewed}
       periodNav={{
         label: monthLabel(viewed),
         prevParam: ordinal(prev) >= ordinal(PERIOD_FLOOR) ? toParam(prev) : null,

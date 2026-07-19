@@ -96,7 +96,7 @@ function renderCharges(
       monthlyProvisionTotal={overrides.monthlyProvisionTotal ?? 0}
       annualTotal={overrides.annualTotal ?? 0}
       paidChargeIds={overrides.paidChargeIds ?? []}
-      currentPeriod={overrides.currentPeriod ?? { year: 2026, month: 1 }}
+      viewedPeriod={overrides.viewedPeriod ?? { year: 2026, month: 1 }}
       periodNav={
         overrides.periodNav ?? {
           label: 'janvier 2026',
@@ -435,14 +435,14 @@ describe('Factures Phase 2 — Payé toggle', () => {
       frequency: 'annual',
       paymentMonths: [6] as readonly number[],
     };
-    renderCharges([annualJune], { currentPeriod: { year: 2026, month: 1 } });
+    renderCharges([annualJune], { viewedPeriod: { year: 2026, month: 1 } });
     expect(screen.queryByTestId('charges-row-paid-an1')).not.toBeInTheDocument();
   });
 
   it('reflects the seeded paid state via aria-pressed', () => {
     renderCharges([monthlyCharge], {
       paidChargeIds: [monthlyCharge.id],
-      currentPeriod: { year: 2026, month: 1 },
+      viewedPeriod: { year: 2026, month: 1 },
     });
     expect(screen.getByTestId(`charges-row-paid-${monthlyCharge.id}`)).toHaveAttribute(
       'aria-pressed',
@@ -452,7 +452,7 @@ describe('Factures Phase 2 — Payé toggle', () => {
 
   it('toggles paid optimistically and calls the action with the current period', async () => {
     togglePaymentMock.mockResolvedValue({ ok: true, data: { paid: true, paidAmount: 1200 } });
-    renderCharges([monthlyCharge], { currentPeriod: { year: 2026, month: 3 } });
+    renderCharges([monthlyCharge], { viewedPeriod: { year: 2026, month: 3 } });
     const toggle = screen.getByTestId(`charges-row-paid-${monthlyCharge.id}`);
     expect(toggle).toHaveAttribute('aria-pressed', 'false');
     await act(async () => {
@@ -473,7 +473,7 @@ describe('Factures Phase 2 — Payé toggle', () => {
       ok: false,
       errorCode: 'errors.charges.payments.toggleFailed',
     });
-    renderCharges([monthlyCharge], { currentPeriod: { year: 2026, month: 1 } });
+    renderCharges([monthlyCharge], { viewedPeriod: { year: 2026, month: 1 } });
     await act(async () => {
       fireEvent.click(screen.getByTestId(`charges-row-paid-${monthlyCharge.id}`));
     });
@@ -481,20 +481,20 @@ describe('Factures Phase 2 — Payé toggle', () => {
   });
 
   it('renders the "ce mois" paid summary when charges are due', () => {
-    renderCharges([monthlyCharge], { currentPeriod: { year: 2026, month: 1 } });
+    renderCharges([monthlyCharge], { viewedPeriod: { year: 2026, month: 1 } });
     expect(screen.getByTestId('charges-paid-summary')).toBeInTheDocument();
   });
 
   it('shows the remaining amount headline: full when unpaid, zero once seeded paid', () => {
     // Unpaid: remaining = the bill's full amount (1 200 €).
     const { unmount } = renderCharges([monthlyCharge], {
-      currentPeriod: { year: 2026, month: 1 },
+      viewedPeriod: { year: 2026, month: 1 },
     });
     expect(screen.getByTestId('charges-remaining-amount')).toHaveTextContent(/1[  ]200/);
     unmount();
     // Seeded paid: the countdown reflects it — remaining drops to 0, count 1/1.
     renderCharges([monthlyCharge], {
-      currentPeriod: { year: 2026, month: 1 },
+      viewedPeriod: { year: 2026, month: 1 },
       paidChargeIds: [monthlyCharge.id],
     });
     expect(screen.getByTestId('charges-remaining-amount')).toHaveTextContent(/^0/);
@@ -504,7 +504,7 @@ describe('Factures Phase 2 — Payé toggle', () => {
   it('shows a live per-group remaining next to the subtotal, replaced by "tout payé" once settled', () => {
     // Unpaid due-this-month bill → the group line shows "reste 1 200 €".
     const { unmount } = renderCharges([monthlyCharge], {
-      currentPeriod: { year: 2026, month: 1 },
+      viewedPeriod: { year: 2026, month: 1 },
     });
     expect(screen.getByTestId('charges-group-remaining-monthly')).toHaveTextContent(/1[  ]200/);
     expect(screen.queryByTestId('charges-group-allpaid-monthly')).toBeNull();
@@ -513,7 +513,7 @@ describe('Factures Phase 2 — Payé toggle', () => {
     // persistent "tout payé" state so the static subtotal cannot be misread
     // as an amount still owed.
     renderCharges([monthlyCharge], {
-      currentPeriod: { year: 2026, month: 1 },
+      viewedPeriod: { year: 2026, month: 1 },
       paidChargeIds: [monthlyCharge.id],
     });
     expect(screen.queryByTestId('charges-group-remaining-monthly')).toBeNull();
@@ -522,13 +522,13 @@ describe('Factures Phase 2 — Payé toggle', () => {
 
   it('flips the banner to the all-paid success state and hides the hint', () => {
     const { unmount } = renderCharges([monthlyCharge], {
-      currentPeriod: { year: 2026, month: 1 },
+      viewedPeriod: { year: 2026, month: 1 },
     });
     expect(screen.getByTestId('charges-paid-summary')).toHaveTextContent('Reste à payer ce mois');
     expect(screen.getByTestId('charges-paid-hint')).toBeInTheDocument();
     unmount();
     renderCharges([monthlyCharge], {
-      currentPeriod: { year: 2026, month: 1 },
+      viewedPeriod: { year: 2026, month: 1 },
       paidChargeIds: [monthlyCharge.id],
     });
     expect(screen.getByTestId('charges-paid-summary')).toHaveTextContent('Tout est payé ce mois');
@@ -538,7 +538,7 @@ describe('Factures Phase 2 — Payé toggle', () => {
   it('sorts rows by resolved due date ascending within a group (stable under ticking)', () => {
     const late = { ...monthlyCharge, id: 'late', label: 'Late bill', paymentDay: 20 };
     const early = { ...monthlyCharge, id: 'early', label: 'Early bill', paymentDay: 3 };
-    renderCharges([late, early], { currentPeriod: { year: 2026, month: 1 } });
+    renderCharges([late, early], { viewedPeriod: { year: 2026, month: 1 } });
     const ids = within(screen.getByTestId('charges-group-monthly'))
       .getAllByRole('listitem')
       .map((el) => el.getAttribute('data-testid'));
@@ -560,7 +560,7 @@ describe('Factures Phase 2 — Payé toggle', () => {
     };
     renderCharges([...sampleCharges, quarterly, semiannual], {
       subtotals: { monthly: 1200, quarterly: 100, semiannual: 200, annual: 300 },
-      currentPeriod: { year: 2026, month: 1 },
+      viewedPeriod: { year: 2026, month: 1 },
     });
     expect(screen.getByTestId('charges-group-subtotal-monthly')).toHaveTextContent('/mois');
     expect(screen.getByTestId('charges-group-subtotal-quarterly')).toHaveTextContent('/trimestre');
@@ -603,7 +603,7 @@ describe('Factures Phase 2 — Payé toggle', () => {
           resolveAction = res;
         }),
     );
-    renderCharges([monthlyCharge], { currentPeriod: { year: 2026, month: 1 } });
+    renderCharges([monthlyCharge], { viewedPeriod: { year: 2026, month: 1 } });
     const watchBtn = screen.getByTestId(`charges-row-watch-${monthlyCharge.id}`);
     expect(watchBtn).toHaveAttribute('aria-pressed', 'false');
     fireEvent.click(watchBtn);
@@ -619,7 +619,7 @@ describe('Factures Phase 2 — Payé toggle', () => {
   it('shows the watchFailed toast when toggleWatchAction throws (catch path)', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     toggleWatchMock.mockRejectedValueOnce(new Error('network error'));
-    renderCharges([monthlyCharge], { currentPeriod: { year: 2026, month: 1 } });
+    renderCharges([monthlyCharge], { viewedPeriod: { year: 2026, month: 1 } });
     await act(async () => {
       fireEvent.click(screen.getByTestId(`charges-row-watch-${monthlyCharge.id}`));
     });
@@ -629,7 +629,7 @@ describe('Factures Phase 2 — Payé toggle', () => {
 
   it('renders a pressed watch button for a charge already flagged', () => {
     renderCharges([{ ...monthlyCharge, isWatched: true }], {
-      currentPeriod: { year: 2026, month: 1 },
+      viewedPeriod: { year: 2026, month: 1 },
     });
     expect(screen.getByTestId(`charges-row-watch-${monthlyCharge.id}`)).toHaveAttribute(
       'aria-pressed',
@@ -639,7 +639,7 @@ describe('Factures Phase 2 — Payé toggle', () => {
 
   it('shows an error toast when the watch toggle fails', async () => {
     toggleWatchMock.mockResolvedValue({ ok: false, errorCode: 'errors.charges.watchFailed' });
-    renderCharges([monthlyCharge], { currentPeriod: { year: 2026, month: 1 } });
+    renderCharges([monthlyCharge], { viewedPeriod: { year: 2026, month: 1 } });
     await act(async () => {
       fireEvent.click(screen.getByTestId(`charges-row-watch-${monthlyCharge.id}`));
     });
@@ -650,7 +650,7 @@ describe('Factures Phase 2 — Payé toggle', () => {
     togglePaymentMock.mockResolvedValue({ ok: true, data: { paid: true, paidAmount: 1200 } });
     const late = { ...monthlyCharge, id: 'late', label: 'Late bill', paymentDay: 20 };
     const early = { ...monthlyCharge, id: 'early', label: 'Early bill', paymentDay: 3 };
-    renderCharges([late, early], { currentPeriod: { year: 2026, month: 1 } });
+    renderCharges([late, early], { viewedPeriod: { year: 2026, month: 1 } });
     await act(async () => {
       fireEvent.click(screen.getByTestId('charges-row-paid-early'));
     });
@@ -661,14 +661,14 @@ describe('Factures Phase 2 — Payé toggle', () => {
   });
 
   it('renders the paid-toggle hint when charges are due this month', () => {
-    renderCharges([monthlyCharge], { currentPeriod: { year: 2026, month: 1 } });
+    renderCharges([monthlyCharge], { viewedPeriod: { year: 2026, month: 1 } });
     expect(screen.getByTestId('charges-paid-hint')).toBeInTheDocument();
   });
 });
 
 // THI-329 — current-period due date + overdue badge (PR-B). The component reads
 // the real clock for `todayIso`, so to keep "overdue" deterministic without
-// faking timers we drive it through `currentPeriod`: a PAST period is always
+// faking timers we drive it through `viewedPeriod`: a PAST period is always
 // before today (→ overdue), a far-FUTURE period is always after (→ not overdue).
 describe('<ChargesClient /> — THI-329 current-period date & overdue badge', () => {
   const monthly = sampleCharges[0]!; // paymentDay 5, due every month
@@ -684,7 +684,7 @@ describe('<ChargesClient /> — THI-329 current-period date & overdue badge', ()
   });
 
   it('flags an unpaid current-month charge whose day has passed as overdue, anchored to that month (not the next)', () => {
-    renderCharges([monthly], { currentPeriod: { year: 2020, month: 6 } });
+    renderCharges([monthly], { viewedPeriod: { year: 2020, month: 6 } });
     const row = screen.getByTestId('charges-row-a1');
     expect(within(row).getByTestId('charges-row-overdue-a1')).toBeInTheDocument();
     const due = within(row).getByTestId('charges-row-next-due').textContent ?? '';
@@ -695,13 +695,13 @@ describe('<ChargesClient /> — THI-329 current-period date & overdue badge', ()
   });
 
   it('shows no overdue badge when the current-month due day is still ahead', () => {
-    renderCharges([monthly], { currentPeriod: { year: 2099, month: 6 } });
+    renderCharges([monthly], { viewedPeriod: { year: 2099, month: 6 } });
     expect(screen.queryByTestId('charges-row-overdue-a1')).toBeNull();
   });
 
   it('shows no overdue badge for a charge not due in the current month (upcoming)', () => {
     // annual a2 [6]; current month March → upcoming June, never overdue.
-    renderCharges([sampleCharges[1]!], { currentPeriod: { year: 2020, month: 3 } });
+    renderCharges([sampleCharges[1]!], { viewedPeriod: { year: 2020, month: 3 } });
     expect(screen.queryByTestId('charges-row-overdue-a2')).toBeNull();
   });
 
@@ -710,7 +710,7 @@ describe('<ChargesClient /> — THI-329 current-period date & overdue badge', ()
     // the badge must be gone (status 'paid' wins). Seeding via paidChargeIds (not
     // the optimistic toggle) keeps this deterministic — useOptimistic reverts to
     // its base after the transition settles in the test harness.
-    renderCharges([monthly], { currentPeriod: { year: 2020, month: 6 }, paidChargeIds: ['a1'] });
+    renderCharges([monthly], { viewedPeriod: { year: 2020, month: 6 }, paidChargeIds: ['a1'] });
     expect(screen.queryByTestId('charges-row-overdue-a1')).toBeNull();
     expect(screen.getByTestId('charges-row-paid-a1')).toHaveAttribute('aria-pressed', 'true');
   });
@@ -743,7 +743,7 @@ describe('<ChargesClient /> — month-history navigator', () => {
 
   it('in a past month: back-link visible and the banner names the period', () => {
     renderCharges([monthly], {
-      currentPeriod: { year: 2026, month: 6 },
+      viewedPeriod: { year: 2026, month: 6 },
       periodNav: {
         label: 'juin 2026',
         prevParam: '2026-05',
@@ -761,7 +761,7 @@ describe('<ChargesClient /> — month-history navigator', () => {
 
   it('in a past month fully paid: period-scoped success copy', () => {
     renderCharges([monthly], {
-      currentPeriod: { year: 2026, month: 6 },
+      viewedPeriod: { year: 2026, month: 6 },
       paidChargeIds: [monthly.id],
       periodNav: {
         label: 'juin 2026',
