@@ -1134,7 +1134,7 @@
       "watched": "En seguimiento",
       "watchedHint": "Tus facturas marcadas, para verlas venir.",
       "watchedEmptyHint": "Consejo: marca una factura «en seguimiento» en la página de Gastos fijos para seguirla aquí.",
-      "forgottenAlert": "{count, plural, =1 {1 factura de {month} nunca se marcó} other {# facturas de {month} nunca se marcaron}} — comprueba que realmente se pagaron.",
+      "forgottenAlert": "Nunca {count, plural, =1 {marcada} other {marcadas}} en {month}: {labels} — comprueba que realmente se {count, plural, =1 {pagó} other {pagaron}}.",
       "buckets": {
         "overdue": "Atrasadas"
       }

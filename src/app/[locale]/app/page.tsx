@@ -12,7 +12,7 @@ import { ProchainesFacturesCard } from '@/components/dashboard/ProchainesFacture
 import { SimulatorDrawer } from '@/components/dashboard/SimulatorDrawer';
 import { Expenses, Transfer, money } from '@/lib/domain';
 import { calculerSituationDuMois, paymentKey, type PaymentLedger } from '@/lib/domain/cockpit';
-import { countUnpaidForPeriod } from '@/lib/domain/charges';
+import { unpaidChargesForPeriod } from '@/lib/domain/charges';
 import { getWorkspaceSnapshot, toCockpitCharges } from '@/lib/data/workspace-snapshot';
 import type { AccountType } from '@/lib/schemas/account';
 import type { Locale } from '@/i18n/routing';
@@ -202,11 +202,11 @@ export default async function DashboardPage() {
           payments={paymentsLedger}
           todayIso={todayIso}
           locale={locale}
-          forgottenCount={countUnpaidForPeriod(
+          forgottenLabels={unpaidChargesForPeriod(
             snapshot.charges,
             new Set(snapshot.previousMonthPaidChargeIds),
             snapshot.previousPeriod,
-          )}
+          ).map((c) => c.label)}
           forgottenMonthLabel={formatMonth(snapshot.previousPeriod.month, locale)}
         />
       </section>

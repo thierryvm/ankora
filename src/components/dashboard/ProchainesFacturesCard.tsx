@@ -17,12 +17,13 @@ type Props = {
   todayIso: string;
   locale: Locale;
   /**
-   * Bills due LAST month that were never ticked (the per-period ledger resets
-   * naturally on month rollover, hiding them). > 0 renders the "forgotten
-   * bills" alert so the user checks they were actually paid. Computed
-   * upstream via `countUnpaidForPeriod` on the previous period's ledger.
+   * Labels of the bills due LAST month that were never ticked (the per-period
+   * ledger resets naturally on month rollover, hiding them). Non-empty renders
+   * the "forgotten bills" alert NAMING the bills so the user checks they were
+   * actually paid. Computed upstream via `unpaidChargesForPeriod` on the
+   * previous period's ledger.
    */
-  forgottenCount?: number;
+  forgottenLabels?: readonly string[];
   /** Localized label of the previous month (e.g. « juin »), for the alert copy. */
   forgottenMonthLabel?: string;
 };
@@ -58,7 +59,7 @@ export async function ProchainesFacturesCard({
   payments,
   todayIso,
   locale,
-  forgottenCount = 0,
+  forgottenLabels = [],
   forgottenMonthLabel = '',
 }: Props) {
   const t = await getTranslations('dashboard.upcomingBills');
@@ -148,7 +149,7 @@ export async function ProchainesFacturesCard({
             {/* Forgotten-bills alert — factual, calm, FSMA-safe. The copy text
                 stays `text-foreground` (AA both themes); the warning tint is
                 decorative only (same dark-safety rule as the overdue badge). */}
-            {forgottenCount > 0 && (
+            {forgottenLabels.length > 0 && (
               <p
                 className="border-warning/40 bg-warning/10 text-foreground flex items-start gap-2 rounded-lg border px-3 py-2.5 text-sm"
                 data-testid="prochaines-factures-forgotten"
@@ -158,7 +159,11 @@ export async function ProchainesFacturesCard({
                   className="text-warning mt-0.5 h-4 w-4 shrink-0"
                   strokeWidth={2}
                 />
-                {t('forgottenAlert', { count: forgottenCount, month: forgottenMonthLabel })}
+                {t('forgottenAlert', {
+                  count: forgottenLabels.length,
+                  month: forgottenMonthLabel,
+                  labels: forgottenLabels.join(', '),
+                })}
               </p>
             )}
             {/* ── Ce mois-ci ─────────────────────────────────────────── */}

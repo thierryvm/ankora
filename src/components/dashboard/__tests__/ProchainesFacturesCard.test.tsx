@@ -70,7 +70,7 @@ async function renderCard(input: {
   charges: Charge[];
   payments?: PaymentLedger;
   todayIso?: string;
-  forgottenCount?: number;
+  forgottenLabels?: readonly string[];
   forgottenMonthLabel?: string;
 }) {
   return render(
@@ -79,7 +79,7 @@ async function renderCard(input: {
       payments: input.payments ?? NO_PAYMENTS,
       todayIso: input.todayIso ?? TODAY,
       locale: 'fr-BE',
-      forgottenCount: input.forgottenCount ?? 0,
+      forgottenLabels: input.forgottenLabels ?? [],
       forgottenMonthLabel: input.forgottenMonthLabel ?? '',
     }),
   );
@@ -179,25 +179,25 @@ describe('<ProchainesFacturesCard /> — THI-329 PR-C', () => {
     expect(screen.getByTestId('prochaines-factures-watched-hint')).toBeInTheDocument();
   });
 
-  it('renders the forgotten-bills alert with the dynamic count and month label', async () => {
+  it('names the forgotten bills in the alert (plural form)', async () => {
     await renderCard({
       charges: [makeCharge()],
-      forgottenCount: 2,
+      forgottenLabels: ['Taxe voiture', 'S.W.D.E'],
       forgottenMonthLabel: 'juin',
     });
     expect(screen.getByTestId('prochaines-factures-forgotten')).toHaveTextContent(
-      /2 factures de juin n'ont jamais été cochées/,
+      /Jamais cochées en juin : Taxe voiture, S\.W\.D\.E/,
     );
   });
 
   it('uses the singular form for a single forgotten bill', async () => {
     await renderCard({
       charges: [makeCharge()],
-      forgottenCount: 1,
+      forgottenLabels: ['Taxe voiture'],
       forgottenMonthLabel: 'juin',
     });
     expect(screen.getByTestId('prochaines-factures-forgotten')).toHaveTextContent(
-      /1 facture de juin n'a jamais été cochée/,
+      /Jamais cochée en juin : Taxe voiture — vérifie qu'elle a bien été payée/,
     );
   });
 

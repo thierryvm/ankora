@@ -1134,7 +1134,7 @@
       "watched": "In het oog houden",
       "watchedHint": "Je gemarkeerde facturen, om ze te zien aankomen.",
       "watchedEmptyHint": "Tip: markeer een factuur als 'in het oog houden' op de pagina Vaste kosten om ze hier te volgen.",
-      "forgottenAlert": "{count, plural, =1 {1 factuur van {month} werd nooit afgevinkt} other {# facturen van {month} werden nooit afgevinkt}} — controleer of ze echt betaald zijn.",
+      "forgottenAlert": "Nooit afgevinkt in {month}: {labels} — controleer of {count, plural, =1 {die echt betaald is} other {die echt betaald zijn}}.",
       "buckets": {
         "overdue": "Te laat"
       }
