@@ -28,7 +28,8 @@
       "simulator": "Simulator",
       "settings": "Einstellungen",
       "admin": "Admin",
-      "adminAriaLabel": "Admin-Bereich (nur Gründer)"
+      "adminAriaLabel": "Admin-Bereich (nur Gründer)",
+      "commitments": "Verpflichtungen"
     },
     "actions": {
       "retry": "Erneut versuchen",
@@ -820,6 +821,38 @@
         "tooltip": "Click to rename"
       }
     },
+    "commitments": {
+      "title": "Meine Verpflichtungen",
+      "subtitle": "Kredite, Ratenpläne und einmalige Rechnungen — mit dem noch offenen Betrag.",
+      "addFormTitle": "Verpflichtung hinzufügen",
+      "addButton": "Hinzufügen",
+      "adding": "Wird hinzugefügt…",
+      "labelLabel": "Bezeichnung",
+      "kindLabel": "Art",
+      "totalAmountLabel": "Offener Restbetrag (€)",
+      "totalAmountHint": "Was du heute noch schuldest, nicht die ursprünglich geliehene Summe.",
+      "installmentAmountLabel": "Betrag pro Rate (€)",
+      "installmentsTotalLabel": "Verbleibende Raten",
+      "count": "{count, plural, =0 {Keine Verpflichtung} =1 {1 Verpflichtung} other {# Verpflichtungen}}",
+      "emptyState": "Noch keine Verpflichtung. Füge einen Kredit, einen Ratenplan oder eine anstehende Rechnung hinzu.",
+      "totalRemainingLabel": "Insgesamt offen",
+      "remainingLabel": "Offen",
+      "summarySchedule": "{paid}/{total} Raten à {amount} · letzte im {end}",
+      "summaryOneOff": "{amount} im {month}",
+      "progressAria": "Tilgungsfortschritt von {label}",
+      "markPaidAria": "Rate von {label} als bezahlt markieren",
+      "unmarkPaidAria": "Rate von {label} als zu zahlen markieren",
+      "deleteAria": "{label} löschen",
+      "toastCreated": "Verpflichtung hinzugefügt",
+      "toastDeleted": "Verpflichtung gelöscht",
+      "toastMarkedPaid": "Rate als bezahlt markiert",
+      "toastMarkedUnpaid": "Rate als zu zahlen markiert",
+      "kinds": {
+        "debt": "Kredit",
+        "installmentPlan": "Ratenplan",
+        "oneOff": "Einmalige Rechnung"
+      }
+    },
     "expenses": {
       "title": "Meine Ausgaben",
       "subtitle": "Die Ausgaben abseits wiederkehrender Fixkosten — Einkäufe, Restaurant, Freizeit…",
@@ -1373,6 +1406,14 @@
         "required": "The account name is required.",
         "tooLong": "The account name is too long (max 50 characters).",
         "invalidChars": "The account name cannot contain < or >."
+      }
+    },
+    "commitments": {
+      "createFailed": "Verpflichtung konnte nicht hinzugefügt werden.",
+      "updateFailed": "Verpflichtung konnte nicht geändert werden.",
+      "deleteFailed": "Verpflichtung konnte nicht gelöscht werden.",
+      "payments": {
+        "toggleFailed": "Status der Rate konnte nicht geändert werden."
       }
     }
   },

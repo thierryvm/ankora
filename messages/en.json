@@ -28,7 +28,8 @@
       "simulator": "Simulator",
       "settings": "Settings",
       "admin": "Admin",
-      "adminAriaLabel": "Admin area (founder only)"
+      "adminAriaLabel": "Admin area (founder only)",
+      "commitments": "Commitments"
     },
     "actions": {
       "retry": "Retry",
@@ -820,6 +821,38 @@
         "tooltip": "Click to rename"
       }
     },
+    "commitments": {
+      "title": "My commitments",
+      "subtitle": "Loans, instalment plans and one-off bills — with what is left to pay.",
+      "addFormTitle": "Add a commitment",
+      "addButton": "Add",
+      "adding": "Adding…",
+      "labelLabel": "Label",
+      "kindLabel": "Type",
+      "totalAmountLabel": "Remaining balance (€)",
+      "totalAmountHint": "What you still owe today, not the amount originally borrowed.",
+      "installmentAmountLabel": "Amount per instalment (€)",
+      "installmentsTotalLabel": "Instalments left",
+      "count": "{count, plural, =0 {No commitment} =1 {1 commitment} other {# commitments}}",
+      "emptyState": "No commitment yet. Add a loan, an instalment plan or an upcoming bill.",
+      "totalRemainingLabel": "Total still owed",
+      "remainingLabel": "Left",
+      "summarySchedule": "{paid}/{total} instalments of {amount} · last one in {end}",
+      "summaryOneOff": "{amount} in {month}",
+      "progressAria": "Repayment progress for {label}",
+      "markPaidAria": "Mark the {label} instalment as paid",
+      "unmarkPaidAria": "Mark the {label} instalment as to pay",
+      "deleteAria": "Delete {label}",
+      "toastCreated": "Commitment added",
+      "toastDeleted": "Commitment deleted",
+      "toastMarkedPaid": "Instalment marked as paid",
+      "toastMarkedUnpaid": "Instalment marked as to pay",
+      "kinds": {
+        "debt": "Loan",
+        "installmentPlan": "Instalment plan",
+        "oneOff": "One-off bill"
+      }
+    },
     "expenses": {
       "title": "My expenses",
       "subtitle": "Spending outside recurring bills — groceries, dining, leisure…",
@@ -1373,6 +1406,14 @@
         "required": "The account name is required.",
         "tooLong": "The account name is too long (max 50 characters).",
         "invalidChars": "The account name cannot contain < or >."
+      }
+    },
+    "commitments": {
+      "createFailed": "Unable to add the commitment.",
+      "updateFailed": "Unable to update the commitment.",
+      "deleteFailed": "Unable to delete the commitment.",
+      "payments": {
+        "toggleFailed": "Unable to update the instalment status."
       }
     }
   },

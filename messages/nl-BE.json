@@ -28,7 +28,8 @@
       "simulator": "Simulator",
       "settings": "Instellingen",
       "admin": "Admin",
-      "adminAriaLabel": "Adminzone (alleen oprichter)"
+      "adminAriaLabel": "Adminzone (alleen oprichter)",
+      "commitments": "Verbintenissen"
     },
     "actions": {
       "retry": "Opnieuw proberen",
@@ -820,6 +821,38 @@
         "tooltip": "Click to rename"
       }
     },
+    "commitments": {
+      "title": "Mijn verbintenissen",
+      "subtitle": "Kredieten, afbetalingsplannen en eenmalige facturen — met wat nog te betalen is.",
+      "addFormTitle": "Verbintenis toevoegen",
+      "addButton": "Toevoegen",
+      "adding": "Toevoegen…",
+      "labelLabel": "Naam",
+      "kindLabel": "Type",
+      "totalAmountLabel": "Openstaand saldo (€)",
+      "totalAmountHint": "Wat je vandaag nog verschuldigd bent, niet het oorspronkelijk geleende bedrag.",
+      "installmentAmountLabel": "Bedrag per aflossing (€)",
+      "installmentsTotalLabel": "Resterende aflossingen",
+      "count": "{count, plural, =0 {Geen verbintenis} =1 {1 verbintenis} other {# verbintenissen}}",
+      "emptyState": "Nog geen verbintenis. Voeg een krediet, afbetalingsplan of komende factuur toe.",
+      "totalRemainingLabel": "Totaal nog verschuldigd",
+      "remainingLabel": "Nog",
+      "summarySchedule": "{paid}/{total} aflossingen van {amount} · laatste in {end}",
+      "summaryOneOff": "{amount} in {month}",
+      "progressAria": "Aflossingsvoortgang van {label}",
+      "markPaidAria": "Aflossing van {label} als betaald markeren",
+      "unmarkPaidAria": "Aflossing van {label} als te betalen markeren",
+      "deleteAria": "{label} verwijderen",
+      "toastCreated": "Verbintenis toegevoegd",
+      "toastDeleted": "Verbintenis verwijderd",
+      "toastMarkedPaid": "Aflossing als betaald gemarkeerd",
+      "toastMarkedUnpaid": "Aflossing als te betalen gemarkeerd",
+      "kinds": {
+        "debt": "Krediet",
+        "installmentPlan": "Afbetalingsplan",
+        "oneOff": "Eenmalige factuur"
+      }
+    },
     "expenses": {
       "title": "Mijn uitgaven",
       "subtitle": "De uitgaven buiten de terugkerende vaste kosten — boodschappen, resto, vrije tijd…",
@@ -1373,6 +1406,14 @@
         "required": "The account name is required.",
         "tooLong": "The account name is too long (max 50 characters).",
         "invalidChars": "The account name cannot contain < or >."
+      }
+    },
+    "commitments": {
+      "createFailed": "Kan de verbintenis niet toevoegen.",
+      "updateFailed": "Kan de verbintenis niet bijwerken.",
+      "deleteFailed": "Kan de verbintenis niet verwijderen.",
+      "payments": {
+        "toggleFailed": "Kan de status van de aflossing niet bijwerken."
       }
     }
   },

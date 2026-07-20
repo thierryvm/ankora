@@ -28,7 +28,8 @@
       "simulator": "Simulador",
       "settings": "Ajustes",
       "admin": "Admin",
-      "adminAriaLabel": "Zona admin (solo fundador)"
+      "adminAriaLabel": "Zona admin (solo fundador)",
+      "commitments": "Compromisos"
     },
     "actions": {
       "retry": "Reintentar",
@@ -820,6 +821,38 @@
         "tooltip": "Click to rename"
       }
     },
+    "commitments": {
+      "title": "Mis compromisos",
+      "subtitle": "Créditos, planes de pago y facturas puntuales — con lo que queda por pagar.",
+      "addFormTitle": "Añadir un compromiso",
+      "addButton": "Añadir",
+      "adding": "Añadiendo…",
+      "labelLabel": "Nombre",
+      "kindLabel": "Tipo",
+      "totalAmountLabel": "Saldo pendiente (€)",
+      "totalAmountHint": "Lo que aún debes hoy, no el importe prestado originalmente.",
+      "installmentAmountLabel": "Importe por cuota (€)",
+      "installmentsTotalLabel": "Cuotas restantes",
+      "count": "{count, plural, =0 {Ningún compromiso} =1 {1 compromiso} other {# compromisos}}",
+      "emptyState": "Aún no hay compromisos. Añade un crédito, un plan de pago o una factura próxima.",
+      "totalRemainingLabel": "Total pendiente",
+      "remainingLabel": "Queda",
+      "summarySchedule": "{paid}/{total} cuotas de {amount} · última en {end}",
+      "summaryOneOff": "{amount} en {month}",
+      "progressAria": "Progreso de amortización de {label}",
+      "markPaidAria": "Marcar la cuota de {label} como pagada",
+      "unmarkPaidAria": "Marcar la cuota de {label} como por pagar",
+      "deleteAria": "Eliminar {label}",
+      "toastCreated": "Compromiso añadido",
+      "toastDeleted": "Compromiso eliminado",
+      "toastMarkedPaid": "Cuota marcada como pagada",
+      "toastMarkedUnpaid": "Cuota marcada como por pagar",
+      "kinds": {
+        "debt": "Crédito",
+        "installmentPlan": "Plan de pago",
+        "oneOff": "Factura puntual"
+      }
+    },
     "expenses": {
       "title": "Mis gastos",
       "subtitle": "Las salidas fuera de los gastos fijos recurrentes — compra, restaurantes, ocio…",
@@ -1373,6 +1406,14 @@
         "required": "The account name is required.",
         "tooLong": "The account name is too long (max 50 characters).",
         "invalidChars": "The account name cannot contain < or >."
+      }
+    },
+    "commitments": {
+      "createFailed": "No se ha podido añadir el compromiso.",
+      "updateFailed": "No se ha podido actualizar el compromiso.",
+      "deleteFailed": "No se ha podido eliminar el compromiso.",
+      "payments": {
+        "toggleFailed": "No se ha podido actualizar el estado de la cuota."
       }
     }
   },

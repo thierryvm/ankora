@@ -28,7 +28,8 @@
       "simulator": "Simulateur",
       "settings": "Paramètres",
       "admin": "Admin",
-      "adminAriaLabel": "Espace admin (réservé fondateur)"
+      "adminAriaLabel": "Espace admin (réservé fondateur)",
+      "commitments": "Engagements"
     },
     "actions": {
       "retry": "Réessayer",
@@ -820,6 +821,38 @@
         "tooltip": "Cliquer pour renommer"
       }
     },
+    "commitments": {
+      "title": "Mes engagements",
+      "subtitle": "Crédits, échéanciers et factures ponctuelles — avec ce qu'il reste à payer.",
+      "addFormTitle": "Ajouter un engagement",
+      "addButton": "Ajouter",
+      "adding": "Ajout…",
+      "labelLabel": "Libellé",
+      "kindLabel": "Type",
+      "totalAmountLabel": "Montant restant dû (€)",
+      "totalAmountHint": "Ce qu'il te reste à payer aujourd'hui, pas le montant emprunté à l'origine.",
+      "installmentAmountLabel": "Montant par échéance (€)",
+      "installmentsTotalLabel": "Nombre d'échéances restantes",
+      "count": "{count, plural, =0 {Aucun engagement} =1 {1 engagement} other {# engagements}}",
+      "emptyState": "Aucun engagement pour l'instant. Ajoute un crédit, un plan de paiement ou une facture à venir.",
+      "totalRemainingLabel": "Total restant dû",
+      "remainingLabel": "Reste",
+      "summarySchedule": "{paid}/{total} échéances de {amount} · dernière en {end}",
+      "summaryOneOff": "{amount} en {month}",
+      "progressAria": "Progression du remboursement de {label}",
+      "markPaidAria": "Marquer l'échéance de {label} comme payée",
+      "unmarkPaidAria": "Marquer l'échéance de {label} comme à payer",
+      "deleteAria": "Supprimer {label}",
+      "toastCreated": "Engagement ajouté",
+      "toastDeleted": "Engagement supprimé",
+      "toastMarkedPaid": "Échéance marquée payée",
+      "toastMarkedUnpaid": "Échéance marquée à payer",
+      "kinds": {
+        "debt": "Crédit",
+        "installmentPlan": "Plan de paiement",
+        "oneOff": "Facture ponctuelle"
+      }
+    },
     "expenses": {
       "title": "Mes dépenses",
       "subtitle": "Les sorties hors charges récurrentes — courses, resto, loisirs…",
@@ -1373,6 +1406,14 @@
         "required": "Le nom du compte est requis.",
         "tooLong": "Le nom est trop long (max 50 caractères).",
         "invalidChars": "Le nom ne peut pas contenir < ou >."
+      }
+    },
+    "commitments": {
+      "createFailed": "Impossible d'ajouter l'engagement.",
+      "updateFailed": "Impossible de modifier l'engagement.",
+      "deleteFailed": "Impossible de supprimer l'engagement.",
+      "payments": {
+        "toggleFailed": "Impossible de modifier l'état de l'échéance."
       }
     }
   },
