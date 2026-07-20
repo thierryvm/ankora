@@ -699,7 +699,8 @@
       "expensesViewAll": "Alle uitgaven bekijken →",
       "accountsHeading": "Mijn rekeningen",
       "provisionHealthSectionHeading": "Gezondheid van de voorzieningen",
-      "upcomingBillsSectionHeading": "Aankomende facturen"
+      "upcomingBillsSectionHeading": "Aankomende facturen",
+      "commitmentsSectionHeading": "Mijn verbintenissen"
     },
     "charges": {
       "title": "Mijn vaste kosten",
@@ -1173,6 +1174,13 @@
       "buckets": {
         "overdue": "Te laat"
       }
+    },
+    "commitments": {
+      "title": "Mijn verbintenissen",
+      "viewAll": "Alles bekijken",
+      "totalRemainingLabel": "Totaal nog verschuldigd",
+      "dueThisMonthLabel": "Deze maand",
+      "installmentsLeft": "{left, plural, =1 {nog 1 aflossing} other {nog # aflossingen}} · tot {end}"
     }
   },
   "glossary": {

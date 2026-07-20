@@ -16,6 +16,7 @@ import {
   toggleCommitmentPaymentAction,
 } from '@/lib/actions/commitments';
 import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
+import type { CommitmentRow } from '@/lib/data/commitments';
 import {
   endPeriod,
   installmentsPaid,
@@ -24,26 +25,13 @@ import {
   periodKey,
   remainingBalance,
   type Commitment,
-  type CommitmentFrequency,
   type CommitmentKind,
 } from '@/lib/domain/commitments';
 import { formatCurrency, formatMonth } from '@/lib/i18n/formatters';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 
-export type RawCommitment = {
-  id: string;
-  label: string;
-  kind: CommitmentKind;
-  totalAmount: number;
-  installmentAmount: number | null;
-  installmentsTotal: number;
-  startYear: number;
-  startMonth: number;
-  paymentDay: number;
-  frequency: CommitmentFrequency;
-  notes: string | null;
-  isActive: boolean;
-};
+/** Row shape crossing the RSC boundary (money as plain `number`, never Decimal). */
+export type RawCommitment = CommitmentRow;
 
 type Props = {
   commitments: RawCommitment[];
