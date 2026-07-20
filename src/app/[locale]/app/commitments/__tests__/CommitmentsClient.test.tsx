@@ -163,6 +163,31 @@ describe('<CommitmentsClient />', () => {
     await waitFor(() => expect(toastSuccessMock).toHaveBeenCalled());
   });
 
+  it('moves the balance AND the progress bar while the tick is pending', async () => {
+    let resolveAction!: (v: { ok: true; data: { paid: boolean } }) => void;
+    toggleMock.mockImplementation(
+      () =>
+        new Promise((res) => {
+          resolveAction = res;
+        }),
+    );
+    // Jan already ticked (1/17, 3 950 €); ticking Feb must show 2/17, 3 700 €.
+    renderPage([carLoan], {
+      currentPeriod: { year: 2026, month: 2 },
+      paidKeysByCommitment: { car: ['2026-1'] },
+    });
+    expect(screen.getByTestId('commitment-remaining-car')).toHaveTextContent(/3[  ]950/);
+
+    fireEvent.click(screen.getByTestId('commitment-paid-car'));
+    await waitFor(() =>
+      expect(screen.getByTestId('commitment-remaining-car')).toHaveTextContent(/3[  ]700/),
+    );
+    expect(screen.getByTestId('commitment-progress-car')).toHaveAttribute('aria-valuenow', '12');
+    await act(async () => {
+      resolveAction({ ok: true, data: { paid: true } });
+    });
+  });
+
   it('shows an error toast when the tick fails', async () => {
     toggleMock.mockResolvedValue({
       ok: false,
@@ -173,6 +198,38 @@ describe('<CommitmentsClient />', () => {
       fireEvent.click(screen.getByTestId('commitment-paid-car'));
     });
     await waitFor(() => expect(toastErrorMock).toHaveBeenCalled());
+  });
+
+  it('rolls the optimistic tick BACK when the action is rejected (no manual revert needed)', async () => {
+    // useOptimistic discards its value once the transition settles and
+    // re-derives from the server-provided base — which a rejected toggle left
+    // untouched. This test locks that contract (Sourcery #234 flagged a
+    // missing manual rollback; the rollback is the hook's own behaviour).
+    toggleMock.mockResolvedValue({
+      ok: false,
+      errorCode: 'errors.commitments.payments.toggleFailed',
+    });
+    renderPage([carLoan], { currentPeriod: { year: 2026, month: 3 } });
+    const tick = screen.getByTestId('commitment-paid-car');
+    await act(async () => {
+      fireEvent.click(tick);
+    });
+    await waitFor(() => expect(toastErrorMock).toHaveBeenCalled());
+    expect(tick).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByTestId('commitment-remaining-car')).toHaveTextContent(/4[  ]200/);
+  });
+
+  it('rolls back the same way when the action throws', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    toggleMock.mockRejectedValueOnce(new Error('network error'));
+    renderPage([carLoan], { currentPeriod: { year: 2026, month: 3 } });
+    const tick = screen.getByTestId('commitment-paid-car');
+    await act(async () => {
+      fireEvent.click(tick);
+    });
+    await waitFor(() => expect(toastErrorMock).toHaveBeenCalled());
+    expect(tick).toHaveAttribute('aria-pressed', 'false');
+    consoleSpy.mockRestore();
   });
 
   it('creates a commitment with the anchor set to the viewed period', async () => {
@@ -212,6 +269,35 @@ describe('<CommitmentsClient />', () => {
     const payload = createMock.mock.calls[0]?.[0];
     expect(payload.installmentsTotal).toBe(1);
     expect(payload.installmentAmount).toBeUndefined();
+  });
+
+  it('surfaces a creation failure and keeps the form open', async () => {
+    createMock.mockResolvedValue({ ok: false, errorCode: 'errors.commitments.createFailed' });
+    renderPage([]);
+    fireEvent.click(screen.getByTestId('commitments-add-toggle'));
+    fireEvent.change(screen.getByLabelText('Libellé'), { target: { value: 'X' } });
+    fireEvent.change(screen.getByLabelText(/Montant restant dû/), { target: { value: '100' } });
+    fireEvent.change(screen.getByLabelText(/Montant par échéance/), { target: { value: '10' } });
+    await act(async () => {
+      fireEvent.submit(screen.getByRole('button', { name: /^ajouter$/i }).closest('form')!);
+    });
+    await waitFor(() => expect(toastErrorMock).toHaveBeenCalled());
+    // The form stays mounted so the user does not lose what they typed.
+    expect(screen.getByLabelText('Libellé')).toBeInTheDocument();
+  });
+
+  it('rejects a negative amount client-side, before calling the action', async () => {
+    // The `min={0}` HTML validation is bypassed by a programmatic submit, so
+    // the guard in `onCreate` is the real backstop (before Zod's own check).
+    renderPage([]);
+    fireEvent.click(screen.getByTestId('commitments-add-toggle'));
+    fireEvent.change(screen.getByLabelText('Libellé'), { target: { value: 'X' } });
+    fireEvent.change(screen.getByLabelText(/Montant restant dû/), { target: { value: '-5' } });
+    await act(async () => {
+      fireEvent.submit(screen.getByRole('button', { name: /^ajouter$/i }).closest('form')!);
+    });
+    expect(createMock).not.toHaveBeenCalled();
+    expect(toastErrorMock).toHaveBeenCalled();
   });
 
   it('deletes a commitment', async () => {

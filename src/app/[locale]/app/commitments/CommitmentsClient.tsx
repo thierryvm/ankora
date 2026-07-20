@@ -121,6 +121,10 @@ export function CommitmentsClient({
 
   function onTogglePaid(c: RawCommitment) {
     const entry = `${c.id}|${periodKey(currentPeriod.year, currentPeriod.month)}`;
+    // No manual rollback needed on failure: `useOptimistic` discards the
+    // optimistic value when the transition settles and re-derives from
+    // `paidBase` — which the server did NOT change on a rejected toggle. A
+    // hand-rolled revert would double-toggle. Locked by a test (Sourcery #234).
     startTransition(async () => {
       applyOptimisticPaid(entry);
       try {
@@ -354,8 +358,16 @@ export function CommitmentsClient({
                 const tickedThisPeriod = paidKeys.has(
                   periodKey(currentPeriod.year, currentPeriod.month),
                 );
-                const progress = Math.round((paid / c.installmentsTotal) * 100);
-                const finished = paid >= c.installmentsTotal;
+                // Defensive clamp: the DB CHECK + Zod both keep
+                // `installmentsTotal` in [1, 600] and `installmentsPaid` can
+                // never exceed the schedule, so neither NaN nor >100 is
+                // reachable today — but corrupted data must not produce an
+                // invalid aria-valuenow or a bar wider than its track.
+                const progress =
+                  c.installmentsTotal > 0
+                    ? Math.min(100, Math.max(0, Math.round((paid / c.installmentsTotal) * 100)))
+                    : 0;
+                const finished = c.installmentsTotal > 0 && paid >= c.installmentsTotal;
 
                 return (
                   <li

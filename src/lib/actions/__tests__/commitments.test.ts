@@ -218,10 +218,27 @@ describe('createCommitmentAction', () => {
     expect(supa.lastInsertPayload()).toMatchObject({ installment_amount: null });
   });
 
-  it('rejects invalid input before touching the DB', async () => {
+  it('rejects invalid input before touching the DB, with per-field errors', async () => {
     programMembership();
     const r = await createCommitmentAction({ ...VALID_INPUT, totalAmount: -1 });
     expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.errorCode).toBe('errors.validation.generic');
+      // The form needs to know WHICH field failed.
+      expect(r.fieldErrors?.totalAmount?.length).toBeGreaterThan(0);
+    }
+    expect(auditSpy).not.toHaveBeenCalled();
+  });
+
+  it('returns createFailed on a DB error, without auditing', async () => {
+    programMembership();
+    supa.program({
+      table: 'commitments',
+      op: 'insert',
+      result: { data: null, error: { message: 'rls denied' } },
+    });
+    const r = await createCommitmentAction(VALID_INPUT);
+    expect(r).toEqual({ ok: false, errorCode: 'errors.commitments.createFailed' });
     expect(auditSpy).not.toHaveBeenCalled();
   });
 
@@ -340,5 +357,69 @@ describe('toggleCommitmentPaymentAction', () => {
     programMembership();
     const r = await toggleCommitmentPaymentAction({ ...period, periodMonth: 13 });
     expect(r).toEqual({ ok: false, errorCode: 'errors.validation.generic' });
+  });
+
+  it('rejects a non-uuid commitment id', async () => {
+    programMembership();
+    const r = await toggleCommitmentPaymentAction({ ...period, commitmentId: 'nope' });
+    expect(r).toEqual({ ok: false, errorCode: 'errors.validation.generic' });
+  });
+
+  it('returns the rate-limit error before reading anything', async () => {
+    programMembership();
+    rateLimitSpy.mockImplementation(async () => ({ success: false, limit: 60, remaining: 0 }));
+    const r = await toggleCommitmentPaymentAction(period);
+    expect(r).toEqual({ ok: false, errorCode: 'errors.session.rateLimited' });
+    expect(auditSpy).not.toHaveBeenCalled();
+  });
+
+  it('fails cleanly when the INSERT is rejected by the DB', async () => {
+    programMembership();
+    supa.program({
+      table: 'commitments',
+      op: 'select',
+      result: {
+        data: { total_amount: 4200, installment_amount: 250, installments_total: 17 },
+        error: null,
+      },
+    });
+    supa.program({
+      table: 'commitment_payments',
+      op: 'select',
+      result: { data: null, error: null },
+    });
+    supa.program({
+      table: 'commitment_payments',
+      op: 'insert',
+      result: { data: null, error: { message: 'unique violation' } },
+    });
+    const r = await toggleCommitmentPaymentAction(period);
+    expect(r).toEqual({ ok: false, errorCode: 'errors.commitments.payments.toggleFailed' });
+    expect(auditSpy).not.toHaveBeenCalled();
+  });
+
+  it('fails cleanly when the DELETE is rejected by the DB', async () => {
+    programMembership();
+    supa.program({
+      table: 'commitments',
+      op: 'select',
+      result: {
+        data: { total_amount: 4200, installment_amount: 250, installments_total: 17 },
+        error: null,
+      },
+    });
+    supa.program({
+      table: 'commitment_payments',
+      op: 'select',
+      result: { data: { id: 'pay-1' }, error: null },
+    });
+    supa.program({
+      table: 'commitment_payments',
+      op: 'delete',
+      result: { data: null, error: { message: 'rls denied' } },
+    });
+    const r = await toggleCommitmentPaymentAction(period);
+    expect(r).toEqual({ ok: false, errorCode: 'errors.commitments.payments.toggleFailed' });
+    expect(auditSpy).not.toHaveBeenCalled();
   });
 });
