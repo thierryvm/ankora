@@ -136,6 +136,85 @@ describe('<EngagementsCard />', () => {
     expect(row).not.toHaveTextContent(/échéances restantes/);
   });
 
+  it('aggregates the total across several commitments', async () => {
+    const spf: CommitmentRow = {
+      ...carLoan,
+      id: 'spf',
+      label: 'Arrangement SPF',
+      kind: 'installment_plan',
+      totalAmount: 1600,
+      installmentAmount: 200,
+      installmentsTotal: 8,
+    };
+    await renderCard({
+      commitments: [carLoan, spf],
+      // Car: 1 ticked → 3 950 €. SPF: 2 ticked → 1 200 €. Total 5 150 €.
+      paidKeysByCommitment: { car: ['2026-1'], spf: ['2026-1', '2026-2'] },
+    });
+    expect(screen.getByTestId('engagements-total-remaining')).toHaveTextContent(/5[  ]150/);
+    expect(screen.getByTestId('engagements-row-car')).toBeInTheDocument();
+    expect(screen.getByTestId('engagements-row-spf')).toBeInTheDocument();
+  });
+
+  it('sums this month only over the commitments NOT yet ticked (mixed state)', async () => {
+    const spf: CommitmentRow = {
+      ...carLoan,
+      id: 'spf',
+      label: 'Arrangement SPF',
+      kind: 'installment_plan',
+      totalAmount: 1600,
+      installmentAmount: 200,
+      installmentsTotal: 8,
+    };
+    await renderCard({
+      commitments: [carLoan, spf],
+      // Both fall due in March; only the car is ticked → only the SPF's 200 €
+      // may still be counted as due this month.
+      paidKeysByCommitment: { car: ['2026-3'] },
+      currentPeriod: { year: 2026, month: 3 },
+    });
+    const due = screen.getByTestId('engagements-due-this-month');
+    expect(due).toHaveTextContent(/200/);
+    expect(due).not.toHaveTextContent(/450/);
+  });
+
+  it('hides the due-this-month figure once every commitment is ticked', async () => {
+    const spf: CommitmentRow = {
+      ...carLoan,
+      id: 'spf',
+      totalAmount: 1600,
+      installmentAmount: 200,
+      installmentsTotal: 8,
+    };
+    await renderCard({
+      commitments: [carLoan, spf],
+      paidKeysByCommitment: { car: ['2026-3'], spf: ['2026-3'] },
+      currentPeriod: { year: 2026, month: 3 },
+    });
+    expect(screen.queryByTestId('engagements-due-this-month')).toBeNull();
+    // The card itself stays: both still carry a balance.
+    expect(screen.getByTestId('engagements-card')).toBeInTheDocument();
+  });
+
+  it('keeps the card when one commitment is settled and another is not', async () => {
+    const settled: CommitmentRow = {
+      ...carLoan,
+      id: 'done',
+      label: 'Petit crédit',
+      totalAmount: 500,
+      installmentAmount: 250,
+      installmentsTotal: 2,
+    };
+    await renderCard({
+      commitments: [settled, carLoan],
+      paidKeysByCommitment: { done: ['2026-1', '2026-2'] },
+    });
+    expect(screen.queryByTestId('engagements-row-done')).toBeNull();
+    expect(screen.getByTestId('engagements-row-car')).toBeInTheDocument();
+    // Only the live commitment counts toward the total.
+    expect(screen.getByTestId('engagements-total-remaining')).toHaveTextContent(/4[  ]200/);
+  });
+
   it('ignores an inactive commitment', async () => {
     const { container } = await renderCard({
       commitments: [{ ...carLoan, isActive: false }],
