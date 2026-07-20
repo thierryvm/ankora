@@ -1,21 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { log } from '@/lib/log';
-import type { CommitmentFrequency, CommitmentKind } from '@/lib/domain/commitments';
+import type { CommitmentRow } from '@/lib/data/commitment-row';
 
-export type CommitmentRow = {
-  id: string;
-  label: string;
-  kind: CommitmentKind;
-  totalAmount: number;
-  installmentAmount: number | null;
-  installmentsTotal: number;
-  startYear: number;
-  startMonth: number;
-  paymentDay: number;
-  frequency: CommitmentFrequency;
-  notes: string | null;
-  isActive: boolean;
-};
+export type { CommitmentRow } from '@/lib/data/commitment-row';
 
 export type CommitmentsWithLedger = {
   commitments: CommitmentRow[];
@@ -64,14 +51,14 @@ export async function getCommitmentsWithLedger(
   const commitments: CommitmentRow[] = (commitmentsRes.data ?? []).map((c) => ({
     id: c.id,
     label: c.label,
-    kind: c.kind as CommitmentKind,
+    kind: c.kind as CommitmentRow['kind'],
     totalAmount: Number(c.total_amount),
     installmentAmount: c.installment_amount === null ? null : Number(c.installment_amount),
     installmentsTotal: c.installments_total,
     startYear: c.start_year,
     startMonth: c.start_month,
     paymentDay: c.payment_day,
-    frequency: c.frequency as CommitmentFrequency,
+    frequency: c.frequency as CommitmentRow['frequency'],
     notes: c.notes,
     isActive: c.is_active,
   }));

@@ -6,7 +6,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
 import messages from '../../../../messages/fr-BE.json';
-import type { CommitmentRow } from '@/lib/data/commitments';
+import type { CommitmentRow } from '@/lib/data/commitment-row';
 
 vi.mock('@/i18n/navigation', () => ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

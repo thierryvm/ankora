@@ -3,7 +3,7 @@ import { getTranslations } from 'next-intl/server';
 
 import { Link } from '@/i18n/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import type { CommitmentRow } from '@/lib/data/commitments';
+import { commitmentRowToDomain, type CommitmentRow } from '@/lib/data/commitment-row';
 import {
   endPeriod,
   installmentsPaid,
@@ -11,7 +11,6 @@ import {
   installmentAmountOf,
   periodKey,
   remainingBalance,
-  type Commitment,
 } from '@/lib/domain/commitments';
 import type { Locale } from '@/i18n/routing';
 import { formatCurrency, formatMonth } from '@/lib/i18n/formatters';
@@ -22,19 +21,6 @@ type Props = {
   currentPeriod: { year: number; month: number };
   locale: Locale;
 };
-
-const toDomain = (c: CommitmentRow): Commitment => ({
-  id: c.id,
-  kind: c.kind,
-  totalAmount: c.totalAmount,
-  installmentAmount: c.installmentAmount,
-  installmentsTotal: c.installmentsTotal,
-  startYear: c.startYear,
-  startMonth: c.startMonth,
-  paymentDay: c.paymentDay,
-  frequency: c.frequency,
-  isActive: c.isActive,
-});
 
 /**
  * Dashboard « Mes engagements » card (épic Dettes & échéanciers PR-3).
@@ -57,7 +43,7 @@ export async function EngagementsCard({
   const rows = commitments
     .filter((c) => c.isActive)
     .map((c) => {
-      const domain = toDomain(c);
+      const domain = commitmentRowToDomain(c);
       const paidKeys = new Set(paidKeysByCommitment[c.id] ?? []);
       const paid = installmentsPaid(domain, paidKeys);
       return {

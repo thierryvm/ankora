@@ -16,7 +16,7 @@ import {
   toggleCommitmentPaymentAction,
 } from '@/lib/actions/commitments';
 import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
-import type { CommitmentRow } from '@/lib/data/commitments';
+import { commitmentRowToDomain, type CommitmentRow } from '@/lib/data/commitment-row';
 import {
   endPeriod,
   installmentsPaid,
@@ -24,7 +24,6 @@ import {
   installmentAmountOf,
   periodKey,
   remainingBalance,
-  type Commitment,
   type CommitmentKind,
 } from '@/lib/domain/commitments';
 import { formatCurrency, formatMonth } from '@/lib/i18n/formatters';
@@ -94,18 +93,7 @@ export function CommitmentsClient({
     return keys;
   };
 
-  const toDomain = (c: RawCommitment): Commitment => ({
-    id: c.id,
-    kind: c.kind,
-    totalAmount: c.totalAmount,
-    installmentAmount: c.installmentAmount,
-    installmentsTotal: c.installmentsTotal,
-    startYear: c.startYear,
-    startMonth: c.startMonth,
-    paymentDay: c.paymentDay,
-    frequency: c.frequency,
-    isActive: c.isActive,
-  });
+  const toDomain = commitmentRowToDomain;
 
   function onTogglePaid(c: RawCommitment) {
     const entry = `${c.id}|${periodKey(currentPeriod.year, currentPeriod.month)}`;
