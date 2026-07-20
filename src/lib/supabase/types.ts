@@ -6,31 +6,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: '14.5';
   };
-  graphql_public: {
-    Tables: {
-      [_ in never]: never;
-    };
-    Views: {
-      [_ in never]: never;
-    };
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json;
-          operationName?: string;
-          query?: string;
-          variables?: Json;
-        };
-        Returns: Json;
-      };
-    };
-    Enums: {
-      [_ in never]: never;
-    };
-    CompositeTypes: {
-      [_ in never]: never;
-    };
-  };
   public: {
     Tables: {
       accounts: {
@@ -319,6 +294,149 @@ export type Database = {
           },
         ];
       };
+      commitment_payments: {
+        Row: {
+          commitment_id: string;
+          created_at: string;
+          created_by: string;
+          id: string;
+          note: string | null;
+          paid_amount: number;
+          paid_at: string;
+          period_month: number;
+          period_year: number;
+          workspace_id: string;
+        };
+        Insert: {
+          commitment_id: string;
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          note?: string | null;
+          paid_amount: number;
+          paid_at?: string;
+          period_month: number;
+          period_year: number;
+          workspace_id: string;
+        };
+        Update: {
+          commitment_id?: string;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          note?: string | null;
+          paid_amount?: number;
+          paid_at?: string;
+          period_month?: number;
+          period_year?: number;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'commitment_payments_commitment_id_fkey';
+            columns: ['commitment_id'];
+            isOneToOne: false;
+            referencedRelation: 'commitments';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'commitment_payments_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'commitment_payments_workspace_id_fkey';
+            columns: ['workspace_id'];
+            isOneToOne: false;
+            referencedRelation: 'workspaces';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      commitments: {
+        Row: {
+          category_id: string | null;
+          created_at: string;
+          created_by: string;
+          frequency: string;
+          id: string;
+          installment_amount: number | null;
+          installments_total: number;
+          is_active: boolean;
+          kind: string;
+          label: string;
+          notes: string | null;
+          payment_day: number;
+          start_month: number;
+          start_year: number;
+          total_amount: number;
+          updated_at: string;
+          workspace_id: string;
+        };
+        Insert: {
+          category_id?: string | null;
+          created_at?: string;
+          created_by: string;
+          frequency?: string;
+          id?: string;
+          installment_amount?: number | null;
+          installments_total: number;
+          is_active?: boolean;
+          kind: string;
+          label: string;
+          notes?: string | null;
+          payment_day?: number;
+          start_month: number;
+          start_year: number;
+          total_amount: number;
+          updated_at?: string;
+          workspace_id: string;
+        };
+        Update: {
+          category_id?: string | null;
+          created_at?: string;
+          created_by?: string;
+          frequency?: string;
+          id?: string;
+          installment_amount?: number | null;
+          installments_total?: number;
+          is_active?: boolean;
+          kind?: string;
+          label?: string;
+          notes?: string | null;
+          payment_day?: number;
+          start_month?: number;
+          start_year?: number;
+          total_amount?: number;
+          updated_at?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'commitments_category_id_fkey';
+            columns: ['category_id'];
+            isOneToOne: false;
+            referencedRelation: 'categories';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'commitments_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'commitments_workspace_id_fkey';
+            columns: ['workspace_id'];
+            isOneToOne: false;
+            referencedRelation: 'workspaces';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       deletion_requests: {
         Row: {
           cancelled_at: string | null;
@@ -535,9 +653,6 @@ export type Database = {
         Row: {
           months_tracked: number | null;
           provision_target: number | null;
-          // PR-BETA-3 (THI-267) — columns added by migration 20260526000001.
-          // Patched here manually; `npm run supabase:types` will re-emit
-          // these on the next regeneration against the remote project.
           reste_a_vivre_default: number;
           reste_a_vivre_overrides: Json;
           savings_balance: number | null;
@@ -634,6 +749,10 @@ export type Database = {
       is_workspace_member: { Args: { ws_id: string }; Returns: boolean };
       purge_audit_log_older_than_12_months: { Args: never; Returns: number };
       seed_default_accounts: { Args: { ws_id: string }; Returns: undefined };
+      seed_default_categories: {
+        Args: { owner_id: string; ws_id: string };
+        Returns: undefined;
+      };
     };
     Enums: {
       [_ in never]: never;
@@ -760,9 +879,6 @@ export type CompositeTypes<
     : never;
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },
