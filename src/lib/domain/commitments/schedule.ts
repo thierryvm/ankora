@@ -60,10 +60,20 @@ export function endPeriod(c: Commitment): Period {
   return periods[periods.length - 1] ?? { year: c.startYear, month: c.startMonth };
 }
 
-/** Whether an instalment falls due in `period` (inactive commitments never are). */
+/**
+ * Whether an instalment falls due in `period` (inactive commitments never are).
+ *
+ * Direct arithmetic rather than scanning `installmentPeriods()` — this runs
+ * per row in the cockpit budget pass, so it must not allocate an array of up
+ * to 600 periods on every call (Sourcery #233). Equivalence with the schedule
+ * is locked by a property test.
+ */
 export function isDueInPeriod(c: Commitment, period: Period): boolean {
   if (!c.isActive) return false;
-  return installmentPeriods(c).some((p) => p.year === period.year && p.month === period.month);
+  const step = MONTHS_BETWEEN[c.frequency];
+  const offset = (period.year - c.startYear) * 12 + (period.month - c.startMonth);
+  if (offset < 0 || offset % step !== 0) return false;
+  return offset / step < c.installmentsTotal;
 }
 
 /** The amount of one instalment — a one-off owes its whole total at once. */

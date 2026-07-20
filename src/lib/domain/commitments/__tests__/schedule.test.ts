@@ -8,6 +8,7 @@ import {
   remainingBalance,
   installmentsPaid,
   isFinished,
+  periodKey,
   type Commitment,
 } from '../schedule';
 
@@ -51,6 +52,29 @@ describe('installmentPeriods', () => {
     ]);
   });
 
+  it('honours a semiannual cadence across a year boundary', () => {
+    const periods = installmentPeriods(
+      commitment({ frequency: 'semiannual', installmentsTotal: 4, startYear: 2026, startMonth: 7 }),
+    );
+    expect(periods).toEqual([
+      { year: 2026, month: 7 },
+      { year: 2027, month: 1 },
+      { year: 2027, month: 7 },
+      { year: 2028, month: 1 },
+    ]);
+  });
+
+  it('honours an annual cadence over several years', () => {
+    const periods = installmentPeriods(
+      commitment({ frequency: 'annual', installmentsTotal: 3, startYear: 2026, startMonth: 11 }),
+    );
+    expect(periods).toEqual([
+      { year: 2026, month: 11 },
+      { year: 2027, month: 11 },
+      { year: 2028, month: 11 },
+    ]);
+  });
+
   it('returns a single period for a one-off', () => {
     const periods = installmentPeriods(
       commitment({ kind: 'one_off', installmentsTotal: 1, installmentAmount: null }),
@@ -71,6 +95,34 @@ describe('endPeriod', () => {
       year: 2026,
       month: 8,
     });
+  });
+
+  it('respects a non-monthly cadence for the final period', () => {
+    // SPF-style: 8 quarterly instalments from Feb 2026 → last one 21 months later.
+    expect(
+      endPeriod(
+        commitment({
+          frequency: 'quarterly',
+          installmentsTotal: 8,
+          startYear: 2026,
+          startMonth: 2,
+        }),
+      ),
+    ).toEqual({ year: 2027, month: 11 });
+  });
+
+  it('handles a long-running schedule spanning several years', () => {
+    // 60 monthly instalments from June 2024 → May 2029.
+    expect(
+      endPeriod(commitment({ installmentsTotal: 60, startYear: 2024, startMonth: 6 })),
+    ).toEqual({ year: 2029, month: 5 });
+  });
+});
+
+describe('periodKey', () => {
+  it('formats the ledger key as `year-month`, unpadded (matches the payments ledger)', () => {
+    expect(periodKey(2026, 1)).toBe('2026-1');
+    expect(periodKey(2026, 11)).toBe('2026-11');
   });
 });
 
@@ -95,6 +147,47 @@ describe('isDueInPeriod', () => {
     const q = commitment({ frequency: 'quarterly', installmentsTotal: 3, startMonth: 11 });
     expect(isDueInPeriod(q, { year: 2026, month: 12 })).toBe(false);
     expect(isDueInPeriod(q, { year: 2027, month: 2 })).toBe(true);
+  });
+
+  it('aligns on the 6-month rhythm for a semiannual plan', () => {
+    const s = commitment({
+      frequency: 'semiannual',
+      installmentsTotal: 3,
+      startYear: 2026,
+      startMonth: 2,
+    });
+    expect(isDueInPeriod(s, { year: 2026, month: 2 })).toBe(true);
+    expect(isDueInPeriod(s, { year: 2026, month: 8 })).toBe(true);
+    expect(isDueInPeriod(s, { year: 2027, month: 2 })).toBe(true);
+    expect(isDueInPeriod(s, { year: 2026, month: 7 })).toBe(false);
+    expect(isDueInPeriod(s, { year: 2027, month: 8 })).toBe(false); // past the 3rd
+  });
+
+  it('aligns on the same month each year for an annual plan', () => {
+    const a = commitment({
+      frequency: 'annual',
+      installmentsTotal: 3,
+      startYear: 2026,
+      startMonth: 11,
+    });
+    expect(isDueInPeriod(a, { year: 2027, month: 11 })).toBe(true);
+    expect(isDueInPeriod(a, { year: 2026, month: 10 })).toBe(false);
+    expect(isDueInPeriod(a, { year: 2026, month: 12 })).toBe(false);
+  });
+
+  // The direct-arithmetic implementation must stay equivalent to the schedule
+  // it replaced (Sourcery #233 perf note): scan a 4-year window and compare.
+  it('matches installmentPeriods() exactly across every cadence (equivalence lock)', () => {
+    const cadences = ['monthly', 'quarterly', 'semiannual', 'annual'] as const;
+    for (const frequency of cadences) {
+      const c = commitment({ frequency, installmentsTotal: 5, startYear: 2026, startMonth: 5 });
+      const scheduled = new Set(installmentPeriods(c).map((p) => `${p.year}-${p.month}`));
+      for (let y = 2025; y <= 2032; y += 1) {
+        for (let m = 1; m <= 12; m += 1) {
+          expect(isDueInPeriod(c, { year: y, month: m })).toBe(scheduled.has(`${y}-${m}`));
+        }
+      }
+    }
   });
 });
 
@@ -140,6 +233,16 @@ describe('remainingBalance / installmentsPaid / isFinished', () => {
     expect(remainingBalance(c, all)).toBe(0);
     expect(installmentsPaid(c, all)).toBe(3);
     expect(isFinished(c, all)).toBe(true);
+  });
+
+  it('ignores a ledger tick from BEFORE the schedule starts', () => {
+    // Anchor is Nov 2026; a stray Oct 2026 tick must not count as progress.
+    const stray = paidSet([
+      [2026, 10],
+      [2026, 11],
+    ]);
+    expect(installmentsPaid(c, stray)).toBe(1);
+    expect(remainingBalance(c, stray)).toBe(500);
   });
 
   it('never goes negative, even if the ledger holds an off-schedule tick', () => {
