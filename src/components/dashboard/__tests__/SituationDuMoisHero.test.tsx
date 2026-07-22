@@ -120,6 +120,28 @@ describe('<SituationDuMoisHero />', () => {
     expect(screen.queryByTestId('allocation-segment-engagements')).toBeNull();
   });
 
+  it('ADR-021: the rouge nudge folds engagements into the obligations total', async () => {
+    await renderHero({
+      statut: 'rouge',
+      revenus: 2000,
+      chargesFixes: 1500,
+      provisionsLissees: 300,
+      engagementsMensuels: 400,
+      resteDisponible: -200,
+    });
+    // nudge.rouge interpolates obligations = 1500 + 300 + 400 = 2200 (not 1800).
+    const nudge = screen.getByTestId('situation-nudge-link').closest('div');
+    const digits = (nudge?.textContent ?? '').replace(/[\s  ]/g, '');
+    expect(digits).toContain('2200'); // 1500 + 300 + 400 — engagements folded in
+    expect(digits).not.toContain('1800'); // the charges+provisions-only figure
+  });
+
+  it('ADR-021: the AllocationBar aria mentions engagements only when present', async () => {
+    // Base barAria never contains the word « engagements » — the appended clause does.
+    await renderHero({ statut: 'vert', engagementsMensuels: 250, resteDisponible: 412 });
+    expect(screen.getByRole('img').getAttribute('aria-label')).toContain('engagements');
+  });
+
   it('incomplet (THI-335): shows setup CTA, no AllocationBar, no negative amount', async () => {
     const { container } = await renderHero({ statut: 'incomplet', revenus: 0 });
     expect(screen.getByText(messages.dashboard.situation.incomplet.title)).toBeInTheDocument();

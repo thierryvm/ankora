@@ -162,7 +162,7 @@ export function engagementsMensuelsLisses(
 }
 ```
 
-**Cas de test (≥ 90 % lignes/fonctions domaine)** — utiliser des `Commitment` litéraux :
+**Cas de test (≥ 90 % lignes/fonctions domaine)** — utiliser des `Commitment` littéraux :
 
 1. crédit mensuel 250 €/mois (installmentsTotal 17), ref dans la fenêtre, aucune coche → 250.
 2. échéancier trimestriel 600 €/trim (installmentsTotal 4), ref dans la fenêtre → 200 (lissage /3).
