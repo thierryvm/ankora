@@ -54,6 +54,7 @@ const BASE = {
   revenus: 2500,
   chargesFixes: 1500,
   provisionsLissees: 338,
+  engagementsMensuels: 0,
   resteDisponible: 662,
   budgetVieCourante: 500,
   capacite: 162,
@@ -105,6 +106,18 @@ describe('<SituationDuMoisHero />', () => {
     await renderHero({ statut: 'rouge', resteDisponible: -180 });
     expect(screen.getByText(messages.dashboard.situation.statut.rouge)).toBeInTheDocument();
     expect(screen.getByTestId('situation-nudge-link')).toBeInTheDocument();
+  });
+
+  it('ADR-021: surfaces an engagements flow row + bar segment when engagements > 0', async () => {
+    await renderHero({ statut: 'vert', engagementsMensuels: 250, resteDisponible: 412 });
+    expect(screen.getByText(messages.dashboard.situation.flow.engagements)).toBeInTheDocument();
+    expect(screen.getByTestId('allocation-segment-engagements')).toBeInTheDocument();
+  });
+
+  it('ADR-021: hides the engagements row + segment when there are none (default 0)', async () => {
+    await renderHero({ statut: 'vert' });
+    expect(screen.queryByText(messages.dashboard.situation.flow.engagements)).toBeNull();
+    expect(screen.queryByTestId('allocation-segment-engagements')).toBeNull();
   });
 
   it('incomplet (THI-335): shows setup CTA, no AllocationBar, no negative amount', async () => {

@@ -16,6 +16,8 @@ type Props = {
   revenus: number;
   chargesFixes: number;
   provisionsLissees: number;
+  /** Mensualités lissées des engagements actifs (ADR-021). 0 = masqué. */
+  engagementsMensuels: number;
   resteDisponible: number;
   budgetVieCourante: number;
   capacite: number;
@@ -99,7 +101,7 @@ export async function SituationDuMoisHero(props: Props) {
   let nudge: string | null = null;
   if (props.statut === 'rouge') {
     nudge = t('nudge.rouge', {
-      obligations: fmt(props.chargesFixes + props.provisionsLissees),
+      obligations: fmt(props.chargesFixes + props.provisionsLissees + props.engagementsMensuels),
       revenus: fmt(props.revenus),
     });
   } else if (props.statut === 'orange') {
@@ -123,6 +125,15 @@ export async function SituationDuMoisHero(props: Props) {
             ratio: props.provisionsLissees / props.revenus,
             fill: 'var(--color-brand-500)',
           },
+          ...(props.engagementsMensuels > 0
+            ? [
+                {
+                  key: 'engagements',
+                  ratio: props.engagementsMensuels / props.revenus,
+                  fill: 'var(--color-muted-foreground)',
+                },
+              ]
+            : []),
           {
             key: 'vie',
             ratio:
@@ -140,12 +151,19 @@ export async function SituationDuMoisHero(props: Props) {
             : []),
         ];
 
-  const barAria = t('barAria', {
-    charges: fmt(props.chargesFixes),
-    provisions: fmt(props.provisionsLissees),
-    vieCourante: fmt(props.budgetVieCourante),
-    epargne: fmt(Math.max(0, props.capacite)),
-  });
+  const barAria =
+    t('barAria', {
+      charges: fmt(props.chargesFixes),
+      provisions: fmt(props.provisionsLissees),
+      vieCourante: fmt(props.budgetVieCourante),
+      epargne: fmt(Math.max(0, props.capacite)),
+    }) +
+    // Optional clause, appended only when there are engagements — keeps the
+    // canonical 4-part string untouched (no i18n regression) while still
+    // describing the extra bar segment for screen readers (ADR-021).
+    (props.engagementsMensuels > 0
+      ? ` ${t('barAriaEngagements', { engagements: fmt(props.engagementsMensuels) })}`
+      : '');
 
   const perJour =
     props.joursRestants > 0 && props.budgetVieCourante > 0
@@ -220,6 +238,14 @@ export async function SituationDuMoisHero(props: Props) {
             muted
             dotClass="bg-brand-500"
           />
+          {props.engagementsMensuels > 0 && (
+            <FlowRow
+              label={t('flow.engagements')}
+              value={`− ${fmt(props.engagementsMensuels)}`}
+              muted
+              dotClass="bg-muted-foreground"
+            />
+          )}
           <div className="border-border mt-1 border-t pt-2">
             <FlowRow label={t('flow.resteDisponible')} value={fmt(props.resteDisponible)} strong />
           </div>

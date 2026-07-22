@@ -1093,13 +1093,15 @@
         "revenus": "Einkommen",
         "chargesFixes": "Fixkosten",
         "provisions": "Verteilte Rücklagen",
+        "engagements": "Verpflichtungen",
         "resteDisponible": "Verfügbarer Betrag",
         "resteAVivre": "Alltag",
         "capaciteEpargne": "Sparpotenzial",
         "ajuster": "Diesen Monat anpassen",
         "parJour": "≈ {amount}/Tag"
       },
-      "barAria": "Aufteilung deines Einkommens: {charges} Fixkosten, {provisions} Rücklagen, {vieCourante} Alltag, {epargne} mögliche Ersparnisse."
+      "barAria": "Aufteilung deines Einkommens: {charges} Fixkosten, {provisions} Rücklagen, {vieCourante} Alltag, {epargne} mögliche Ersparnisse.",
+      "barAriaEngagements": "Davon {engagements} an Verpflichtungen."
     },
     "effort": {
       "title": "Geglätteter finanzieller Aufwand",
