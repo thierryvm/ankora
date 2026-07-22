@@ -21,7 +21,7 @@ import {
 import { unpaidChargesForPeriod } from '@/lib/domain/charges';
 import { getWorkspaceSnapshot, toCockpitCharges } from '@/lib/data/workspace-snapshot';
 import { getCommitmentsWithLedger } from '@/lib/data/commitments';
-import { commitmentRowToDomain } from '@/lib/data/commitment-row';
+import { commitmentRowToDomain, hasLiveCommitments } from '@/lib/data/commitment-row';
 import type { AccountType } from '@/lib/schemas/account';
 import type { Locale } from '@/i18n/routing';
 import { formatCurrency, formatDate, formatMonth } from '@/lib/i18n/formatters';
@@ -116,6 +116,11 @@ export default async function DashboardPage() {
     commitmentLedger,
     snapshot.currentPeriod,
   );
+  // Does « Mes engagements » have anything to show? Drives the desktop layout:
+  // Gauge + Engagements share a 2-col row only when the card renders, otherwise
+  // the Gauge takes the full width (no empty half-column). Same predicate the
+  // card self-hides on, so layout and card never disagree.
+  const showCommitments = hasLiveCommitments(commitments, paidKeysByCommitment);
 
   // THI-327 Phase 0 — unified "Situation du mois" hero. Reuses the same
   // cockpit primitives as the (now removed) Effort + Capacité cards.
@@ -194,32 +199,58 @@ export default async function DashboardPage() {
         bills never catch me short?" — complements the hero radar which
         answers "what is my real monthly burden?". Always visible (even
         on an empty workspace) so the user sees the canonical narrative.
-        Layout grid-cols-1 lg:grid-cols-3 mirrors the bloc 1 account row
-        and keeps the card at ~1/3 width on desktop (the gauge is dense,
-        not wide).
+        On desktop it shares a 2-col row with « Mes engagements » when that
+        card has content (see `showCommitments`), else it spans full width.
       */}
-      <section aria-labelledby="provision-health-heading" className="grid grid-cols-1 gap-4">
-        <h2 id="provision-health-heading" className="sr-only">
-          {t('provisionHealthSectionHeading')}
-        </h2>
-        <ProvisionHealthGaugeCard
-          charges={cockpitCharges}
-          payments={paymentsLedger}
-          soldeEpargneActuel={soldeEpargneActuel}
-          period={snapshot.currentPeriod}
-          locale={locale}
-        />
-      </section>
+      {/*
+        Provisions health + « Mes engagements » share a 2-col row on desktop
+        (both dense but narrow). `lg:items-start` keeps each card at its natural
+        height. When there is nothing to show, the whole grid collapses to the
+        gauge at full width — `showCommitments` gates the 2nd column so it never
+        leaves an empty half.
+      */}
+      <div className={showCommitments ? 'grid gap-4 lg:grid-cols-2 lg:items-start' : ''}>
+        <section aria-labelledby="provision-health-heading" className="flex flex-col gap-4">
+          <h2 id="provision-health-heading" className="sr-only">
+            {t('provisionHealthSectionHeading')}
+          </h2>
+          <ProvisionHealthGaugeCard
+            charges={cockpitCharges}
+            payments={paymentsLedger}
+            soldeEpargneActuel={soldeEpargneActuel}
+            period={snapshot.currentPeriod}
+            locale={locale}
+          />
+        </section>
+
+        {/*
+          Épic « Dettes & échéanciers » PR-3 — « Mes engagements ». Paired with
+          the provisions gauge on desktop. `EngagementsCard` self-hides when
+          empty; `showCommitments` (same predicate) gates the section so the
+          grid reserves the 2nd column only when the card actually renders.
+        */}
+        {showCommitments && (
+          <section aria-labelledby="commitments-heading" className="flex flex-col gap-4">
+            <h2 id="commitments-heading" className="sr-only">
+              {t('commitmentsSectionHeading')}
+            </h2>
+            <EngagementsCard
+              commitments={commitments}
+              paidKeysByCommitment={paidKeysByCommitment}
+              currentPeriod={snapshot.currentPeriod}
+              locale={locale}
+            />
+          </section>
+        )}
+      </div>
 
       {/*
-        THI-192 — Prochaines factures (cockpit v3 section #5 of 8).
-        Surfaces a 30-day horizon split into J-7 / J-14 / J-30 windows + a
-        separate overdue bucket. Reuses `snapshot.charges` (now carrying the
-        canonical `payment_months[]` + `payment_day` post-THI-192 debt fix)
-        and the same `paymentsLedger` Map as section #2 so a settled bill
-        for the current cycle never appears as overdue.
+        THI-192 — Prochaines factures (cockpit v3 section #5 of 8). Full width
+        (row-heavy: J-7 / J-14 / J-30 windows + a separate overdue bucket).
+        Reuses `snapshot.charges` + the same `paymentsLedger` Map as the gauge
+        so a settled bill for the current cycle never appears as overdue.
       */}
-      <section aria-labelledby="upcoming-bills-heading" className="grid grid-cols-1 gap-4">
+      <section aria-labelledby="upcoming-bills-heading" className="flex flex-col gap-4">
         <h2 id="upcoming-bills-heading" className="sr-only">
           {t('upcomingBillsSectionHeading')}
         </h2>
@@ -237,23 +268,6 @@ export default async function DashboardPage() {
             monthLabel: formatMonth(snapshot.previousPeriod.month, locale),
             periodParam: `${snapshot.previousPeriod.year}-${String(snapshot.previousPeriod.month).padStart(2, '0')}`,
           }}
-        />
-      </section>
-
-      {/*
-        Épic « Dettes & échéanciers » PR-3 — « Mes engagements ». Sits right
-        after the bills card: both answer "what do I owe", bills for the month,
-        commitments for the long run. Self-hiding when there is nothing to show.
-      */}
-      <section aria-labelledby="commitments-heading" className="grid grid-cols-1 gap-4">
-        <h2 id="commitments-heading" className="sr-only">
-          {t('commitmentsSectionHeading')}
-        </h2>
-        <EngagementsCard
-          commitments={commitments}
-          paidKeysByCommitment={paidKeysByCommitment}
-          currentPeriod={snapshot.currentPeriod}
-          locale={locale}
         />
       </section>
 
@@ -295,7 +309,7 @@ export default async function DashboardPage() {
                   <Link
                     href="/app/accounts"
                     // PR-D5 a11y: underline permanent (was hover-only — invisible on iOS touch).
-                    className="text-muted-foreground hover:text-brand-700 text-xs underline underline-offset-2"
+                    className="text-muted-foreground hover:text-brand-700 -my-1.5 inline-flex min-h-11 items-center text-xs underline underline-offset-2"
                   >
                     {tDaily('cta_set_plafond')}
                   </Link>

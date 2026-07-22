@@ -74,7 +74,7 @@ export async function EngagementsCard({
         </CardTitle>
         <Link
           href="/app/commitments"
-          className="text-brand-text hover:text-brand-text-strong focus-visible:ring-brand-600 inline-flex shrink-0 items-center gap-1 rounded-md text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+          className="text-brand-text hover:text-brand-text-strong focus-visible:ring-brand-600 -my-1 inline-flex min-h-11 shrink-0 items-center gap-1 rounded-md text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
           data-testid="engagements-card-link"
         >
           {t('viewAll')}

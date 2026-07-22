@@ -1,3 +1,4 @@
+import { isFinished } from '@/lib/domain/commitments';
 import type { Commitment, CommitmentFrequency, CommitmentKind } from '@/lib/domain/commitments';
 
 /**
@@ -41,3 +42,21 @@ export const commitmentRowToDomain = (c: CommitmentRow): Commitment => ({
   frequency: c.frequency,
   isActive: c.isActive,
 });
+
+/**
+ * Whether any commitment is still "live" — active and not fully settled. This
+ * is the SAME predicate `EngagementsCard` uses to decide whether it renders
+ * (it self-hides when empty), exposed here so the dashboard layout can reserve
+ * the second column only when the card will actually show something (no empty
+ * half-width hole on desktop). Single source → the two can never disagree.
+ */
+export function hasLiveCommitments(
+  commitments: readonly CommitmentRow[],
+  paidKeysByCommitment: Record<string, readonly string[]>,
+): boolean {
+  return commitments.some(
+    (c) =>
+      c.isActive &&
+      !isFinished(commitmentRowToDomain(c), new Set(paidKeysByCommitment[c.id] ?? [])),
+  );
+}
