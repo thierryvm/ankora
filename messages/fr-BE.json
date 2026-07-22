@@ -699,7 +699,8 @@
       "expensesViewAll": "Voir toutes les dépenses →",
       "accountsHeading": "Mes comptes",
       "provisionHealthSectionHeading": "Santé des provisions",
-      "upcomingBillsSectionHeading": "Prochaines factures"
+      "upcomingBillsSectionHeading": "Prochaines factures",
+      "commitmentsSectionHeading": "Mes engagements"
     },
     "charges": {
       "title": "Mes charges",
@@ -1173,6 +1174,13 @@
       "buckets": {
         "overdue": "En retard"
       }
+    },
+    "commitments": {
+      "title": "Mes engagements",
+      "viewAll": "Voir tout",
+      "totalRemainingLabel": "Total restant dû",
+      "dueThisMonthLabel": "Ce mois",
+      "installmentsLeft": "{left, plural, =1 {1 échéance restante} other {# échéances restantes}} · jusqu’en {end}"
     }
   },
   "glossary": {

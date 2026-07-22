@@ -699,7 +699,8 @@
       "expensesViewAll": "Ver todos los gastos →",
       "accountsHeading": "Mis cuentas",
       "provisionHealthSectionHeading": "Salud de las provisiones",
-      "upcomingBillsSectionHeading": "Próximas facturas"
+      "upcomingBillsSectionHeading": "Próximas facturas",
+      "commitmentsSectionHeading": "Mis compromisos"
     },
     "charges": {
       "title": "Mis gastos fijos",
@@ -1173,6 +1174,13 @@
       "buckets": {
         "overdue": "Atrasadas"
       }
+    },
+    "commitments": {
+      "title": "Mis compromisos",
+      "viewAll": "Ver todo",
+      "totalRemainingLabel": "Total pendiente",
+      "dueThisMonthLabel": "Este mes",
+      "installmentsLeft": "{left, plural, =1 {queda 1 cuota} other {quedan # cuotas}} · hasta {end}"
     }
   },
   "glossary": {

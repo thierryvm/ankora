@@ -699,7 +699,8 @@
       "expensesViewAll": "Alle Ausgaben anzeigen →",
       "accountsHeading": "Meine Konten",
       "provisionHealthSectionHeading": "Gesundheit der Rücklagen",
-      "upcomingBillsSectionHeading": "Anstehende Rechnungen"
+      "upcomingBillsSectionHeading": "Anstehende Rechnungen",
+      "commitmentsSectionHeading": "Meine Verpflichtungen"
     },
     "charges": {
       "title": "Meine Fixkosten",
@@ -1173,6 +1174,13 @@
       "buckets": {
         "overdue": "Überfällig"
       }
+    },
+    "commitments": {
+      "title": "Meine Verpflichtungen",
+      "viewAll": "Alle anzeigen",
+      "totalRemainingLabel": "Insgesamt offen",
+      "dueThisMonthLabel": "Diesen Monat",
+      "installmentsLeft": "{left, plural, =1 {noch 1 Rate} other {noch # Raten}} · bis {end}"
     }
   },
   "glossary": {

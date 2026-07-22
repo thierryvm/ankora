@@ -699,7 +699,8 @@
       "expensesViewAll": "View all expenses →",
       "accountsHeading": "My accounts",
       "provisionHealthSectionHeading": "Provisions health",
-      "upcomingBillsSectionHeading": "Upcoming bills"
+      "upcomingBillsSectionHeading": "Upcoming bills",
+      "commitmentsSectionHeading": "My commitments"
     },
     "charges": {
       "title": "My bills",
@@ -1173,6 +1174,13 @@
       "buckets": {
         "overdue": "Overdue"
       }
+    },
+    "commitments": {
+      "title": "My commitments",
+      "viewAll": "View all",
+      "totalRemainingLabel": "Total still owed",
+      "dueThisMonthLabel": "This month",
+      "installmentsLeft": "{left, plural, =1 {1 instalment left} other {# instalments left}} · until {end}"
     }
   },
   "glossary": {

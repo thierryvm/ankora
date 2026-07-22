@@ -16,6 +16,7 @@ import {
   toggleCommitmentPaymentAction,
 } from '@/lib/actions/commitments';
 import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
+import { commitmentRowToDomain, type CommitmentRow } from '@/lib/data/commitment-row';
 import {
   endPeriod,
   installmentsPaid,
@@ -23,27 +24,13 @@ import {
   installmentAmountOf,
   periodKey,
   remainingBalance,
-  type Commitment,
-  type CommitmentFrequency,
   type CommitmentKind,
 } from '@/lib/domain/commitments';
 import { formatCurrency, formatMonth } from '@/lib/i18n/formatters';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 
-export type RawCommitment = {
-  id: string;
-  label: string;
-  kind: CommitmentKind;
-  totalAmount: number;
-  installmentAmount: number | null;
-  installmentsTotal: number;
-  startYear: number;
-  startMonth: number;
-  paymentDay: number;
-  frequency: CommitmentFrequency;
-  notes: string | null;
-  isActive: boolean;
-};
+/** Row shape crossing the RSC boundary (money as plain `number`, never Decimal). */
+export type RawCommitment = CommitmentRow;
 
 type Props = {
   commitments: RawCommitment[];
@@ -106,18 +93,7 @@ export function CommitmentsClient({
     return keys;
   };
 
-  const toDomain = (c: RawCommitment): Commitment => ({
-    id: c.id,
-    kind: c.kind,
-    totalAmount: c.totalAmount,
-    installmentAmount: c.installmentAmount,
-    installmentsTotal: c.installmentsTotal,
-    startYear: c.startYear,
-    startMonth: c.startMonth,
-    paymentDay: c.paymentDay,
-    frequency: c.frequency,
-    isActive: c.isActive,
-  });
+  const toDomain = commitmentRowToDomain;
 
   function onTogglePaid(c: RawCommitment) {
     const entry = `${c.id}|${periodKey(currentPeriod.year, currentPeriod.month)}`;

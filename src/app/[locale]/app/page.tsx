@@ -9,11 +9,13 @@ import { AccountCard } from '@/components/features/AccountCard';
 import { SituationDuMoisHero } from '@/components/dashboard/SituationDuMoisHero';
 import { ProvisionHealthGaugeCard } from '@/components/dashboard/ProvisionHealthGaugeCard';
 import { ProchainesFacturesCard } from '@/components/dashboard/ProchainesFacturesCard';
+import { EngagementsCard } from '@/components/dashboard/EngagementsCard';
 import { SimulatorDrawer } from '@/components/dashboard/SimulatorDrawer';
 import { Expenses, Transfer, money } from '@/lib/domain';
 import { calculerSituationDuMois, paymentKey, type PaymentLedger } from '@/lib/domain/cockpit';
 import { unpaidChargesForPeriod } from '@/lib/domain/charges';
 import { getWorkspaceSnapshot, toCockpitCharges } from '@/lib/data/workspace-snapshot';
+import { getCommitmentsWithLedger } from '@/lib/data/commitments';
 import type { AccountType } from '@/lib/schemas/account';
 import type { Locale } from '@/i18n/routing';
 import { formatCurrency, formatDate, formatMonth } from '@/lib/i18n/formatters';
@@ -36,6 +38,10 @@ export default async function DashboardPage() {
   const t = await getTranslations('app.dashboard');
   const locale = (await getLocale()) as Locale;
   const snapshot = await getWorkspaceSnapshot();
+  // Same read as /app/commitments — the card and the page can never disagree.
+  const { commitments, paidKeysByCommitment } = await getCommitmentsWithLedger(
+    snapshot.workspaceId,
+  );
   const currentMonth = new Date().getMonth() + 1;
   const monthLabel = formatMonth(currentMonth, locale);
   const fmtMoney = (value: Parameters<typeof formatCurrency>[0]) => formatCurrency(value, locale);
@@ -211,6 +217,23 @@ export default async function DashboardPage() {
             monthLabel: formatMonth(snapshot.previousPeriod.month, locale),
             periodParam: `${snapshot.previousPeriod.year}-${String(snapshot.previousPeriod.month).padStart(2, '0')}`,
           }}
+        />
+      </section>
+
+      {/*
+        Épic « Dettes & échéanciers » PR-3 — « Mes engagements ». Sits right
+        after the bills card: both answer "what do I owe", bills for the month,
+        commitments for the long run. Self-hiding when there is nothing to show.
+      */}
+      <section aria-labelledby="commitments-heading" className="grid grid-cols-1 gap-4">
+        <h2 id="commitments-heading" className="sr-only">
+          {t('commitmentsSectionHeading')}
+        </h2>
+        <EngagementsCard
+          commitments={commitments}
+          paidKeysByCommitment={paidKeysByCommitment}
+          currentPeriod={snapshot.currentPeriod}
+          locale={locale}
         />
       </section>
 
