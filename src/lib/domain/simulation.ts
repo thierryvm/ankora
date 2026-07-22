@@ -40,14 +40,21 @@ export function simulate(charges: readonly Charge[], input: SimulationInput): Si
 
 /**
  * "Reste disponible" (réserve libre) view of a simulation — the signature
- * metric of Ankora: `revenus − effort financier lissé`. THI-195 reframes the
- * simulator on this (not on the raw "effort"/total charges) so the user sees
- * the impact on the same number the cockpit hero shows.
+ * metric of Ankora. THI-195 reframes the simulator on this (not on the raw
+ * "effort"/total charges) so the user sees the impact on the same number the
+ * cockpit hero shows.
  *
- *   resteDisponible = revenus − monthlyProvision (== revenus − effortFinancierLisse)
+ *   resteDisponible = revenus − monthlyProvision − engagements
+ *                     (== revenus − effortFinancierLisse − engagements)
  *
- * `monthlyDelta` is invariant under the revenus shift (it cancels), so the
- * projected/current gap equals `simulate(...).monthlyDelta`.
+ * `engagements` is the smoothed monthly burden of the active commitments
+ * (ADR-021): the hero deducts it, so the simulator MUST too, otherwise the two
+ * surfaces disagree by `engagements` whenever a debt is running. It is constant
+ * across the what-if action (which only touches charges), so it lowers `current`
+ * and `projected` equally and leaves `monthlyDelta` invariant.
+ *
+ * `monthlyDelta` is invariant under both the revenus shift and the engagements
+ * shift (they cancel), so the projected/current gap equals `simulate(...).monthlyDelta`.
  *
  * Pure — no clamping. If `revenus` is 0 (income not configured), `current` is
  * negative and the UI layer is responsible for the messaging.
@@ -58,10 +65,14 @@ export type ResteDisponibleView = {
   monthlyDelta: Money;
 };
 
-export function resteDisponibleView(revenus: Money, result: SimulationResult): ResteDisponibleView {
+export function resteDisponibleView(
+  revenus: Money,
+  result: SimulationResult,
+  engagements: Money = zero(),
+): ResteDisponibleView {
   return {
-    current: revenus.minus(result.currentMonthlyProvision),
-    projected: revenus.minus(result.projectedMonthlyProvision),
+    current: revenus.minus(result.currentMonthlyProvision).minus(engagements),
+    projected: revenus.minus(result.projectedMonthlyProvision).minus(engagements),
     monthlyDelta: result.monthlyDelta,
   };
 }

@@ -50,6 +50,7 @@ const MODES: readonly Mode[] = ['cancel', 'negotiate', 'add'];
 export function SimulatorClient({
   charges,
   revenus,
+  engagementsMensuels = 0,
   hideHeader = false,
 }: {
   charges: RawCharge[];
@@ -61,6 +62,13 @@ export function SimulatorClient({
    * like `domainCharges` does with `money(c.amount)`.
    */
   revenus: number;
+  /**
+   * Smoothed monthly burden of the active commitments (ADR-021), as a raw
+   * `number` (same RSC-boundary rule as `revenus`). Subtracted from the "Reste
+   * disponible" baseline so the simulator matches the dashboard hero instead of
+   * drifting by this amount whenever a debt is running. Defaults to 0.
+   */
+  engagementsMensuels?: number;
   hideHeader?: boolean;
 }) {
   const t = useTranslations('app.simulator');
@@ -146,7 +154,12 @@ export function SimulatorClient({
   // Re-wrap `revenus` (a raw number across the RSC boundary) into a Decimal
   // here, mirroring `domainCharges`. Never let a Decimal cross the boundary.
   const revenusMoney = money(revenus);
-  const reserveView = result ? Simulation.resteDisponibleView(revenusMoney, result) : null;
+  // ADR-021: deduct the smoothed commitments burden so the simulator's "Actuel"
+  // reste disponible matches the hero's (which already deducts it).
+  const engagementsMoney = money(engagementsMensuels);
+  const reserveView = result
+    ? Simulation.resteDisponibleView(revenusMoney, result, engagementsMoney)
+    : null;
   const deltaPositive = result?.monthlyDelta.gt(0);
   // Income not configured (e.g. the standalone /app/simulator route has no
   // `missingSetup` guard): a "Reste disponible" computed from revenus = 0 is

@@ -482,7 +482,11 @@ export default async function DashboardPage() {
             The /app/simulator route is preserved as a fallback. */}
         {/* Pass income as a raw number — a Decimal can't cross the RSC
             boundary into the client drawer (it loses its prototype). */}
-        <SimulatorDrawer charges={snapshot.rawCharges} revenus={snapshot.monthlyIncome ?? 0} />
+        <SimulatorDrawer
+          charges={snapshot.rawCharges}
+          revenus={snapshot.monthlyIncome ?? 0}
+          engagementsMensuels={engagementsMensuels.toNumber()}
+        />
       </div>
     </div>
   );
