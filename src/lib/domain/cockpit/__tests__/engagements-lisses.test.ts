@@ -134,6 +134,33 @@ describe('engagementsMensuelsLisses', () => {
     ).toBe(0);
   });
 
+  it('smooths a semiannual instalment across 6 months (1200 / 6 = 200)', () => {
+    const semi: Commitment = {
+      ...quarterly,
+      id: 'semi',
+      frequency: 'semiannual',
+      installmentAmount: 1200,
+      installmentsTotal: 3,
+    };
+    // Anchor Jan 2026, step 6 → instalments Jan 2026, Jul 2026, Jan 2027.
+    const total = engagementsMensuelsLisses([semi], ledger(semi, []), { year: 2026, month: 1 });
+    expect(total.toNumber()).toBe(200);
+  });
+
+  it('smooths a contributing annual instalment on installmentAmount, not totalAmount (1200 / 12)', () => {
+    const annual: Commitment = {
+      ...quarterly,
+      id: 'annual',
+      frequency: 'annual',
+      totalAmount: 2400,
+      installmentAmount: 1200,
+      installmentsTotal: 2,
+    };
+    // Anchor Jan 2026, step 12 → instalments Jan 2026, Jan 2027; 1200/12 = 100.
+    const total = engagementsMensuelsLisses([annual], ledger(annual, []), { year: 2026, month: 1 });
+    expect(total.toNumber()).toBe(100);
+  });
+
   it('aggregates several active commitments (250 monthly + 200 quarterly = 450)', () => {
     const total = engagementsMensuelsLisses(
       [carLoan, quarterly],
