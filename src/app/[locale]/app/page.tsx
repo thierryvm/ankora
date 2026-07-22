@@ -198,7 +198,7 @@ export default async function DashboardPage() {
         and keeps the card at ~1/3 width on desktop (the gauge is dense,
         not wide).
       */}
-      <section aria-labelledby="provision-health-heading" className="grid grid-cols-1 gap-4">
+      <section aria-labelledby="provision-health-heading" className="flex flex-col gap-4">
         <h2 id="provision-health-heading" className="sr-only">
           {t('provisionHealthSectionHeading')}
         </h2>
@@ -219,7 +219,7 @@ export default async function DashboardPage() {
         and the same `paymentsLedger` Map as section #2 so a settled bill
         for the current cycle never appears as overdue.
       */}
-      <section aria-labelledby="upcoming-bills-heading" className="grid grid-cols-1 gap-4">
+      <section aria-labelledby="upcoming-bills-heading" className="flex flex-col gap-4">
         <h2 id="upcoming-bills-heading" className="sr-only">
           {t('upcomingBillsSectionHeading')}
         </h2>
@@ -245,7 +245,7 @@ export default async function DashboardPage() {
         after the bills card: both answer "what do I owe", bills for the month,
         commitments for the long run. Self-hiding when there is nothing to show.
       */}
-      <section aria-labelledby="commitments-heading" className="grid grid-cols-1 gap-4">
+      <section aria-labelledby="commitments-heading" className="flex flex-col gap-4">
         <h2 id="commitments-heading" className="sr-only">
           {t('commitmentsSectionHeading')}
         </h2>
@@ -295,7 +295,7 @@ export default async function DashboardPage() {
                   <Link
                     href="/app/accounts"
                     // PR-D5 a11y: underline permanent (was hover-only — invisible on iOS touch).
-                    className="text-muted-foreground hover:text-brand-700 text-xs underline underline-offset-2"
+                    className="text-muted-foreground hover:text-brand-700 -my-1.5 inline-flex min-h-11 items-center text-xs underline underline-offset-2"
                   >
                     {tDaily('cta_set_plafond')}
                   </Link>
