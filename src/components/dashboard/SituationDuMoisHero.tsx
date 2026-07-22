@@ -125,6 +125,13 @@ export async function SituationDuMoisHero(props: Props) {
             ratio: props.provisionsLissees / props.revenus,
             fill: 'var(--color-brand-500)',
           },
+          // Engagements segment (ADR-021). `--color-muted-foreground` is a
+          // text token reused here as a neutral graphic fill on purpose: it's
+          // the only palette token visually distinct from the four semantic
+          // hues (info/brand/accent/success) AND ≥3:1 vs the track and both
+          // neighbours in light + dark (WCAG 1.4.11 verified). The waterfall
+          // `<dl>` carries the same figure textually, so the bar stays a
+          // supplementary anchor.
           ...(props.engagementsMensuels > 0
             ? [
                 {
