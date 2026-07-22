@@ -1,8 +1,9 @@
 /**
- * CommitmentsClient — épic « Dettes & échéanciers » PR-2.
+ * CommitmentsClient — épic « Dettes & échéanciers ».
  *
  * The page's promise: for every commitment you see WHAT IS LEFT to pay and how
- * far along you are, and ticking an instalment moves both instantly.
+ * far along you are; the − / + stepper validates each of the N instalments, and
+ * the pencil edits the commitment. Both move the balance + bar instantly.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
@@ -11,6 +12,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import messages from '../../../../../../messages/fr-BE.json';
 
 const createMock = vi.hoisted(() => vi.fn());
+const updateMock = vi.hoisted(() => vi.fn());
 const deleteMock = vi.hoisted(() => vi.fn());
 const toggleMock = vi.hoisted(() => vi.fn());
 const toastSuccessMock = vi.hoisted(() => vi.fn());
@@ -18,6 +20,7 @@ const toastErrorMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/actions/commitments', () => ({
   createCommitmentAction: createMock,
+  updateCommitmentAction: updateMock,
   deleteCommitmentAction: deleteMock,
   toggleCommitmentPaymentAction: toggleMock,
 }));
@@ -65,6 +68,7 @@ function renderPage(
 describe('<CommitmentsClient />', () => {
   beforeEach(() => {
     createMock.mockReset();
+    updateMock.mockReset();
     deleteMock.mockReset();
     toggleMock.mockReset();
     toastSuccessMock.mockReset();
@@ -85,7 +89,6 @@ describe('<CommitmentsClient />', () => {
   });
 
   it('decreases the balance and advances the bar for each paid instalment', () => {
-    // Two instalments ticked (Jan + Feb 2026) → 4 200 − 2×250 = 3 700 €, 2/17.
     renderPage([carLoan], { paidKeysByCommitment: { car: ['2026-1', '2026-2'] } });
     expect(screen.getByTestId('commitment-remaining-car')).toHaveTextContent(/3[  ]700/);
     expect(screen.getByTestId('commitment-progress-car')).toHaveAttribute('aria-valuenow', '12');
@@ -94,10 +97,10 @@ describe('<CommitmentsClient />', () => {
   });
 
   it('lands on 0 € with a full bar once every instalment is ticked', () => {
-    const all = Array.from({ length: 17 }, (_, i) => {
-      const total = 0 + i; // from Jan 2026
-      return `${2026 + Math.floor(total / 12)}-${(total % 12) + 1}`;
-    });
+    const all = Array.from(
+      { length: 17 },
+      (_, i) => `${2026 + Math.floor(i / 12)}-${(i % 12) + 1}`,
+    );
     renderPage([carLoan], { paidKeysByCommitment: { car: all } });
     expect(screen.getByTestId('commitment-remaining-car')).toHaveTextContent(/^0/);
     expect(screen.getByTestId('commitment-progress-car')).toHaveAttribute('aria-valuenow', '100');
@@ -117,27 +120,26 @@ describe('<CommitmentsClient />', () => {
     renderPage([oneOff], { currentPeriod: { year: 2026, month: 10 } });
     const row = screen.getByTestId('commitment-row-boiler');
     expect(within(row).getByText(/octobre 2026/i)).toBeInTheDocument();
-    expect(within(row).queryByText(/échéances/)).toBeNull();
+    expect(within(row).queryByText(/\d\/\d+ échéances/)).toBeNull();
   });
 
-  it('exposes the tick only when an instalment is due in the viewed period', () => {
-    // March 2026 IS on the monthly schedule; the loan started in January.
-    renderPage([carLoan], { currentPeriod: { year: 2026, month: 3 } });
-    expect(screen.getByTestId('commitment-paid-car')).toBeInTheDocument();
-    // A one-off due in October has nothing to tick in January.
-    const oneOff: RawCommitment = {
-      ...carLoan,
-      id: 'later',
-      kind: 'one_off',
-      installmentsTotal: 1,
-      installmentAmount: null,
-      startMonth: 10,
-    };
-    renderPage([oneOff], { currentPeriod: { year: 2026, month: 1 } });
-    expect(screen.queryByTestId('commitment-paid-later')).toBeNull();
+  // --- Multi-instalment validation via the − / + stepper -------------------
+
+  it('shows the payment stepper with the paid / total count on every commitment', () => {
+    renderPage([carLoan], { paidKeysByCommitment: { car: ['2026-1'] } });
+    const row = screen.getByTestId('commitment-row-car');
+    expect(within(row).getByTestId('stepper-count')).toHaveTextContent('1 / 17');
+    expect(within(row).getByTestId('stepper-dec')).not.toBeDisabled();
+    expect(within(row).getByTestId('stepper-inc')).not.toBeDisabled();
   });
 
-  it('ticks an instalment optimistically and calls the action with the viewed period', async () => {
+  it('disables − at 0 paid', () => {
+    renderPage([carLoan]);
+    expect(screen.getByTestId('stepper-dec')).toBeDisabled();
+    expect(screen.getByTestId('stepper-inc')).not.toBeDisabled();
+  });
+
+  it('+ marks the earliest unpaid instalment and calls the toggle with that period', async () => {
     let resolveAction!: (v: { ok: true; data: { paid: boolean } }) => void;
     toggleMock.mockImplementation(
       () =>
@@ -146,16 +148,16 @@ describe('<CommitmentsClient />', () => {
         }),
     );
     renderPage([carLoan], { currentPeriod: { year: 2026, month: 3 } });
-    const tick = screen.getByTestId('commitment-paid-car');
-    expect(tick).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByTestId('stepper-count')).toHaveTextContent('0 / 17');
 
-    fireEvent.click(tick);
-    // Optimistic state is visible while the server call is pending.
-    await waitFor(() => expect(tick).toHaveAttribute('aria-pressed', 'true'));
+    fireEvent.click(screen.getByTestId('stepper-inc'));
+    // Optimistic: the count advances while the server call is pending.
+    await waitFor(() => expect(screen.getByTestId('stepper-count')).toHaveTextContent('1 / 17'));
+    // Earliest unpaid scheduled period is Jan 2026 — NOT the viewed month.
     expect(toggleMock).toHaveBeenCalledWith({
       commitmentId: 'car',
       periodYear: 2026,
-      periodMonth: 3,
+      periodMonth: 1,
     });
     await act(async () => {
       resolveAction({ ok: true, data: { paid: true } });
@@ -163,7 +165,7 @@ describe('<CommitmentsClient />', () => {
     await waitFor(() => expect(toastSuccessMock).toHaveBeenCalled());
   });
 
-  it('moves the balance AND the progress bar while the tick is pending', async () => {
+  it('+ fills the oldest hole (Jan paid → ticks Feb) and moves balance + bar', async () => {
     let resolveAction!: (v: { ok: true; data: { paid: boolean } }) => void;
     toggleMock.mockImplementation(
       () =>
@@ -171,66 +173,90 @@ describe('<CommitmentsClient />', () => {
           resolveAction = res;
         }),
     );
-    // Jan already ticked (1/17, 3 950 €); ticking Feb must show 2/17, 3 700 €.
-    renderPage([carLoan], {
-      currentPeriod: { year: 2026, month: 2 },
-      paidKeysByCommitment: { car: ['2026-1'] },
-    });
+    renderPage([carLoan], { paidKeysByCommitment: { car: ['2026-1'] } });
     expect(screen.getByTestId('commitment-remaining-car')).toHaveTextContent(/3[  ]950/);
 
-    fireEvent.click(screen.getByTestId('commitment-paid-car'));
+    fireEvent.click(screen.getByTestId('stepper-inc'));
     await waitFor(() =>
       expect(screen.getByTestId('commitment-remaining-car')).toHaveTextContent(/3[  ]700/),
     );
     expect(screen.getByTestId('commitment-progress-car')).toHaveAttribute('aria-valuenow', '12');
+    expect(toggleMock).toHaveBeenCalledWith({
+      commitmentId: 'car',
+      periodYear: 2026,
+      periodMonth: 2,
+    });
     await act(async () => {
       resolveAction({ ok: true, data: { paid: true } });
     });
   });
 
-  it('shows an error toast when the tick fails', async () => {
+  it('− un-marks the latest paid instalment', async () => {
+    let resolveAction!: (v: { ok: true; data: { paid: boolean } }) => void;
+    toggleMock.mockImplementation(
+      () =>
+        new Promise((res) => {
+          resolveAction = res;
+        }),
+    );
+    renderPage([carLoan], { paidKeysByCommitment: { car: ['2026-1', '2026-2'] } });
+    expect(screen.getByTestId('stepper-count')).toHaveTextContent('2 / 17');
+
+    fireEvent.click(screen.getByTestId('stepper-dec'));
+    await waitFor(() => expect(screen.getByTestId('stepper-count')).toHaveTextContent('1 / 17'));
+    // Latest paid scheduled period is Feb 2026.
+    expect(toggleMock).toHaveBeenCalledWith({
+      commitmentId: 'car',
+      periodYear: 2026,
+      periodMonth: 2,
+    });
+    await act(async () => {
+      resolveAction({ ok: true, data: { paid: false } });
+    });
+  });
+
+  it('shows an error toast when a + tick fails', async () => {
     toggleMock.mockResolvedValue({
       ok: false,
       errorCode: 'errors.commitments.payments.toggleFailed',
     });
-    renderPage([carLoan], { currentPeriod: { year: 2026, month: 3 } });
+    renderPage([carLoan]);
     await act(async () => {
-      fireEvent.click(screen.getByTestId('commitment-paid-car'));
+      fireEvent.click(screen.getByTestId('stepper-inc'));
     });
     await waitFor(() => expect(toastErrorMock).toHaveBeenCalled());
   });
 
-  it('rolls the optimistic tick BACK when the action is rejected (no manual revert needed)', async () => {
-    // useOptimistic discards its value once the transition settles and
-    // re-derives from the server-provided base — which a rejected toggle left
-    // untouched. This test locks that contract (Sourcery #234 flagged a
-    // missing manual rollback; the rollback is the hook's own behaviour).
+  it('rolls the optimistic + tick BACK when the action is rejected (no manual revert)', async () => {
+    // useOptimistic discards its value on settle and re-derives from the base,
+    // which a rejected toggle left untouched. Re-locks the Sourcery #234 contract
+    // on the explicit-intent reducer.
     toggleMock.mockResolvedValue({
       ok: false,
       errorCode: 'errors.commitments.payments.toggleFailed',
     });
-    renderPage([carLoan], { currentPeriod: { year: 2026, month: 3 } });
-    const tick = screen.getByTestId('commitment-paid-car');
+    renderPage([carLoan]);
     await act(async () => {
-      fireEvent.click(tick);
+      fireEvent.click(screen.getByTestId('stepper-inc'));
     });
     await waitFor(() => expect(toastErrorMock).toHaveBeenCalled());
-    expect(tick).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByTestId('stepper-count')).toHaveTextContent('0 / 17');
     expect(screen.getByTestId('commitment-remaining-car')).toHaveTextContent(/4[  ]200/);
   });
 
   it('rolls back the same way when the action throws', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     toggleMock.mockRejectedValueOnce(new Error('network error'));
-    renderPage([carLoan], { currentPeriod: { year: 2026, month: 3 } });
-    const tick = screen.getByTestId('commitment-paid-car');
+    renderPage([carLoan]);
     await act(async () => {
-      fireEvent.click(tick);
+      fireEvent.click(screen.getByTestId('stepper-inc'));
     });
     await waitFor(() => expect(toastErrorMock).toHaveBeenCalled());
-    expect(tick).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByTestId('stepper-count')).toHaveTextContent('0 / 17');
     consoleSpy.mockRestore();
   });
+
+  // --- Create --------------------------------------------------------------
 
   it('creates a commitment with the anchor set to the viewed period', async () => {
     createMock.mockResolvedValue({ ok: true });
@@ -282,13 +308,10 @@ describe('<CommitmentsClient />', () => {
       fireEvent.submit(screen.getByRole('button', { name: /^ajouter$/i }).closest('form')!);
     });
     await waitFor(() => expect(toastErrorMock).toHaveBeenCalled());
-    // The form stays mounted so the user does not lose what they typed.
     expect(screen.getByLabelText('Libellé')).toBeInTheDocument();
   });
 
   it('rejects a negative amount client-side, before calling the action', async () => {
-    // The `min={0}` HTML validation is bypassed by a programmatic submit, so
-    // the guard in `onCreate` is the real backstop (before Zod's own check).
     renderPage([]);
     fireEvent.click(screen.getByTestId('commitments-add-toggle'));
     fireEvent.change(screen.getByLabelText('Libellé'), { target: { value: 'X' } });
@@ -297,6 +320,41 @@ describe('<CommitmentsClient />', () => {
       fireEvent.submit(screen.getByRole('button', { name: /^ajouter$/i }).closest('form')!);
     });
     expect(createMock).not.toHaveBeenCalled();
+    expect(toastErrorMock).toHaveBeenCalled();
+  });
+
+  // --- Edit ----------------------------------------------------------------
+
+  it('edits a commitment: the pencil prefills the form and calls updateCommitmentAction', async () => {
+    updateMock.mockResolvedValue({ ok: true });
+    renderPage([carLoan]);
+    fireEvent.click(screen.getByTestId('commitment-edit-car'));
+    // Form is prefilled with the row's current values.
+    expect(screen.getByLabelText('Libellé')).toHaveValue('Crédit voiture');
+    expect(screen.getByLabelText(/Nombre d'échéances/)).toHaveValue(17);
+
+    fireEvent.change(screen.getByLabelText('Libellé'), { target: { value: 'Crédit auto' } });
+    await act(async () => {
+      fireEvent.submit(screen.getByRole('button', { name: /enregistrer/i }).closest('form')!);
+    });
+    await waitFor(() => expect(updateMock).toHaveBeenCalledTimes(1));
+    expect(updateMock.mock.calls[0]?.[0]).toBe('car');
+    expect(updateMock.mock.calls[0]?.[1]).toMatchObject({
+      label: 'Crédit auto',
+      installmentsTotal: 17,
+    });
+    expect(createMock).not.toHaveBeenCalled();
+  });
+
+  it('blocks reducing installmentsTotal below the number already ticked', async () => {
+    updateMock.mockResolvedValue({ ok: true });
+    renderPage([carLoan], { paidKeysByCommitment: { car: ['2026-1', '2026-2', '2026-3'] } });
+    fireEvent.click(screen.getByTestId('commitment-edit-car'));
+    fireEvent.change(screen.getByLabelText(/Nombre d'échéances/), { target: { value: '2' } });
+    await act(async () => {
+      fireEvent.submit(screen.getByRole('button', { name: /enregistrer/i }).closest('form')!);
+    });
+    expect(updateMock).not.toHaveBeenCalled();
     expect(toastErrorMock).toHaveBeenCalled();
   });
 

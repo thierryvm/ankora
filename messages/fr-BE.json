@@ -841,8 +841,6 @@
       "summarySchedule": "{paid}/{total} échéances de {amount} · dernière en {end}",
       "summaryOneOff": "{amount} en {month}",
       "progressAria": "Progression du remboursement de {label}",
-      "markPaidAria": "Marquer l'échéance de {label} comme payée",
-      "unmarkPaidAria": "Marquer l'échéance de {label} comme à payer",
       "deleteAria": "Supprimer {label}",
       "toastCreated": "Engagement ajouté",
       "toastDeleted": "Engagement supprimé",
@@ -852,7 +850,17 @@
         "debt": "Crédit",
         "installmentPlan": "Plan de paiement",
         "oneOff": "Facture ponctuelle"
-      }
+      },
+      "editFormTitle": "Modifier l'engagement",
+      "saveButton": "Enregistrer",
+      "saving": "Enregistrement…",
+      "cancelButton": "Annuler",
+      "editAria": "Modifier {label}",
+      "markOneAria": "Marquer une échéance payée pour {label}",
+      "unmarkOneAria": "Annuler la dernière échéance payée pour {label}",
+      "installmentsCountAria": "{paid} sur {total} échéances payées pour {label}",
+      "toastUpdated": "Engagement modifié",
+      "reductionBlocked": "Impossible : {paid} échéances sont déjà validées. Retire d’abord des paiements."
     },
     "expenses": {
       "title": "Mes dépenses",
