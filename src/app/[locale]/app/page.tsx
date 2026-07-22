@@ -12,10 +12,16 @@ import { ProchainesFacturesCard } from '@/components/dashboard/ProchainesFacture
 import { EngagementsCard } from '@/components/dashboard/EngagementsCard';
 import { SimulatorDrawer } from '@/components/dashboard/SimulatorDrawer';
 import { Expenses, Transfer, money } from '@/lib/domain';
-import { calculerSituationDuMois, paymentKey, type PaymentLedger } from '@/lib/domain/cockpit';
+import {
+  calculerSituationDuMois,
+  engagementsMensuelsLisses,
+  paymentKey,
+  type PaymentLedger,
+} from '@/lib/domain/cockpit';
 import { unpaidChargesForPeriod } from '@/lib/domain/charges';
 import { getWorkspaceSnapshot, toCockpitCharges } from '@/lib/data/workspace-snapshot';
 import { getCommitmentsWithLedger } from '@/lib/data/commitments';
+import { commitmentRowToDomain } from '@/lib/data/commitment-row';
 import type { AccountType } from '@/lib/schemas/account';
 import type { Locale } from '@/i18n/routing';
 import { formatCurrency, formatDate, formatMonth } from '@/lib/i18n/formatters';
@@ -99,6 +105,18 @@ export default async function DashboardPage() {
     snapshot.vieCouranteMonthlyTransfer === null || snapshot.vieCouranteMonthlyTransfer === 0;
   const tDaily = await getTranslations('dashboard.daily');
 
+  // ADR-021 — smoothed monthly burden of the active finite commitments, so the
+  // hero's « Reste disponible » reconciles with the « Mes engagements » card
+  // (same read via `getCommitmentsWithLedger`). Decimal stays server-side.
+  const commitmentLedger = new Map(
+    Object.entries(paidKeysByCommitment).map(([id, keys]) => [id, new Set(keys)] as const),
+  );
+  const engagementsMensuels = engagementsMensuelsLisses(
+    commitments.map(commitmentRowToDomain),
+    commitmentLedger,
+    snapshot.currentPeriod,
+  );
+
   // THI-327 Phase 0 — unified "Situation du mois" hero. Reuses the same
   // cockpit primitives as the (now removed) Effort + Capacité cards.
   const situation = calculerSituationDuMois({
@@ -110,6 +128,7 @@ export default async function DashboardPage() {
     soldeEpargneActuel,
     payments: paymentsLedger,
     ref: snapshot.currentPeriod,
+    engagementsMensuels,
   });
 
   // Days remaining in the current month (Europe/Brussels) for the "≈ X/jour"
@@ -156,6 +175,7 @@ export default async function DashboardPage() {
           revenus={situation.revenus.toNumber()}
           chargesFixes={situation.chargesFixes.toNumber()}
           provisionsLissees={situation.provisionsLissees.toNumber()}
+          engagementsMensuels={situation.engagementsMensuels.toNumber()}
           resteDisponible={situation.resteDisponible.toNumber()}
           budgetVieCourante={situation.budgetVieCourante.toNumber()}
           capacite={situation.capacite.toNumber()}

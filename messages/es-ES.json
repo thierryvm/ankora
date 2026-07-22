@@ -1093,13 +1093,15 @@
         "revenus": "Ingresos",
         "chargesFixes": "Gastos fijos",
         "provisions": "Reservas distribuidas",
+        "engagements": "Compromisos",
         "resteDisponible": "Disponible",
         "resteAVivre": "Día a día",
         "capaciteEpargne": "Capacidad de ahorro",
         "ajuster": "Ajustar este mes",
         "parJour": "≈ {amount}/día"
       },
-      "barAria": "Distribución de tus ingresos: {charges} de gastos fijos, {provisions} de reservas, {vieCourante} de día a día, {epargne} de ahorro posible."
+      "barAria": "Distribución de tus ingresos: {charges} de gastos fijos, {provisions} de reservas, {vieCourante} de día a día, {epargne} de ahorro posible.",
+      "barAriaEngagements": "Incluyendo {engagements} de compromisos."
     },
     "effort": {
       "title": "Esfuerzo financiero suavizado",

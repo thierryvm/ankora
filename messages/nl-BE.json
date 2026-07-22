@@ -1093,13 +1093,15 @@
         "revenus": "Inkomen",
         "chargesFixes": "Vaste kosten",
         "provisions": "Gespreide voorzieningen",
+        "engagements": "Verbintenissen",
         "resteDisponible": "Beschikbaar saldo",
         "resteAVivre": "Dagelijks leven",
         "capaciteEpargne": "Spaarcapaciteit",
         "ajuster": "Deze maand aanpassen",
         "parJour": "≈ {amount}/dag"
       },
-      "barAria": "Verdeling van je inkomen: {charges} vaste kosten, {provisions} voorzieningen, {vieCourante} dagelijks leven, {epargne} mogelijk spaargeld."
+      "barAria": "Verdeling van je inkomen: {charges} vaste kosten, {provisions} voorzieningen, {vieCourante} dagelijks leven, {epargne} mogelijk spaargeld.",
+      "barAriaEngagements": "Waarvan {engagements} aan verbintenissen."
     },
     "effort": {
       "title": "Vereffende financiële inspanning",

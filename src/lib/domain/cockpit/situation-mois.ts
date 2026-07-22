@@ -12,7 +12,7 @@ import type { CockpitCharge, PaymentLedger, ReferencePeriod } from './types';
  *  - vert      : capacité ≥ 0 ET provisions à jour
  *  - orange    : capacité < 0 OU provisions en déficit (mais revenus couvrent
  *                les obligations charges + provisions)
- *  - rouge     : charges + provisions > revenus (resteDisponible < 0)
+ *  - rouge     : charges + provisions + engagements > revenus (resteDisponible < 0)
  *  - incomplet : revenus non configurés (monthlyIncome === null) → fix THI-335
  *                (aucun chiffre négatif anxiogène n'est exposé à l'UI)
  */
@@ -27,6 +27,12 @@ export type SituationDuMoisInput = Readonly<{
   soldeEpargneActuel: Decimal;
   payments: PaymentLedger;
   ref: ReferencePeriod;
+  /**
+   * Mensualités lissées des engagements actifs (ADR-021), calculées par la page
+   * via `engagementsMensuelsLisses`. Requis (pas de default silencieux) : un
+   * oubli de wiring doit casser à la compilation. 0 quand aucun engagement.
+   */
+  engagementsMensuels: Decimal;
 }>;
 
 export type SituationDuMois = Readonly<{
@@ -36,7 +42,9 @@ export type SituationDuMois = Readonly<{
   revenus: Decimal;
   chargesFixes: Decimal;
   provisionsLissees: Decimal;
-  /** Chiffre-héros = revenus − chargesFixes − provisionsLissees. */
+  /** Mensualités lissées des engagements actifs (ADR-021). 0 si aucun. */
+  engagementsMensuels: Decimal;
+  /** Chiffre-héros = revenus − chargesFixes − provisionsLissees − engagementsMensuels. */
   resteDisponible: Decimal;
   budgetVieCourante: Decimal;
   capacite: Decimal;
@@ -66,12 +74,20 @@ export function calculerSituationDuMois(input: SituationDuMoisInput): SituationD
   const provisionsLissees = provisionsMensuellesLissees(input.charges);
   const provisionsAJour = sante.statut === 'a_jour';
 
+  // ADR-021: engagements (dettes/échéanciers actifs) sont une sortie fixe
+  // mensuelle réelle — on retire leur mensualité lissée du reste disponible
+  // (charges-only via `capaciteEpargneReelle`, inchangé) pour que le hero et la
+  // carte « Mes engagements » cessent de se contredire.
+  const { engagementsMensuels } = input;
+  const resteDisponible = capac.resteDisponible.minus(engagementsMensuels);
+  const capacite = resteDisponible.minus(capac.resteAVivre);
+
   let statut: SituationStatut;
   if (!hasRevenus) {
     statut = 'incomplet';
-  } else if (capac.resteDisponible.lt(0)) {
+  } else if (resteDisponible.lt(0)) {
     statut = 'rouge';
-  } else if (capac.capacite.lt(0) || !provisionsAJour) {
+  } else if (capacite.lt(0) || !provisionsAJour) {
     statut = 'orange';
   } else {
     statut = 'vert';
@@ -83,9 +99,10 @@ export function calculerSituationDuMois(input: SituationDuMoisInput): SituationD
     revenus,
     chargesFixes,
     provisionsLissees,
-    resteDisponible: capac.resteDisponible,
+    engagementsMensuels,
+    resteDisponible,
     budgetVieCourante: capac.resteAVivre,
-    capacite: capac.capacite,
+    capacite,
     provisionsAJour,
     deficitEpargne: sante.deficitEpargne,
     rattrapageMensuel: sante.rattrapageMensuel,

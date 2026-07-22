@@ -1093,13 +1093,15 @@
         "revenus": "Income",
         "chargesFixes": "Fixed charges",
         "provisions": "Smoothed provisions",
+        "engagements": "Commitments",
         "resteDisponible": "Available leftover",
         "resteAVivre": "Living budget",
         "capaciteEpargne": "Savings capacity",
         "ajuster": "Adjust this month",
         "parJour": "≈ {amount}/day"
       },
-      "barAria": "Breakdown of your income: {charges} charges, {provisions} provisions, {vieCourante} living budget, {epargne} potential savings."
+      "barAria": "Breakdown of your income: {charges} charges, {provisions} provisions, {vieCourante} living budget, {epargne} potential savings.",
+      "barAriaEngagements": "Including {engagements} of commitments."
     },
     "effort": {
       "title": "Smoothed financial effort",

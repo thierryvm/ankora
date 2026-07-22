@@ -27,6 +27,7 @@ describe('calculerSituationDuMois', () => {
       soldeEpargneActuel: new Decimal(0),
       payments: NO_PAYMENTS,
       ref: REF,
+      engagementsMensuels: new Decimal(0),
     });
     expect(out.statut).toBe('vert');
     expect(out.hasRevenus).toBe(true);
@@ -43,6 +44,7 @@ describe('calculerSituationDuMois', () => {
       soldeEpargneActuel: new Decimal(0),
       payments: NO_PAYMENTS,
       ref: REF,
+      engagementsMensuels: new Decimal(0),
     });
     expect(out.statut).toBe('orange');
     expect(out.resteDisponible.toNumber()).toBe(500);
@@ -59,6 +61,7 @@ describe('calculerSituationDuMois', () => {
       soldeEpargneActuel: new Decimal(0),
       payments: NO_PAYMENTS,
       ref: REF,
+      engagementsMensuels: new Decimal(0),
     });
     expect(out.statut).toBe('orange');
     expect(out.capacite.gte(0)).toBe(true);
@@ -74,6 +77,7 @@ describe('calculerSituationDuMois', () => {
       soldeEpargneActuel: new Decimal(0),
       payments: NO_PAYMENTS,
       ref: REF,
+      engagementsMensuels: new Decimal(0),
     });
     expect(out.statut).toBe('rouge');
     expect(out.resteDisponible.toNumber()).toBe(-500);
@@ -87,6 +91,7 @@ describe('calculerSituationDuMois', () => {
       soldeEpargneActuel: new Decimal(0),
       payments: NO_PAYMENTS,
       ref: REF,
+      engagementsMensuels: new Decimal(0),
     });
     expect(out.statut).toBe('incomplet');
     expect(out.hasRevenus).toBe(false);
@@ -104,6 +109,7 @@ describe('calculerSituationDuMois', () => {
       soldeEpargneActuel: new Decimal(10000),
       payments: NO_PAYMENTS,
       ref: REF,
+      engagementsMensuels: new Decimal(0),
     });
     expect(out.chargesFixes.toNumber()).toBe(1500);
     expect(out.provisionsLissees.toNumber()).toBe(100); // 1200 / 12
@@ -121,6 +127,7 @@ describe('calculerSituationDuMois', () => {
       soldeEpargneActuel: new Decimal(0),
       payments: NO_PAYMENTS,
       ref: REF,
+      engagementsMensuels: new Decimal(0),
     });
     expect(out.chargesFixes.toNumber()).toBe(900);
     // Whole-chain proof: the inactive 800 must not leak past chargesFixes.
@@ -135,9 +142,57 @@ describe('calculerSituationDuMois', () => {
       soldeEpargneActuel: new Decimal(0),
       payments: NO_PAYMENTS,
       ref: REF,
+      engagementsMensuels: new Decimal(0),
     });
     expect(out.statut).toBe('vert');
     expect(out.resteDisponible.toNumber()).toBe(2500);
     expect(out.capacite.toNumber()).toBe(1800);
+  });
+
+  it('ADR-021: engagements lower resteDisponible and capacité by their amount', () => {
+    const out = calculerSituationDuMois({
+      revenus: new Decimal(3000),
+      charges: [charge({ amount: new Decimal(1000), frequency: 'monthly' })],
+      budgetVieCourante: new Decimal(500),
+      soldeEpargneActuel: new Decimal(0),
+      payments: NO_PAYMENTS,
+      ref: REF,
+      engagementsMensuels: new Decimal(300),
+    });
+    expect(out.engagementsMensuels.toNumber()).toBe(300);
+    expect(out.resteDisponible.toNumber()).toBe(1700); // 3000 − 1000 − 0 − 300
+    expect(out.capacite.toNumber()).toBe(1200); // 1700 − 500
+    expect(out.statut).toBe('vert');
+  });
+
+  it('ADR-021: engagements can tip statut vert → orange (capacité < 0)', () => {
+    const out = calculerSituationDuMois({
+      revenus: new Decimal(2500),
+      charges: [charge({ amount: new Decimal(1838), frequency: 'monthly' })],
+      budgetVieCourante: new Decimal(500),
+      soldeEpargneActuel: new Decimal(0),
+      payments: NO_PAYMENTS,
+      ref: REF,
+      engagementsMensuels: new Decimal(200),
+    });
+    // Same base as the first test (was vert, capacité 162); −200 tips capacité negative.
+    expect(out.resteDisponible.toNumber()).toBe(462); // 2500 − 1838 − 200
+    expect(out.capacite.toNumber()).toBe(-38);
+    expect(out.statut).toBe('orange');
+  });
+
+  it('ADR-021: engagements can tip statut into rouge (resteDisponible < 0)', () => {
+    const out = calculerSituationDuMois({
+      revenus: new Decimal(1000),
+      charges: [charge({ amount: new Decimal(800), frequency: 'monthly' })],
+      budgetVieCourante: new Decimal(100),
+      soldeEpargneActuel: new Decimal(0),
+      payments: NO_PAYMENTS,
+      ref: REF,
+      engagementsMensuels: new Decimal(300),
+    });
+    // Without engagements resteDisponible would be 200 (≥ 0); −300 flips it under.
+    expect(out.resteDisponible.toNumber()).toBe(-100); // 1000 − 800 − 300
+    expect(out.statut).toBe('rouge');
   });
 });

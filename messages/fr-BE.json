@@ -1093,13 +1093,15 @@
         "revenus": "Revenus",
         "chargesFixes": "Charges fixes",
         "provisions": "Provisions lissées",
+        "engagements": "Engagements",
         "resteDisponible": "Reste disponible",
         "resteAVivre": "Reste à vivre",
         "capaciteEpargne": "Capacité épargne",
         "ajuster": "Ajuster ce mois",
         "parJour": "≈ {amount}/jour"
       },
-      "barAria": "Répartition de tes revenus : {charges} de charges, {provisions} de provisions, {vieCourante} de vie courante, {epargne} d'épargne possible."
+      "barAria": "Répartition de tes revenus : {charges} de charges, {provisions} de provisions, {vieCourante} de vie courante, {epargne} d'épargne possible.",
+      "barAriaEngagements": "Dont {engagements} d'engagements."
     },
     "effort": {
       "title": "Effort financier lissé",
