@@ -48,27 +48,27 @@ const revenus = 2466;
 
 describe('<SimulatorDrawer /> — closed state', () => {
   it('renders the trigger labelled "Simuler"', () => {
-    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} />);
+    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} engagementsMensuels={0} />);
     const trigger = screen.getByTestId('simulator-drawer-trigger');
     expect(trigger).toBeInTheDocument();
     expect(trigger.textContent ?? '').toContain(messages.app.dashboard.ctaSimulator);
   });
 
   it('does not render the dialog until the trigger is clicked', () => {
-    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} />);
+    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} engagementsMensuels={0} />);
     expect(screen.queryByTestId('simulator-drawer')).toBeNull();
   });
 });
 
 describe('<SimulatorDrawer /> — open state', () => {
   it('opens the dialog on trigger click', async () => {
-    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} />);
+    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} engagementsMensuels={0} />);
     fireEvent.click(screen.getByTestId('simulator-drawer-trigger'));
     expect(await screen.findByTestId('simulator-drawer')).toBeInTheDocument();
   });
 
   it('exposes role="dialog" and aria-modal on the open drawer', async () => {
-    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} />);
+    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} engagementsMensuels={0} />);
     fireEvent.click(screen.getByTestId('simulator-drawer-trigger'));
     const dialog = await screen.findByTestId('simulator-drawer');
     expect(dialog).toHaveAttribute('role', 'dialog');
@@ -76,14 +76,14 @@ describe('<SimulatorDrawer /> — open state', () => {
   });
 
   it('renders the drawer title from i18n (app.simulator.title)', async () => {
-    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} />);
+    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} engagementsMensuels={0} />);
     fireEvent.click(screen.getByTestId('simulator-drawer-trigger'));
     const heading = await screen.findByRole('heading', { name: sim.title });
     expect(heading.tagName).toBe('H2');
   });
 
   it('hides the SimulatorClient page header (hideHeader): subtitle is not rendered', async () => {
-    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} />);
+    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} engagementsMensuels={0} />);
     fireEvent.click(screen.getByTestId('simulator-drawer-trigger'));
     await screen.findByTestId('simulator-drawer');
     // The standalone page renders a <p> subtitle; inside the drawer the
@@ -92,7 +92,7 @@ describe('<SimulatorDrawer /> — open state', () => {
   });
 
   it('mounts the calculator with a guided empty default (Q3: no charge auto-selected)', async () => {
-    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} />);
+    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} engagementsMensuels={0} />);
     fireEvent.click(screen.getByTestId('simulator-drawer-trigger'));
     await screen.findByTestId('simulator-drawer');
     // Mode pills come from SimulatorClient → proves the calculator mounted.
@@ -109,7 +109,7 @@ describe('<SimulatorDrawer /> — open state', () => {
     // re-wraps it with money(). Passing a Decimal used to reach the client as a
     // prototype-less object and crash at `revenus.lte(0)`. Opening the drawer
     // forces that code path; the empty impact state proves a full render.
-    renderWithIntl(<SimulatorDrawer charges={charges} revenus={2466} />);
+    renderWithIntl(<SimulatorDrawer charges={charges} revenus={2466} engagementsMensuels={0} />);
     fireEvent.click(screen.getByTestId('simulator-drawer-trigger'));
     await screen.findByTestId('simulator-drawer');
     expect(screen.getByText(sim.impact.empty)).toBeInTheDocument();
@@ -122,7 +122,7 @@ describe('<SimulatorDrawer /> — dismiss + focus management', () => {
   });
 
   it('closes the drawer when the backdrop is clicked', async () => {
-    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} />);
+    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} engagementsMensuels={0} />);
     fireEvent.click(screen.getByTestId('simulator-drawer-trigger'));
     await screen.findByTestId('simulator-drawer');
     fireEvent.click(screen.getByTestId('simulator-drawer-backdrop'));
@@ -130,7 +130,7 @@ describe('<SimulatorDrawer /> — dismiss + focus management', () => {
   });
 
   it('closes the drawer when the X button is clicked', async () => {
-    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} />);
+    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} engagementsMensuels={0} />);
     fireEvent.click(screen.getByTestId('simulator-drawer-trigger'));
     await screen.findByTestId('simulator-drawer');
     fireEvent.click(screen.getByTestId('simulator-drawer-close'));
@@ -138,7 +138,7 @@ describe('<SimulatorDrawer /> — dismiss + focus management', () => {
   });
 
   it('closes the drawer on Escape', async () => {
-    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} />);
+    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} engagementsMensuels={0} />);
     fireEvent.click(screen.getByTestId('simulator-drawer-trigger'));
     await screen.findByTestId('simulator-drawer');
     fireEvent.keyDown(window, { key: 'Escape' });
@@ -146,7 +146,7 @@ describe('<SimulatorDrawer /> — dismiss + focus management', () => {
   });
 
   it('returns focus to the trigger after closing (WCAG 2.4.3)', async () => {
-    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} />);
+    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} engagementsMensuels={0} />);
     const trigger = screen.getByTestId('simulator-drawer-trigger');
     fireEvent.click(trigger);
     await screen.findByTestId('simulator-drawer');
@@ -156,7 +156,7 @@ describe('<SimulatorDrawer /> — dismiss + focus management', () => {
   });
 
   it('pins the body (iOS-safe scroll lock) while open and restores it on close', async () => {
-    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} />);
+    renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} engagementsMensuels={0} />);
     fireEvent.click(screen.getByTestId('simulator-drawer-trigger'));
     await screen.findByTestId('simulator-drawer');
     // iOS-safe lock: body is pinned with position:fixed (rubber-band proof),

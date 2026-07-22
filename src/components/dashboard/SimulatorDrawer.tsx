@@ -16,6 +16,8 @@ type Props = {
    * server passes the plain number and `SimulatorClient` re-wraps it.
    */
   revenus: number;
+  /** Smoothed monthly commitments burden (ADR-021), raw `number` — same rule. */
+  engagementsMensuels: number;
 };
 
 /**
@@ -39,7 +41,7 @@ type Props = {
  * No re-fetch on open: `charges` is passed down from the dashboard server
  * component (`snapshot.rawCharges`), already in memory.
  */
-export function SimulatorDrawer({ charges, revenus }: Props) {
+export function SimulatorDrawer({ charges, revenus, engagementsMensuels }: Props) {
   const t = useTranslations('app.dashboard');
   const tSimulator = useTranslations('app.simulator');
   const tClose = useTranslations('ui.action');
@@ -194,7 +196,12 @@ export function SimulatorDrawer({ charges, revenus }: Props) {
             {/* `pb-safe`: reserve the iOS home-indicator inset so the last
                 result card is never hidden behind it on a full-screen PWA. */}
             <div className="flex-1 overflow-y-auto px-5 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-              <SimulatorClient hideHeader charges={charges} revenus={revenus} />
+              <SimulatorClient
+                hideHeader
+                charges={charges}
+                revenus={revenus}
+                engagementsMensuels={engagementsMensuels}
+              />
             </div>
           </div>
         </div>

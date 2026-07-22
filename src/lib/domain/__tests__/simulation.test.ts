@@ -240,6 +240,28 @@ describe('resteDisponibleView (réserve libre = revenus − effort lissé)', () 
       result.monthlyDelta.toNumber(),
     );
   });
+
+  it('ADR-021: engagements lower both sides equally, monthlyDelta unchanged', () => {
+    const result = simulate(charges, { kind: 'cancel', chargeId: 'c1' });
+    const view = resteDisponibleView(money(2000), result, money(250));
+    // current = 2000 − 150 − 250 ; projected = 2000 − 100 − 250
+    expect(view.current.toNumber()).toBe(1600);
+    expect(view.projected.toNumber()).toBe(1650);
+    expect(view.monthlyDelta.toNumber()).toBe(50); // engagements cancel in the gap
+  });
+
+  it('ADR-021 anti-drift: simulator baseline equals the hero reste disponible', () => {
+    const engagements = money(250);
+    const result = simulate(charges, { kind: 'cancel', chargeId: 'c1' });
+    const simulatorBaseline = resteDisponibleView(money(2000), result, engagements).current;
+    // Hero reste disponible = revenus − effortFinancierLisse − engagements, and
+    // monthlyProvisionTotal ≡ effortFinancierLisse (anchoring below), so the two
+    // surfaces must land on the exact same number — no drift.
+    const heroReste = money(2000)
+      .minus(effortFinancierLisse(charges.map(toCockpit)))
+      .minus(engagements);
+    expect(simulatorBaseline.toNumber()).toBeCloseTo(heroReste.toNumber(), 10);
+  });
 });
 
 describe('anchoring (D3) — monthlyProvisionTotal ≡ effortFinancierLisse', () => {
