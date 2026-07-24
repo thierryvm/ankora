@@ -82,13 +82,6 @@ Purement soustractif — aucune modification de comportement runtime.
 
 ### À SUPPRIMER (vérifié : 0 référence applicative)
 
-**Code mort** :
-
-- `src/components/ui/dialog.tsx` + son test (0 importeur app)
-- `src/components/ui/sheet.tsx` + son test
-- `src/components/ui/switch.tsx` + son test
-- `src/components/ui/form.tsx` + son test
-
 **Assets boilerplate Next** (0 référence) :
 
 - `public/next.svg`, `public/vercel.svg`, `public/file.svg`, `public/globe.svg`, `public/window.svg`
@@ -106,10 +99,14 @@ Purement soustractif — aucune modification de comportement runtime.
 `docs/adr/`, `docs/NORTH_STAR.md`, `docs/ROADMAP.md`, `docs/design/` (hors archive),
 `docs/runbooks/`, `docs/handoffs/` (doctrine cross-session), `docs/superpowers/`.
 
-### À NE PAS toucher (reporté)
+### À NE PAS toucher (reporté / protégé)
 
-- Consolidation `ui/**` ↔ `atoms/**` → **Phase 1** (refactor, pas suppression). Les
-  primitives `ui/glass|num|row|eyebrow` et `atoms/**` restent (encore utilisées).
+- **Primitives Radix `ui/{dialog,form,sheet,switch}`** — bien que 0-importées, elles
+  sont **délibérément conservées** comme couche a11y canonique (focus trap, ARIA,
+  clavier) par **ADR-020 Accepted** (« Préserver l'infrastructure Radix de `ui/` »).
+  Leur retrait éventuel est une **décision d'amendement d'ADR-020** (Phase 1
+  consolidation avec @thierry), pas une suppression de nettoyage. (Codex #245.)
+- Consolidation `ui/**` ↔ `atoms/**` → **Phase 1** (refactor, pas suppression).
 - 2 locale switchers, 2 actions de renommage compte → Phase 1/3.
 
 ### Méthode (mécanique, low-risk)
