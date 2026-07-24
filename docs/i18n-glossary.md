@@ -90,7 +90,7 @@ Keep these **as-is** across all locales:
 - GDPR acronym by locale:
   - FR = **RGPD**, ES = **RGPD**, NL = **AVG**, EN = **GDPR**, DE = **DSGVO**
 - Rights-text article references: keep `art. 20`, `art. 6`, etc.
-- Placeholders: `{name}`, `{count}`, `{month}`, `{amount}`, `{year}`, `{date}`, `{days}`, `{sign}`, `{percent}`, `{total}`, `{paid}`, `{label}`, `{provision}`, `{bills}`, `{frequency}`, `{version}` — keep token names **exactly**.
+- Placeholders: `{name}`, `{count}`, `{month}`, `{amount}`, `{year}`, `{date}`, `{days}`, `{sign}`, `{percent}`, `{total}`, `{paid}`, `{spent}`, `{budget}`, `{label}`, `{provision}`, `{bills}`, `{frequency}`, `{version}` — keep token names **exactly**.
 - HTML-like tags inside values: `<b>`, `<code>`, `<link>`, `<mail>`, `<apd>`, `<cgu>`, `<privacy>`, `<strong>` — keep tag names **exactly**.
 
 ---

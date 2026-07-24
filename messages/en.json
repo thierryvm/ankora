@@ -871,7 +871,7 @@
       "dateLabel": "Date",
       "addButton": "Add",
       "adding": "Adding…",
-      "emptyState": "No expenses recorded.",
+      "emptyState": "No expenses this month yet.",
       "summary": "{count, plural, =0 {No expenses} one {1 expense · {total}} other {# expenses · {total}}}",
       "deleteAria": "Delete {label}",
       "editAria": "Edit {label}",
@@ -884,7 +884,13 @@
         "saving": "Saving…",
         "cancel": "Cancel",
         "errorGeneric": "The change couldn't be saved. Please try again in a moment."
-      }
+      },
+      "resteAVivreLabel": "Living budget — {month}",
+      "overBudget": "Over by {amount}",
+      "spentOfBudget": "{spent} spent of {budget}",
+      "perDay": "≈ {amount}/day ({days} days left)",
+      "barAria": "Living budget: {spent} spent of {budget}.",
+      "earlierToggle": "Earlier months ({count})"
     },
     "settings": {
       "metaTitle": "Settings",

@@ -59,6 +59,36 @@ const sampleExpenses = [
   },
 ];
 
+type RenderOpts = {
+  resteAVivre?: number;
+  spentThisMonth?: number;
+  currentYear?: number;
+  currentMonth?: number;
+  joursRestants?: number;
+};
+
+/** Default month = May 2026 so the sample expenses count as « this month ». */
+function renderExpenses(expenses = sampleExpenses, opts: RenderOpts = {}) {
+  const cy = opts.currentYear ?? 2026;
+  const cm = opts.currentMonth ?? 5;
+  // Default the authoritative total to the current-month sum of the passed list,
+  // so tests that don't care about pagination stay consistent with the widget.
+  const prefix = `${cy}-${String(cm).padStart(2, '0')}`;
+  const spentThisMonth =
+    opts.spentThisMonth ??
+    expenses.filter((e) => e.occurredOn.startsWith(prefix)).reduce((a, e) => a + e.amount, 0);
+  return renderWithIntl(
+    <ExpensesClient
+      expenses={expenses}
+      resteAVivre={opts.resteAVivre ?? 500}
+      spentThisMonth={spentThisMonth}
+      currentYear={cy}
+      currentMonth={cm}
+      joursRestants={opts.joursRestants ?? 10}
+    />,
+  );
+}
+
 describe('<ExpensesClient /> — PR-BETA-CLEANUP-3 list (date locale + edit button)', () => {
   beforeEach(() => {
     createExpenseMock.mockReset();
@@ -70,7 +100,7 @@ describe('<ExpensesClient /> — PR-BETA-CLEANUP-3 list (date locale + edit butt
   });
 
   it('renders the locale-aware date (medium style) for each row, not the raw ISO', () => {
-    renderWithIntl(<ExpensesClient expenses={sampleExpenses} />);
+    renderExpenses();
     const firstRow = screen.getByTestId('expenses-row-e1');
     const dateCell = within(firstRow).getByTestId('expenses-row-date');
     // 4-digit year present (formatDate medium) — no longer the raw
@@ -83,7 +113,7 @@ describe('<ExpensesClient /> — PR-BETA-CLEANUP-3 list (date locale + edit butt
   });
 
   it('exposes both Modifier and Supprimer buttons per row', () => {
-    renderWithIntl(<ExpensesClient expenses={sampleExpenses} />);
+    renderExpenses();
     expect(screen.getByTestId('expenses-row-edit-e1')).toBeInTheDocument();
     expect(screen.getByTestId('expenses-row-delete-e1')).toBeInTheDocument();
     expect(screen.getByTestId('expenses-row-edit-e2')).toBeInTheDocument();
@@ -91,7 +121,7 @@ describe('<ExpensesClient /> — PR-BETA-CLEANUP-3 list (date locale + edit butt
   });
 
   it('exposes an editAria localised label naming the expense', () => {
-    renderWithIntl(<ExpensesClient expenses={sampleExpenses} />);
+    renderExpenses();
     expect(screen.getByRole('button', { name: 'Modifier Courses Carrefour' })).toBeInTheDocument();
   });
 });
@@ -107,7 +137,7 @@ describe('<ExpensesClient /> — PR-BETA-CLEANUP-3 edit drawer', () => {
   });
 
   it('opens the drawer with pre-filled fields when Modifier is clicked', async () => {
-    renderWithIntl(<ExpensesClient expenses={sampleExpenses} />);
+    renderExpenses();
     expect(screen.queryByTestId('expense-edit-drawer')).toBeNull();
     fireEvent.click(screen.getByTestId('expenses-row-edit-e1'));
     expect(await screen.findByTestId('expense-edit-drawer')).toBeInTheDocument();
@@ -118,7 +148,7 @@ describe('<ExpensesClient /> — PR-BETA-CLEANUP-3 edit drawer', () => {
 
   it('calls updateExpenseAction on Save and closes the drawer on success', async () => {
     updateExpenseMock.mockResolvedValue({ ok: true });
-    renderWithIntl(<ExpensesClient expenses={sampleExpenses} />);
+    renderExpenses();
     fireEvent.click(screen.getByTestId('expenses-row-edit-e1'));
     await screen.findByTestId('expense-edit-drawer');
     fireEvent.change(screen.getByTestId('expense-edit-amount'), { target: { value: '95' } });
@@ -142,7 +172,7 @@ describe('<ExpensesClient /> — PR-BETA-CLEANUP-3 edit drawer', () => {
       ok: false,
       errorCode: 'errors.expenses.updateFailed',
     });
-    renderWithIntl(<ExpensesClient expenses={sampleExpenses} />);
+    renderExpenses();
     fireEvent.click(screen.getByTestId('expenses-row-edit-e1'));
     await screen.findByTestId('expense-edit-drawer');
     await act(async () => {
@@ -152,6 +182,64 @@ describe('<ExpensesClient /> — PR-BETA-CLEANUP-3 edit drawer', () => {
     expect(screen.getByTestId('expense-edit-drawer')).toBeInTheDocument();
     expect(toastSuccessMock).not.toHaveBeenCalled();
     expect(routerRefreshMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('<ExpensesClient /> — reste à vivre (this-month budget)', () => {
+  it('shows the remaining living budget and a per-day figure for the current month', () => {
+    renderExpenses(); // budget 500, spent 87.5 + 42 = 129.5 this month → 370.5 left
+    expect(screen.getByTestId('reste-a-vivre-remaining')).toHaveTextContent(/370/);
+    expect(screen.getByTestId('reste-a-vivre-perday')).toBeInTheDocument();
+    expect(screen.queryByTestId('reste-a-vivre-over')).toBeNull();
+  });
+
+  it('flags an over-budget month and drops the per-day figure', () => {
+    renderExpenses(sampleExpenses, { resteAVivre: 100 }); // spent 129.5 > 100
+    expect(screen.getByTestId('reste-a-vivre-over')).toBeInTheDocument();
+    expect(screen.queryByTestId('reste-a-vivre-perday')).toBeNull();
+  });
+
+  it('drives the budget from the authoritative spentThisMonth, not the capped list', () => {
+    // Only 2 rows are loaded (list capped at 50), but the true month total is 300.
+    renderExpenses(sampleExpenses, { spentThisMonth: 300 });
+    // 500 − 300 = 200 (NOT 500 − 129.5 from the two visible rows). Sourcery #242.
+    expect(screen.getByTestId('reste-a-vivre-remaining')).toHaveTextContent(/200/);
+  });
+
+  it('splits current-month from earlier months into a collapsible section', () => {
+    const mixed = [
+      sampleExpenses[0]!, // e1 — May (this month)
+      { id: 'e3', label: 'Avril lointain', amount: 20, occurredOn: '2026-04-10', note: null },
+    ];
+    renderExpenses(mixed);
+    // Current-month list has only e1; e3 lives in the « earlier months » details.
+    const list = screen.getByTestId('expenses-list');
+    expect(within(list).getByTestId('expenses-row-e1')).toBeInTheDocument();
+    expect(within(list).queryByTestId('expenses-row-e3')).toBeNull();
+    const earlier = screen.getByTestId('expenses-earlier');
+    expect(within(earlier).getByTestId('expenses-row-e3')).toBeInTheDocument();
+    // Only e1 (87.5) counts against the budget → 412.5 left.
+    expect(screen.getByTestId('reste-a-vivre-remaining')).toHaveTextContent(/412/);
+  });
+
+  it('has no earlier section when every expense is in the current month', () => {
+    renderExpenses();
+    expect(screen.queryByTestId('expenses-earlier')).toBeNull();
+  });
+
+  it('shows the empty-state + earlier section when nothing is from this month', () => {
+    const earlierOnly = [
+      { id: 'e3', label: 'Avril lointain', amount: 20, occurredOn: '2026-04-10', note: null },
+    ];
+    renderExpenses(earlierOnly);
+    // No current-month list — the empty-state message stands in.
+    expect(screen.getByTestId('expenses-empty-state')).toBeInTheDocument();
+    expect(screen.queryByTestId('expenses-list')).toBeNull();
+    // The earlier expense still lives in the collapsible « Mois précédents ».
+    const earlier = screen.getByTestId('expenses-earlier');
+    expect(within(earlier).getByTestId('expenses-row-e3')).toBeInTheDocument();
+    // A 0-spend month leaves the full budget available.
+    expect(screen.getByTestId('reste-a-vivre-remaining')).toHaveTextContent(/500/);
   });
 });
 
@@ -184,6 +272,26 @@ describe('app.expenses — i18n parity (5 locales, PR-BETA-CLEANUP-3)', () => {
       expect(e.drawer?.saving).toBeTypeOf('string');
       expect(e.drawer?.cancel).toBeTypeOf('string');
       expect(e.drawer?.errorGeneric).toBeTypeOf('string');
+    },
+  );
+
+  it.each(['fr-BE', 'en', 'de-DE', 'es-ES', 'nl-BE'] as const)(
+    'locale %s exposes the reste-à-vivre keys with intact placeholders',
+    async (locale) => {
+      const m = (await import(`../../../../../../messages/${locale}.json`)).default as {
+        app: { expenses: Record<string, string> };
+      };
+      const e = m.app.expenses;
+      const has = (key: string, tokens: string[]) => {
+        expect(e[key]).toBeTypeOf('string');
+        for (const tok of tokens) expect(e[key] ?? '').toContain(tok);
+      };
+      has('resteAVivreLabel', ['{month}']);
+      has('overBudget', ['{amount}']);
+      has('spentOfBudget', ['{spent}', '{budget}']);
+      has('perDay', ['{amount}', '{days}']);
+      has('barAria', ['{spent}', '{budget}']);
+      has('earlierToggle', ['{count}']);
     },
   );
 });

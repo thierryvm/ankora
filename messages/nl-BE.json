@@ -871,7 +871,7 @@
       "dateLabel": "Datum",
       "addButton": "Toevoegen",
       "adding": "Toevoegen…",
-      "emptyState": "Nog geen uitgaven geregistreerd.",
+      "emptyState": "Nog geen uitgaven deze maand.",
       "summary": "{count, plural, =0 {Geen uitgaven} one {1 uitgave · {total}} other {# uitgaven · {total}}}",
       "deleteAria": "{label} verwijderen",
       "editAria": "{label} bewerken",
@@ -884,7 +884,13 @@
         "saving": "Opslaan…",
         "cancel": "Annuleren",
         "errorGeneric": "De wijziging kon niet worden opgeslagen. Probeer het zo opnieuw."
-      }
+      },
+      "resteAVivreLabel": "Dagelijks leven — {month}",
+      "overBudget": "{amount} over budget",
+      "spentOfBudget": "{spent} besteed van {budget}",
+      "perDay": "≈ {amount}/dag (nog {days} dagen)",
+      "barAria": "Dagelijks leven: {spent} besteed van {budget}.",
+      "earlierToggle": "Vorige maanden ({count})"
     },
     "settings": {
       "metaTitle": "Instellingen",
