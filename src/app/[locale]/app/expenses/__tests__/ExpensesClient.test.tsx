@@ -59,6 +59,26 @@ const sampleExpenses = [
   },
 ];
 
+type RenderOpts = {
+  resteAVivre?: number;
+  currentYear?: number;
+  currentMonth?: number;
+  joursRestants?: number;
+};
+
+/** Default month = May 2026 so the sample expenses count as « this month ». */
+function renderExpenses(expenses = sampleExpenses, opts: RenderOpts = {}) {
+  return renderWithIntl(
+    <ExpensesClient
+      expenses={expenses}
+      resteAVivre={opts.resteAVivre ?? 500}
+      currentYear={opts.currentYear ?? 2026}
+      currentMonth={opts.currentMonth ?? 5}
+      joursRestants={opts.joursRestants ?? 10}
+    />,
+  );
+}
+
 describe('<ExpensesClient /> — PR-BETA-CLEANUP-3 list (date locale + edit button)', () => {
   beforeEach(() => {
     createExpenseMock.mockReset();
@@ -70,7 +90,7 @@ describe('<ExpensesClient /> — PR-BETA-CLEANUP-3 list (date locale + edit butt
   });
 
   it('renders the locale-aware date (medium style) for each row, not the raw ISO', () => {
-    renderWithIntl(<ExpensesClient expenses={sampleExpenses} />);
+    renderExpenses();
     const firstRow = screen.getByTestId('expenses-row-e1');
     const dateCell = within(firstRow).getByTestId('expenses-row-date');
     // 4-digit year present (formatDate medium) — no longer the raw
@@ -83,7 +103,7 @@ describe('<ExpensesClient /> — PR-BETA-CLEANUP-3 list (date locale + edit butt
   });
 
   it('exposes both Modifier and Supprimer buttons per row', () => {
-    renderWithIntl(<ExpensesClient expenses={sampleExpenses} />);
+    renderExpenses();
     expect(screen.getByTestId('expenses-row-edit-e1')).toBeInTheDocument();
     expect(screen.getByTestId('expenses-row-delete-e1')).toBeInTheDocument();
     expect(screen.getByTestId('expenses-row-edit-e2')).toBeInTheDocument();
@@ -91,7 +111,7 @@ describe('<ExpensesClient /> — PR-BETA-CLEANUP-3 list (date locale + edit butt
   });
 
   it('exposes an editAria localised label naming the expense', () => {
-    renderWithIntl(<ExpensesClient expenses={sampleExpenses} />);
+    renderExpenses();
     expect(screen.getByRole('button', { name: 'Modifier Courses Carrefour' })).toBeInTheDocument();
   });
 });
@@ -107,7 +127,7 @@ describe('<ExpensesClient /> — PR-BETA-CLEANUP-3 edit drawer', () => {
   });
 
   it('opens the drawer with pre-filled fields when Modifier is clicked', async () => {
-    renderWithIntl(<ExpensesClient expenses={sampleExpenses} />);
+    renderExpenses();
     expect(screen.queryByTestId('expense-edit-drawer')).toBeNull();
     fireEvent.click(screen.getByTestId('expenses-row-edit-e1'));
     expect(await screen.findByTestId('expense-edit-drawer')).toBeInTheDocument();
@@ -118,7 +138,7 @@ describe('<ExpensesClient /> — PR-BETA-CLEANUP-3 edit drawer', () => {
 
   it('calls updateExpenseAction on Save and closes the drawer on success', async () => {
     updateExpenseMock.mockResolvedValue({ ok: true });
-    renderWithIntl(<ExpensesClient expenses={sampleExpenses} />);
+    renderExpenses();
     fireEvent.click(screen.getByTestId('expenses-row-edit-e1'));
     await screen.findByTestId('expense-edit-drawer');
     fireEvent.change(screen.getByTestId('expense-edit-amount'), { target: { value: '95' } });
@@ -142,7 +162,7 @@ describe('<ExpensesClient /> — PR-BETA-CLEANUP-3 edit drawer', () => {
       ok: false,
       errorCode: 'errors.expenses.updateFailed',
     });
-    renderWithIntl(<ExpensesClient expenses={sampleExpenses} />);
+    renderExpenses();
     fireEvent.click(screen.getByTestId('expenses-row-edit-e1'));
     await screen.findByTestId('expense-edit-drawer');
     await act(async () => {
@@ -152,6 +172,42 @@ describe('<ExpensesClient /> — PR-BETA-CLEANUP-3 edit drawer', () => {
     expect(screen.getByTestId('expense-edit-drawer')).toBeInTheDocument();
     expect(toastSuccessMock).not.toHaveBeenCalled();
     expect(routerRefreshMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('<ExpensesClient /> — reste à vivre (this-month budget)', () => {
+  it('shows the remaining living budget and a per-day figure for the current month', () => {
+    renderExpenses(); // budget 500, spent 87.5 + 42 = 129.5 this month → 370.5 left
+    expect(screen.getByTestId('reste-a-vivre-remaining')).toHaveTextContent(/370/);
+    expect(screen.getByTestId('reste-a-vivre-perday')).toBeInTheDocument();
+    expect(screen.queryByTestId('reste-a-vivre-over')).toBeNull();
+  });
+
+  it('flags an over-budget month and drops the per-day figure', () => {
+    renderExpenses(sampleExpenses, { resteAVivre: 100 }); // spent 129.5 > 100
+    expect(screen.getByTestId('reste-a-vivre-over')).toBeInTheDocument();
+    expect(screen.queryByTestId('reste-a-vivre-perday')).toBeNull();
+  });
+
+  it('splits current-month from earlier months into a collapsible section', () => {
+    const mixed = [
+      sampleExpenses[0]!, // e1 — May (this month)
+      { id: 'e3', label: 'Avril lointain', amount: 20, occurredOn: '2026-04-10', note: null },
+    ];
+    renderExpenses(mixed);
+    // Current-month list has only e1; e3 lives in the « earlier months » details.
+    const list = screen.getByTestId('expenses-list');
+    expect(within(list).getByTestId('expenses-row-e1')).toBeInTheDocument();
+    expect(within(list).queryByTestId('expenses-row-e3')).toBeNull();
+    const earlier = screen.getByTestId('expenses-earlier');
+    expect(within(earlier).getByTestId('expenses-row-e3')).toBeInTheDocument();
+    // Only e1 (87.5) counts against the budget → 412.5 left.
+    expect(screen.getByTestId('reste-a-vivre-remaining')).toHaveTextContent(/412/);
+  });
+
+  it('has no earlier section when every expense is in the current month', () => {
+    renderExpenses();
+    expect(screen.queryByTestId('expenses-earlier')).toBeNull();
   });
 });
 

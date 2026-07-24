@@ -871,7 +871,7 @@
       "dateLabel": "Datum",
       "addButton": "Hinzufügen",
       "adding": "Hinzufügen…",
-      "emptyState": "Keine Ausgabe erfasst.",
+      "emptyState": "Noch keine Ausgaben diesen Monat.",
       "summary": "{count, plural, =0 {Keine Ausgabe} one {1 Ausgabe · {total}} other {# Ausgaben · {total}}}",
       "deleteAria": "{label} löschen",
       "editAria": "{label} bearbeiten",
@@ -884,7 +884,13 @@
         "saving": "Speichern…",
         "cancel": "Abbrechen",
         "errorGeneric": "Die Änderung konnte nicht gespeichert werden. Bitte gleich erneut versuchen."
-      }
+      },
+      "resteAVivreLabel": "Alltag — {month}",
+      "overBudget": "{amount} über Budget",
+      "spentOfBudget": "{spent} von {budget} ausgegeben",
+      "perDay": "≈ {amount}/Tag (noch {days} Tage)",
+      "barAria": "Alltagsbudget: {spent} von {budget} ausgegeben.",
+      "earlierToggle": "Frühere Monate ({count})"
     },
     "settings": {
       "metaTitle": "Einstellungen",
