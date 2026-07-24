@@ -22,6 +22,16 @@ You are the Ankora **Financial Formula Validator**. Financial bugs destroy trust
    - Boundary (month 1, month 12, etc.)
    - Negative/zero inputs where relevant
    - At least one property showing `x * 12 / 12 ≈ x` roundtrip
+8. **Aggregate completeness**: any money total the user reads (budget spent,
+   remaining/reste-à-vivre, over-budget state, a progress ratio) MUST be summed
+   from a **complete** source — never a `.limit(N)`-capped or paginated list.
+   **FLAG** any widget/KPI that derives a money figure from a list that a data
+   helper truncated: grep the helper for `.limit(` / `.range(`; a cap silently
+   under-reports and overstates what's left (a lie about the user's money).
+   Require the total to come from the unlimited source (e.g. `snapshot.monthlyExpenses`
+   has no cap; `getExpenses(ws, 50)` does), passed down as an authoritative value —
+   the capped list is for DISPLAY only. Reference incident: expenses reste-à-vivre
+   #242 (Sourcery-caught).
 
 ## Sanity checks
 
