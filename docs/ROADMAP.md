@@ -42,28 +42,32 @@ Cowork pilote A+B+contenus D/E. CC Ankora pilote C+tech D/E. Thierry valide + me
 
 ---
 
-## Agents QA Pilier A (12 au total)
+## Agents QA Pilier A (14 au total)
 
 Tous les agents résident dans `.claude/agents/` et sont trigger-driven. Chaque agent valide un domaine critique avant merge.
 
 > **Source de vérité** : le frontmatter et le contenu de `.claude/agents/<name>.md` sont **canoniques**. La table ci-dessous et la section "Workflow agents" de [`CLAUDE.md`](../CLAUDE.md) sont des **résumés navigables** — en cas de divergence, le fichier agent prévaut. Lors de l'ajout/modification d'un agent : éditer d'abord `.claude/agents/<name>.md`, puis répercuter dans cette table et dans `CLAUDE.md`.
 
-| #   | Agent                         | Domaine                                                        | Trigger                                 | Gate            |
-| --- | ----------------------------- | -------------------------------------------------------------- | --------------------------------------- | --------------- |
-| 1   | `security-auditor`            | Auth, middleware, RLS, headers                                 | touch auth/\*\*                         | ✅ requis       |
-| 2   | `rls-flow-tester`             | Supabase RLS + migrations                                      | touch migrations/\*\*                   | ✅ requis       |
-| 3   | `financial-formula-validator` | `src/lib/domain/`                                              | touch domain/\*\*                       | ✅ requis       |
-| 4   | `ui-auditor`                  | WCAG 2.2 AA, mobile, Tailwind 4                                | touch components/\*\*                   | ✅ requis       |
-| 5   | `lighthouse-auditor`          | Performance, a11y, BP, SEO                                     | pre-release only                        | ✅ requis RC    |
-| 6   | `seo-geo-auditor`             | SEO signals, entity consistency                                | touch public pages                      | ✅ requis       |
-| 7   | `gdpr-compliance-auditor`     | PII, consent, export, deletion                                 | touch PII, auth, D-lang                 | ✅ requis       |
-| 8   | `test-runner`                 | Vitest + Playwright                                            | post-change                             | ✅ requis       |
-| 9   | `dashboard-ux-auditor`        | User dashboard UX + design tokens                              | touch app/app/\*\*                      | ✅ requis PR-3  |
-| 10  | `admin-dashboard-auditor`     | Admin security, perf, a11y                                     | touch app/admin/\*\*                    | ✅ requis PR-B2 |
-| 11  | `i18n-auditor`                | next-intl key parity, placeholders, glossary, email-as-keyword | touch messages/\*\*, src/i18n/\*\*      | ✅ requis       |
-| 12  | `mobile-ios-auditor`          | iPhone Safari (WebKit) UX, safe-area, ITP, viewport, focus     | touch layout/nav/forms/dashboard mobile | ✅ requis       |
+| #   | Agent                         | Domaine                                                                                                         | Trigger                                      | Gate            |
+| --- | ----------------------------- | --------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | --------------- |
+| 1   | `security-auditor`            | Auth, middleware, RLS, headers                                                                                  | touch auth/\*\*                              | ✅ requis       |
+| 2   | `rls-flow-tester`             | Supabase RLS + migrations                                                                                       | touch migrations/\*\*                        | ✅ requis       |
+| 3   | `financial-formula-validator` | `src/lib/domain/`                                                                                               | touch domain/\*\*                            | ✅ requis       |
+| 4   | `ui-auditor`                  | WCAG 2.2 AA, mobile, Tailwind 4                                                                                 | touch components/\*\*                        | ✅ requis       |
+| 5   | `lighthouse-auditor`          | Performance, a11y, BP, SEO                                                                                      | pre-release only                             | ✅ requis RC    |
+| 6   | `seo-geo-auditor`             | SEO signals, entity consistency                                                                                 | touch public pages                           | ✅ requis       |
+| 7   | `gdpr-compliance-auditor`     | PII, consent, export, deletion                                                                                  | touch PII, auth, D-lang                      | ✅ requis       |
+| 8   | `test-runner`                 | Vitest + Playwright                                                                                             | post-change                                  | ✅ requis       |
+| 9   | `dashboard-ux-auditor`        | User dashboard UX + design tokens                                                                               | touch app/app/\*\*                           | ✅ requis PR-3  |
+| 10  | `admin-dashboard-auditor`     | Admin security, perf, a11y                                                                                      | touch app/admin/\*\*                         | ✅ requis PR-B2 |
+| 11  | `i18n-auditor`                | next-intl key parity, placeholders, glossary, email-as-keyword                                                  | touch messages/\*\*, src/i18n/\*\*           | ✅ requis       |
+| 12  | `mobile-ios-auditor`          | iPhone Safari (WebKit) UX, safe-area, ITP, viewport, focus                                                      | touch layout/nav/forms/dashboard mobile      | ✅ requis       |
+| 13  | `llm-security-auditor`        | OWASP LLM Top 10 + vecteurs IA 2026                                                                             | touch system prompt/providers/RAG/MCP        | ✅ requis RC IA |
+| 14  | `mobile-liquid-glass-auditor` | Contrat glass : contraste AA glass **et** fallback opaque, reduced-transparency/motion, anti-stacking/perf, CSP | touch glass/backdrop-filter/surfaces élevées | ✅ requis       |
 
 **Note sur les triggers** : Les chemins documentés (ex. `touch auth/**`, `touch app/app/**`) définissent les cas d'usage _intentionnels_ pour chaque agent. L'invocation manuelle reste primaire pour la Phase 1. Une automatisation CI complète (détection de fichiers + dispatch d'agents) est une future amélioration Pilier A (Phase 2+).
+
+**Note sur `mobile-liquid-glass-auditor`** : ajouté le 24 juillet 2026 pour la refonte UX (spec `docs/superpowers/specs/2026-07-24-ankora-refonte-ux-program-design.md`). Ankora adopte une esthétique inspirée d'Apple « Liquid Glass » sous contraintes dures : cet agent garantit que le glass reste une **couche d'enhancement jamais porteuse de sens** — contraste WCAG AA vérifié dans l'état glass **et** dans le fallback opaque (`prefers-reduced-transparency`), `prefers-reduced-motion` respecté, une seule couche de backdrop-filter (perf GPU mobile), aucun style glass inline (CSP stricte). Complémentaire de `mobile-ios-auditor` (WebKit général) et `ui-auditor` (WCAG générique).
 
 **Note sur `mobile-ios-auditor`** : ajouté le 4 mai 2026 suite à la "Mobile Recovery Day" (overflow horizontal, theme toggle full-screen, focus ring cyan, cards Dashboard coupées détectés sur iPhone 14 réel — bugs invisibles en Brave DevTools). Complémentaire de `ui-auditor` (qui audite mobile-first générique en Chromium) — focus exclusif sur les quirks Safari iOS WebKit (ITP, safe-area, `100vh`, auto-zoom inputs, `position: sticky`, PWA Add-to-Home-Screen). Procédure manuelle de test sur iPhone réel : `docs/runbooks/dev-on-iphone.md`.
 
