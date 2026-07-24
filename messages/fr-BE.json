@@ -871,7 +871,7 @@
       "dateLabel": "Date",
       "addButton": "Ajouter",
       "adding": "Ajout…",
-      "emptyState": "Aucune dépense enregistrée.",
+      "emptyState": "Aucune dépense ce mois-ci pour l'instant.",
       "summary": "{count, plural, =0 {Aucune dépense} one {1 dépense · {total}} other {# dépenses · {total}}}",
       "deleteAria": "Supprimer {label}",
       "editAria": "Modifier {label}",
@@ -884,7 +884,13 @@
         "saving": "Enregistrement…",
         "cancel": "Annuler",
         "errorGeneric": "La modification n'a pas pu être enregistrée. Réessaye dans un instant."
-      }
+      },
+      "resteAVivreLabel": "Reste à vivre — {month}",
+      "overBudget": "Dépassé de {amount}",
+      "spentOfBudget": "{spent} dépensés sur {budget}",
+      "perDay": "≈ {amount}/jour ({days} j restants)",
+      "barAria": "Budget vie courante : {spent} dépensés sur {budget}.",
+      "earlierToggle": "Mois précédents ({count})"
     },
     "settings": {
       "metaTitle": "Paramètres",
