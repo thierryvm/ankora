@@ -209,6 +209,21 @@ describe('<ExpensesClient /> — reste à vivre (this-month budget)', () => {
     renderExpenses();
     expect(screen.queryByTestId('expenses-earlier')).toBeNull();
   });
+
+  it('shows the empty-state + earlier section when nothing is from this month', () => {
+    const earlierOnly = [
+      { id: 'e3', label: 'Avril lointain', amount: 20, occurredOn: '2026-04-10', note: null },
+    ];
+    renderExpenses(earlierOnly);
+    // No current-month list — the empty-state message stands in.
+    expect(screen.getByTestId('expenses-empty-state')).toBeInTheDocument();
+    expect(screen.queryByTestId('expenses-list')).toBeNull();
+    // The earlier expense still lives in the collapsible « Mois précédents ».
+    const earlier = screen.getByTestId('expenses-earlier');
+    expect(within(earlier).getByTestId('expenses-row-e3')).toBeInTheDocument();
+    // A 0-spend month leaves the full budget available.
+    expect(screen.getByTestId('reste-a-vivre-remaining')).toHaveTextContent(/500/);
+  });
 });
 
 describe('app.expenses — i18n parity (5 locales, PR-BETA-CLEANUP-3)', () => {
@@ -240,6 +255,26 @@ describe('app.expenses — i18n parity (5 locales, PR-BETA-CLEANUP-3)', () => {
       expect(e.drawer?.saving).toBeTypeOf('string');
       expect(e.drawer?.cancel).toBeTypeOf('string');
       expect(e.drawer?.errorGeneric).toBeTypeOf('string');
+    },
+  );
+
+  it.each(['fr-BE', 'en', 'de-DE', 'es-ES', 'nl-BE'] as const)(
+    'locale %s exposes the reste-à-vivre keys with intact placeholders',
+    async (locale) => {
+      const m = (await import(`../../../../../../messages/${locale}.json`)).default as {
+        app: { expenses: Record<string, string> };
+      };
+      const e = m.app.expenses;
+      const has = (key: string, tokens: string[]) => {
+        expect(e[key]).toBeTypeOf('string');
+        for (const tok of tokens) expect(e[key] ?? '').toContain(tok);
+      };
+      has('resteAVivreLabel', ['{month}']);
+      has('overBudget', ['{amount}']);
+      has('spentOfBudget', ['{spent}', '{budget}']);
+      has('perDay', ['{amount}', '{days}']);
+      has('barAria', ['{spent}', '{budget}']);
+      has('earlierToggle', ['{count}']);
     },
   );
 });

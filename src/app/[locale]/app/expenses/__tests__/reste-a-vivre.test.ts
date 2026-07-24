@@ -27,11 +27,12 @@ describe('resteAVivreStatus', () => {
     expect(resteAVivreStatus(500, 100, 0).perDay).toBeNull();
   });
 
-  it('treats any spend against a 0 budget as fully over', () => {
+  it('treats any spend against a 0 budget as fully over, with no per-day figure', () => {
     const s = resteAVivreStatus(0, 10, 5);
     expect(s.spentRatio).toBe(1);
     expect(s.isOver).toBe(true);
     expect(s.remaining).toBe(-10);
+    expect(s.perDay).toBeNull(); // a 0 budget must never spread a negative
   });
 
   it('is a clean slate at zero spend', () => {

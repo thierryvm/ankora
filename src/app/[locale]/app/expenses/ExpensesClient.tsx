@@ -179,9 +179,11 @@ export function ExpensesClient({
       <Card data-testid="reste-a-vivre-card">
         <CardContent className="flex flex-col gap-4 py-6">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <p className="text-muted-foreground text-sm font-medium">
+            {/* Real <h2> (not a <p>) so screen-reader heading navigation has a
+                landmark for this section — the page otherwise has only the h1. */}
+            <h2 className="text-muted-foreground text-sm font-medium">
               {t('resteAVivreLabel', { month: monthName })}
-            </p>
+            </h2>
             {status.isOver && (
               <span
                 className="bg-danger inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold text-white"
@@ -229,6 +231,10 @@ export function ExpensesClient({
         </CardContent>
       </Card>
 
+      {/* Add form stays ALWAYS visible (unlike ChargesClient, which collapses
+          it): logging a daily expense is a frequent, quick action — the whole
+          point of a « vie courante » tracker — so it earns permanent screen
+          real estate. Deliberate cross-page divergence, not an oversight. */}
       <Card>
         <CardHeader>
           <CardTitle>{t('addFormTitle')}</CardTitle>
