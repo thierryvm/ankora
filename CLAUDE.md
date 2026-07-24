@@ -97,7 +97,7 @@ src/
 supabase/
   migrations/          # schéma + RLS + triggers
 .claude/
-  agents/              # 13 QA agents (security, rls, financial, ui, lighthouse, seo-geo, gdpr, test-runner, dashboard-ux, admin-dashboard, i18n, mobile-ios, llm-security)
+  agents/              # 14 QA agents (security, rls, financial, ui, lighthouse, seo-geo, gdpr, test-runner, dashboard-ux, admin-dashboard, i18n, mobile-ios, llm-security, mobile-liquid-glass)
 ```
 
 ## Règles de code
