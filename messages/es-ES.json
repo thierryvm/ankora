@@ -841,8 +841,6 @@
       "summarySchedule": "{paid}/{total} cuotas de {amount} · última en {end}",
       "summaryOneOff": "{amount} en {month}",
       "progressAria": "Progreso de amortización de {label}",
-      "markPaidAria": "Marcar la cuota de {label} como pagada",
-      "unmarkPaidAria": "Marcar la cuota de {label} como por pagar",
       "deleteAria": "Eliminar {label}",
       "toastCreated": "Compromiso añadido",
       "toastDeleted": "Compromiso eliminado",
@@ -852,7 +850,17 @@
         "debt": "Crédito",
         "installmentPlan": "Plan de pago",
         "oneOff": "Factura puntual"
-      }
+      },
+      "editFormTitle": "Editar compromiso",
+      "saveButton": "Guardar",
+      "saving": "Guardando…",
+      "cancelButton": "Cancelar",
+      "editAria": "Editar {label}",
+      "markOneAria": "Marcar un plazo como pagado para {label}",
+      "unmarkOneAria": "Deshacer el último plazo pagado para {label}",
+      "installmentsCountAria": "{paid} de {total} plazos pagados para {label}",
+      "toastUpdated": "Compromiso actualizado",
+      "reductionBlocked": "No se puede: {paid} plazos ya están marcados. Desmarca algunos pagos primero."
     },
     "expenses": {
       "title": "Mis gastos",

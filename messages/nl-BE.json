@@ -841,8 +841,6 @@
       "summarySchedule": "{paid}/{total} aflossingen van {amount} · laatste in {end}",
       "summaryOneOff": "{amount} in {month}",
       "progressAria": "Aflossingsvoortgang van {label}",
-      "markPaidAria": "Aflossing van {label} als betaald markeren",
-      "unmarkPaidAria": "Aflossing van {label} als te betalen markeren",
       "deleteAria": "{label} verwijderen",
       "toastCreated": "Verbintenis toegevoegd",
       "toastDeleted": "Verbintenis verwijderd",
@@ -852,7 +850,17 @@
         "debt": "Krediet",
         "installmentPlan": "Afbetalingsplan",
         "oneOff": "Eenmalige factuur"
-      }
+      },
+      "editFormTitle": "Verbintenis bewerken",
+      "saveButton": "Opslaan",
+      "saving": "Opslaan…",
+      "cancelButton": "Annuleren",
+      "editAria": "{label} bewerken",
+      "markOneAria": "Eén termijn als betaald markeren voor {label}",
+      "unmarkOneAria": "Laatste betaalde termijn ongedaan maken voor {label}",
+      "installmentsCountAria": "{paid} van {total} termijnen betaald voor {label}",
+      "toastUpdated": "Verbintenis bijgewerkt",
+      "reductionBlocked": "Niet mogelijk: {paid} termijnen zijn al afgevinkt. Vink eerst betalingen uit."
     },
     "expenses": {
       "title": "Mijn uitgaven",

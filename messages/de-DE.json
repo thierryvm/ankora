@@ -841,8 +841,6 @@
       "summarySchedule": "{paid}/{total} Raten à {amount} · letzte im {end}",
       "summaryOneOff": "{amount} im {month}",
       "progressAria": "Tilgungsfortschritt von {label}",
-      "markPaidAria": "Rate von {label} als bezahlt markieren",
-      "unmarkPaidAria": "Rate von {label} als zu zahlen markieren",
       "deleteAria": "{label} löschen",
       "toastCreated": "Verpflichtung hinzugefügt",
       "toastDeleted": "Verpflichtung gelöscht",
@@ -852,7 +850,17 @@
         "debt": "Kredit",
         "installmentPlan": "Ratenplan",
         "oneOff": "Einmalige Rechnung"
-      }
+      },
+      "editFormTitle": "Verpflichtung bearbeiten",
+      "saveButton": "Speichern",
+      "saving": "Speichern…",
+      "cancelButton": "Abbrechen",
+      "editAria": "{label} bearbeiten",
+      "markOneAria": "Eine Rate als bezahlt markieren für {label}",
+      "unmarkOneAria": "Letzte bezahlte Rate rückgängig machen für {label}",
+      "installmentsCountAria": "{paid} von {total} Raten bezahlt für {label}",
+      "toastUpdated": "Verpflichtung aktualisiert",
+      "reductionBlocked": "Nicht möglich: {paid} Raten sind bereits markiert. Entferne zuerst Zahlungen."
     },
     "expenses": {
       "title": "Meine Ausgaben",

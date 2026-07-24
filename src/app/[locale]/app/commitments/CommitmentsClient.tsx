@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useOptimistic, useState, useTransition } from 'react';
-import { Check, Plus, Trash2 } from 'lucide-react';
+import { Check, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
@@ -9,22 +9,25 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/toast';
+import { InstallmentStepper } from '@/components/commitments/InstallmentStepper';
 import type { Locale } from '@/i18n/routing';
 import {
   createCommitmentAction,
   deleteCommitmentAction,
   toggleCommitmentPaymentAction,
+  updateCommitmentAction,
 } from '@/lib/actions/commitments';
 import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
 import { commitmentRowToDomain, type CommitmentRow } from '@/lib/data/commitment-row';
 import {
   endPeriod,
-  installmentsPaid,
-  isDueInPeriod,
   installmentAmountOf,
+  installmentPeriods,
+  installmentsPaid,
   periodKey,
   remainingBalance,
   type CommitmentKind,
+  type Period,
 } from '@/lib/domain/commitments';
 import { formatCurrency, formatMonth } from '@/lib/i18n/formatters';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
@@ -39,6 +42,8 @@ type Props = {
   currentPeriod: { year: number; month: number };
   locale: Locale;
 };
+
+type FormMode = 'closed' | 'create' | 'edit';
 
 const KIND_KEY = {
   debt: 'kinds.debt',
@@ -56,15 +61,52 @@ export function CommitmentsClient({
   const translateError = useActionErrorTranslator();
 
   const [isPending, startTransition] = useTransition();
-  const [showAddForm, setShowAddForm] = useState(false);
+
+  // --- Form state (create + edit share one form; `formMode` is the single
+  //     source of truth, `editingId` only meaningful in 'edit'). ---
+  const [formMode, setFormMode] = useState<FormMode>('closed');
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [label, setLabel] = useState('');
   const [kind, setKind] = useState<CommitmentKind>('debt');
   const [totalAmount, setTotalAmount] = useState('');
   const [installmentAmount, setInstallmentAmount] = useState('');
   const [installmentsTotal, setInstallmentsTotal] = useState('12');
 
-  // Optimistic paid ledger: a Set of `${commitmentId}|${periodKey}` so a tick
-  // reflects instantly, then reconciles on the action's revalidate.
+  function resetForm() {
+    setLabel('');
+    setKind('debt');
+    setTotalAmount('');
+    setInstallmentAmount('');
+    setInstallmentsTotal('12');
+    setEditingId(null);
+  }
+
+  function openCreate() {
+    resetForm();
+    setFormMode('create');
+  }
+
+  function openEdit(c: RawCommitment) {
+    setEditingId(c.id);
+    setLabel(c.label);
+    setKind(c.kind);
+    setTotalAmount(String(c.totalAmount));
+    setInstallmentAmount(c.installmentAmount === null ? '' : String(c.installmentAmount));
+    setInstallmentsTotal(String(c.installmentsTotal));
+    setFormMode('edit');
+  }
+
+  function closeForm() {
+    resetForm();
+    setFormMode('closed');
+  }
+
+  // Optimistic paid ledger: a Set of `${commitmentId}|${periodKey}`. The reducer
+  // takes an EXPLICIT intent (`{key, paid}`) rather than a blind toggle so a `+`
+  // always adds and a `−` always removes — idempotent even on a stale read, so a
+  // fast double-click can't accidentally cancel a payment. `useOptimistic`
+  // discards the optimistic value on settle and re-derives from `paidBase`
+  // (unchanged by a rejected toggle) → no manual rollback (Sourcery #234).
   const paidBase = useMemo(() => {
     const set = new Set<string>();
     for (const [id, keys] of Object.entries(paidKeysByCommitment)) {
@@ -75,10 +117,10 @@ export function CommitmentsClient({
 
   const [optimisticPaid, applyOptimisticPaid] = useOptimistic(
     paidBase,
-    (current: ReadonlySet<string>, entry: string) => {
+    (current: ReadonlySet<string>, action: { key: string; paid: boolean }) => {
       const next = new Set(current);
-      if (next.has(entry)) next.delete(entry);
-      else next.add(entry);
+      if (action.paid) next.add(action.key);
+      else next.delete(action.key);
       return next;
     },
   );
@@ -95,19 +137,16 @@ export function CommitmentsClient({
 
   const toDomain = commitmentRowToDomain;
 
-  function onTogglePaid(c: RawCommitment) {
-    const entry = `${c.id}|${periodKey(currentPeriod.year, currentPeriod.month)}`;
-    // No manual rollback needed on failure: `useOptimistic` discards the
-    // optimistic value when the transition settles and re-derives from
-    // `paidBase` — which the server did NOT change on a rejected toggle. A
-    // hand-rolled revert would double-toggle. Locked by a test (Sourcery #234).
+  /** Toggle ONE scheduled period, marking it paid or unpaid (explicit intent). */
+  function togglePeriodPaid(c: RawCommitment, period: Period, markPaid: boolean) {
+    const entry = `${c.id}|${periodKey(period.year, period.month)}`;
     startTransition(async () => {
-      applyOptimisticPaid(entry);
+      applyOptimisticPaid({ key: entry, paid: markPaid });
       try {
         const result = await toggleCommitmentPaymentAction({
           commitmentId: c.id,
-          periodYear: currentPeriod.year,
-          periodMonth: currentPeriod.month,
+          periodYear: period.year,
+          periodMonth: period.month,
         });
         if (result.ok) {
           toast.success(result.data.paid ? t('toastMarkedPaid') : t('toastMarkedUnpaid'));
@@ -123,7 +162,25 @@ export function CommitmentsClient({
     });
   }
 
-  function onCreate(e: React.FormEvent) {
+  /** `+` — mark the earliest not-yet-paid scheduled instalment (fills the oldest hole). */
+  function onTickNext(c: RawCommitment) {
+    const paidKeys = paidKeysOf(c.id);
+    const next = installmentPeriods(toDomain(c)).find(
+      (p) => !paidKeys.has(periodKey(p.year, p.month)),
+    );
+    if (next) togglePeriodPaid(c, next, true);
+  }
+
+  /** `−` — un-mark the latest paid scheduled instalment. */
+  function onUntickLast(c: RawCommitment) {
+    const paidKeys = paidKeysOf(c.id);
+    const last = [...installmentPeriods(toDomain(c))]
+      .reverse()
+      .find((p) => paidKeys.has(periodKey(p.year, p.month)));
+    if (last) togglePeriodPaid(c, last, false);
+  }
+
+  function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const total = Number(totalAmount.replace(',', '.'));
     const perInstallment = Number(installmentAmount.replace(',', '.'));
@@ -135,34 +192,55 @@ export function CommitmentsClient({
       return;
     }
 
+    // Reduction guard (edit): never set installmentsTotal below what is already
+    // ticked — that would silently orphan out-of-schedule ledger rows and drop
+    // the visible paid count. Block with a friendly toast before the round-trip.
+    if (formMode === 'edit' && editingId && !isOneOff) {
+      const target = commitments.find((x) => x.id === editingId);
+      if (target) {
+        const alreadyPaid = installmentsPaid(toDomain(target), paidKeysOf(target.id));
+        if (count < alreadyPaid) {
+          toast.error(t('reductionBlocked', { paid: alreadyPaid }));
+          return;
+        }
+      }
+    }
+
+    // A one-off owes its total at once — one instalment, no per-instalment amount.
+    const payload = {
+      label: label.trim(),
+      kind,
+      totalAmount: total,
+      ...(isOneOff ? {} : { installmentAmount: perInstallment }),
+      installmentsTotal: isOneOff ? 1 : count,
+    };
+
     startTransition(async () => {
       try {
-        const result = await createCommitmentAction({
-          label: label.trim(),
-          kind,
-          totalAmount: total,
-          // A one-off owes its total at once — no instalment amount.
-          ...(isOneOff ? {} : { installmentAmount: perInstallment }),
-          installmentsTotal: isOneOff ? 1 : count,
-          startYear: currentPeriod.year,
-          startMonth: currentPeriod.month,
-          paymentDay: 1,
-          frequency: 'monthly',
-        });
+        const result = editingId
+          ? await updateCommitmentAction(editingId, payload)
+          : await createCommitmentAction({
+              ...payload,
+              startYear: currentPeriod.year,
+              startMonth: currentPeriod.month,
+              paymentDay: 1,
+              frequency: 'monthly',
+            });
         if (result.ok) {
-          toast.success(t('toastCreated'));
-          setLabel('');
-          setTotalAmount('');
-          setInstallmentAmount('');
-          setShowAddForm(false);
+          toast.success(editingId ? t('toastUpdated') : t('toastCreated'));
+          closeForm();
         } else {
           toast.error(translateError(result.errorCode));
         }
       } catch (err) {
         if (isNextControlFlowError(err)) throw err;
         // eslint-disable-next-line no-console
-        console.error('createCommitmentAction threw', err);
-        toast.error(translateError('errors.commitments.createFailed'));
+        console.error('commitment submit threw', err);
+        toast.error(
+          translateError(
+            editingId ? 'errors.commitments.updateFailed' : 'errors.commitments.createFailed',
+          ),
+        );
       }
     });
   }
@@ -171,8 +249,13 @@ export function CommitmentsClient({
     startTransition(async () => {
       try {
         const result = await deleteCommitmentAction(id);
-        if (result.ok) toast.success(t('toastDeleted'));
-        else toast.error(translateError(result.errorCode));
+        if (result.ok) {
+          toast.success(t('toastDeleted'));
+          // If the deleted row was being edited, drop the stale form.
+          if (editingId === id) closeForm();
+        } else {
+          toast.error(translateError(result.errorCode));
+        }
       } catch (err) {
         if (isNextControlFlowError(err)) throw err;
         // eslint-disable-next-line no-console
@@ -187,6 +270,7 @@ export function CommitmentsClient({
     (sum, c) => sum + remainingBalance(toDomain(c), paidKeysOf(c.id)),
     0,
   );
+  const isFormOpen = formMode !== 'closed';
 
   return (
     <div className="flex flex-col gap-6">
@@ -197,10 +281,10 @@ export function CommitmentsClient({
         </div>
         <Button
           type="button"
-          variant={showAddForm ? 'outline' : 'default'}
-          onClick={() => setShowAddForm((v) => !v)}
-          aria-expanded={showAddForm}
-          aria-controls="commitments-add-form"
+          variant={formMode === 'create' ? 'outline' : 'default'}
+          onClick={() => (formMode === 'create' ? closeForm() : openCreate())}
+          aria-expanded={isFormOpen}
+          aria-controls="commitments-form"
           data-testid="commitments-add-toggle"
         >
           <Plus className="h-4 w-4" />
@@ -208,13 +292,13 @@ export function CommitmentsClient({
         </Button>
       </header>
 
-      {showAddForm && (
-        <Card id="commitments-add-form">
+      {isFormOpen && (
+        <Card id="commitments-form">
           <CardHeader>
-            <CardTitle>{t('addFormTitle')}</CardTitle>
+            <CardTitle>{formMode === 'edit' ? t('editFormTitle') : t('addFormTitle')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={onCreate} className="grid gap-4 md:grid-cols-2">
+            <form onSubmit={onSubmit} className="grid gap-4 md:grid-cols-2">
               <div className="flex flex-col gap-2">
                 <Label htmlFor="commitment-label">{t('labelLabel')}</Label>
                 <Input
@@ -287,10 +371,18 @@ export function CommitmentsClient({
                   />
                 </div>
               )}
-              <div className="md:col-span-2">
+              <div className="flex items-center gap-3 md:col-span-2">
                 <Button type="submit" disabled={isPending}>
-                  <Plus className="h-4 w-4" />
-                  {isPending ? t('adding') : t('addButton')}
+                  {formMode === 'edit'
+                    ? isPending
+                      ? t('saving')
+                      : t('saveButton')
+                    : isPending
+                      ? t('adding')
+                      : t('addButton')}
+                </Button>
+                <Button type="button" variant="ghost" onClick={closeForm} disabled={isPending}>
+                  {t('cancelButton')}
                 </Button>
               </div>
             </form>
@@ -330,15 +422,10 @@ export function CommitmentsClient({
                 const paid = installmentsPaid(domain, paidKeys);
                 const remaining = remainingBalance(domain, paidKeys);
                 const end = endPeriod(domain);
-                const dueThisPeriod = isDueInPeriod(domain, currentPeriod);
-                const tickedThisPeriod = paidKeys.has(
-                  periodKey(currentPeriod.year, currentPeriod.month),
-                );
-                // Defensive clamp: the DB CHECK + Zod both keep
-                // `installmentsTotal` in [1, 600] and `installmentsPaid` can
-                // never exceed the schedule, so neither NaN nor >100 is
-                // reachable today — but corrupted data must not produce an
-                // invalid aria-valuenow or a bar wider than its track.
+                // Defensive clamp: DB CHECK + Zod keep `installmentsTotal` in
+                // [1, 600] and `installmentsPaid` can never exceed the schedule,
+                // so neither NaN nor >100 is reachable — but corrupted data must
+                // not produce an invalid aria-valuenow or an over-wide bar.
                 const progress =
                   c.installmentsTotal > 0
                     ? Math.min(100, Math.max(0, Math.round((paid / c.installmentsTotal) * 100)))
@@ -346,11 +433,7 @@ export function CommitmentsClient({
                 const finished = c.installmentsTotal > 0 && paid >= c.installmentsTotal;
 
                 return (
-                  <li
-                    key={c.id}
-                    data-testid={`commitment-row-${c.id}`}
-                    className="relative py-4 pr-24"
-                  >
+                  <li key={c.id} data-testid={`commitment-row-${c.id}`} className="py-4">
                     <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                       <p className="text-foreground text-sm font-medium">
                         {c.label}
@@ -383,9 +466,8 @@ export function CommitmentsClient({
                       </p>
                     </div>
 
-                    {/* Progress bar — pure CSS width, no inline style beyond the
-                        computed percentage (CSP-safe: it is a style attribute,
-                        not an inline <style> element). */}
+                    {/* Progress bar — width via the style attribute (a computed
+                        percentage, CSP-safe: attribute, not an inline <style>). */}
                     <div
                       className="bg-surface-muted mt-2 h-1.5 w-full overflow-hidden rounded-full"
                       role="progressbar"
@@ -415,39 +497,50 @@ export function CommitmentsClient({
                           })}
                     </p>
 
-                    {dueThisPeriod && (
-                      <button
-                        type="button"
-                        onClick={() => onTogglePaid(c)}
+                    {/* Controls row: payment stepper + edit + delete, in flow
+                        (no absolute corners — makes room for all three). */}
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <InstallmentStepper
+                        paid={paid}
+                        total={c.installmentsTotal}
+                        onTickNext={() => onTickNext(c)}
+                        onUntickLast={() => onUntickLast(c)}
                         disabled={isPending}
-                        aria-pressed={tickedThisPeriod}
-                        aria-label={
-                          tickedThisPeriod
-                            ? t('unmarkPaidAria', { label: c.label })
-                            : t('markPaidAria', { label: c.label })
-                        }
-                        data-testid={`commitment-paid-${c.id}`}
-                        className={`focus-visible:ring-brand-600 absolute top-3 right-12 flex size-11 cursor-pointer items-center justify-center rounded-full border-2 transition-colors [-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:size-9 ${
-                          tickedThisPeriod
-                            ? 'border-brand-600 bg-brand-600 text-white'
-                            : 'border-border hover:border-brand-600 text-transparent'
-                        }`}
-                      >
-                        <Check className="h-4 w-4" strokeWidth={3} aria-hidden />
-                      </button>
-                    )}
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onDelete(c.id)}
-                      disabled={isPending}
-                      aria-label={t('deleteAria', { label: c.label })}
-                      data-testid={`commitment-delete-${c.id}`}
-                      className="absolute top-3 right-0 size-11 shrink-0 md:size-9"
-                    >
-                      <Trash2 className="text-danger h-4 w-4" />
-                    </Button>
+                        countAriaLabel={t('installmentsCountAria', {
+                          paid,
+                          total: c.installmentsTotal,
+                          label: c.label,
+                        })}
+                        markOneAriaLabel={t('markOneAria', { label: c.label })}
+                        unmarkOneAriaLabel={t('unmarkOneAria', { label: c.label })}
+                      />
+                      <div className="ml-auto flex items-center gap-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openEdit(c)}
+                          disabled={isPending}
+                          aria-label={t('editAria', { label: c.label })}
+                          data-testid={`commitment-edit-${c.id}`}
+                          className="size-11 shrink-0 md:size-9"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onDelete(c.id)}
+                          disabled={isPending}
+                          aria-label={t('deleteAria', { label: c.label })}
+                          data-testid={`commitment-delete-${c.id}`}
+                          className="size-11 shrink-0 md:size-9"
+                        >
+                          <Trash2 className="text-danger h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
                   </li>
                 );
               })}

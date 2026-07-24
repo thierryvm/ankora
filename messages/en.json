@@ -841,8 +841,6 @@
       "summarySchedule": "{paid}/{total} instalments of {amount} · last one in {end}",
       "summaryOneOff": "{amount} in {month}",
       "progressAria": "Repayment progress for {label}",
-      "markPaidAria": "Mark the {label} instalment as paid",
-      "unmarkPaidAria": "Mark the {label} instalment as to pay",
       "deleteAria": "Delete {label}",
       "toastCreated": "Commitment added",
       "toastDeleted": "Commitment deleted",
@@ -852,7 +850,17 @@
         "debt": "Loan",
         "installmentPlan": "Instalment plan",
         "oneOff": "One-off bill"
-      }
+      },
+      "editFormTitle": "Edit commitment",
+      "saveButton": "Save",
+      "saving": "Saving…",
+      "cancelButton": "Cancel",
+      "editAria": "Edit {label}",
+      "markOneAria": "Mark one instalment paid for {label}",
+      "unmarkOneAria": "Undo the last paid instalment for {label}",
+      "installmentsCountAria": "{paid} of {total} instalments paid for {label}",
+      "toastUpdated": "Commitment updated",
+      "reductionBlocked": "Can’t: {paid} instalments are already ticked. Un-tick some payments first."
     },
     "expenses": {
       "title": "My expenses",

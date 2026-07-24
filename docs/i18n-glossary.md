@@ -90,7 +90,7 @@ Keep these **as-is** across all locales:
 - GDPR acronym by locale:
   - FR = **RGPD**, ES = **RGPD**, NL = **AVG**, EN = **GDPR**, DE = **DSGVO**
 - Rights-text article references: keep `art. 20`, `art. 6`, etc.
-- Placeholders: `{name}`, `{count}`, `{month}`, `{amount}`, `{year}`, `{date}`, `{days}`, `{sign}`, `{percent}`, `{total}`, `{label}`, `{provision}`, `{bills}`, `{frequency}`, `{version}` — keep token names **exactly**.
+- Placeholders: `{name}`, `{count}`, `{month}`, `{amount}`, `{year}`, `{date}`, `{days}`, `{sign}`, `{percent}`, `{total}`, `{paid}`, `{label}`, `{provision}`, `{bills}`, `{frequency}`, `{version}` — keep token names **exactly**.
 - HTML-like tags inside values: `<b>`, `<code>`, `<link>`, `<mail>`, `<apd>`, `<cgu>`, `<privacy>`, `<strong>` — keep tag names **exactly**.
 
 ---
@@ -203,5 +203,6 @@ Compact labels for the charges-list frequency tag (THI-299). The full word above
 | 1.0     | 2026-04-20 | Initial glossary — Wave 1.5 "Opération Babel" translation.                                                        |
 | 1.1     | 2026-04-20 | Destructive confirmations switch to email-as-keyword pattern (§6). Drop SUPPRIMER/DELETE/LÖSCHEN/ELIMINAR.        |
 | 1.2     | 2026-06-01 | Add `common.frequencyAbbr` abbreviation table (§4, THI-299). de-DE quarterly `Vj.`→`Quartl.` (Vorjahr collision). |
+| 1.3     | 2026-07-22 | Add `{paid}` placeholder (§3, commitments stepper « X / N payées », PR #240).                                     |
 
 Any new term, any register change, any account-name update **must** be logged here before landing in messages/\*.json.
