@@ -107,12 +107,15 @@ export function CommitmentsClient({
   // and no cue for keyboard/screen-reader users (dashboard-ux-auditor P1).
   useEffect(() => {
     if (formMode === 'closed') return;
-    // `preventScroll` so focus doesn't jump instantly — the smooth scroll below
-    // does the moving. `scrollIntoView` is guarded (jsdom doesn't implement it).
+    // `preventScroll` so focus doesn't jump instantly — the scroll below does
+    // the moving. `scrollIntoView` is guarded (jsdom doesn't implement it).
     document.getElementById('commitment-label')?.focus({ preventScroll: true });
+    // Respect prefers-reduced-motion (WCAG 2.3.3): no smooth animation for users
+    // who asked to reduce motion — jump instantly instead (Codex review).
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     document
       .getElementById('commitments-form')
-      ?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+      ?.scrollIntoView?.({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
   }, [formMode, editingId]);
 
   // Optimistic paid ledger: a Set of `${commitmentId}|${periodKey}`. The reducer
