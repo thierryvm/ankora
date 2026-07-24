@@ -45,7 +45,20 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm audit --audit-level=high
+      # BLOCKING gate — the surface actually shipped to users. `--omit=dev` keeps
+      # build/runtime chains in scope (next, postcss, sharp… all reached through
+      # production deps) while excluding pure dev tooling that never leaves the
+      # repo. Rationale (2026-07-25, @thierry): the eslint chain carries a HIGH
+      # `brace-expansion` advisory with NO applicable fix — the global override
+      # breaks @eslint/config-array, and eslint@10 breaks the eslint-plugin-react
+      # bundled inside eslint-config-next (upstream `context.getFilename()`
+      # removal). Blocking every PR on an unfixable, non-shipped DoS helps nobody.
+      - name: Audit production surface (blocking)
+        run: npm audit --audit-level=high --omit=dev
+      # NON-blocking visibility — we still want dev-tooling advisories in the log
+      # so drift is noticed and re-checked whenever upstream ships a fix.
+      - name: Audit dev tooling (informational)
+        run: npm audit --audit-level=high || true
 
   e2e:
     name: Playwright E2E
