@@ -18,7 +18,7 @@ type Props = {
 };
 
 const BTN =
-  'focus-visible:ring-brand-600 border-border hover:border-brand-600 flex size-11 shrink-0 items-center justify-center rounded-full border-2 transition-colors [-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40 md:size-9';
+  'focus-visible:ring-brand-600 border-border hover:border-brand-600 flex size-11 shrink-0 items-center justify-center rounded-full border-2 transition-colors [-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:size-9';
 
 /**
  * Payment stepper for a finite commitment — « X / N payées » with − / +.

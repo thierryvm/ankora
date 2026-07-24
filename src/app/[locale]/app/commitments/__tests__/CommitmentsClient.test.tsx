@@ -346,6 +346,14 @@ describe('<CommitmentsClient />', () => {
     expect(createMock).not.toHaveBeenCalled();
   });
 
+  it('moves focus into the form when the pencil opens edit', async () => {
+    renderPage([carLoan]);
+    fireEvent.click(screen.getByTestId('commitment-edit-car'));
+    // The effect focuses the label field so keyboard/SR users land in the form
+    // even when it opened off-screen at the top of a long list (ux-auditor P1).
+    await waitFor(() => expect(screen.getByLabelText('Libellé')).toHaveFocus());
+  });
+
   it('blocks reducing installmentsTotal below the number already ticked', async () => {
     updateMock.mockResolvedValue({ ok: true });
     renderPage([carLoan], { paidKeysByCommitment: { car: ['2026-1', '2026-2', '2026-3'] } });
