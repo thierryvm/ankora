@@ -61,6 +61,7 @@ const sampleExpenses = [
 
 type RenderOpts = {
   resteAVivre?: number;
+  spentThisMonth?: number;
   currentYear?: number;
   currentMonth?: number;
   joursRestants?: number;
@@ -68,12 +69,21 @@ type RenderOpts = {
 
 /** Default month = May 2026 so the sample expenses count as « this month ». */
 function renderExpenses(expenses = sampleExpenses, opts: RenderOpts = {}) {
+  const cy = opts.currentYear ?? 2026;
+  const cm = opts.currentMonth ?? 5;
+  // Default the authoritative total to the current-month sum of the passed list,
+  // so tests that don't care about pagination stay consistent with the widget.
+  const prefix = `${cy}-${String(cm).padStart(2, '0')}`;
+  const spentThisMonth =
+    opts.spentThisMonth ??
+    expenses.filter((e) => e.occurredOn.startsWith(prefix)).reduce((a, e) => a + e.amount, 0);
   return renderWithIntl(
     <ExpensesClient
       expenses={expenses}
       resteAVivre={opts.resteAVivre ?? 500}
-      currentYear={opts.currentYear ?? 2026}
-      currentMonth={opts.currentMonth ?? 5}
+      spentThisMonth={spentThisMonth}
+      currentYear={cy}
+      currentMonth={cm}
       joursRestants={opts.joursRestants ?? 10}
     />,
   );
@@ -187,6 +197,13 @@ describe('<ExpensesClient /> — reste à vivre (this-month budget)', () => {
     renderExpenses(sampleExpenses, { resteAVivre: 100 }); // spent 129.5 > 100
     expect(screen.getByTestId('reste-a-vivre-over')).toBeInTheDocument();
     expect(screen.queryByTestId('reste-a-vivre-perday')).toBeNull();
+  });
+
+  it('drives the budget from the authoritative spentThisMonth, not the capped list', () => {
+    // Only 2 rows are loaded (list capped at 50), but the true month total is 300.
+    renderExpenses(sampleExpenses, { spentThisMonth: 300 });
+    // 500 − 300 = 200 (NOT 500 − 129.5 from the two visible rows). Sourcery #242.
+    expect(screen.getByTestId('reste-a-vivre-remaining')).toHaveTextContent(/200/);
   });
 
   it('splits current-month from earlier months into a collapsible section', () => {

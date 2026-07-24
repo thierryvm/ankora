@@ -30,6 +30,14 @@ type Props = {
   expenses: RawExpense[];
   /** Monthly « vie courante » budget (reste à vivre). */
   resteAVivre: number;
+  /**
+   * AUTHORITATIVE total spent this month, summed server-side from the COMPLETE
+   * (unlimited) `monthlyExpenses`. The `expenses` list is capped at 50 rows, so
+   * the budget/bar/over-budget MUST NOT be derived from it — past the 51st
+   * current-month expense it would under-report spend and overstate what's left
+   * (a lie about the user's money). Sourcery #242.
+   */
+  spentThisMonth: number;
   currentYear: number;
   currentMonth: number;
   /** Days left in the current month (Europe/Brussels), for the per-day figure. */
@@ -43,6 +51,7 @@ function today(): string {
 export function ExpensesClient({
   expenses,
   resteAVivre,
+  spentThisMonth,
   currentYear,
   currentMonth,
   joursRestants,
@@ -111,14 +120,15 @@ export function ExpensesClient({
     });
   }
 
-  // Split by the current calendar month (the reste-à-vivre budget is monthly).
+  // Split the (capped) list for DISPLAY by the current calendar month. The
+  // budget math below never uses these sums — it uses the authoritative
+  // `spentThisMonth` (complete, server-side) so pagination can't skew the money.
   const monthPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
   const thisMonth = expenses.filter((e) => e.occurredOn.startsWith(monthPrefix));
   const earlier = expenses.filter((e) => !e.occurredOn.startsWith(monthPrefix));
-  const spent = thisMonth.reduce((acc, e) => acc + e.amount, 0);
-  const status = resteAVivreStatus(resteAVivre, spent, joursRestants);
+  const status = resteAVivreStatus(resteAVivre, spentThisMonth, joursRestants);
   const monthName = formatMonth(currentMonth, locale, 'long');
-  const barAria = t('barAria', { spent: fmt(spent), budget: fmt(resteAVivre) });
+  const barAria = t('barAria', { spent: fmt(spentThisMonth), budget: fmt(resteAVivre) });
 
   const renderRow = (e: RawExpense) => (
     <li
@@ -217,7 +227,7 @@ export function ExpensesClient({
           </div>
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs">
             <span className="text-muted-foreground">
-              {t('spentOfBudget', { spent: fmt(spent), budget: fmt(resteAVivre) })}
+              {t('spentOfBudget', { spent: fmt(spentThisMonth), budget: fmt(resteAVivre) })}
             </span>
             {status.perDay !== null && (
               <span
@@ -286,7 +296,9 @@ export function ExpensesClient({
 
       <Card>
         <CardHeader>
-          <CardTitle>{t('summary', { count: thisMonth.length, total: fmt(spent) })}</CardTitle>
+          <CardTitle>
+            {t('summary', { count: thisMonth.length, total: fmt(spentThisMonth) })}
+          </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           {thisMonth.length === 0 ? (
