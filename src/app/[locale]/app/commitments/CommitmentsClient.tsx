@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useOptimistic, useState, useTransition } from 'react';
+import { useEffect, useMemo, useOptimistic, useState, useTransition } from 'react';
 import { Check, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -100,6 +100,23 @@ export function CommitmentsClient({
     resetForm();
     setFormMode('closed');
   }
+
+  // When the form opens (create OR edit), bring it into view and move focus into
+  // it. Without this, clicking the pencil on a row far down the list opens the
+  // form at the TOP of the page — off-screen, with no change for a sighted user
+  // and no cue for keyboard/screen-reader users (dashboard-ux-auditor P1).
+  useEffect(() => {
+    if (formMode === 'closed') return;
+    // `preventScroll` so focus doesn't jump instantly — the scroll below does
+    // the moving. `scrollIntoView` is guarded (jsdom doesn't implement it).
+    document.getElementById('commitment-label')?.focus({ preventScroll: true });
+    // Respect prefers-reduced-motion (WCAG 2.3.3): no smooth animation for users
+    // who asked to reduce motion — jump instantly instead (Codex review).
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    document
+      .getElementById('commitments-form')
+      ?.scrollIntoView?.({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+  }, [formMode, editingId]);
 
   // Optimistic paid ledger: a Set of `${commitmentId}|${periodKey}`. The reducer
   // takes an EXPLICIT intent (`{key, paid}`) rather than a blind toggle so a `+`
