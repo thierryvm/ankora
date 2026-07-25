@@ -107,10 +107,18 @@ test.describe('LocaleSwitcher — THI-255 delayed apply / TICKET 7 coverage', ()
       )
       .toBe('en');
 
-    // Hard-navigate so we exercise the cookie-based locale resolution path
-    // (next-intl reads `NEXT_LOCALE` server-side on a fresh request).
-    await page.goto('/faq', { waitUntil: 'load' });
+    // Hard-navigate to the PREFIXED path — the only thing that carries the
+    // locale since 2026-07-25. `localeCookie: false` + `localeDetection: false`
+    // reduced resolution to the URL prefix alone (cf. src/i18n/routing.ts), so
+    // an unprefixed `/faq` now deterministically renders French. That is what
+    // the app's own `<Link>`s emit once the user is in English, so this is the
+    // real user path, not a workaround.
+    await page.goto('/en/faq', { waitUntil: 'load' });
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+
+    // And the counterpart: the unprefixed URL is French for everyone.
+    await page.goto('/faq', { waitUntil: 'load' });
+    await expect(page.locator('html')).toHaveAttribute('lang', 'fr-BE');
   });
 
   test('3. i18n parity across main routes — `/`, `/faq`, `/glossaire` render in the active locale', async ({
@@ -121,15 +129,13 @@ test.describe('LocaleSwitcher — THI-255 delayed apply / TICKET 7 coverage', ()
     // `/` — landing
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 
-    // `/faq`
-    await page.goto('/faq', { waitUntil: 'load' });
+    // `/faq` — prefixed, as the app's own `<Link>`s emit in English.
+    await page.goto('/en/faq', { waitUntil: 'load' });
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 
-    // `/glossaire` — the route name itself is locale-aware via next-intl;
-    // with `localePrefix: 'as-needed'` on the default locale the EN slug
-    // stays `/glossaire` (not re-routed yet — no pathnames map). We just
-    // assert the html lang attribute carries the user's choice through.
-    await page.goto('/glossaire', { waitUntil: 'load' });
+    // `/glossaire` — the slug itself is not localised (no `pathnames` map), so
+    // only the prefix carries the locale.
+    await page.goto('/en/glossaire', { waitUntil: 'load' });
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   });
 
@@ -242,16 +248,15 @@ test.describe('LocaleSwitcher — THI-255 delayed apply / TICKET 7 coverage', ()
  * the middleware behaviour under test is identical, but dev never prefetches.
  */
 test.describe('a prefetch must not rewrite NEXT_LOCALE', () => {
-  // KNOWN BUG, NOT YET FIXED — kept executable and red-by-design rather than
-  // deleted, so the suite keeps describing the defect until it is closed.
-  //
-  // Three middleware-level fixes were built and measured on 2026-07-25; all
-  // three are structurally impossible, because Next normalises RSC requests
-  // before `proxy.ts` runs (headers AND the `_rsc` query param are stripped),
-  // so the middleware cannot tell a background prefetch from a real page
-  // navigation. Full measurements + the two remaining candidate fixes:
-  // `docs/audits/2026-07-25-locale-cookie-race-diagnostic.md`.
-  test.fixme('French stays French after an /en prefetch', async ({ page, baseURL }) => {
+  // Closed 2026-07-25 by `localeCookie: false` in `src/i18n/routing.ts`.
+  // Three middleware-level fixes were built and measured first; all three are
+  // structurally impossible, because Next normalises RSC requests before
+  // `proxy.ts` runs (headers AND the `_rsc` query param are stripped), so the
+  // middleware cannot tell a background prefetch from a real navigation. The
+  // fix had to remove next-intl's write instead of trying to detect the
+  // request. Verified red on the previous config, green on this one.
+  // Cf. `docs/audits/2026-07-25-locale-cookie-race-diagnostic.md`.
+  test('French stays French after an /en prefetch', async ({ page, baseURL }) => {
     await page.setViewportSize(DESKTOP_VIEWPORT);
     await page.goto('/');
 

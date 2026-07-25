@@ -16,9 +16,12 @@ import { updateSession } from '@/lib/supabase/middleware';
  *      theme-boot inline script in `[locale]/layout.tsx` rendered without a
  *      `nonce` attribute and was blocked by the strict CSP. Cf.
  *      `docs/audits/2026-05-18-prod-p0-bugs-diagnostic.md`.
- *   2. next-intl `handleI18nRouting` — detects the locale (URL segment > cookie > default),
- *      performs any 302 redirect / internal rewrite and sets the NEXT_LOCALE cookie on the
- *      outgoing response.
+ *   2. next-intl `handleI18nRouting` — resolves the locale from the URL segment
+ *      alone, falling back to `defaultLocale`, and performs any redirect /
+ *      internal rewrite. It no longer reads NOR writes the NEXT_LOCALE cookie:
+ *      `localeCookie: false` + `localeDetection: false` since 2026-07-25 (the
+ *      cookie rewrite was silently reverting the user's language — see the long
+ *      note in `src/i18n/routing.ts`).
  *   3. Apply CSP header to the outgoing response so the browser receives the
  *      matching policy for the nonce that Server Components rendered with.
  *   4. Supabase `updateSession` — refreshes the session cookie on the already-localized
@@ -89,8 +92,8 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   request.headers.set('x-pathname', request.nextUrl.pathname);
 
   // 2. i18n routing. Produces either a redirect, an internal rewrite, or a
-  //    NextResponse.next() carrying the NEXT_LOCALE cookie. Subsequent steps
-  //    augment this response in-place.
+  //    plain NextResponse.next(). It carries no locale cookie any more
+  //    (`localeCookie: false`). Subsequent steps augment this response in-place.
   const response = handleI18nRouting(request);
 
   // 3. Apply CSP to the outgoing response so the browser enforces the same
