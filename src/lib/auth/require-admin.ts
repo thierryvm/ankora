@@ -1,5 +1,8 @@
 import { headers } from 'next/headers';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
+import { getLocale } from 'next-intl/server';
+
+import { redirect } from '@/i18n/navigation';
 import type { User } from '@supabase/supabase-js';
 
 import { env } from '@/lib/env';
@@ -75,7 +78,7 @@ export async function requireAdmin(): Promise<User> {
       { userId: user.id, ipAddress, userAgent },
       { path },
     );
-    redirect('/app');
+    return redirect({ href: '/app', locale: await getLocale() });
   }
 
   // 4. Granted

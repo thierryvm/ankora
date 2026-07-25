@@ -10,6 +10,20 @@ const createClientMock = vi.fn(async () => ({
 const logWarnMock = vi.hoisted(() => vi.fn());
 const logErrorMock = vi.hoisted(() => vi.fn());
 
+// This suite covers `getOptionalUser` only, but the module under test now
+// imports the locale-aware `redirect`. Stub the barrel so next-intl's ESM build
+// stays out of the Vitest module graph (it fails to resolve `next/navigation`
+// there). The redirecting branches are covered in `require-user-redirects.test.ts`.
+vi.mock('@/i18n/navigation', () => ({
+  redirect: () => {
+    throw new Error('NEXT_REDIRECT');
+  },
+}));
+
+vi.mock('next-intl/server', () => ({
+  getLocale: async () => 'fr-BE',
+}));
+
 vi.mock('@/lib/supabase/server', () => ({
   createClient: () => createClientMock(),
 }));

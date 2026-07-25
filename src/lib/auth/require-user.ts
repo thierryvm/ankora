@@ -1,6 +1,7 @@
-import { redirect } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
+import { getLocale } from 'next-intl/server';
 
+import { redirect } from '@/i18n/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { log } from '@/lib/log';
 
@@ -73,12 +74,19 @@ export async function getOptionalUser(): Promise<User | null> {
  * Delegates the session lookup to `getOptionalUser` so the Supabase wiring
  * (createClient + getUser + error handling) lives in a single place.
  */
-export async function requireUser(redirectTo = '/login'): Promise<User> {
+export async function requireUser(): Promise<User> {
   const user = await getOptionalUser();
 
   if (!user) {
-    log.warn('[503-diag] require-user requireUser redirect', { redirectTo });
-    redirect(redirectTo);
+    log.warn('[503-diag] require-user requireUser redirect', { redirectTo: '/login' });
+    // Locale-aware on purpose: `localePrefix: 'as-needed'` means French lives
+    // on unprefixed URLs, so a bare `redirect('/login')` sends an English user
+    // to the French login page. next-intl stopped covering for this when
+    // `localeDetection` was turned off (#258) — the cookie branch that used to
+    // 307 `/login` to `/en/login` is gone. This `redirect` returns `never` and
+    // throws synchronously like the one from `next/navigation`, and its type
+    // forces the locale to be passed.
+    return redirect({ href: '/login', locale: await getLocale() });
   }
 
   return user;
@@ -121,7 +129,7 @@ export async function requireUserWithWorkspace(): Promise<{
       userId: user.id,
       hadError: !!error,
     });
-    redirect('/onboarding');
+    return redirect({ href: '/onboarding', locale: await getLocale() });
   }
 
   return {

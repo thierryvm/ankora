@@ -1,7 +1,10 @@
 'use server';
 
 import { headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { redirect as redirectToExternalUrl } from 'next/navigation';
+import { getLocale } from 'next-intl/server';
+
+import { redirect } from '@/i18n/navigation';
 
 import { env } from '@/lib/env';
 import { createClient } from '@/lib/supabase/server';
@@ -73,7 +76,7 @@ export async function signupAction(formData: FormData): Promise<ActionResult> {
     userAgent,
   });
 
-  redirect('/signup/check-email');
+  return redirect({ href: '/signup/check-email', locale: await getLocale() });
 }
 
 export async function signInWithGoogleAction(): Promise<ActionResult> {
@@ -103,7 +106,11 @@ export async function signInWithGoogleAction(): Promise<ActionResult> {
     return { ok: false, errorCode: 'errors.auth.googleFailed' };
   }
 
-  redirect(data.url);
+  // EXTERNAL URL — Google's consent screen. It must never go through the
+  // locale-aware `redirect`: that one prefixes its `href`, which would turn an
+  // absolute third-party URL into a broken same-origin path. Hence the explicit
+  // alias — the distinction is load-bearing, not stylistic.
+  redirectToExternalUrl(data.url);
 }
 
 export async function loginAction(formData: FormData): Promise<ActionResult> {
@@ -151,7 +158,10 @@ export async function loginAction(formData: FormData): Promise<ActionResult> {
     .eq('id', data.user.id)
     .maybeSingle();
 
-  redirect(profile?.onboarded_at ? '/app' : '/onboarding');
+  return redirect({
+    href: profile?.onboarded_at ? '/app' : '/onboarding',
+    locale: await getLocale(),
+  });
 }
 
 export async function logoutAction(): Promise<void> {
@@ -167,7 +177,12 @@ export async function logoutAction(): Promise<void> {
     await logAuditEvent(AuditEvent.AUTH_LOGOUT, { userId: user.id, ipAddress: ip, userAgent });
   }
 
-  redirect('/');
+  // Prefixed on purpose. The @thierry arbitration of 2026-07-25 ("`/` always
+  // renders French") is about Accept-Language detection on an unprefixed URL,
+  // not about an explicit redirect from a context where the locale is known.
+  // Dropping an English user on the French landing right after logout is the
+  // very bug this PR closes.
+  return redirect({ href: '/', locale: await getLocale() });
 }
 
 export async function requestPasswordResetAction(formData: FormData): Promise<ActionResult> {
@@ -240,5 +255,5 @@ export async function confirmPasswordResetAction(formData: FormData): Promise<Ac
     userAgent,
   });
 
-  redirect('/login?reset=done');
+  return redirect({ href: '/login?reset=done', locale: await getLocale() });
 }

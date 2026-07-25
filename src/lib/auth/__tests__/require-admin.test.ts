@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const requireUserMock = vi.fn();
 const rateLimitMock = vi.fn();
 const logAuditEventMock = vi.fn();
-const redirectMock = vi.fn((_path?: string): never => {
+const redirectMock = vi.fn((_args?: unknown): never => {
   throw new Error('NEXT_REDIRECT');
 });
 const notFoundMock = vi.fn(() => {
@@ -17,8 +17,19 @@ vi.mock('next/headers', () => ({
 }));
 
 vi.mock('next/navigation', () => ({
-  redirect: (path: string) => redirectMock(path),
   notFound: () => notFoundMock(),
+}));
+
+// `redirect` now comes from the locale-aware barrel, so the guard can send an
+// English admin to `/en/app` instead of the French cockpit. Mocking the barrel
+// (rather than `next/navigation`) also keeps next-intl's ESM build out of the
+// Vitest module graph — it fails to resolve `next/navigation` there.
+vi.mock('@/i18n/navigation', () => ({
+  redirect: (args: unknown) => redirectMock(args),
+}));
+
+vi.mock('next-intl/server', () => ({
+  getLocale: async () => 'fr-BE',
 }));
 
 vi.mock('@/lib/auth/require-user', () => ({
@@ -103,7 +114,7 @@ describe('requireAdmin() — rate-limited + audit-logged guard', () => {
 
     await expect(requireAdmin()).rejects.toThrow('NEXT_REDIRECT');
 
-    expect(redirectMock).toHaveBeenCalledWith('/app');
+    expect(redirectMock).toHaveBeenCalledWith({ href: '/app', locale: 'fr-BE' });
     // Per security-auditor P1-B + gdpr P1, attempted_user_id is no longer
     // duplicated into metadata — canonical `userId` column carries it.
     expect(logAuditEventMock).toHaveBeenCalledWith(

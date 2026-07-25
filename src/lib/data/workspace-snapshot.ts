@@ -1,4 +1,6 @@
-import { redirect } from 'next/navigation';
+import { getLocale } from 'next-intl/server';
+
+import { redirect } from '@/i18n/navigation';
 
 import { createClient } from '@/lib/supabase/server';
 import { log } from '@/lib/log';
@@ -150,14 +152,14 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  if (!user) return redirect({ href: '/login', locale: await getLocale() });
 
   const { data: profile } = await supabase
     .from('users')
     .select('onboarded_at')
     .eq('id', user.id)
     .maybeSingle();
-  if (!profile?.onboarded_at) redirect('/onboarding');
+  if (!profile?.onboarded_at) return redirect({ href: '/onboarding', locale: await getLocale() });
 
   const { data: membership } = await supabase
     .from('workspace_members')
@@ -166,7 +168,7 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
     .order('joined_at', { ascending: true })
     .limit(1)
     .maybeSingle();
-  if (!membership) redirect('/onboarding');
+  if (!membership) return redirect({ href: '/onboarding', locale: await getLocale() });
 
   const workspaceId = membership.workspace_id;
 
@@ -245,7 +247,8 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
       .eq('period_month', previousMonth),
   ]);
 
-  if (wsRes.error || !wsRes.data) redirect('/onboarding');
+  if (wsRes.error || !wsRes.data)
+    return redirect({ href: '/onboarding', locale: await getLocale() });
 
   // Never swallow a charges read failure silently again (incident 2026-07-18:
   // the `?? []` fallback made a failing SELECT look like an empty workspace).

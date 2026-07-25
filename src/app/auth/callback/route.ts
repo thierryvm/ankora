@@ -19,6 +19,15 @@ import { routing, type Locale } from '@/i18n/routing';
  * Falls back to `routing.defaultLocale` (fr-BE) if the cookie is missing or
  * carries an unknown value. The TS type guard rules out a spoofed cookie.
  */
+/**
+ * Reads the cookie DELIBERATELY, and must keep doing so — do not "simplify"
+ * this to `getLocale()` from `next-intl/server`. This route is excluded from
+ * the proxy matcher (`src/proxy.ts`), so the middleware never runs here and the
+ * `X-NEXT-INTL-LOCALE` header `getLocale()` relies on is absent. It would fall
+ * back to `resolveLocaleFromUserOrCookie()` in `src/i18n/request.ts`, which
+ * costs an extra `auth.getUser()` plus a `users` select on the OAuth hot path,
+ * for the same value the cookie already carries.
+ */
 async function resolveLocale(): Promise<Locale> {
   const cookieStore = await cookies();
   const raw = cookieStore.get('NEXT_LOCALE')?.value;

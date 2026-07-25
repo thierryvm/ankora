@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
+import { redirect } from '@/i18n/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 
 import { Link } from '@/i18n/navigation';
@@ -31,7 +31,7 @@ export default async function DeletionStatusPage() {
     .limit(1)
     .maybeSingle();
 
-  if (!data) redirect('/app/settings');
+  if (!data) return redirect({ href: '/app/settings', locale: await getLocale() });
 
   const scheduled = new Date(data.scheduled_for);
   const now = new Date();
