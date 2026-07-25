@@ -152,7 +152,7 @@ export function BottomTabBar({ isAdmin = false }: BottomTabBarProps) {
       <nav
         aria-label={t('label')}
         data-testid="bottom-tab-bar"
-        className="bg-background/85 border-border/40 fixed right-0 bottom-0 left-0 z-40 border-t pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden"
+        className="surface-overlay border-border/40 fixed right-0 bottom-0 left-0 z-40 border-t pb-[env(safe-area-inset-bottom)] md:hidden"
       >
         <div className="flex h-12 items-stretch">
           {TABS.map((tab) => {

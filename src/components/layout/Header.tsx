@@ -66,7 +66,7 @@ export async function Header({ variant = 'marketing', isAuthenticated, userEmail
     // safe-area env vars; `pt-[env(safe-area-inset-top)]` pushes the content
     // row below the status bar without disturbing browser layout (where the
     // inset reports 0).
-    <header className="border-border bg-background/80 sticky top-0 z-40 border-b pt-[env(safe-area-inset-top)] backdrop-blur">
+    <header className="surface-overlay border-border sticky top-0 z-40 border-b pt-[env(safe-area-inset-top)]">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-4 md:px-6">
         {/*
          * The logo always points to the public landing (`/`), aligned with
