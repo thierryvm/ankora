@@ -81,10 +81,16 @@ export default defineConfig({
     })),
   ],
 
+  // CI starts the server itself (build + start, see ci.yml). Locally Playwright
+  // starts it — `npm run dev` by default for fast iteration, but `npm run start`
+  // (production build) when E2E_PROD_SERVER=1. The dev server compiles Server
+  // Actions on first invocation, which blows past assertion timeouts and fails
+  // authenticated specs for no real reason; `scripts/e2e-auth.mjs` therefore
+  // opts into the production server so a local run matches what CI would see.
   webServer: process.env.CI
     ? undefined
     : {
-        command: 'npm run dev',
+        command: process.env.E2E_PROD_SERVER === '1' ? 'npm run start' : 'npm run dev',
         url: BASE_URL,
         reuseExistingServer: true,
         timeout: 120_000,
