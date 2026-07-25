@@ -12,6 +12,24 @@ test.describe('Security headers', () => {
     expect(csp).toContain("object-src 'none'");
   });
 
+  test('style-src allow-lists no third-party style hash', async ({ page }) => {
+    // Deliberate absence, not an oversight. Allow-listing the hash of the
+    // <style> sonner injects at runtime would silence its two console
+    // violations, but allowing a <style> also APPLIES it — and that copy is
+    // unlayered, so it would outrank the layered `@import` in globals.css and
+    // every Tailwind utility, painting a white toast in dark mode. The
+    // stylesheet is served from 'self' instead. Cf. docs/prs/PR-csp-sonner-report.md.
+    const response = await page.goto('/');
+    const csp = response?.headers()['content-security-policy'] ?? '';
+    const styleSrc = csp.split(';').find((d) => d.trim().startsWith('style-src')) ?? '';
+
+    expect(styleSrc, 'style-src directive present').toBeTruthy();
+    expect(styleSrc, 'no hash source may creep into style-src').not.toMatch(/'sha\d{3}-/);
+    // `'unsafe-hashes'` only concerns inline `style=` attributes and must never
+    // be needed here — the repo styles exclusively through classes.
+    expect(styleSrc).not.toContain("'unsafe-hashes'");
+  });
+
   test('baseline security headers applied', async ({ page }) => {
     const response = await page.goto('/');
     const h = response?.headers() ?? {};
