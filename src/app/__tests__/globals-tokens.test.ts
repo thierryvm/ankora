@@ -178,6 +178,45 @@ describe('globals.css — Design System tokens (PR-3a, cc-design v1)', () => {
     });
   });
 
+  describe('Floating surface primitive (.surface-overlay)', () => {
+    it('paints a solid base so the class alone already passes contrast', () => {
+      expect(css).toMatch(/\.surface-overlay\s*{\s*background:\s*var\(--color-background\)/);
+    });
+
+    it('adds translucency only where backdrop-filter is supported', () => {
+      expect(css).toMatch(
+        /@supports\s*\(backdrop-filter:[^)]*\)[^@]*\.surface-overlay\s*{[^}]*backdrop-filter:\s*blur\(20px\)\s*saturate\(180%\)/s,
+      );
+    });
+
+    it('keeps the 82% mix — the constant the WCAG margin depends on', () => {
+      // Audited 2026-07-25: at 82%, light-mode `--color-muted-foreground` nav text
+      // still clears AA (4.76:1) against a worst-case fully-black backdrop. Lower
+      // it (the old ad-hoc surfaces used 70% and 60%, both failing AA) and that
+      // margin is gone — hence pinning the number here.
+      expect(css).toMatch(
+        /\.surface-overlay\s*{[^}]*color-mix\(in oklab,\s*var\(--color-background\)\s*82%,\s*transparent\)/s,
+      );
+    });
+
+    it('falls back to the solid base under reduced transparency or motion', () => {
+      expect(css).toMatch(
+        /@media\s*\(prefers-reduced-transparency:\s*reduce\)[^@]*\.surface-overlay\s*{[^}]*backdrop-filter:\s*none/s,
+      );
+    });
+
+    it('declares the fallback AFTER the @supports block so it wins the cascade', () => {
+      // Same specificity (conditional group rules add none) → source order decides.
+      // Inverted order would silently leave reduced-transparency users on glass.
+      const supportsAt = css.indexOf('@supports (backdrop-filter');
+      const fallbackAt = css.search(
+        /@media\s*\(prefers-reduced-transparency:\s*reduce\)[^@]*\.surface-overlay/s,
+      );
+      expect(supportsAt).toBeGreaterThan(-1);
+      expect(fallbackAt).toBeGreaterThan(supportsAt);
+    });
+  });
+
   describe('Helper text classes', () => {
     it.each(['eyebrow', 'micro', 't-primary', 't-secondary', 't-muted'])(
       'defines .%s helper class',

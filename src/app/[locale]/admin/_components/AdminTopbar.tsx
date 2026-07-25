@@ -27,7 +27,7 @@ export async function AdminTopbar({ locale }: { locale: string }): Promise<React
   const initialTheme: Theme = themeCookie === 'dark' ? 'dark' : 'light';
 
   return (
-    <header className="border-border bg-card/60 sticky top-0 z-30 flex items-center justify-between border-b px-4 py-3 backdrop-blur md:px-6">
+    <header className="surface-overlay border-border sticky top-0 z-30 flex items-center justify-between border-b px-4 py-3 md:px-6">
       <div className="flex items-center gap-3">
         <span className="font-semibold">Ankora · Admin</span>
         <span className="text-muted-foreground rounded-full border px-2 py-0.5 text-xs">

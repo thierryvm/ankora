@@ -253,6 +253,45 @@
   }
 }
 
+/* ---------- Floating surface — the canonical overlay token ----------
+   THE single class for anything that floats ABOVE content: sticky header,
+   bottom tab bar, drawers, sheets. Content surfaces (cards) stay solid.
+
+   Why that split: Apple's Liquid Glass is "controls float above content", and
+   keeping glass off content is also what makes contrast safe by construction —
+   body text always sits on a controlled, opaque backdrop, never on a blur of
+   whatever happens to scroll underneath.
+
+   Three layers, in cascade order (order matters — later wins at equal specificity):
+     1. Solid base        — always painted; on its own it already passes WCAG AA
+     2. @supports         — translucency added ONLY where backdrop-filter exists
+     3. reduced-transparency / reduced-motion — explicitly back to the solid base
+
+   Replaces the ad-hoc `bg-background/8x backdrop-blur` pairs previously inlined
+   on Header and BottomTabBar, neither of which had a fallback: a user with
+   "Reduce Transparency" on still got a translucent nav. */
+.surface-overlay {
+  background: var(--color-background);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .surface-overlay {
+    /* 82% keeps the base colour dominant, so the effective backdrop stays
+       within a few percent of the solid fallback whatever scrolls beneath. */
+    background: color-mix(in oklab, var(--color-background) 82%, transparent);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce), (prefers-reduced-motion: reduce) {
+  .surface-overlay {
+    background: var(--color-background);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
 /* ---------- Semantic element presets ----------
    Wrapped in @layer base so any Tailwind utility class (text-*, bg-*, font-*)
    overrides the default `color: var(--color-foreground)` baked into `.num*`,
