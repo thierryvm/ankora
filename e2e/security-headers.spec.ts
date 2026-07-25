@@ -12,21 +12,21 @@ test.describe('Security headers', () => {
     expect(csp).toContain("object-src 'none'");
   });
 
-  test('style-src carries the sonner hashes and no unsafe-inline escape', async ({ page }) => {
-    // Wiring assertion. `tests/csp-style-hashes.test.ts` proves the constants
-    // still match sonner's stylesheet; this proves they actually reach the
-    // emitted directive. A constant that is defined but never interpolated
-    // would otherwise pass the unit test while the violation stays live.
+  test('style-src allow-lists no third-party style hash', async ({ page }) => {
+    // Deliberate absence, not an oversight. Allow-listing the hash of the
+    // <style> sonner injects at runtime would silence its two console
+    // violations, but allowing a <style> also APPLIES it — and that copy is
+    // unlayered, so it would outrank the layered `@import` in globals.css and
+    // every Tailwind utility, painting a white toast in dark mode. The
+    // stylesheet is served from 'self' instead. Cf. docs/prs/PR-csp-sonner-report.md.
     const response = await page.goto('/');
     const csp = response?.headers()['content-security-policy'] ?? '';
     const styleSrc = csp.split(';').find((d) => d.trim().startsWith('style-src')) ?? '';
 
     expect(styleSrc, 'style-src directive present').toBeTruthy();
-    // The <style> sonner inserts empty, then the CSS it writes into it.
-    expect(styleSrc).toContain("'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='");
-    expect(styleSrc).toContain("'sha256-CIxDM5jnsGiKqXs2v7NKCY5MzdR9gu6TtiMJrDw29AY='");
-    // Element hashes only — `'unsafe-hashes'` concerns inline `style=`
-    // attributes and must never be needed here.
+    expect(styleSrc, 'no hash source may creep into style-src').not.toMatch(/'sha\d{3}-/);
+    // `'unsafe-hashes'` only concerns inline `style=` attributes and must never
+    // be needed here — the repo styles exclusively through classes.
     expect(styleSrc).not.toContain("'unsafe-hashes'");
   });
 

@@ -3,7 +3,8 @@
 **Date** : 25 juillet 2026
 **Auteur** : @cc-ankora
 **Branche** : `fix/csp-sonner-inline-style`
-**Revue de plan** : `plan-reviewer` — 🔴 REJECTED puis 🟡 APPROVED WITH CHANGES (7 corrections, toutes appliquées)
+**Revue de plan** : `plan-reviewer` — 🔴 REJECTED puis 🟡 APPROVED WITH CHANGES (7 corrections appliquées)
+**Audit sécurité** : `security-auditor` — 🔴 NO-GO sur la 1re version, levé par l'option (a) ci-dessous
 
 ---
 
@@ -59,58 +60,71 @@ toast, jamais son conteneur.
 
 ## 4. Correctif
 
-| Fichier                                | Changement                                                                     |
-| -------------------------------------- | ------------------------------------------------------------------------------ |
-| `src/app/globals.css`                  | `@import 'sonner/dist/styles.css' layer(sonner);` + ordre de couches explicite |
-| `src/lib/security/csp-style-hashes.ts` | nouveau — les deux hashes, sans aucun import                                   |
-| `src/proxy.ts`                         | hashes interpolés dans `style-src`, dans **tous** les environnements           |
-| `tests/csp-style-hashes.test.ts`       | nouveau — garde anti-dérive                                                    |
-| `e2e/security-headers.spec.ts`         | assertion de câblage sur la directive émise                                    |
+| Fichier                        | Changement                                                                     |
+| ------------------------------ | ------------------------------------------------------------------------------ |
+| `src/app/globals.css`          | `@import 'sonner/dist/styles.css' layer(sonner);` + ordre de couches explicite |
+| `e2e/security-headers.spec.ts` | assertion verrouillant l'absence de hash tiers dans `style-src`                |
 
-**Ceinture + bretelles, deux rôles distincts** : la feuille `'self'` est ce qui rend l'UI
-correcte (et le reste le jour où le hash dérive) ; les hashes ne font que rendre la console
-propre.
+Un seul changement fonctionnel : la feuille de style arrive par une source `'self'`, donc
+autorisée, donc les toasts retrouvent leur positionnement.
+
+### Ce que la première version faisait en plus, et pourquoi c'est retiré
+
+La première version épinglait aussi les deux hashes SHA-256 dans `style-src` pour faire
+taire les violations console. **`security-auditor` a posé un NO-GO, à raison** : les deux
+moitiés du diff se contredisaient.
+
+Autoriser un `<style>`, ce n'est pas seulement le tolérer — c'est **l'appliquer**. Or la
+copie injectée par sonner est _non-layered_, et du CSS non-layered l'emporte sur n'importe
+quelle couche quelle que soit la spécificité. Les hashes auraient donc annulé exactement la
+protection que le `@layer` du même diff venait d'installer. Aggravant mesuré par l'audit :
+sonner utilise `theme: 'light'` par défaut et `<Toaster />` ne passe pas de `theme`, donc
+`--normal-bg: #fff` aurait gagné sur `bg-card` → **toast à fond blanc en thème sombre**, et
+perte du code couleur de sévérité (`border-danger`, `border-success`…).
+
+Bénéfice secondaire, relevé par l'audit : sans épinglage, le CSS runtime d'une future
+version compromise de sonner reste **bloqué par la CSP** ; seule la copie vendored, layered
+et visible dans un diff de lockfile, s'applique.
+
+**Arbitrage assumé** : deux avertissements console cosmétiques valent mieux qu'une
+régression visuelle en thème sombre et qu'un CSS tiers exécuté au sommet de notre cascade.
+La décision est documentée à l'endroit où elle sera relue (`src/app/globals.css`) et
+verrouillée par une assertion E2E qui échoue si un hash réapparaît dans `style-src`.
 
 ### Points de vigilance traités
 
-- **Couche cascade** — `sonner/dist/styles.css` est livré _non-layered_, et du CSS
-  non-layered l'emporte **toujours** sur du CSS layered, quelle que soit la spécificité. Un
-  import naïf aurait écrasé `bg-card`, `border-border`, `border-danger`… de
-  `toast.tsx`, en clair comme en sombre. D'où `@layer theme, base, sonner, components,
-utilities;` déclaré **avant** les imports : sonner garde son positionnement, nos
-  utilitaires gardent le dernier mot.
-- **Pas de gating production** — mesuré : la violation se reproduit aussi en dev, car CSP3
-  fait ignorer `'unsafe-inline'` dès qu'un nonce est présent, et `'nonce-…'` est toujours
-  émis. Le `devStyleExtras` est un no-op pour cette directive.
-- **Module de constantes sans import** — importer `src/proxy.ts` depuis Vitest est
-  impossible : il tire `src/lib/supabase/middleware.ts` → `src/lib/env.ts`, qui _throw_ au
-  chargement sans les variables d'environnement.
-- **Pas de `'unsafe-hashes'`** — ce sont des éléments `<style>`, pas des attributs `style=`.
+- **Couche cascade** — `sonner/dist/styles.css` est livré _non-layered_. D'où
+  `@layer theme, base, sonner, components, utilities;` déclaré **avant** les imports :
+  sonner garde son positionnement, nos utilitaires gardent le dernier mot.
 - **`package.json` inchangé** — `sonner` est déjà une dépendance.
+- **Pas de `'unsafe-hashes'`, pas de `'unsafe-inline'`** — le repo style exclusivement par
+  classes.
 
 ## 5. Preuve avant / après
 
 Sonde Playwright : écoute de `securitypolicyviolation` posée via `addInitScript` (donc
-active dès l'évaluation du chunk), puis mesure de la `position` calculée d'un
-`[data-sonner-toaster]`.
+active dès l'évaluation du chunk), puis mesure de la `position` calculée du conteneur et de
+la couleur de fond d'un toast, **dans les deux thèmes**.
 
-|                                                           | violations `style-src` | `[data-sonner-toaster]` |
-| --------------------------------------------------------- | ---------------------- | ----------------------- |
-| **Avant** — production actuelle (`ankora-chi.vercel.app`) | **2**                  | `static` ✗ CSS absent   |
-| **Après** — build de production local                     | **0**                  | `fixed` ✓ CSS appliqué  |
+|                                       | violations `style-src` | positionnement | fond du toast (sombre) |
+| ------------------------------------- | ---------------------- | -------------- | ---------------------- |
+| **Avant** — production actuelle       | 2                      | `static` ✗     | `rgb(17, 26, 46)`      |
+| **Après** — build de production local | 2 _(assumées)_         | `fixed` ✓      | `rgb(17, 26, 46)` ✓    |
 
-## 6. Garde anti-dérive
+Le défaut utilisateur est corrigé et nos tokens de thème sont préservés dans les deux modes
+— ce qui n'aurait pas été le cas avec les hashes (fond blanc attendu en sombre).
 
-Une montée de version de `sonner` change le littéral CSS et ferait silencieusement
-réapparaître la violation. `tests/csp-style-hashes.test.ts` ré-extrait le littéral depuis
-`node_modules` à chaque run et échoue bruyamment. Il refuse aussi de passer au vert si
-l'extraction casse : nombre d'appels `__insertCSS(` attendu, et longueur extraite
+## 6. Verrou anti-régression
 
-> 1 000 caractères — une regex qui ne matche plus rien ne peut pas produire un test vert.
+`e2e/security-headers.spec.ts` échoue si un hash (`'sha256-…'`, `'sha384-…'`, `'sha512-…'`)
+réapparaît dans `style-src`, ou si `'unsafe-hashes'` y est introduit. C'est la seule
+protection nécessaire une fois l'option (a) retenue : sans hash épinglé, il n'y a plus de
+constante susceptible de dériver lors d'une montée de version de sonner.
 
-Le test unitaire prouve que la constante est **juste** ; le spec E2E prouve qu'elle est
-**branchée**. Une constante définie mais jamais interpolée passerait le premier et laisserait
-la violation vivante.
+Le garde-fou anti-dérive de la première version (ré-extraction + re-hash du littéral depuis
+`node_modules`) a été retiré avec les hashes qu'il protégeait. `security-auditor` avait par
+ailleurs relevé que son message d'échec — « update SONNER_STYLE_HASH » — invitait à
+re-hasher mécaniquement un CSS potentiellement hostile.
 
 ## 7. Hors scope, à replanifier
 
