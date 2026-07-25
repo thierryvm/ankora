@@ -141,6 +141,25 @@ non-régression.
 - `npm run lint` : 0 erreur (7 warnings préexistants)
 - `npm run test` : **1646 / 1646**, dont le verrou de config `routing.test.ts` (5/5)
 
+### Parcours joué en direct dans un navigateur
+
+Demandé par @thierry. Build de production local, navigateur piloté pas à pas :
+
+| Étape                                               | Résultat                                                                       |
+| --------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Arrivée sur `/`                                     | `lang="fr-BE"`, aucun cookie — pas de redirection `Accept-Language`            |
+| Clic **EN**                                         | `/en`, titre « Your financial anchor »                                         |
+| Clic **FR**, puis 5 s d'attente                     | `/`, `lang="fr-BE"`, `NEXT_LOCALE=fr-BE` — la fenêtre de course est passée     |
+| Prefetch `/en?_rsc=…` rejoué avec le cookie `fr-BE` | HTTP 200, **cookie inchangé** — c'est exactement la requête qui le réécrivait  |
+| Navigation vers `/faq`                              | `lang="fr-BE"`, H1 « Questions fréquentes », **aucun 307 vers `/en`**          |
+| `/en` puis `/en/faq`                                | `lang="en"`, H1 « Frequently asked questions », **et le cookie reste `fr-BE`** |
+
+La dernière ligne est la démonstration la plus directe : consulter des pages anglaises ne
+touche plus à la langue enregistrée.
+
+Console : 2 violations CSP `style-src` (celles de `sonner`, conservées délibérément en
+#257) et 4 erreurs Vercel Insights (scripts absents en local). Aucune erreur nouvelle.
+
 ### Ce que la preuve ne couvre pas
 
 Le rejeu rouge/vert n'a pas pu être refait en aller-retour immédiat en fin de session (le

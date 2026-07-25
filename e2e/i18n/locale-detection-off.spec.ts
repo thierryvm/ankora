@@ -33,6 +33,13 @@ test.describe('locale detection is off — the URL decides, not the browser', ()
   test('an English browser choosing French keeps French — the unreachable-French bug', async ({
     page,
   }) => {
+    // Desktop viewport: on mobile the switcher lives inside the nav drawer and
+    // is not directly clickable, which is why `locale-switcher.spec.ts` is
+    // `testIgnore`d on the mobile projects (cf. playwright.config.ts). The
+    // contract under test here — which locale an `en-US` browser resolves to —
+    // is viewport-independent, and the two navigation-only tests in this file
+    // keep covering it on every project.
+    await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/');
     // Go to English first so the switch back to French is a real choice.
     await page.getByTestId('locale-option-en').click();
