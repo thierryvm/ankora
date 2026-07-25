@@ -7,17 +7,11 @@ import type { Locale } from '@/i18n/routing';
 import { formatDate, normalizeEmail } from '@/lib/i18n/formatters';
 
 import { Link } from '@/i18n/navigation';
+import { LocaleSwitcher } from '@/components/layout/LocaleSwitcher';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { toast } from '@/components/ui/toast';
 import {
   updateProfileAction,
@@ -35,7 +29,6 @@ type Deletion = { scheduledFor: string; status: string } | null;
 type Props = {
   email: string;
   displayName: string;
-  locale: string;
   factors: Factor[];
   deletion: Deletion;
   /**
@@ -47,17 +40,10 @@ type Props = {
   cookiesSection?: React.ReactNode;
 };
 
-export function SettingsClient({
-  email,
-  displayName,
-  locale,
-  factors,
-  deletion,
-  cookiesSection,
-}: Props) {
+export function SettingsClient({ email, displayName, factors, deletion, cookiesSection }: Props) {
   return (
     <div className="flex flex-col gap-6">
-      <ProfileCard email={email} displayName={displayName} locale={locale} />
+      <ProfileCard email={email} displayName={displayName} />
       <MfaCard factors={factors} />
       <DataCard />
       {cookiesSection}
@@ -66,26 +52,16 @@ export function SettingsClient({
   );
 }
 
-function ProfileCard({
-  email,
-  displayName,
-  locale,
-}: {
-  email: string;
-  displayName: string;
-  locale: string;
-}) {
+function ProfileCard({ email, displayName }: { email: string; displayName: string }) {
   const t = useTranslations('app.settings.profile');
-  const tOptions = useTranslations('app.settings.profile.localeOptions');
   const translateError = useActionErrorTranslator();
   const [name, setName] = useState(displayName);
-  const [lang, setLang] = useState(locale);
   const [pending, startTransition] = useTransition();
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     startTransition(async () => {
-      const res = await updateProfileAction({ displayName: name, locale: lang });
+      const res = await updateProfileAction({ displayName: name });
       if (res.ok) toast.success(t('toastSaved'));
       else toast.error(translateError(res.errorCode));
     });
@@ -113,25 +89,51 @@ function ProfileCard({
               required
             />
           </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="locale">{t('localeLabel')}</Label>
-            <Select value={lang} onValueChange={setLang}>
-              <SelectTrigger id="locale">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="fr-BE">{tOptions('fr-BE')}</SelectItem>
-                <SelectItem value="fr-FR">{tOptions('fr-FR')}</SelectItem>
-                <SelectItem value="en-GB">{tOptions('en-GB')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
           <div>
             <Button type="submit" disabled={pending}>
               {pending ? t('submitting') : t('submit')}
             </Button>
           </div>
         </form>
+
+        {/*
+          Language sits OUTSIDE the form on purpose. It is not a draft the user
+          submits — `LocaleSwitcher` persists the choice immediately and then
+          navigates to the localised URL, which remounts this card. Leaving the
+          control inside the form would suggest "Save" applies to it, and a name
+          typed but not yet saved would vanish on switch with no explanation.
+          Same label-left / control-right grammar as the theme toggle in
+          `MoreSheet`.
+
+          `data-testid` on the WRAPPER, not on the switcher: `/app/settings`
+          mounts `<Header variant="app">` (which renders a LocaleSwitcher in a
+          `hidden lg:flex` block — present in the DOM at every viewport) and,
+          on mobile, `MoreSheet` renders another. There are therefore two to
+          three instances on this page, all carrying the same internal testids.
+          Any Playwright locator for this one must scope through this wrapper,
+          or hit a strict-mode violation.
+        */}
+        <div
+          data-testid="settings-locale-field"
+          className="border-border mt-4 flex items-center justify-between gap-4 border-t pt-4"
+        >
+          {/*
+            A <span>, not a <Label>: `LocaleSwitcher` is a radiogroup with no
+            single labelable control, so `htmlFor` would dangle.
+
+            It NAMES the group through `labelledById` rather than letting the
+            switcher use its own `aria-label`. At ≥1024px this page mounts a
+            second switcher in the header, and two radiogroups both announced
+            as "Changer de langue" are indistinguishable in a screen reader's
+            element list. Borrowing the visible "Langue" text disambiguates
+            them, and makes the accessible name exactly match the visible one
+            (WCAG 2.5.3) instead of merely containing it.
+          */}
+          <span id="settings-locale-label" className="text-sm leading-none font-medium">
+            {t('localeLabel')}
+          </span>
+          <LocaleSwitcher labelledById="settings-locale-label" />
+        </div>
       </CardContent>
     </Card>
   );
