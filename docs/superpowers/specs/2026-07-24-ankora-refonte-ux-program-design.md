@@ -118,3 +118,49 @@ Purement soustractif — aucune modification de comportement runtime.
 ### Hors périmètre (YAGNI)
 
 Pas de refactor, pas de renommage, pas de nouveau composant. Que du `rm`.
+
+---
+
+## Défauts constatés à traiter en Phase 1 (nav mobile)
+
+Signalés par @thierry le 25 juillet 2026 en production, **volontairement non corrigés à
+chaud** : la nav mobile est refondue d'un bloc en Phase 1, un patch isolé serait jeté.
+Tracés ici pour qu'ils entrent dans le périmètre plutôt que d'être redécouverts.
+
+### 1. `/app/commitments` est inatteignable depuis la nav mobile
+
+La route existe, la page fonctionne, mais elle n'est référencée par **aucune** surface de
+navigation mobile :
+
+| Surface                                                                                | Contient Engagements ?                                      |
+| -------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `Header.tsx` — nav applicative (7 destinations)                                        | oui, mais `hidden … lg:flex` → desktop ≥ 1024 px uniquement |
+| `BottomTabBar` — 4 onglets (`/app`, `/app/charges`, `/app/expenses`, `/app/simulator`) | non                                                         |
+| `MoreSheet` — comptes, réglages, admin, faq, glossaire, légal                          | **non**                                                     |
+| `EngagementsCard` (cockpit)                                                            | oui — **seul point d'entrée mobile**                        |
+
+Conséquence : hors du cockpit, Engagements n'existe plus sur mobile.
+
+### 2. Cause structurelle — aucune source unique de destinations
+
+C'est le vrai défaut, et celui que la Phase 1 doit fermer. Les destinations sont
+**dupliquées à trois endroits** (`Header.tsx`, `BottomTabBar.tsx`, `MoreSheet.tsx`), sans
+contrat commun. Rien n'empêche aujourd'hui d'ajouter une route et d'oublier une ou deux
+surfaces — c'est précisément ce qui s'est produit pour Engagements.
+
+Attendu Phase 1 : un registre unique de destinations (id, href, libellé i18n, icône,
+surface(s) d'affichage), consommé par les trois surfaces, plus un test qui échoue si une
+route de `src/app/[locale]/app/**` n'y figure pas. La répartition tabs / sheet devient
+alors une décision de données, pas de duplication.
+
+### 3. Incohérence des segments d'URL (à arbitrer, pas un bug)
+
+`/glossaire` est en français, `/app/commitments`, `/app/expenses`, `/app/charges`,
+`/app/settings` sont en anglais. Les segments d'URL sont du code, donc en anglais par
+convention projet — mais la convention n'est pas appliquée uniformément. Aucune table
+`pathnames` next-intl n'existe, donc aucune URL n'est localisée.
+
+Ce n'est pas cassé et les libellés affichés sont bien traduits (`nav.commitments`). En
+faire des URLs françaises est une **décision à part entière** : impact SEO, redirections
+permanentes des URLs existantes, table `pathnames` à maintenir sur 5 locales. À arbitrer
+avec @thierry, hors Phase 1 sauf décision explicite.
