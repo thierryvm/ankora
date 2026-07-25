@@ -8,13 +8,13 @@
 
 ## 1. Ce qui a été livré
 
-| PR   | Sujet                                                            | État                    |
-| ---- | ---------------------------------------------------------------- | ----------------------- |
-| #254 | agents `prod-bug-investigator` + `test-quality-auditor`          | ✅ mergée               |
-| #253 | handoff session précédente                                       | ✅ mergée               |
-| #255 | diagnostic de la course sur le cookie de langue                  | ✅ mergée               |
-| #256 | correction de la cause des échecs de login locaux (`e2e-auth`)   | ✅ mergée               |
-| #257 | CSP : style des toasts restauré + violations `sonner` supprimées | ⏳ ouverte, CI en cours |
+| PR   | Sujet                                                                         | État       |
+| ---- | ----------------------------------------------------------------------------- | ---------- |
+| #254 | agents `prod-bug-investigator` + `test-quality-auditor`                       | ✅ mergée  |
+| #253 | handoff session précédente                                                    | ✅ mergée  |
+| #255 | diagnostic de la course sur le cookie de langue                               | ✅ mergée  |
+| #256 | correction de la cause des échecs de login locaux (`e2e-auth`)                | ✅ mergée  |
+| #257 | CSP : style des toasts restauré (violations console conservées, délibérément) | ⏳ ouverte |
 
 ---
 
@@ -68,18 +68,38 @@ Cause : `sonner` insère un `<style>` **vide** puis le remplit → un élément,
 par re-calcul depuis le paquet installé.
 
 **Ce que ça cachait** : le CSS bloqué, `[data-sonner-toaster]{position:fixed}` ne
-s'appliquait pas → **les toasts sont mal positionnés en production**.
+s'appliquait pas → **les toasts étaient mal positionnés en production**.
 
-|                             | violations `style-src` | `[data-sonner-toaster]` |
-| --------------------------- | ---------------------- | ----------------------- |
-| Avant (production actuelle) | 2                      | `static` ✗              |
-| Après (build prod local)    | 0                      | `fixed` ✓               |
+### Deux hypothèses à moi, deux réfutations par les agents
 
-Ma première hypothèse (Radix / `get-nonce`) a été **réfutée par `plan-reviewer`** : ce
-singleton-là remplit son `<style>` avant de l'insérer, il ne peut pas produire un hash de
-chaîne vide.
+1. `plan-reviewer` a réfuté ma piste **Radix / `get-nonce`** : ce singleton-là remplit son
+   `<style>` avant de l'insérer, il ne peut donc pas produire un hash de chaîne vide. Il a
+   désigné `sonner` — confirmé ensuite par re-calcul, match exact sur les deux hashes.
+2. `security-auditor` a posé un **NO-GO** sur ma première version, qui épinglait les deux
+   hashes dans `style-src` pour faire taire la console. Motif : autoriser un `<style>`, ce
+   n'est pas le tolérer, c'est **l'appliquer**. La copie injectée est _non-layered_, donc
+   elle l'emporte sur toute couche — les hashes annulaient exactement la protection
+   `@layer` du même diff. Et comme sonner utilise `theme: 'light'` par défaut, son
+   `--normal-bg: #fff` aurait gagné sur `bg-card` → **toast fond blanc en thème sombre**.
 
----
+### Ce qui est livré : option (a)
+
+Import layered uniquement, pas de hash. Arbitrage assumé : deux avertissements console
+cosmétiques valent mieux qu'une régression visuelle en sombre et qu'un CSS tiers exécuté au
+sommet de notre cascade. Bénéfice secondaire : une future version compromise de sonner
+resterait bloquée par la CSP.
+
+|                             | violations     | positionnement | fond du toast (sombre) |
+| --------------------------- | -------------- | -------------- | ---------------------- |
+| Avant (production actuelle) | 2              | `static` ✗     | `rgb(17, 26, 46)`      |
+| Après (build prod local)    | 2 _(assumées)_ | `fixed` ✓      | `rgb(17, 26, 46)` ✓    |
+
+La décision est documentée dans `src/app/globals.css` et verrouillée par une assertion E2E
+qui échoue si un hash réapparaît dans `style-src`.
+
+**⚠️ À signaler à @thierry** : les 2 violations console qu'il avait relevées **restent
+visibles**. C'est délibéré et documenté — les supprimer casserait les toasts en thème
+sombre. Le vrai défaut (positionnement) est corrigé.
 
 ## 4. Reste à faire
 
@@ -103,11 +123,10 @@ correctif de la locale avait des tests unitaires verts et ne changeait rien dans
 navigateur : les mocks fabriquaient un en-tête que Next ne transmet jamais. La règle
 appliquée depuis : mesurer le signal réel **avant** d'écrire le prédicat, jamais l'inverse.
 
-**Le sous-agent qui contredit a plus de valeur que celui qui valide.** `plan-reviewer` a
-rejeté mon diagnostic CSP avec une preuve tirée du code de `node_modules` ; ma piste était
-fausse et aurait produit un troisième correctif inopérant. Il a aussi vu une régression
-visuelle que je n'avais pas anticipée (le CSS non-layered de sonner écrasant les utilitaires
-Tailwind).
+**Le sous-agent qui contredit a plus de valeur que celui qui valide.** Deux fois sur ce
+seul bug CSP : `plan-reviewer` a réfuté mon diagnostic (preuve tirée de `node_modules`),
+puis `security-auditor` a posé un NO-GO sur mon correctif en montrant que ses deux moitiés
+se contredisaient. Sans eux je livrais une régression visuelle en thème sombre.
 
 **Ne pas livrer un troisième correctif non prouvé sur un bug déjà mal corrigé deux fois.**
 Reverter et documenter le cul-de-sac vaut mieux qu'un pari. Le résultat négatif mesuré est
