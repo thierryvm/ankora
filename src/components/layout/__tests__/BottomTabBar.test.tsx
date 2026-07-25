@@ -61,6 +61,7 @@ vi.mock('@/components/gdpr/ConsentBanner', () => ({
 }));
 
 import { BottomTabBar } from '../BottomTabBar';
+import { MOBILE_SHEET_DESTINATIONS } from '../app-destinations';
 import {
   BOTTOM_TAB_BAR_EXCLUDED_ROUTES,
   isExcludedRoute,
@@ -198,6 +199,37 @@ describe('<BottomTabBar /> — More sheet content', () => {
 
     expect(screen.getByTestId('more-sheet-link-accounts')).toHaveAttribute('href', '/app/accounts');
     expect(screen.getByTestId('more-sheet-link-settings')).toHaveAttribute('href', '/app/settings');
+  });
+
+  it('reaches Engagements from mobile — the bug this registry closes', async () => {
+    // `/app/commitments` used to be declared in the desktop header only
+    // (`hidden lg:flex`), so on mobile the page existed but nothing linked to
+    // it outside the cockpit card. Reported in production by @thierry
+    // 2026-07-25. `app-destinations.test.ts` guards the registry itself; this
+    // asserts the sheet actually renders what the registry declares.
+    const user = userEvent.setup();
+    render(<BottomTabBar />);
+    await user.click(screen.getByTestId('bottom-tab-more'));
+
+    expect(screen.getByTestId('more-sheet-link-commitments')).toHaveAttribute(
+      'href',
+      '/app/commitments',
+    );
+  });
+
+  it('renders every sheet destination the registry declares', async () => {
+    // Catches a surface that stops consuming the registry: the sheet must
+    // render all of them, not a hand-picked subset.
+    const user = userEvent.setup();
+    render(<BottomTabBar />);
+    await user.click(screen.getByTestId('bottom-tab-more'));
+
+    for (const destination of MOBILE_SHEET_DESTINATIONS) {
+      expect(screen.getByTestId(`more-sheet-link-${destination.id}`)).toHaveAttribute(
+        'href',
+        destination.href,
+      );
+    }
   });
 
   it('exposes the FAQ / glossary / legal entries in the resources section', async () => {

@@ -101,6 +101,7 @@
       },
       "links": {
         "accounts": "Rekeningen",
+        "commitments": "Verbintenissen",
         "settings": "Instellingen",
         "admin": "Admin",
         "adminAriaLabel": "Adminzone (alleen oprichter)",

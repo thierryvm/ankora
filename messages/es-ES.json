@@ -101,6 +101,7 @@
       },
       "links": {
         "accounts": "Cuentas",
+        "commitments": "Compromisos",
         "settings": "Ajustes",
         "admin": "Admin",
         "adminAriaLabel": "Zona admin (solo fundador)",

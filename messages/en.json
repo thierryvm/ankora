@@ -101,6 +101,7 @@
       },
       "links": {
         "accounts": "Accounts",
+        "commitments": "Commitments",
         "settings": "Settings",
         "admin": "Admin",
         "adminAriaLabel": "Admin area (founder only)",
