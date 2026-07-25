@@ -24,18 +24,29 @@
  * for no real reason (observed 2026-07-25: the save button still read
  * « Enregistrement… » after 5 s). A validation tool that cries wolf gets ignored.
  *
- * ⚠️ RATE LIMIT — why a filter is mandatory. Each spec performs a real login,
- * and `rateLimit('auth', …)` is keyed **by IP** at 5 attempts / 15 minutes
- * (`src/lib/security/rate-limit.ts`, `src/lib/actions/auth.ts`). Running all 13
- * authenticated specs at once therefore locks itself out from the 6th login on —
- * verified 2026-07-25 ("Service temporairement indisponible"). This is the rate
- * limiter working correctly, not a bug. So: validate the 1-3 specs your change
- * actually touches. `--all` exists for the rare full sweep and warns first.
+ * ⚠️ LOGINS FAIL LOCALLY UNLESS UPSTASH IS REAL — read this before blaming the
+ * app. `npm run start` runs with NODE_ENV=production, and in production
+ * `rateLimit()` **fails closed**: any error reaching Upstash returns
+ * `rate_limit_unavailable`, which the login surfaces as « Service
+ * temporairement indisponible » (`src/lib/security/rate-limit.ts`,
+ * `src/lib/actions/auth.ts`). A `.env.local` pointing at a placeholder such as
+ * `https://dummy.upstash.io` therefore breaks the FIRST login, not the sixth.
+ * Corrected 2026-07-25 — this header previously blamed the 5-attempts/15-min
+ * quota, which sent debugging down the wrong path.
+ *
+ * Point `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` at the real free
+ * instance (`vercel env pull`) before running authenticated specs.
+ *
+ * Once Upstash is real, the quota does apply: `rateLimit('auth', …)` is keyed
+ * **by IP** at 5 attempts / 15 minutes, and each spec performs a real login. A
+ * 13-spec sweep locks itself out from the 6th login on. So: validate the 1-3
+ * specs your change actually touches. `--all` exists for the rare full sweep
+ * and warns first.
  *
  * Usage:
  *   npm run e2e:auth -- accounts         # specs matching "accounts" (the norm)
  *   npm run e2e:auth -- charges expenses # several filters
- *   npm run e2e:auth -- --all            # every auth spec (expect rate-limit hits)
+ *   npm run e2e:auth -- --all            # every auth spec (expect quota hits)
  *   npm run e2e:auth -- accounts --headed --skip-build
  */
 import { spawnSync } from 'node:child_process';
@@ -126,7 +137,10 @@ const allSpecs = findAuthSpecs();
 // attempts / 15 min per IP, so an unfiltered sweep locks itself out (see header).
 if (filters.length === 0 && !runAll) {
   console.error('✖ Name what you want to validate — every spec performs a real login,');
-  console.error('  and auth is rate-limited to 5 attempts / 15 min per IP.\n');
+  console.error('  and auth is rate-limited to 5 attempts / 15 min per IP.');
+  console.error('  (If the very FIRST login already fails with « Service temporairement');
+  console.error('   indisponible », that is not the quota — check UPSTASH_REDIS_REST_URL');
+  console.error('   in .env.local: rateLimit() fails closed in production builds.)\n');
   console.error('  Available authenticated specs:');
   for (const s of allSpecs) console.error(`    ${s}`);
   console.error('\n  e.g. npm run e2e:auth -- accounts        (use --all to sweep anyway)');
