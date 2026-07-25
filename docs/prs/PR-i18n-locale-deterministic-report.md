@@ -167,7 +167,56 @@ serveur local n'a pas pu être relancé). Le rouge documenté ci-dessus a été 
 dans la même session, sur le même test et le même chemin de code, avec la configuration
 d'avant. La CI rejoue la suite complète contre un build de production.
 
-## 7. Definition of DONE
+## 7. Régression connue, assumée, tracée
+
+`i18n-auditor` a rendu un **NO-GO** sur un P0 réel, que j'ai confirmé par la mesure plutôt
+que de le prendre pour argent comptant :
+
+| Requête `/app` avec cookie `NEXT_LOCALE=en` | Résultat                                        |
+| ------------------------------------------- | ----------------------------------------------- |
+| Prod actuelle (ancienne config)             | `307 → /en/app` — l'anglais est préservé        |
+| Cette PR                                    | `307 → /login` — non préfixé, donc **français** |
+
+Le middleware servait de **filet implicite** aux redirections serveur non préfixées. En
+`as-needed`, le préfixe du français est `/fr-BE`, jamais la chaîne vide : un chemin comme
+`/login` ne matche donc aucun préfixe, et c'est la branche cookie de `localeDetection` qui
+rattrapait le coup en émettant un 307 vers `/en/login`. Cette branche n'existe plus.
+
+Sites concernés (≈ 9), tous en `redirect()` de `next/navigation` brut :
+
+`src/lib/auth/require-user.ts` (`/login`, `/onboarding`) · `src/lib/auth/require-admin.ts`
+(`/app`) · `src/lib/data/workspace-snapshot.ts` (×4) · `src/lib/actions/auth.ts` (×4) ·
+`src/lib/actions/onboarding.ts` · `src/app/[locale]/onboarding/page.tsx` ·
+`src/app/[locale]/app/settings/deletion-status/page.tsx`
+
+Effet : un utilisateur anglophone **connecté** dont la session expire, qui se connecte, se
+déconnecte ou finit son onboarding atterrit sur une page française.
+
+**Pourquoi ce n'est pas corrigé ici** : ces sites sont des gardes d'authentification et des
+Server Actions — voie lourde, nouveau plan, `plan-reviewer`. Étendre le scope d'une PR en
+vol est une action explicitement bannie (doctrine `CLAUDE.md`, banned list §1).
+
+**Arbitrage @thierry, 25/07** : merger cette PR et enchaîner une PR de suivi dédiée. Le bug
+corrigé ici est quotidien et en production ; la régression ne touche que des utilisateurs
+anglophones **connectés**, dont il n'existe aucun avant le lancement. Le correctif de suivi
+est mécanique : le bon pattern existe déjà dans `src/app/auth/callback/route.ts`
+(`localiseTarget()`), il reste à le répliquer.
+
+### Autres constats de l'audit, hors périmètre
+
+- `updateProfileAction` écrit `users.locale` sans toucher au cookie ni revalider → la
+  langue enregistrée depuis Réglages n'a aucun effet visible. Et son `<Select>` propose
+  `fr-FR` / `en-GB`, absents de l'enum `LOCALES` → toute valeur autre que `fr-BE` échoue en
+  validation Zod. **Cassé indépendamment de cette PR.**
+- `src/i18n/request.ts` est un 3ᵉ lecteur du cookie, non documenté et probablement inerte.
+- Les deep-links `/nl-BE`, `/de-DE`, `/es-ES` résolvent toujours, mais aucun test ne le
+  vérifie.
+
+`seo-geo-auditor` : **GO**, aucune régression du diff. Il a relevé 4 bugs SEO préexistants
+(canoniques cross-locale sur `/faq` et les pages légales, pages `noindex` soumises au
+sitemap, locales non traduites indexables) — également hors périmètre, à ticketer.
+
+## 8. Definition of DONE
 
 | #   | Critère                             | Preuve                                 |
 | --- | ----------------------------------- | -------------------------------------- |
