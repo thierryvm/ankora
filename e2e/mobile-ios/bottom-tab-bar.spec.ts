@@ -75,13 +75,21 @@ test.describe('BottomTabBar — iPhone Safari WebKit (PR-BETA-6 / THI-277)', () 
     await expect(page.getByTestId('more-sheet')).toBeVisible();
     await expect(page.getByRole('dialog', { name: 'Plus' })).toBeVisible();
 
-    // Sheet content sanity: at least the canonical Accounts + Settings links.
+    // Sheet content sanity: the cockpit destinations the registry declares.
     await expect(page.getByTestId('more-sheet-link-accounts')).toBeVisible();
+    await expect(page.getByTestId('more-sheet-link-commitments')).toBeVisible();
     await expect(page.getByTestId('more-sheet-link-settings')).toBeVisible();
     await expect(page.getByTestId('more-sheet-logout')).toBeVisible();
 
     // Backdrop tap dismisses (Apple iOS sheet behaviour parity).
-    await page.getByTestId('more-sheet-backdrop').click();
+    //
+    // Click near the TOP of the backdrop rather than letting Playwright aim at
+    // its centre. The backdrop is `fixed inset-0`, so its centre is the middle
+    // of the viewport — and the sheet is tall enough to cover that point, which
+    // makes a centre click land on the sheet itself and never dismiss. A user
+    // taps the exposed strip above the sheet; this reproduces that, and stays
+    // correct as the sheet's height changes with its content.
+    await page.getByTestId('more-sheet-backdrop').click({ position: { x: 20, y: 20 } });
     await expect(page.getByTestId('more-sheet')).toBeHidden();
   });
 

@@ -1,11 +1,27 @@
 'use client';
 
 import { useState, useTransition, useCallback } from 'react';
-import { LayoutDashboard, Receipt, Wallet, Sparkles, Menu } from 'lucide-react';
+import {
+  HandCoins,
+  Landmark,
+  LayoutDashboard,
+  Menu,
+  Receipt,
+  Settings,
+  Sparkles,
+  Wallet,
+  type LucideIcon,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Link } from '@/i18n/navigation';
 import { usePathname } from '@/i18n/navigation';
+
+import {
+  MOBILE_TAB_DESTINATIONS,
+  isDestinationActive,
+  type AppDestinationId,
+} from './app-destinations';
 import { MoreSheet } from './MoreSheet';
 
 /**
@@ -56,43 +72,40 @@ import { MoreSheet } from './MoreSheet';
 // `'use client'` boundary of this file (which crashes every page render
 // on Next.js 16 + React 19, observed on PR #182 preview Vercel).
 
-type TabId = 'cockpit' | 'bills' | 'expenses' | 'simulate' | 'more';
-
-type Tab = {
-  id: TabId;
-  href: string;
-  labelKey: 'cockpit' | 'bills' | 'expenses' | 'simulate' | 'more';
-  // Mark routes that must use a startsWith comparison vs the exact-match
-  // `/app` root. We only have one exact-match tab today but keeping the
-  // shape explicit prevents a future refactor from quietly breaking the
-  // cockpit highlight.
-  match: 'exact' | 'startsWith';
-  icon: typeof LayoutDashboard;
+/**
+ * Icons and labels stay HERE, not in the registry: the registry is server-safe
+ * (no React) and next-intl message keys are typed against `fr-BE.json`, so only
+ * string literals type-check. Both maps are keyed by `AppDestinationId`, so
+ * adding a destination without an icon or a label is a TypeScript error — the
+ * same exhaustiveness the registry gives for the destinations themselves.
+ *
+ * Labels are per-surface on purpose. This bar says "Cockpit" / "Factures" /
+ * "Simuler" (`layout.bottomTab.*`) where the desktop header says "Tableau de
+ * bord" / "Charges" / "Simulateur" (`common.nav.*`). Sharing one key would have
+ * silently rewritten copy that was written for each context.
+ */
+const TAB_ICONS: Record<AppDestinationId, LucideIcon> = {
+  cockpit: LayoutDashboard,
+  bills: Receipt,
+  expenses: Wallet,
+  simulate: Sparkles,
+  commitments: HandCoins,
+  accounts: Landmark,
+  settings: Settings,
 };
 
-const TABS: readonly Tab[] = [
-  { id: 'cockpit', href: '/app', labelKey: 'cockpit', match: 'exact', icon: LayoutDashboard },
-  { id: 'bills', href: '/app/charges', labelKey: 'bills', match: 'startsWith', icon: Receipt },
-  {
-    id: 'expenses',
-    href: '/app/expenses',
-    labelKey: 'expenses',
-    match: 'startsWith',
-    icon: Wallet,
-  },
-  {
-    id: 'simulate',
-    href: '/app/simulator',
-    labelKey: 'simulate',
-    match: 'startsWith',
-    icon: Sparkles,
-  },
-] as const;
+type BottomTabLabelKey = 'cockpit' | 'bills' | 'expenses' | 'simulate';
 
-function isActive(pathname: string, tab: Tab): boolean {
-  if (tab.match === 'exact') return pathname === tab.href;
-  return pathname === tab.href || pathname.startsWith(`${tab.href}/`);
-}
+const TAB_LABELS: Record<AppDestinationId, BottomTabLabelKey | null> = {
+  cockpit: 'cockpit',
+  bills: 'bills',
+  expenses: 'expenses',
+  simulate: 'simulate',
+  // Sheet-only destinations have no bottom-tab label.
+  commitments: null,
+  accounts: null,
+  settings: null,
+};
 
 function triggerHapticFeedback(): void {
   if (typeof navigator === 'undefined') return;
@@ -155,9 +168,10 @@ export function BottomTabBar({ isAdmin = false }: BottomTabBarProps) {
         className="surface-overlay border-border/40 fixed right-0 bottom-0 left-0 z-40 border-t pb-[env(safe-area-inset-bottom)] md:hidden"
       >
         <div className="flex h-12 items-stretch">
-          {TABS.map((tab) => {
-            const Icon = tab.icon;
-            const active = isActive(pathname, tab);
+          {MOBILE_TAB_DESTINATIONS.map((tab) => {
+            const Icon = TAB_ICONS[tab.id];
+            const labelKey = TAB_LABELS[tab.id];
+            const active = isDestinationActive(pathname, tab);
             return (
               <Link
                 key={tab.id}
@@ -176,7 +190,7 @@ export function BottomTabBar({ isAdmin = false }: BottomTabBarProps) {
                 ].join(' ')}
               >
                 <Icon className="h-5 w-5" aria-hidden="true" />
-                <span>{t(tab.labelKey)}</span>
+                <span>{labelKey ? t(labelKey) : null}</span>
               </Link>
             );
           })}

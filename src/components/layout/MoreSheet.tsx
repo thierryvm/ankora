@@ -6,6 +6,8 @@ import { useTranslations } from 'next-intl';
 import { Moon, Sun, X, LogOut } from 'lucide-react';
 
 import { Link } from '@/i18n/navigation';
+
+import { MOBILE_SHEET_DESTINATIONS, type AppDestinationId } from './app-destinations';
 import { useIsClient } from '@/lib/hooks/useIsClient';
 import { logoutAction } from '@/lib/actions/auth';
 import { LocaleSwitcher } from './LocaleSwitcher';
@@ -58,6 +60,25 @@ export type MoreSheetProps = {
   isOpen: boolean;
   onClose: () => void;
   isAdmin?: boolean;
+};
+
+/**
+ * Sheet labels live here, not in the registry: next-intl keys are typed against
+ * `fr-BE.json`, so only literals type-check. Keyed by `AppDestinationId` so a
+ * new destination without a label is a TypeScript error.
+ *
+ * The four tab destinations are typed too even though the sheet does not render
+ * them — `Record` demands exhaustiveness, and the day one of them moves to the
+ * sheet its label is already there.
+ */
+const SHEET_LABELS: Record<AppDestinationId, 'accounts' | 'settings' | 'commitments'> = {
+  accounts: 'accounts',
+  settings: 'settings',
+  commitments: 'commitments',
+  cockpit: 'accounts',
+  bills: 'accounts',
+  expenses: 'accounts',
+  simulate: 'accounts',
 };
 
 export function MoreSheet({ isOpen, onClose, isAdmin = false }: MoreSheetProps) {
@@ -210,22 +231,24 @@ export function MoreSheet({ isOpen, onClose, isAdmin = false }: MoreSheetProps) 
             >
               {tSections('cockpit')}
             </h3>
-            <Link
-              href="/app/accounts"
-              onClick={handleClose}
-              data-testid="more-sheet-link-accounts"
-              className={linkClass}
-            >
-              <span>{tLinks('accounts')}</span>
-            </Link>
-            <Link
-              href="/app/settings"
-              onClick={handleClose}
-              data-testid="more-sheet-link-settings"
-              className={linkClass}
-            >
-              <span>{tLinks('settings')}</span>
-            </Link>
+            {/*
+              Generated from the destination registry rather than hardcoded, so
+              a route can no longer reach production without a way to navigate
+              to it. `/app/commitments` did exactly that: declared in the
+              desktop header only, unreachable on mobile outside the cockpit
+              card. Order follows the registry's declaration order.
+            */}
+            {MOBILE_SHEET_DESTINATIONS.map((destination) => (
+              <Link
+                key={destination.id}
+                href={destination.href}
+                onClick={handleClose}
+                data-testid={`more-sheet-link-${destination.id}`}
+                className={linkClass}
+              >
+                <span>{tLinks(SHEET_LABELS[destination.id])}</span>
+              </Link>
+            ))}
             {isAdmin && (
               <Link
                 href="/admin"

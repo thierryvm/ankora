@@ -101,6 +101,7 @@
       },
       "links": {
         "accounts": "Comptes",
+        "commitments": "Engagements",
         "settings": "Paramètres",
         "admin": "Admin",
         "adminAriaLabel": "Espace admin (réservé fondateur)",

@@ -101,6 +101,7 @@
       },
       "links": {
         "accounts": "Konten",
+        "commitments": "Verpflichtungen",
         "settings": "Einstellungen",
         "admin": "Admin",
         "adminAriaLabel": "Adminbereich (nur Gründer)",

@@ -5,7 +5,9 @@ import { Button } from '@/components/ui/button';
 import { isAdmin } from '@/lib/auth/is-admin';
 import { getOptionalUser } from '@/lib/auth/require-user';
 import { shouldMountBottomTabBar } from '@/lib/layout/bottom-tab-bar-state';
+
 import { AccountButton } from './AccountButton';
+import { APP_DESTINATIONS, type AppDestinationId } from './app-destinations';
 import { HeaderNav } from './HeaderNav';
 
 type HeaderProps = {
@@ -22,6 +24,32 @@ type HeaderProps = {
   // round-trip). For the marketing variant the Header resolves it itself
   // from the session lookup below. `null` = anonymous / not provided.
   userEmail?: string | null;
+};
+
+/**
+ * Desktop nav labels — `common.nav.*`, and intentionally NOT the same wording as
+ * the bottom tab bar ("Tableau de bord" here vs "Cockpit" there, "Charges" vs
+ * "Factures"). Each surface got copy written for its own context; sharing one
+ * key would have silently rewritten it. Keyed by `AppDestinationId` so a new
+ * destination without a label fails to compile.
+ */
+const HEADER_NAV_LABELS: Record<
+  AppDestinationId,
+  | 'nav.dashboard'
+  | 'nav.accounts'
+  | 'nav.charges'
+  | 'nav.commitments'
+  | 'nav.expenses'
+  | 'nav.simulator'
+  | 'nav.settings'
+> = {
+  cockpit: 'nav.dashboard',
+  accounts: 'nav.accounts',
+  bills: 'nav.charges',
+  commitments: 'nav.commitments',
+  expenses: 'nav.expenses',
+  simulate: 'nav.simulator',
+  settings: 'nav.settings',
 };
 
 export async function Header({ variant = 'marketing', isAuthenticated, userEmail }: HeaderProps) {
@@ -99,27 +127,18 @@ export async function Header({ variant = 'marketing', isAuthenticated, userEmail
           </nav>
         ) : (
           <nav aria-label={t('nav.appLabel')} className="hidden items-center gap-1 lg:flex">
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/app">{t('nav.dashboard')}</Link>
-            </Button>
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/app/accounts">{t('nav.accounts')}</Link>
-            </Button>
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/app/charges">{t('nav.charges')}</Link>
-            </Button>
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/app/commitments">{t('nav.commitments')}</Link>
-            </Button>
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/app/expenses">{t('nav.expenses')}</Link>
-            </Button>
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/app/simulator">{t('nav.simulator')}</Link>
-            </Button>
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/app/settings">{t('nav.settings')}</Link>
-            </Button>
+            {/*
+              Renders the FULL registry, deliberately ignoring `mobilePlacement`
+              — that field governs the mobile split (bottom tab vs "more"
+              sheet), never this bar. Filtering on it here would make
+              destinations disappear from desktop, which is the bug class the
+              registry exists to prevent.
+            */}
+            {APP_DESTINATIONS.map((destination) => (
+              <Button key={destination.id} asChild variant="ghost" size="sm">
+                <Link href={destination.href}>{t(HEADER_NAV_LABELS[destination.id])}</Link>
+              </Button>
+            ))}
             {showAdminLink && (
               <Button asChild variant="ghost" size="sm" aria-label={t('nav.adminAriaLabel')}>
                 <Link href="/admin" className="flex items-center gap-1.5">
