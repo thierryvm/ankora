@@ -200,3 +200,95 @@ test.describe('LocaleSwitcher — THI-255 delayed apply / TICKET 7 coverage', ()
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   });
 });
+
+/**
+ * THI-XXX (2026-07-25) — the switcher must not be undone by a background prefetch.
+ *
+ * Root cause measured on prod: next-intl's `syncCookie` rewrites `NEXT_LOCALE`
+ * on any request whose resolved locale differs from the cookie, and it cannot
+ * tell a prefetch from a navigation. Right after switching back to French the
+ * still-mounted English tree prefetches `/en/…?_rsc=`, and each of those reset
+ * the cookie to `en` for a year. The PAGE stayed French — so an assertion on
+ * `html[lang]` passes while the user is silently broken. The cookie value is
+ * the only honest assertion.
+ *
+ * Asymmetry (also measured): FR→EN is immune, because its prefetches target
+ * unprefixed URLs where the cookie already matches. Only EN→FR is corruptible,
+ * which is exactly why @thierry saw it "always go back to English".
+ *
+ * ⚠️ Requires a PRODUCTION server: `<Link>` prefetching does not happen in
+ * `npm run dev`, so this spec would be green by construction there. CI builds
+ * and starts (ci.yml); locally use `E2E_PROD_SERVER=1`.
+ */
+
+/**
+ * 2026-07-25 — a background prefetch must never rewrite the user's language.
+ *
+ * Root cause measured on prod: next-intl's `syncCookie` rewrites `NEXT_LOCALE`
+ * on any request whose resolved locale differs from the cookie, and it cannot
+ * tell a prefetch from a navigation. Right after switching back to French, the
+ * still-mounted English tree prefetches `/en/…?_rsc=`, and each of those reset
+ * the cookie to `en` for a year. The PAGE stayed French — an assertion on
+ * `html[lang]` passes while the user is silently broken, which is why the
+ * pre-existing skipped spec would not have caught it either. The cookie is the
+ * only honest assertion.
+ *
+ * The prefetch is issued EXPLICITLY here rather than hoping the browser fires
+ * one: the production bug is a race that reproduces roughly half the time, and
+ * a test that depends on winning that race passes with OR without the fix —
+ * verified 2026-07-25, which is exactly the false confidence to avoid.
+ *
+ * ⚠️ Needs a PRODUCTION server (`E2E_PROD_SERVER=1` locally; CI builds+starts):
+ * the middleware behaviour under test is identical, but dev never prefetches.
+ */
+test.describe('a prefetch must not rewrite NEXT_LOCALE', () => {
+  // KNOWN BUG, NOT YET FIXED — kept executable and red-by-design rather than
+  // deleted, so the suite keeps describing the defect until it is closed.
+  //
+  // Three middleware-level fixes were built and measured on 2026-07-25; all
+  // three are structurally impossible, because Next normalises RSC requests
+  // before `proxy.ts` runs (headers AND the `_rsc` query param are stripped),
+  // so the middleware cannot tell a background prefetch from a real page
+  // navigation. Full measurements + the two remaining candidate fixes:
+  // `docs/audits/2026-07-25-locale-cookie-race-diagnostic.md`.
+  test.fixme('French stays French after an /en prefetch', async ({ page, baseURL }) => {
+    await page.setViewportSize(DESKTOP_VIEWPORT);
+    await page.goto('/');
+
+    // Go EN then back to FR — the real user flow, and the only way to actually
+    // hold a `NEXT_LOCALE=fr-BE` cookie: a French visitor on `/` never gets one
+    // written, since the resolved locale already matches and `syncCookie` only
+    // writes on a mismatch.
+    await switchTo(page, 'en');
+    await switchTo(page, 'fr-BE');
+
+    const localeCookie = async () =>
+      (await page.context().cookies()).find((c) => c.name === 'NEXT_LOCALE')?.value;
+    expect(await localeCookie(), 'precondition: the visitor chose French').toBe('fr-BE');
+
+    // Exactly what Next emits when it prefetches an <Link href="/en/…"> that is
+    // still mounted from the previous English tree. The shape below was captured
+    // from a real browser prefetch on 2026-07-25 (Playwright request
+    // interception): `?_rsc=<hash>` on the URL, `rsc: 1` + `next-router-prefetch: 1`
+    // as headers, and NO accept header. Reproducing it faithfully matters — the
+    // `_rsc` param is the only part of it that still reaches middleware, so a
+    // hand-written approximation without it silently stops testing the fix.
+    const status = await page.evaluate(async (base) => {
+      const res = await fetch(`${base}/en?_rsc=e2eprobe`, {
+        headers: { RSC: '1', 'Next-Router-Prefetch': '1' },
+        credentials: 'include',
+      });
+      return res.status;
+    }, baseURL);
+    expect(status).toBeLessThan(400);
+
+    expect(
+      await localeCookie(),
+      'a prefetch of /en must NOT flip the stored language to English',
+    ).toBe('fr-BE');
+
+    // And the preference must still drive real navigation.
+    await page.goto('/faq');
+    expect(page.url(), 'French must not be redirected to /en').not.toMatch(/\/en(\/|$)/);
+  });
+});
