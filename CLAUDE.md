@@ -34,7 +34,7 @@ Admin panel obligatoire : santé technique, santé produit, acquisition, recomma
 
 Tout dashboard minimaliste = refus de merge.
 
-### Agents QA (14 au total)
+### Agents QA (16 au total)
 
 Existants : `security-auditor`, `rls-flow-tester`, `financial-formula-validator`, `ui-auditor`, `lighthouse-auditor`, `seo-geo-auditor`, `gdpr-compliance-auditor`, `test-runner`, `i18n-auditor`.
 
@@ -43,6 +43,8 @@ Pilier A : `dashboard-ux-auditor`, `admin-dashboard-auditor`.
 Mobile Recovery Day (4 mai 2026) : `mobile-ios-auditor` — focus iPhone Safari WebKit (complémentaire de `ui-auditor`). Procédure manuelle : `docs/runbooks/dev-on-iphone.md`.
 
 LLM Security (ajouté 16 mai 2026) : `llm-security-auditor` — audit sécurité IA avancé OWASP LLM Top 10 + vecteurs 2026 (RAG poisoning, indirect injection, agent hijacking, supply chain LLM, model extraction, sycophancy abuse, multi-turn drift, encoding bypass). Modèle Opus. Complémentaire de `security-auditor` (couche app classique).
+
+Diagnostic & qualité (ajoutés 25 juil. 2026) : `prod-bug-investigator` — établit la cause racine d'un bug prod **par la preuve** avant tout correctif (chaque affirmation étiquetée MEASURED / READ IN CODE / INFERRED / UNVERIFIED). Modèle Opus. `test-quality-auditor` — juge si les tests **prouvent** le comportement : specs désactivées en silence, assertions qui ne peuvent pas échouer, fix sans test de non-régression. Modèle Sonnet. Complémentaire de `test-runner` (qui exécute, sans juger).
 
 Refonte UX (ajouté 24 juil. 2026) : `mobile-liquid-glass-auditor` — garant du contrat « Liquid Glass » : contraste WCAG AA dans l'état glass ET le fallback opaque, `prefers-reduced-transparency`/`reduced-motion`, anti-stacking/perf backdrop-filter, CSP-safe, quirks WebKit. Modèle Sonnet. Complémentaire de `mobile-ios-auditor` (WebKit général) et `ui-auditor` (WCAG générique). Cf. spec `docs/superpowers/specs/2026-07-24-ankora-refonte-ux-program-design.md`.
 
@@ -97,7 +99,7 @@ src/
 supabase/
   migrations/          # schéma + RLS + triggers
 .claude/
-  agents/              # 14 QA agents (security, rls, financial, ui, lighthouse, seo-geo, gdpr, test-runner, dashboard-ux, admin-dashboard, i18n, mobile-ios, llm-security, mobile-liquid-glass)
+  agents/              # 16 QA agents (security, rls, financial, ui, lighthouse, seo-geo, gdpr, test-runner, test-quality, dashboard-ux, admin-dashboard, i18n, mobile-ios, llm-security, mobile-liquid-glass, prod-bug-investigator)
 ```
 
 ## Règles de code
@@ -308,6 +310,8 @@ Cet ordre est **verrouillé**. Si une PR émerge hors-plan (ex: hotfix sécurit�
 - **gdpr-compliance-auditor** : dès qu'on touche à PII, cookies, export, deletion
 - **test-runner** : après toute modification de code
 - **llm-security-auditor** : audit sécurité IA avancé OWASP LLM Top 10 + vecteurs 2026 (RAG poisoning, indirect injection, agent hijacking, supply chain LLM, model extraction, sycophancy abuse, multi-turn drift, encoding bypass). Lancer avant release majeure touchant l'IA, après modification architecturale (system prompt, providers, agents, RAG, tools, MCP). Complémentaire de `security-auditor` (couche app classique). Modèle : Opus.
+- **prod-bug-investigator** : dès qu'un bug est constaté en prod/sur l'app tournante et que la cause est INCONNUE (locale qui saute, session perdue, données périmées, cache empoisonné, « marche en local pas en prod », intermittent). Reproduit avant de théoriser, étiquette chaque affirmation par son niveau de preuve, explique l'intermittence, liste ce qui est écarté. Diagnostique — n'implémente pas. Modèle : Opus.
+- **test-quality-auditor** : à l'ajout/modif de tests et avant merge d'une PR touchant domaine/Server Actions/UI critique. Répond à « ces tests auraient-ils attrapé le bug ? » : specs `test.skip` inconditionnelles, `.only` oublié, assertions vacuoles, fix sans test de non-régression, branches critiques non couvertes. Modèle : Sonnet.
 - **mobile-liquid-glass-auditor** : après toute modif de glass/backdrop-filter/translucidité/surfaces élevées (nav, cartes, sheets, header, bottom-tab). Vérifie le contraste WCAG AA dans l'état glass ET le fallback opaque, `prefers-reduced-transparency`/`reduced-motion`, anti-stacking + perf backdrop-filter, CSP-safe, quirks WebKit. Complémentaire de `mobile-ios-auditor` + `ui-auditor`. Modèle : Sonnet.
 
 ## Commandes

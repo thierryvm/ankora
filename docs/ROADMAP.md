@@ -42,7 +42,7 @@ Cowork pilote A+B+contenus D/E. CC Ankora pilote C+tech D/E. Thierry valide + me
 
 ---
 
-## Agents QA Pilier A (14 au total)
+## Agents QA Pilier A (16 au total)
 
 Tous les agents résident dans `.claude/agents/` et sont trigger-driven. Chaque agent valide un domaine critique avant merge.
 
@@ -64,6 +64,8 @@ Tous les agents résident dans `.claude/agents/` et sont trigger-driven. Chaque 
 | 12  | `mobile-ios-auditor`          | iPhone Safari (WebKit) UX, safe-area, ITP, viewport, focus                                                      | touch layout/nav/forms/dashboard mobile      | ✅ requis       |
 | 13  | `llm-security-auditor`        | OWASP LLM Top 10 + vecteurs IA 2026                                                                             | touch system prompt/providers/RAG/MCP        | ✅ requis RC IA |
 | 14  | `mobile-liquid-glass-auditor` | Contrat glass : contraste AA glass **et** fallback opaque, reduced-transparency/motion, anti-stacking/perf, CSP | touch glass/backdrop-filter/surfaces élevées | ✅ requis       |
+| 15  | `prod-bug-investigator`       | Cause racine d'un bug prod, par la preuve                                                                       | bug constaté, cause inconnue                 | ✅ requis       |
+| 16  | `test-quality-auditor`        | Les tests prouvent-ils le comportement ?                                                                        | touch tests / pre-merge critique             | ✅ requis       |
 
 **Note sur les triggers** : Les chemins documentés (ex. `touch auth/**`, `touch app/app/**`) définissent les cas d'usage _intentionnels_ pour chaque agent. L'invocation manuelle reste primaire pour la Phase 1. Une automatisation CI complète (détection de fichiers + dispatch d'agents) est une future amélioration Pilier A (Phase 2+).
 
