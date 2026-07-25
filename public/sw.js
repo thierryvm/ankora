@@ -5,30 +5,65 @@
  * RLS and session freshness.
  */
 
-// Bumped 2026-06-02 (THI-324) to purge caches poisoned with authenticated,
-// locale-prefixed pages (`/en/app/*`, `/admin`, `/login`, …) that the old
-// locale-blind `isBypass` let through — see the `isBypass` note below. The
-// `activate` handler deletes any cache whose key doesn't start with the current
-// `CACHE_VERSION`, so bumping this constant is the canonical way to force a
-// clean slate across all returning visitors on first SW activation.
-// (Previous bump 2026-05-19 / PR P0-V2 purged the /fonts/*.ttf HTML-404 poison.)
-const CACHE_VERSION = 'ankora-v3-20260602';
+// Bumped 2026-07-25 (THI-324 follow-up) to purge caches holding RSC payloads
+// and the pre-cached `/` document. Measured before the fix: after a plain visit
+// plus one locale switch, Cache Storage held 8 `?_rsc=` entries — including
+// English ones (`/en?_rsc=…`) — plus the `/` document. Those payloads were
+// served cache-first FOREVER (no network failure needed), which meant the
+// locale silently reverted to a cached English render and `updateSession`
+// (proxy → Supabase refresh) never ran, so the session went stale and the app
+// asked to log in again. Reported by @thierry 2026-07-25, both symptoms, one
+// cause. The `activate` handler deletes any cache whose key doesn't start with
+// the current `CACHE_VERSION`, so bumping is the canonical clean slate.
+// (2026-06-02 purged locale-blind authenticated pages; 2026-05-19 the
+// /fonts/*.ttf HTML-404 poison.)
+const CACHE_VERSION = 'ankora-v4-20260725';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 
+const OFFLINE_URL = '/offline';
+
+// Immutable, non-negotiated assets only. `/` is deliberately NOT here: it is a
+// locale-negotiated document (next-intl `as-needed` serves FR at `/` and EN at
+// `/en`, chosen from the cookie/Accept-Language), so a single cached copy is
+// wrong for anyone whose locale differs from whoever's install populated it.
 const PRECACHE_URLS = [
-  '/',
   '/manifest.webmanifest',
   '/icon.svg',
   '/apple-icon.svg',
   '/brand/logo.svg',
-  '/offline',
+  OFFLINE_URL,
 ];
+
+/**
+ * Pre-cache the offline document WITHOUT the redirect flag.
+ *
+ * `/offline` is locale-negotiated (`as-needed`), so for a visitor whose locale
+ * is `en` the fetch follows `/offline` → 307 → `/en/offline` and the stored
+ * Response carries `redirected === true`. Handing a redirected Response back
+ * from `respondWith()` on a **navigate** request throws a TypeError in Chrome
+ * and WebKit — the offline fallback would fail exactly when it is needed.
+ * Rebuilding it from its body clears the flag.
+ */
+async function precacheOffline(cache) {
+  const res = await fetch(OFFLINE_URL, { credentials: 'same-origin' });
+  if (!res.ok) return;
+  const clean = new Response(await res.blob(), {
+    status: res.status,
+    statusText: res.statusText,
+    headers: res.headers,
+  });
+  await cache.put(OFFLINE_URL, clean);
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(STATIC_CACHE)
-      .then((cache) => cache.addAll(PRECACHE_URLS).catch(() => undefined))
+      .then(async (cache) => {
+        // Assets are independent: one 404 must not abort the whole precache.
+        await cache.addAll(PRECACHE_URLS.filter((u) => u !== OFFLINE_URL)).catch(() => undefined);
+        await precacheOffline(cache).catch(() => undefined);
+      })
       .then(() => self.skipWaiting()),
   );
 });
@@ -82,28 +117,44 @@ function isBypass(url) {
   );
 }
 
+/**
+ * ALLOWLIST — the only things this worker is allowed to cache.
+ *
+ * Deliberately an allowlist, not a denylist. The previous design cached
+ * "everything except a blocklist", so every new dynamic GET route silently
+ * re-opened the hole: that is what produced THI-324 (authenticated locale-
+ * prefixed pages), the /fonts/*.ttf HTML-404 poison, and the RSC/locale bug of
+ * 2026-07-25. Entries here are content-hashed or genuinely static — never
+ * negotiated by cookie, locale, or session.
+ */
+const CACHEABLE_ASSET =
+  /^\/(?:_next\/static\/|icons\/|brand\/|fonts\/)|^\/(?:manifest\.webmanifest|icon\.svg|apple-icon\.svg|favicon\.ico)$|\.(?:png|jpe?g|svg|webp|avif|ico|woff2?|ttf|otf)$/;
+
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
-  if (isBypass(url)) return;
 
-  // Network-first for HTML, cache-first for static assets.
-  const accept = request.headers.get('accept') ?? '';
-  if (accept.includes('text/html')) {
+  // Page navigations: always the network, so next-intl negotiates the locale and
+  // the proxy refreshes the Supabase session. `/offline` is the ONLY fallback —
+  // never a cached copy of the page itself, which would resurrect a stale locale
+  // or a stale auth state (the 2026-07-25 bug).
+  if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(STATIC_CACHE).then((cache) => cache.put(request, copy));
-          return res;
-        })
-        .catch(() => caches.match(request).then((cached) => cached ?? caches.match('/offline'))),
+      fetch(request).catch(() =>
+        caches.match(OFFLINE_URL).then((cached) => cached ?? Response.error()),
+      ),
     );
     return;
   }
+
+  // Everything that is not an immutable asset — RSC payloads (`?_rsc=`,
+  // `Accept: text/x-component`), API calls, documents — is left entirely alone:
+  // no respondWith, so the browser performs a normal network request and its
+  // Set-Cookie / session refresh happen exactly as the server intended.
+  if (!CACHEABLE_ASSET.test(url.pathname) || isBypass(url)) return;
 
   event.respondWith(
     caches.match(request).then(

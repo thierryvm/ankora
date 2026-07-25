@@ -57,7 +57,10 @@ describe('sw.js PROTECTED_LOCALED — authenticated page surfaces, locale-aware 
   });
 
   it.each([
-    // Public marketing / shell — SAFE to cache, must NOT be matched.
+    // Public, non-authenticated surfaces — outside PROTECTED_LOCALED.
+    // NOTE: "not bypassed" no longer implies "cached". Since 2026-07-25 the
+    // worker caches only what CACHEABLE_ASSET allows, so these documents go to
+    // the network like any other page — see the allowlist tests below.
     '/',
     '/en',
     '/pricing',
@@ -68,7 +71,7 @@ describe('sw.js PROTECTED_LOCALED — authenticated page surfaces, locale-aware 
     '/applications',
     '/app-store',
     '/en/applications',
-  ])('does NOT match (cacheable public surface): %s', (pathname) => {
+  ])('does NOT match PROTECTED_LOCALED (public surface): %s', (pathname) => {
     expect(matches(pathname)).toBe(false);
   });
 });
@@ -96,4 +99,54 @@ describe('sw.js — security-critical slugs stay covered (anti-drift guard)', ()
       expect(matches(`/en/${slug}`)).toBe(true);
     },
   );
+});
+
+describe('sw.js — caching allowlist (2026-07-25 locale/session bug)', () => {
+  // Root cause, measured in prod-build Cache Storage after one locale switch:
+  // 8 `?_rsc=` entries (including English ones) plus the `/` document, all
+  // served cache-first. The locale silently reverted to the cached English
+  // render and `updateSession` never ran, so the session went stale.
+
+  it('never pre-caches the root document (it is locale-negotiated)', () => {
+    const precache = swSource.match(/const PRECACHE_URLS = \[([\s\S]*?)\]/)?.[1] ?? '';
+    expect(precache).not.toMatch(/(^|[\s,])'\/'/);
+    expect(precache).toMatch(/'\/offline'|OFFLINE_URL/);
+  });
+
+  it('routes page navigations to the network with /offline as the only fallback', () => {
+    expect(swSource).toMatch(/request\.mode === 'navigate'/);
+    // The fallback must be the dedicated offline document — never the page's
+    // own cached copy, which is what resurrected the stale locale/session.
+    const navBranch = swSource.match(/request\.mode === 'navigate'[\s\S]*?^  }/m)?.[0] ?? '';
+    expect(navBranch).toMatch(/caches\.match\(OFFLINE_URL\)/);
+    expect(navBranch).not.toMatch(/caches\.match\(request\)/);
+    expect(navBranch).not.toMatch(/cache\.put/);
+  });
+
+  it('declares an allowlist of immutable assets rather than caching everything else', () => {
+    expect(swSource).toMatch(/const CACHEABLE_ASSET\s*=/);
+    expect(swSource).toMatch(/if \(!CACHEABLE_ASSET\.test\(url\.pathname\)/);
+  });
+
+  it('keeps RSC payloads out of the cache — they carry locale and session state', () => {
+    const allowlist = swSource.match(/const CACHEABLE_ASSET =\s*([\s\S]*?);/)?.[1] ?? '';
+    expect(allowlist).not.toMatch(/_rsc/);
+    // A pathname-only allowlist can't match `?_rsc=` query strings, and RSC
+    // requests target page paths — so they fall through to the network.
+    expect(allowlist).toContain('_next');
+    expect(allowlist).toContain('static');
+  });
+
+  it('strips the redirect flag from the pre-cached offline document', () => {
+    // `/offline` is locale-negotiated: for an `en` visitor the precache fetch
+    // follows a 307 and stores `redirected === true`, which throws a TypeError
+    // when returned from respondWith() on a navigate request.
+    expect(swSource).toMatch(/new Response\(await res\.blob\(\)/);
+  });
+
+  it('bumped CACHE_VERSION so poisoned caches are evicted on activation', () => {
+    const version = swSource.match(/const CACHE_VERSION = '([^']+)'/)?.[1] ?? '';
+    expect(version).not.toBe('ankora-v3-20260602');
+    expect(version).toMatch(/^ankora-v\d+-\d{8}$/);
+  });
 });
