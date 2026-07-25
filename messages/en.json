@@ -904,11 +904,6 @@
         "emailLabel": "Email",
         "displayNameLabel": "Display name",
         "localeLabel": "Language",
-        "localeOptions": {
-          "fr-BE": "Français (Belgique)",
-          "fr-FR": "Français (France)",
-          "en-GB": "English"
-        },
         "submit": "Save",
         "submitting": "Saving…",
         "toastSaved": "Profile updated"
@@ -1345,9 +1340,6 @@
         "displayName": {
           "required": "Name required.",
           "tooLong": "Maximum 80 characters."
-        },
-        "locale": {
-          "invalid": "Invalid language."
         },
         "factorId": {
           "invalid": "Invalid identifier."

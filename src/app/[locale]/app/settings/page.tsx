@@ -21,7 +21,7 @@ export default async function SettingsPage() {
   const supabase = await createClient();
 
   const [profileRes, factorsRes, deletionRes, consentRes] = await Promise.all([
-    supabase.from('users').select('display_name, locale, email').eq('id', user.id).maybeSingle(),
+    supabase.from('users').select('display_name, email').eq('id', user.id).maybeSingle(),
     supabase.auth.mfa.listFactors(),
     supabase
       .from('deletion_requests')
@@ -52,7 +52,6 @@ export default async function SettingsPage() {
       <SettingsClient
         email={profileRes.data?.email ?? user.email ?? ''}
         displayName={profileRes.data?.display_name ?? ''}
-        locale={profileRes.data?.locale ?? 'fr-BE'}
         factors={factors}
         deletion={deletion}
         cookiesSection={

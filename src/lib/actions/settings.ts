@@ -53,10 +53,9 @@ export async function updateProfileAction(input: unknown): Promise<ActionResult>
 
   const { error } = await supabase
     .from('users')
-    .update({
-      display_name: parsed.data.displayName,
-      locale: parsed.data.locale,
-    })
+    // Display name only — the language preference is owned by `setLocaleAction`,
+    // which also writes the cookie and revalidates the root layout.
+    .update({ display_name: parsed.data.displayName })
     .eq('id', user.id);
 
   if (error) return { ok: false, errorCode: 'errors.settings.profileUpdateFailed' };

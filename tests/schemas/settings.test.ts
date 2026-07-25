@@ -6,28 +6,48 @@ import {
 } from '@/lib/schemas/settings';
 
 describe('profileUpdateSchema', () => {
-  it('accepts trimmed display name and known locale', () => {
-    const res = profileUpdateSchema.parse({
-      displayName: '  Thierry  ',
-      locale: 'fr-BE',
-    });
+  it('accepts and trims the display name', () => {
+    const res = profileUpdateSchema.parse({ displayName: '  Thierry  ' });
     expect(res.displayName).toBe('Thierry');
-    expect(res.locale).toBe('fr-BE');
   });
 
-  it('defaults locale to fr-BE when omitted', () => {
-    const res = profileUpdateSchema.parse({ displayName: 'Name' });
-    expect(res.locale).toBe('fr-BE');
+  /**
+   * The language preference used to travel through this schema, which gave it
+   * two writers: this one wrote `users.locale` only, while `setLocaleAction`
+   * wrote the cookie AND revalidated the root layout. The Settings selector was
+   * the casualty — it offered `fr-FR` / `en-GB`, absent from `LOCALES`, so every
+   * choice but `fr-BE` failed validation, and even `fr-BE` changed nothing on
+   * screen. `setLocaleAction` is now the single writer.
+   *
+   * These two specs replace the ones that asserted the opposite (locale
+   * accepted, defaulted to `fr-BE`). Deleting them outright would have removed
+   * the only trace that this contract changed on purpose.
+   */
+  it('ignores a locale sent by an older client instead of rejecting the request', () => {
+    // Deploy skew: tabs on the previous bundle keep posting `locale`. The schema
+    // is a plain `z.object`, so Zod strips unknown keys. Adding `.strict()`
+    // would turn those tabs into hard validation failures.
+    const res = profileUpdateSchema.parse({ displayName: 'Thierry', locale: 'fr-BE' });
+    expect(res.displayName).toBe('Thierry');
+    expect(res as Record<string, unknown>).not.toHaveProperty('locale');
+  });
+
+  it('never writes a default locale back', () => {
+    // The old schema carried `.default('fr-BE')`. Left in place while the client
+    // stopped sending the field, it would have silently reset the language on
+    // every profile save.
+    const res = profileUpdateSchema.parse({ displayName: 'Thierry' });
+    expect(res as Record<string, unknown>).not.toHaveProperty('locale');
   });
 
   it('rejects empty name', () => {
     expect(profileUpdateSchema.safeParse({ displayName: '  ' }).success).toBe(false);
   });
 
-  it('rejects unknown locale', () => {
-    expect(profileUpdateSchema.safeParse({ displayName: 'N', locale: 'xx-ZZ' }).success).toBe(
-      false,
-    );
+  it('accepts a request whatever the stray locale value, since the field is gone', () => {
+    // Formerly "rejects unknown locale". The rejection now belongs to
+    // `setLocaleAction`, which validates against `LOCALES` on its own path.
+    expect(profileUpdateSchema.safeParse({ displayName: 'N', locale: 'xx-ZZ' }).success).toBe(true);
   });
 });
 

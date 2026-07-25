@@ -40,7 +40,24 @@ import { setLocaleAction } from '@/lib/actions/locale';
  * re-renders the Server Components — no `router.refresh()` (THI-266 history:
  * the refresh was redundant + closed the mobile drawer mid-switch).
  */
-export function LocaleSwitcher() {
+export type LocaleSwitcherProps = {
+  /**
+   * Id of a visible element that names this switcher, used INSTEAD of the
+   * built-in `aria-label`.
+   *
+   * Needed because more than one switcher can be mounted at once: on
+   * `/app/settings` at ≥1024px, `HeaderNav` renders one (its `hidden lg:flex`
+   * block is in the DOM and focusable) and the Profile card renders another.
+   * Two radiogroups sharing the accessible name "Changer de langue" are
+   * indistinguishable in a screen reader's element list — the Settings one
+   * therefore borrows its visible "Langue" label instead. Leaving this
+   * undefined keeps the original `aria-label`, so the header and MoreSheet
+   * instances are unchanged.
+   */
+  labelledById?: string;
+};
+
+export function LocaleSwitcher({ labelledById }: LocaleSwitcherProps = {}) {
   const t = useTranslations('ui.localeSwitcher');
   const locale = useLocale() as Locale;
   const router = useRouter();
@@ -77,7 +94,7 @@ export function LocaleSwitcher() {
       <div
         ref={groupRef}
         role="radiogroup"
-        aria-label={t('aria')}
+        {...(labelledById ? { 'aria-labelledby': labelledById } : { 'aria-label': t('aria') })}
         aria-busy={pending}
         onKeyDown={onKeyDown}
         data-testid="locale-switcher"

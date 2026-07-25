@@ -904,11 +904,6 @@
         "emailLabel": "E-mail",
         "displayNameLabel": "Weergavenaam",
         "localeLabel": "Taal",
-        "localeOptions": {
-          "fr-BE": "Français (Belgique)",
-          "fr-FR": "Français (France)",
-          "en-GB": "English"
-        },
         "submit": "Opslaan",
         "submitting": "Opslaan…",
         "toastSaved": "Profiel bijgewerkt"
@@ -1345,9 +1340,6 @@
         "displayName": {
           "required": "Naam verplicht.",
           "tooLong": "Maximum 80 tekens."
-        },
-        "locale": {
-          "invalid": "Taal niet geldig."
         },
         "factorId": {
           "invalid": "Identificator niet geldig."
