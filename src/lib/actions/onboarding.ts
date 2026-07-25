@@ -2,7 +2,9 @@
 
 import { z } from 'zod';
 
-import { redirect } from 'next/navigation';
+import { getLocale } from 'next-intl/server';
+
+import { redirect } from '@/i18n/navigation';
 
 import { createClient } from '@/lib/supabase/server';
 import { chargeFrequencySchema } from '@/lib/schemas/charge';
@@ -123,5 +125,5 @@ export async function completeOnboardingAction(input: unknown): Promise<ActionRe
 
   await supabase.from('users').update({ onboarded_at: new Date().toISOString() }).eq('id', user.id);
 
-  redirect('/app');
+  return redirect({ href: '/app', locale: await getLocale() });
 }
