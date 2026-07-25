@@ -34,7 +34,7 @@ Admin panel obligatoire : santé technique, santé produit, acquisition, recomma
 
 Tout dashboard minimaliste = refus de merge.
 
-### Agents QA (13 au total)
+### Agents QA (14 au total)
 
 Existants : `security-auditor`, `rls-flow-tester`, `financial-formula-validator`, `ui-auditor`, `lighthouse-auditor`, `seo-geo-auditor`, `gdpr-compliance-auditor`, `test-runner`, `i18n-auditor`.
 
@@ -43,6 +43,8 @@ Pilier A : `dashboard-ux-auditor`, `admin-dashboard-auditor`.
 Mobile Recovery Day (4 mai 2026) : `mobile-ios-auditor` — focus iPhone Safari WebKit (complémentaire de `ui-auditor`). Procédure manuelle : `docs/runbooks/dev-on-iphone.md`.
 
 LLM Security (ajouté 16 mai 2026) : `llm-security-auditor` — audit sécurité IA avancé OWASP LLM Top 10 + vecteurs 2026 (RAG poisoning, indirect injection, agent hijacking, supply chain LLM, model extraction, sycophancy abuse, multi-turn drift, encoding bypass). Modèle Opus. Complémentaire de `security-auditor` (couche app classique).
+
+Refonte UX (ajouté 24 juil. 2026) : `mobile-liquid-glass-auditor` — garant du contrat « Liquid Glass » : contraste WCAG AA dans l'état glass ET le fallback opaque, `prefers-reduced-transparency`/`reduced-motion`, anti-stacking/perf backdrop-filter, CSP-safe, quirks WebKit. Modèle Sonnet. Complémentaire de `mobile-ios-auditor` (WebKit général) et `ui-auditor` (WCAG générique). Cf. spec `docs/superpowers/specs/2026-07-24-ankora-refonte-ux-program-design.md`.
 
 ### Choix techniques lockés
 
@@ -95,7 +97,7 @@ src/
 supabase/
   migrations/          # schéma + RLS + triggers
 .claude/
-  agents/              # 13 QA agents (security, rls, financial, ui, lighthouse, seo-geo, gdpr, test-runner, dashboard-ux, admin-dashboard, i18n, mobile-ios, llm-security)
+  agents/              # 14 QA agents (security, rls, financial, ui, lighthouse, seo-geo, gdpr, test-runner, dashboard-ux, admin-dashboard, i18n, mobile-ios, llm-security, mobile-liquid-glass)
 ```
 
 ## Règles de code
@@ -306,6 +308,7 @@ Cet ordre est **verrouillé**. Si une PR émerge hors-plan (ex: hotfix sécurit�
 - **gdpr-compliance-auditor** : dès qu'on touche à PII, cookies, export, deletion
 - **test-runner** : après toute modification de code
 - **llm-security-auditor** : audit sécurité IA avancé OWASP LLM Top 10 + vecteurs 2026 (RAG poisoning, indirect injection, agent hijacking, supply chain LLM, model extraction, sycophancy abuse, multi-turn drift, encoding bypass). Lancer avant release majeure touchant l'IA, après modification architecturale (system prompt, providers, agents, RAG, tools, MCP). Complémentaire de `security-auditor` (couche app classique). Modèle : Opus.
+- **mobile-liquid-glass-auditor** : après toute modif de glass/backdrop-filter/translucidité/surfaces élevées (nav, cartes, sheets, header, bottom-tab). Vérifie le contraste WCAG AA dans l'état glass ET le fallback opaque, `prefers-reduced-transparency`/`reduced-motion`, anti-stacking + perf backdrop-filter, CSP-safe, quirks WebKit. Complémentaire de `mobile-ios-auditor` + `ui-auditor`. Modèle : Sonnet.
 
 ## Commandes
 
