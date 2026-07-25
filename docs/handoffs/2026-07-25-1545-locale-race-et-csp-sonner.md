@@ -8,58 +8,64 @@
 
 ## 1. Ce qui a été livré
 
-| PR   | Sujet                                                                         | État       |
-| ---- | ----------------------------------------------------------------------------- | ---------- |
-| #254 | agents `prod-bug-investigator` + `test-quality-auditor`                       | ✅ mergée  |
-| #253 | handoff session précédente                                                    | ✅ mergée  |
-| #255 | diagnostic de la course sur le cookie de langue                               | ✅ mergée  |
-| #256 | correction de la cause des échecs de login locaux (`e2e-auth`)                | ✅ mergée  |
-| #257 | CSP : style des toasts restauré (violations console conservées, délibérément) | ⏳ ouverte |
+| PR   | Sujet                                                   | État      |
+| ---- | ------------------------------------------------------- | --------- |
+| #253 | handoff session précédente                              | ✅ mergée |
+| #254 | agents `prod-bug-investigator` + `test-quality-auditor` | ✅ mergée |
+| #255 | diagnostic de la course sur le cookie de langue         | ✅ mergée |
+| #256 | vraie cause des échecs de login locaux (`e2e-auth`)     | ✅ mergée |
+| #257 | CSP : positionnement des toasts restauré en production  | ✅ mergée |
+| #258 | **résolution de langue déterministe — bug fermé**       | ✅ mergée |
+| #259 | trou de nav mobile + dettes des audits, tracés          | ✅ mergée |
+
+Working tree propre, aucune PR ouverte, `main` à jour.
 
 ---
 
-## 2. Bug 1 — sélecteur de langue qui repasse en anglais
+## 2. Bug 1 — sélecteur de langue qui repasse en anglais — **FERMÉ (#258)**
 
-**Cause racine établie**, **correctif non livré**, **décision d'architecture en attente de @thierry**.
+### Correctif livré
 
-`next-intl` réécrit `NEXT_LOCALE` dès que le locale résolu par l'URL diffère du cookie, et
-le préfixe d'URL gagne toujours. Toute requête `/en…` alors que le cookie vaut `fr-BE`
-rebascule le cookie en `en` pour un an. C'est une **course** : la requête `/en…` encore en
-vol se termine après le `Set-Cookie` de la Server Action. Asymétrique par construction —
-le sens FR→EN est immunisé (URLs non préfixées), d'où « ça revient toujours à l'anglais ».
+```ts
+// src/i18n/routing.ts
+localeCookie: false,
+localeDetection: false,
+```
 
-### Le résultat négatif, qui est le vrai livrable
+La résolution se réduit au seul préfixe d'URL, avec repli sur `defaultLocale`. `syncCookie`
+retourne immédiatement : la course disparaît par construction.
 
-Trois correctifs middleware construits et mesurés sur build de production, **trois échecs
-structurels** :
+**Les deux flags sont indissociables.** `plan-reviewer` a trouvé que `localeCookie: false`
+seul aurait transformé un bug intermittent en bug déterministe — cookie et `Accept-Language`
+étant deux branches de la _même_ garde, retirer le cookie promeut `Accept-Language` en
+détecteur unique, et le français (URLs non préfixées en `as-needed`) devenait inatteignable
+pour un navigateur anglophone. Arbitrage re-validé par @thierry sur l'énoncé corrigé : `/`
+rend toujours le français, quelle que soit la langue du navigateur.
 
-| Signal                                         | Mesure                                                 | Verdict                               |
-| ---------------------------------------------- | ------------------------------------------------------ | ------------------------------------- |
-| `rsc` / `next-router-prefetch` / `sec-purpose` | envoyés par le navigateur, absents côté middleware     | Next les retire avant                 |
-| `accept: text/x-component`                     | un vrai prefetch envoie `accept=(none)`                | ne matche que les `fetch()` fabriqués |
-| `?_rsc=<hash>`                                 | `curl "/en?_rsc=probe"` → `nextUrl.search = "(empty)"` | Next retire aussi le paramètre        |
+### Le résultat négatif qui reste utile
 
-**Next canonise les requêtes RSC avant le middleware.** Un prefetch et une navigation
-document sont indiscernables depuis `proxy.ts`. Aucun correctif à cette couche ne peut
-fonctionner — ni le nôtre, ni celui de `next-intl`. Ne pas retenter cette voie.
+Trois correctifs middleware ont été construits et mesurés avant d'abandonner cette couche.
+**Next canonise les requêtes RSC avant le middleware** — en-têtes `rsc` /
+`next-router-prefetch` / `sec-purpose` retirés, _et_ paramètre `?_rsc` retiré de l'URL. Un
+prefetch et une navigation document sont indiscernables depuis `proxy.ts`. Ne pas retenter
+cette voie.
 
 **Piège d'ordonnancement à conserver** : toute manipulation brute de l'en-tête `set-cookie`
-dans `proxy.ts` doit être la **dernière** opération, après `updateSession` — `ResponseCookies`
-re-sérialise le jar entier à chaque `.set()` et restaure ce qu'on vient de retirer.
+dans `proxy.ts` doit être la _dernière_ opération, après `updateSession` —
+`ResponseCookies` re-sérialise le jar entier à chaque `.set()`.
 
-### Décision attendue de @thierry
+### Parcours validé en direct
 
-- **Option A (recommandée)** — `localeCookie: false` : `syncCookie` devient inerte, la
-  course disparaît par construction. Coût : une arrivée sur `/` nu ne mémorise plus une
-  langue qui contredit `Accept-Language`. PR dédiée + `plan-reviewer`.
-- **Option B** — navigation dure sur changement de langue : atténue sans supprimer la
-  cause, non prouvable par un test. Jamais seule.
+FR → EN → FR, puis le prefetch `/en` rejoué avec le cookie `fr-BE` : cookie intact. `/faq`
+reste français, aucun 307. `/en/faq` rend en anglais **et le cookie reste `fr-BE`**.
 
-Diagnostic complet : `docs/audits/2026-07-25-locale-cookie-race-diagnostic.md`.
-Le test de non-régression est dans la suite en `test.fixme` — il décrit le défaut tant
-qu'il n'est pas clos.
+### Régression connue, assumée, tracée
 
----
+`i18n-auditor` a rendu NO-GO sur un P0 réel, confirmé par la mesure : les ~9 `redirect()`
+non préfixés des gardes auth et Server Actions perdent la langue (`/app` avec cookie `en`
+faisait `307 → /en/app`, fait désormais `307 → /login`, donc français). Arbitré par
+@thierry : merger et enchaîner une PR de suivi. Détail dans
+`docs/audits/2026-07-25-dettes-tracees-audits-i18n-seo.md`.
 
 ## 3. Bug 2 — violations CSP `inline-style` (PR #257)
 
@@ -103,18 +109,28 @@ sombre. Le vrai défaut (positionnement) est corrigé.
 
 ## 4. Reste à faire
 
-1. **#257** — finir la DoD5 (CI, Sourcery, threads, `CLEAN`) puis merger
-2. **Bug 1** — @thierry tranche entre Option A et Option B, puis PR dédiée + `plan-reviewer`
-3. **Radix / `get-nonce`** — bug réel mais **non mesuré** : `react-style-singleton` n'a
-   toujours pas de nonce. Nécessite `get-nonce` en dépendance explicite (`package.json`,
-   voie lourde) et un `setNonce()` en corps de render — jamais dans un `useEffect`, les
-   effects remontant des enfants vers les parents. Mesurer d'abord.
-4. **Symptôme 2 (reconnexion fantôme)** — cause **non établie**. Ce n'est pas une perte de
+1. **PR de suivi P0** — localiser les ~9 `redirect()` non préfixés (gardes auth + Server
+   Actions). Voie lourde : nouveau plan + `plan-reviewer`. Le bon pattern existe déjà dans
+   `src/app/auth/callback/route.ts` (`localiseTarget()`). Aucun test E2E actuel ne peut voir
+   cette régression (parcours connectés skippés en CI) → validation Playwright seedée locale.
+2. **Phase 1 refonte UX — nav mobile.** @thierry a constaté que `/app/commitments` est
+   inatteignable depuis la nav mobile et a explicitement choisi d'**attendre la Phase 1**
+   plutôt qu'un patch isolé. Cause structurelle à fermer : destinations dupliquées dans
+   `Header.tsx`, `BottomTabBar.tsx`, `MoreSheet.tsx` sans contrat commun. Attendu : registre
+   unique + test qui échoue si une route de `app/**` n'y figure pas. Cf. le spec du
+   programme UX, section « Défauts constatés à traiter en Phase 1 ».
+3. **Sélecteur de langue des Réglages cassé** (préexistant) — le `<Select>` propose `fr-FR`
+   et `en-GB`, absents de l'enum `LOCALES`, donc toute valeur autre que `fr-BE` échoue en
+   validation Zod ; et l'action n'écrit ni le cookie ni ne revalide.
+4. **4 bugs SEO préexistants** — pages `noindex` soumises au sitemap, canoniques
+   cross-locale sur la FAQ et les pages légales, glossaire qui se canonicalise vers
+   l'accueil, locales non traduites indexables.
+5. **Symptôme 2 (reconnexion fantôme)** — cause **non établie**. Ce n'est pas une perte de
    session (Supabase : `sessions_timebox=0`, sessions vivantes 47 j, 0 rotation
-   concurrente). Investigation séparée, surtout pas dans la même PR.
-5. **Refonte UX** — phases 1c (nav mobile) et 1d (consolidation ui↔atoms) non entamées
-
----
+   concurrente). Investigation séparée.
+6. **Arbitrage à soumettre** — segments d'URL incohérents (`/glossaire` en français,
+   `/app/*` en anglais). Les localiser = impact SEO + redirections permanentes + table
+   `pathnames` sur 5 locales. Pas un bug.
 
 ## 5. Leçons de la session
 
