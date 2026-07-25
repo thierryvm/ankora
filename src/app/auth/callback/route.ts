@@ -7,8 +7,11 @@ import { routing, type Locale } from '@/i18n/routing';
 /**
  * Resolve the locale to apply on the post-OAuth redirect.
  *
- * Reads the `NEXT_LOCALE` cookie (set by next-intl + by `setLocaleAction`
- * via the LocaleSwitcher). The Supabase OAuth roundtrip preserves browser
+ * Reads the `NEXT_LOCALE` cookie, whose sole writer is `setLocaleAction` (the
+ * LocaleSwitcher) since 2026-07-25 — next-intl no longer manages it
+ * (`localeCookie: false`, cf. `src/i18n/routing.ts`). This route is one of the
+ * two remaining readers, with `src/app/not-found.tsx`, and the reason the
+ * cookie is still worth writing at all. The Supabase OAuth roundtrip preserves browser
  * cookies (the Google redirect URL stays on the same eTLD+1 and the cookie
  * is `SameSite=Lax` — see `src/i18n/routing.ts`), so the locale the visitor
  * picked BEFORE clicking "Sign in" survives the external hop.

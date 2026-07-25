@@ -12,8 +12,15 @@ import './globals.css';
  * passthrough (the real shell lives in `[locale]/layout.tsx`), so this
  * component carries its own document tags.
  *
- * Copy is bilingual FR/EN, picked from the `NEXT_LOCALE` cookie set by
- * next-intl, with a safe fallback to FR (defaultLocale).
+ * Copy is bilingual FR/EN, picked from the `NEXT_LOCALE` cookie — written by
+ * `setLocaleAction`, which is its sole writer since 2026-07-25 (next-intl no
+ * longer manages it: `localeCookie: false`, cf. `src/i18n/routing.ts`). This
+ * route is one of the two remaining readers, with
+ * `src/app/auth/callback/route.ts`. Safe fallback to FR (defaultLocale).
+ *
+ * Note: a visitor who never used the switcher has no cookie and gets FR here,
+ * even with an English browser — consistent with the rest of the app, where
+ * locale now comes from the URL prefix alone.
  */
 
 const COPY = {
