@@ -41,7 +41,8 @@
     "supabase:stop": "supabase stop",
     "supabase:reset": "supabase db reset",
     "supabase:types": "supabase gen types typescript --linked > src/lib/supabase/types.ts",
-    "prepare": "husky"
+    "prepare": "husky",
+    "e2e:auth": "node scripts/e2e-auth.mjs"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs,cjs}": [
