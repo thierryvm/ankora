@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid';
 import createMiddleware from 'next-intl/middleware';
 
 import { routing } from '@/i18n/routing';
+import { STYLE_SRC_HASHES } from '@/lib/security/csp-style-hashes';
 import { updateSession } from '@/lib/supabase/middleware';
 
 /**
@@ -54,7 +55,13 @@ function buildCsp(nonce: string): string {
   const directives: Record<string, string> = {
     'default-src': `'self'`,
     'script-src': `'self' 'nonce-${nonce}' 'strict-dynamic'${devScriptExtras}`,
-    'style-src': `'self' 'nonce-${nonce}'${devStyleExtras}`,
+    // The hashes are emitted in EVERY environment, not just production.
+    // Measured 2026-07-25: the sonner violation reproduces in dev too, because
+    // CSP3 makes a directive ignore `'unsafe-inline'` as soon as a nonce or
+    // hash source is present — and `'nonce-…'` is always there. `devStyleExtras`
+    // is therefore a no-op for this directive, and gating the hashes on
+    // production would leave dev noisy for no benefit.
+    'style-src': `'self' 'nonce-${nonce}' ${STYLE_SRC_HASHES.join(' ')}${devStyleExtras}`,
     'img-src': `'self' data: blob: ${supabaseDomains}`,
     'font-src': `'self' data:`,
     'connect-src': `'self' ${supabaseDomains} ${vercelInsights}${isDev ? ' ws: wss:' : ''}`,

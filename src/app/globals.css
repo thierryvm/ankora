@@ -1,4 +1,22 @@
+/* Cascade layer order — MUST precede the imports below.
+   `sonner` sits between `base` and `components` on purpose. Its stylesheet
+   ships UNLAYERED, and unlayered CSS beats layered CSS whatever the
+   specificity, so importing it as-is would override the Tailwind utilities in
+   `@layer utilities` that style our toasts (`bg-card`, `border-border`,
+   `border-danger`… in `src/components/ui/toast.tsx`) — in both themes.
+   Pulling it into a named layer declared BEFORE `utilities` gives our
+   utilities the last word while keeping sonner's positioning rules
+   (`[data-sonner-toaster]{position:fixed}`) intact. */
+@layer theme, base, sonner, components, utilities;
+
 @import 'tailwindcss';
+
+/* Toast styling served as a `'self'` stylesheet instead of relying on the
+   runtime `<style>` sonner injects at module evaluation — that injection is
+   blocked by our strict CSP (cf. src/lib/security/csp-style-hashes.ts), which
+   left the toasts unpositioned in production. This import is what keeps the UI
+   correct; the CSP hashes only silence the console. */
+@import 'sonner/dist/styles.css' layer(sonner);
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
