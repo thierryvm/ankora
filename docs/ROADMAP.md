@@ -54,12 +54,15 @@ Chacune mérite sa propre PR ; aucune n'est un blocage de l'étape en cours.
 **30 octobre 2026** ; les migrations d'Ankora reposent encore sur les grants
 implicites.
 
-**Ce n'est plus théorique** : sur la base reconstruite depuis les 15 migrations par
-le job `e2e-authenticated`, `logAuditEvent()` échoue avec
-`permission denied for table audit_log`. La production fonctionne parce qu'elle a
-été créée quand les grants implicites existaient — une base neuve ne les reçoit
-plus. Le journal d'audit portant une obligation RGPD, cette dette se traite avec
-l'étape 3.
+Échéance ferme, mais **ce n'est PAS la cause du `permission denied for table audit_log`**
+observé le 26 juillet (attribution corrigée le jour même). Cause suspectée, à mesurer
+avant tout correctif : `createAdminClient()` (`src/lib/supabase/server.ts:37`) passe
+la clé service_role **et** un adaptateur qui rend les cookies de l'utilisateur ; en
+présence d'un cookie de session, le jeton utilisateur écrase la clé et le client
+retombe en rôle `authenticated`, à qui `audit_log` est explicitement interdit. Si
+c'est confirmé, le correctif est dans `server.ts`, **surtout pas** un GRANT sur
+`audit_log` — qui ouvrirait le journal d'audit à tout utilisateur connecté.
+Traité en étape 3a.
 
 Convention : [`docs/CONVENTIONS.md`](./CONVENTIONS.md).
 
