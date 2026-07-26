@@ -43,6 +43,15 @@ test.describe('Auth — validation (no DB writes)', () => {
   // address, so it cannot be used to enumerate accounts. Skipped, it asserted
   // nothing at all.
   test('forgot-password: always reports success (no enumeration)', async ({ page }) => {
+    // CONDITIONAL, unlike the unconditional skip this replaces. The rest of this
+    // file writes nothing and runs everywhere; this one case needs GoTrue to
+    // serve a real password-reset round trip, so it runs in the
+    // `e2e-authenticated` job and reports itself skipped elsewhere — with the
+    // reason attached, rather than vanishing.
+    test.skip(
+      process.env.E2E_SUPABASE_READY !== '1',
+      'Needs a reachable Supabase (real reset round-trip) — runs in the e2e-authenticated job.',
+    );
     await page.goto('/forgot-password');
     await page.getByLabel('Email').fill('nonexistent@ankora.test');
     await page.getByRole('button', { name: /envoyer/i }).click();

@@ -158,7 +158,7 @@ ininterprétable au premier conflit, donc ignoré :
 
 | Job                              | Plancher au 26 juillet 2026                       |
 | -------------------------------- | ------------------------------------------------- |
-| `Playwright E2E`                 | 214 passed                                        |
+| `Playwright E2E`                 | 215 passed (214 avant, +1 spec locale réactivée)  |
 | `Playwright E2E (authenticated)` | 24 passed (mesuré en local avant le premier push) |
 
 Le second job porte en plus une **liste de quarantaine** dans
