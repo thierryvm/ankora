@@ -58,6 +58,12 @@ export async function createExpenseAction(input: unknown): Promise<ActionResult>
     occurred_on: parsed.data.occurredOn,
     category_id: parsed.data.categoryId,
     note: parsed.data.note,
+    // Defensive boundary fix, not a user-visible bug: no UI picks an account
+    // today, so the column has always fallen back to its DB default. The
+    // schema declares the field and `updateExpenseAction` honours it — leaving
+    // create as the only path that silently drops it is the kind of asymmetry
+    // that bites once the account picker lands.
+    paid_from: parsed.data.paidFrom,
   });
 
   if (error) return { ok: false, errorCode: 'errors.expenses.createFailed' };

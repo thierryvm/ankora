@@ -17,6 +17,7 @@ import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 
 import { ExpenseEditDrawer, type ExpenseEditDrawerExpense } from './ExpenseEditDrawer';
 import { resteAVivreStatus } from './reste-a-vivre';
+import { todayInAnkoraTz } from '@/lib/date/tz';
 
 type RawExpense = {
   id: string;
@@ -44,10 +45,6 @@ type Props = {
   joursRestants: number;
 };
 
-function today(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
 export function ExpensesClient({
   expenses,
   resteAVivre,
@@ -64,7 +61,7 @@ export function ExpensesClient({
   const [isPending, startTransition] = useTransition();
   const [label, setLabel] = useState('');
   const [amount, setAmount] = useState('');
-  const [occurredOn, setOccurredOn] = useState(today());
+  const [occurredOn, setOccurredOn] = useState(todayInAnkoraTz());
   const [editingExpense, setEditingExpense] = useState<ExpenseEditDrawerExpense | null>(null);
 
   function onCreate(e: React.FormEvent) {

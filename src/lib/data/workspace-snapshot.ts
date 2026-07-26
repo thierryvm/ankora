@@ -1,5 +1,7 @@
 import { getLocale } from 'next-intl/server';
 
+import { ANKORA_TIMEZONE } from '@/lib/date/tz';
+
 import { redirect } from '@/i18n/navigation';
 
 import { createClient } from '@/lib/supabase/server';
@@ -40,16 +42,6 @@ export function toCockpitCharges(charges: readonly Charge[]): readonly CockpitCh
     isActive: c.isActive,
   }));
 }
-
-/**
- * Canonical timezone for month-boundary calculations on the dashboard.
- * Ankora is FSMA-scoped to Belgium and `next-intl` already uses Europe/Brussels
- * for date formatting. Computing month boundaries in this timezone avoids
- * drifting one day around midnight UTC for end-of-month expenses.
- *
- * Multi-tenant per-workspace timezone is a post-launch concern (PR-D2).
- */
-const ANKORA_TIMEZONE = 'Europe/Brussels';
 
 function getCurrentMonthBoundariesISO(): { startISO: string; nextStartISO: string } {
   const formatter = new Intl.DateTimeFormat('en-CA', {
