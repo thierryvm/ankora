@@ -34,10 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   defect on the app's most important page, surfaced by the above. Fix belongs in its own
   PR — this one touches no `src/`.
 - **Audit logging fails on a database rebuilt from the migrations**: every
-  `logAuditEvent()` returns `permission denied for table audit_log`. Production works,
-  which means a grant was applied there outside the migration set. The migrations are
-  therefore not a complete description of production — worth closing, since audit trails
-  carry a GDPR obligation.
+  `logAuditEvent()` returns `permission denied for table audit_log`. Production works because it was created while Supabase still exposed tables
+  implicitly; a fresh database no longer gets those grants. This is THI-206 (explicit
+  GRANT in the migration template, Supabase breaking change 2026-10-30) arriving early,
+  and it matters now because audit trails carry a GDPR obligation.
 
 ### Changed
 
