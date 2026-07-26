@@ -42,18 +42,27 @@ Le journal ne contenait que ce qui était émis **avant** l'existence d'un cooki
 `logAuditEvent` avalant son erreur (`log.error`, jamais de `throw`), rien ne l'a signalé
 pendant trois mois.
 
-**Non vérifié en production** : la même migration `revoke` s'y applique, donc l'inférence
-est forte, mais deux tentatives de lecture d'agrégats (CLI puis connecteur Supabase) ont
-été refusées par le classifieur. **À confirmer par @thierry** — une requête suffit :
+### Production — MESURÉ le 27 juillet, et c'est le même trou
 
-```sql
-select event_type, count(*), max(occurred_at)
-from public.audit_log group by 1 order by 2 desc;
-```
+Relevé par @thierry sur `ankora-prod` (`fkscfvoouwufyjwnfvhb`) :
 
-Si `charge.created`, `expense.created`, `account.renamed` y sont absents alors que
-`auth.rate_limited` est présent, la production a le même trou et il faut le dire dans le
-registre RGPD (art. 5(2), accountability).
+| `event_type`                | n   | dernier              |
+| --------------------------- | --- | -------------------- |
+| `auth.rate_limited`         | 22  | 2026-07-26 17:59 UTC |
+| `admin.access.rate_limited` | 21  | 2026-05-18 16:35 UTC |
+| `auth.signup`               | 2   | 2026-04-20 09:49 UTC |
+| `auth.password_reset`       | 1   | 2026-04-17 19:19 UTC |
+
+**Quatre types, et tous les quatre s'écrivent avant qu'un cookie de session existe.**
+Absents alors que l'app tourne depuis avril (47 utilisateurs actifs mensuels) :
+`auth.login`, `auth.logout`, l'intégralité de `charge.*` / `expense.*` / `commitment.*` /
+`account.*` / `workspace.*`, l'intégralité de `gdpr.*`, et `admin.access.granted|denied`.
+
+La production a donc été aveugle du **16 avril au 27 juillet 2026**. Consigné au registre :
+[`docs/compliance/2026-07-27-registre-defaillance-journal-audit.md`](../compliance/2026-07-27-registre-defaillance-journal-audit.md).
+Pas de notification APD ni aux personnes concernées — la défaillance est **fail-closed**,
+aucune donnée n'a été exposée ni altérée, et la preuve de consentement (art. 7(1)) n'a
+jamais transité par ce client.
 
 ## 2. Ce qui change
 
