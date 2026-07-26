@@ -59,14 +59,23 @@ n'a été journalisée** :
   `gdpr.deletion_*`
 - `admin.access.granted` et `admin.access.denied`
 
-**Note sur le nombre d'utilisateurs.** Le compteur « 47 utilisateurs actifs
-mensuels » du tableau de bord Supabase ne mesure **pas** 47 personnes : il compte
-les utilisateurs distincts ayant émis une requête d'authentification pendant le
-cycle de facturation, et `npm run e2e:auth` exerce les parcours connectés **contre
-la production** en créant des comptes jetables `ankora-e2e+<hex>@ankora.test`.
-Ces comptes sont supprimés en fin de test, mais restent comptabilisés pour le
-cycle. Le nombre réel d'utilisateurs humains est à établir séparément et n'est de
-toute façon pas nécessaire à la démonstration ci-dessus.
+**Personnes concernées — chiffre réel.** Relevé le 27 juillet 2026 :
+**5 comptes**, aucun compte de test, dont **1 seul** connecté dans les 30 derniers
+jours. Trois de ces comptes appartiennent à des **tiers** (proches du responsable
+de traitement) ; deux sont ceux du responsable lui-même. Les tiers sont des
+personnes concernées au sens du RGPD et disposent de l'ensemble de leurs droits.
+
+Le compteur « 47 utilisateurs actifs mensuels » du tableau de bord Supabase ne
+mesure **pas** 47 personnes : il compte les utilisateurs distincts ayant émis une
+requête d'authentification pendant le cycle de facturation, et `npm run e2e:auth`
+exerce les parcours connectés **contre la production** en créant des comptes
+jetables `ankora-e2e+<hex>@ankora.test`. Supprimés en fin de test, ils restent
+comptabilisés pour le cycle.
+
+**Recoupement indépendant de la défaillance.** `auth.users.last_sign_in_at` est
+renseigné pour les 5 comptes (connexions réelles entre avril et juillet 2026),
+alors que `audit_log` ne contient **aucune** ligne `auth.login`. Deux sources
+indépendantes, une seule conclusion.
 
 ## 3. Ce qui n'a PAS été perdu
 
