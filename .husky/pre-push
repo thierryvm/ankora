@@ -1,0 +1,19 @@
+#!/usr/bin/env sh
+# Dernier filet avant que du code quitte la machine.
+#
+# @thierry mène un projet PRO sur le compte `ovb` en parallèle de celui-ci, et
+# les deux comptes GitHub sont connectés au keyring EN MÊME TEMPS. `git push`
+# s'authentifie via `gh auth git-credential`, donc il pousse sous le compte `gh`
+# ACTIF — une bascule silencieuse enverrait du code personnel sur
+# l'infrastructure professionnelle, et rien dans la chaîne d'outils ne
+# protesterait avant un 403 des heures plus tard. Démontré : basculer le compte
+# fait renvoyer `username=ovb-willemot` à `git credential fill`.
+#
+# Vérifie aussi Supabase et Vercel, parce qu'un push déclenche un déploiement.
+#
+# Aucun faux positif hors ligne : l'appel `gh api user` et le `git push` ont
+# besoin du réseau tous les deux. Sans réseau, le push échouerait de toute façon.
+#
+# Urgence : `git push --no-verify` contourne — à n'utiliser qu'en sachant
+# précisément pourquoi.
+npm run preflight

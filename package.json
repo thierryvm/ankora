@@ -17,6 +17,7 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "lint:use-server": "node scripts/lint-use-server.mjs",
+    "preflight": "node --env-file=.env.local scripts/preflight-accounts.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
