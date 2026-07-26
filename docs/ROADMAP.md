@@ -1,492 +1,91 @@
 # Roadmap — Ankora
 
-**Update 31 mai 2026** : Lot UI lisibilité (audit @cowork 2026-05-30/31) en cours. **PR-UI-1 (THI-298) mergée** (squash [`4bc0bb3`](https://github.com/thierryvm/ankora/commit/4bc0bb3), PR [#205](https://github.com/thierryvm/ankora/pull/205)) : focus champ « un signal pas deux » — liseré émeraude unique `brand-600` + `box-shadow 1px` (no-reflow), outline global non-layered neutralisé sur les champs via exception compagne `globals.css:421`, carve-out `aria-invalid`. Le live-test runtime @cowork a attrapé un défaut de cascade CSS (outline global) invisible aux unit/e2e/`ui-auditor`. Rapport `docs/prs/PR-UI-1-report.md`. **Position actuelle** : prochain = **THI-299** (PR-UI-2 badge fréquence) → THI-300 (PR-UI-3a liste charges groupée + total) → THI-301 (DateField). Dette focus transverse tracée **THI-304** (Lots A/B/C/D dont `.drw-input` drawer atom). En parallèle backlog : Track B P1 lot 2 (simulateur S5 curseur + marché).
-
-**Update 25 mai 2026** : Sprint Beta J-16 — **PR-BETA-1 et PR-BETA-6 mergées**.
-
-- PR-BETA-1 (THI-265, commit [`5232dda`](https://github.com/thierryvm/ankora/commit/5232dda), PR [#179](https://github.com/thierryvm/ankora/pull/179)) : refactor visuel `/app/charges` — grid desktop + cards mobile.
-- PR-BETA-6 (THI-277, commit [`0cdf924`](https://github.com/thierryvm/ankora/commit/0cdf924), PR [#182](https://github.com/thierryvm/ankora/pull/182)) : Apple HIG Bottom Tab Bar mobile + persistente authenticated cross-destinations (cockpit / admin / faq / glossaire / legal). 5 commits squashés : v1 + Option A v3 persistence + addendum GDPR Cookie/Footer + hotfix #2 server-client boundary + hotfix #3 anti-doublon nav burger ↔ bar + hotfix #4 Footer nav hidden mobile + ScrollToTop lift. Cf. [`docs/prs/PR-BETA-6-bottom-tab-bar-report.md`](./prs/PR-BETA-6-bottom-tab-bar-report.md).
-
-Sprint Beta restantes : **3 PR** — PR-BETA-3 (THI-267 Capacité tryptique ADR-009), PR-BETA-4 (THI-268 Dashboard 3 couches, dépend mockups Claude Design #3), PR-BETA-5 (THI-269 Landing nav refactor — **scope réduit** à LocaleToggle FR/EN + Auth-aware CTAs : le burger marketing duplicate-nav est déjà neutralisé conditionnellement par BETA-6 hotfix #3).
-
-**Backlog Beta** : THI-279 i18n callback OAuth (~30 min, P3 medium — bug pré-existant, non régression BETA-6, traité dans `chore/beta-cleanup-roadmap-polish`).
-
-**Update 24 mai 2026** : Sprint Beta J-17 — **PR-BETA-2 mergée** (commit [`011401f`](https://github.com/thierryvm/ankora/commit/011401f), PR [#181](https://github.com/thierryvm/ankora/pull/181)). Couvre THI-266 (i18n perf desktop : retrait `router.refresh()` redondant + landing FR/EN drift + 3 E2E unfixme'd) **+** THI-276 intégrée in-place (iPhone Safari RSC cache fix : `revalidatePath('/', 'layout')` server-side dans `setLocaleAction`). Sprint Beta restantes après ce merge : **3 PR** — PR-BETA-6 (THI-277 Bottom Tab Bar mobile + sheet "Plus"), puis PR-BETA-3 (THI-267 Capacité tryptique ADR-009), puis PR-BETA-4 (THI-268 Dashboard 3 couches). PR-BETA-5+7 (THI-269 Landing nav refactor) **différable v1.0** fin juin si débordement Beta. Cf. CHANGELOG.md §"2026-05-24 — PR-BETA-2" + [`docs/prs/PR-BETA-2-i18n-perf-phase-b-report.md`](./prs/PR-BETA-2-i18n-perf-phase-b-report.md).
-
-**Update 17 mai 2026** : pivot scope explicite — **Beta (10 juin) = MVP fonctionnel utilisable**, **V1.0 publique (fin juin) = cible Monarch Money level**, **V1.1 post-launch = parité Monarch complète si gap résiduel**. Voir [§Trois jalons](#trois-jalons-verrouillés--v11-post-launch) et nouvelle section [§PR-D6/D7 candidates](#pr-d6d7--dashboard-cockpit-v10-candidates-post-pr-d5-mobile-ios) (17 tickets Linear capturés, projet Ankora créé).
-
-Dernière mise à jour : 9 mai 2026 (clôture session marathon) — **Design Ankora V1.0 ENTIÈREMENT FIGÉ**. PR-D1 à PR-D4 PHASE 1 mergées (6 PRs). Sessions Claude Design : #1 ✅ Design System + #2 ✅ Landing + #3 ✅ Dashboard Cockpit (Surface 1 hero waterfall Option C bidirectionnel pixel-perfect + 11 atoms + Surfaces 2/3/4 Charges/Dépenses/Catégories + Plans d'apurement + Onglet Mouvements Compte Épargne) + **#4 ✅ Onboarding 3 étapes** (catalogue belge ~70 fournisseurs + import CSV 5 sources + saisie manuelle + Reste à vivre + tutoriel 3 cards) + **#5 ✅ Admin Panel V1** (Santé technique Vercel/Supabase/Upstash/Sentry + Santé produit MAU/Drop-off + Acquisition Top 5 sources + Recommandations rule-based 5 patterns avec R-02 FSMA-safe « pas de LLM » et R-06 anti-culpa exemplaire) + **patch finalisation Bloc E** (recolorisation sémantique danger/warning/success/brand pour fixer thème clair monochrome laiton + atom 10 ThemeToggle + atom 11 LangSwitcher FR-BE/EN + RBAC visible badge "Zone admin · réservée fondateur" + nav conditionnelle isAdmin + helper `requireAdmin()` côté serveur). **3 ADRs nouveaux 9 mai** : [ADR-009 amendé](./adr/ADR-009-capacite-epargne-reelle.md) (3 concepts UX Reste disponible 662 € / Reste à vivre 500 € / Capacité d'épargne réelle 162 € + bouton "Ajuster ce mois" R-10) + [ADR-017 Proposed](./adr/ADR-017-plans-apurement.md) (table `installment_plans` + génération auto N transactions + drawer drilldown + cas Thierry 2 407 €/11×) + [ADR-018 Proposed](./adr/ADR-018-provisions-bidirectionnelles-audit-trail.md) (table `provision_transfers` direction OUT/IN + ballet aller-retour compte courant ↔ lissage). [ADR-016](./adr/ADR-016-tracking-paiements-multi-sources.md) reste statut `Proposed` (à valider Accepted post-PR-D5). **Brief PR-D4 PHASE 2 enrichi** (ADDENDUM 2026-05-09 sections A→K) dans `prompts/PR-D4-PHASE2-cd3-integration.md` : 11 atoms (au lieu de 8), ADR-009 amend, R-13 services bundlés (`included_services` jsonb), R-14 i18n FR-BE 100%, ADR-017/018 stubs, RBAC admin complet (helper + nav conditionnelle + badge + footer disclaimer), 4 tests Vitest + 2 e2e additionnels, table garde-fous R-01 à R-14. **Règles critiques 14 verrouillées** dans Obsidian `_regles-decisions-critiques.md`. Prochaines étapes : (1) appliquer patch Bloc E finalisation via @cc-design + export ZIP snapshot complet pour sécurité → (2) lancer @cc-ankora terminal Opus 4.7 sur PR-D4 PHASE 2 (intégration React/Tailwind, ~4-6 jours) → (3) PR-D5 backend (CRUD plans apurement + provision_transfers + table workspace_settings.reste_a_vivre + import CSV 5 sources). **Décision Option B locked** (alpha @thierry + 2-3 proches 4-6 sem, **PAS de release publique 10 mai**, v1.0 publique fin juin). Cf. [ADR-005](./adr/ADR-005-pr3a-anticipated-design-system.md) + [ADR-009 amendé](./adr/ADR-009-capacite-epargne-reelle.md) + [ADR-016](./adr/ADR-016-tracking-paiements-multi-sources.md) + [ADR-017](./adr/ADR-017-plans-apurement.md) + [ADR-018](./adr/ADR-018-provisions-bidirectionnelles-audit-trail.md) + handoff Obsidian `Athenaeum/10_Projects/ankora/cowork-handoffs/2026-05-09-fin-session-bloc-d-onboarding-bloc-e-admin.md`.
-
-## Cap v1.0 publique — Vision & Jalons (23 avril 2026)
-
-**Source unique de vérité** : `docs/NORTH_STAR.md` (19 avril 2026). Ce document consolide la vision v1.0 publique, les 5 piliers parallélisables, les contraintes non négociables et les cibles mesurables.
-
-### Trois jalons verrouillés (+ V1.1 post-launch)
-
-| Jalon                | Horizon                            | Contenu minimal                                                                                                                                                                                                            |
-| -------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Alpha**            | ~4 semaines                        | Thierry + 2-3 proches, FR seul, auth + onboarding + CRUD + dashboard v3 partiel + simulateur + MFA                                                                                                                         |
-| **Beta**             | ~8 semaines (cible 10 juin 2026)   | **MVP fonctionnel utilisable** — 5-10 testeurs, CGU/Privacy UE+BE 2026, GDPR export/delete, bug reporting live, Klaro!, **3 sections cockpit v3 essentielles** : Health gauge + Bills J-7/14/30 + Drawer simulator         |
-| **v1.0**             | ~12 semaines (cible fin juin 2026) | **Cible Monarch Money level** — signups ouverts ankora.be, FR + EN, AEO complet, Lighthouse 100, /roadmap publique, admin panel v1, **8/8 sections cockpit v3 livrées** (incluant Timeline 6m + Goals + Drag-to-rebalance) |
-| **v1.1 post-launch** | hors planning verrouillé           | **Parité Monarch complète** si gap résiduel après V1.0 — drag-to-rebalance optimisé, polish UX, NL/DE/ES locales, notifications push PWA. Livré "quand c'est prêt"                                                         |
-
-### Cinq piliers parallélisables
-
-- **A — Fondations & Hygiène** : ROADMAP sync, agents QA (10), CI gates (Sourcery, Lighthouse budget), branch protection
-- **B — Product Excellence** : recherche concurrentielle (12 acteurs), mockups user dashboard v3, admin panel v1, design tokens finaux
-- **C — Core Fonctionnel** : auth + MFA, onboarding 3 étapes, CRUD charges/dépenses, dashboard core, simulateur intégré, goals
-- **D — Sécurité & Légal** : CGU/Privacy en langue user (BE 2026), Klaro! TCF v2.2, GDPR export/deletion, rate limiting, audit log
-- **E — SEO/AEO/Perf** : schemas JSON-LD fintech, llms-full.txt, /roadmap publique, Lighthouse 100/100/100/100, Service Worker
-
-Cowork pilote A+B+contenus D/E. CC Ankora pilote C+tech D/E. Thierry valide + merge.
+**Réécrit le 26 juillet 2026.** Les 492 lignes précédentes empilaient des « Update »
+datés d'avril à mai 2026 décrivant un plan (PR-D1…D8, Sprint Beta, jalon « v1.0
+publique fin juin ») qui n'a plus cours : le programme actif est la **refonte v2 en
+17 étapes**. Un document que personne ne peut suivre ne guide personne. L'historique
+reste intégralement dans git (`git log -- docs/ROADMAP.md`).
 
 ---
 
-## Agents QA Pilier A (16 au total)
+## Programme actif — refonte v2
 
-Tous les agents résident dans `.claude/agents/` et sont trigger-driven. Chaque agent valide un domaine critique avant merge.
+**Source de vérité** : [`docs/superpowers/specs/2026-07-26-ankora-refonte-v2-plan.md`](./superpowers/specs/2026-07-26-ankora-refonte-v2-plan.md)
+(17 étapes, périmètre et critères de sortie vérifiables par étape).
 
-> **Source de vérité** : le frontmatter et le contenu de `.claude/agents/<name>.md` sont **canoniques**. La table ci-dessous et la section "Workflow agents" de [`CLAUDE.md`](../CLAUDE.md) sont des **résumés navigables** — en cas de divergence, le fichier agent prévaut. Lors de l'ajout/modification d'un agent : éditer d'abord `.claude/agents/<name>.md`, puis répercuter dans cette table et dans `CLAUDE.md`.
+**Règle** : une étape n'est pas commencée tant que la précédente n'est pas terminée.
 
-| #   | Agent                         | Domaine                                                                                                         | Trigger                                      | Gate            |
-| --- | ----------------------------- | --------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | --------------- |
-| 1   | `security-auditor`            | Auth, middleware, RLS, headers                                                                                  | touch auth/\*\*                              | ✅ requis       |
-| 2   | `rls-flow-tester`             | Supabase RLS + migrations                                                                                       | touch migrations/\*\*                        | ✅ requis       |
-| 3   | `financial-formula-validator` | `src/lib/domain/`                                                                                               | touch domain/\*\*                            | ✅ requis       |
-| 4   | `ui-auditor`                  | WCAG 2.2 AA, mobile, Tailwind 4                                                                                 | touch components/\*\*                        | ✅ requis       |
-| 5   | `lighthouse-auditor`          | Performance, a11y, BP, SEO                                                                                      | pre-release only                             | ✅ requis RC    |
-| 6   | `seo-geo-auditor`             | SEO signals, entity consistency                                                                                 | touch public pages                           | ✅ requis       |
-| 7   | `gdpr-compliance-auditor`     | PII, consent, export, deletion                                                                                  | touch PII, auth, D-lang                      | ✅ requis       |
-| 8   | `test-runner`                 | Vitest + Playwright                                                                                             | post-change                                  | ✅ requis       |
-| 9   | `dashboard-ux-auditor`        | User dashboard UX + design tokens                                                                               | touch app/app/\*\*                           | ✅ requis PR-3  |
-| 10  | `admin-dashboard-auditor`     | Admin security, perf, a11y                                                                                      | touch app/admin/\*\*                         | ✅ requis PR-B2 |
-| 11  | `i18n-auditor`                | next-intl key parity, placeholders, glossary, email-as-keyword                                                  | touch messages/\*\*, src/i18n/\*\*           | ✅ requis       |
-| 12  | `mobile-ios-auditor`          | iPhone Safari (WebKit) UX, safe-area, ITP, viewport, focus                                                      | touch layout/nav/forms/dashboard mobile      | ✅ requis       |
-| 13  | `llm-security-auditor`        | OWASP LLM Top 10 + vecteurs IA 2026                                                                             | touch system prompt/providers/RAG/MCP        | ✅ requis RC IA |
-| 14  | `mobile-liquid-glass-auditor` | Contrat glass : contraste AA glass **et** fallback opaque, reduced-transparency/motion, anti-stacking/perf, CSP | touch glass/backdrop-filter/surfaces élevées | ✅ requis       |
-| 15  | `prod-bug-investigator`       | Cause racine d'un bug prod, par la preuve                                                                       | bug constaté, cause inconnue                 | ✅ requis       |
-| 16  | `test-quality-auditor`        | Les tests prouvent-ils le comportement ?                                                                        | touch tests / pre-merge critique             | ✅ requis       |
+| Étape | Objet                                                                            | État            |
+| ----- | -------------------------------------------------------------------------------- | --------------- |
+| 1     | Dépenses — affordance d'édition, suppression confirmée, 3 bugs de date/frontière | ✅ #270         |
+| 2     | Filet e2e réel en CI — les parcours connectés s'exécutent enfin                  | ✅ #271         |
+| 3     | **RGPD P0 — la suppression de compte doit réellement supprimer**                 | ⏳ **suivante** |
+| 4-17  | cf. spec                                                                         | 📋              |
 
-**Note sur les triggers** : Les chemins documentés (ex. `touch auth/**`, `touch app/app/**`) définissent les cas d'usage _intentionnels_ pour chaque agent. L'invocation manuelle reste primaire pour la Phase 1. Une automatisation CI complète (détection de fichiers + dispatch d'agents) est une future amélioration Pilier A (Phase 2+).
+### Vision produit
 
-**Note sur `mobile-liquid-glass-auditor`** : ajouté le 24 juillet 2026 pour la refonte UX (spec `docs/superpowers/specs/2026-07-24-ankora-refonte-ux-program-design.md`). Ankora adopte une esthétique inspirée d'Apple « Liquid Glass » sous contraintes dures : cet agent garantit que le glass reste une **couche d'enhancement jamais porteuse de sens** — contraste WCAG AA vérifié dans l'état glass **et** dans le fallback opaque (`prefers-reduced-transparency`), `prefers-reduced-motion` respecté, une seule couche de backdrop-filter (perf GPU mobile), aucun style glass inline (CSP stricte). Complémentaire de `mobile-ios-auditor` (WebKit général) et `ui-auditor` (WCAG générique).
-
-**Note sur `mobile-ios-auditor`** : ajouté le 4 mai 2026 suite à la "Mobile Recovery Day" (overflow horizontal, theme toggle full-screen, focus ring cyan, cards Dashboard coupées détectés sur iPhone 14 réel — bugs invisibles en Brave DevTools). Complémentaire de `ui-auditor` (qui audite mobile-first générique en Chromium) — focus exclusif sur les quirks Safari iOS WebKit (ITP, safe-area, `100vh`, auto-zoom inputs, `position: sticky`, PWA Add-to-Home-Screen). Procédure manuelle de test sur iPhone réel : `docs/runbooks/dev-on-iphone.md`.
+Inchangée et hors de ce fichier : [`docs/NORTH_STAR.md`](./NORTH_STAR.md) (vision,
+jalons, piliers, contraintes non négociables). Les huit sections obligatoires du
+dashboard et le positionnement FSMA sont rappelés dans [`CLAUDE.md`](../CLAUDE.md).
 
 ---
 
-## ⚠️ Contrainte transverse : Budget 0 €
+## Contraintes transverses
 
-Tant que Ankora n'a pas de revenus, **aucune dépendance payante n'est tolérée en production**. Ce principe couvre tous les PR de ce document et doit être validé pour toute nouvelle brique :
+**Budget 0 €** — aucune dépendance payante en production tant qu'Ankora n'a pas de
+revenus. Services autorisés : Vercel Hobby, Supabase Free, Upstash Free, GitHub
+Actions (dépôt public → minutes gratuites). Introduire une dépendance payante exige
+une validation @thierry explicite.
 
-- Hosting : **Vercel Hobby** (gratuit, limites suffisantes pour un MVP personnel)
-- Database + Auth + Storage : **Supabase Free** (500 Mo DB, 50 k MAU, 5 Go bandwidth, 1 Go storage)
-- Rate limiting : **Upstash Free** (10 k commandes/jour)
-- CI/CD : **GitHub Actions** (repo public = illimité)
-- Monitoring applicatif : deux options acceptables tant qu'elles restent 0 € — (a) capteur maison intégré à Supabase (voir PR-B1), ou (b) **Sentry Developer free tier** (5 000 erreurs/mois, 10 k performance units, 50 replays, 1 user) via l'intégration native Vercel. Décision finale prise dans PR-B1 (voir §PR-B1 — décision Sentry vs capteur maison).
-- Traductions : **IA locale via Claude Code** (utilise la session Claude de Thierry), jamais d'appel API payant. DeepL free tier accepté uniquement pour review ponctuelle, pas en build pipeline.
-- IA produit : **aucun appel LLM côté serveur en Phase 1**. Phase 2 = BYOK (utilisateur fournit sa clé Anthropic/OpenRouter), Ankora ne facture jamais le compute. Confirmation Thierry 2026-04-18 : "pour la partie IA, on utilisera BYOK plus tard".
-- Recommandations admin : **rule-based** (seuils, compteurs, regex), **pas de LLM** en Phase 1. Upgrade LLM possible en Phase 2 via la clé BYOK de l'utilisateur (pas Ankora qui facture).
-
-Toute PR introduisant un service tiers facturé **doit d'abord obtenir validation explicite de Thierry**. Pas d'exception silencieuse.
+**Qualité** — quatre checks obligatoires sur `main` depuis le 26 juillet 2026 :
+`Lint + Typecheck + Unit Tests`, `Security audit`, `Playwright E2E`,
+`Playwright E2E (authenticated)`. Le nombre de cas e2e exécutés ne descend jamais
+(planchers et procédure de mesure dans [`CLAUDE.md`](../CLAUDE.md)).
 
 ---
 
-## Ordre d'exécution des PR techniques
+## Dettes ouvertes
 
-L'ordre ci-dessous est **verrouillé**. Il a été pensé pour que chaque PR débloque la suivante sans dette technique ni retouche arrière.
+Chacune mérite sa propre PR ; aucune n'est un blocage de l'étape en cours.
 
-**Re-séquencement 2026-04-25** : PR-3 monolithique splittée en **PR-3a/b/c** ; PR-3a anticipée avant PR-2/PR-B1 comme socle architectural. Justification complète : [ADR-005](./adr/ADR-005-pr3a-anticipated-design-system.md).
+### THI-206 — GRANT explicite dans le template de migration
 
-| #   | PR                                                         | Statut                                                                                                                                                                                                                      | Bloquant pour | Raison d'être                                                                                                                                               |
-| --- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | **PR-1 — Socle i18n next-intl**                            | ✅ mergée                                                                                                                                                                                                                   | PR-1bis       | Route group `[locale]` + 5 locales                                                                                                                          |
-| 2   | **PR-Q — OpenGraph statique**                              | ✅ mergée                                                                                                                                                                                                                   | —             | 5 PNG 1200×630 générés via Playwright                                                                                                                       |
-| 3   | **PR-1bis — Extraction i18n routes privées**               | ✅ mergée (a491297, 18 avril 2026)                                                                                                                                                                                          | PR-2          | Clés i18n pour auth + app + onboarding                                                                                                                      |
-| 4   | **PR-3a — Design System socle (DS + tokens + fonts)**      | ✅ mergée (rapport `docs/prs/PR-3a-tokens-fonts-skill-report.md`, 26 avril 2026)                                                                                                                                            | —             | Tokens canoniques, fonts, SKILL `ankora-design-system` — socle visuel livré                                                                                 |
-| 5   | **PR-3b — Atomic UI kit**                                  | ✅ mergée (PR #67, 24 avril 2026)                                                                                                                                                                                           | —             | `src/components/ui/` (Button, Card, Input, Badge…) + tests Vitest                                                                                           |
-| 6   | **PR-3c — Landing fusion intelligente**                    | ✅ mergée en 4 sous-PRs : #76 (PR-3c-1 foundation), #78 (PR-3c-2 MktNav+Hero), #82 (PR-3c-3 WhatIfDemo), #84 (PR-3c-4 Hero waterfall 3 steps). Branche `feat/hero-waterfall-3steps` supprimée post-merge.                   | —             | Fusion ossature TSX/RSC actuelle ↔ apports cc-design (hero waterfall, simulator, pricing)                                                                   |
-| 7   | **PR-2 — Traductions NL/EN/ES/DE**                         | ⏳ en attente — débloquée par PR-3 mergée                                                                                                                                                                                   | —             | Remplissage des 4 locales non-FR                                                                                                                            |
-| 8   | **PR-B1 — Bug reporting MVP**                              | 📋 prompt prêt (`prompts/PR-B1-bug-reporting-mvp.md`) — exécutable en parallèle de PR-2                                                                                                                                     | —             | Capteur d'erreurs + widget avant QA lourde dashboard v3                                                                                                     |
-| 9   | **PR-C1 — Audit data flow Dashboard + revalidatePath fix** | ✅ mergée (PR #88, 3 mai 2026)                                                                                                                                                                                              | PR-C2a        | Fix Server Actions + Router Cache après mutations dashboard                                                                                                 |
-| 10  | **PR-C2a — Section Dépenses du mois sur Dashboard**        | ✅ mergée (PR #89, commit 969c64e, 3 mai 2026)                                                                                                                                                                              | PR-D1         | Comble le gap A6 (dépenses invisibles) — section minimale livrée immédiatement                                                                              |
-| 11  | **Voie D — Dashboard Cockpit complet (PR-D1 → PR-D8)**     | 🚧 EN COURS. PR-D1 (#94) ✅ + PR-D2 (#96) ✅ + **PR-D3 (#121) ✅ + PR-D3-bis (#122) ✅ mergées 6 mai 2026**. 5 ADRs (008-012) ✅ `Accepted` (validés 2026-05-03). Reste PR-D4 enrichi → PR-D8 (démarrage 11 mai post-CD#3). | —             | Refactor complet vers la vraie vision IronBudget : Effort Lissé, Capacité Réelle, Assistant Virements, Plan rattrapage, Live Quotidien, Simulateur d'Action |
-| 12  | **PR-2 — Traductions NL/ES/DE**                            | ⏳ en attente — réordonnée P3 après Voie D (focus produit avant i18n complet)                                                                                                                                               | —             | Remplissage des 3 locales manquantes (FR + EN suffisent v1.0)                                                                                               |
-| 13  | **PR-B1 — Bug reporting MVP**                              | 📋 prompt prêt — réordonné P3 après Voie D                                                                                                                                                                                  | —             | Capteur d'erreurs + widget                                                                                                                                  |
-| 14  | **PR-F — Rétro-planning provisions**                       | 💡 fusionnée dans Voie D (notifications réactives J-3/J-0/retard du Dashboard cockpit)                                                                                                                                      | —             | Devient feature naturelle du Dashboard cockpit                                                                                                              |
-| 15  | **PR-B2 — Admin panel complet**                            | 💡 idée (post-MVP)                                                                                                                                                                                                          | —             | Dashboard santé + métriques + règles                                                                                                                        |
+**Plus urgente qu'annoncée.** Supabase retire l'exposition automatique des tables au
+**30 octobre 2026** ; les migrations d'Ankora reposent encore sur les grants
+implicites.
 
-Signification des icônes : ✅ mergée · 🚧 en cours · ⏳ en attente d'un prérequis · 📋 prompt rédigé prêt à exécuter · 💡 idée cadrée mais pas encore de prompt.
+**Ce n'est plus théorique** : sur la base reconstruite depuis les 15 migrations par
+le job `e2e-authenticated`, `logAuditEvent()` échoue avec
+`permission denied for table audit_log`. La production fonctionne parce qu'elle a
+été créée quand les grants implicites existaient — une base neuve ne les reçoit
+plus. Le journal d'audit portant une obligation RGPD, cette dette se traite avec
+l'étape 3.
 
-### Pourquoi PR-3a avant PR-2 et PR-B1 ?
+Convention : [`docs/CONVENTIONS.md`](./CONVENTIONS.md).
 
-PR-3a livre les **tokens canoniques + fonts + SKILL `ankora-design-system`** sans toucher aux composants ni aux pages. Sans cela :
+### Six specs e2e décrivent un dashboard supprimé
 
-- **PR-2** traduirait des chaînes UI qui changeront visuellement en PR-3b/c (re-traduction inutile sur copies obsolètes)
-- **PR-B1** construirait son widget bug-reporting sur des primitives `Button`/`Card`/`Modal` qu'il faudrait re-styler en PR-3b
-- **PR-3b** travaillerait sur des tokens incohérents avec le DS final
+En quarantaine motivée dans `e2e/authenticated-specs.json`, imprimée à chaque run.
+Elles visent le cockpit d'avant THI-327. La liste ne doit que **rétrécir**.
 
-PR-3a est un **socle architectural** (≤ 400 lignes, 0 régression UI possible) qui débloque proprement la suite.
+### `CardTitle` rend une `<div>`
 
-### Pourquoi PR-B1 avant PR-3b/c ?
+Les titres de section du cockpit ne portent donc aucun rôle `heading` — défaut WCAG
+sur la page la plus importante de l'app, et cause de trois des six specs
+quarantinées. Primitive partagée : PR dédiée + `ui-auditor`.
 
-PR-3b (composants atomiques) et surtout PR-3c (Landing fusion) vont générer des bugs subtils de style/interaction/a11y. Si PR-B1 est en place **avant** PR-3b/c, chaque bug rencontré en QA génère un bundle markdown copiable en 2 clics vers Claude Code. Gain de temps majeur sur le debugging.
+### Angle mort du préflight comptes
+
+`npm run preflight` valide le fichier de lien Supabase, pas le compte que le CLI
+utilise réellement. Infrastructure de garde-fous → PR dédiée, jamais dans une PR de
+feature.
 
 ---
 
-## Dettes post-PR-1bis (à solder avant PR-2)
-
-Trois PRs atomiques enchaînées **dans cet ordre** pour éviter les conflits sur `messages/*.json` et les diffs Tailwind qui touchent partout. Chaque item fait l'objet d'une PR dédiée (pas de bundling).
-
-- [x] **`chore(i18n): remove obsolete dashboard keys`** — mergée PR #20 (commit b13e52c, 18 avril 2026). 10 clés orphelines (`title`, `welcome`, `subtitle`, `emptyState`, `cards.*`) retirées sur 5 locales (−90 lignes).
-- [x] **`feat(i18n): locale-aware formatters`** — mergée PR #21 (commit 4b5e045, 18 avril 2026). `src/lib/i18n/formatters.ts` avec `formatCurrency`, `formatDate`, `formatDateTime`, `formatMonth`, `formatNumber`, `formatPercent`. Cache Intl par locale. Migration complète : 8 fichiers (`page.tsx` dashboard, `deletion-status`, 4 `*Client.tsx`, `SettingsClient`) + suppression de `src/lib/format.ts`. Tests Vitest 20 cas sur 5 locales, coverage 100/100/95 lines/funcs/branches. **Conditionne le port des mockups v2** (affichage `1 234,50 €` en fr-BE vs `€1,234.50` en en).
-- [x] **`chore(tailwind): migrate to canonical classes`** — **Verified compliant 2026-04-19** (audit zéro inline colors, repo déjà 100% tokens canoniques). Pas de migration nécessaire. Audit report sauvegardé : `docs/tailwind-canonical-audit.md`. Mergée PR #23.
-- [x] **#61 — Aligner classes Tailwind legacy sur convention canonique** — `text-(--color-muted-foreground)` → `text-muted-foreground`. Les deux marchent en v4 mais la convention canonique est maintenant le standard (introducée dans Header refactor commit 354ad28). Alignement complet du codebase (38 fichiers, ~150 instances) — commit 1 du refactor/post-pr25-debts (2026-04-19).
-- [x] **PR #27 — Code review cleanup + i18n parity** — Consolidation finale : CSP nonce, centralisation brand constants, extraction formatters i18n, alignement Tailwind, parité messages de-DE (6 clés placeholder). Mergée 2026-04-20 (581641d).
-
----
-
-## Prochaine feature majeure — Voie D Dashboard Cockpit complet
-
-**Mise à jour 2026-05-03** : suite au partage par @thierry du mockup AI Studio "IronBudget" (5 screenshots + ZIP), la vision du Dashboard v3 a été **profondément réécrite**. La spec canonique remplace désormais la version 8-sections précédente :
-
-- **Source de vérité** : `specs/dashboard-cockpit-vraie-vision-2026-05-03.md` (vault Athenaeum, 700 lignes)
-- **5 ADRs `Accepted`** (validés 2026-05-03 par délégation @thierry → @cowork) : ADR-008 (account naming) / ADR-009 (Capacité Réelle) / ADR-010 (Live Quotidien) / ADR-011 (Plan rattrapage 3 mois) / ADR-012 (Assistant Virements)
-- **Brief Claude Design Session #3 réécrit** : section 3.2 de `docs/design/claude-design-brief.md` mise à jour 2026-05-03
-
-**Voies en cours** :
-
-- **Voie C (en cours)** — Remplir le Dashboard actuel pour qu'il soit utilisable user N°1 par @thierry. ✅ PR-C1 mergée (revalidatePath fix). ✅ PR-C2a mergée (section Dépenses Mai). ⏳ PR-C2b et suivantes fusionnées dans Voie D (refactor complet plutôt que patches successifs).
-- **Voie D (planifiée 3-4 semaines)** — Dashboard Cockpit complet, voir section dédiée plus bas pour PR-D1 → PR-D8 séquentiels.
-- **Voie A (PR-2 traductions NL/ES/DE)** — Réordonnée P3, post-Voie D. v1.0 publique vise FR + EN seulement (cf. CLAUDE.md ankora). NL/DE/ES annoncées dans `/roadmap` publique, livrées post-launch.
-
-**Décision stratégique @thierry — 2 options deadline 10 mai** :
-
-- **Option A — v0.9 publique le 10 mai + v1.0 mi-juin** : ship ce qu'on a (Dashboard actuel + PR-C2a section Dépenses + 1-2 polish UX critiques) le 10 mai pour respecter le ressort psychologique. v1.0 cockpit complet mi-juin.
-- **Option B — alpha @thierry + report v1.0 publique 4-6 semaines** : pas de release publique 10 mai, on garde l'app en alpha utilisateur N°1 et on livre v1.0 directement avec le cockpit complet.
-
-**À trancher @thierry**. Décision business, pas technique.
-
-## Voie D — Dashboard Cockpit complet (verrouillé 2026-05-03)
-
-Suite à la spec canonique `specs/dashboard-cockpit-vraie-vision-2026-05-03.md`, la Voie D découpe le Dashboard cockpit en 8 sous-PRs séquentielles. Ordre **impératif** (chaque PR débloque la suivante).
-
-| #              | Sous-PR                                                                                                      | Pré-requis                                              | Scope                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Estimation |
-| -------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| PR-D1          | **Foundations** (data model + domain pur + tests)                                                            | ADR-008/009/010/011/012 validés `Accepted` par @thierry | Migrations Supabase (`account_type`/`display_name`, `payment_months`/`payment_day`/`category_id`/`sort_order`, `categories` table seedée, `charge_payments` table). Module domain `src/lib/domain/cockpit/` complet, tests Vitest ≥ 90 % couverture. Aucun changement UI.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | 3-4 jours  |
-| PR-D2          | **Header + 3 cards comptes typés + renommage inline**                                                        | PR-D1 mergée                                            | Header avec sélecteur mois `< Mai 2026 >` (URL `?month=YYYY-MM`). 3 cards comptes (income_bills bleu / provisions vert / daily_card violet). Server Action `renameAccount`. Migration des comptes existants vers le bon `account_type`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | 2 jours    |
-| PR-D3          | **Bloc 1 radar : Effort Lissé + Capacité Réelle**                                                            | PR-D2 mergée                                            | ✅ **MERGÉE 6 mai 2026 (PR #121, commit 51acdbf)**. Bloc 2 hero radar livré.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | 1-2 jours  |
-| PR-D3-bis      | **Waterfall pédagogique + layout réordonné + cleanup KPI legacy**                                            | PR-D3 mergée + feedback empirique @thierry              | ✅ **MERGÉE 6 mai 2026 (PR #122, commit 992c171)**. Waterfall 3-row (Revenus / Effort / Plafond) + layout comptes-en-haut + suppression 4 KPI legacy (Provisions/Santé/Virement/Factures). Tests +5 Vitest + 2 E2E.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | 1 jour     |
-| PR-UI-2        | **Fixes UI charges/expenses régressions visuelles** (HORS-VOIE D urgent)                                     | PR-D3-bis mergée + feedback empirique @thierry 7 mai    | 3 fixes ciblés sur composant `Input` shadcn (impact DS-wide 18 fichiers) : (1) focus ring emerald-500/40 au lieu de cyan/blanc + border emerald-500/60, (2) scroll spinner désactivé `[appearance:textfield]` + `::-webkit-*-spin-button:appearance-none`, (3) date icon dark theme `dark:[color-scheme:dark]`. Pas de logique métier touchée. Tests Vitest snapshots 5 locales.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | 2-3 heures |
-| PR-QA-1d       | **Playwright stability fixes pré-existants** (HORS-VOIE D parallèle)                                         | PR-D3-bis mergée                                        | 6 fails Playwright pré-existants (cookies-consent + error-boundaries) : `scrollIntoViewIfNeeded()` + `waitForFunction(localStorage)` + bump iOS WebKit timeout. BUG-iOS-011 #116 reste en backlog. Scope STRICT tests-only, zéro modif applicatif.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | 15-20 min  |
-| PR-D4          | **Liste charges enrichie + édition inline + dates + catégories + toggle paye**                               | PR-UI-2 mergée + Session Claude Design #3 bouclée       | **SCOPE ÉTENDU post-feedback empirique 7 mai** : refonte form `/charges` (multi-mois + catégorie + jour + date d'échéance + date paiement). Édition inline charges/dépenses (drawer ou modal). Composant `ChargeList` + sub-sections par compte. Toggle paye (`charge_payments`). Tri date / ordre custom + drag&drop. Idem `/expenses` (édition inline + catégorie). Visual layer aligné CD#3.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | 3-4 jours  |
-| PR-CAT-1       | **Catégories ambitieuses v2 YNAB+Monarch-level** (HORS-VOIE D bonus, scope (c) tranché 7 mai @thierry)       | PR-D4 mergée                                            | **Scope (c) v2 ambitieux verrouillé** : Table Supabase `categories` exposée UI (page `/app/settings/categories`) + groupes (`category_groups`) + couleurs custom + emojis/icônes lucide-react + soft delete (avec 'autres' protégée non-supprimable, fallback automatique) + drag-to-reorder (lib `@dnd-kit/core` ou natif HTML5 drag) + règles automatiques (table `categorization_rules` : payee match / amount range / account → category, application retroactive optionnelle inspirée Monarch) + auto-categorize v1 string match label. Seed 8 défauts groupés : Logement (loyer/charges/eau) / Famille / Taxes / Santé / Abonnements / Assurances / Transport / Autres. Dropdown catégorie + groupe dans Charges + Expenses + Simulator (impact filtré par catégorie). Tests Vitest ≥ 90% couverture domaine. Aucune perte qualité UI/UX/perf : Lighthouse ≥ 95, WCAG 2.2 AA, mobile-first, dark theme parfait. **Inspirations** : YNAB drag/emoji/groupes + Monarch règles retroactives + Copilot ML _defer Phase 2 post-alpha_. | 4-5 jours  |
-| PR-NAV-1       | **Navigation fluide app/ : breadcrumbs + liens Dépenses/Simulateur** (HORS-VOIE D urgent friction empirique) | PR-UI-2 mergée                                          | 🟢 **OUVERTE PR #128 (commits 2fb67ad + 09f9603)** — résout 3 frictions empiriques @thierry post-PR-D3-bis : F1 ajout liens Dépenses/Simulateur dans HeaderNav (desktop + drawer mobile), F2 composant `AppBreadcrumbs` SSR sur toutes `/app/*` (sauf `/app` accueil), F3 friction mobile résolue (breadcrumb visible juste sous header, plus besoin d'ouvrir drawer pour retour Dashboard). 11 fichiers, 5 locales i18n parité, +17 tests Vitest (670/670 verts), 3 agents QA invoqués (`ui-auditor` + `mobile-ios-auditor` + `dashboard-ux-auditor`) avec M1 corrigés (sémantique liste + touch targets ≥ 44px). Playwright 7 fails 100% pré-existants (vérifié byte-byte vs main run, 0 régression). DoD-5 : 4/5 verts, ne reste que merge @thierry.                                                                                                                                                                                                                                                                                 | 1.5-2h     |
-| PR-FIX-CSP-DEV | **Fix CSP violations dev mode** (HORS-VOIE D hardening proposée par cc-ankora 7 mai)                         | PR-NAV-1 mergée                                         | ~80 erreurs CSP en dev mode pré-existantes : Next.js devtools + Vercel Speed Insights inline scripts/styles sans nonce. **`security-auditor` agent OBLIGATOIRE** avant merge. À investiguer en lien possible avec issue #114 prod (CSP violations Turbopack) — root cause peut-être partagée. Hors scope strict tout fix prod (dev mode uniquement).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | 0.5-1 jour |
-| PR-NAV-2       | **Navigation densité + libellés** (HORS-VOIE D recommandée par dashboard-ux-auditor 7 mai)                   | PR-NAV-1 mergée + Session Claude Design #3 bouclée      | Recommandée par `dashboard-ux-auditor` post-PR-NAV-1 : raffiner densité visuelle + clarté libellés breadcrumbs/header sur mobile + desktop. Visual layer aligné CD#3. Possiblement bottom nav mobile à étudier. **Scope précis à trancher post-mockups CD#3 weekend 10-11 mai.**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | 1 jour     |
-| PR-FIX-CONSENT | **Fix ConsentBanner cache stale** (HORS-VOIE D bug user prod, issue #126)                                    | PR-NAV-1 mergée                                         | Fix `cachedInitialized` flag dans `src/components/gdpr/ConsentBanner.tsx:53` qui fige le `useSyncExternalStore` au premier appel. Si `localStorage` set après le premier `getSnapshot()` (cas Playwright `addInitScript` ou cas réel reload navigation interne), cache reste figé sur `{stored: null}` et banner reste visible. Fix Option A : `useEffect(() => { notify(); }, [])` au mount pour force refresh post-hydration. Débloque 5 tests E2E + bug user prod réel. Tests Vitest régression. Diagnostic complet : `cc-handoffs/2026-05-07-PR-QA-2-diagnostic-12-fails.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                        | 0.5 jour   |
-| PR-FIX-NAV-404 | **Fix not-found.tsx WebKit nav** (HORS-VOIE D bug user, issue #127, possiblement lié #115)                   | PR-NAV-1 mergée                                         | Remplacer `<a href="/">` par `<Link>` from `next/link` dans `src/app/not-found.tsx` (PR-THI-122). Native anchor click ne navigue pas en mobile-safari (URL reste `/this-page-does-not-exist`). Possiblement root cause partagée avec issue #115 RSC prefetch 404 prod. Investigation conjointe recommandée.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | 0.5 jour   |
-| PR-D5          | **Bloc droite : Quotidien live + Assistant Virements + Santé Provisions**                                    | PR-D4 mergée                                            | Card Quotidien avec live decrement (useOptimistic). Card Assistant Virements (gradient bleu-vert, sub-card Santé, hero montant à virer + détail provisions item-par-item). Tests Vitest ≥ 25 cas algo Santé Provisions.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | 3 jours    |
-| PR-D6          | **Modals (ajout charge + gestion catégories)**                                                               | PR-D5 mergée                                            | Modal `AddChargeDialog` (multi-select mois si non-mensuelle). Modal `ManageCategoriesDialog` (CRUD avec contrainte 'autres' protégée). Focus trap, Esc, return focus.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | 1-2 jours  |
-| PR-D7          | **Notifications + Prévisions 6 mois**                                                                        | PR-D6 mergée                                            | Système notifications réactives (bell + badge + dropdown). Card Prévisions (bar chart custom SVG, tooltips hover). Couleurs adaptatives selon margePrevue.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | 2 jours    |
-| PR-D8          | **Simulateur d'Action**                                                                                      | PR-D7 mergée                                            | Card Simulateur (select charge + nouveau prix → économie lissée + bouton appliquer). Server Action `updateCharge`. Cohérence avec table `provider_negotiations` future (A8).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | 1 jour     |
-
-**Total estimation Voie D complète** : 16-20 jours homme = 3-4 semaines de travail concentré CC Ankora.
-
-### Pré-requis bloquants Voie D (à solder avant PR-D3)
-
-1. ✅ **5 ADRs `Accepted`** (008-012) — validés 2026-05-03 par délégation @thierry → @cowork. Plus de blocage ici.
-2. **Session Claude Design #3 bouclée** ⏳ : brief Session #3 réécrit dans `docs/design/claude-design-brief.md` §3.2 (mise à jour 2026-05-03). **Lancement verrouillé samedi 10 mai** (contrainte abonnement @thierry, fenêtre Opus 4.7 jusqu'au 10 mai). Mockups Claude Design à produire dans `ankora-mockups/dashboard-cockpit-v3-claude-design/`.
-3. ✅ **Décision Option A vs B tranchée 6 mai 2026** par @cowork (carte blanche @thierry) : **Option B retenue** = alpha @thierry + 2-3 proches pendant 4-6 semaines, **PAS de release publique 10 mai**, v1.0 publique mi-juin (NORTH_STAR cap respecté). Raison : Voie D restante = 11-13 jours, ship dégradé violerait NORTH_STAR règle d'or #3 (Dashboard Excellence non négociable).
-
-### ADRs additionnels Voie D (post-PR-D1 mais avant PR-D8)
-
-- **ADR-013 — Negotiations history** (table `provider_negotiations`, A8 dans le tracking @thierry) — préalable à PR-D8
-- **ADR-014 — Account transfers log** (table `account_transfers`, A9) — utilisé par PR-D5 (Assistant Virements logs)
-- **ADR-015 — Savings buckets segregation** (table `savings_buckets`, A10) — affine ADR-002 (bucket-model), à rédiger en parallèle de PR-D5
-
----
-
-## PR-D6/D7 — Dashboard Cockpit V1.0 candidates (post-PR-D5 mobile-iOS)
-
-**Source** : audit PR-D5 mobile-iOS (`docs/audits/2026-05-16-pr-d5-mobile-ios.md`), Phase 5 Linear tracking.
-
-**Projet Linear** : <https://linear.app/thierryvm/project/ankora-7dd28cb2e3a1> (team Thierryvm, target 2026-06-30).
-
-L'audit dashboard-ux PR-D5 a confirmé que 6 des 8 sections du cockpit v3 (cible Monarch Money) restent à livrer. Découpage **PR-D6** (Beta essentielles) / **PR-D7** (V1.0 publique) à arbitrer post-merge PR-D5 selon la vélocité réelle.
-
-### Priorisation par jalon
-
-| Section                               | Linear                                                | Cible              | Priorité |
-| ------------------------------------- | ----------------------------------------------------- | ------------------ | -------- |
-| Health score provisions gauge         | [THI-190](https://linear.app/thierryvm/issue/THI-190) | **Beta (10 juin)** | Medium   |
-| Prochaines factures J-7/14/30         | [THI-192](https://linear.app/thierryvm/issue/THI-192) | **Beta (10 juin)** | Medium   |
-| Simulateur what-if drawer integration | [THI-195](https://linear.app/thierryvm/issue/THI-195) | **Beta (10 juin)** | Medium   |
-| Timeline cashflow 6 mois prédictive   | [THI-191](https://linear.app/thierryvm/issue/THI-191) | V1.0 (fin juin)    | Low      |
-| Goals épargne avec ETA                | [THI-193](https://linear.app/thierryvm/issue/THI-193) | V1.0 (fin juin)    | Low      |
-| Enveloppes drag-to-rebalance          | [THI-194](https://linear.app/thierryvm/issue/THI-194) | V1.0 (fin juin)    | Low      |
-
-### Décision architecturale bloquante PR-D6
-
-[THI-189](https://linear.app/thierryvm/issue/THI-189) — **Canonical decision: atoms/_ vs ui/_ — migration plan + ADR**. À trancher AVANT le démarrage PR-D6/D7 pour figer la frontière atoms vs ui consommée par les nouvelles sections. Sinon les 6 sections vont fragmenter encore plus le DS.
-
-### Backlog P2 polish (10 tickets, Low priority)
-
-[THI-196 → THI-205](https://linear.app/thierryvm/project/ankora-7dd28cb2e3a1) — issues mineures non-bloquantes Beta :
-
-- THI-196 : Hero KPI mockup grid fallback responsive grid-cols-2 mobile
-- THI-197 : Landing hero overflow horizontal pré-existant (BUG-iOS-HERO-OVERFLOW, test.fixme actif)
-- THI-198 : PWA decode WebKit emulator workaround (BUG-iOS-007-emulator)
-- THI-199 : Dashboard `/app/loading.tsx` skeleton aligné Bloc 1+2
-- THI-200 : Charges tri/filtre/groupement par fréquence (atome Tabs)
-- THI-201 : Expenses groupement par jour/semaine/mois + dates formatées via `formatDate`
-- THI-202 : Dashboard cards couleur seule positif/négatif (WCAG 1.4.1) → préfixe +/− ou icône
-- THI-203 : Settings `ConsentToggleRow` extraction + harmonisation rounded-md vs rounded-xl
-- THI-204 : `AccountCard` tokenisation purple-500 raw → token sémantique
-- THI-205 : Simulator text-xl KPIs → `.num-lg` cohérence dashboard
-
----
-
-## Backlog produit
-
-- **Modèle enveloppes (ex-buckets)** : 3 ADRs fondateurs en rédaction côté Cowork — (a) no-PSD2, (b) bucket-model, (c) notifications-system. Les ADRs doivent être mergés dans `docs/adr/` avant d'engager PR-3 ou PR-F, car ils conditionnent l'architecture de données.
-
----
-
-## Backlog infrastructure / Tech debt
-
-### PR-INFRA-4 — Migration template GRANT explicite + REVOKE FROM PUBLIC
-
-**Linear** : [THI-206](https://linear.app/thierryvm/issue/THI-206) · **Priorité** : Medium · **Deadline** : 30 octobre 2026
-
-Mettre à jour le template migration Ankora pour intégrer `GRANT explicite` (Supabase breaking change 30/10/2026 — tables non exposées par défaut sans grant) et le pattern empirique `REVOKE FROM PUBLIC` pour fermer les fonctions PostgREST privées.
-
-**Audit Ankora 2026-05-17** (post-merge PR-D5) — infra à jour, action limitée au template :
-
-- Postgres : **17.6** ✅ (deadline force-upgrade 1er juillet caduque pour Ankora)
-- Node CI 4 workflows + `engines` : **24** ✅ (deadline 30 juin caduque)
-- `@supabase/supabase-js` : `^2.103.3` (dans la fenêtre 2.101–2.105 stable)
-- `vercel.json` runtime : défaut Vercel (Node 24+)
-
-Convention canonique documentée dans [`docs/CONVENTIONS.md`](./CONVENTIONS.md#migrations-supabase--conventions-post-30-octobre-2026). Premier usage sur la prochaine migration créée — pas de réécriture rétroactive des migrations existantes (RLS + grants implicites conservés pour les tables d'avant la deadline).
-
-**Refs** :
-
-- Obsidian learning : `90_Meta/learnings/2026-05-16-supabase-breaking-changes-2026-cross-project.md`
-- Supabase changelog : <https://supabase.com/changelog/45329-breaking-change-tables-not-exposed-to-data-and-graphql-api-automatically>
-
----
-
-## Phase 0 — Bootstrap (terminée)
-
-- [x] Choix du nom + vérification domaines
-- [x] Bootstrap Next.js 16 + TypeScript strict + Tailwind 4
-- [x] Headers sécurité A+ (CSP nonce, HSTS, COOP, Permissions-Policy)
-- [x] Couche domaine pure (budget, provision, simulation, balance) testée
-- [x] Migrations Supabase + RLS complètes
-- [x] `.claude/agents/` (10 QA agents — 7 bootstrap + dashboard-ux-auditor + admin-dashboard-auditor)
-- [x] CI GitHub Actions (lint + typecheck + test + e2e + lighthouse + audit)
-- [x] Husky pre-commit + commit-msg
-- [x] PWA manifest + llms.txt + sitemap + robots
-- [x] Logo + favicon + icônes PWA
-
----
-
-## Phase 1 — MVP (en cours)
-
-Objectif : cockpit personnel utilisable par Thierry, ses enfants et amis.
-
-### Bloc i18n + visuels (en cours)
-
-- [x] PR-1 — socle i18n next-intl + route group `[locale]` + 5 locales
-- [x] PR-Q — OpenGraph statique 5 locales
-- [x] PR-1bis — extraction i18n routes privées (mergée dans a491297, 18 avril 2026)
-  - Batch A : routes publiques locale-aware (landing, FAQ, legal, offline, onboarding) + `LocaleSwitcher` + `ScrollToTop` + middleware i18n
-  - Batch B : routes privées (auth + app) migrées avec `generateMetadata` via `getTranslations`, server actions locale-aware, Zod i18n-friendly
-  - Tests : parity sync des 4 stubs non-FR + E2E skip GDPR banner sur mobile emulations (Pixel 7 + iPhone 14, flaky tap dispatch)
-  - Hygiène : `.gitignore` durci (`design-mockup-*.html`, `.claude/settings.local.json`, `prompts/`)
-- [x] **PR-3a — Design System socle** (tokens + fonts + SKILL `ankora-design-system`) — mergée 26 avril 2026 (rapport `docs/prs/PR-3a-tokens-fonts-skill-report.md`)
-- [x] **PR-3b — Atomic UI kit** (`src/components/ui/` + tests Vitest) — mergée PR #67, 24 avril 2026
-- [x] **PR-3c — Landing fusion intelligente** — split en 3 sous-PRs ✅ mergées : #76 PR-3c-1 (foundation), #78 PR-3c-2 (MktNav+Hero), #82 PR-3c-3 (WhatIfDemo). Polish hero-waterfall en cours sur `feat/hero-waterfall-3steps`.
-- [ ] PR-2 — traductions NL-BE / EN / ES-ES / DE-DE (glossaire doc déjà écrit) — **prochaine recommandée**
-- [ ] PR-B1 — Bug reporting MVP (voir §PR-B1 ci-dessous) — exécutable en parallèle
-
-### Bloc fonctionnel produit
-
-- [ ] Auth Supabase : signup, login, reset, MFA
-- [ ] Onboarding 3 étapes (nom espace, revenus, première charge)
-- [ ] CRUD charges fixes + catégories
-- [ ] CRUD dépenses variables
-- [ ] Dashboard : provisions mensuelles, santé, transfert suggéré, factures du mois
-- [ ] Simulateur what-if (annuler / négocier)
-- [ ] Export GDPR (JSON)
-- [ ] Suppression compte GDPR (grace 30j + cron)
-- [ ] Consentement cookies (banner granulaire)
-- [ ] Pages légales : CGU, Privacy, Cookies, FAQ
-- [ ] Service Worker offline-first pour les pages publiques
-- [ ] Lighthouse 100/100/100/100 (mobile + desktop)
-- [ ] Tests e2e Playwright sur les parcours critiques
-
----
-
-## PR-B1 — Bug reporting MVP (cadre, prompt à produire)
-
-**Objectif** : donner à Thierry (et plus tard aux users) un moyen simple de signaler un bug technique ou UX, avec capture automatique du contexte, pour générer un rapport directement exploitable par Claude Code.
-
-**Contraintes** :
-
-- Budget 0 € strict — Sentry est **possible** sous son Developer free tier (voir arbitrage ci-dessous), LogRocket / Bugsnag / Datadog restent exclus (pas de free tier viable)
-- Fonctionne sur mobile iOS/Android PWA + desktop Mac/Windows/Linux PWA, sans API native
-- RGPD compliant : consentement explicite à chaque envoi, scrub auto des PII (email, montants), pas de mots de passe / tokens / cookies
-
-### Décision à prendre dans PR-B1 : Sentry vs capteur maison
-
-Deux options viables 0 € — à trancher avant de produire le prompt PR-B1.
-
-**Option A — Sentry Developer free tier + intégration Vercel**
-
-| Critère            | Verdict                                                                                                                         |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| Coût               | 0 € (plan Developer : 5 k erreurs/mois, 10 k perf units, 50 replays, 1 seat)                                                    |
-| Installation       | `@sentry/nextjs` + intégration Vercel (env vars auto, source maps upload auto) — ~30 min                                        |
-| Qualité capture    | Excellente : stack traces propres, session replay, breadcrumbs, release tracking                                                |
-| RGPD               | Sentry propose EU data residency (`de.sentry.io`), mais reste un tiers qui voit les stack traces + fragments DOM                |
-| Vendor lock-in     | Moyen — si Sentry change ses conditions free tier, migration nécessaire                                                         |
-| Admin panel        | Les bugs restent chez Sentry, on expose un lien vers leur dashboard depuis `/app/admin` (pas d'export bundle Claude Code natif) |
-| Widget manuel user | À construire quand même (Sentry User Feedback existe mais limité)                                                               |
-
-**Option B — Capteur maison Supabase-native**
-
-| Critère            | Verdict                                                                                                                           |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
-| Coût               | 0 € (utilise Supabase free déjà en place)                                                                                         |
-| Installation       | ~600 lignes à écrire — 1 PR complète                                                                                              |
-| Qualité capture    | Bonne si bien fait (Error Boundary + window.onerror + ring buffer) — pas de session replay en V1                                  |
-| RGPD               | Parfait : zéro données sortent de l'infra Ankora, tout reste EU Supabase                                                          |
-| Vendor lock-in     | Aucun                                                                                                                             |
-| Admin panel        | **Intégré nativement** : bugs dans table `bug_reports`, bouton "Bundle Claude Code" + "Créer GitHub Issue" fait partie de l'admin |
-| Widget manuel user | Natif, sur-mesure                                                                                                                 |
-
-**Recommandation** : **Option B pour V1** si on accepte l'effort de dev initial, parce qu'elle s'intègre parfaitement dans la vision PR-B2 (admin panel complet avec bundle Claude Code, moteur de règles sur les mêmes données, etc.) et garde l'architecture 100 % owned. Sentry reste un **plan B** à 30 min d'installation si jamais PR-B1 traîne et qu'on a besoin de capter les erreurs de PR-3 en urgence — rien n'empêche les deux de cohabiter (Sentry pour les erreurs techniques fines, capteur maison pour les reports users + feedback UX).
-
-**Scope MVP** :
-
-- Error Boundary React global + `window.onerror` + `unhandledrejection` + ring buffer 20 dernières actions user
-- Widget bug flottant (icône discrète bas-droite) + raccourci `Ctrl+Shift+B`
-- Modal avec : description libre, niveau de sévérité, screenshot optionnel via `html2canvas` (ou équivalent Canvas API)
-- Server Action → table Supabase `bug_reports` (RLS : user voit les siens, admin voit tout)
-- Page admin minimaliste `/app/admin/bugs` avec liste + filtres + bouton **Exporter bundle Claude Code** (`.md` copiable) et bouton **Créer issue GitHub** (via API, token serveur)
-- i18n 5 langues (clés à caler avec PR-2)
-- Doc user : `/help/signaler-un-bug`
-- Doc admin : `docs/admin/bug-triage.md`
-
-**Estimation** : ~10 fichiers, ~600 lignes, 1 session Claude Code.
-
----
-
-## PR-F — Rétro-planning provisions (cadre, post-PR-3)
-
-**Objectif** : anticiper les retraits depuis l'épargne vers le compte courant à l'approche des échéances de factures provisionnées.
-
-**Principe** : quand l'utilisateur envoie une provision `P` vers son compte épargne pour la charge `C`, le système enregistre `C.next_due_date` et déclenche des alertes :
-
-- J-7 : "Dans 7 jours, la facture `C` arrive à échéance — prévois de rapatrier `P` vers ton compte courant"
-- J-3 : rappel plus urgent
-- J-0 : "Échéance aujourd'hui"
-
-**Implémentation envisagée** :
-
-- Nouvelle colonne `provisions_movements.charge_id` (FK vers `charges.id`)
-- Nouvelle colonne `charges.next_due_date`
-- Job quotidien (pg_cron Supabase ou cron Vercel) qui scanne et génère les notifications
-- Canal V1 : in-app (table `notifications`) — V2 : push PWA / email
-
-**Estimation** : ~15 fichiers, migration DB + domaine + UI alerts.
-
----
-
-## PR-B2 — Admin panel complet (anticipation architecture, post-MVP)
-
-**But stratégique** : même si on ne construit PR-B2 qu'après avoir de vrais users, on **prévoit la structure dès maintenant** pour que PR-B1 plante déjà les bonnes fondations (schéma DB, namespace de routes admin, hooks audit).
-
-### Sections prévues (chacune = PR dédiée à terme)
-
-| ID     | Section                 | Sources de données                             | Moteur                   |
-| ------ | ----------------------- | ---------------------------------------------- | ------------------------ |
-| PR-B2a | Santé technique         | `bug_reports`, audit log, Supabase metrics API | Rules                    |
-| PR-B2b | Santé produit / UX      | `audit_log` (events), funnels onboarding       | Rules                    |
-| PR-B2c | Marketing & acquisition | Supabase auth events, referrer                 | Rules                    |
-| PR-B2d | Recommandations         | Agrégation des 3 précédentes                   | **Rule-based** (pas LLM) |
-
-### Moteur de recommandations — rule-based (0 € au lieu de LLM)
-
-Principe : au lieu de faire tourner un LLM coûteux pour "détecter les patterns et suggérer des améliorations", on écrit des **règles déterministes** qui cherchent des signaux précis. Exemples :
-
-- `SI count(bug_reports WHERE component = X AND created_at > now()-7d) >= 5 ALORS recommande "Composant X instable — 5+ reports cette semaine"`
-- `SI taux_complétion_onboarding_step_2 < 60% ALORS recommande "Étape 2 de l'onboarding → taux d'abandon élevé, revoir le wording"`
-- `SI p95_latency_server_action > 500ms ALORS recommande "Server Actions lentes → audit DB queries"`
-- `SI signups_suspects (même domaine email + 10 en 1h) ALORS recommande "Anti-abuse : investiguer X@domaine.tld"`
-
-Avantages vs LLM :
-
-- **0 € de coût**
-- **0 hallucination** — une règle se déclenche ou ne se déclenche pas
-- **Testable** — chaque règle = un test Vitest
-- **Debuggable** — tu vois exactement pourquoi une reco s'affiche
-
-Implémentation : `src/lib/admin/rules/` — chaque règle exporte `{ id, label, query, severity, action }`. Un seul cron ou un bouton "Rafraîchir" calcule toutes les règles. Un futur upgrade LLM pourra s'intégrer en Phase 2 BYOK si besoin.
-
-### Fondations à poser DÈS PR-B1 pour PR-B2
-
-- Table `bug_reports` avec colonnes `component`, `severity`, `user_id`, `route`, `viewport`, `locale`, `user_agent`, `created_at`
-- Namespace route `/app/admin/**` avec garde `requireAdmin()` (user id = Thierry pour l'instant)
-- Hook `logProductEvent(event, metadata)` qui append à `audit_log` — servira aussi pour PR-B2b
-- Migration DB prête à accueillir futures tables `admin_rules`, `admin_notifications`
-
----
-
-## Phase 2 — Pots partagés + IA BYOK
-
-- Pots partagés inter-utilisateurs (invitation par email, rôles viewer/editor)
-- Anthropic SDK + OpenRouter : **l'utilisateur fournit sa clé**, Ankora relaye
-  - Suggestions de négociation
-  - Détection d'abonnements dormants
-  - Résumé mensuel personnalisé
-- Import CSV / OFX (pas de PSD2)
-- Notifications push (factures à venir)
-- Moteur de recommandations admin : option **upgrade LLM** via la clé BYOK de Thierry (pas Ankora qui facture)
-
----
-
-## Phase 3 — Produit complet
-
-- Agrégation multi-devises
-- Tableau de bord annuel + rapports téléchargeables (PDF)
-- Suggestions d'épargne sans conseil (ex: livret A/LDDS = informationnel uniquement)
-- Version mobile native via Expo (si la PWA montre des limites)
-- Tarification payante (plan pro : multi-espaces, IA inclus, support prioritaire) — le moment où Ankora peut **enfin** engager des coûts d'infra
-
----
-
-## Tâches post-lancement — Infrastructure domaine
-
-Une fois le MVP en production public (fin Phase 1), les alias `privacy@ankora.be` et `security@ankora.be` doivent être câblés sur le domaine.
-
-- [ ] Configurer MX ankora.be + alias `privacy@ankora.be`, `security@ankora.be`, `contact@ankora.be`, `conduct@ankora.be`
-- [x] Migrer contacts dans les 5 locales (fichiers `messages/{en,fr-BE,nl-BE,es-ES,de-DE}.json`) — déjà en `ankora.be`
-- [x] Aligner `README.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`, `.github/ISSUE_TEMPLATE/*` sur `ankora.be` (20 avr 2026)
-- [ ] Mettre à jour `SECURITY.md` : remplacer le TODO temporaire par `privacy@ankora.be` une fois la MX active
-- [ ] Mettre à jour `LICENSE` et `NOTICE` si références à `*@ankora.eu`
-- [ ] Page Privacy section "Responsable de traitement" : confirmer adresse postale + contact email belge
-
-**État actuel (avril 2026)** : tous les contacts unifiés sur `thierryvm@gmail.com` en attente de config MX domaine. Les références repo pointent désormais toutes vers `ankora.be`.
-
----
-
-## Hors scope (définitif)
-
-- Agrégation PSD2 (coût + régulation)
-- Déclaration fiscale automatisée
-- Conseil en placement personnalisé (FSMA)
-- Comptabilité en partie double pour entreprises
-- Dépendances payantes tant que Phase 3 n'est pas atteinte (voir §Budget 0 €)
+## Conventions de travail
+
+- Ordre d'exécution, gouvernance et Definition of DONE : [`CLAUDE.md`](../CLAUDE.md)
+- Décisions d'architecture : [`docs/adr/`](./adr/)
+- Rapports de PR : [`docs/prs/`](./prs/)
+- Handoffs de session : [`docs/handoffs/`](./handoffs/)
+- Runbooks (e2e, migrations, Upstash, iPhone) : [`docs/runbooks/`](./runbooks/)
