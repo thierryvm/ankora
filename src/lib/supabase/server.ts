@@ -34,21 +34,8 @@ export async function createClient() {
   );
 }
 
-export async function createAdminClient() {
-  const cookieStore = await cookies();
-
-  return createServerClient<Database>(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
-    cookies: {
-      getAll() {
-        return cookieStore.getAll();
-      },
-      setAll() {
-        // Admin client never writes user cookies.
-      },
-    },
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
-}
+// `createAdminClient` used to live here. It paired the service_role key with a
+// cookie adapter, so any request carrying a session silently downgraded to the
+// `authenticated` role (H3, issue #192). Replaced by
+// `createServiceRoleClient()` in `@/lib/supabase/admin` — never reintroduce a
+// service_role client that reads cookies.

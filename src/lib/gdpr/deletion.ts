@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/admin';
 import { logAuditEvent, AuditEvent } from '@/lib/security/audit-log';
 
 /**
@@ -12,7 +12,7 @@ export async function requestDeletion(
   userId: string,
   reason?: string,
 ): Promise<{ scheduledFor: string }> {
-  const supabase = await createAdminClient();
+  const supabase = createServiceRoleClient();
   const scheduledFor = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
   const { error } = await supabase.from('deletion_requests').insert({
@@ -37,13 +37,18 @@ export async function requestDeletion(
 }
 
 export async function executeDeletion(userId: string): Promise<void> {
-  const supabase = await createAdminClient();
+  const supabase = createServiceRoleClient();
 
-  // Pseudonymise audit log (keep security trail, drop identity)
-  await supabase
+  // Pseudonymise audit log (keep security trail, drop identity).
+  // The result MUST be checked: this used to be fire-and-forget, so a refusal
+  // left identifying rows in place while the rest of the deletion carried on.
+  const { error: pseudonymise } = await supabase
     .from('audit_log')
     .update({ user_id: null, ip_address: null, user_agent: null })
     .eq('user_id', userId);
+  if (pseudonymise) {
+    throw new Error(`Failed to pseudonymise audit log: ${pseudonymise.message}`);
+  }
 
   // Cascade will handle workspaces → charges/expenses/categories/consents
   const { error: deleteWorkspaces } = await supabase
@@ -55,18 +60,22 @@ export async function executeDeletion(userId: string): Promise<void> {
   const { error: deleteUser } = await supabase.auth.admin.deleteUser(userId);
   if (deleteUser) throw new Error(`Failed to delete auth user: ${deleteUser.message}`);
 
+  // No `resource_id` here, deliberately. It carried the very UUID the two
+  // statements above just erased, so the account would be re-identifiable one
+  // row after its deletion — jsonb metadata is not cascaded by
+  // `on delete set null`. Same reasoning that removed `attempted_user_id` from
+  // the metadata allow-list (see audit-log.ts).
   await logAuditEvent(
     AuditEvent.GDPR_DELETION_COMPLETED,
     { userId: null },
     {
       resource_type: 'user',
-      resource_id: userId,
     },
   );
 }
 
 export async function cancelDeletion(userId: string): Promise<void> {
-  const supabase = await createAdminClient();
+  const supabase = createServiceRoleClient();
   const { error } = await supabase
     .from('deletion_requests')
     .update({ status: 'cancelled', cancelled_at: new Date().toISOString() })

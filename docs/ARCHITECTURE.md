@@ -64,7 +64,10 @@ Schémas **Zod** — source unique de vérité pour les types de formulaires + v
 
 - `client.ts` — navigateur, session PKCE persistée
 - `server.ts` — Server Components / Actions, session depuis cookies
-- `server.ts#createAdminClient` — service role (usage strict : GDPR export, deletion, audit)
+- `admin.ts#createServiceRoleClient` — service role, **sans cookies** (usage strict :
+  export GDPR, suppression, audit). Le prédécesseur vivait dans `server.ts` et lisait les
+  cookies de la requête : toute session présente dégradait le client en rôle
+  `authenticated` (H3, issue #192, mesuré le 26 juillet 2026)
 - `middleware.ts` — refresh session à chaque requête
 
 ### 4. `src/lib/security/`
@@ -99,7 +102,7 @@ Schémas **Zod** — source unique de vérité pour les types de formulaires + v
 
 1. Bouton "Télécharger mes données" → Server Action `requestExport()`
 2. `rateLimit('export', userId)` → 3/heure max
-3. `createAdminClient()` (service role — bypass RLS)
+3. `createServiceRoleClient()` (service role — bypass RLS)
 4. Lecture parallèle de toutes les tables de l'utilisateur
 5. `logAuditEvent(GDPR_EXPORT_COMPLETED, ...)`
 6. Retour : JSON à télécharger en client (header `Content-Disposition: attachment`)

@@ -159,7 +159,12 @@ ininterprétable au premier conflit, donc ignoré :
 | Job                              | Plancher au 26 juillet 2026                       |
 | -------------------------------- | ------------------------------------------------- |
 | `Playwright E2E`                 | 215 passed (214 avant, +1 spec locale réactivée)  |
-| `Playwright E2E (authenticated)` | 24 passed (mesuré en local avant le premier push) |
+| `Playwright E2E (authenticated)` | **25 passed** (24 au départ, +1 spec `audit-log`) |
+
+Chaque relèvement est **mesuré en local avant le premier push**, jamais estimé.
+Une spec authentifiée ajoutée sous `e2e/` est aussi découverte par le job public :
+elle doit y **sauter** (`test.skip(!admin, …)`) et non échouer, sinon c'est le
+plancher public qui bouge.
 
 Le second job porte en plus une **liste de quarantaine** dans
 `e2e/authenticated-specs.json` : 6 specs découvertes et comptées mais pas

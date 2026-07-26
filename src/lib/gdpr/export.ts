@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/admin';
 import { logAuditEvent, AuditEvent } from '@/lib/security/audit-log';
 
 /**
@@ -19,7 +19,7 @@ export type UserDataExport = {
 };
 
 export async function exportUserData(userId: string): Promise<UserDataExport> {
-  const supabase = await createAdminClient();
+  const supabase = createServiceRoleClient();
 
   const [userRes, workspacesRes, chargesRes, expensesRes, categoriesRes, consentsRes, auditRes] =
     await Promise.all([

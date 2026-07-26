@@ -158,9 +158,13 @@ son entrée. La liste doit rétrécir, jamais grandir en silence.
 
 ---
 
-## Ce que la CI ne prouve toujours pas
+## Ce que la CI prouve, et ce qu'elle ne prouve pas
 
-Le job `e2e-authenticated` n'est **pas** dans les checks requis de la branche
-protégée : modifier la protection de branche relève d'une PR dédiée à revue
-humaine. Tant que ce n'est pas fait, **il peut être rouge sans bloquer une
-fusion**. Suivi côté @thierry.
+Depuis le 26 juillet 2026, `main` exige **quatre** checks :
+`Lint + Typecheck + Unit Tests`, `Security audit`, `Playwright E2E` et
+`Playwright E2E (authenticated)`. Avant cette date, **aucun** check n'était
+requis : tous les jobs pouvaient être rouges sans empêcher une fusion.
+
+Ce qui reste hors de portée de la CI : les **six specs en quarantaine**
+ci-dessus, et tout ce qui ne s'observe que contre le schéma de production
+(`npm run e2e:auth`, lancé à la main).

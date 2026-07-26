@@ -105,7 +105,6 @@ vi.mock('next/headers', () => ({
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => supa.client,
-  createAdminClient: async () => supa.client,
 }));
 
 vi.mock('@/lib/auth/require-user', () => ({
