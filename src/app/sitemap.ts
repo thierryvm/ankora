@@ -1,9 +1,29 @@
 import type { MetadataRoute } from 'next';
 import { SITE } from '@/lib/site';
-import { routing } from '@/i18n/routing';
+import { LOCALES_VISIBLE, routing } from '@/i18n/routing';
 import { GLOSSARY_LOCALES, getGlossaryTerms, GLOSSARY_LOCALE_PREFIXES } from '@/lib/glossary';
 
-const PUBLIC_ROUTES = ['', '/faq', '/legal/cgu', '/legal/privacy', '/legal/cookies'] as const;
+/**
+ * Routes worth submitting for indexing.
+ *
+ * `/legal/*` is deliberately absent: those pages set
+ * `robots: { index: false, follow: true }`, so submitting them made Search
+ * Console report "Submitted URL marked noindex" on 15 URLs (3 pages × 5
+ * locales) — a self-inflicted error report, not a ranking opportunity.
+ */
+const PUBLIC_ROUTES = ['', '/faq'] as const;
+
+/**
+ * Locales the sitemap advertises.
+ *
+ * `LOCALES_VISIBLE` (FR + EN), not `routing.locales`. `nl-BE`, `de-DE` and
+ * `es-ES` resolve — deep links and QA bookmarks keep working — but their
+ * `landing.*` copy is still French verbatim, so submitting them asks Google to
+ * index untranslated pages under a Dutch/German/Spanish URL. The glossary
+ * already scopes itself this way through `GLOSSARY_LOCALES`; this aligns the
+ * rest. Add a locale back here once its translation is reviewed.
+ */
+const INDEXABLE_LOCALES = LOCALES_VISIBLE;
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
@@ -11,7 +31,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const entries: MetadataRoute.Sitemap = [];
 
-  for (const locale of routing.locales) {
+  for (const locale of INDEXABLE_LOCALES) {
     const prefix = locale === routing.defaultLocale ? '' : `/${locale}`;
     for (const route of PUBLIC_ROUTES) {
       entries.push({
@@ -21,7 +41,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
         priority: route === '' ? 1 : 0.6,
         alternates: {
           languages: Object.fromEntries(
-            routing.locales.map((l) => [
+            INDEXABLE_LOCALES.map((l) => [
               l,
               `${base}${l === routing.defaultLocale ? '' : `/${l}`}${route}`,
             ]),
