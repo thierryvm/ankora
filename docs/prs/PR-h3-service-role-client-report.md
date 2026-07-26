@@ -95,7 +95,7 @@ Un test qui ne peut pas échouer ne prouve rien ; ces deux-là peuvent.
 | `npm run typecheck`               | 0 erreur                                                  |
 | `npm run lint`                    | 0 erreur (9 warnings préexistants)                        |
 | `npm run lint:use-server`         | 0 erreur                                                  |
-| `npm run test`                    | **132 fichiers, 1708 tests**                              |
+| `npm run test`                    | **133 fichiers, 1723 tests**                              |
 | Job authentifié (local)           | **25 passed** — plancher relevé 24 → 25, mesuré           |
 | Spec sous env public factice      | **skipped**, pas échouée → plancher public inchangé (215) |
 | `node scripts/e2e-auth-specs.mjs` | 14 specs, 8 exécutées, 6 en quarantaine                   |
@@ -149,7 +149,49 @@ n'inline pas les variables non `NEXT_PUBLIC_*`, donc un import accidentel donner
 | 4   | `mergeStateStatus: CLEAN`                 | ⏳            |
 | 5   | Ce rapport                                | ✅            |
 
-## 8. Observation annexe
+## 8. Ce que les trois audits ont changé
+
+`security-auditor` **PASS_WITH_NOTES** · `gdpr-compliance-auditor`
+**COMPLIANT_WITH_NOTES** · `test-quality-auditor` **PASS WITH GAPS**. Aucun P0.
+Six constats sont entrés dans la PR ; les autres sont tracés ci-dessous.
+
+**Le correctif était comportemental, il est devenu structurel.** `persistSession: false`
+empêche de _persister_ une session, pas d'en _détenir_ une : un `.auth.setSession()` sur
+le client rendu rouvrait H3 **sans toucher `admin.ts`**, donc sous le radar du test
+d'imports comme du test d'en-têtes. L'audit l'a mesuré. Le client est désormais scellé par
+l'option `accessToken` — tout `.auth` refuse, vérifié par sonde runtime, et l'identité
+envoyée reste `Bearer <service_role>`. Ce qui a forcé une seconde fabrique,
+`createServiceRoleAdminClient()`, pour le seul appelant qui a besoin de l'API admin GoTrue.
+
+**Deux défauts que ce merge allumait**, tous deux corrigés ici : la troncature silencieuse
+de l'export (`limit(1000)` sans `order` → sous-ensemble arbitraire du journal, dans un
+fichier annoncé comme complet) et la double journalisation des demandes de suppression.
+
+**Trois trous de couverture mesurés**, tous sur du code que cette PR repointait sans
+l'exercer : `requestDeletion`, `cancelDeletion` et l'intégralité d'`export.ts` étaient à
+0 %. Les sept requêtes d'export ont maintenant leur colonne de scoping assertée **par
+nom** — avec un vrai client service_role, la RLS ne rattrape plus une requête non scopée.
+
+**Ce que l'audit RGPD tranche et qui n'était pas acquis** : la panne est **fail-closed**.
+Un client dégradé obtient moins de droits, jamais plus — aucune donnée personnelle
+exposée ni altérée. Cela écarte les art. 33/34 (notification) et ne laisse qu'une
+consignation art. 24. Et la preuve de consentement (art. 7(1)) n'a **jamais** été perdue :
+`user_consents` passe par le client de session, pas par celui-ci.
+
+### Tracé, hors périmètre de cette PR
+
+| Constat                                                                                                                                                                                                                                                                      | Échéance                                              |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| Les lignes d'audit à `user_id IS NULL` gardent une IP + user-agent que la pseudonymisation ne peut pas atteindre (c'est exactement la classe de lignes déjà en base)                                                                                                         | avant que 3b ne branche le cron                       |
+| Les trois écritures destructrices d'`executeDeletion` ne sont pas atomiques ; l'ordre, lui, est forcé et correct                                                                                                                                                             | avant 3b                                              |
+| Plus rien ne démontre qu'un effacement précis a eu lieu (art. 5(2)) — `resource_id` retiré, `deletion_requests` cascadé                                                                                                                                                      | avant 3b                                              |
+| `deletion_self_update` laisse modifier `scheduled_for` ; sans exécuteur c'est inerte, avec un cron ça déclenche une suppression immédiate                                                                                                                                    | avant 3b                                              |
+| Aucune alerte sur l'échec d'écriture d'audit — `error_code` aide à diagnostiquer, pas à détecter (art. 32(1)(d))                                                                                                                                                             | PR dédiée                                             |
+| Purge 12 mois jamais planifiée — le journal croît sans plafond dès ce merge (art. 5(1)(e))                                                                                                                                                                                   | même cron que 3b                                      |
+| Trois textes publics deviennent faux : export dit « complet » (7 tables sur 14), base légale du journal dite « obligation légale » au lieu d'intérêt légitime, journal décrit comme de simples « logs de sécurité » alors qu'il devient un profil comportemental sur 12 mois | **décision @thierry** — texte de politique, 5 locales |
+| Registre des traitements art. 30 + DPA des trois sous-traitants : absents du dépôt                                                                                                                                                                                           | avant ouverture publique                              |
+
+## 9. Observation annexe
 
 `e2e/dashboard-account-rename.spec.ts` a échoué une fois puis passé au rejeu : elle est
 sensible au démarrage à froid quand elle est le **premier** trafic servi par un serveur de
