@@ -3,8 +3,17 @@ import { logAuditEvent, AuditEvent } from '@/lib/security/audit-log';
 
 /**
  * Right to data portability (RGPD art. 20).
- * Produces a self-contained JSON bundle of every row the user owns.
- * Service role required — RLS would otherwise scope reads to the caller's session.
+ *
+ * Produces a JSON bundle of SEVEN of the fourteen tables. It is NOT "every row
+ * the user owns", whatever this comment used to say — `commitments`,
+ * `commitment_payments` (the user's debts), `accounts` (their balances),
+ * `charge_payments`, `workspace_settings`, `workspace_members` and
+ * `deletion_requests` are all absent. The public copy was corrected to match;
+ * do not let this comment drift back and justify re-inflating the claim.
+ *
+ * Service role required — RLS would otherwise scope reads to the caller's
+ * session, and it no longer backstops an unscoped query. Every statement below
+ * must filter on `userId`, asserted by column name in `__tests__/export.test.ts`.
  */
 export type UserDataExport = {
   schemaVersion: '1.0';
