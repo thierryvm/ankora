@@ -7,8 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **CI now runs the authenticated journeys.** A second Playwright job boots an ephemeral
+  Supabase stack, applies the 15 migrations to an empty database, and runs the 13 specs
+  that seed a user and log in. Until now those specs existed but never executed anywhere
+  except on a developer machine: CI reported **214 passed, 173 skipped** — 44.7% of the
+  suite, and every connected surface was in the skipped half.
+- **Migrations are proven to replay from zero**, as a side effect of the above. Production
+  only ever received them incrementally, so nothing had ever verified that a fresh
+  database could be built from the repository.
+- **`docs/runbooks/e2e.md`** — how to run each suite, and the traps that cost an hour:
+  `E2E_BASE_URL` (not `PLAYWRIGHT_BASE_URL`), the shifted Supabase ports, and why a first
+  login failing with "service unavailable" is an unreachable Upstash rather than a quota.
+
+### Known issues
+
+- **Six e2e specs describe a dashboard that no longer exists**, discovered by running them
+  for the first time. Three assert `data-testid`s present in **zero** files under `src/`
+  (`effort-financier-card`, `substat-*`, `capacite-epargne-*`) — they test the hero radar
+  the Situation Hero replaced. Three look for a `heading` role on `CardTitle`, which
+  renders a `<div>`. They are quarantined with a written reason each, printed on every
+  run, and tracked for a rewrite — not silently skipped.
+- **Dashboard section titles are not headings.** `CardTitle` renders a `<div>`, so the
+  cockpit's sections carry no heading structure for a screen reader. A real accessibility
+  defect on the app's most important page, surfaced by the above. Fix belongs in its own
+  PR — this one touches no `src/`.
+- **Audit logging fails on a database rebuilt from the migrations**: every
+  `logAuditEvent()` returns `permission denied for table audit_log`. Production works,
+  which means a grant was applied there outside the migration set. The migrations are
+  therefore not a complete description of production — worth closing, since audit trails
+  carry a GDPR obligation.
+
 ### Changed
 
+- **Losing e2e coverage is now a red build.** The authenticated spec list is committed
+  (`e2e/authenticated-specs.json`) and compared against code discovery on every run, in
+  both directions. The previous predicate matched `adminClientOrNull` alone and missed
+  every spec seeding through the `seededUser` fixture, so `npm run e2e:auth -- --all`
+  reported running everything while running 9 specs out of 13.
 - **Expenses — the row is now the edit target, and deleting moved into the drawer.**
   The list used to carry a muted pencil beside a red bin: the eye went to the bin, and
   editing an expense was widely believed to be impossible. Deleting — the only
@@ -17,6 +54,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Two specs that asserted nothing now assert something.** The anti-enumeration check on
+  password reset — a real security property — had been disabled for want of a reachable
+  Supabase. The locale soft-navigation check had been disabled on a mistaken premise: it
+  hunted a FAQ link the desktop landing does not render, when any prefetched `<Link>`
+  would have done, and the landing does render several. There are now **zero**
+  unconditional skips in `e2e/`.
 - **Expense dates are back on Belgian time.** The new-expense form defaulted to the UTC
   day. During Belgian summer time, between midnight and 02:00 local, it pre-filled
   _yesterday_ — and on the first of the month the expense was filed under the previous
@@ -38,7 +81,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **THI-266 fix(i18n)** — `LocaleSwitcher.tsx` : suppression de l'appel `router.refresh()` redondant après `router.replace(pathname, { locale })`. En mode `localePrefix: 'as-needed'`, le pathname change déjà sur `replace` (`/` ↔ `/en`, `/dashboard` ↔ `/en/dashboard`), ce qui déclenche le re-render naturel des Server Components avec la nouvelle locale via `setRequestLocale()`. Le `refresh` explicite était à la fois redondant ET destructeur : il invalidait l'intégralité du cache RSC, démontait `HeaderNav` (fermant le drawer mobile en pleine bascule — TICKET 4) et étirait la propagation au-delà de 15 s en `npm run dev` (TICKET 7). Side-effects de `setLocaleAction` (cookie `NEXT_LOCALE` + UPDATE `users.locale`) intacts — ils s'exécutent server-side avant la navigation client.
 - **THI-276 fix(i18n)** — `setLocaleAction` ajoute `revalidatePath('/', 'layout')` après l'écriture cookie + update Supabase. Corollaire architectural au retrait de `router.refresh()` ci-dessus : sans cette invalidation server-side, les entries précédemment prefetched par `<Link>` (Next 16 prefetch on viewport) gardent leur payload RSC rendu dans l'ancienne locale. Au prochain click sur un `<Link href="/faq">`, le router client sert la version cachée — la page apparaît dans l'ancienne langue malgré le cookie `NEXT_LOCALE` mis à jour. Bug observé par @thierry sur iPhone Safari réel via preview PR #181 (TICKET 7 reproduit sur pages publiques anonymes, exclut donc une cause `users.locale` Supabase). Les E2E Chromium initiaux passaient car `page.goto()` est une hard navigation qui bypass le router cache client. `revalidatePath('/', 'layout')` invalide TOUTES les routes sous `/` ; l'invalidation est lazy (refetch seulement si user navigate).
 - **THI-266 + THI-276 test(i18n)** — 16 Vitest specs `setLocaleAction` (`tests/actions/locale.test.ts`) couvrent : validation Zod stricte (5 unsupported + null/undefined/number), cookie attributes (`maxAge: 1y, sameSite: 'lax', path: '/'`), `users.locale` update conditionnel auth, et **invariant architectural ordering** `cookie.set → supabase.getUser → revalidatePath` (anonymous) ou `cookie.set → supabase.update.eq → revalidatePath` (auth). 3 nouveaux Vitest specs `LocaleSwitcher — THI-266 Phase B no-refresh contract` verrouillent `router.replace(pathname, { locale })` exactement 1 fois + `router.refresh` jamais. Refactor mock `@/i18n/navigation` via `vi.hoisted()` pour exposer les fn refs.
-- **THI-266 + THI-276 e2e(i18n)** — 4 scenarios actifs dans `e2e/i18n/locale-switcher.spec.ts` : (1) rapid switches FR↔EN settle on last selection, (2) hard nav `/faq` persiste locale, (3) parité `/`, `/faq`, `/glossaire`, (4) **NOUVEAU** soft navigation via `<Link>` click pick up new locale (RSC cache invalidated). Le scenario #4 est le test forensique du contrat `revalidatePath` — sans le fix, Next servirait le `/faq` prefetched depuis le cache client en FR malgré le switch EN. Helper `switchTo()` timeout 15 s → 5 s.
+- **THI-266 + THI-276 e2e(i18n)** — 4 scenarios dans `e2e/i18n/locale-switcher.spec.ts` : (1) rapid switches FR↔EN settle on last selection, (2) hard nav `/faq` persiste locale, (3) parité `/`, `/faq`, `/glossaire`, (4) **NOUVEAU** soft navigation via `<Link>` click pick up new locale (RSC cache invalidated). Le scenario #4 est le test forensique du contrat `revalidatePath` — sans le fix, Next servirait le `/faq` prefetched depuis le cache client en FR malgré le switch EN. Helper `switchTo()` timeout 15 s → 5 s.
+  <br>**Correction 2026-07-26** — cette entrée annonçait « 4 scenarios **actifs** » alors que le n° 4 a été livré `test.skip` et n'a jamais tourné. Il est réactivé et passe depuis l'étape 2 du programme de refonte.
 - **fix(landing)** — Drift doctrine `messages/*.json` : trust line landing affichait `FR · NL · EN` dans les 5 locales, alors que la doctrine v1.0 publique (CLAUDE.md "Cap v1.0 publique — Langues v1.0" + `docs/NORTH_STAR.md`) restreint l'affichage à FR + EN. NL/DE/ES restent atteignables en deep-link mais sont masquées du marketing tant que chaque locale n'a pas reçu une review native (post-launch v1.1, annoncées dans `/roadmap` publique). Le test Vitest `Hero.test.tsx` ligne 75 a été mis à jour en lockstep pour assertion `/FR · EN/i`.
 - **Hors scope (volontairement reporté)** — Extraction de `cookies()` hors de `[locale]/layout.tsx` + audit du middleware matcher (audit perf THI-243 RC #2 / #4) : reporté hypothétique futur PR si mesure post-merge confirme un résiduel. Routes `[locale]/*` restent `ƒ Dynamic` (état pré-PR inchangé) — le bug user n'est pas causé par le statut Dynamic mais par le router cache RSC client, fix dans cette PR. Détails arbitrage diagnostic affiné : `docs/prs/PR-BETA-2-i18n-perf-phase-b-report.md` §3 + §11.
 

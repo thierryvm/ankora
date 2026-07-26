@@ -1,0 +1,124 @@
+# Local Supabase stack — development machines and the `e2e-authenticated` CI job.
+#
+# This file governs the EPHEMERAL local stack only. Production (`ankora-prod`,
+# ref fkscfvoouwufyjwnfvhb) is configured in the Supabase dashboard and is never
+# touched by anything here. Nothing in this file is a secret: the local anon and
+# service_role keys are Supabase's fixed, published demo keys.
+#
+# ⚠️ This repo IS linked to production (`supabase/.temp/project-ref`). Run
+# `npm run preflight` before ANY supabase command, and never pass `--linked` to a
+# destructive one. `supabase db reset` targets the local stack; `--linked` would
+# target production. See docs/runbooks/e2e.md.
+#
+# Trimmed by hand from `supabase init` output (396 lines of defaults). Every
+# service left enabled below carries the reason it is needed; everything the app
+# does not use is off, because each container costs boot time on a CI runner.
+#
+# PORTS ARE DELIBERATELY NOT THE SUPABASE DEFAULTS (544xx → 5442x). @thierry's
+# professional project runs its own local Supabase stack on this machine and
+# holds 54321/54322; `supabase start` here failed with "port is already
+# allocated" and helpfully suggested `supabase stop --project-id OVB` — i.e.
+# stopping the OTHER project's stack. Shifting Ankora's ports is the correct fix:
+# the two stacks now coexist, and no command in this repo can ever take down work
+# that belongs to a different project. CI runners are empty, so the shift costs
+# nothing there.
+
+project_id = "ankora"
+
+# PostgREST — the app's entire data path goes through it. Required.
+[api]
+enabled = true
+port = 54421
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54422
+shadow_port = 54420
+# Matches production, measured 2026-07-26 via the Management API: 17.6.1.104.
+# A mismatch here would let a migration pass in CI and fail on production — the
+# exact class of lie this whole step exists to remove.
+major_version = 17
+
+# Not used by the app (no connection pooling in the Next runtime).
+[db.pooler]
+enabled = false
+
+# How the 15 migrations reach the fresh database on `supabase start`. This is
+# also what proves, on every CI run, that they replay from zero — never verified
+# before this step, since production only ever received them incrementally.
+[db.migrations]
+enabled = true
+
+# No seed file: e2e specs seed their own ephemeral users through the service_role
+# client and delete them in teardown.
+[db.seed]
+enabled = false
+
+# Unused — `grep -rn "\.channel(|realtime" src/` returns nothing.
+[realtime]
+enabled = false
+
+# Human-facing UI. Useless in CI, and one more container to boot.
+[studio]
+enabled = false
+
+# Logflare. First cause of slow boots and `supabase start` failures on runners,
+# and we read no logs from the ephemeral stack.
+[analytics]
+enabled = false
+
+# SMTP sink — KEPT ON DELIBERATELY. `e2e/auth.spec.ts` asserts the
+# forgot-password round trip, which calls `resetPasswordForEmail`. GoTrue's
+# behaviour with no mail transport at all is version-dependent (log-and-200, or
+# 500). One container is cheap; discovering that difference in CI is not.
+[inbucket]
+enabled = true
+port = 54424
+
+# Unused — `grep -rn "\.storage\b" src/` returns nothing.
+[storage]
+enabled = false
+
+# Unused — no `supabase/functions/` directory exists.
+[edge_runtime]
+enabled = false
+
+[auth]
+enabled = true
+# Must match the URL the app is served from, locally and in CI, otherwise
+# password-reset links fall outside the redirect allow-list.
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000", "http://127.0.0.1:3000"]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+enable_signup = true
+enable_anonymous_sign_ins = false
+# The app enforces its own policy (12+ chars, Zod, `src/lib/schemas/auth.ts`)
+# before anything reaches GoTrue, so this floor is never the binding constraint.
+minimum_password_length = 6
+
+[auth.email]
+enable_signup = true
+# Seeded users are created with `email_confirm: true`; requiring confirmation
+# would make every authenticated spec depend on reading a mailbox.
+enable_confirmations = false
+max_frequency = "1s"
+
+# GoTrue enforces its OWN quotas, independently of `src/lib/security/rate-limit.ts`.
+# The defaults are sized for a public project facing the internet; this stack is
+# ephemeral, unreachable from outside the job, and destroyed at the end of it.
+#
+# `sign_in_sign_ups = 30` per 5 min per IP is the one that matters: the suite
+# performs 100+ real logins from a single address. Left at the default, the
+# authenticated specs would fail on Supabase's limiter even though our own
+# limiter had been dealt with — the failure would look like a broken login and
+# send debugging down the wrong path entirely.
+[auth.rate_limit]
+sign_in_sign_ups = 10000
+token_refresh = 10000
+token_verifications = 10000
+# Applies to the forgot-password spec. Default is 2 per hour.
+email_sent = 1000

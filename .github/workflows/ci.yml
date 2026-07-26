@@ -108,6 +108,132 @@ jobs:
           path: playwright-report/
           retention-days: 7
 
+  e2e-authenticated:
+    name: Playwright E2E (authenticated)
+    # NO `container:` here, unlike the job above — `supabase start` needs the
+    # Docker daemon, and from inside a job container the Supabase containers
+    # would be siblings on the host with `localhost:54421` routing nowhere.
+    # The price is installing browsers rather than using the pre-baked image;
+    # see the cache step.
+    runs-on: ubuntu-latest
+    # Sibling of `e2e`, NOT downstream of it: chaining would add ~7 minutes to
+    # the critical path for nothing.
+    needs: quality
+    timeout-minutes: 25
+    services:
+      redis:
+        image: redis@sha256:6ab0b6e7381779332f97b8ca76193e45b0756f38d4c0dcda72dbb3c32061ab99
+      # Speaks the Upstash REST protocol in front of a plain Redis, so
+      # `rateLimit()` is genuinely exercised instead of bypassed. Without it the
+      # limiter fails closed (NODE_ENV=production under `next start`) and every
+      # mutation returns "service unavailable" — not just logins.
+      #
+      # The image has not been pushed since 2024-05-11, which is why it is
+      # pinned by digest and why compatibility was measured rather than assumed:
+      # `Ratelimit.slidingWindow(5, '15 m')` allows 5 calls and refuses the 6th
+      # through it, exactly as against Upstash. If a future @upstash/ratelimit
+      # release breaks that, this job goes red loudly and the fallback is a
+      # dedicated free Upstash database via the E2E_UPSTASH_* secrets the `e2e`
+      # job already reads.
+      srh:
+        image: hiett/serverless-redis-http@sha256:5b0bb9239fce53abf87b2018a7a0deb9ec7bd900c5360738fe5fbeeb426f9150
+        env:
+          SRH_MODE: env
+          SRH_TOKEN: ci-local-not-a-secret
+          SRH_CONNECTION_STRING: 'redis://redis:6379'
+        # Mandatory: without `container:` on the job, service containers are not
+        # reachable over localhost unless their port is published. SRH listens on
+        # 80 inside the container; the Next server runs on the HOST and reaches it
+        # at localhost:8079. SRH itself reaches Redis by service name, on the job
+        # network. Two different address spaces in one job — confusing them is the
+        # likeliest way to break this.
+        ports:
+          - 8079:80
+    env:
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_ENV: development
+      # Ports are shifted off the Supabase defaults, matching supabase/config.toml.
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54421
+      UPSTASH_REDIS_REST_URL: http://localhost:8079
+      UPSTASH_REDIS_REST_TOKEN: ci-local-not-a-secret
+      INTERNAL_SECRET: ci-secret-at-least-32-characters-long
+      # Says "a real Supabase is up" — `adminClientOrNull()` no longer guesses
+      # from the URL, and now throws rather than skipping if that claim is false.
+      E2E_SUPABASE_READY: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+
+      # Fails in seconds if the authenticated spec list drifted from the
+      # committed one, in either direction. Before anything expensive runs.
+      - name: Verify authenticated spec selection
+        run: node scripts/e2e-auth-specs.mjs
+
+      # Browsers and system deps are cached SEPARATELY: actions/cache restores
+      # ~/.cache/ms-playwright, but apt packages live outside it and must be
+      # installed every run regardless.
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - name: Install Playwright system dependencies
+        run: npx playwright install-deps chromium webkit
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install chromium webkit
+
+      - uses: supabase/setup-cli@v1
+        with:
+          # Pinned, not `latest`: this job is a gate, and a gate whose toolchain
+          # changes under it cannot be trusted. 2.84.2 is the version the local
+          # stack and the migration replay were verified against.
+          version: 2.84.2
+      # Applies the 15 migrations to an empty database on first boot. That this
+      # succeeds is itself a result: production only ever received them
+      # incrementally, so replayability had never been verified anywhere.
+      - name: Start local Supabase stack
+        run: supabase start
+      # The local anon and service_role keys are Supabase's fixed published demo
+      # values, identical on every machine — not secrets. Read at runtime anyway,
+      # so no key literal lives in this repository.
+      - name: Export local Supabase keys
+        run: |
+          supabase status -o json > /tmp/supabase-status.json
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$(jq -r .ANON_KEY /tmp/supabase-status.json)" >> "$GITHUB_ENV"
+          echo "SUPABASE_SERVICE_ROLE_KEY=$(jq -r .SERVICE_ROLE_KEY /tmp/supabase-status.json)" >> "$GITHUB_ENV"
+
+      # NEXT_PUBLIC_* values are inlined at build time, so the stack must be up
+      # before this runs.
+      - run: npm run build
+      - name: Start server
+        run: npm run start &
+      - name: Wait for server port
+        run: npx wait-on tcp:3000 -t 60000
+
+      # Two projects rather than all six: chromium-desktop for the desktop
+      # journeys, iPhone 14 for the WebKit ones under e2e/mobile-ios/. Running
+      # every project would triple the wall time before anyone has measured what
+      # this job actually costs. Widening is an increase, which D6 allows; this
+      # is the floor, not a ceiling.
+      - name: Run authenticated specs
+        run: npx playwright test $(node scripts/e2e-auth-specs.mjs --list | tr '\n' ' ') --project=chromium-desktop --project="iPhone 14" --reporter=list
+
+      - name: Supabase logs on failure
+        if: failure()
+        run: supabase status || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-authenticated
+          path: playwright-report/
+          retention-days: 7
+
   lighthouse:
     name: Lighthouse CI
     runs-on: ubuntu-latest

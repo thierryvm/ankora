@@ -2,12 +2,15 @@
 /**
  * Run the AUTHENTICATED Playwright specs locally against a real Supabase.
  *
- * Why this exists: CI cannot run them. `.github/workflows/ci.yml` falls back to
- * dummy Supabase values (the `E2E_*` secrets are deliberately unset — the only
+ * Why this existed: CI could not run them. The `e2e` job falls back to dummy
+ * Supabase values (the `E2E_*` secrets are deliberately unset — the only hosted
  * Supabase project is production, and a `service_role` key must never live in
- * CI), so every spec guarded by `test.skip(!admin, …)` silently skips. That is
- * 13 of 30 specs — i.e. every authenticated journey. This script closes that gap
- * on the developer machine, reproducibly, instead of hand-rolling env exports.
+ * CI), so every spec guarded by `test.skip(!admin, …)` silently skipped: 13 spec
+ * files out of 33, i.e. every authenticated journey.
+ *
+ * As of the `e2e-authenticated` job, CI runs them against an ephemeral local
+ * Supabase stack. This script keeps its own reason to exist: validating a change
+ * against the REAL production schema before pushing, which no local stack can do.
  *
  * Safety model:
  *  - Credentials are read from `.env.local` into this process only. They are
@@ -37,11 +40,17 @@
  * Point `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` at the real free
  * instance (`vercel env pull`) before running authenticated specs.
  *
- * Once Upstash is real, the quota does apply: `rateLimit('auth', …)` is keyed
- * **by IP** at 5 attempts / 15 minutes, and each spec performs a real login. A
- * 13-spec sweep locks itself out from the 6th login on. So: validate the 1-3
- * specs your change actually touches. `--all` exists for the rare full sweep
- * and warns first.
+ * OUR quota no longer bites, and this is a change from what this header used to
+ * say. `e2e/helpers/test.ts` now hands each test its own `x-forwarded-for`, so
+ * `rateLimit('auth', …)` — 5 attempts / 15 min keyed by IP — buckets per test
+ * instead of per machine. A full sweep no longer locks itself out on ours.
+ *
+ * SUPABASE's own quota still does. GoTrue rate-limits sign-ins per IP
+ * independently of our limiter, and the production project's settings live in
+ * the dashboard, not in `supabase/config.toml` (that file governs the local
+ * stack only). So `--all` against production can still hit a wall that has
+ * nothing to do with Ankora's code. Prefer validating the 1-3 specs your change
+ * actually touches; `--all` exists for the rare full sweep and warns first.
  *
  * Usage:
  *   npm run e2e:auth -- accounts         # specs matching "accounts" (the norm)
@@ -50,9 +59,9 @@
  *   npm run e2e:auth -- accounts --headed --skip-build
  */
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { join } from 'node:path';
+import { resolveAuthSpecs } from './lib/auth-specs.mjs';
 
 const ENV_FILE = '.env.local';
 /** Keys the seeded specs need; `adminClientOrNull()` returns null without them. */
@@ -107,21 +116,15 @@ function npmCli() {
   process.exit(1);
 }
 
-/** Every spec that seeds a user — detected, not hard-coded, so it can't drift. */
-function findAuthSpecs(dir = 'e2e', found = []) {
-  for (const entry of readdirSync(dir)) {
-    const path = join(dir, entry);
-    if (statSync(path).isDirectory()) {
-      findAuthSpecs(path, found);
-    } else if (
-      entry.endsWith('.spec.ts') &&
-      readFileSync(path, 'utf8').includes('adminClientOrNull')
-    ) {
-      found.push(path.replace(/\\/g, '/'));
-    }
-  }
-  return found;
-}
+/**
+ * The spec list now comes from `scripts/lib/auth-specs.mjs`, shared with the
+ * `e2e-authenticated` CI job so the two can never disagree.
+ *
+ * The local copy this replaces matched on `adminClientOrNull` alone, which
+ * missed every spec reaching Supabase through the `seededUser` fixture —
+ * bottom-tab-bar, expenses-crud and settings-locale-field. `--all` had been
+ * quietly running 9 specs while reporting that it ran everything.
+ */
 
 const OWN_FLAGS = ['--skip-build', '--all'];
 const passthrough = process.argv.slice(2).filter((a) => !OWN_FLAGS.includes(a));
@@ -131,15 +134,16 @@ const runAll = process.argv.includes('--all');
 const filters = passthrough.filter((a) => !a.startsWith('-'));
 const flags = passthrough.filter((a) => a.startsWith('-'));
 
-const allSpecs = findAuthSpecs();
+const allSpecs = resolveAuthSpecs();
 
-// A filter is mandatory: every spec logs in, and auth is rate-limited to 5
-// attempts / 15 min per IP, so an unfiltered sweep locks itself out (see header).
+// A filter stays mandatory: every spec performs a real login against the
+// PRODUCTION project, whose own GoTrue quota our per-test IP does not affect.
 if (filters.length === 0 && !runAll) {
-  console.error('✖ Name what you want to validate — every spec performs a real login,');
-  console.error('  and auth is rate-limited to 5 attempts / 15 min per IP.');
-  console.error('  (If the very FIRST login already fails with « Service temporairement');
-  console.error('   indisponible », that is not the quota — check UPSTASH_REDIS_REST_URL');
+  console.error('✖ Name what you want to validate — every spec performs a real login');
+  console.error("  against production. Ankora's own limiter is now isolated per test,");
+  console.error("  but Supabase's is not, and its settings live in the dashboard.");
+  console.error('  (If the very FIRST login fails with « Service temporairement');
+  console.error('   indisponible », that is not a quota — check UPSTASH_REDIS_REST_URL');
   console.error('   in .env.local: rateLimit() fails closed in production builds.)\n');
   console.error('  Available authenticated specs:');
   for (const s of allSpecs) console.error(`    ${s}`);
@@ -156,9 +160,10 @@ if (specs.length === 0) {
 
 if (specs.length > 5) {
   console.warn(
-    `⚠ ${specs.length} specs = ${specs.length} logins, but auth allows 5 per 15 min per IP.\n` +
-      '  Expect "Service temporairement indisponible" past the 5th — that is the\n' +
-      '  rate limiter doing its job, not a regression.\n',
+    `⚠ ${specs.length} specs = ${specs.length}+ real logins against PRODUCTION.\n` +
+      "  Ankora's limiter is isolated per test (e2e/helpers/test.ts), so it will not\n" +
+      "  trip. Supabase's own sign-in quota is per IP and is not, so a wall past a\n" +
+      '  few dozen logins comes from GoTrue, not from a regression in the app.\n',
   );
 }
 

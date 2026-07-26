@@ -19,17 +19,44 @@ export type SeedCharge = {
 };
 
 /**
- * Returns an admin Supabase client or null if the env is not configured
- * for full authenticated e2e (e.g. dummy CI values). Callers should skip
- * the test when null.
+ * Returns an admin Supabase client, or null when the environment cannot provide
+ * one. Callers skip the test on null.
+ *
+ * Readiness is DECLARED, not sniffed. It used to be inferred from the URL —
+ * `url.includes('localhost:54321')` meant "dummy CI value, skip". That heuristic
+ * made a real local Supabase stack indistinguishable from a placeholder, so
+ * `supabase start` in CI would have changed nothing: every authenticated spec
+ * would have kept skipping. Whoever starts the stack now says so with
+ * E2E_SUPABASE_READY=1.
+ *
+ * The distinction that matters: NO flag means "this environment was never meant
+ * to run authenticated specs" → skip, which is legitimate. Flag set but the
+ * client cannot be built means something is BROKEN → throw. Returning null there
+ * would report a green, mostly-skipped run — the exact failure this whole step
+ * exists to remove.
  */
 export function adminClientOrNull(): AdminClient | null {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  if (url.includes('localhost:54321')) return null;
-  if (key.length < 40) return null;
-  return createClient<Database>(url, key, {
+  const declaredReady = process.env.E2E_SUPABASE_READY === '1';
+
+  // A truncated or placeholder key: both local and hosted service_role keys are
+  // JWTs well over 40 characters.
+  const usable = Boolean(url) && Boolean(key) && (key?.length ?? 0) >= 40;
+
+  if (!usable) {
+    if (declaredReady) {
+      throw new Error(
+        'E2E_SUPABASE_READY=1 but no usable Supabase admin credentials: ' +
+          `NEXT_PUBLIC_SUPABASE_URL=${url ? 'set' : 'MISSING'}, ` +
+          `SUPABASE_SERVICE_ROLE_KEY=${key ? `${key.length} chars` : 'MISSING'}. ` +
+          'Refusing to skip silently — fix the environment or unset the flag.',
+      );
+    }
+    return null;
+  }
+
+  return createClient<Database>(url!, key!, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 }
