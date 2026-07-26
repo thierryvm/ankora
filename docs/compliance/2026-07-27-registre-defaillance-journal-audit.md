@@ -47,8 +47,10 @@ Relevé le 27 juillet 2026 sur `ankora-prod` (`fkscfvoouwufyjwnfvhb`) :
 **Les quatre seuls types présents sont ceux qui s'écrivent avant qu'un cookie de
 session n'existe.** Aucun autre n'a jamais atteint la table.
 
-Absents, alors que l'application est utilisée depuis avril (47 utilisateurs
-actifs mensuels au tableau de bord Supabase) :
+Absents, alors que l'application est utilisée depuis avril — ce que prouve la
+présence même de `auth.signup` et de `auth.rate_limited` : des gens se sont
+inscrits et ont tenté de se connecter, mais **pas une seule connexion réussie
+n'a été journalisée** :
 
 - `auth.login`, `auth.logout`, `auth.mfa_enabled`, `auth.mfa_disabled`
 - l'intégralité des mutations financières — `charge.*`, `expense.*`,
@@ -56,6 +58,15 @@ actifs mensuels au tableau de bord Supabase) :
 - l'intégralité des événements RGPD — `gdpr.consent_*`, `gdpr.export_*`,
   `gdpr.deletion_*`
 - `admin.access.granted` et `admin.access.denied`
+
+**Note sur le nombre d'utilisateurs.** Le compteur « 47 utilisateurs actifs
+mensuels » du tableau de bord Supabase ne mesure **pas** 47 personnes : il compte
+les utilisateurs distincts ayant émis une requête d'authentification pendant le
+cycle de facturation, et `npm run e2e:auth` exerce les parcours connectés **contre
+la production** en créant des comptes jetables `ankora-e2e+<hex>@ankora.test`.
+Ces comptes sont supprimés en fin de test, mais restent comptabilisés pour le
+cycle. Le nombre réel d'utilisateurs humains est à établir séparément et n'est de
+toute façon pas nécessaire à la démonstration ci-dessus.
 
 ## 3. Ce qui n'a PAS été perdu
 
