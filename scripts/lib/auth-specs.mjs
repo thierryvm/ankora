@@ -37,6 +37,15 @@ const NAMED_INCLUSIONS = ['e2e/auth.spec.ts'];
 
 export const EXPECTED_LIST_PATH = 'e2e/authenticated-specs.json';
 
+/**
+ * Quarantined specs are still DISCOVERED and still verified against the
+ * committed list — they are simply not run yet, each with a written reason.
+ *
+ * This is deliberately not `test.skip` inside the spec files. A skip is invisible
+ * in a report that says "passed"; a quarantine list is printed on every run, with
+ * its reason, and shrinks in public.
+ */
+
 function walk(dir, found = []) {
   for (const entry of readdirSync(dir)) {
     const path = join(dir, entry);
@@ -58,15 +67,23 @@ export function discoverAuthSpecs(root = 'e2e') {
   return [...new Set([...discovered, ...NAMED_INCLUSIONS])].sort();
 }
 
-/** The committed list. */
+/** The committed list — every authenticated spec, quarantined or not. */
 export function readExpectedSpecs() {
   const raw = JSON.parse(readFileSync(EXPECTED_LIST_PATH, 'utf8'));
   return [...raw.specs].sort();
 }
 
+/** `{ path: reason }` for specs that are known-broken and not run yet. */
+export function readQuarantine() {
+  const raw = JSON.parse(readFileSync(EXPECTED_LIST_PATH, 'utf8'));
+  return raw.quarantine ?? {};
+}
+
 /**
- * Compares discovery against the committed list. Returns the spec list on
- * agreement; throws a message naming both sides on divergence.
+ * Compares discovery against the committed list. Returns the specs to RUN
+ * (quarantine removed) on agreement; throws a message naming both sides on
+ * divergence. Quarantined specs stay inside the comparison, so removing one
+ * without updating the list is still caught.
  */
 export function resolveAuthSpecs() {
   const discovered = discoverAuthSpecs();
@@ -96,5 +113,6 @@ export function resolveAuthSpecs() {
     throw new Error(lines.join('\n'));
   }
 
-  return discovered;
+  const quarantine = readQuarantine();
+  return discovered.filter((spec) => !(spec in quarantine));
 }

@@ -8,16 +8,27 @@
  * `--check` runs BEFORE Playwright in CI. A drift caught here costs seconds; the
  * same drift caught by nobody costs a shrinking suite that still reports green.
  */
-import { resolveAuthSpecs, EXPECTED_LIST_PATH } from './lib/auth-specs.mjs';
+import { resolveAuthSpecs, readQuarantine, EXPECTED_LIST_PATH } from './lib/auth-specs.mjs';
 
 const wantsList = process.argv.includes('--list');
 
 try {
   const specs = resolveAuthSpecs();
+  const quarantine = readQuarantine();
   if (wantsList) {
     console.log(specs.join('\n'));
   } else {
-    console.log(`✅ ${specs.length} authenticated specs, matching ${EXPECTED_LIST_PATH}.`);
+    const total = specs.length + Object.keys(quarantine).length;
+    console.log(`✅ ${total} authenticated specs, matching ${EXPECTED_LIST_PATH}.`);
+    console.log(`   ${specs.length} run.`);
+    // Printed on every single run, on purpose. A quarantine nobody sees is a
+    // skip with better manners.
+    if (Object.keys(quarantine).length > 0) {
+      console.log(`   ${Object.keys(quarantine).length} QUARANTINED — not run:`);
+      for (const [spec, reason] of Object.entries(quarantine)) {
+        console.log(`     · ${spec}\n       ${reason}`);
+      }
+    }
   }
   // Not process.exit(): it aborts Node on Windows while sockets are still open,
   // and an exit code you cannot trust is worse than no gate at all.

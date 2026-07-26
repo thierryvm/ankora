@@ -21,5 +21,22 @@
     "e2e/mobile-ios/bottom-tab-bar.spec.ts",
     "e2e/mobile-ios/expenses-crud.spec.ts",
     "e2e/mobile-ios/settings-locale-field.spec.ts"
-  ]
+  ],
+
+  "$quarantine_comment": [
+    "Specs that DESCRIBE A DASHBOARD THAT NO LONGER EXISTS. They were merged, the",
+    "cockpit was rebuilt (THI-327 Situation Hero, #217 / #236), and nothing objected",
+    "because they had never executed anywhere: CI skipped them for want of a Supabase.",
+    "Running them for the first time on 2026-07-26 is what surfaced this.",
+    "They are listed, printed on every run with their reason, and NOT silently skipped.",
+    "Follow-up: rewrite each against the current dashboard, then delete its entry here."
+  ],
+  "quarantine": {
+    "e2e/accounts.spec.ts": "Locates the plan section via getByRole('heading', /plan du mois/i), but CardTitle renders a <div> (src/components/ui/card.tsx:23) — the heading role does not exist, so this could never pass.",
+    "e2e/dashboard-expenses.spec.ts": "Same cause: getByRole('heading', /dépenses —/i) against a CardTitle <div>.",
+    "e2e/dashboard-data-flow.spec.ts": "Same heading-role cause, plus getByText(/^Factures /i) on a surface the cockpit rebuild replaced.",
+    "e2e/dashboard-capacite-tryptique.spec.ts": "Asserts testids substat-reste-disponible / substat-reste-a-vivre / capacite-epargne-card / capacite-epargne-substats — all present in ZERO files under src/.",
+    "e2e/dashboard-cockpit-bloc2.spec.ts": "Asserts testid effort-financier-card — present in ZERO files under src/. Tests the 'Bloc 2 hero radar' that the Situation Hero superseded.",
+    "e2e/dashboard-simulator-drawer.spec.ts": "One case asserts [aria-label=\"Notifications\"], a control the app no longer renders; another expects 'Reste disponible' text inside the drawer."
+  }
 }
