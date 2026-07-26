@@ -115,3 +115,6 @@ prompts/*
 # CC handoffs (Obsidian sync, ne pas committer en repo)
 cc-handoffs/
 .tmp/
+
+# Build artefact (npm run build > build-output.log)
+build-output.log
