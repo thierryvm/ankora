@@ -1,3 +1,10 @@
 #!/usr/bin/env sh
+# Identité du commit d'abord : `--local` ne fait aucun appel réseau, donc ça ne
+# coûte rien à chaque commit. Attrape une identité git pointant vers le projet
+# professionnel AVANT que des commits mal attribués n'existent — les découvrir
+# au push obligerait à réécrire l'historique. Le compte GitHub lui-même est
+# vérifié dans le hook pre-push, où l'aller-retour réseau se justifie.
+node --env-file-if-exists=.env.local scripts/preflight-accounts.mjs --local
+
 npm run lint:use-server
 npx lint-staged

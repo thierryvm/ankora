@@ -40,6 +40,12 @@ const EXPECTED = {
 // projet pro où le script vit dans `apps/web/scripts/`).
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 
+// Mode `--local` : uniquement les vérifications sans réseau. Utilisé par le
+// hook pre-commit, où l'on veut attraper une identité git erronée AVANT que des
+// commits mal attribués n'existent, sans payer un aller-retour réseau à chaque
+// `git commit`.
+const LOCAL_ONLY = process.argv.includes('--local');
+
 const results = [];
 const check = (name, ok, detail) => results.push({ name, ok, detail });
 const fingerprint = (value) =>
@@ -49,22 +55,25 @@ const fingerprint = (value) =>
 // Ankora n'a pas de token GitHub dans .env.local : l'accès passe par la CLI
 // `gh`. C'est aussi là qu'est le vrai risque — le compte ACTIF de la CLI, pas
 // un token de service.
-try {
-  const login = execFileSync('gh', ['api', 'user', '--jq', '.login'], {
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-  }).trim();
-  check(
-    'Compte GitHub actif',
-    login === EXPECTED.ghLogin,
-    `login=${login} (attendu ${EXPECTED.ghLogin})`,
-  );
-} catch (error) {
-  const hint = /not found|ENOENT/i.test(error.message)
-    ? 'CLI `gh` introuvable'
-    : `gh a échoué : ${error.message.split('\n')[0]}`;
-  check('Compte GitHub actif', false, hint);
-}
+if (LOCAL_ONLY) {
+  // Sauté volontairement : seul appel réseau du script.
+} else
+  try {
+    const login = execFileSync('gh', ['api', 'user', '--jq', '.login'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    }).trim();
+    check(
+      'Compte GitHub actif',
+      login === EXPECTED.ghLogin,
+      `login=${login} (attendu ${EXPECTED.ghLogin})`,
+    );
+  } catch (error) {
+    const hint = /not found|ENOENT/i.test(error.message)
+      ? 'CLI `gh` introuvable'
+      : `gh a échoué : ${error.message.split('\n')[0]}`;
+    check('Compte GitHub actif', false, hint);
+  }
 
 // ── 2) Identité des commits ──────────────────────────────────────────────────
 // Un `gh` correct avec un `git config user.name` du projet pro produirait des
@@ -175,7 +184,9 @@ check(
 
 // ── Rapport ──────────────────────────────────────────────────────────────────
 const pad = (s, n) => s + ' '.repeat(Math.max(0, n - s.length));
-console.log('\n  PREFLIGHT COMPTES — Ankora (projet personnel, thierryvm)\n');
+console.log(
+  `\n  PREFLIGHT COMPTES — Ankora (projet personnel, thierryvm)${LOCAL_ONLY ? ' · mode local' : ''}\n`,
+);
 
 let allOk = true;
 for (const r of results) {

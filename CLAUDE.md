@@ -255,6 +255,36 @@ Cf. `docs/design/trio-agents.md` (convention complète), `docs/design/claude-des
 
 **Toute session de dev démarre par cette checklist — sans exception.**
 
+### Phase 0bis — Preflight comptes (avant toute opération sortante)
+
+@thierry mène un **projet professionnel sur le compte `ovb`** (GitHub `ovb-willemot`,
+Vercel, Supabase) en parallèle d'Ankora, qui est **personnel** et utilise **toujours
+`thierryvm`** sur les trois plateformes.
+
+Les deux comptes GitHub sont connectés au keyring **en même temps**. `git push`
+s'authentifie via `gh auth git-credential`, donc il pousse sous le compte `gh` **actif** :
+une bascule silencieuse enverrait du code personnel sur l'infrastructure professionnelle,
+et rien ne protesterait avant un 403 des heures plus tard. Démontré le 2026-07-26 —
+basculer le compte fait renvoyer `username=ovb-willemot` à `git credential fill`.
+
+**Automatisé** (rien à faire, la machine s'en charge) :
+
+- `.husky/pre-commit` → `preflight --local` : identité git, remote, Supabase, Vercel.
+  Aucun appel réseau. Attrape une mauvaise identité **avant** que des commits mal
+  attribués existent.
+- `.husky/pre-push` → `npm run preflight` : idem plus le compte GitHub actif.
+
+**À la main** — les hooks git ne peuvent pas couvrir ces cas, ce ne sont pas des
+opérations git. Lancer `npm run preflight` et exiger un GO avant :
+
+- `supabase db push` ou toute migration
+- `vercel deploy`, ou tout changement de variables d'environnement Vercel
+- toute commande `gh` qui écrit (créer un dépôt, modifier des secrets, changer la
+  protection de branche)
+
+En cas de NO-GO : `gh auth switch --user thierryvm`, puis relancer. Ne jamais contourner
+avec `--no-verify` sans savoir précisément pourquoi.
+
 ### Phase 0 — Model check (obligatoire au démarrage)
 
 Au début de chaque session CC Ankora, **VÉRIFIER LE MODÈLE ACTIF** :
