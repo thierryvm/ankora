@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Expenses — the row is now the edit target, and deleting moved into the drawer.**
+  The list used to carry a muted pencil beside a red bin: the eye went to the bin, and
+  editing an expense was widely believed to be impossible. Deleting — the only
+  irreversible action on the page — was one stray tap away with no confirmation; it now
+  lives inside the drawer behind a confirmation that names the expense and its amount.
+
+### Fixed
+
+- **Expense dates are back on Belgian time.** The new-expense form defaulted to the UTC
+  day. During Belgian summer time, between midnight and 02:00 local, it pre-filled
+  _yesterday_ — and on the first of the month the expense was filed under the previous
+  month, where the current list never shows it.
+- **Date-only values no longer drift by a day.** `formatDate` applied the runtime
+  timezone to values that carry no time, rendering the previous day west of Greenwich and
+  causing a hydration mismatch between a UTC server and the browser. Real instants —
+  including the account-deletion dates — keep the runtime timezone, deliberately.
+- **Creating an expense no longer drops `paid_from`.** Not user-visible today (no UI picks
+  an account, and the database default covered it), but the field would have vanished on
+  the create path only, the day an account picker lands.
+
 ### Added
 
 - Phase 2 MVP — complete end-to-end scope (auth, onboarding, dashboard, settings, PWA, GDPR).

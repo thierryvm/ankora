@@ -2,12 +2,14 @@
 
 import { useEffect, useId, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { X } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { Trash2, X } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
 
-import { updateExpenseAction } from '@/lib/actions/expenses';
+import { deleteExpenseAction, updateExpenseAction } from '@/lib/actions/expenses';
 import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
+import { formatCurrency } from '@/lib/i18n/formatters';
+import type { Locale } from '@/i18n/routing';
 import { toast } from '@/components/ui/toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,13 +60,18 @@ export function ExpenseEditDrawer({ expense, onClose }: Props) {
   const [label, setLabel] = useState(expense?.label ?? '');
   const [amount, setAmount] = useState(expense?.amount.toString() ?? '');
   const [occurredOn, setOccurredOn] = useState(expense?.occurredOn ?? '');
+  const locale = useLocale() as Locale;
   const [isPending, startTransition] = useTransition();
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   if (expense && expense.id !== seedId) {
     setSeedId(expense.id);
     setLabel(expense.label);
     setAmount(expense.amount.toString());
     setOccurredOn(expense.occurredOn);
+    // Reset the confirmation too: reopening on another expense must never
+    // inherit an armed delete from the previous one.
+    setConfirmingDelete(false);
   }
 
   // ESC closes; body scroll-locked while open.
@@ -116,6 +123,40 @@ export function ExpenseEditDrawer({ expense, onClose }: Props) {
         if (isNextControlFlowError(err)) throw err;
         // eslint-disable-next-line no-console
         console.error('updateExpenseAction threw', err);
+        toast.error(t('drawer.errorGeneric'));
+      }
+    });
+  }
+
+  /**
+   * Deleting lives here rather than in the list.
+   *
+   * It used to be a red bin next to every row: one stray tap on a scrolling
+   * list and an expense was gone, irreversibly, with no confirmation. Moving it
+   * behind the drawer means you have to open the expense — and read it — before
+   * you can destroy it, and the confirmation names what is about to disappear
+   * rather than asking "are you sure?" about nothing in particular.
+   *
+   * Soft delete with an undo window is a later step; until then, naming the
+   * expense and its amount is the whole safety net.
+   */
+  function remove() {
+    if (!expense) return;
+    startTransition(async () => {
+      try {
+        const result = await deleteExpenseAction(expense.id);
+        if (result.ok) {
+          toast.success(t('toastDeleted'));
+          onClose();
+          router.refresh();
+        } else {
+          toast.error(translateError(result.errorCode) || t('drawer.errorGeneric'));
+        }
+      } catch (err) {
+        // Doctrine PR-BETA-3 hotfix #3 — never swallow Next.js control flow.
+        if (isNextControlFlowError(err)) throw err;
+        // eslint-disable-next-line no-console
+        console.error('deleteExpenseAction threw', err);
         toast.error(t('drawer.errorGeneric'));
       }
     });
@@ -190,6 +231,59 @@ export function ExpenseEditDrawer({ expense, onClose }: Props) {
               data-testid="expense-edit-occurred-on"
             />
           </div>
+        </div>
+
+        {/*
+          The destructive action is visually separated from the form and sits
+          before the footer, so "Enregistrer" is never the neighbour of
+          "Supprimer". Two steps: arming shows what will be destroyed, by name
+          and amount — a confirmation that says nothing is a confirmation
+          nobody reads.
+        */}
+        <div className="border-border border-t px-5 py-4">
+          {confirmingDelete ? (
+            <div className="space-y-3" data-testid="expense-delete-confirm">
+              <p className="text-sm">
+                {t('drawer.confirmDelete', {
+                  label: expense.label,
+                  amount: formatCurrency(expense.amount, locale),
+                })}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setConfirmingDelete(false)}
+                  disabled={isPending}
+                  data-testid="expense-delete-abort"
+                >
+                  {t('drawer.cancel')}
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={remove}
+                  disabled={isPending}
+                  data-testid="expense-delete-confirmed"
+                >
+                  {isPending ? t('drawer.deleting') : t('drawer.confirmDeleteAction')}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setConfirmingDelete(true)}
+              disabled={isPending}
+              aria-label={t('deleteAria', { label: expense.label })}
+              data-testid="expense-delete-arm"
+              className="text-danger hover:text-danger min-h-11 gap-2 px-2"
+            >
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
+              {t('drawer.delete')}
+            </Button>
+          )}
         </div>
 
         <footer className="border-border bg-card flex items-center justify-end gap-2 border-t px-5 py-4">
