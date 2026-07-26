@@ -102,3 +102,74 @@ jamais touchés.
 - `docs/runbooks/e2e.md` — comment lancer chaque suite, et les pièges qui coûtent
   une heure
 - `docs/superpowers/specs/2026-07-26-ankora-refonte-v2-plan.md` — programme 17 étapes
+
+---
+
+## 9. ADDENDUM — étape 3 instruite, plan REJETÉ (21h30)
+
+Phase 0 faite, plan écrit, `plan-reviewer` → **🔴 REJECTED**. Rien n'a été codé.
+Point d'arrêt volontaire : étape la plus destructrice du programme, quota de session
+à 91 %.
+
+### Les six faits de Phase 0 (5 confirmés, 1 réfuté)
+
+| #   | Fait                                                                   | Verdict       |
+| --- | ---------------------------------------------------------------------- | ------------- |
+| F1  | `executeDeletion()` n'a aucun appelant                                 | ✅            |
+| F2  | Aucun cron ne consomme la file (`vercel.json` sans `crons`)            | ✅            |
+| F3  | Export RGPD : 7 tables sur 14                                          | ✅            |
+| F4  | `purge_audit_log_older_than_12_months()` jamais planifiée              | ✅            |
+| F5  | `recordCookieConsentAction` sans Zod (`src/lib/actions/consent.ts:32`) | ✅            |
+| F6  | J'attribuais le `permission denied for table audit_log` à THI-206      | ❌ **RÉFUTÉ** |
+
+### Ce qui a motivé le rejet
+
+1. **F6 faux, et le correctif « évident » est une faille.** Cause suspectée (lue dans
+   le code, **pas encore mesurée**) : `createAdminClient()`
+   (`src/lib/supabase/server.ts:37`) passe la clé service_role **et** un adaptateur qui
+   rend les cookies de l'utilisateur. En présence d'une session, le jeton utilisateur
+   écrase la clé → rôle `authenticated`, à qui `audit_log` est explicitement interdit.
+   **Un GRANT sur `audit_log` donnerait le journal d'audit en écriture à tout
+   utilisateur connecté** — l'inverse de `20260417000003`.
+   **Impact production, pas seulement test** : `executeDeletion()` utilise le même
+   client. La pseudonymisation partirait en `authenticated` → 0 ligne, sans erreur,
+   pendant que `auth.admin.deleteUser` réussit. Compte effacé, IP/user-agent conservés.
+2. **Vercel n'envoie que `CRON_SECRET`**, ce nom exact. Avec `INTERNAL_SECRET` la route
+   répond 401 à chaque invocation, la file ne se vide jamais — **et mon critère de
+   sortie serait passé au vert**.
+3. **Garde-fous manquants** : plafond de lot (un dry-run ne protège pas d'un mauvais
+   prédicat de sélection), verrou anti-concurrence (Vercel peut invoquer deux fois le
+   même run ; nécessite `'processing'` dans la contrainte `check` + index unique partiel
+   `(user_id) where status='pending'`), isolation d'erreur par ligne (Vercel ne réessaie
+   jamais un cron en échec).
+4. **Pas de section rollback** : un rollback de déploiement Vercel **ne désarme pas** un
+   cron actif. Désactiver le cron dans l'UI d'abord.
+
+### Autres pièges relevés, à intégrer au plan v2
+
+- `deletion.ts:58-65` réécrit `resource_id: userId` **après** la pseudonymisation →
+  l'UUID survit à l'effacement. Régression d'une constatation P1 déjà documentée
+  (`docs/audits/2026-05-10-pr-sec-admin/gdpr-compliance-auditor.md:15`).
+- `deletion_requests.user_id … on delete cascade` : la preuve de conformité disparaît
+  avec l'utilisateur, et la purge 12 mois efface la dernière trace. Décision art. 5(2) à
+  prendre.
+- `delete from workspaces` (`deletion.ts:49-53`) est redondant (`auth.admin.deleteUser`
+  cascade déjà) et crée la fenêtre de suppression partielle : compte connectable, vidé,
+  irréparable. Nommer le point de commit atomique.
+- Test de complétude d'export en égalité stricte = piège ; il faut une allow-list avec
+  motif d'exclusion écrit. Et `export.ts:32` tronque `audit_log` à 1000 lignes.
+- Rayon de `created_by … on delete cascade` sur un workspace à deux membres.
+
+### Découpage arrêté
+
+- **PR 3a — non destructive** : mesurer F6 + correctif (probablement `server.ts`, **pas
+  de migration**), export complété + test structurel, Zod consent, écart texte/code
+  politique de confidentialité.
+- **PR 3b — destructive** : tests de `executeDeletion` d'abord, migration de la file,
+  route cron (`CRON_SECRET`), garde-fous, purge audit_log, rollback écrit.
+
+### Reprise — première action
+
+**Mesurer F6**, avant toute ligne de code : appeler `logAuditEvent()` depuis un contexte
+**sans** cookie de session puis **avec**, sur la même base. Deux appels suffisent à
+trancher. Puis réécrire le plan et le re-soumettre à `plan-reviewer`.
