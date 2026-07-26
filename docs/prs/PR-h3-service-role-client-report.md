@@ -125,7 +125,28 @@ suppression + cron, purge `audit_log`, THI-206. Chacun aura sa PR.
 comme « la suppression de compte fonctionne » : elle rend correct un code qui n'est pas
 encore branché. C'est l'objet de l'étape 3b.
 
-## 6. Décision demandée à @thierry
+## 6. `server-only` — accordé par @thierry, et ce que la mesure a démenti
+
+@thierry a validé la dépendance. Elle est installée. **Mais elle ne fait pas ce que
+j'annonçais** — vérifié, pas supposé.
+
+Sonde : une page `'use client'` important `@/lib/supabase/admin`, puis `npm run build`.
+**Le build réussit** (`EXIT=0`). Next 16 sous Turbopack aliase `server-only` vers sa
+propre copie (`next/dist/build/create-compiler-aliases.js:187-195`) : côté serveur vers
+`empty`, côté client vers `index`, qui lève l'erreur **quand le chunk s'exécute dans le
+navigateur**. C'est une erreur d'exécution nommée, pas une barrière au build. Le garde-fou
+perdu avec `next/headers` n'est donc **pas** restitué par ce paquet.
+
+Le vrai remplaçant est une règle ajoutée à `scripts/lint-use-server.mjs` — script que la
+CI exécute déjà, donc aucune modification de workflow : tout module `'use client'` qui
+importe `@/lib/supabase/admin`, `@/lib/security/audit-log`, `@/lib/gdpr/export` ou
+`@/lib/gdpr/deletion` fait échouer le lint. Falsifié : `exit 1` avec la sonde en place,
+`exit 0` sans elle.
+
+`server-only` est conservé — marqueur canonique, coût nul, message d'erreur clair — mais
+il est désormais documenté pour ce qu'il fait réellement, dans `admin.ts` comme ici.
+
+## 6bis. Décision initiale, conservée pour l'historique
 
 **Dépendance `server-only` — non ajoutée, volontairement.** L'ancien client importait
 `next/headers`, ce qui faisait **échouer le build** si un composant `'use client'`

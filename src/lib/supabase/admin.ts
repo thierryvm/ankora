@@ -1,3 +1,4 @@
+import 'server-only';
 import { createClient } from '@supabase/supabase-js';
 import { env } from '@/lib/env';
 import type { Database } from '@/lib/supabase/types';
@@ -23,11 +24,25 @@ import type { Database } from '@/lib/supabase/types';
  * the request actually carries.
  */
 
+/**
+ * Three layers keep this module off the client, deliberately, because none of
+ * them is sufficient alone:
+ *
+ *   1. `import 'server-only'` — the canonical marker. Measured on Next 16 with
+ *      Turbopack it does NOT fail the build: Next aliases it to its own copy,
+ *      which throws when the chunk runs in the BROWSER. A named runtime error,
+ *      not a build gate. Do not claim more for it than that.
+ *   2. `npm run lint:use-server` refuses any `'use client'` module that imports
+ *      this file. That is the check that actually goes red in CI, and it is the
+ *      replacement for the build-time guard lost when `createAdminClient` (and
+ *      its `next/headers` import) was deleted.
+ *   3. The runtime assertion below, for whatever slips past both.
+ *
+ * No key can leak either way: Next never inlines non-NEXT_PUBLIC_* variables
+ * into the client bundle, so an accidental import yields `undefined`. What these
+ * layers buy is a failure that names its own cause.
+ */
 function assertServer(fn: string): void {
-  // The service_role key bypasses RLS entirely, so a browser is never a
-  // legitimate caller. Next does not inline non-NEXT_PUBLIC_* variables into
-  // the client bundle, so an accidental import yields `undefined` rather than a
-  // leaked key — this turns that confusing failure into a named one.
   if (typeof window !== 'undefined') {
     throw new Error(`${fn}() must never run in the browser.`);
   }

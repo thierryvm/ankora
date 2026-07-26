@@ -154,12 +154,54 @@ for (const file of files) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Second rule: no 'use client' module may import a server-only boundary.
+//
+// `createAdminClient` used to import `next/headers`, and Next refuses at BUILD
+// time when a client component pulls that in. Removing it (H3, issue #192) lost
+// that guard, and `server-only` does not restore it: measured on Next 16 with
+// Turbopack, a client page importing the service-role module builds fine and
+// only throws once the chunk runs in the browser. So the build no longer says
+// no — this does, in a check CI already runs.
+//
+// Direct imports only. A module that re-exports one of these one level away
+// would slip through; the realistic mistake is the direct one.
+// ---------------------------------------------------------------------------
+const SERVER_ONLY_MODULES = [
+  '@/lib/supabase/admin',
+  '@/lib/security/audit-log',
+  '@/lib/gdpr/export',
+  '@/lib/gdpr/deletion',
+];
+
+for (const file of files) {
+  const content = fs.readFileSync(path.join(projectRoot, file), 'utf-8');
+
+  const firstCode = content
+    .split('\n')
+    .map((l) => l.trim())
+    .find((l) => l !== '' && !l.startsWith('//'));
+  const isClient = firstCode === "'use client';" || firstCode === '"use client";';
+  if (!isClient) continue;
+
+  content.split('\n').forEach((line, i) => {
+    for (const mod of SERVER_ONLY_MODULES) {
+      if (new RegExp(`from ['"]${mod}['"]`).test(line)) {
+        violations.push(
+          `ERROR: ${file}:${i + 1} — 'use client' module imports ${mod}, which reaches the service_role key`,
+        );
+      }
+    }
+  });
+}
+
 if (violations.length > 0) {
   console.error(
-    `\n❌ 'use server' violations detected:\n${violations.join('\n')}\n\nFix by moving non-async exports to sibling files without 'use server' directive.`,
+    `\n❌ Server/client boundary violations detected:\n${violations.join('\n')}\n\n` +
+      `Fix by moving non-async exports to sibling files without the 'use server' directive,\n` +
+      `and by keeping service_role modules out of client components.`,
   );
-  process.exit(1);
+  process.exitCode = 1;
 } else {
-  console.log('✓ All "use server" files contain only async exports');
-  process.exit(0);
+  console.log('✓ "use server" exports are async-only, and no client module reaches service_role');
 }
