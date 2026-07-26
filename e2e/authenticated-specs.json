@@ -1,0 +1,25 @@
+{
+  "$comment": [
+    "Specs that require a real Supabase — the ones the `e2e-authenticated` CI job runs.",
+    "Kept under version control so that losing coverage is a RED build, not a quieter one.",
+    "Discovery (scripts/lib/auth-specs.mjs) compares against this list on every run and",
+    "fails in both directions: a spec that stops being detected (renamed fixture, new",
+    "indirection, deletion) and a spec newly detected but not yet accepted here.",
+    "Adding an authenticated spec? Add its path below in the same commit."
+  ],
+  "specs": [
+    "e2e/accounts.spec.ts",
+    "e2e/auth.spec.ts",
+    "e2e/charges/charges-list-desktop.spec.ts",
+    "e2e/charges/charges-list-mobile.spec.ts",
+    "e2e/dashboard-account-rename.spec.ts",
+    "e2e/dashboard-capacite-tryptique.spec.ts",
+    "e2e/dashboard-cockpit-bloc2.spec.ts",
+    "e2e/dashboard-data-flow.spec.ts",
+    "e2e/dashboard-expenses.spec.ts",
+    "e2e/dashboard-simulator-drawer.spec.ts",
+    "e2e/mobile-ios/bottom-tab-bar.spec.ts",
+    "e2e/mobile-ios/expenses-crud.spec.ts",
+    "e2e/mobile-ios/settings-locale-field.spec.ts"
+  ]
+}

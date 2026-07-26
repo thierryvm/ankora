@@ -156,34 +156,25 @@ test.describe('LocaleSwitcher — THI-255 delayed apply / TICKET 7 coverage', ()
    * locks the contract from the user-visible side: click a Link,
    * not goto.
    *
-   * **Status `test.skip` (CI re-run 2026-05-24 22h30)** — the
-   * `getByRole('link', { name: /^FAQ$/i })` lookup returns 0
-   * matches on the landing after the locale switch. Root cause is
-   * still being characterised (likely: the marketing landing route
-   * does NOT mount the shared `Footer` component, and the desktop
-   * `MktNav` deliberately drops the FAQ link in favour of in-page
-   * anchors — `/#principles`, `/#simulator`, `/#pricing`). The
-   * surface that actually carries the FAQ `<Link>` in this state
-   * is the mobile drawer (`lg:hidden`), unreachable on the
-   * `chromium-desktop` viewport this spec runs on.
+   * **Un-skipped 2026-07-26.** It had been `test.skip` since 2026-05-24 with a
+   * note blaming the surface: "the landing does not mount the shared Footer, and
+   * MktNav drops the FAQ link in favour of in-page anchors, so no FAQ `<Link>` is
+   * reachable on desktop". The first half is true; the conclusion was not. The
+   * landing mounts `MktFooter` (`(public)/page.tsx:92`), which renders real
+   * next-intl `<Link>`s to `/legal/cgu` and `/legal/privacy`
+   * (`MktFooter.tsx:29-34`). Only the FAQ link was missing — the spec did not
+   * need FAQ, it needed *any* prefetched `<Link>` leaving the landing.
    *
-   * The architectural invariant (`revalidatePath('/', 'layout')`
-   * called exactly once after the cookie write + Supabase update,
-   * in the documented order) is locked by the Vitest suite at
-   * `tests/actions/locale.test.ts` (16 specs covering Zod
-   * validation, cookie attributes, anonymous/auth side-effects,
-   * and the call ordering invariant). The forensic mobile
-   * verification happens via @thierry's iPhone Safari smoke test
-   * post-merge (`/`, switch FR→EN, tap `<Link>` to `/faq` from the
-   * mobile drawer, assert page rendered in EN).
+   * The selector now targets the href rather than the label, because the label is
+   * exactly what the locale switch changes ("Conditions" → "Terms"): matching on
+   * it would conflate "the link moved" with "the switch failed".
    *
-   * Follow-up to unfix-and-pass this scenario: scope a `MktNav`
-   * variant that exposes the FAQ link on desktop, or pivot the
-   * selector to a `mobile-chrome` viewport once the mobile-iOS
-   * suite owns this surface. Tracked alongside THI-276 for the
-   * next mobile UX sprint (PR-BETA-6 Bottom Tab Bar).
+   * The architectural invariant (`revalidatePath('/', 'layout')` called exactly
+   * once after the cookie write + Supabase update, in the documented order) is
+   * separately locked by `tests/actions/locale.test.ts` (16 specs). This one
+   * locks the user-visible half: click a Link, not goto.
    */
-  test.skip('4. soft navigation via <Link> picks up the new locale (RSC cache invalidated)', async ({
+  test('4. soft navigation via <Link> picks up the new locale (RSC cache invalidated)', async ({
     page,
   }) => {
     // Sanity start — default fr-BE.
@@ -193,13 +184,15 @@ test.describe('LocaleSwitcher — THI-255 delayed apply / TICKET 7 coverage', ()
     // know the server action has settled (cookie write + revalidate).
     await switchTo(page, 'en');
 
-    // The FAQ link target — see the JSDoc above for the surface
-    // discovery work still pending. Kept as documentation of the
-    // intended selector once a desktop-reachable FAQ link exists
-    // on the landing in this PR's variant.
-    const faqLink = page.getByRole('link', { name: /^FAQ$/i }).first();
-    await expect(faqLink).toBeVisible({ timeout: 5_000 });
-    await Promise.all([page.waitForURL(/\/(en\/)?faq/, { timeout: 5_000 }), faqLink.click()]);
+    // A real <Link> out of the landing, matched by destination so the assertion
+    // survives the label being translated. With `localePrefix: 'as-needed'` the
+    // href is `/legal/cgu` in French and `/en/legal/cgu` in English.
+    const legalLink = page.locator('a[href$="/legal/cgu"]').first();
+    await expect(legalLink).toBeVisible({ timeout: 5_000 });
+    await Promise.all([
+      page.waitForURL(/\/(en\/)?legal\/cgu/, { timeout: 10_000 }),
+      legalLink.click(),
+    ]);
 
     // The critical assertion: the soft-navigated page MUST render in
     // EN, not the cached FR prefetch.
