@@ -27,7 +27,7 @@ vi.mock('@/lib/env', () => ({
   },
 }));
 
-import { createServiceRoleClient } from '../admin';
+import { createServiceRoleAdminClient, createServiceRoleClient } from '../admin';
 
 function headerValue(init: RequestInit | undefined, name: string): string | undefined {
   const raw = init?.headers;
@@ -75,19 +75,46 @@ describe('createServiceRoleClient — H3 / issue #192 regression guard', () => {
     expect(() => createServiceRoleClient()).toThrow(/never run in the browser/i);
   });
 
-  // This one is a lint, not a proof of behaviour — and it is deliberately the
-  // load-bearing guard for THIS regression. A unit test cannot reproduce the
-  // real failure (it needs a live session cookie and a real database), but the
-  // bug had exactly one shape: a service_role client built on the SSR helper.
-  // Forbidding those two imports makes that shape unreachable.
-  it('never imports the cookie-aware helpers', () => {
-    const source = readFileSync(join(__dirname, '..', 'admin.ts'), 'utf8');
-    const importLines = source
-      .split('\n')
-      .filter((line) => /^\s*import\s/.test(line))
-      .join('\n');
+  // Sealing is what turns invariants 1 and 2 from a convention into an SDK
+  // guarantee: `persistSession: false` stops a session being STORED, not HELD,
+  // so a later `.auth.setSession()` on the returned client would re-open H3
+  // without anyone editing admin.ts. With `accessToken` set, the whole `.auth`
+  // namespace refuses.
+  it('seals the auth namespace so no session can ever be attached', () => {
+    const client = createServiceRoleClient();
 
-    expect(importLines).not.toContain('@supabase/ssr');
-    expect(importLines).not.toContain('next/headers');
+    expect(() => client.auth.getSession()).toThrow(/accessToken option/i);
+    expect(() => client.auth.admin).toThrow(/accessToken option/i);
+  });
+
+  // A lint, not a proof of behaviour — and deliberately load-bearing for THIS
+  // regression, since a unit test cannot reproduce the real failure (it needs a
+  // live session cookie and a real database). The bug had exactly one shape: a
+  // service_role client built on the SSR helper. Scanning the WHOLE source, not
+  // just the import lines, so `require()` and `await import()` cannot slip past.
+  it('never reaches for the cookie-aware helpers, anywhere in the file', () => {
+    const source = readFileSync(join(__dirname, '..', 'admin.ts'), 'utf8');
+    const code = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+
+    expect(code).not.toContain('@supabase/ssr');
+    expect(code).not.toContain('next/headers');
+    expect(code).not.toContain('createServerClient');
+    expect(code).not.toContain('cookies');
+  });
+});
+
+describe('createServiceRoleAdminClient — the unsealed variant', () => {
+  it('exposes the GoTrue admin API the sealed client hides', () => {
+    // Its one reason to exist: `auth.admin.deleteUser` in the erasure flow.
+    expect(createServiceRoleAdminClient().auth.admin).toBeDefined();
+  });
+
+  it('is not a singleton either', () => {
+    expect(createServiceRoleAdminClient()).not.toBe(createServiceRoleAdminClient());
+  });
+
+  it('refuses to run in a browser', () => {
+    vi.stubGlobal('window', {});
+    expect(() => createServiceRoleAdminClient()).toThrow(/never run in the browser/i);
   });
 });

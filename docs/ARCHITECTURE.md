@@ -64,10 +64,13 @@ Schémas **Zod** — source unique de vérité pour les types de formulaires + v
 
 - `client.ts` — navigateur, session PKCE persistée
 - `server.ts` — Server Components / Actions, session depuis cookies
-- `admin.ts#createServiceRoleClient` — service role, **sans cookies** (usage strict :
-  export GDPR, suppression, audit). Le prédécesseur vivait dans `server.ts` et lisait les
-  cookies de la requête : toute session présente dégradait le client en rôle
-  `authenticated` (H3, issue #192, mesuré le 26 juillet 2026)
+- `admin.ts#createServiceRoleClient` — service role, **sans cookies** et **scellé** via
+  l'option `accessToken` : tout l'espace `.auth` refuse, donc aucune session ne peut lui
+  être attachée après coup. Usage strict : audit, export GDPR. Le prédécesseur vivait dans
+  `server.ts` et lisait les cookies de la requête ; toute session présente dégradait le
+  client en rôle `authenticated` (H3, issue #192, mesuré le 26 juillet 2026)
+- `admin.ts#createServiceRoleAdminClient` — variante **non scellée**, uniquement pour
+  l'API admin GoTrue (`auth.admin.deleteUser`). Un seul appelant légitime : `gdpr/deletion.ts`
 - `middleware.ts` — refresh session à chaque requête
 
 ### 4. `src/lib/security/`

@@ -1,4 +1,4 @@
-import { createServiceRoleClient } from '@/lib/supabase/admin';
+import { createServiceRoleAdminClient, createServiceRoleClient } from '@/lib/supabase/admin';
 import { logAuditEvent, AuditEvent } from '@/lib/security/audit-log';
 
 /**
@@ -6,6 +6,16 @@ import { logAuditEvent, AuditEvent } from '@/lib/security/audit-log';
  * Deletion cascades via FK constraints: workspaces → charges/expenses/categories.
  * Audit log rows are pseudonymised (user_id set to NULL) rather than deleted,
  * to preserve security trail integrity per art. 17(3)(b)+(e).
+ *
+ * Two known limits, both tracked for the step that wires `executeDeletion` to a
+ * cron (it has no caller today):
+ *   - Rows written with `userId: null` (rate-limit hits, password resets) carry
+ *     an IP and user agent that `.eq('user_id', …)` can never reach, so they
+ *     outlive the erasure. An IP is personal data.
+ *   - The three statements below are not one transaction. A failure after the
+ *     pseudonymisation leaves a live account whose audit trail is already
+ *     anonymised. The order is nonetheless forced: deleting the auth user first
+ *     would null `user_id` and make those rows unreachable.
  */
 
 export async function requestDeletion(
@@ -32,7 +42,9 @@ export async function requestDeletion(
 }
 
 export async function executeDeletion(userId: string): Promise<void> {
-  const supabase = createServiceRoleClient();
+  // The unsealed client, because this is the one place that needs the GoTrue
+  // admin API. Everything else in this file uses the sealed one.
+  const supabase = createServiceRoleAdminClient();
 
   // Pseudonymise audit log (keep security trail, drop identity).
   // The result MUST be checked: this used to be fire-and-forget, so a refusal
@@ -45,7 +57,9 @@ export async function executeDeletion(userId: string): Promise<void> {
     throw new Error(`Failed to pseudonymise audit log: ${pseudonymise.message}`);
   }
 
-  // Cascade will handle workspaces → charges/expenses/categories/consents
+  // Cascade handles workspaces → charges/expenses/categories. `user_consents`
+  // and `deletion_requests` do NOT descend from workspaces — they cascade from
+  // `users`, via the auth deletion below.
   const { error: deleteWorkspaces } = await supabase
     .from('workspaces')
     .delete()

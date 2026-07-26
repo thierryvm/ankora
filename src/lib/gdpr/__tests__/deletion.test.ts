@@ -55,6 +55,7 @@ const fakeClient = {
 
 vi.mock('@/lib/supabase/admin', () => ({
   createServiceRoleClient: () => fakeClient,
+  createServiceRoleAdminClient: () => fakeClient,
 }));
 
 const auditSpy = vi.fn();
