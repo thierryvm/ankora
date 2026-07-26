@@ -145,6 +145,41 @@ gh api repos/thierryvm/ankora/pulls/<N>/comments \
 
 Si output non vide → corriger avant de déclarer DONE.
 
+### Le nombre de cas e2e exécutés ne descend jamais
+
+**Critère permanent, ajouté le 26 juillet 2026.** Une CI verte ne vaut que ce
+qu'elle exécute. Le 26 juillet, le job `Playwright E2E` affichait **214 passed /
+173 skipped** : 44,7 % de la suite ne tournait nulle part, et tous les parcours
+connectés étaient dans les 173. Un `gh pr checks ✅` ne disait rien des surfaces
+les plus sensibles de l'app.
+
+Deux jobs, donc **deux planchers distincts** — un chiffre global agrégé serait
+ininterprétable au premier conflit, donc ignoré :
+
+| Job                              | Plancher au 26 juillet 2026                       |
+| -------------------------------- | ------------------------------------------------- |
+| `Playwright E2E`                 | 214 passed                                        |
+| `Playwright E2E (authenticated)` | 24 passed (mesuré en local avant le premier push) |
+
+Le second job porte en plus une **liste de quarantaine** dans
+`e2e/authenticated-specs.json` : 6 specs découvertes et comptées mais pas
+exécutées, chacune avec sa raison, imprimées à chaque run. Cette liste ne doit
+que **rétrécir**. Y ajouter une entrée est un aveu qui se justifie par écrit dans
+le rapport de PR, jamais un raccourci pour faire passer une CI.
+
+Mesure — relever la ligne `N passed` / `N skipped` du reporter de **chaque** job :
+
+```bash
+gh run view <run-id> --log | grep -E "^\s+[0-9]+ (passed|skipped)"
+```
+
+Une PR qui fait **baisser** l'un de ces nombres est refusée, sauf justification
+écrite dans le rapport de PR. Supprimer une spec obsolète est légitime ; le faire
+sans le dire ne l'est pas. Même logique côté sélection : `e2e/authenticated-specs.json`
+est committée et toute divergence avec la découverte fait échouer le job, parce
+qu'une suite qui rétrécit en silence est pire qu'une suite absente — elle inspire
+confiance.
+
 **Règle de refus**: ne JAMAIS déclarer une tâche terminée sans avoir
 explicitement vérifié les 5 critères ci-dessus. Un push sans vérif Sourcery
 = tâche incomplète, point.
