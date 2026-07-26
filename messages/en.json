@@ -360,7 +360,7 @@
       },
       "export": {
         "q": "Can I export my data?",
-        "a": "Yes. The \"Download my data\" button in Settings gives you a complete JSON file of everything Ankora holds about you. Compliant with the GDPR right to portability (art. 20)."
+        "a": "Yes. The \"Download my data\" button in Settings gives you a JSON file containing your profile, budgets, charges, expenses, categories, consents and activity log. We are widening this export release by release (GDPR right to portability, art. 20)."
       },
       "advice": {
         "q": "Does Ankora provide financial advice?",
@@ -451,7 +451,7 @@
         "heading": "3. Legal bases (GDPR art. 6)",
         "item1": "<b>Contract</b>: providing the service (account, financial data).",
         "item2": "<b>Consent</b>: analytics/marketing cookies, newsletter.",
-        "item3": "<b>Legal obligation</b>: security logs (12-month retention).",
+        "item3": "<b>Legitimate interest</b>: activity log and security logs (12-month retention), to detect abuse and show the service works as described.",
         "item4": "<b>Legitimate interest</b>: fraud prevention, security maintenance."
       },
       "s4": {
@@ -472,7 +472,7 @@
         "item1": "<b>Access</b>: view your data at any time in your space.",
         "item2": "<b>Rectification</b>: edit profile and data in the dedicated pages.",
         "item3": "<b>Erasure</b>: \"Delete my account\" button in Settings → Privacy.",
-        "item4": "<b>Portability</b>: \"Download my data\" button — full JSON export.",
+        "item4": "<b>Portability</b>: \"Download my data\" button — JSON export of your budget data.",
         "item5": "<b>Objection / Restriction</b>: refuse or withdraw non-essential cookies at any time.",
         "item6": "<b>Complaint</b>: with the <apd>Data Protection Authority</apd> (Belgium)."
       },
@@ -933,7 +933,7 @@
       },
       "data": {
         "title": "My data",
-        "description": "GDPR portability (art. 20) — download a full JSON of everything Ankora holds about you.",
+        "description": "GDPR portability (art. 20) — download a JSON of your profile, budgets, charges, expenses, categories, consents and activity log.",
         "exportButton": "Download my data",
         "exporting": "Generating…",
         "toastDownloaded": "Export downloaded"
