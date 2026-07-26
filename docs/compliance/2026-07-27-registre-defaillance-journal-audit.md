@@ -157,5 +157,41 @@ demande d'effacement.
 
 ---
 
+## 8. Contexte des personnes concernées
+
+Les trois comptes tiers appartiennent à des **membres de la famille** du
+responsable de traitement, dont deux de ses enfants. Aucun n'a utilisé
+l'application depuis des mois : dernières connexions le 3 mai, le 23 avril et le
+19 avril 2026 — ce dernier compte ne s'est connecté qu'une fois, à l'inscription.
+
+**Ce que ça change** : le risque pratique d'un préjudice est nul. Les personnes
+concernées sont joignables directement, et aucune activité n'a eu lieu sur la
+période où le journal était aveugle.
+
+**Ce que ça ne change pas** : ces personnes restent des personnes concernées au
+sens du RGPD, avec l'intégralité de leurs droits. L'exemption « activité
+strictement personnelle ou domestique » (art. 2(2)(c)) ne s'applique **pas** :
+Ankora est déployée publiquement, avec un site vitrine, une page tarifaire et une
+politique de confidentialité. Le lien familial atténue le risque, il ne retire
+pas les obligations — en particulier l'art. 17, dont la file de suppression doit
+être branchée (étape 3b).
+
+---
+
+## Validation
+
+**Faits confirmés par le responsable de traitement** le 27 juillet 2026 : les
+cinq comptes, les trois tiers, et l'absence de toute alerte reçue pendant la
+période.
+
+**Conclusion assumée** : pas de notification à l'Autorité de protection des
+données. Motivée au §4 par le sens _fail-closed_ de la défaillance et confirmée
+par le fait qu'aucune activité tierce n'a eu lieu sur la période.
+
+**Réserve explicite** : ni le responsable de traitement ni l'agent rédacteur ne
+sont juristes. Cette qualification repose sur l'analyse du §4 et sur des faits
+mesurés, non sur un avis juridique professionnel. En cas de doute ultérieur, ou
+si le nombre d'utilisateurs tiers augmente, la faire revoir.
+
 **Établi par** @cc-ankora (Claude Opus 5), sur mesure directe en production, le
-27 juillet 2026. À relire et contresigner par le responsable de traitement.
+27 juillet 2026. Contresigné par le merge de la PR #273.
