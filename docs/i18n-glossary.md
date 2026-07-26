@@ -77,6 +77,27 @@ These terms have marketing weight and must match the decisions below in every lo
 
 ---
 
+## 2bis. GDPR legal-basis terms — locked
+
+These are the **statutory** wordings of the regulation in each language, not
+free translations. A native reviewer will be tempted to reach for a synonym
+(`legitiem belang`, `interés justificado`); those are not the terms the text of
+the regulation uses, and a privacy policy that names its legal basis loosely is
+worth less than one that names it exactly. Do not substitute.
+
+| FR concept           | nl-BE                          | en                          | de-DE                  | es-ES                  | Notes                                              |
+| -------------------- | ------------------------------ | --------------------------- | ---------------------- | ---------------------- | -------------------------------------------------- |
+| intérêt légitime     | gerechtvaardigd belang         | legitimate interest         | berechtigtes Interesse | interés legítimo       | Art. 6(1)(f). German noun always capitalised.      |
+| obligation légale    | wettelijke verplichting        | legal obligation            | gesetzliche Pflicht    | obligación legal       | Art. 6(1)(c). Reserve for actual statutory duties. |
+| consentement         | toestemming                    | consent                     | Einwilligung           | consentimiento         | Art. 6(1)(a).                                      |
+| exécution du contrat | uitvoering van de overeenkomst | performance of the contract | Vertragserfüllung      | ejecución del contrato | Art. 6(1)(b).                                      |
+
+**Why this section exists** — on 2026-07-27 the privacy policy claimed _legal
+obligation_ as the basis for keeping the audit log. No Belgian law imposes that
+on a budgeting tool; the correct basis is legitimate interest, which carries a
+balancing test rather than a statutory duty. Naming the wrong basis is not a
+translation slip, it is a compliance statement that cannot be defended.
+
 ## 3. Don't translate
 
 Keep these **as-is** across all locales:
@@ -198,11 +219,12 @@ Compact labels for the charges-list frequency tag (THI-299). The full word above
 
 ## 7. Versioning
 
-| Version | Date       | Change                                                                                                            |
-| ------- | ---------- | ----------------------------------------------------------------------------------------------------------------- |
-| 1.0     | 2026-04-20 | Initial glossary — Wave 1.5 "Opération Babel" translation.                                                        |
-| 1.1     | 2026-04-20 | Destructive confirmations switch to email-as-keyword pattern (§6). Drop SUPPRIMER/DELETE/LÖSCHEN/ELIMINAR.        |
-| 1.2     | 2026-06-01 | Add `common.frequencyAbbr` abbreviation table (§4, THI-299). de-DE quarterly `Vj.`→`Quartl.` (Vorjahr collision). |
-| 1.3     | 2026-07-22 | Add `{paid}` placeholder (§3, commitments stepper « X / N payées », PR #240).                                     |
+| Version | Date       | Change                                                                                                                                                   |
+| ------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.0     | 2026-04-20 | Initial glossary — Wave 1.5 "Opération Babel" translation.                                                                                               |
+| 1.1     | 2026-04-20 | Destructive confirmations switch to email-as-keyword pattern (§6). Drop SUPPRIMER/DELETE/LÖSCHEN/ELIMINAR.                                               |
+| 1.2     | 2026-06-01 | Add `common.frequencyAbbr` abbreviation table (§4, THI-299). de-DE quarterly `Vj.`→`Quartl.` (Vorjahr collision).                                        |
+| 1.3     | 2026-07-22 | Add `{paid}` placeholder (§3, commitments stepper « X / N payées », PR #240).                                                                            |
+| 1.4     | 2026-07-27 | Lock the GDPR legal-basis terms (§2bis). Privacy policy said "legal obligation" for the audit log; corrected to legitimate interest in all five locales. |
 
 Any new term, any register change, any account-name update **must** be logged here before landing in messages/\*.json.

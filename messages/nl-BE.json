@@ -360,7 +360,7 @@
       },
       "export": {
         "q": "Kan ik mijn gegevens exporteren?",
-        "a": "Ja. De knop « Mijn gegevens downloaden » in Instellingen bezorgt je een volledig JSON-bestand met alles wat Ankora over jou bewaart. Conform het recht op dataportabiliteit AVG (art. 20)."
+        "a": "Ja. De knop « Mijn gegevens downloaden » in Instellingen bezorgt je een JSON-bestand met je profiel, budgetten, vaste kosten, uitgaven, categorieën, toestemmingen en activiteitenlogboek. We breiden deze export uit met elke versie (AVG-recht op dataportabiliteit, art. 20)."
       },
       "advice": {
         "q": "Geeft Ankora financieel advies?",
@@ -451,8 +451,8 @@
         "heading": "3. Rechtsgronden (AVG art. 6)",
         "item1": "<b>Contract</b>: levering van de dienst (account, financiële gegevens).",
         "item2": "<b>Toestemming</b>: analytics/marketing-cookies, nieuwsbrief.",
-        "item3": "<b>Wettelijke verplichting</b>: beveiligingslogs (bewaring 12 maanden).",
-        "item4": "<b>Gerechtvaardigd belang</b>: fraudepreventie, behoud van veiligheid."
+        "item3": "<b>Gerechtvaardigd belang</b>: activiteitenlogboek en beveiligingslogs (bewaring 12 maanden), om misbruik op te sporen en de goede werking aan te tonen.",
+        "item4": "<b>Gerechtvaardigd belang</b>: fraudepreventie, behoud van de beveiliging."
       },
       "s4": {
         "heading": "4. Hosting en onderaannemers",
@@ -472,7 +472,7 @@
         "item1": "<b>Inzage</b>: raadpleeg je gegevens op elk moment in je ruimte.",
         "item2": "<b>Rectificatie</b>: wijzig profiel en gegevens in de voorziene pagina's.",
         "item3": "<b>Verwijdering</b>: knop « Mijn account verwijderen » in Instellingen → Privacy.",
-        "item4": "<b>Portabiliteit</b>: knop « Mijn gegevens downloaden » — volledige JSON-export.",
+        "item4": "<b>Portabiliteit</b>: knop « Mijn gegevens downloaden » — JSON-export van je budgetgegevens.",
         "item5": "<b>Bezwaar / Beperking</b>: weiger of trek niet-essentiële cookies op elk moment in.",
         "item6": "<b>Klacht</b>: bij de <apd>Gegevensbeschermingsautoriteit</apd> (België)."
       },
@@ -933,7 +933,7 @@
       },
       "data": {
         "title": "Mijn gegevens",
-        "description": "AVG-dataportabiliteit (art. 20) — download een volledige JSON van alles wat Ankora over jou bewaart.",
+        "description": "AVG-dataportabiliteit (art. 20) — download een JSON met je profiel, budgetten, vaste kosten, uitgaven, categorieën, toestemmingen en activiteitenlogboek.",
         "exportButton": "Mijn gegevens downloaden",
         "exporting": "Genereren…",
         "toastDownloaded": "Export gedownload"

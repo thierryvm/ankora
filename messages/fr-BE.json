@@ -360,7 +360,7 @@
       },
       "export": {
         "q": "Puis-je exporter mes données ?",
-        "a": "Oui. Le bouton « Télécharger mes données » dans Paramètres te fournit un fichier JSON complet de tout ce qu'Ankora détient sur toi. Conforme au droit de portabilité RGPD (art. 20)."
+        "a": "Oui. Le bouton « Télécharger mes données » dans Paramètres te fournit un fichier JSON contenant ton profil, tes budgets, tes charges, tes dépenses, tes catégories, tes consentements et ton journal d'activité. Nous élargissons cet export au fil des versions (droit de portabilité RGPD, art. 20)."
       },
       "advice": {
         "q": "Est-ce qu'Ankora donne des conseils financiers ?",
@@ -451,7 +451,7 @@
         "heading": "3. Bases légales (RGPD art. 6)",
         "item1": "<b>Contrat</b> : fourniture du service (compte, données financières).",
         "item2": "<b>Consentement</b> : cookies analytics/marketing, newsletter.",
-        "item3": "<b>Obligation légale</b> : logs de sécurité (conservation 12 mois).",
+        "item3": "<b>Intérêt légitime</b> : journal d'activité et logs de sécurité (conservation 12 mois), pour détecter les abus et démontrer le bon fonctionnement du service.",
         "item4": "<b>Intérêt légitime</b> : prévention fraude, maintien de la sécurité."
       },
       "s4": {
@@ -472,7 +472,7 @@
         "item1": "<b>Accès</b> : consulte tes données à tout moment dans ton espace.",
         "item2": "<b>Rectification</b> : modifie profil et données dans les pages dédiées.",
         "item3": "<b>Effacement</b> : bouton « Supprimer mon compte » dans Paramètres → Confidentialité.",
-        "item4": "<b>Portabilité</b> : bouton « Télécharger mes données » — export JSON complet.",
+        "item4": "<b>Portabilité</b> : bouton « Télécharger mes données » — export JSON de tes données budgétaires.",
         "item5": "<b>Opposition / Restriction</b> : refuse ou retire les cookies non essentiels à tout moment.",
         "item6": "<b>Plainte</b> : auprès de l'<apd>Autorité de protection des données</apd> (Belgique)."
       },
@@ -933,7 +933,7 @@
       },
       "data": {
         "title": "Mes données",
-        "description": "Portabilité RGPD (art. 20) — télécharge un JSON complet de tout ce qu'Ankora détient sur toi.",
+        "description": "Portabilité RGPD (art. 20) — télécharge un JSON de ton profil, tes budgets, charges, dépenses, catégories, consentements et journal d'activité.",
         "exportButton": "Télécharger mes données",
         "exporting": "Génération…",
         "toastDownloaded": "Export téléchargé"

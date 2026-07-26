@@ -360,7 +360,7 @@
       },
       "export": {
         "q": "Kann ich meine Daten exportieren?",
-        "a": "Ja. Die Schaltfläche „Meine Daten herunterladen“ in den Einstellungen liefert dir eine vollständige JSON-Datei mit allem, was Ankora über dich hat. Konform mit dem Recht auf Datenübertragbarkeit der DSGVO (Art. 20)."
+        "a": "Ja. Die Schaltfläche „Meine Daten herunterladen“ in den Einstellungen liefert dir eine JSON-Datei mit deinem Profil, deinen Budgets, Fixkosten, Ausgaben, Kategorien, Einwilligungen und deinem Aktivitätsprotokoll. Wir erweitern diesen Export mit jeder Version (DSGVO-Recht auf Datenübertragbarkeit, Art. 20)."
       },
       "advice": {
         "q": "Gibt Ankora Finanzberatung?",
@@ -451,7 +451,7 @@
         "heading": "3. Rechtsgrundlagen (DSGVO Art. 6)",
         "item1": "<b>Vertrag</b>: Bereitstellung des Dienstes (Konto, Finanzdaten).",
         "item2": "<b>Einwilligung</b>: Analytics-/Marketing-Cookies, Newsletter.",
-        "item3": "<b>Gesetzliche Pflicht</b>: Sicherheitslogs (Aufbewahrung 12 Monate).",
+        "item3": "<b>Berechtigtes Interesse</b>: Aktivitätsprotokoll und Sicherheitslogs (Aufbewahrung 12 Monate), um Missbrauch zu erkennen und die ordnungsgemäße Funktion nachzuweisen.",
         "item4": "<b>Berechtigtes Interesse</b>: Betrugsprävention, Aufrechterhaltung der Sicherheit."
       },
       "s4": {
@@ -472,7 +472,7 @@
         "item1": "<b>Auskunft</b>: Sieh deine Daten jederzeit in deinem Bereich ein.",
         "item2": "<b>Berichtigung</b>: Ändere Profil und Daten auf den entsprechenden Seiten.",
         "item3": "<b>Löschung</b>: Schaltfläche „Mein Konto löschen“ unter Einstellungen → Datenschutz.",
-        "item4": "<b>Datenübertragbarkeit</b>: Schaltfläche „Meine Daten herunterladen“ — vollständiger JSON-Export.",
+        "item4": "<b>Datenübertragbarkeit</b>: Schaltfläche „Meine Daten herunterladen“ — JSON-Export deiner Budgetdaten.",
         "item5": "<b>Widerspruch / Einschränkung</b>: Lehne nicht-essenzielle Cookies jederzeit ab oder widerrufe sie.",
         "item6": "<b>Beschwerde</b>: bei der <apd>Datenschutzbehörde</apd> (Belgien)."
       },
@@ -933,7 +933,7 @@
       },
       "data": {
         "title": "Meine Daten",
-        "description": "DSGVO-Datenübertragbarkeit (Art. 20) — lade ein vollständiges JSON mit allem herunter, was Ankora über dich hat.",
+        "description": "DSGVO-Datenübertragbarkeit (Art. 20) — lade ein JSON mit deinem Profil, deinen Budgets, Fixkosten, Ausgaben, Kategorien, Einwilligungen und deinem Aktivitätsprotokoll herunter.",
         "exportButton": "Meine Daten herunterladen",
         "exporting": "Generieren…",
         "toastDownloaded": "Export heruntergeladen"
