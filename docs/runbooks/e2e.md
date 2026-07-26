@@ -31,7 +31,7 @@ nu ne l'affiche pas. Le durcissement du préflight est tracé pour une PR dédi�
 | Job                              | Supabase                | Ce qu'il prouve                                               |
 | -------------------------------- | ----------------------- | ------------------------------------------------------------- |
 | `Playwright E2E`                 | valeurs factices        | surface publique : landing, SEO, en-têtes, a11y, consentement |
-| `Playwright E2E (authenticated)` | **stack locale réelle** | les 13 specs qui sèment un utilisateur et se connectent       |
+| `Playwright E2E (authenticated)` | **stack locale réelle** | 7 des 13 specs authentifiées (6 en quarantaine, cf. plus bas) |
 
 Avant le 26 juillet 2026, seul le premier existait : **214 cas passaient, 173
 sautaient** — 44,7 % de la suite. Tous les parcours connectés étaient dans les 173. Un `gh pr checks ✅` ne disait donc rien des surfaces les plus sensibles.
