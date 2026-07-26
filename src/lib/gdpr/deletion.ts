@@ -24,15 +24,10 @@ export async function requestDeletion(
 
   if (error) throw new Error(`Failed to schedule deletion: ${error.message}`);
 
-  await logAuditEvent(
-    AuditEvent.GDPR_DELETION_REQUESTED,
-    { userId },
-    {
-      resource_type: 'deletion_request',
-      reason: 'user_request',
-    },
-  );
-
+  // No audit call here on purpose. `requestAccountDeletionAction` already emits
+  // GDPR_DELETION_REQUESTED, and it has the request IP and user-agent that this
+  // module does not. Logging from both produced two rows per request, one of
+  // them impoverished — invisible only while audit writes were being refused.
   return { scheduledFor };
 }
 

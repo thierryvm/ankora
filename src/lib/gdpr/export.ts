@@ -29,7 +29,17 @@ export async function exportUserData(userId: string): Promise<UserDataExport> {
       supabase.from('expenses').select('*').eq('created_by', userId),
       supabase.from('categories').select('*').eq('created_by', userId),
       supabase.from('user_consents').select('*').eq('user_id', userId),
-      supabase.from('audit_log').select('*').eq('user_id', userId).limit(1000),
+      // `order` before `limit` is not cosmetic: without it PostgREST returns
+      // rows in physical order, so a user past 1000 events would receive an
+      // arbitrary subset of their audit trail with no indication of it. The cap
+      // was theoretical while audit writes were being refused; from this commit
+      // every financial gesture writes a row.
+      supabase
+        .from('audit_log')
+        .select('*')
+        .eq('user_id', userId)
+        .order('occurred_at', { ascending: false })
+        .limit(1000),
     ]);
 
   const bundle: UserDataExport = {

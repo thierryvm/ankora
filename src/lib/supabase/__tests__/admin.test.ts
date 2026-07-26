@@ -63,6 +63,13 @@ describe('createServiceRoleClient — H3 / issue #192 regression guard', () => {
     expect(headerValue(call.init, 'Authorization')).toBe(`Bearer ${SERVICE_ROLE_KEY}`);
   });
 
+  // The third invariant the module header states, and the only one a test can
+  // pin cheaply. A module-level singleton would let auth state from one request
+  // survive into the next.
+  it('returns a fresh client on every call, never a shared singleton', () => {
+    expect(createServiceRoleClient()).not.toBe(createServiceRoleClient());
+  });
+
   it('refuses to run in a browser', async () => {
     vi.stubGlobal('window', {});
     expect(() => createServiceRoleClient()).toThrow(/never run in the browser/i);
