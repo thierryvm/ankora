@@ -17,6 +17,7 @@ import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 
 import { ExpenseEditDrawer, type ExpenseEditDrawerExpense } from './ExpenseEditDrawer';
 import { resteAVivreStatus } from './reste-a-vivre';
+import { todayInAnkoraTz } from '@/lib/date/tz';
 
 type RawExpense = {
   id: string;
@@ -44,10 +45,6 @@ type Props = {
   joursRestants: number;
 };
 
-function today(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
 export function ExpensesClient({
   expenses,
   resteAVivre,
@@ -64,7 +61,7 @@ export function ExpensesClient({
   const [isPending, startTransition] = useTransition();
   const [label, setLabel] = useState('');
   const [amount, setAmount] = useState('');
-  const [occurredOn, setOccurredOn] = useState(today());
+  const [occurredOn, setOccurredOn] = useState(todayInAnkoraTz());
   const [editingExpense, setEditingExpense] = useState<ExpenseEditDrawerExpense | null>(null);
 
   function onCreate(e: React.FormEvent) {
@@ -131,49 +128,47 @@ export function ExpensesClient({
   const barAria = t('barAria', { spent: fmt(spentThisMonth), budget: fmt(resteAVivre) });
 
   const renderRow = (e: RawExpense) => (
-    <li
-      key={e.id}
-      data-testid={`expenses-row-${e.id}`}
-      className="flex items-center justify-between gap-3 py-3"
-    >
-      <div className="min-w-0 flex-1">
-        <p data-testid="expenses-row-label" className="truncate font-medium">
-          {e.label}
-        </p>
-        <p data-testid="expenses-row-date" className="text-muted-foreground text-xs">
-          {formatDate(e.occurredOn, locale, 'medium')}
-        </p>
-      </div>
-      <p
-        data-testid="expenses-row-amount"
-        className="text-foreground shrink-0 text-sm font-semibold tabular-nums"
-      >
-        {fmt(e.amount)}
-      </p>
-      <Button
+    <li key={e.id} data-testid={`expenses-row-${e.id}`}>
+      {/*
+        The whole row is the target, not a muted pencil next to a red bin.
+
+        The drawer has always worked, but its trigger was a
+        `text-muted-foreground` Pencil sitting beside a `text-danger` Trash —
+        the eye goes to the red one, and @thierry spent weeks believing
+        expenses could not be edited at all.
+
+        A real <button> rather than an onClick on the <li>: it keeps keyboard
+        focus, the accessible name and the 44 px target, and nothing
+        interactive is nested inside it.
+
+        Deleting moves into the drawer. An irreversible action one stray tap
+        away in a scrolling list, with no confirmation, was the more dangerous
+        half of the same layout.
+      */}
+      <button
         type="button"
-        variant="ghost"
-        size="icon"
         onClick={() => onEdit(e)}
         disabled={isPending}
         aria-label={t('editAria', { label: e.label })}
         data-testid={`expenses-row-edit-${e.id}`}
-        className="size-11 shrink-0 md:size-9"
+        className="hover:bg-muted focus-visible:ring-brand-600 flex min-h-11 w-full items-center justify-between gap-3 rounded-md px-2 py-3 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:cursor-progress"
       >
-        <Pencil className="text-muted-foreground h-4 w-4" />
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        onClick={() => onDelete(e.id)}
-        disabled={isPending}
-        aria-label={t('deleteAria', { label: e.label })}
-        data-testid={`expenses-row-delete-${e.id}`}
-        className="size-11 shrink-0 md:size-9"
-      >
-        <Trash2 className="text-danger h-4 w-4" />
-      </Button>
+        <span className="min-w-0 flex-1">
+          <span data-testid="expenses-row-label" className="block truncate font-medium">
+            {e.label}
+          </span>
+          <span data-testid="expenses-row-date" className="text-muted-foreground block text-xs">
+            {formatDate(e.occurredOn, locale, 'medium')}
+          </span>
+        </span>
+        <span
+          data-testid="expenses-row-amount"
+          className="text-foreground shrink-0 text-sm font-semibold tabular-nums"
+        >
+          {fmt(e.amount)}
+        </span>
+        <Pencil className="text-muted-foreground h-4 w-4 shrink-0" aria-hidden="true" />
+      </button>
     </li>
   );
 

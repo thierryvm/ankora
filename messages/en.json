@@ -884,7 +884,11 @@
         "save": "Save",
         "saving": "Saving…",
         "cancel": "Cancel",
-        "errorGeneric": "The change couldn't be saved. Please try again in a moment."
+        "errorGeneric": "The change couldn't be saved. Please try again in a moment.",
+        "delete": "Delete",
+        "deleting": "Deleting…",
+        "confirmDelete": "Delete “{label}” — {amount}? This expense will be permanently erased.",
+        "confirmDeleteAction": "Yes, delete"
       },
       "resteAVivreLabel": "Living budget — {month}",
       "overBudget": "Over by {amount}",

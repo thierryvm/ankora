@@ -112,12 +112,24 @@ describe('<ExpensesClient /> — PR-BETA-CLEANUP-3 list (date locale + edit butt
     expect(dateCell.textContent ?? '').not.toBe('2026-05-15');
   });
 
-  it('exposes both Modifier and Supprimer buttons per row', () => {
+  it('makes the whole row the edit target', () => {
+    // Was: "exposes both Modifier and Supprimer buttons per row". The row used
+    // to carry a muted pencil beside a red bin, and the eye went to the bin —
+    // @thierry believed for weeks that expenses could not be edited at all.
     renderExpenses();
     expect(screen.getByTestId('expenses-row-edit-e1')).toBeInTheDocument();
-    expect(screen.getByTestId('expenses-row-delete-e1')).toBeInTheDocument();
     expect(screen.getByTestId('expenses-row-edit-e2')).toBeInTheDocument();
-    expect(screen.getByTestId('expenses-row-delete-e2')).toBeInTheDocument();
+  });
+
+  it('offers no way to delete from the list', () => {
+    // Structural, not cosmetic: an irreversible action one stray tap away in a
+    // scrolling list, with no confirmation, is the defect being removed.
+    // Deleting now lives inside the drawer, behind a confirmation that names
+    // the expense and its amount.
+    renderExpenses();
+    expect(screen.queryByTestId('expenses-row-delete-e1')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('expenses-row-delete-e2')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /supprimer/i })).not.toBeInTheDocument();
   });
 
   it('exposes an editAria localised label naming the expense', () => {
@@ -258,6 +270,10 @@ describe('app.expenses — i18n parity (5 locales, PR-BETA-CLEANUP-3)', () => {
               saving?: string;
               cancel?: string;
               errorGeneric?: string;
+              delete?: string;
+              deleting?: string;
+              confirmDelete?: string;
+              confirmDeleteAction?: string;
             };
           };
         };
@@ -272,6 +288,26 @@ describe('app.expenses — i18n parity (5 locales, PR-BETA-CLEANUP-3)', () => {
       expect(e.drawer?.saving).toBeTypeOf('string');
       expect(e.drawer?.cancel).toBeTypeOf('string');
       expect(e.drawer?.errorGeneric).toBeTypeOf('string');
+      // Delete moved into the drawer; its confirmation must exist everywhere,
+      // or a locale silently renders a raw key on a destructive action.
+      expect(e.drawer?.delete).toBeTypeOf('string');
+      expect(e.drawer?.deleting).toBeTypeOf('string');
+      expect(e.drawer?.confirmDelete).toBeTypeOf('string');
+      expect(e.drawer?.confirmDeleteAction).toBeTypeOf('string');
+    },
+  );
+
+  it.each(['fr-BE', 'en', 'de-DE', 'es-ES', 'nl-BE'] as const)(
+    'locale %s keeps the delete confirmation placeholders intact',
+    async (locale) => {
+      const m = (await import(`../../../../../../messages/${locale}.json`)).default as {
+        app: { expenses: { drawer: Record<string, string> } };
+      };
+      const confirm = m.app.expenses.drawer.confirmDelete ?? '';
+      // A confirmation that names nothing is a confirmation nobody reads: both
+      // the label and the amount have to survive translation.
+      expect(confirm).toContain('{label}');
+      expect(confirm).toContain('{amount}');
     },
   );
 

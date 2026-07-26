@@ -884,7 +884,11 @@
         "save": "Opslaan",
         "saving": "Opslaan…",
         "cancel": "Annuleren",
-        "errorGeneric": "De wijziging kon niet worden opgeslagen. Probeer het zo opnieuw."
+        "errorGeneric": "De wijziging kon niet worden opgeslagen. Probeer het zo opnieuw.",
+        "delete": "Verwijderen",
+        "deleting": "Verwijderen…",
+        "confirmDelete": "“{label}” — {amount} verwijderen? Deze uitgave wordt definitief gewist.",
+        "confirmDeleteAction": "Ja, verwijderen"
       },
       "resteAVivreLabel": "Dagelijks leven — {month}",
       "overBudget": "{amount} over budget",

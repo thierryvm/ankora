@@ -884,7 +884,11 @@
         "save": "Speichern",
         "saving": "Speichern…",
         "cancel": "Abbrechen",
-        "errorGeneric": "Die Änderung konnte nicht gespeichert werden. Bitte gleich erneut versuchen."
+        "errorGeneric": "Die Änderung konnte nicht gespeichert werden. Bitte gleich erneut versuchen.",
+        "delete": "Löschen",
+        "deleting": "Wird gelöscht…",
+        "confirmDelete": "„{label}“ — {amount} löschen? Diese Ausgabe wird endgültig entfernt.",
+        "confirmDeleteAction": "Ja, löschen"
       },
       "resteAVivreLabel": "Alltag — {month}",
       "overBudget": "{amount} über Budget",

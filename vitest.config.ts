@@ -15,13 +15,29 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
-      include: ['src/lib/domain/**/*.ts', 'src/lib/schemas/**/*.ts', 'src/lib/i18n/formatters.ts'],
+      include: [
+        'src/lib/domain/**/*.ts',
+        'src/lib/schemas/**/*.ts',
+        'src/lib/i18n/formatters.ts',
+        'src/lib/actions/expenses.ts',
+      ],
       exclude: ['**/*.test.ts', '**/*.spec.ts', '**/index.ts', '**/types.ts'],
       thresholds: {
         lines: 90,
         functions: 90,
         branches: 85,
         statements: 90,
+        // Server Actions sit below the global bar on purpose. They are mostly
+        // guard clauses and one Supabase call, so the last few percent are the
+        // error branches of the client itself — expensive to fake, worth little.
+        // Without this per-glob entry, adding the file to `include` would fail
+        // CI against the 90 % global bar rather than raise the floor.
+        'src/lib/actions/expenses.ts': {
+          lines: 80,
+          functions: 80,
+          branches: 80,
+          statements: 80,
+        },
       },
     },
   },

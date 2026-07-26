@@ -83,12 +83,35 @@ export function formatPercent(value: number, locale: Locale, fractionDigits: num
 
 type DateStyle = 'full' | 'long' | 'medium' | 'short';
 
+/** Matches a calendar day with no time component, e.g. `2026-07-18`. */
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+
 export function formatDate(
   date: Date | string | number,
   locale: Locale,
   style: DateStyle = 'long',
 ): string {
-  return getDateFormatter(locale, { dateStyle: style }).format(toDate(date));
+  // Date-only strings are formatted in UTC; everything else keeps the runtime
+  // timezone.
+  //
+  // `new Date('2026-07-18')` is parsed as midnight UTC by spec, so formatting
+  // it in the runtime timezone shifts it to the 17th anywhere west of
+  // Greenwich — a wrong day, and a hydration mismatch between a Vercel server
+  // on UTC and the visitor's browser. `formatMonth` twenty lines below already
+  // passes `timeZone: 'UTC'` for exactly this reason; the inconsistency was
+  // internal to this file.
+  //
+  // The predicate is what makes it safe to fix. Applying UTC unconditionally
+  // would corrupt the three callers that pass a real instant: the account
+  // deletion dates (`scheduled_for`, `cancelled_at`, both `timestamptz`) read
+  // by `deletion-status/page.tsx` and `SettingsClient.tsx`. A Belgian user
+  // requesting deletion between 00:00 and 02:00 local would be shown an
+  // erasure date off by one day — a legally binding figure.
+  const isDateOnly = typeof date === 'string' && DATE_ONLY.test(date);
+  return getDateFormatter(locale, {
+    dateStyle: style,
+    ...(isDateOnly ? { timeZone: 'UTC' } : {}),
+  }).format(toDate(date));
 }
 
 export function formatDateTime(

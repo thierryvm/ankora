@@ -884,7 +884,11 @@
         "save": "Guardar",
         "saving": "Guardando…",
         "cancel": "Cancelar",
-        "errorGeneric": "El cambio no se ha podido guardar. Inténtalo de nuevo dentro de un momento."
+        "errorGeneric": "El cambio no se ha podido guardar. Inténtalo de nuevo dentro de un momento.",
+        "delete": "Eliminar",
+        "deleting": "Eliminando…",
+        "confirmDelete": "¿Eliminar «{label}» — {amount}? Este gasto se borrará definitivamente.",
+        "confirmDeleteAction": "Sí, eliminar"
       },
       "resteAVivreLabel": "Día a día — {month}",
       "overBudget": "Superado en {amount}",

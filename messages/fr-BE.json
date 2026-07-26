@@ -884,7 +884,11 @@
         "save": "Enregistrer",
         "saving": "Enregistrement…",
         "cancel": "Annuler",
-        "errorGeneric": "La modification n'a pas pu être enregistrée. Réessaye dans un instant."
+        "errorGeneric": "La modification n'a pas pu être enregistrée. Réessaye dans un instant.",
+        "delete": "Supprimer",
+        "deleting": "Suppression…",
+        "confirmDelete": "Supprimer « {label} » — {amount} ? Cette dépense sera définitivement effacée.",
+        "confirmDeleteAction": "Oui, supprimer"
       },
       "resteAVivreLabel": "Reste à vivre — {month}",
       "overBudget": "Dépassé de {amount}",
