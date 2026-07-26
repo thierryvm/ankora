@@ -23,6 +23,21 @@ export async function generateMetadata({ params }: LocaleParams) {
   return {
     title: t('metaTitle'),
     description: t('metaDescription'),
+    // Without an explicit `alternates`, Next keeps the PARENT layout's canonical
+    // — so /glossaire, /en/glossaire and /nl-BE/glossaire each canonicalised to
+    // their own homepage instead of to themselves, and none of them could rank.
+    // `glossaire/[slug]` already did this correctly; the index did not.
+    alternates: {
+      canonical: buildCanonicalUrl('/glossaire', locale),
+      // Same `languages` block as `[slug]/page.tsx`. Omitting it here would
+      // repeat, on the fix itself, the very defect this PR closes: a canonical
+      // with no matching hreflang, leaving the head to say nothing about the
+      // other locales. Scoped to GLOSSARY_LOCALES because only those three have
+      // translated terms.
+      languages: Object.fromEntries(
+        GLOSSARY_LOCALES.map((l) => [l, buildCanonicalUrl('/glossaire', l)]),
+      ),
+    },
   };
 }
 

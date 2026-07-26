@@ -4,6 +4,7 @@ import { getTranslations } from 'next-intl/server';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { JsonLd } from '@/components/seo/JsonLd';
+import { buildCanonicalUrl } from '@/lib/glossary';
 
 const QUESTION_KEYS = [
   'bankConnection',
@@ -16,12 +17,25 @@ const QUESTION_KEYS = [
   'sharing',
 ] as const;
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  // `params`, not `getLocale()`: the latter works only because the locale
+  // layout happens to call `cookies()` for the theme, which forces dynamic
+  // rendering. Reading the segment directly removes that hidden coupling and
+  // matches how the glossary pages already do it.
+  const { locale } = await params;
   const t = await getTranslations('faq');
   return {
     title: t('metaTitle'),
     description: t('metaDescription'),
-    alternates: { canonical: '/faq' },
+    // Locale-aware: when a segment declares `alternates`, Next REPLACES the
+    // parent's value instead of recomputing it per locale. Hardcoding '/faq'
+    // made /en/faq canonicalise to the French page, contradicting the hreflang
+    // Link header emitted for that same URL.
+    alternates: { canonical: buildCanonicalUrl('/faq', locale) },
   };
 }
 

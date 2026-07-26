@@ -4,16 +4,26 @@ import { getTranslations } from 'next-intl/server';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Prose, ProseMeta } from '@/components/layout/Prose';
+import { buildCanonicalUrl } from '@/lib/glossary';
 
 const LAST_UPDATED = '16 avril 2026';
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  // `params`, not `getLocale()`: the latter works only because the locale
+  // layout happens to call `cookies()` for the theme, which forces dynamic
+  // rendering. Reading the segment directly removes that hidden coupling and
+  // matches how the glossary pages already do it.
+  const { locale } = await params;
   const t = await getTranslations('legal.cookies');
   return {
     title: t('metaTitle'),
     description: t('metaDescription'),
     robots: { index: false, follow: true },
-    alternates: { canonical: '/legal/cookies' },
+    alternates: { canonical: buildCanonicalUrl('/legal/cookies', locale) },
   };
 }
 
