@@ -143,11 +143,19 @@ if (existsSync(vercelPath)) {
 }
 
 // ── 7) URL applicative ───────────────────────────────────────────────────────
+// `.env.local` est le fichier de DÉVELOPPEMENT : localhost y est la valeur
+// attendue. La valeur de production (https://ankora.be) vit dans les variables
+// d'environnement Vercel et n'a rien à faire ici. Les deux sont donc valides —
+// ce qui ne l'est pas, c'est un domaine qui n'appartient à aucun des deux.
 const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+const isLocal = Boolean(appUrl?.includes('localhost') || appUrl?.includes('127.0.0.1'));
+const isProd = Boolean(appUrl?.includes(EXPECTED.appHost));
 check(
   'URL applicative',
-  Boolean(appUrl?.includes(EXPECTED.appHost)) || Boolean(appUrl?.includes('localhost')),
-  appUrl ?? 'NEXT_PUBLIC_APP_URL absent',
+  isLocal || isProd,
+  appUrl
+    ? `${appUrl} — ${isLocal ? `dev local (prod = ${EXPECTED.appHost}, définie côté Vercel)` : 'production'}`
+    : 'NEXT_PUBLIC_APP_URL absent',
 );
 
 // ── 8) Secrets requis par les opérations prod ────────────────────────────────
