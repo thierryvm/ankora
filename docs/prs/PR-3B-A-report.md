@@ -369,6 +369,68 @@ annoncée dans les 5 politiques de confidentialité n'est donc toujours pas impl
 (art. 5(1)(e)). PR-B l'arme (plan §B1.5). D'ici là, la fonction est correcte et inerte —
 réparée, pas branchée.
 
+## 9bis. Le défaut généralise — mesure sur les 9 fonctions de `public`
+
+Demandé par @thierry avant merge : ne pas s'arrêter à `claim_pending_deletions`. Le motif
+`revoke … from public` sans nommer `anon, authenticated` existe dans ce dépôt depuis
+avril.
+
+**Privilèges réels, lus en base** (pas le texte des migrations) :
+
+| Fonction                                 | `SECURITY DEFINER` | `anon`  | `authenticated` |
+| ---------------------------------------- | ------------------ | ------- | --------------- |
+| `assert_rls_coverage()`                  | non                | **oui** | **oui**         |
+| `is_workspace_editor(uuid)`              | **OUI**            | **oui** | oui _(requis)_  |
+| `is_workspace_member(uuid)`              | **OUI**            | **oui** | oui _(requis)_  |
+| `touch_updated_at()`                     | non                | **oui** | **oui**         |
+| `claim_pending_deletions(int)`           | non                | non     | non             |
+| `handle_new_user()`                      | oui                | non     | non             |
+| `purge_audit_log_older_than_12_months()` | non                | non     | non             |
+| `seed_default_accounts(uuid)`            | oui                | non     | non             |
+| `seed_default_categories(uuid, uuid)`    | oui                | non     | non             |
+
+Deux des quatre fonctions joignables par `anon` sont `SECURITY DEFINER` : « la RLS
+filtre » ne serait donc **pas** une réponse valable, puisqu'elles s'exécutent avec les
+droits de leur propriétaire. Impact vérifié **en appelant réellement**, clé `anon`, via
+PostgREST :
+
+| Fonction                        | Réponse à `anon`  | Ce que ça vaut                                                                                    |
+| ------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------- |
+| `assert_rls_coverage()`         | `[]`, HTTP 200    | **Aucune divulgation** — `INVOKER`, le catalogue est lu avec les droits d'`anon`                  |
+| `is_workspace_member(uuid nul)` | `false`, HTTP 200 | **Aucun oracle** — le corps teste `auth.uid()`, NULL pour `anon`, donc `false` pour tout argument |
+| `is_workspace_editor(uuid nul)` | idem              | idem                                                                                              |
+| `touch_updated_at()`            | `PGRST202`        | **Inatteignable** — fonction trigger, aucune signature exposée par PostgREST                      |
+
+**Conclusion : aucune exploitation possible aujourd'hui, sur aucune des quatre.** Le
+résultat est rassurant, et c'est précisément pour ça qu'il faut nommer ce qui le produit :
+l'innocuité tient au **corps** de chaque fonction, pas au privilège. `is_workspace_member`
+est inoffensive parce qu'elle interroge `auth.uid()` ; une future fonction `DEFINER` qui
+ne le ferait pas hériterait du même grant sans que personne ne le remarque.
+
+**Correctifs dus, par impact décroissant** — dans une **PR dédiée**, pas ici : ces quatre
+grants sont antérieurs à cette PR (avril et mai), et les corriger dans une PR dont
+l'invariant est de ne rien armer serait exactement l'extension de scope que le plan
+interdit.
+
+1. `assert_rls_coverage()` → révoquer pour `anon` **et** `authenticated` (diagnostic,
+   `service_role` seul).
+2. `is_workspace_member` / `is_workspace_editor` → révoquer pour **`anon` uniquement**.
+   Le grant `authenticated` est **obligatoire** : les politiques RLS les appellent dans ce
+   rôle (cf. `20260528000001`, note P2). Le retirer casserait toute lecture applicative —
+   c'est la dette advisor 0028 déjà tracée.
+3. `touch_updated_at()` → révoquer pour `anon` et `authenticated`. Sans effet sur les
+   triggers, qui s'exécutent dans le contexte du propriétaire.
+
+**Limite de cette mesure, à dire** : elle est faite sur la pile **locale**, dont les deux
+migrations sont identiques à la production (`supabase migration list` : `local = remote`
+sur les 16). Les grants viennent des migrations et des privilèges par défaut de Supabase
+sur `public`, identiques de part et d'autre — mais ce n'est pas une preuve. La requête
+prod est fournie ci-dessous comme **lecture n° 4**, en lecture seule.
+
+Le MCP Supabase **ne pouvait pas** servir à cette vérification : interrogé, il ne voit que
+`goldteam` — le **premier** compte. L'utiliser aurait interrogé la mauvaise base et rendu
+un résultat faux avec l'air d'être vrai.
+
 ## 10. Un incident de process, à consigner
 
 `test-quality-auditor`, qui dispose de Bash, a injecté un import dynamique de

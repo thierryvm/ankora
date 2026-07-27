@@ -247,6 +247,30 @@ Pour reconstruire les rôles @cowork sans dépendance Desktop, deux sub-agents v
 
 Référence : `Athenaeum/10_Projects/ankora/cc-handoffs/2026-05-27-recovery-session-ankora-post-crash.md` (incident détaillé) + `Athenaeum/10_Projects/ankora/conventions/post-cowork-doctrine.md` (doctrine complète).
 
+### Un agent QA doté de Bash ne doit pas pouvoir atteindre un commit (2026-07-27)
+
+`test-quality-auditor.md:73` dit déjà « Never modify code — only report ». Il a quand
+même muté `src/lib/gdpr/deletion-core.ts` pendant la PR #282, et la ligne s'est retrouvée
+dans un commit parce que le pilote committait depuis le même arbre de travail. **Répéter
+l'instruction ne sert à rien : elle y est déjà.** Ce qui manque, c'est que la
+désobéissance n'ait aucun chemin vers l'historique.
+
+Trois règles, à appliquer dès qu'un agent avec Bash a tourné dans la session :
+
+1. **Jamais de stage en masse.** `git add -A` et `git add .` sont interdits après le
+   passage d'un tel agent. Chemins explicites uniquement.
+2. **Lire `git diff --cached --stat` avant chaque commit.** Un fichier que tu n'as pas
+   modifié toi-même dans cette liste = STOP, on inspecte avant de committer.
+3. **Une falsification qui exige de muter du code se fait hors de l'arbre de travail** —
+   copie jetable, ou base locale qu'on restaure ensuite. Jamais dans un fichier suivi
+   par git.
+
+Corollaire pour la rédaction des prompts d'agents : tout agent QA à qui on donne Bash
+reçoit la consigne explicite « tu ne modifies aucun fichier du dépôt ; si tu dois muter
+pour falsifier, fais-le dans la base locale et restaure ». La consigne dans le fichier
+d'agent ne suffit pas — celle du prompt non plus, d'ailleurs : ce sont les règles 1 et 2
+qui protègent réellement.
+
 ### Banned list complémentaire (verrouillée 2026-05-27)
 
 Ces 5 items s'ajoutent aux interdictions historiques (`feedback_irreversibility_guardrails`, doctrine modèles agents) et sont vérifiés par `plan-reviewer` :
