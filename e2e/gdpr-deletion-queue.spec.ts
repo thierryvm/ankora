@@ -32,7 +32,25 @@ const admin = adminClientOrNull();
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
-const isLocalSupabase = /^https?:\/\/(127\.0\.0\.1|localhost|\[::1\])([:/]|$)/.test(SUPABASE_URL);
+/**
+ * Parsed, not pattern-matched. A regex over the raw string is bypassable
+ * through the userinfo part — measured:
+ *
+ *   http://127.0.0.1:5442@fkscfvoouwufyjwnfvhb.supabase.co
+ *     regex says local · real host is fkscfvoouwufyjwnfvhb.supabase.co
+ *
+ * The `:` of the port makes the pattern accept everything before the `@`. This
+ * is the guard standing between a spec that calls an UNSCOPED
+ * `claimPendingDeletionsWith(admin, 100)` and a production database, so it
+ * resolves the host the same way the client will.
+ */
+const isLocalSupabase = (() => {
+  try {
+    return ['127.0.0.1', 'localhost', '::1', '[::1]'].includes(new URL(SUPABASE_URL).hostname);
+  } catch {
+    return false;
+  }
+})();
 
 const AUDIT_EVENT = 'test.deletion_queue';
 

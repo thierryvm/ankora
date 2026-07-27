@@ -28,7 +28,7 @@ vi.mock('@/lib/log', () => ({
   log: { error: logErrorSpy, warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }));
 
-import { GET, maxDuration } from '../route';
+import { BATCH_SIZE, GET, maxDuration } from '../route';
 
 function call(authorization?: string) {
   return GET(
@@ -82,17 +82,24 @@ describe('authentication — the run refuses by default', () => {
     expect(logErrorSpy).not.toHaveBeenCalled();
   });
 
-  it('401s when CRON_SECRET is missing from the environment — and SCREAMS', async () => {
+  it('401s when CRON_SECRET is missing from the environment — and SCREAMS once', async () => {
     envMock.CRON_SECRET = undefined;
 
-    const res = await call(`Bearer ${SECRET}`);
-
-    expect(res.status).toBe(401);
+    const first = await call(`Bearer ${SECRET}`);
+    expect(first.status).toBe(401);
     // The whole point of this case: a configuration failure and a wrong token
     // are indistinguishable to the caller, and must be distinguishable to us.
     expect(logErrorSpy).toHaveBeenCalledTimes(1);
     expect(logErrorSpy.mock.calls[0]?.[0]).toMatch(/CRON_SECRET is not configured/i);
     expect(claimSpy).not.toHaveBeenCalled();
+
+    // …and exactly once per cold start. This endpoint is public and unmetered:
+    // without the guard, a scanner hammering the path would write one log line
+    // per request for as long as the misconfiguration lasted, which is the same
+    // free cost the 401-before-any-I/O was supposed to bound.
+    const second = await call(`Bearer ${SECRET}`);
+    expect(second.status).toBe(401);
+    expect(logErrorSpy).toHaveBeenCalledTimes(1);
   });
 
   it('200s with the right secret', async () => {
@@ -204,5 +211,14 @@ describe('the invariant that pairs two files', () => {
     // its batch and the same account would be deleted twice. Raising this to
     // 300 s is touching the anti-double-deletion guard, not a timeout.
     expect(maxDuration).toBeLessThan(3600);
+  });
+
+  it('keeps BATCH_SIZE within the ceiling the SQL function enforces', () => {
+    // `claim_pending_deletions` bounds its own limit with
+    // `least(coalesce(batch_size, 1), 100)`. Above 100 the SQL would return 100
+    // while `claimed.length >= BATCH_SIZE` never became true — the `capped`
+    // alarm would disappear without a sound, which is worse than not having it:
+    // it would still LOOK like a guard.
+    expect(BATCH_SIZE).toBeLessThanOrEqual(100);
   });
 });

@@ -33,8 +33,39 @@ export const dynamic = 'force-dynamic';
  */
 export const maxDuration = 60;
 
-/** One run claims at most this many requests. See `capped` below. */
-const BATCH_SIZE = 25;
+/**
+ * One run claims at most this many requests. See `capped` below.
+ *
+ * MUST stay ≤ 100. `claim_pending_deletions` bounds its own limit with
+ * `least(coalesce(batch_size, 1), 100)`, so a value above 100 would make the
+ * SQL return 100 while `claimed.length >= BATCH_SIZE` never became true — the
+ * `capped` alarm would disappear without a sound. Pinned by a test.
+ */
+export const BATCH_SIZE = 25;
+
+/**
+ * A GoTrue or PostgREST message is written by someone else and can embed an id
+ * or an address. This route promises `request_id`, never `user_id`, and pino's
+ * redaction works by PATH (`*.email`, `headers.authorization`) — it will never
+ * see an identifier buried inside a free-form string. Truncated and stripped of
+ * UUIDs before it reaches a durable log, one line after we set out to erase one.
+ */
+function safeErrorMessage(error: unknown): string {
+  const raw = error instanceof Error ? error.message : 'unknown';
+  return raw
+    .slice(0, 200)
+    .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '<uuid>');
+}
+
+/**
+ * The missing-secret error is logged ONCE per cold start.
+ *
+ * Without this, every anonymous request to an unmetered public endpoint writes
+ * a log line while the misconfiguration lasts — a scanner hammering the path
+ * would fill the Vercel log for free. The head comment claims the 401 bounds
+ * the cost to CPU; that claim is only true if it also bounds log ingestion.
+ */
+let missingSecretLogged = false;
 
 /**
  * Constant-time comparison that cannot throw.
@@ -59,9 +90,12 @@ export async function GET(request: Request): Promise<NextResponse> {
   // authenticate would look exactly like an attacker being turned away, which
   // is the class of quiet failure this whole step exists to remove.
   if (!expected) {
-    log.error('CRON_SECRET is not configured — the GDPR deletion run cannot authenticate', {
-      route: '/api/cron/gdpr',
-    });
+    if (!missingSecretLogged) {
+      missingSecretLogged = true;
+      log.error('CRON_SECRET is not configured — the GDPR deletion run cannot authenticate', {
+        route: '/api/cron/gdpr',
+      });
+    }
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
@@ -77,9 +111,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   try {
     claimed = await claimPendingDeletions(BATCH_SIZE);
   } catch (error) {
-    log.error('Failed to claim pending deletions', {
-      error_message: error instanceof Error ? error.message : 'unknown',
-    });
+    log.error('Failed to claim pending deletions', { error_message: safeErrorMessage(error) });
     return NextResponse.json({ error: 'claim_failed' }, { status: 500 });
   }
 
@@ -102,7 +134,7 @@ export async function GET(request: Request): Promise<NextResponse> {
       // after we set out to remove it.
       log.error('Account erasure failed', {
         request_id: request_.requestId,
-        error_message: error instanceof Error ? error.message : 'unknown',
+        error_message: safeErrorMessage(error),
       });
     }
   }
@@ -113,9 +145,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   } catch (error) {
     // Retention is not the reason this run exists. A purge failure is reported
     // and swallowed rather than allowed to mask a successful erasure batch.
-    log.error('Audit log retention purge failed', {
-      error_message: error instanceof Error ? error.message : 'unknown',
-    });
+    log.error('Audit log retention purge failed', { error_message: safeErrorMessage(error) });
   }
 
   // The cap does not exist to limit work — it exists to make visible the day 25

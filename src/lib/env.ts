@@ -22,7 +22,20 @@ const serverSchema = z
     // `.github/workflows/` — a banned action in a feature PR. The refusal lives
     // in the route instead, which returns 401 when this is unset AND emits a
     // `log.error` so a misconfiguration screams while a wrong token stays mute.
-    CRON_SECRET: z.string().min(32).optional(),
+    // `.trim()` is not cosmetic, and `.regex()` catches the cause at the source.
+    // `openssl rand -base64 32` — the command written in `.env.example` — emits
+    // a TRAILING NEWLINE, and a `vercel env add` fed by a pipe keeps it. The
+    // fetch spec TRIMS a received header value, so the incoming token would be
+    // clean while the expected one carried `\n`: `expected !== provided`
+    // FOREVER, one 401 per night, no alert, and the right to erasure silently
+    // unexecuted. Exactly the defect this route exists to remove, reintroduced
+    // by a whitespace character.
+    CRON_SECRET: z
+      .string()
+      .trim()
+      .min(32)
+      .regex(/^\S+$/, 'CRON_SECRET must not contain whitespace')
+      .optional(),
     ANKORA_PLAYGROUND_ENABLED: z.enum(['true', 'false']).default('false').optional(),
     // Comma-separated list of Supabase user IDs allowed in /admin/* routes.
     // PR-D4-PHASE2-B initial: contains @thierry's user_id only. Future PRs
