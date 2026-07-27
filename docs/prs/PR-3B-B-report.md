@@ -9,6 +9,19 @@
 
 ---
 
+> ## ⛔ Ce merge est sûr — la pose du secret ne l'est pas encore
+>
+> **Merger cette PR n'arme rien** : sans `CRON_SECRET` dans Vercel, la route répond 401 et
+> rien n'est supprimé. C'est la **pose du secret** qui arme, et elle est bloquée par
+> [#285](https://github.com/thierryvm/ankora/issues/285) (blocage de tête de file) et par
+> deux lectures production — la **n° 5** ci-dessous, et la **n° 4** (privilèges des
+> 9 fonctions sur l'hébergé), transmise le 27 juillet et non revenue.
+>
+> Ordre verrouillé : merge → amendement ADR-024 + correctif #285 → les deux lectures →
+> **alors seulement** poser le secret → **redéployer** → `vercel crons ls` → run manuel file
+> vide. La dernière étape est **indivisible** : les variables Vercel sont figées dans un
+> déploiement, poser sans redéployer donne un 401 quotidien silencieux.
+
 ## 1. Ce que ce merge rend possible
 
 `src/app/api/cron/gdpr/route.ts` devient le **seul appelant de `executeDeletion`** dans
@@ -221,9 +234,28 @@ Pendant ce temps l'écran affiche « La suppression de ton compte a commencé. E
 plus être annulée », **et le bouton d'annulation est retiré pour ce statut**. La personne
 est enfermée entre les deux issues, définitivement, et l'app le lui dit avec aplomb.
 
-Correctif : colonne `attempts` + `last_error_code`, incrémentée à chaque échec, avec un
-seuil de mise en quarantaine. C'est une **migration**, donc un élargissement de scope en
-cours de PR — banni sans nouveau plan écrit. Ouvert comme suite immédiate.
+**→ Issue [#285](https://github.com/thierryvm/ankora/issues/285), qui porte l'interdit :
+NE PAS poser `CRON_SECRET` en production tant que ce n'est pas corrigé.**
+
+Une issue plutôt qu'un paragraphe, et la raison mérite d'être écrite : poser le secret est
+une action **manuelle**, faisable n'importe quel jour, éventuellement dans trois semaines,
+éventuellement par une session qui n'aura pas lu ce rapport. **Un piège qui ne vit que dans
+une conversation est un piège armé.** C'est la même règle que #278.
+
+### Le préalable que je n'avais pas vu, relevé par @thierry
+
+La reprise fait `set status = 'pending', claimed_at = null`. **Elle efface la seule trace
+qu'une tentative a eu lieu.**
+
+Même **avant** d'ajouter un compteur, on ne peut donc déjà plus distinguer une ligne jamais
+tentée d'une ligne tentée trois cents fois. Quelle que soit la conception retenue, **elle
+doit cesser d'effacer** — c'est le préalable, pas un détail d'implémentation. J'avais lu ce
+`claimed_at = null` comme une remise à zéro propre ; c'est aussi une destruction de preuve.
+
+Correctif : arrêter d'effacer, puis `attempts` + `last_error_code`, puis un seuil de
+quarantaine, puis l'honnêteté de l'écran dans cet état. C'est une **migration** : doctrine
+projet — amendement d'ADR-024 en session N, exécution en session N+1. Le temps existe,
+puisque rien n'est armé.
 
 **F5 — `capped` détecte une rafale, jamais une stagnation.** Trois demandes en souffrance
 depuis 40 jours → `capped: false` tout du long. Le nombre qui manque est
