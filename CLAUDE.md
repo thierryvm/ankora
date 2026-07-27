@@ -161,12 +161,16 @@ ininterprétable au premier conflit, donc ignoré :
 | Job                              | Plancher au 27 juillet 2026                                 |
 | -------------------------------- | ----------------------------------------------------------- |
 | `Playwright E2E`                 | 215 passed (214 avant, +1 spec locale réactivée)            |
-| `Playwright E2E (authenticated)` | **30 passed** (25 avant, +5 `gdpr-deletion-queue`, PR-3B-A) |
+| `Playwright E2E (authenticated)` | **31 passed** (25 avant, +6 `gdpr-deletion-queue`, PR-3B-A) |
 
 Le relèvement du 27 juillet est mesuré, pas déduit : `gdpr-deletion-queue.spec.ts`
 n'apparaît que dans **un** des deux projets du job authentifié (`iPhone 14` filtre sur
-`**/mobile-ios/**`), d'où +5 et non +10. Dans le job public elle ajoute **15 sautés et
-0 passé** — 5 cas × 3 projets — donc le plancher public ne bouge pas.
+`**/mobile-ios/**`), d'où +6 et non +12. Dans le job public elle ajoute **18 sautés et
+0 passé** — 6 cas × 3 projets — donc le plancher public ne bouge pas.
+
+Le chiffre est passé de 30 à 31 en cours de PR : `test-quality-auditor` a montré que les
+trois corrections UI n'avaient aucun test, et le sixième cas les couvre. Un plancher qui
+monte parce qu'un trou a été trouvé est le seul mouvement sain de ce tableau.
 
 Chaque relèvement est **mesuré en local avant le premier push**, jamais estimé.
 Une spec authentifiée ajoutée sous `e2e/` est aussi découverte par le job public :

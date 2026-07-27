@@ -179,19 +179,31 @@ test.describe('GDPR deletion queue (ADR-024)', () => {
       ]);
       if (error) throw new Error(`seed requests: ${error.message}`);
 
-      const first = await claimPendingDeletionsWith(admin, 25);
-      const claimed = first.map((c) => c.userId).sort();
+      // `claim_pending_deletions` is GLOBAL by design — it takes every due row
+      // in the table, not this test's. So assertions are scoped to the four
+      // users seeded here rather than to the whole result set: on an ephemeral
+      // CI database the two are identical, but on a developer's local stack any
+      // leftover row would make an exact-equality assertion fail for a reason
+      // that has nothing to do with the behaviour under test. Measured: it did.
+      const mine = new Set(everyone.map((u) => u.userId));
+      const scoped = (rows: Array<{ userId: string }>) =>
+        rows
+          .map((r) => r.userId)
+          .filter((id) => mine.has(id))
+          .sort();
+
+      const first = await claimPendingDeletionsWith(admin, 100);
 
       // The row stranded for two hours comes back; the one claimed five minutes
       // ago does NOT — a live run must never have its batch stolen. This is the
       // pair of assertions that the `requested_at` version of the guard passed
-      // vacuously, because a row is only due 14 days after being requested, so
-      // that test was always true and re-queued everything.
-      expect(claimed).toEqual([due.userId, stuckOld.userId].sort());
+      // vacuously, because a row is only due a whole grace period after being
+      // requested, so that test was always true and re-queued everything.
+      expect(scoped(first)).toEqual([due.userId, stuckOld.userId].sort());
 
       // Immediately again: everything due is now `processing` with a fresh
       // `claimed_at`, so there is nothing left to take.
-      await expect(claimPendingDeletionsWith(admin, 25)).resolves.toEqual([]);
+      expect(scoped(await claimPendingDeletionsWith(admin, 100))).toEqual([]);
 
       const { data: notDueRow } = await admin
         .from('deletion_requests')
@@ -226,6 +238,64 @@ test.describe('GDPR deletion queue (ADR-024)', () => {
     }
   });
 
+  /**
+   * The three UI fixes of this PR had NO test — not unit, not end-to-end. A
+   * revert of any of the three would have passed CI in silence, and each one is
+   * an art. 12(1) defect: telling someone something false about an irreversible
+   * act. Found by `test-quality-auditor`, closed here.
+   *
+   * They are covered together because they are one journey: during `processing`
+   * the settings page must keep pointing at the status screen, and the status
+   * screen must not announce a completed erasure.
+   */
+  test('during processing, the UI keeps the status reachable and stops promising a cancellation', async ({
+    page,
+  }) => {
+    if (!admin) return;
+
+    const user = await seedOnboardedUser(admin);
+    try {
+      const { error } = await admin.from('deletion_requests').insert({
+        user_id: user.userId,
+        scheduled_for: isoIn(-1),
+        status: 'processing',
+        claimed_at: new Date().toISOString(),
+      });
+      if (error) throw new Error(`seed processing request: ${error.message}`);
+
+      await page.goto('/login');
+      await page.getByLabel('Email').fill(user.email);
+      await page.getByLabel('Mot de passe').fill(user.password);
+      await page.getByRole('button', { name: /^se connecter$/i }).click();
+      await page.waitForURL(/\/app\b/, { timeout: 15_000 });
+
+      // `settings/page.tsx` filtered on `status='pending'` alone, so `deletion`
+      // was null during `processing`: the danger zone fell back to the REQUEST
+      // FORM and dropped the only link to the status screen — exactly when the
+      // erasure had become irreversible.
+      await page.goto('/app/settings');
+      const viewStatus = page.getByRole('link', { name: /voir le statut/i });
+      await expect(viewStatus).toBeVisible();
+      // The request form must NOT be back.
+      await expect(page.getByLabel(/raison/i)).toHaveCount(0);
+      // And the copy must not still promise a cancellation.
+      await expect(page.getByText(/annuler à tout moment/i)).toHaveCount(0);
+
+      await viewStatus.click();
+      await page.waitForURL(/deletion-status/);
+
+      // `processing` used to fall through to the `completed` branch — an
+      // erasure in flight announced as already done, in red.
+      await expect(page.getByText('En cours', { exact: true })).toBeVisible();
+      await expect(page.getByText('Complétée', { exact: true })).toHaveCount(0);
+      // No cancel affordance: a run owns the row and GoTrue may already have
+      // been called.
+      await expect(page.getByRole('button', { name: /annuler la suppression/i })).toHaveCount(0);
+    } finally {
+      await deleteSeededUser(admin, user.userId);
+    }
+  });
+
   test('an authenticated JWT cannot create a request, nor move one to processing', async () => {
     if (!admin) return;
     test.skip(!ANON_KEY, 'Needs NEXT_PUBLIC_SUPABASE_ANON_KEY to build a client-role session.');
@@ -250,6 +320,13 @@ test.describe('GDPR deletion queue (ADR-024)', () => {
         .from('deletion_requests')
         .insert({ user_id: user.userId, scheduled_for: isoIn(-1), status: 'pending' });
       expect(insertError).not.toBeNull();
+
+      // `20260727000002` — EXECUTE revoked from anon AND authenticated.
+      // `revoke … from public` alone left Supabase's default grants in place,
+      // and a future migration re-adding one would otherwise pass CI in
+      // silence. This is the same class of mistake `20260727000001` made.
+      const { error: rpcError } = await asUser.rpc('claim_pending_deletions', { batch_size: 1 });
+      expect(rpcError?.code).toBe('42501');
 
       const { error: seedError } = await admin
         .from('deletion_requests')

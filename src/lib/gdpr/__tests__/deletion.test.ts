@@ -199,6 +199,19 @@ describe('requestDeletion', () => {
     expect(calls).toEqual(['insert:deletion_requests', 'select:deletion_requests']);
   });
 
+  it('still throws when the conflicting request cannot be found afterwards', async () => {
+    // Narrow race: the insert conflicts, but by the time we look the row is
+    // gone (cancelled, or cascaded away with the account). Inventing a date
+    // here would state a deadline nothing will honour, so the caller is told
+    // the request failed.
+    program('insert:deletion_requests', {
+      error: { code: '23505', message: 'duplicate key value violates unique constraint' },
+    });
+    program('select:deletion_requests', { data: null, error: null });
+
+    await expect(requestDeletion(USER_ID)).rejects.toThrow(/schedule deletion/i);
+  });
+
   it('leaves the audit line to its caller, which has the IP and user agent', async () => {
     await requestDeletion(USER_ID);
 

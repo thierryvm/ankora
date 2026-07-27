@@ -35,6 +35,7 @@ type Scripted = {
 
 const calls: string[] = [];
 let updateOptions: unknown;
+let updateValues: unknown;
 let eqFilter: { column: string; value: unknown } | undefined;
 
 function makeClient(scripted: Scripted): DeletionClient {
@@ -49,8 +50,9 @@ function makeClient(scripted: Scripted): DeletionClient {
 
   const client = {
     from: (table: string) => ({
-      update: (_values: unknown, options?: unknown) => {
+      update: (values: unknown, options?: unknown) => {
         calls.push(`update:${table}`);
+        updateValues = values;
         updateOptions = options;
         return updateChain;
       },
@@ -74,6 +76,7 @@ function makeClient(scripted: Scripted): DeletionClient {
 beforeEach(() => {
   calls.length = 0;
   updateOptions = undefined;
+  updateValues = undefined;
   eqFilter = undefined;
 });
 
@@ -87,6 +90,20 @@ describe('pseudonymiseAuditLog', () => {
     // never state how many rows an erasure actually touched.
     expect(updateOptions).toEqual({ count: 'exact' });
     expect(eqFilter).toEqual({ column: 'user_id', value: USER_ID });
+  });
+
+  it('clears the IP and the user agent, not just the user id', async () => {
+    const client = makeClient({ update: { error: null, count: 1 } });
+
+    await pseudonymiseAuditLog(client, USER_ID);
+
+    // `user_id` alone would be worthless: `on delete set null` clears it as a
+    // side effect of the cascade. The IP and the user agent are cleared by
+    // NOTHING else — dropping either from this payload would leave personal
+    // data behind while every other assertion stayed green. Until now that
+    // regression was caught only by the real-Supabase job, not by the unit
+    // suite that runs on every push.
+    expect(updateValues).toEqual({ user_id: null, ip_address: null, user_agent: null });
   });
 
   it('treats zero rows as a success, not as a reason to stop', async () => {

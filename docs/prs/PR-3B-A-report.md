@@ -431,6 +431,59 @@ Le MCP Supabase **ne pouvait pas** servir à cette vérification : interrogé, i
 `goldteam` — le **premier** compte. L'utiliser aurait interrogé la mauvaise base et rendu
 un résultat faux avec l'air d'être vrai.
 
+## 9ter. `test-quality-auditor` — le trou qu'il a trouvé, et qui est fermé
+
+Relancé proprement (interdiction d'écriture explicite ; arbre de travail vérifié intact
+après coup). Verdict **PASS WITH GAPS**. Il a confirmé les deux faiblesses que j'avais
+déjà avouées — M7 et l'aveuglement du test de frontière aux imports dynamiques — et il en
+a trouvé une que je n'avais pas vue.
+
+**Les trois corrections UI de cette PR n'avaient AUCUN test.** Ni unitaire, ni e2e :
+
+- la table `STATUS_PRESENTATION` qui empêche `processing` de s'afficher « Complétée » ;
+- le `.in('status', ['pending','processing'])` de `settings/page.tsx` ;
+- la branche `processing` de `DangerZone`.
+
+Un revert de l'une des trois **passait la CI en silence**. Et ce sont précisément les
+corrections d'un défaut art. 12(1) — dire à quelqu'un quelque chose de faux sur un acte
+irréversible. Le rapport se félicitait de 10 falsifications tout en laissant sans garde la
+correction que le commit lui-même appelle « le trou trouvé par la revue de plan ».
+
+**Fermé** par un sixième cas e2e qui parcourt le trajet complet : connexion réelle,
+`/app/settings` pendant `processing` (le lien « Voir le statut » est présent, le formulaire
+de demande absent, la promesse « annuler à tout moment » absente), puis l'écran de statut
+(« En cours » visible, « Complétée » absent, aucun bouton d'annulation).
+
+**Falsifié** — mutation `.in(…)` → `.eq('status','pending')` :
+
+```
+Error: element(s) not found
+> 278 |  await expect(viewStatus).toBeVisible();
+1 failed, 5 passed        (restauré : 6 passed)
+```
+
+Deux autres trous fermés dans la foulée :
+
+- **Le durcissement des grants n'avait aucun test.** Une future migration réaccordant
+  `execute … to anon` serait passée en silence — exactement la faute que
+  `20260727000001` avait commise. Le client `anon` déjà construit dans la spec appelle
+  maintenant la fonction et exige `42501`. Falsifié en réaccordant le grant en base :
+  `Expected "42501"`, 1 failed → grant révoqué → 6 passed.
+- **La charge utile de la pseudonymisation n'était jamais vérifiée en unitaire** : le faux
+  client jetait `_values`. Retirer `ip_address: null` ne laissait rouge que le job
+  Supabase réel, pas la suite qui tourne à chaque push. Assertion ajoutée.
+
+Plus un cas pour la branche `23505` sans ligne retrouvée, et une correction de fragilité
+que le test a lui-même révélée : `claim_pending_deletions` étant **globale**, l'assertion
+d'égalité exacte échouait sur une base locale portant des lignes dues d'autres essais. Les
+assertions sont désormais **scopées aux utilisateurs semés** par le test — identique sur
+une base éphémère de CI, robuste ailleurs.
+
+**Ce qui reste ouvert, et que je ne corrige pas ici** : le test de frontière de module ne
+détecte pas un import dynamique. Le prouver a coûté un incident (§10) ; le corriger demande
+d'analyser le graphe d'imports plutôt que le texte, ce qui dépasse cette PR. Nommé, pas
+réparé.
+
 ## 10. Un incident de process, à consigner
 
 `test-quality-auditor`, qui dispose de Bash, a injecté un import dynamique de
