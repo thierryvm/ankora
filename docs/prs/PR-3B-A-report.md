@@ -68,6 +68,31 @@ supabase migration list      → local 20260727000001 = remote 20260727000001
 **Lignes affectées par le collapse défensif des doublons : 0**, conformément à la lecture
 n° 2. Aucune demande d'effacement n'a été annulée par cette migration.
 
+### Le comportement de la production a changé au PUSH, pas au MERGE
+
+À écrire noir sur blanc, parce que l'historique Git ne le dira pas : la production porte
+les deux migrations **alors que `main` n'a pas encore le code**. Depuis le `db push` et
+indépendamment de tout merge :
+
+- **`deletion_self_insert` est SUPPRIMÉE en production.** Un client ne peut plus insérer
+  de ligne dans `deletion_requests`, même pour lui-même.
+- **`deletion_self_update` y est déjà resserrée** : seule transition possible
+  `pending → cancelled`.
+- `claim_pending_deletions` existe, EXECUTE fermé à `anon` et `authenticated`.
+- `purge_audit_log_older_than_12_months()` est passée en `SECURITY INVOKER`.
+
+**Pourquoi c'est sûr, et pourquoi ce n'est pas une supposition** : `deletion_requests`
+n'est écrit qu'en **un seul endroit** du code — `src/lib/gdpr/deletion.ts`, via
+`createServiceRoleClient()`, qui contourne la RLS. **Aucune insertion client n'existe**
+dans le produit. La politique retirée accordait une capacité que rien n'utilisait.
+
+**Si cette PR n'était finalement pas mergée**, la migration **reste** : un revert de PR sur
+GitHub ne défait pas un `db push`. Elle est additive (colonne, statut, index, deux
+fonctions) et ses deux politiques sont **plus restrictives** qu'avant, donc un retour en
+arrière du code ne casse rien — le code ne s'appuyait déjà pas sur ce qui a été retiré, et
+la contrainte `check` élargie accepte l'ancien jeu de valeurs. Sans danger, mais présent :
+revenir en arrière pour de bon demanderait une migration inverse écrite exprès.
+
 Validée d'abord contre la pile Supabase **locale** (`supabase_db_ankora`), où les
 17 instructions passent et le collapse rend `UPDATE 0`. Le local a servi de banc d'essai
 pour tout ce qui suit — la production n'a reçu que la migration, jamais un test.
@@ -569,6 +594,28 @@ L'agent est allé plus loin que ma mesure. `aclexplode` sur `is_workspace_member
 disparu — **et `anon` hérite quand même, par `PUBLIC`**. La migration de mai **n'a rien
 changé**. C'est l'advisor 0028, et c'est exactement la leçon que `...000002` applique
 correctement à la fonction neuve en nommant `public, anon, authenticated`.
+
+### Les deux révocations mesurées avant d'être proposées
+
+@thierry a refusé qu'une PR d'hygiène parte sur de la documentation. `touch_updated_at()`
+est une **fonction de trigger branchée sur 6 tables** (`accounts`, `charges`,
+`commitments`, `users`, `workspace_settings`, `workspaces`) : la révoquer à l'aveugle
+aurait pu casser **chaque écriture de l'application**. Mesuré en trois temps sur la pile
+locale, en rôle `authenticated` avec claims JWT :
+
+```
+updated_at remis à 2020-01-01, UPDATE  →  2026-07-27 17:02:40.346726   (avant revoke)
+revoke execute … from public, anon, authenticated
+updated_at remis à 2020-01-01, UPDATE  →  2026-07-27 17:02:40.368922   (APRÈS revoke)
+```
+
+**`updated_at` bouge toujours.** Le privilège `EXECUTE` d'une fonction de trigger est
+vérifié **à la création du trigger**, pas à chaque déclenchement. Le `revoke` ne casse
+rien. _(Grant local restauré après la mesure, pour rester aligné sur la production.)_
+
+`assert_rls_coverage()` : **aucun appelant** dans le dépôt. Le commentaire « Callable from
+CI » de `20260417000002:36` décrit une intention jamais réalisée. Révocable pour les deux
+rôles.
 
 **Correctif de la PR dédiée** — noter le `public` dans chaque `revoke`, sans quoi elle
 répétera la faute de mai :
