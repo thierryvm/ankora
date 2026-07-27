@@ -99,11 +99,14 @@ Les titres de section du cockpit ne portent donc aucun rôle `heading` — défa
 sur la page la plus importante de l'app, et cause de trois des six specs
 quarantinées. Primitive partagée : PR dédiée + `ui-auditor`.
 
-### Angle mort du préflight comptes
+### ~~Angle mort du préflight comptes~~ — comblé le 27 juillet 2026 (#276)
 
-`npm run preflight` valide le fichier de lien Supabase, pas le compte que le CLI
-utilise réellement. Infrastructure de garde-fous → PR dédiée, jamais dans une PR de
-feature.
+`npm run preflight` lisait deux fichiers sur disque et appelait ça un compte vérifié ; un
+fichier de lien peut nommer le bon projet pendant que la CLI est authentifiée ailleurs. Il
+interroge désormais chaque CLI sur ce qu'elle **voit réellement** : Supabase doit renvoyer
+`ankora-prod` marqué `linked`, et `vercel whoami` doit renvoyer `thierryvm`. Les deux sont
+des appels réseau, tous deux sautés sous `--local` pour que le hook de pre-commit reste
+hors ligne.
 
 ---
 
