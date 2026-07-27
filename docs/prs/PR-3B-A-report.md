@@ -190,10 +190,16 @@ d'autres lignes dues.
 | `Playwright E2E`                 | 215 passed | **215 passed** (inchangé) | +15 **sautés**, +0 passé — 5 cas × 3 projets |
 | `Playwright E2E (authenticated)` | 25 passed  | **30 passed**             | +5, dans **un** seul projet                  |
 
-Le plancher authentifié a été obtenu **deux fois, indépendamment** : mesuré en local avant
-le premier push, puis relevé dans le log du job CI —
-`gh api repos/thierryvm/ankora/actions/jobs/89996571728/logs` → `30 passed (1.7m)`.
-Ce n'est donc pas une estimation confirmée après coup.
+Les deux planchers ont été obtenus **deux fois, indépendamment** : mesurés en local avant
+le premier push, puis relevés dans les logs des jobs CI.
+
+```
+job 89996571728 (authenticated) →  30 passed (1.7m)
+job 89996571710 (public)        →  215 passed (6.5m)  ·  190 skipped
+```
+
+Le public passe de 175 à 190 sautés — les 15 attendus (5 cas × 3 projets), et pas un de
+plus. Ce ne sont donc pas des estimations confirmées après coup.
 
 Le +5 et non +10 est mesuré, pas déduit : le job authentifié lance deux projets, mais
 `iPhone 14` porte `testMatch: '**/mobile-ios/**'`, donc n'atteint pas cette spec.
@@ -379,13 +385,19 @@ risque que je connaissais et que j'ai quand même pris.
 
 ## 11. Definition of DONE
 
-| #   | Critère                                   | État                          |
-| --- | ----------------------------------------- | ----------------------------- |
-| 1   | 4 checks obligatoires verts               | _à compléter au dernier push_ |
-| 2   | Sourcery silencieux sur le dernier commit | **⚠️ voir ci-dessous**        |
-| 3   | Reviews humaines résolues                 | —                             |
-| 4   | `mergeStateStatus: CLEAN`                 | _à vérifier_                  |
-| 5   | Rapport livré                             | ce document                   |
+| #   | Critère                                   | État                                                         |
+| --- | ----------------------------------------- | ------------------------------------------------------------ |
+| 1   | 4 checks obligatoires verts               | verts sur `312e441` — **à revérifier sur le dernier commit** |
+| 2   | Sourcery silencieux sur le dernier commit | **⚠️ non relu — voir ci-dessous**                            |
+| 3   | Reviews humaines résolues                 | —                                                            |
+| 4   | `mergeStateStatus: CLEAN`                 | _à vérifier au dernier push_                                 |
+| 5   | Rapport livré                             | ce document                                                  |
+
+Critère 1 sur `312e441` : `Lint + Typecheck + Unit Tests` ✅, `Security audit` ✅,
+`Playwright E2E` ✅ (215 passed / 190 skipped), `Playwright E2E (authenticated)` ✅
+(30 passed). Les commits suivants (`43b8ec8`, `2a2d032`, `0cb0857`) ont relancé la CI —
+**cette PR n'est pas DONE tant que ces quatre checks ne sont pas verts sur le dernier
+commit**, et le dire maintenant vaut mieux que de laisser croire l'inverse.
 
 ### Critère 2 — un plafond atteint n'est pas un silence approbateur
 
