@@ -19,8 +19,31 @@ reste intégralement dans git (`git log -- docs/ROADMAP.md`).
 | ----- | -------------------------------------------------------------------------------- | --------------- |
 | 1     | Dépenses — affordance d'édition, suppression confirmée, 3 bugs de date/frontière | ✅ #270         |
 | 2     | Filet e2e réel en CI — les parcours connectés s'exécutent enfin                  | ✅ #271         |
-| 3     | **RGPD P0 — la suppression de compte doit réellement supprimer**                 | ⏳ **suivante** |
+| 3     | **RGPD P0 — la suppression de compte doit réellement supprimer**                 | 🔄 **en cours** |
 | 4-17  | cf. spec                                                                         | 📋              |
+
+### Étape 3 — détail (27 juillet 2026)
+
+L'exécution des spécifications a révélé que le préalable n'était pas la file de
+suppression, mais **ce sur quoi elle repose** : le journal d'audit n'enregistrait rien
+depuis avril, et trois affirmations publiques étaient inexactes.
+
+| Lot                                                                                   | État                                                                             |
+| ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Le client `service_role` fuitait la session utilisateur (H3, #192)                    | ✅ #273                                                                          |
+| Trois affirmations publiques inexactes (export « complet », base légale)              | ✅ #274                                                                          |
+| ADR-023 — délai de grâce 30 → 14 jours (art. 12(3))                                   | ✅ #275                                                                          |
+| Préflight : vérifier les comptes **actifs** Supabase/Vercel, pas les fichiers de lien | ✅ #276                                                                          |
+| Agents QA : `silent-failure-auditor` + 3 agents corrigés                              | ✅ #277                                                                          |
+| ADR-024 — conception de la file (reprise plutôt qu'atomicité) + plan d'exécution      | ✅ #279                                                                          |
+| **PR-A** — la file, inerte : migration, orchestration extraite, UI, i18n, tests       | ⏳ **suivante**                                                                  |
+| **PR-B** — l'armement : route de cron, `CRON_SECRET`, 30 → 14 jours appliqué          | 📋 après PR-A                                                                    |
+| `auth.audit_log_entries` garde l'email et l'IP après effacement (art. 17)             | 📋 [#278](https://github.com/thierryvm/ankora/issues/278) — ADR + session dédiés |
+
+**Verrou** : PR-B est bloquée tant que les trois lectures production du plan
+([`docs/plans/step-3b-deletion-queue.md`](./plans/step-3b-deletion-queue.md)) ne sont pas
+revenues. La troisième est un NO-GO : toute la conception repose sur un chemin PostgREST
+`service_role` jamais re-vérifié en production depuis #273.
 
 ### Vision produit
 
