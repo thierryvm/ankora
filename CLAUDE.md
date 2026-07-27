@@ -34,7 +34,7 @@ Admin panel obligatoire : santé technique, santé produit, acquisition, recomma
 
 Tout dashboard minimaliste = refus de merge.
 
-### Agents QA (16 au total)
+### Agents QA (17 au total)
 
 Existants : `security-auditor`, `rls-flow-tester`, `financial-formula-validator`, `ui-auditor`, `lighthouse-auditor`, `seo-geo-auditor`, `gdpr-compliance-auditor`, `test-runner`, `i18n-auditor`.
 
@@ -45,6 +45,8 @@ Mobile Recovery Day (4 mai 2026) : `mobile-ios-auditor` — focus iPhone Safari 
 LLM Security (ajouté 16 mai 2026) : `llm-security-auditor` — audit sécurité IA avancé OWASP LLM Top 10 + vecteurs 2026 (RAG poisoning, indirect injection, agent hijacking, supply chain LLM, model extraction, sycophancy abuse, multi-turn drift, encoding bypass). Modèle Opus. Complémentaire de `security-auditor` (couche app classique).
 
 Diagnostic & qualité (ajoutés 25 juil. 2026) : `prod-bug-investigator` — établit la cause racine d'un bug prod **par la preuve** avant tout correctif (chaque affirmation étiquetée MEASURED / READ IN CODE / INFERRED / UNVERIFIED). Modèle Opus. `test-quality-auditor` — juge si les tests **prouvent** le comportement : specs désactivées en silence, assertions qui ne peuvent pas échouer, fix sans test de non-régression. Modèle Sonnet. Complémentaire de `test-runner` (qui exécute, sans juger).
+
+Mécanismes muets (ajouté 27 juil. 2026) : `silent-failure-auditor` — le seul agent qui demande non pas « est-ce présent ? » mais « est-ce que ça marche, et le saurait-on si ça s'arrêtait ? ». Né de trois incidents de la même famille : écritures d'audit refusées trois mois en silence (H3), fonction de purge `SECURITY DEFINER` sur table `FORCE RLS` jamais appelée depuis avril, job e2e vert avec 173 specs sautées. Modèle Opus. Complémentaire de `security-auditor` (présence des garde-fous) et `test-quality-auditor` (valeur des tests).
 
 Refonte UX (ajouté 24 juil. 2026) : `mobile-liquid-glass-auditor` — garant du contrat « Liquid Glass » : contraste WCAG AA dans l'état glass ET le fallback opaque, `prefers-reduced-transparency`/`reduced-motion`, anti-stacking/perf backdrop-filter, CSP-safe, quirks WebKit. Modèle Sonnet. Complémentaire de `mobile-ios-auditor` (WebKit général) et `ui-auditor` (WCAG générique). Cf. spec `docs/superpowers/specs/2026-07-24-ankora-refonte-ux-program-design.md`.
 
@@ -99,7 +101,7 @@ src/
 supabase/
   migrations/          # schéma + RLS + triggers
 .claude/
-  agents/              # 16 QA agents (security, rls, financial, ui, lighthouse, seo-geo, gdpr, test-runner, test-quality, dashboard-ux, admin-dashboard, i18n, mobile-ios, llm-security, mobile-liquid-glass, prod-bug-investigator)
+  agents/              # 17 QA agents (security, rls, financial, ui, lighthouse, seo-geo, gdpr, test-runner, test-quality, dashboard-ux, admin-dashboard, i18n, mobile-ios, llm-security, mobile-liquid-glass, prod-bug-investigator, silent-failure)
 ```
 
 ## Règles de code
@@ -368,7 +370,8 @@ Cet ordre est **verrouillé**. Si une PR émerge hors-plan (ex: hotfix sécurit�
 > **Source de vérité** : `.claude/agents/<name>.md` est canonique. Cette liste et la table `docs/ROADMAP.md` sont des résumés. En cas de conflit, le fichier agent prévaut. Pour ajouter/modifier un agent : éditer d'abord le fichier agent, puis répercuter ici + ROADMAP.
 
 - **security-auditor** : avant merge de toute PR touchant auth / middleware / RLS / headers
-- **rls-flow-tester** : après toute migration ou changement RLS
+- **rls-flow-tester** : après toute migration ou changement RLS. Vérifie **les deux sens** — qu'un tiers ne passe pas, et que le chemin privilégié (service_role, `SECURITY DEFINER`) n'est pas refusé en silence par `FORCE RLS` ou un grant manquant. Rapporte des **nombres de lignes**, pas « aucune erreur »
+- **silent-failure-auditor** : dès qu'un mécanisme est censé protéger, enregistrer, prouver ou nettoyer — journal d'audit, écriture privilégiée, cron/tâche de fond, gate CI, purge de rétention, file d'attente, alerte. Question unique : « si ça s'arrêtait cette nuit, qu'est-ce qui serait différent demain matin ? ». Classe les constats par **durée d'invisibilité**, pas par gravité. Modèle : Opus.
 - **financial-formula-validator** : après tout changement dans `src/lib/domain/`
 - **ui-auditor** : après toute modification UI (audit générique mobile-first WCAG 2.2 AA, viewport Chromium)
 - **mobile-ios-auditor** : après modification layout / nav / forms / dashboard mobile / theme toggle / drawer — audit Safari iOS WebKit spécifique (safe-area, ITP, `100vh`, auto-zoom inputs, focus rings emerald). Complémentaire de `ui-auditor`. Procédure manuelle : `docs/runbooks/dev-on-iphone.md`.
