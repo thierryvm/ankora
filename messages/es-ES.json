@@ -356,7 +356,7 @@
       },
       "deletion": {
         "q": "¿Puedo eliminar mi cuenta?",
-        "a": "Sí, en cualquier momento desde Ajustes → Privacidad. La eliminación se hace efectiva 30 días después de tu solicitud (puedes cancelar durante ese periodo). Todos tus datos financieros se borran, los logs de seguridad se seudonimizan."
+        "a": "Sí, en cualquier momento desde Ajustes → Privacidad. La eliminación se hace efectiva 14 días después de tu solicitud (puedes cancelar durante ese periodo). Todos tus datos financieros se borran, los logs de seguridad se seudonimizan."
       },
       "export": {
         "q": "¿Puedo exportar mis datos?",
@@ -420,7 +420,7 @@
       },
       "s7": {
         "heading": "7. Resolución",
-        "body": "Puedes eliminar tu cuenta en cualquier momento desde Ajustes → Privacidad. La eliminación es efectiva 30 días tras la solicitud (periodo cancelable)."
+        "body": "Puedes eliminar tu cuenta en cualquier momento desde Ajustes → Privacidad. La eliminación es efectiva 14 días tras la solicitud (periodo cancelable)."
       },
       "s8": {
         "heading": "8. Ley aplicable",
@@ -464,7 +464,7 @@
       "s5": {
         "heading": "5. Plazo de conservación",
         "item1": "Cuenta activa: mientras utilices el servicio.",
-        "item2": "Cuenta eliminada: eliminación efectiva 30 días después de tu solicitud (periodo de gracia cancelable).",
+        "item2": "Cuenta eliminada: eliminación efectiva 14 días después de tu solicitud (periodo de gracia cancelable).",
         "item3": "Logs de seguridad: 12 meses máximo, seudonimizados tras la eliminación de la cuenta."
       },
       "s6": {
@@ -944,13 +944,13 @@
         "scheduledBodyProcessing": "La eliminación de tu cuenta ha comenzado. Ya no se puede cancelar.",
         "viewStatus": "Ver el estado",
         "title": "Zona peligrosa",
-        "description": "Eliminación definitiva de la cuenta. 30 días de gracia para cancelar — después, todo se borra (logs de auditoría seudonimizados).",
+        "description": "Eliminación definitiva de la cuenta. 14 días de gracia para cancelar — después, tus datos financieros se borran y los logs de auditoría se seudonimizan. Algunos registros técnicos de autenticación permanecen.",
         "reasonLabel": "Motivo (opcional)",
         "reasonPlaceholder": "Ayúdanos a mejorar…",
         "confirmLabel": "Para confirmar, escribe tu dirección de e-mail: <code>{email}</code>",
         "submit": "Eliminar mi cuenta",
         "submitting": "Programando…",
-        "toastScheduled": "Eliminación programada — tienes 30 días para cancelar"
+        "toastScheduled": "Eliminación programada — tienes 14 días para cancelar"
       },
       "cookies": {
         "title": "Cookies y privacidad",

@@ -356,7 +356,7 @@
       },
       "deletion": {
         "q": "Kan ik mijn account verwijderen?",
-        "a": "Ja, op elk moment via Instellingen → Privacy. De verwijdering gaat 30 dagen na je aanvraag in (je kunt ze tijdens die periode annuleren). Al je financiële gegevens worden gewist, de beveiligingslogs worden gepseudonimiseerd."
+        "a": "Ja, op elk moment via Instellingen → Privacy. De verwijdering gaat 14 dagen na je aanvraag in (je kunt ze tijdens die periode annuleren). Al je financiële gegevens worden gewist, de beveiligingslogs worden gepseudonimiseerd."
       },
       "export": {
         "q": "Kan ik mijn gegevens exporteren?",
@@ -420,7 +420,7 @@
       },
       "s7": {
         "heading": "7. Beëindiging",
-        "body": "Je kunt je account op elk moment verwijderen via Instellingen → Privacy. De verwijdering wordt 30 dagen na de aanvraag effectief (annuleerbare periode)."
+        "body": "Je kunt je account op elk moment verwijderen via Instellingen → Privacy. De verwijdering wordt 14 dagen na de aanvraag effectief (annuleerbare periode)."
       },
       "s8": {
         "heading": "8. Toepasselijk recht",
@@ -464,7 +464,7 @@
       "s5": {
         "heading": "5. Bewaartermijn",
         "item1": "Actief account: zolang je de dienst gebruikt.",
-        "item2": "Verwijderd account: verwijdering effectief 30 dagen na je aanvraag (annuleerbare grace period).",
+        "item2": "Verwijderd account: verwijdering effectief 14 dagen na je aanvraag (annuleerbare grace period).",
         "item3": "Beveiligingslogs: maximum 12 maanden, gepseudonimiseerd na accountverwijdering."
       },
       "s6": {
@@ -944,13 +944,13 @@
         "scheduledBodyProcessing": "Het verwijderen van je account is gestart. Dit kan niet meer worden geannuleerd.",
         "viewStatus": "Status bekijken",
         "title": "Gevarenzone",
-        "description": "Definitieve verwijdering van het account. 30 dagen grace period om te annuleren — daarna wordt alles gewist (audit logs gepseudonimiseerd).",
+        "description": "Definitieve verwijdering van het account. 14 dagen grace period om te annuleren — daarna worden je financiële gegevens gewist en audit logs gepseudonimiseerd. Sommige technische authenticatielogs blijven bestaan.",
         "reasonLabel": "Reden (optioneel)",
         "reasonPlaceholder": "Help ons om te verbeteren…",
         "confirmLabel": "Typ je e-mailadres om te bevestigen: <code>{email}</code>",
         "submit": "Mijn account verwijderen",
         "submitting": "Inplannen…",
-        "toastScheduled": "Verwijdering ingepland — je hebt 30 dagen om te annuleren"
+        "toastScheduled": "Verwijdering ingepland — je hebt 14 dagen om te annuleren"
       },
       "cookies": {
         "title": "Cookies & privacy",

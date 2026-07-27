@@ -356,7 +356,7 @@
       },
       "deletion": {
         "q": "Can I delete my account?",
-        "a": "Yes, at any time from Settings → Privacy. Deletion takes effect 30 days after your request (you can cancel during this period). All your financial data is wiped, security logs are pseudonymised."
+        "a": "Yes, at any time from Settings → Privacy. Deletion takes effect 14 days after your request (you can cancel during this period). All your financial data is wiped, security logs are pseudonymised."
       },
       "export": {
         "q": "Can I export my data?",
@@ -420,7 +420,7 @@
       },
       "s7": {
         "heading": "7. Termination",
-        "body": "You can delete your account at any time from Settings → Privacy. Deletion takes effect 30 days after the request (cancellable during that period)."
+        "body": "You can delete your account at any time from Settings → Privacy. Deletion takes effect 14 days after the request (cancellable during that period)."
       },
       "s8": {
         "heading": "8. Governing law",
@@ -464,7 +464,7 @@
       "s5": {
         "heading": "5. Retention period",
         "item1": "Active account: for as long as you use the service.",
-        "item2": "Deleted account: deletion takes effect 30 days after your request (cancellable grace period).",
+        "item2": "Deleted account: deletion takes effect 14 days after your request (cancellable grace period).",
         "item3": "Security logs: 12 months maximum, pseudonymised after account deletion."
       },
       "s6": {
@@ -944,13 +944,13 @@
         "scheduledBodyProcessing": "Deletion of your account has started. It can no longer be cancelled.",
         "viewStatus": "View status",
         "title": "Danger zone",
-        "description": "Permanent account deletion. 30-day grace period to cancel — after that, everything is wiped (audit logs pseudonymised).",
+        "description": "Permanent account deletion. 14-day grace period to cancel — after that, your financial data is erased and audit logs are pseudonymised. Some technical authentication logs remain.",
         "reasonLabel": "Reason (optional)",
         "reasonPlaceholder": "Help us improve…",
         "confirmLabel": "To confirm, type your email address: <code>{email}</code>",
         "submit": "Delete my account",
         "submitting": "Scheduling…",
-        "toastScheduled": "Deletion scheduled — you have 30 days to cancel"
+        "toastScheduled": "Deletion scheduled — you have 14 days to cancel"
       },
       "cookies": {
         "title": "Cookies & privacy",

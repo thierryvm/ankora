@@ -169,17 +169,20 @@ describe('executeDeletion', () => {
 });
 
 describe('requestDeletion', () => {
-  it('schedules the erasure 30 days out', async () => {
+  it('schedules the erasure 14 days out', async () => {
     const before = Date.now();
     const { scheduledFor } = await requestDeletion(USER_ID);
     const after = Date.now();
 
     expect(calls).toEqual(['insert:deletion_requests']);
 
+    // 14, not 30 (ADR-023): at 30 the erasure landed on the exact edge of the
+    // one-month deadline of art. 12(3), so one failed run put us out of time.
+    // The shortened window ships WITH the executor and never before.
     const scheduled = new Date(scheduledFor).getTime();
-    const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
-    expect(scheduled).toBeGreaterThanOrEqual(before + THIRTY_DAYS);
-    expect(scheduled).toBeLessThanOrEqual(after + THIRTY_DAYS);
+    const FOURTEEN_DAYS = 14 * 24 * 60 * 60 * 1000;
+    expect(scheduled).toBeGreaterThanOrEqual(before + FOURTEEN_DAYS);
+    expect(scheduled).toBeLessThanOrEqual(after + FOURTEEN_DAYS);
   });
 
   it('returns the EXISTING deadline when a request is already in flight', async () => {

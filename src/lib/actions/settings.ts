@@ -186,7 +186,7 @@ export async function exportMyDataAction(): Promise<
 }
 
 // =========================================================================
-// GDPR — Account deletion (30-day grace)
+// GDPR — Account deletion (14-day grace, ADR-023)
 // =========================================================================
 export async function requestAccountDeletionAction(input: unknown): Promise<ActionResult> {
   const { user } = await requireSessionUser();

@@ -82,7 +82,7 @@ Schémas **Zod** — source unique de vérité pour les types de formulaires + v
 
 - `consent.ts` — enregistrement + lecture des consentements granulaires
 - `export.ts` — bundle JSON complet de l'utilisateur
-- `deletion.ts` — demande (grace 30j) + exécution (cascade + pseudonymisation audit)
+- `deletion.ts` — demande (grace 14j) + exécution (cascade + pseudonymisation audit)
 
 ### 6. `src/app/`
 
@@ -117,8 +117,9 @@ Schémas **Zod** — source unique de vérité pour les types de formulaires + v
 > envoyés, une suppression de workspaces retirée depuis, et un statut `completed`
 > inatteignable. Réécrite sur ce que le code fait.
 
-1. `requestDeletion(userId)` → insert dans `deletion_requests`, `scheduled_for = now + 30j`
-   (14j à partir de PR-B, cf. ADR-023). Une demande déjà en vol renvoie l'échéance
+1. `requestDeletion(userId)` → insert dans `deletion_requests`, `scheduled_for = now + 14j`
+   (ADR-023 : 30j tombait au bord exact du délai légal d'un mois de l'art. 12(3) — un run
+   en échec et on était hors délai). Une demande déjà en vol renvoie l'échéance
    **existante** : l'index unique partiel n'en autorise qu'une active par personne.
 2. **Aucun e-mail.** L'application n'en envoie pas (ADR-023 §2) : l'annulation se fait
    depuis `/app/settings/deletion-status`, tant que la demande est `pending`.

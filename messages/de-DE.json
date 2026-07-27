@@ -356,7 +356,7 @@
       },
       "deletion": {
         "q": "Kann ich mein Konto löschen?",
-        "a": "Ja, jederzeit unter Einstellungen → Datenschutz. Die Löschung wird 30 Tage nach deinem Antrag wirksam (du kannst sie in diesem Zeitraum widerrufen). Alle deine Finanzdaten werden gelöscht, die Sicherheitslogs werden pseudonymisiert."
+        "a": "Ja, jederzeit unter Einstellungen → Datenschutz. Die Löschung wird 14 Tage nach deinem Antrag wirksam (du kannst sie in diesem Zeitraum widerrufen). Alle deine Finanzdaten werden gelöscht, die Sicherheitslogs werden pseudonymisiert."
       },
       "export": {
         "q": "Kann ich meine Daten exportieren?",
@@ -420,7 +420,7 @@
       },
       "s7": {
         "heading": "7. Kündigung",
-        "body": "Du kannst dein Konto jederzeit unter Einstellungen → Datenschutz löschen. Die Löschung wird 30 Tage nach dem Antrag wirksam (widerrufbare Frist)."
+        "body": "Du kannst dein Konto jederzeit unter Einstellungen → Datenschutz löschen. Die Löschung wird 14 Tage nach dem Antrag wirksam (widerrufbare Frist)."
       },
       "s8": {
         "heading": "8. Anwendbares Recht",
@@ -464,7 +464,7 @@
       "s5": {
         "heading": "5. Aufbewahrungsdauer",
         "item1": "Aktives Konto: solange du den Dienst nutzt.",
-        "item2": "Gelöschtes Konto: Löschung wirksam 30 Tage nach deinem Antrag (widerrufbare Frist).",
+        "item2": "Gelöschtes Konto: Löschung wirksam 14 Tage nach deinem Antrag (widerrufbare Frist).",
         "item3": "Sicherheitslogs: maximal 12 Monate, nach Kontolöschung pseudonymisiert."
       },
       "s6": {
@@ -944,13 +944,13 @@
         "scheduledBodyProcessing": "Die Löschung deines Kontos hat begonnen. Das lässt sich nicht mehr rückgängig machen.",
         "viewStatus": "Status anzeigen",
         "title": "Gefahrenzone",
-        "description": "Endgültige Löschung des Kontos. 30 Tage Gnadenfrist zum Widerrufen — danach wird alles gelöscht (Audit-Logs pseudonymisiert).",
+        "description": "Endgültige Löschung des Kontos. 14 Tage Gnadenfrist zum Widerrufen — danach werden deine Finanzdaten gelöscht und Audit-Logs pseudonymisiert. Einige technische Authentifizierungsprotokolle bleiben bestehen.",
         "reasonLabel": "Grund (optional)",
         "reasonPlaceholder": "Hilf uns, uns zu verbessern…",
         "confirmLabel": "Tippe zur Bestätigung deine E-Mail-Adresse ein: <code>{email}</code>",
         "submit": "Mein Konto löschen",
         "submitting": "Planen…",
-        "toastScheduled": "Löschung geplant — du hast 30 Tage zum Widerrufen"
+        "toastScheduled": "Löschung geplant — du hast 14 Tage zum Widerrufen"
       },
       "cookies": {
         "title": "Cookies & Datenschutz",
