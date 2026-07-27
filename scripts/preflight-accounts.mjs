@@ -27,6 +27,7 @@ import { fileURLToPath } from 'node:url';
 const EXPECTED = {
   ghLogin: 'thierryvm',
   ghRepo: 'thierryvm/ankora',
+  vercelLogin: 'thierryvm',
   // Référence publique : elle est déjà exposée dans NEXT_PUBLIC_SUPABASE_URL,
   // donc la figer ici n'ajoute aucune fuite.
   supabaseRef: 'fkscfvoouwufyjwnfvhb',
@@ -48,6 +49,48 @@ const LOCAL_ONLY = process.argv.includes('--local');
 
 const results = [];
 const check = (name, ok, detail) => results.push({ name, ok, detail });
+
+// Troisième état, distinct d'un succès comme d'un échec : l'outil que la
+// vérification interroge n'est pas installé, donc l'opération qu'elle protège
+// est de toute façon impossible depuis cette machine. Le compter comme un échec
+// ferait échouer le préflight en permanence chez qui n'a pas la CLI — et un
+// garde-fou qu'on prend l'habitude de contourner ne garde plus rien.
+// Une CLI PRÉSENTE qui répond mal reste un ❌.
+const skip = (name, detail) => results.push({ name, skipped: true, detail });
+
+// Sous Windows, les binaires installés globalement par npm sont des `.cmd`, et
+// Node ≥ 20 refuse de les lancer sans shell (durcissement CVE-2024-27980,
+// erreur `EINVAL`). `gh` et `supabase` sont de vrais exécutables et n'en ont pas
+// besoin ; `vercel` si. On passe donc par le shell UNIQUEMENT sur Windows, avec
+// des arguments codés en dur — aucune entrée utilisateur n'entre ici.
+// Sur Windows la commande complète part en UNE chaîne, sans tableau d'arguments :
+// Node déprécie la combinaison `shell:true` + args (les arguments y sont
+// concaténés sans échappement). Ici tout est littéral, mais un avertissement de
+// dépréciation dans la sortie d'un garde-fou est du bruit — et le bruit est ce
+// qui fait qu'on cesse de lire un garde-fou.
+const runCli = (name, args) => {
+  const onWindows = process.platform === 'win32';
+  const opts = { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] };
+  return onWindows
+    ? execFileSync(`${name}.cmd ${args.join(' ')}`, [], { ...opts, shell: true })
+    : execFileSync(name, args, opts);
+};
+
+// « L'outil est-il installé ? » se décide sur un code de sortie, jamais sur le
+// texte d'une erreur : avec `shell:true`, une commande absente produit un
+// message TRADUIT par le système (« n'est pas reconnu… » sur un Windows
+// français). Une regex anglaise y échouait en silence, et la vérification
+// tombait en ❌ au lieu de se déclarer non applicable.
+const hasBinary = (name) => {
+  try {
+    // `where` et `which` sont de vrais exécutables : pas de shell, et leur code
+    // de sortie ne dépend pas de la langue du système.
+    execFileSync(process.platform === 'win32' ? 'where' : 'which', [name], { stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
+};
 const fingerprint = (value) =>
   createHash('sha256').update(String(value)).digest('hex').slice(0, 12);
 
@@ -55,6 +98,13 @@ const fingerprint = (value) =>
 // Ankora n'a pas de token GitHub dans .env.local : l'accès passe par la CLI
 // `gh`. C'est aussi là qu'est le vrai risque — le compte ACTIF de la CLI, pas
 // un token de service.
+//
+// Asymétrie assumée avec 4bis et 6bis : `gh` absente reste un ❌, là où
+// `supabase` ou `vercel` absentes se déclarent non applicables. La raison tient
+// en une phrase — sans la CLI Supabase on ne peut pas migrer, sans la CLI Vercel
+// on ne peut pas déployer, donc le risque disparaît avec l'outil ; alors que
+// `git push` fonctionne très bien sans `gh`, par un autre assistant
+// d'identifiants. Le risque, lui, reste entier.
 if (LOCAL_ONLY) {
   // Sauté volontairement : seul appel réseau du script.
 } else
@@ -118,6 +168,44 @@ if (existsSync(projectRefPath)) {
   check('Supabase projet lié', false, 'project-ref introuvable (`supabase link` ?)');
 }
 
+// ── 4bis) Compte Supabase réellement utilisé par la CLI ──────────────────────
+// Distinct du 4) : celui-ci lit un FICHIER sur le disque, qui peut désigner le
+// bon projet pendant que la CLI est authentifiée sur un AUTRE compte. Le fichier
+// dirait GO et la commande partirait ailleurs.
+//
+// @thierry a deux comptes Supabase. Le premier porte une organisation nommée
+// « ankora » qui ne contient QUE le projet airsoft ; `ankora-prod` vit sur le
+// second. Le 27 juillet 2026 il a interrogé le mauvais projet depuis le
+// dashboard et lu le schéma d'une autre application — vingt minutes à croire à
+// une dérive de schéma en production.
+//
+// On demande donc à la CLI ce qu'elle voit, avec les identifiants qu'elle
+// utilisera vraiment. Voir le projet attendu ET le voir marqué `linked` est la
+// seule preuve qui vaille.
+if (!LOCAL_ONLY && !hasBinary('supabase')) {
+  skip('Compte Supabase actif', 'CLI `supabase` absente — aucune migration possible d’ici');
+} else if (!LOCAL_ONLY) {
+  try {
+    const raw = runCli('supabase', ['projects', 'list', '-o', 'json']);
+    // La CLI a livré les deux formes selon les versions : un tableau nu avec
+    // `-o json`, un objet `{ projects: [...] }` sans. On accepte les deux.
+    const parsed = JSON.parse(raw);
+    const projects = Array.isArray(parsed) ? parsed : (parsed.projects ?? []);
+    const target = projects.find((p) => p.ref === EXPECTED.supabaseRef);
+    check(
+      'Compte Supabase actif',
+      Boolean(target?.linked),
+      target
+        ? target.linked
+          ? `voit ${target.name} et le considère lié`
+          : `voit ${target.name} mais NON lié — \`supabase link\` ?`
+        : `le compte actif ne voit PAS ${EXPECTED.supabaseRef} (${projects.length} projet(s) visible(s)) — mauvais compte Supabase`,
+    );
+  } catch (error) {
+    check('Compte Supabase actif', false, `supabase a échoué : ${error.message.split('\n')[0]}`);
+  }
+}
+
 // ── 5) Supabase pointé par l'environnement ───────────────────────────────────
 // Distinct du précédent : la CLI peut être liée au bon projet pendant que
 // .env.local pointe ailleurs. L'app tournerait alors sur la mauvaise base.
@@ -149,6 +237,32 @@ if (existsSync(vercelPath)) {
   }
 } else {
   check('Vercel projet lié', false, '.vercel/project.json introuvable (`vercel link` ?)');
+}
+
+// ── 6bis) Compte Vercel réellement connecté ──────────────────────────────────
+// Même raisonnement qu'en 4bis : `.vercel/project.json` est un fichier, pas une
+// session. Un `vercel deploy` part sous le compte connecté à la CLI, et le
+// projet pro vit sur un autre compte.
+if (!LOCAL_ONLY && !hasBinary('vercel')) {
+  skip('Compte Vercel actif', 'CLI `vercel` absente — aucun déploiement possible d’ici');
+} else if (!LOCAL_ONLY) {
+  try {
+    const out = runCli('vercel', ['whoami']);
+    // La commande préfixe sa sortie d'une ligne vide : on prend la dernière
+    // ligne non vide plutôt que de faire confiance à la première.
+    const login = out
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .pop();
+    check(
+      'Compte Vercel actif',
+      login === EXPECTED.vercelLogin,
+      `login=${login ?? '(vide)'} (attendu ${EXPECTED.vercelLogin})`,
+    );
+  } catch (error) {
+    check('Compte Vercel actif', false, `vercel a échoué : ${error.message.split('\n')[0]}`);
+  }
 }
 
 // ── 7) URL applicative ───────────────────────────────────────────────────────
@@ -190,8 +304,9 @@ console.log(
 
 let allOk = true;
 for (const r of results) {
-  console.log(`  ${r.ok ? '✅' : '❌'}  ${pad(r.name, 24)} ${r.detail}`);
-  if (!r.ok) allOk = false;
+  const mark = r.skipped ? '➖' : r.ok ? '✅' : '❌';
+  console.log(`  ${mark}  ${pad(r.name, 24)} ${r.detail}`);
+  if (!r.skipped && !r.ok) allOk = false;
 }
 console.log('');
 

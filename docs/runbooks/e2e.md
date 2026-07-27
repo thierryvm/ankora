@@ -17,12 +17,16 @@ npm run preflight        # exiger un GO avant toute commande supabase
 - **`supabase db reset --linked` détruirait la production.** Le drapeau `--linked`
   ne s'utilise jamais sur une commande destructive, dans aucun contexte.
 
-**Angle mort connu du préflight** (relevé le 26 juillet 2026) : il vérifie le
-_fichier_ de lien, pas le compte que le CLI utilise réellement. Sur cette machine,
-un `supabase` lancé sans `--env-file=.env.local` s'authentifie sur un **autre
-compte Supabase**, qui ne voit même pas `ankora-prod` — un `supabase projects list`
-nu ne l'affiche pas. Le durcissement du préflight est tracé pour une PR dédiée
-(l'infrastructure de garde-fous ne se modifie pas dans une PR de feature).
+**Angle mort comblé le 27 juillet 2026.** Le préflight ne se contentait plus de
+lire le _fichier_ de lien : il demande désormais à la CLI Supabase ce qu'elle
+voit **avec les identifiants qu'elle utilisera vraiment**, et exige d'y trouver
+`ankora-prod` marqué `linked`. Même chose côté Vercel via `vercel whoami`.
+
+À savoir : @thierry a **deux comptes Supabase**. Le premier porte une
+organisation nommée « ankora » qui ne contient que le projet airsoft ;
+`ankora-prod` vit sur le second. Le signe qui les distingue en une seconde —
+si `audit_log` a une colonne `event_type`, c'est Ankora ; si elle a `actor_id`,
+c'est l'airsoft.
 
 ---
 
