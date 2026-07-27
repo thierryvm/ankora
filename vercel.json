@@ -3,6 +3,7 @@
   "regions": ["fra1"],
   "cleanUrls": true,
   "trailingSlash": false,
+  "crons": [{ "path": "/api/cron/gdpr", "schedule": "0 3 * * *" }],
   "headers": [
     {
       "source": "/(.*)",

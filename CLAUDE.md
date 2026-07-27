@@ -160,7 +160,7 @@ ininterprétable au premier conflit, donc ignoré :
 
 | Job                              | Plancher au 27 juillet 2026                                 |
 | -------------------------------- | ----------------------------------------------------------- |
-| `Playwright E2E`                 | 215 passed (214 avant, +1 spec locale réactivée)            |
+| `Playwright E2E`                 | **227 passed** (215 avant, +12 `cron-gdpr-auth`, PR-3B-B)   |
 | `Playwright E2E (authenticated)` | **31 passed** (25 avant, +6 `gdpr-deletion-queue`, PR-3B-A) |
 
 Le relèvement du 27 juillet est mesuré, pas déduit : `gdpr-deletion-queue.spec.ts`

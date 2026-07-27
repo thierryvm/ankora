@@ -7,7 +7,7 @@ import {
 } from '@/lib/gdpr/deletion-core';
 
 /**
- * Right to erasure (RGPD art. 17) — hard delete after a 30-day grace period.
+ * Right to erasure (RGPD art. 17) — hard delete after a 14-day grace period.
  *
  * This module is the `server-only` wrapper: it injects the privileged client
  * and owns the audit line. The orchestration itself lives in
@@ -39,7 +39,13 @@ import {
  * the erasure too. An IP is personal data.
  */
 
-const GRACE_PERIOD_DAYS = 30;
+/**
+ * 14 days, not 30 (ADR-023). At 30 the erasure landed on the exact edge of the
+ * one-month legal deadline of art. 12(3): one failed run and we were late. The
+ * shortened window ships WITH the executor and never before — publishing a
+ * shorter promise with nothing to honour it would be worse than the status quo.
+ */
+const GRACE_PERIOD_DAYS = 14;
 
 export async function requestDeletion(
   userId: string,

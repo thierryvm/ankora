@@ -62,7 +62,7 @@ Ankora se positionne comme un **outil d'éducation budgétaire et d'organisation
 | **PWA installable**      | Fonctionne hors-ligne partiellement, installable sur iOS / Android / desktop.                                              |
 | **Multi-workspace**      | Gère tes comptes perso + couple + maison séparément, chacun avec ses propres membres et rôles.                             |
 | **Export RGPD**          | Export JSON complet de tes données en un clic (art. 20 RGPD).                                                              |
-| **Suppression 30 j**     | Droit à l'oubli avec période de grâce de 30 jours et annulation possible (art. 17 RGPD).                                   |
+| **Suppression 14 j**     | Droit à l'oubli avec période de grâce de 14 jours et annulation possible (art. 17 RGPD).                                   |
 | **MFA TOTP**             | Double authentification via Google Authenticator / 1Password / Authy.                                                      |
 
 ---
@@ -197,20 +197,20 @@ npm run supabase:types   # régénère src/lib/supabase/types.ts
 
 Ce dépôt embarque **12 agents Claude Code** spécialisés dans `.claude/agents/` :
 
-| Agent                         | Déclencheur                                                                          |
-| ----------------------------- | ------------------------------------------------------------------------------------ |
-| `security-auditor`            | Avant merge de toute PR touchant auth, middleware, RLS, headers                      |
-| `rls-flow-tester`             | Après toute migration ou changement de policy RLS                                    |
-| `financial-formula-validator` | Après tout changement dans `src/lib/domain/`                                         |
-| `ui-auditor`                  | Après toute modification UI (mobile-first WCAG 2.2 AA, viewport Chromium)            |
-| `mobile-ios-auditor`          | Layout/nav/forms/dashboard mobile — Safari iOS WebKit (safe-area, ITP, focus rings)  |
-| `dashboard-ux-auditor`        | User dashboard `src/app/[locale]/app/**`                                             |
-| `admin-dashboard-auditor`     | Admin panel `src/app/[locale]/admin/**`                                              |
-| `i18n-auditor`                | `messages/*.json`, `src/i18n/`, Server/Client Components avec `useTranslations`      |
-| `lighthouse-auditor`          | Avant release candidate                                                              |
-| `seo-geo-auditor`             | Après ajout/renommage de pages publiques                                             |
-| `gdpr-compliance-auditor`     | Dès qu'on touche à PII, cookies, export, deletion                                    |
-| `test-runner`                 | Après toute modification de code                                                     |
+| Agent                         | Déclencheur                                                                         |
+| ----------------------------- | ----------------------------------------------------------------------------------- |
+| `security-auditor`            | Avant merge de toute PR touchant auth, middleware, RLS, headers                     |
+| `rls-flow-tester`             | Après toute migration ou changement de policy RLS                                   |
+| `financial-formula-validator` | Après tout changement dans `src/lib/domain/`                                        |
+| `ui-auditor`                  | Après toute modification UI (mobile-first WCAG 2.2 AA, viewport Chromium)           |
+| `mobile-ios-auditor`          | Layout/nav/forms/dashboard mobile — Safari iOS WebKit (safe-area, ITP, focus rings) |
+| `dashboard-ux-auditor`        | User dashboard `src/app/[locale]/app/**`                                            |
+| `admin-dashboard-auditor`     | Admin panel `src/app/[locale]/admin/**`                                             |
+| `i18n-auditor`                | `messages/*.json`, `src/i18n/`, Server/Client Components avec `useTranslations`     |
+| `lighthouse-auditor`          | Avant release candidate                                                             |
+| `seo-geo-auditor`             | Après ajout/renommage de pages publiques                                            |
+| `gdpr-compliance-auditor`     | Dès qu'on touche à PII, cookies, export, deletion                                   |
+| `test-runner`                 | Après toute modification de code                                                    |
 
 Voir [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) pour les détails d'invocation.
 
@@ -280,11 +280,11 @@ Voir [docs/ROADMAP.md](docs/ROADMAP.md) pour la roadmap détaillée.
 
 **Trois jalons V1.0 publique** :
 
-| Jalon       | Horizon                | Contenu                                                                                                       |
-| ----------- | ---------------------- | ------------------------------------------------------------------------------------------------------------- |
-| **Alpha**   | mai 2026 (~4 sem)      | Thierry + 2-3 proches, FR-BE seul, auth + onboarding 3 étapes + cockpit + simulateur + MFA                    |
-| **Beta**    | début juin 2026 (~8 sem) | 5-10 testeurs, CGU/Privacy UE+BE, GDPR export/delete, bug reporting live, Klaro! cookie consent TCF v2.2     |
-| **V1.0**    | fin juin 2026 (~12 sem)  | Signups ouverts ankora.be, FR + EN, AEO complet, Lighthouse 100, /roadmap publique, admin panel V1 live data |
+| Jalon     | Horizon                  | Contenu                                                                                                      |
+| --------- | ------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| **Alpha** | mai 2026 (~4 sem)        | Thierry + 2-3 proches, FR-BE seul, auth + onboarding 3 étapes + cockpit + simulateur + MFA                   |
+| **Beta**  | début juin 2026 (~8 sem) | 5-10 testeurs, CGU/Privacy UE+BE, GDPR export/delete, bug reporting live, Klaro! cookie consent TCF v2.2     |
+| **V1.0**  | fin juin 2026 (~12 sem)  | Signups ouverts ankora.be, FR + EN, AEO complet, Lighthouse 100, /roadmap publique, admin panel V1 live data |
 
 **Prochaines évolutions post-V1.0** :
 

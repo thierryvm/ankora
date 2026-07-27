@@ -33,23 +33,23 @@ Ankora EST :
 
 ## 1. Vocabulaire recommandé (à utiliser dans UI + docs + marketing)
 
-| Concept                       | Source       | Usage                                                                                                                                   |
-| ----------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
-| **Capacité d'épargne réelle** | ADR-009      | KPI hero du dashboard. "Ton vrai reste à vivre chaque mois, sans surprise."                                                            |
-| **Reste à vivre**             | ADR-009 amd. | Budget vie courante variable (ex-`Plafond_Quotidien`). Ajustable mensuellement.                                                         |
-| **Reste disponible**          | ADR-009 amd. | Ce qui reste avant la vie courante (= revenus − charges − provisions − virements auto).                                                 |
-| **Provisions affectées**      | NORTH_STAR   | Argent mis de côté pour factures futures (impôt communal, taxe voiture, vacances…). Échéance + montant cible. Lissage = différenciateur. |
-| **Réserve libre**             | NORTH_STAR   | Buffer de sécurité non affecté. Disponible sans contrainte.                                                                              |
-| **Total Épargne**             | NORTH_STAR   | Somme brute (Provisions affectées + Réserve libre). Lecture 1/3.                                                                         |
-| **Effort financier mensuel**  | ADR-009      | Total des charges fixes mensuelles + provisions mensuelles lissées.                                                                     |
-| **Plan d'apurement**          | ADR-017      | Échelonnement d'une dette (ex: 2 407 € / 11 mensualités). Génération auto N transactions.                                                |
-| **Assistant Virements**       | ADR-012      | Sub-section dashboard qui suggère le montant à virer ce mois, avec détail provisions item-par-item.                                     |
-| **Ballet provisions**         | ADR-018      | Aller-retour bidirectionnel compte courant ↔ épargne (audit trail OUT/IN).                                                              |
-| **Live decrement**            | ADR-010      | Décompte temps réel du Quotidien restant (useOptimistic).                                                                              |
-| **Détection déficit + rattrapage** | ADR-011 | Plan rattrapage 3 mois si déficit Provisions détecté.                                                                                  |
-| **Cashflow waterfall**        | PR-3c-4      | Visualisation 3 steps Revenus / Effort / Plafond (déjà mergé landing + dashboard).                                                       |
-| **Santé Provisions**          | THI-190      | Indicateur synthétique (vert/jaune/rouge) du statut Provisions.                                                                          |
-| **Prochaines factures**       | THI-192      | Vue J-7 / J-14 / J-30 + bucket overdue.                                                                                                  |
+| Concept                            | Source       | Usage                                                                                                                                    |
+| ---------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **Capacité d'épargne réelle**      | ADR-009      | KPI hero du dashboard. "Ton vrai reste à vivre chaque mois, sans surprise."                                                              |
+| **Reste à vivre**                  | ADR-009 amd. | Budget vie courante variable (ex-`Plafond_Quotidien`). Ajustable mensuellement.                                                          |
+| **Reste disponible**               | ADR-009 amd. | Ce qui reste avant la vie courante (= revenus − charges − provisions − virements auto).                                                  |
+| **Provisions affectées**           | NORTH_STAR   | Argent mis de côté pour factures futures (impôt communal, taxe voiture, vacances…). Échéance + montant cible. Lissage = différenciateur. |
+| **Réserve libre**                  | NORTH_STAR   | Buffer de sécurité non affecté. Disponible sans contrainte.                                                                              |
+| **Total Épargne**                  | NORTH_STAR   | Somme brute (Provisions affectées + Réserve libre). Lecture 1/3.                                                                         |
+| **Effort financier mensuel**       | ADR-009      | Total des charges fixes mensuelles + provisions mensuelles lissées.                                                                      |
+| **Plan d'apurement**               | ADR-017      | Échelonnement d'une dette (ex: 2 407 € / 11 mensualités). Génération auto N transactions.                                                |
+| **Assistant Virements**            | ADR-012      | Sub-section dashboard qui suggère le montant à virer ce mois, avec détail provisions item-par-item.                                      |
+| **Ballet provisions**              | ADR-018      | Aller-retour bidirectionnel compte courant ↔ épargne (audit trail OUT/IN).                                                               |
+| **Live decrement**                 | ADR-010      | Décompte temps réel du Quotidien restant (useOptimistic).                                                                                |
+| **Détection déficit + rattrapage** | ADR-011      | Plan rattrapage 3 mois si déficit Provisions détecté.                                                                                    |
+| **Cashflow waterfall**             | PR-3c-4      | Visualisation 3 steps Revenus / Effort / Plafond (déjà mergé landing + dashboard).                                                       |
+| **Santé Provisions**               | THI-190      | Indicateur synthétique (vert/jaune/rouge) du statut Provisions.                                                                          |
+| **Prochaines factures**            | THI-192      | Vue J-7 / J-14 / J-30 + bucket overdue.                                                                                                  |
 
 ### Style général
 
@@ -97,11 +97,11 @@ Ces formulations sont **bannies** de l'UI + landing + glossaire + emails Ankora 
 
 ### 3.1 Trois zones cognitives (dashboard)
 
-| Zone | Rôle                          | Contenu                                                                            | Profondeur                |
-| ---- | ----------------------------- | ---------------------------------------------------------------------------------- | ------------------------- |
-| A    | Rassurance immédiate (3 sec)  | Capacité d'épargne réelle + Effort + indicateur Santé Provisions condensé          | 0 clic, 0 scroll          |
-| B    | Pilotage actif (à scroller)   | Prochaines factures + Assistant Virements + Goals + CTA Simulateur                 | 0 clic, 1-2 scrolls       |
-| C    | Détails consultables          | Santé Provisions gauge + Drag-rebalance + Timeline 6m + activité récente / historique | 1 clic drawer/page dédiée |
+| Zone | Rôle                         | Contenu                                                                               | Profondeur                |
+| ---- | ---------------------------- | ------------------------------------------------------------------------------------- | ------------------------- |
+| A    | Rassurance immédiate (3 sec) | Capacité d'épargne réelle + Effort + indicateur Santé Provisions condensé             | 0 clic, 0 scroll          |
+| B    | Pilotage actif (à scroller)  | Prochaines factures + Assistant Virements + Goals + CTA Simulateur                    | 0 clic, 1-2 scrolls       |
+| C    | Détails consultables         | Santé Provisions gauge + Drag-rebalance + Timeline 6m + activité récente / historique | 1 clic drawer/page dédiée |
 
 ### 3.2 Anti-patterns à refuser
 
@@ -190,7 +190,7 @@ Sélecteur `< Mai 2026 >` en header. URL `?month=YYYY-MM` pour deep-linkability.
 - **Consentement Klaro!** open source (TCF v2.2) — pas Cookiebot / OneTrust (budget 0 €).
 - **Jamais de PII en logs** (email, montants, identifiants).
 - **Export GDPR** : JSON complet, accessible depuis `/app/settings`.
-- **Suppression compte** : délai de grâce 30 jours, cron Vercel.
+- **Suppression compte** : délai de grâce 14 jours, cron Vercel quotidien (3h UTC).
 - **Pas d'agrégation tierce** (pas Plaid, pas Tink, pas PSD2).
 - **Hébergement EU obligatoire** (Vercel + Supabase EU-west).
 

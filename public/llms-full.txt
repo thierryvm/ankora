@@ -1,6 +1,6 @@
 # ankora.be — Full content export for LLMs
 
-Last generated: 2026-07-26
+Last generated: 2026-07-27
 Canonical URL: https://ankora.be
 License: content available for citation with attribution. Code is proprietary.
 
@@ -143,11 +143,11 @@ Ankora prend tes charges trimestrielles, semestrielles et annuelles et les répa
 
 ### Q: Puis-je supprimer mon compte ?
 
-Oui, à tout moment depuis Paramètres → Confidentialité. La suppression prend effet 30 jours après ta demande (tu peux annuler pendant cette période). Toutes tes données financières sont effacées, les logs de sécurité sont pseudonymisés.
+Oui, à tout moment depuis Paramètres → Confidentialité. La suppression prend effet 14 jours après ta demande (tu peux annuler pendant cette période). Toutes tes données financières sont effacées, les logs de sécurité sont pseudonymisés.
 
 ### Q: Puis-je exporter mes données ?
 
-Oui. Le bouton « Télécharger mes données » dans Paramètres te fournit un fichier JSON complet de tout ce qu'Ankora détient sur toi. Conforme au droit de portabilité RGPD (art. 20).
+Oui. Le bouton « Télécharger mes données » dans Paramètres te fournit un fichier JSON contenant ton profil, tes budgets, tes charges, tes dépenses, tes catégories, tes consentements et ton journal d'activité. Nous élargissons cet export au fil des versions (droit de portabilité RGPD, art. 20).
 
 ### Q: Est-ce qu'Ankora donne des conseils financiers ?
 

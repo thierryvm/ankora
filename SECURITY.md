@@ -51,7 +51,7 @@ Only the `main` branch receives security fixes.
 - Encryption at rest (Supabase default)
 - Encryption in transit (TLS 1.3)
 - Audit log unreadable from client JWTs
-- Deletion: 30-day grace period, then hard delete + audit log pseudonymisation
+- Deletion: 14-day grace period, then hard delete + audit log pseudonymisation
 
 ### Dependencies
 

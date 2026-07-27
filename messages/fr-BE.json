@@ -356,7 +356,7 @@
       },
       "deletion": {
         "q": "Puis-je supprimer mon compte ?",
-        "a": "Oui, à tout moment depuis Paramètres → Confidentialité. La suppression prend effet 30 jours après ta demande (tu peux annuler pendant cette période). Toutes tes données financières sont effacées, les logs de sécurité sont pseudonymisés."
+        "a": "Oui, à tout moment depuis Paramètres → Confidentialité. La suppression prend effet 14 jours après ta demande (tu peux annuler pendant cette période). Toutes tes données financières sont effacées, les logs de sécurité sont pseudonymisés."
       },
       "export": {
         "q": "Puis-je exporter mes données ?",
@@ -420,7 +420,7 @@
       },
       "s7": {
         "heading": "7. Résiliation",
-        "body": "Tu peux supprimer ton compte à tout moment depuis Paramètres → Confidentialité. La suppression est effective 30 jours après la demande (période annulable)."
+        "body": "Tu peux supprimer ton compte à tout moment depuis Paramètres → Confidentialité. La suppression est effective 14 jours après la demande (période annulable)."
       },
       "s8": {
         "heading": "8. Droit applicable",
@@ -464,7 +464,7 @@
       "s5": {
         "heading": "5. Durée de conservation",
         "item1": "Compte actif : tant que tu utilises le service.",
-        "item2": "Compte supprimé : suppression effective 30 jours après ta demande (grace period annulable).",
+        "item2": "Compte supprimé : suppression effective 14 jours après ta demande (grace period annulable).",
         "item3": "Logs de sécurité : 12 mois maximum, pseudonymisés après suppression du compte."
       },
       "s6": {
@@ -944,13 +944,13 @@
         "scheduledBodyProcessing": "La suppression de ton compte a commencé. Elle ne peut plus être annulée.",
         "viewStatus": "Voir le statut",
         "title": "Zone dangereuse",
-        "description": "Suppression définitive du compte. Grâce de 30 jours pour annuler — après, tout est effacé (logs audit pseudonymisés).",
+        "description": "Suppression définitive du compte. Grâce de 14 jours pour annuler — après, tes données financières sont effacées et les logs d'audit pseudonymisés. Certains journaux d'authentification techniques subsistent.",
         "reasonLabel": "Raison (optionnel)",
         "reasonPlaceholder": "Aide-nous à nous améliorer…",
         "confirmLabel": "Pour confirmer, tape ton adresse e-mail : <code>{email}</code>",
         "submit": "Supprimer mon compte",
         "submitting": "Programmation…",
-        "toastScheduled": "Suppression programmée — tu as 30 jours pour annuler"
+        "toastScheduled": "Suppression programmée — tu as 14 jours pour annuler"
       },
       "cookies": {
         "title": "Cookies & confidentialité",
