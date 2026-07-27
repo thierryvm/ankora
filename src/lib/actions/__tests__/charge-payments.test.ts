@@ -129,10 +129,9 @@ vi.mock('@/lib/env', () => ({
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => supa.client,
-  createAdminClient: async () => supa.client,
 }));
 
-// Stub the audit-log module wholesale — its real `createAdminClient` import
+// Stub the audit-log module wholesale — its real `createServiceRoleClient` import
 // would pull in `env` + `log` + supabase ssr, none of which we need here.
 vi.mock('@/lib/security/audit-log', () => ({
   AuditEvent: {

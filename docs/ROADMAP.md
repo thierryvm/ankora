@@ -55,14 +55,13 @@ Chacune mérite sa propre PR ; aucune n'est un blocage de l'étape en cours.
 implicites.
 
 Échéance ferme, mais **ce n'est PAS la cause du `permission denied for table audit_log`**
-observé le 26 juillet (attribution corrigée le jour même). Cause suspectée, à mesurer
-avant tout correctif : `createAdminClient()` (`src/lib/supabase/server.ts:37`) passe
-la clé service_role **et** un adaptateur qui rend les cookies de l'utilisateur ; en
-présence d'un cookie de session, le jeton utilisateur écrase la clé et le client
-retombe en rôle `authenticated`, à qui `audit_log` est explicitement interdit. Si
-c'est confirmé, le correctif est dans `server.ts`, **surtout pas** un GRANT sur
-`audit_log` — qui ouvrirait le journal d'audit à tout utilisateur connecté.
-Traité en étape 3a.
+observé le 26 juillet. Cause **mesurée** le jour même : `createAdminClient()` passait la
+clé service_role **et** un adaptateur qui rendait les cookies de l'utilisateur ; en
+présence d'une session, le jeton utilisateur écrasait la clé et le client retombait en
+rôle `authenticated`, à qui `audit_log` est interdit. C'était H3 / issue #192, connue
+depuis le 28 mai et jamais mesurée. Corrigé par `createServiceRoleClient()`
+(`src/lib/supabase/admin.ts`) — **surtout pas** par un GRANT sur `audit_log`, qui aurait
+ouvert le journal d'audit en écriture à tout utilisateur connecté.
 
 Convention : [`docs/CONVENTIONS.md`](./CONVENTIONS.md).
 

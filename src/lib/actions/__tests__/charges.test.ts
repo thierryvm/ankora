@@ -116,7 +116,6 @@ vi.mock('@/lib/env', () => ({
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => supa.client,
-  createAdminClient: async () => supa.client,
 }));
 
 vi.mock('@/lib/security/audit-log', () => ({

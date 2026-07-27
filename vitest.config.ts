@@ -44,6 +44,13 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // `server-only` throws on import outside React's `react-server`
+      // condition — by design, that is how it fails a client bundle at build
+      // time. Under Vitest that would break every suite touching a module which
+      // carries the marker, with an error naming the wrong cause. Aliased
+      // globally rather than mocked per file so the next module to adopt the
+      // marker does not lay a trap for the next test.
+      'server-only': path.resolve(__dirname, './tests/stubs/server-only.ts'),
     },
   },
 });

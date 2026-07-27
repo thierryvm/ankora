@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/admin';
 import { log } from '@/lib/log';
 
 /**
@@ -118,7 +118,7 @@ export async function logAuditEvent(
   context: AuditContext,
   metadata?: Record<string, unknown>,
 ): Promise<void> {
-  const supabase = await createAdminClient();
+  const supabase = createServiceRoleClient();
   const { error } = await supabase.from('audit_log').insert({
     event_type: event,
     user_id: context.userId,
@@ -130,6 +130,12 @@ export async function logAuditEvent(
 
   if (error) {
     // Never throw from audit logging — log to stderr but do not break caller flow.
-    log.error('Audit event persistence failed', { event, error_message: error.message });
+    // `error_code` matters as much as the message: H3 (issue #192) hid for three
+    // months behind a generic failure, and `42501` would have named it at once.
+    log.error('Audit event persistence failed', {
+      event,
+      error_code: error.code,
+      error_message: error.message,
+    });
   }
 }

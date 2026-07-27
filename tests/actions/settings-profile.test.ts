@@ -49,6 +49,14 @@ vi.mock('@/lib/actions/revalidate', () => ({
   revalidateDashboard: vi.fn(),
 }));
 
+// `@/lib/security/audit-log` reaches the service-role client, which parses
+// `@/lib/env` at module load — same reason `@/lib/log` is stubbed above.
+vi.mock('@/lib/supabase/admin', () => ({
+  createServiceRoleClient: () => ({
+    from: () => ({ insert: async () => ({ error: null }) }),
+  }),
+}));
+
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
     auth: {
