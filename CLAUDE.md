@@ -158,10 +158,19 @@ les plus sensibles de l'app.
 Deux jobs, donc **deux planchers distincts** — un chiffre global agrégé serait
 ininterprétable au premier conflit, donc ignoré :
 
-| Job                              | Plancher au 26 juillet 2026                       |
-| -------------------------------- | ------------------------------------------------- |
-| `Playwright E2E`                 | 215 passed (214 avant, +1 spec locale réactivée)  |
-| `Playwright E2E (authenticated)` | **25 passed** (24 au départ, +1 spec `audit-log`) |
+| Job                              | Plancher au 27 juillet 2026                                 |
+| -------------------------------- | ----------------------------------------------------------- |
+| `Playwright E2E`                 | 215 passed (214 avant, +1 spec locale réactivée)            |
+| `Playwright E2E (authenticated)` | **31 passed** (25 avant, +6 `gdpr-deletion-queue`, PR-3B-A) |
+
+Le relèvement du 27 juillet est mesuré, pas déduit : `gdpr-deletion-queue.spec.ts`
+n'apparaît que dans **un** des deux projets du job authentifié (`iPhone 14` filtre sur
+`**/mobile-ios/**`), d'où +6 et non +12. Dans le job public elle ajoute **18 sautés et
+0 passé** — 6 cas × 3 projets — donc le plancher public ne bouge pas.
+
+Le chiffre est passé de 30 à 31 en cours de PR : `test-quality-auditor` a montré que les
+trois corrections UI n'avaient aucun test, et le sixième cas les couvre. Un plancher qui
+monte parce qu'un trou a été trouvé est le seul mouvement sain de ce tableau.
 
 Chaque relèvement est **mesuré en local avant le premier push**, jamais estimé.
 Une spec authentifiée ajoutée sous `e2e/` est aussi découverte par le job public :
@@ -241,6 +250,30 @@ Pour reconstruire les rôles @cowork sans dépendance Desktop, deux sub-agents v
 - **`spec-translator`** (Sonnet) — invocation **OBLIGATOIRE** quand @thierry envoie une demande informelle (langage naturel non structuré). Transforme la demande en spec Phase 0 + Scope + DoD. Strict séparation : spec-translator écrit la spec, CC Ankora exécute. Jamais le même agent qui spec ET code.
 
 Référence : `Athenaeum/10_Projects/ankora/cc-handoffs/2026-05-27-recovery-session-ankora-post-crash.md` (incident détaillé) + `Athenaeum/10_Projects/ankora/conventions/post-cowork-doctrine.md` (doctrine complète).
+
+### Un agent QA doté de Bash ne doit pas pouvoir atteindre un commit (2026-07-27)
+
+`test-quality-auditor.md:73` dit déjà « Never modify code — only report ». Il a quand
+même muté `src/lib/gdpr/deletion-core.ts` pendant la PR #282, et la ligne s'est retrouvée
+dans un commit parce que le pilote committait depuis le même arbre de travail. **Répéter
+l'instruction ne sert à rien : elle y est déjà.** Ce qui manque, c'est que la
+désobéissance n'ait aucun chemin vers l'historique.
+
+Trois règles, à appliquer dès qu'un agent avec Bash a tourné dans la session :
+
+1. **Jamais de stage en masse.** `git add -A` et `git add .` sont interdits après le
+   passage d'un tel agent. Chemins explicites uniquement.
+2. **Lire `git diff --cached --stat` avant chaque commit.** Un fichier que tu n'as pas
+   modifié toi-même dans cette liste = STOP, on inspecte avant de committer.
+3. **Une falsification qui exige de muter du code se fait hors de l'arbre de travail** —
+   copie jetable, ou base locale qu'on restaure ensuite. Jamais dans un fichier suivi
+   par git.
+
+Corollaire pour la rédaction des prompts d'agents : tout agent QA à qui on donne Bash
+reçoit la consigne explicite « tu ne modifies aucun fichier du dépôt ; si tu dois muter
+pour falsifier, fais-le dans la base locale et restaure ». La consigne dans le fichier
+d'agent ne suffit pas — celle du prompt non plus, d'ailleurs : ce sont les règles 1 et 2
+qui protègent réellement.
 
 ### Banned list complémentaire (verrouillée 2026-05-27)
 

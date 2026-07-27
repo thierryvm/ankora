@@ -341,10 +341,16 @@ function DangerZone({ deletion, email }: { deletion: Deletion; email: string }) 
         </CardHeader>
         <CardContent>
           <p className="text-sm">
-            {t.rich('scheduledBody', {
-              date,
-              strong: (chunks) => <strong>{chunks}</strong>,
-            })}
+            {/* `scheduledBody` promises "you can cancel any time until then".
+                Once a run owns the request that is no longer true, and telling
+                the person otherwise is the same inexact statement (art. 12(1))
+                the countdown itself used to make. */}
+            {deletion.status === 'processing'
+              ? t('scheduledBodyProcessing')
+              : t.rich('scheduledBody', {
+                  date,
+                  strong: (chunks) => <strong>{chunks}</strong>,
+                })}
           </p>
           <Button asChild variant="outline" className="mt-4">
             <Link href="/app/settings/deletion-status">{t('viewStatus')}</Link>

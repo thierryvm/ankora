@@ -941,6 +941,7 @@
       "danger": {
         "scheduledTitle": "Deletion in progress",
         "scheduledBody": "Your account will be deleted on <strong>{date}</strong>. You can cancel any time until then.",
+        "scheduledBodyProcessing": "Deletion of your account has started. It can no longer be cancelled.",
         "viewStatus": "View status",
         "title": "Danger zone",
         "description": "Permanent account deletion. 30-day grace period to cancel — after that, everything is wiped (audit logs pseudonymised).",
@@ -1024,6 +1025,9 @@
       "statusLabel": "Status:",
       "requestedOn": "Requested on {date}.",
       "statusPending": "Pending",
+      "statusProcessing": "In progress",
+      "statusUnknown": "Unknown status",
+      "processingBody": "Deletion of your account has started. It can no longer be cancelled.",
       "statusCancelled": "Cancelled",
       "statusCompleted": "Completed",
       "scheduledFor": "Deletion scheduled",
@@ -1408,6 +1412,7 @@
       "profileUpdateFailed": "Unable to update the profile.",
       "deletionRequestFailed": "Unable to schedule the deletion.",
       "deletionCancelFailed": "Unable to cancel the request.",
+      "deletionCancelTooLate": "Deletion has already started and can no longer be cancelled.",
       "exportLimited": "Export limited to once every 5 minutes.",
       "resteAVivreUpdateFailed": "Couldn't adjust the daily living budget. Please try again in a moment."
     },

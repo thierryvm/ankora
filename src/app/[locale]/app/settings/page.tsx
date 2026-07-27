@@ -27,7 +27,12 @@ export default async function SettingsPage() {
       .from('deletion_requests')
       .select('scheduled_for, status')
       .eq('user_id', user.id)
-      .eq('status', 'pending')
+      // BOTH active statuses. Filtering on 'pending' alone made `deletion` null
+      // the moment a run claimed the request, so the danger zone re-showed the
+      // REQUEST FORM and dropped the only link to the status screen — exactly
+      // when the erasure had become irreversible. `.maybeSingle()` stays safe:
+      // `deletion_requests_one_active_idx` allows one active row per person.
+      .in('status', ['pending', 'processing'])
       .maybeSingle(),
     getCookieConsentAction(),
   ]);

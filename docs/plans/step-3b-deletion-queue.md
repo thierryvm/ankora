@@ -188,8 +188,11 @@ traduction ne s'applique pas ici) : `app.deletionStatus.statusProcessing`,
   aucune ligne → `'none'` ; l'action **n'émet pas** d'audit dans les deux derniers cas.
 - `requestDeletion` : `23505` → renvoie l'existant.
 - `executeDeletionWith` : une pseudonymisation en `error` **empêche** `deleteUser` ;
-  **0 ligne pseudonymisée n'empêche rien** ; « user not found » → succès ; un seul
-  `logAuditEvent`.
+  **0 ligne pseudonymisée n'empêche rien** ; « user not found » → succès.
+- `executeDeletion` (l'enveloppe) : **un seul** `logAuditEvent`, et aucun quand la
+  pseudonymisation ou GoTrue échoue. Corrigé le 27 juillet : cette assertion était
+  attribuée à `executeDeletionWith`, qui ne journalise rien — la garantie n'aurait donc
+  été vérifiée nulle part.
 
 **Tests existants à refondre** — à faire, pas à découvrir :
 `src/lib/gdpr/__tests__/deletion.test.ts:110-115` (« propagates a workspace deletion

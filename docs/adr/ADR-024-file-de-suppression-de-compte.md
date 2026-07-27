@@ -256,6 +256,43 @@ corrige — dans le sens le plus défavorable à la personne.
 5 fichiers). ADR-023 s'est trompé sur ce compte ; le total réel de sites à modifier est
 plus élevé, mais ailleurs.
 
+### Amendement du 27 juillet 2026 — la conception 1 n'est plus une inférence
+
+`rls-flow-tester`, lancé sur PR-A (#282), a **fabriqué le mode de panne** au lieu de le
+raisonner : rôle dédié sans `BYPASSRLS`, propriétaire d'une fonction de purge, 7 lignes
+semées dans `audit_log` (`FORCE RLS`).
+
+```
+DEFINER, propriétaire SANS bypassrls, appelée par service_role  →  rows_deleted = 0, survivants = 7
+INVOKER,                              appelée par service_role  →  rows_deleted = 7, survivants = 0
+```
+
+**Zéro ligne supprimée, aucune erreur levée, retour « succès ».** Le rejet de la
+conception 1 et la décision D4 reposent donc désormais sur une mesure reproductible, plus
+sur un principe.
+
+Mesuré au passage, et plus inquiétant que le reste : **`postgres` porte `rolbypassrls = t`
+sur une pile Supabase locale.** La version `SECURITY DEFINER` d'avril de
+`purge_audit_log_older_than_12_months()` **aurait donc passé un test local avec un
+compteur correct**. Ce défaut n'a pas survécu trois mois faute de test — il a survécu
+parce qu'un test local vert n'aurait rien prouvé. À garder en tête pour toute vérification
+future d'un privilège : la seule chose qu'une pile locale démontre sur les privilèges de
+l'hébergé, c'est qu'elle ne les démontre pas.
+
+Deux imprécisions rédactionnelles relevées dans les migrations livrées, corrigées ici
+plutôt que dans les fichiers — `supabase_migrations.schema_migrations` enregistre une
+colonne `statements`, et éditer un fichier déjà appliqué le ferait diverger de ce qui a
+tourné :
+
+1. `20260727000002` lignes 21-24 — « both UPDATE statements match zero rows ». Vrai pour
+   `anon` ; **faux pour un `authenticated` propriétaire d'une ligne échue**, où l'appel
+   lève `42501` / HTTP 403 sur le `with check` de `deletion_self_update` (mesuré 5/5). La
+   conclusion tient, le mécanisme non — et la correction renforce l'argument, puisqu'elle
+   montre que la sûreté reposait entièrement sur une policy.
+2. `20260727000001` lignes 51-61 — l'écrasement des doublons teste `requested_at >`
+   **strict** : deux `pending` au même instant se protègent mutuellement et le
+   `create unique index` échoue en `23505`. Échec **bruyant**, jamais silencieux.
+
 ### Ce qui restera non prouvé après l'implémentation
 
 1. **Les mesures de privilèges sont locales, jamais faites sur l'hébergé.** La conception

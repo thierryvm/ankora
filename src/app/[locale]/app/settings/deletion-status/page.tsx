@@ -45,19 +45,32 @@ export default async function DeletionStatusPage() {
   });
   const scheduledAt = formatDate(scheduled, locale);
 
-  const statusColor =
-    data.status === 'pending'
-      ? 'text-warning'
-      : data.status === 'cancelled'
-        ? 'text-success'
-        : 'text-danger';
+  // `processing` used to fall through to the `completed` branch — an erasure in
+  // flight was announced as already done, in red.
+  //
+  // A previous version of this comment claimed the explicit listing made the
+  // next status added to the CHECK constraint "show up as a missing case". That
+  // was FALSE, and worth recording rather than silently deleting: `status` is
+  // typed `string` (supabase/types.ts), not a union, and a ternary chain has no
+  // exhaustiveness check. A fifth status would have rendered « Complétée », in
+  // red — telling someone their account is erased when it is not. A comment
+  // asserting a guarantee that does not exist is the same defect as the
+  // countdown nothing was executing.
+  //
+  // A lookup with an explicit fallback makes the absence of a case visible
+  // instead of dressing it up as a terminal state.
+  const STATUS_PRESENTATION = {
+    pending: { color: 'text-warning', label: 'statusPending' },
+    processing: { color: 'text-warning', label: 'statusProcessing' },
+    cancelled: { color: 'text-success', label: 'statusCancelled' },
+    // Unreachable in practice (ADR-024 D1: the row cascades away with the
+    // account, so nothing ever writes it), kept because the CHECK accepts it.
+    completed: { color: 'text-danger', label: 'statusCompleted' },
+  } as const;
 
-  const statusLabel =
-    data.status === 'pending'
-      ? t('statusPending')
-      : data.status === 'cancelled'
-        ? t('statusCancelled')
-        : t('statusCompleted');
+  const presentation = STATUS_PRESENTATION[data.status as keyof typeof STATUS_PRESENTATION] ?? null;
+  const statusColor = presentation?.color ?? 'text-muted-foreground';
+  const statusLabel = presentation ? t(presentation.label) : t('statusUnknown');
 
   return (
     <div className="flex flex-col gap-6">
@@ -94,6 +107,21 @@ export default async function DeletionStatusPage() {
               </dl>
               <div className="flex flex-wrap gap-2">
                 <CancelDeletionButton />
+                <Button asChild variant="outline">
+                  <Link href="/app/settings">{t('backToSettings')}</Link>
+                </Button>
+              </div>
+            </>
+          )}
+
+          {/* No cancel button here, deliberately: a run already owns this
+              request and the GoTrue call may already have gone out. Offering
+              a control that cannot work is the same inexact statement the
+              countdown itself used to make. */}
+          {data.status === 'processing' && (
+            <>
+              <p className="text-sm">{t('processingBody')}</p>
+              <div className="flex flex-wrap gap-2">
                 <Button asChild variant="outline">
                   <Link href="/app/settings">{t('backToSettings')}</Link>
                 </Button>

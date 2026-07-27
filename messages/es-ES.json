@@ -941,6 +941,7 @@
       "danger": {
         "scheduledTitle": "Eliminación en curso",
         "scheduledBody": "Tu cuenta se eliminará el <strong>{date}</strong>. Puedes cancelar en cualquier momento hasta entonces.",
+        "scheduledBodyProcessing": "La eliminación de tu cuenta ha comenzado. Ya no se puede cancelar.",
         "viewStatus": "Ver el estado",
         "title": "Zona peligrosa",
         "description": "Eliminación definitiva de la cuenta. 30 días de gracia para cancelar — después, todo se borra (logs de auditoría seudonimizados).",
@@ -1024,6 +1025,9 @@
       "statusLabel": "Estado:",
       "requestedOn": "Solicitada el {date}.",
       "statusPending": "Pendiente",
+      "statusProcessing": "En curso",
+      "statusUnknown": "Estado desconocido",
+      "processingBody": "La eliminación de tu cuenta ha comenzado. Ya no se puede cancelar.",
       "statusCancelled": "Cancelada",
       "statusCompleted": "Completada",
       "scheduledFor": "Eliminación prevista",
@@ -1408,6 +1412,7 @@
       "profileUpdateFailed": "No se ha podido actualizar el perfil.",
       "deletionRequestFailed": "No se ha podido programar la eliminación.",
       "deletionCancelFailed": "No se ha podido cancelar la solicitud.",
+      "deletionCancelTooLate": "La eliminación ya ha comenzado y no se puede cancelar.",
       "exportLimited": "Exportación limitada a una vez cada 5 minutos.",
       "resteAVivreUpdateFailed": "No se ha podido ajustar el presupuesto vital. Inténtalo de nuevo dentro de un momento."
     },

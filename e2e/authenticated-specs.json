@@ -19,6 +19,7 @@
     "e2e/dashboard-data-flow.spec.ts",
     "e2e/dashboard-expenses.spec.ts",
     "e2e/dashboard-simulator-drawer.spec.ts",
+    "e2e/gdpr-deletion-queue.spec.ts",
     "e2e/mobile-ios/bottom-tab-bar.spec.ts",
     "e2e/mobile-ios/expenses-crud.spec.ts",
     "e2e/mobile-ios/settings-locale-field.spec.ts"
