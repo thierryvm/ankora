@@ -111,6 +111,7 @@ describe('authentication — the run refuses by default', () => {
       deleted: 0,
       failed: 0,
       purged: 0,
+      purgeOk: true,
       capped: false,
     });
   });
@@ -160,7 +161,16 @@ describe('the run itself', () => {
 
     const res = await call(`Bearer ${SECRET}`);
 
-    await expect(res.json()).resolves.toMatchObject({ deleted: 1, failed: 0, purged: 0 });
+    // `purged: null` and `purgeOk: false`, NOT `purged: 0`. Until roughly April
+    // 2027 nothing in `audit_log` can be twelve months old, so a healthy run
+    // also reports zero — a broken purge would have been written exactly like a
+    // purge with nothing to do, for nine months.
+    await expect(res.json()).resolves.toMatchObject({
+      deleted: 1,
+      failed: 0,
+      purged: null,
+      purgeOk: false,
+    });
     expect(logErrorSpy).toHaveBeenCalledTimes(1);
   });
 
@@ -198,7 +208,14 @@ describe('the run itself', () => {
 
     const body = await (await call(`Bearer ${SECRET}`)).json();
 
-    expect(Object.keys(body).sort()).toEqual(['capped', 'claimed', 'deleted', 'failed', 'purged']);
+    expect(Object.keys(body).sort()).toEqual([
+      'capped',
+      'claimed',
+      'deleted',
+      'failed',
+      'purgeOk',
+      'purged',
+    ]);
     expect(JSON.stringify(body)).not.toContain('user-1');
     expect(JSON.stringify(body)).not.toContain('req-1');
   });

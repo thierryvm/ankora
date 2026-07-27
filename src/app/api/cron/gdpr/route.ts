@@ -125,9 +125,13 @@ export async function GET(request: Request): Promise<NextResponse> {
     } catch (error) {
       failed += 1;
       // Each failure is isolated on purpose: Vercel NEVER retries a cron, so a
-      // throw here would abandon every remaining account until tomorrow. The
-      // row stays `processing` and is re-queued an hour later by
-      // `claim_pending_deletions`.
+      // throw here would abandon every remaining account until tomorrow.
+      //
+      // The row stays `processing` and is re-queued by `claim_pending_deletions`
+      // — but NOT "an hour later", as this comment used to claim. The 1 hour is
+      // a MINIMUM AGE, not a schedule: the re-queue happens on the next call,
+      // and the only caller runs once a day. So the real delay is up to 24 h.
+      // Sizing an incident on the old wording was wrong by a factor of 24.
       //
       // `request_id`, NEVER `user_id`. Logging the user id of an erasure that
       // just failed would put the identifier back into a durable log, one line
@@ -139,10 +143,18 @@ export async function GET(request: Request): Promise<NextResponse> {
     }
   }
 
-  let purged = 0;
+  // `purged: 0` is ALSO the healthy answer, and will be until roughly April
+  // 2027 — `audit_log` was created on 2026-04-16, so nothing in it can be twelve
+  // months old before then. A broken purge and a purge with nothing to do would
+  // otherwise be written identically for nine months. `purgeOk` is what
+  // separates them.
+  let purged: number | null = 0;
+  let purgeOk = true;
   try {
     purged = await purgeAuditLogOlderThan12Months();
   } catch (error) {
+    purgeOk = false;
+    purged = null;
     // Retention is not the reason this run exists. A purge failure is reported
     // and swallowed rather than allowed to mask a successful erasure batch.
     log.error('Audit log retention purge failed', { error_message: safeErrorMessage(error) });
@@ -161,5 +173,5 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   // Counts only. No user id, no email, no request id — this body ends up in
   // Vercel's cron invocation log.
-  return NextResponse.json({ claimed: claimed.length, deleted, failed, purged, capped });
+  return NextResponse.json({ claimed: claimed.length, deleted, failed, purged, purgeOk, capped });
 }

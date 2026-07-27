@@ -160,7 +160,7 @@ ininterprétable au premier conflit, donc ignoré :
 
 | Job                              | Plancher au 27 juillet 2026                                 |
 | -------------------------------- | ----------------------------------------------------------- |
-| `Playwright E2E`                 | **227 passed** (215 avant, +12 `cron-gdpr-auth`, PR-3B-B)   |
+| `Playwright E2E`                 | **224 passed** (215 avant, +9 `cron-gdpr-auth`, PR-3B-B)    |
 | `Playwright E2E (authenticated)` | **31 passed** (25 avant, +6 `gdpr-deletion-queue`, PR-3B-A) |
 
 Le relèvement du 27 juillet est mesuré, pas déduit : `gdpr-deletion-queue.spec.ts`
@@ -171,6 +171,15 @@ n'apparaît que dans **un** des deux projets du job authentifié (`iPhone 14` fi
 Le chiffre est passé de 30 à 31 en cours de PR : `test-quality-auditor` a montré que les
 trois corrections UI n'avaient aucun test, et le sixième cas les couvre. Un plancher qui
 monte parce qu'un trou a été trouvé est le seul mouvement sain de ce tableau.
+
+**Un plancher qui DESCEND parce qu'un cas ne prouvait rien est le second.** Le 27 juillet,
+`cron-gdpr-auth` a été annoncée à +12 puis ramenée à **+9** : `silent-failure-auditor` a
+mesuré que `CRON_SECRET` n'est défini dans aucun bloc `env` de `ci.yml`, donc que ces cas
+sortent par la première branche de la route et n'atteignent jamais la comparaison de
+secret. Un quatrième cas affirmait que les deux refus sont indiscernables — en CI ils sont
+littéralement la même branche, l'assertion ne pouvait pas échouer. Retiré plutôt que laissé
+à ressembler à un garde-fou. **Un plancher bâti sur des cas vacuoles est pire qu'un
+plancher plus bas.**
 
 Chaque relèvement est **mesuré en local avant le premier push**, jamais estimé.
 Une spec authentifiée ajoutée sous `e2e/` est aussi découverte par le job public :

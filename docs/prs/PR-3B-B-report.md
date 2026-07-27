@@ -156,12 +156,104 @@ La copie utilisateur a été corrigée en conséquence dans les 5 locales : « a
 est effacé » devient faux le jour de l'armement, et dit désormais ce qui est réellement
 effacé **et ce qui subsiste**.
 
+## 7bis. `silent-failure-auditor` — SILENT_FAILURE_CONFIRMED, et il ne parle pas au conditionnel
+
+### La mesure qui décide de tout
+
+```
+vercel env ls production  →  pas de CRON_SECRET
+vercel crons ls           →  /api/cron/gdpr   0 3 * * *   not deployed
+```
+
+**`CRON_SECRET` n'existe pas en production aujourd'hui.** Mergée et déployée telle quelle,
+cette PR arme un cron qui tire à 03:00, prend un 401, et **n'efface rien** — pendant que la
+politique de confidentialité et les CGU annoncent désormais « suppression effective 14 jours
+après la demande ». Rien dans le dépôt ne fait remonter cet état.
+
+**Corollaire de séquencement, plus vicieux que l'absence elle-même** : les variables Vercel
+sont figées dans un déploiement. Poser `CRON_SECRET` **après** le déploiement, ou la faire
+tourner sans redéployer, donne un émetteur et un récepteur désaccordés → **401 quotidien
+sans aucun log**, puisque `expected` est alors défini, juste faux. Ordre obligatoire :
+
+> **poser la variable → redéployer → vérifier**
+
+### F6 — mes propres cas e2e passaient à vide
+
+`CRON_SECRET` n'est défini dans **aucun** bloc `env` de `ci.yml` ni dans `.env.local`. Les
+4 specs × 3 projets sortaient donc par `if (!expected)` et **n'atteignaient jamais**
+`secretMatches`. Mutation décrite par l'audit, non appliquée : remplacer le corps de
+`secretMatches` par `return true` les laissait toutes vertes.
+
+Pire, le cas « ne dit jamais laquelle des deux refus » : en CI les deux refus **sont
+littéralement la même branche**. L'assertion ne pouvait pas échouer.
+
+J'avais donc relevé un plancher de 215 à 227 sur douze cas affirmant une seule chose :
+« une route non configurée refuse ». C'est exactement le défaut que je reprochais ailleurs
+dans cette même session.
+
+**Corrigé** : le cas tautologique est **retiré**, les commentaires disent maintenant ce que
+les cas prouvent et ce qu'ils ne prouvent pas, et le plancher est **redescendu à +9**.
+Poser `CRON_SECRET` dans l'environnement du job e2e — un faux de 32 caractères, pas un
+secret — transformerait neuf cas vains en neuf cas réels, plus celui qui manque partout :
+**un 200 sur HTTP avec le bon secret**. Éditer `.github/workflows/` est une action bannie
+en PR feature, donc **PR dédiée**.
+
+### Corrigé aussi
+
+- **F9 — mon commentaire se trompait d'un facteur 24.** Il disait qu'une ligne bloquée est
+  « re-queued an hour later ». L'heure est un **âge minimum**, pas un horaire : la remise en
+  file a lieu au **prochain appel**, et l'unique appelant tourne **une fois par jour**. Qui
+  dimensionnerait un incident sur cette phrase se tromperait d'un facteur 24.
+- **F2 — `purged: 0` est aussi la réponse saine**, et le restera jusqu'à ~avril 2027 :
+  `audit_log` naît le 16 avril 2026, rien ne peut y avoir 12 mois avant. Une purge cassée et
+  une purge sans travail s'écrivaient identiquement, pour neuf mois. La réponse porte
+  désormais `purgeOk`, et `purged: null` en cas d'échec.
+
+### Nommé, pas construit — et le plus grave d'entre eux
+
+**F3 — blocage de tête de file.** `order by scheduled_for` réclame les plus anciennes
+d'abord, et il n'existe **aucune colonne `attempts`** : une ligne après 1 échec et après
+300 sont identiques en base. **25 lignes empoisonnées suffisent donc à affamer la file pour
+toujours** — elles occupent le lot entier chaque nuit, aucune demande neuve n'est jamais
+traitée, et `capped: true` émet un `log.error` que personne ne lit.
+
+Pendant ce temps l'écran affiche « La suppression de ton compte a commencé. Elle ne peut
+plus être annulée », **et le bouton d'annulation est retiré pour ce statut**. La personne
+est enfermée entre les deux issues, définitivement, et l'app le lui dit avec aplomb.
+
+Correctif : colonne `attempts` + `last_error_code`, incrémentée à chaque échec, avec un
+seuil de mise en quarantaine. C'est une **migration**, donc un élargissement de scope en
+cours de PR — banni sans nouveau plan écrit. Ouvert comme suite immédiate.
+
+**F5 — `capped` détecte une rafale, jamais une stagnation.** Trois demandes en souffrance
+depuis 40 jours → `capped: false` tout du long. Le nombre qui manque est
+`oldest_pending_age_days` : il rend `{claimed: 0}` interprétable — 0 réclamé avec 0 jour
+d'ancienneté est sain, 0 réclamé avec 31 jours est une panne.
+
+**F4 / F8 — personne ne regarde.** Zéro surface admin ne lit `deletion_requests` ni
+`audit_log`. Aucun runbook n'existe pour ce cron. Le moins cher à budget 0 € : une requête
+dans le panneau admin existant, plus un rituel écrit.
+
+### Ce que l'audit crédite, et qu'il faut lire à côté du reste
+
+L'échec de `claimPendingDeletions` rend **500** au lieu d'un zéro tranquille — c'est la
+seule panne du dispositif qui se voit sans lire un log. `isAlreadyGone` neutralise la pilule
+empoisonnée la plus probable. Les 6 cas `gdpr-deletion-queue` s'exécutent **réellement** en
+CI contre un vrai schéma. L'invariant `maxDuration < seuil de reprise` est écrit dans les
+deux fichiers et gardé par un test.
+
+> « Le défaut n'est pas dans la conception de la route. Il est dans le fait que **tout ce
+> qu'elle sait de ses propres pannes, elle l'écrit à 03:00 dans un journal auquel personne
+> n'est abonné** — et que la variable qui la fait fonctionner n'est pas encore posée. »
+
 ## 8. Planchers e2e
 
-| Job                              | Avant      | Après                                    |
-| -------------------------------- | ---------- | ---------------------------------------- |
-| `Playwright E2E`                 | 215 passed | **227 passed** (+12 = 4 cas × 3 projets) |
-| `Playwright E2E (authenticated)` | 31 passed  | **31 passed** (inchangé)                 |
+| Job                              | Avant      | Après                                   |
+| -------------------------------- | ---------- | --------------------------------------- |
+| `Playwright E2E`                 | 215 passed | **224 passed** (+9 = 3 cas × 3 projets) |
+| `Playwright E2E (authenticated)` | 31 passed  | **31 passed** (inchangé)                |
 
-Mesurés en local avant push. La spec publique exerce les refus **contre un vrai serveur
-HTTP**, pas seulement en import de fonction.
+Annoncé à +12, **redescendu à +9** après §7bis. Un plancher bâti sur un cas qui ne peut pas
+échouer est pire qu'un plancher plus bas : il inspire confiance sans la mériter. Les neuf
+qui restent prouvent une chose vraie et non triviale — **la route refuse par défaut, sur un
+vrai socket** — et leurs commentaires disent désormais ce qu'ils ne prouvent pas.
