@@ -139,6 +139,25 @@ une atteinte à des données détenues.
    table. Prouvé rouge sur le code non corrigé, vert après.
 4. Garde-fou de frontière client/serveur vérifié en CI.
 
+5. **Efficacité du correctif vérifiée en production** — 27 juillet 2026, sur
+   `ankora-prod`, par le responsable de traitement.
+
+   Le premier relevé, effectué avant toute connexion, a rendu des chiffres
+   **identiques** à ceux du §2 : 22 `auth.rate_limited`, 21
+   `admin.access.rate_limited`, 2 `auth.signup`, 1 `auth.password_reset`. Cette
+   mesure **ne prouvait rien** — elle ne distinguait pas « le correctif ne
+   fonctionne pas » de « personne ne s'est connecté depuis ». Une mesure
+   incapable de départager deux hypothèses n'est pas une preuve, et c'est
+   précisément le genre d'inférence habillée en mesure que ce dossier reproche
+   au reste du système.
+
+   Le second relevé, après une **déconnexion puis reconnexion réelle** sur
+   `https://ankora.be`, fait apparaître `auth.login` = 1 et `auth.logout` = 1.
+   Le chemin PostgREST `service_role` écrit donc de nouveau en production.
+
+   Ce point corrige une affirmation trop généreuse de la clôture de ce document :
+   le merge d'une PR prouve qu'un code est parti, jamais qu'une écriture atterrit.
+
 **À prendre** :
 
 5. **Alerte sur échec d'écriture d'audit** (art. 32(1)(d)). Sans détection, la
@@ -199,4 +218,9 @@ mesurés, non sur un avis juridique professionnel. En cas de doute ultérieur, o
 si le nombre d'utilisateurs tiers augmente, la faire revoir.
 
 **Établi par** @cc-ankora (Claude Opus 5), sur mesure directe en production, le
-27 juillet 2026. Contresigné par le merge de la PR #273.
+27 juillet 2026.
+
+**Contresigné** non par le merge de la PR #273 — un merge ne démontre que le
+départ d'un code — mais par la mesure post-correctif du §6.5, faite le même jour
+sur `ankora-prod` par le responsable de traitement, et concluante seulement au
+second relevé.

@@ -19,7 +19,6 @@ import type { Database } from '@/lib/supabase/types';
  * See ADR-024 D5.
  */
 
-const _lazy = () => import('@/lib/supabase/admin');
 export type DeletionClient = SupabaseClient<Database>;
 
 export type ClaimedDeletion = {

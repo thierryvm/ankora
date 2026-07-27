@@ -941,7 +941,7 @@
       "danger": {
         "scheduledTitle": "Löschung läuft",
         "scheduledBody": "Dein Konto wird am <strong>{date}</strong> gelöscht. Du kannst jederzeit bis dahin widerrufen.",
-        "scheduledBodyProcessing": "Die Löschung deines Kontos hat begonnen. Sie kann nicht mehr widerrufen werden.",
+        "scheduledBodyProcessing": "Die Löschung deines Kontos hat begonnen. Das lässt sich nicht mehr rückgängig machen.",
         "viewStatus": "Status anzeigen",
         "title": "Gefahrenzone",
         "description": "Endgültige Löschung des Kontos. 30 Tage Gnadenfrist zum Widerrufen — danach wird alles gelöscht (Audit-Logs pseudonymisiert).",
@@ -1026,7 +1026,7 @@
       "requestedOn": "Beantragt am {date}.",
       "statusPending": "Ausstehend",
       "statusProcessing": "Läuft",
-      "processingBody": "Die Löschung deines Kontos hat begonnen. Sie kann nicht mehr widerrufen werden.",
+      "processingBody": "Die Löschung deines Kontos hat begonnen. Das lässt sich nicht mehr rückgängig machen.",
       "statusCancelled": "Widerrufen",
       "statusCompleted": "Abgeschlossen",
       "scheduledFor": "Löschung geplant",
