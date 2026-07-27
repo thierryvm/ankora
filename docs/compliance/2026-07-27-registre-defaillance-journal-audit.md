@@ -176,6 +176,11 @@ politique de confidentialité. Le lien familial atténue le risque, il ne retire
 pas les obligations — en particulier l'art. 17, dont la file de suppression doit
 être branchée (étape 3b).
 
+**Art. 8 écarté.** Les trois titulaires de comptes tiers sont **majeurs**,
+confirmé par le responsable de traitement le 27 juillet 2026. Le régime du
+consentement des mineurs (art. 8, seuil de 13 ans en Belgique) ne s'applique donc
+à aucun compte de la base.
+
 ---
 
 ## Validation
