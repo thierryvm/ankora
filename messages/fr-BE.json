@@ -941,6 +941,7 @@
       "danger": {
         "scheduledTitle": "Suppression en cours",
         "scheduledBody": "Ton compte sera supprimé le <strong>{date}</strong>. Tu peux annuler à tout moment jusque-là.",
+        "scheduledBodyProcessing": "La suppression de ton compte a commencé. Elle ne peut plus être annulée.",
         "viewStatus": "Voir le statut",
         "title": "Zone dangereuse",
         "description": "Suppression définitive du compte. Grâce de 30 jours pour annuler — après, tout est effacé (logs audit pseudonymisés).",
@@ -1024,6 +1025,8 @@
       "statusLabel": "Statut :",
       "requestedOn": "Demandée le {date}.",
       "statusPending": "En attente",
+      "statusProcessing": "En cours",
+      "processingBody": "La suppression de ton compte a commencé. Elle ne peut plus être annulée.",
       "statusCancelled": "Annulée",
       "statusCompleted": "Complétée",
       "scheduledFor": "Suppression prévue",
@@ -1408,6 +1411,7 @@
       "profileUpdateFailed": "Impossible de mettre à jour le profil.",
       "deletionRequestFailed": "Impossible de programmer la suppression.",
       "deletionCancelFailed": "Impossible d'annuler la demande.",
+      "deletionCancelTooLate": "La suppression a déjà commencé : elle ne peut plus être annulée.",
       "exportLimited": "Export limité à une fois toutes les 5 minutes.",
       "resteAVivreUpdateFailed": "Impossible d'ajuster le reste à vivre. Réessaie dans un instant."
     },

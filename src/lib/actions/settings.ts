@@ -14,7 +14,7 @@ import {
 import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
 import { rateLimit } from '@/lib/security/rate-limit';
 import { exportUserData } from '@/lib/gdpr/export';
-import { requestDeletion, cancelDeletion } from '@/lib/gdpr/deletion';
+import { requestDeletion, cancelDeletion, type CancelDeletionResult } from '@/lib/gdpr/deletion';
 import { log } from '@/lib/log';
 import type { ActionResult } from '@/lib/actions/types';
 
@@ -232,17 +232,32 @@ export async function cancelAccountDeletionAction(): Promise<ActionResult> {
   const rl = await rateLimit('mutation', `user:${user.id}`);
   if (!rl.success) return { ok: false, errorCode: 'errors.session.rateLimited' };
 
+  let result: CancelDeletionResult;
   try {
-    await cancelDeletion(user.id);
+    result = await cancelDeletion(user.id);
   } catch {
     return { ok: false, errorCode: 'errors.settings.deletionCancelFailed' };
   }
 
-  await logAuditEvent(AuditEvent.GDPR_DELETION_CANCELLED, {
-    userId: user.id,
-    ipAddress: ip,
-    userAgent,
-  });
+  // Past the point of no return: a run already owns this request and the GoTrue
+  // call may already have gone out. Saying "cancelled" here would be the same
+  // inexact statement (art. 12(1)) this step exists to remove.
+  if (!result.cancelled && result.reason === 'in_progress') {
+    return { ok: false, errorCode: 'errors.settings.deletionCancelTooLate' };
+  }
+
+  // The audit row is emitted ONLY when a row actually moved. It used to fire
+  // unconditionally, so a filter matching nothing still wrote a line asserting
+  // a cancellation that never happened. `none` is not an error — there is
+  // simply nothing to cancel, and the revalidation below sends the stale page
+  // back to settings.
+  if (result.cancelled) {
+    await logAuditEvent(AuditEvent.GDPR_DELETION_CANCELLED, {
+      userId: user.id,
+      ipAddress: ip,
+      userAgent,
+    });
+  }
 
   revalidateAppPath('settings');
   revalidateAppPath('settings/deletion-status');

@@ -45,8 +45,12 @@ export default async function DeletionStatusPage() {
   });
   const scheduledAt = formatDate(scheduled, locale);
 
+  // `processing` used to fall through to the `completed` branch — an erasure in
+  // flight was announced as already done, in red. Listed explicitly so the next
+  // status added to the CHECK constraint shows up as a missing case here rather
+  // than as a wrong label.
   const statusColor =
-    data.status === 'pending'
+    data.status === 'pending' || data.status === 'processing'
       ? 'text-warning'
       : data.status === 'cancelled'
         ? 'text-success'
@@ -55,9 +59,11 @@ export default async function DeletionStatusPage() {
   const statusLabel =
     data.status === 'pending'
       ? t('statusPending')
-      : data.status === 'cancelled'
-        ? t('statusCancelled')
-        : t('statusCompleted');
+      : data.status === 'processing'
+        ? t('statusProcessing')
+        : data.status === 'cancelled'
+          ? t('statusCancelled')
+          : t('statusCompleted');
 
   return (
     <div className="flex flex-col gap-6">
@@ -94,6 +100,21 @@ export default async function DeletionStatusPage() {
               </dl>
               <div className="flex flex-wrap gap-2">
                 <CancelDeletionButton />
+                <Button asChild variant="outline">
+                  <Link href="/app/settings">{t('backToSettings')}</Link>
+                </Button>
+              </div>
+            </>
+          )}
+
+          {/* No cancel button here, deliberately: a run already owns this
+              request and the GoTrue call may already have gone out. Offering
+              a control that cannot work is the same inexact statement the
+              countdown itself used to make. */}
+          {data.status === 'processing' && (
+            <>
+              <p className="text-sm">{t('processingBody')}</p>
+              <div className="flex flex-wrap gap-2">
                 <Button asChild variant="outline">
                   <Link href="/app/settings">{t('backToSettings')}</Link>
                 </Button>

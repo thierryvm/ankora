@@ -158,10 +158,15 @@ les plus sensibles de l'app.
 Deux jobs, donc **deux planchers distincts** — un chiffre global agrégé serait
 ininterprétable au premier conflit, donc ignoré :
 
-| Job                              | Plancher au 26 juillet 2026                       |
-| -------------------------------- | ------------------------------------------------- |
-| `Playwright E2E`                 | 215 passed (214 avant, +1 spec locale réactivée)  |
-| `Playwright E2E (authenticated)` | **25 passed** (24 au départ, +1 spec `audit-log`) |
+| Job                              | Plancher au 27 juillet 2026                                 |
+| -------------------------------- | ----------------------------------------------------------- |
+| `Playwright E2E`                 | 215 passed (214 avant, +1 spec locale réactivée)            |
+| `Playwright E2E (authenticated)` | **30 passed** (25 avant, +5 `gdpr-deletion-queue`, PR-3B-A) |
+
+Le relèvement du 27 juillet est mesuré, pas déduit : `gdpr-deletion-queue.spec.ts`
+n'apparaît que dans **un** des deux projets du job authentifié (`iPhone 14` filtre sur
+`**/mobile-ios/**`), d'où +5 et non +10. Dans le job public elle ajoute **15 sautés et
+0 passé** — 5 cas × 3 projets — donc le plancher public ne bouge pas.
 
 Chaque relèvement est **mesuré en local avant le premier push**, jamais estimé.
 Une spec authentifiée ajoutée sous `e2e/` est aussi découverte par le job public :

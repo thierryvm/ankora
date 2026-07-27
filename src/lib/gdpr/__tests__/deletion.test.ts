@@ -1,55 +1,98 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
- * `src/lib/gdpr/` had no tests at all. These cover the three exported
- * functions — including the two wired into production through
- * `src/lib/actions/settings.ts`, which this PR repointed at the service-role
- * client without exercising.
+ * The `server-only` wrapper: client injection, the audit line, and the two
+ * honest answers the queue forced — a duplicate request that returns the
+ * EXISTING deadline, and a cancellation that says when nothing was cancelled.
  *
- * Every statement below was silently refused while that client was degraded to
- * `authenticated`, so these are also the first tests that describe what the
+ * The orchestration itself is covered by `deletion-core.test.ts`, which can be
+ * exercised without the privileged client at all.
+ *
+ * Every statement here was silently refused while the service-role client was
+ * degraded to `authenticated` (H3, #192), so these also describe what the
  * deletion flow is supposed to do at all.
  */
 
 const USER_ID = '11111111-2222-3333-4444-555555555555';
 
-type StepResult = { error: { message: string } | null };
+type StepResult = {
+  data?: unknown;
+  error?: { code?: string; message: string } | null;
+  count?: number | null;
+};
 
-/** Keyed `${verb}:${table}` — the shape PostgREST calls actually take. */
-const results: Record<string, StepResult> = {};
+/**
+ * Keyed `${verb}:${table}`, queued — `cancelDeletion` and `requestDeletion`
+ * each hit `deletion_requests` twice with different verbs, and the follow-up
+ * read must be scriptable independently of the write that preceded it.
+ */
+const results: Record<string, StepResult[]> = {};
 const calls: string[] = [];
 /** Every `.eq(column, value)` applied, so scoping can be asserted. */
 const filters: Array<{ op: string; column: string; value: unknown }> = [];
 
-function chain(op: string) {
-  calls.push(op);
-  const link = {
-    eq(column: string, value: unknown) {
-      filters.push({ op, column, value });
+function program(key: string, result: StepResult) {
+  (results[key] ??= []).push(result);
+}
+
+function take(key: string): StepResult {
+  return results[key]?.shift() ?? { data: null, error: null, count: 0 };
+}
+
+function builder(table: string) {
+  let op: string | null = null;
+  // Only the FIRST verb wins, and it is recorded once: `.update(…).select('id')`
+  // is an update whose rows are returned, not an update followed by a select.
+  const setOp = (verb: string) => {
+    if (op !== null) return;
+    op = verb;
+    calls.push(`${op}:${table}`);
+  };
+
+  const link: Record<string, unknown> = {
+    select: () => {
+      setOp('select');
       return link;
     },
-    then(onFulfilled?: (r: StepResult) => unknown, onRejected?: (e: unknown) => unknown) {
-      return Promise.resolve(results[op] ?? { error: null }).then(onFulfilled, onRejected);
+    insert: () => {
+      setOp('insert');
+      return link;
     },
+    update: () => {
+      setOp('update');
+      return link;
+    },
+    delete: () => {
+      setOp('delete');
+      return link;
+    },
+    eq: (column: string, value: unknown) => {
+      filters.push({ op: `${op}:${table}`, column, value });
+      return link;
+    },
+    in: () => link,
+    order: () => link,
+    limit: () => link,
+    maybeSingle: async () => take(`${op}:${table}`),
+    then: (onFulfilled?: (r: StepResult) => unknown, onRejected?: (e: unknown) => unknown) =>
+      Promise.resolve(take(`${op}:${table}`)).then(onFulfilled, onRejected),
   };
   return link;
 }
 
 const fakeClient = {
-  from(table: string) {
-    return {
-      update: () => chain(`update:${table}`),
-      delete: () => chain(`delete:${table}`),
-      insert: () => chain(`insert:${table}`),
-    };
-  },
+  from: (table: string) => builder(table),
   auth: {
     admin: {
       deleteUser() {
         calls.push('auth.deleteUser');
-        return Promise.resolve(results['auth.deleteUser'] ?? { error: null });
+        return Promise.resolve(take('auth.deleteUser'));
       },
     },
+  },
+  rpc: (fn: string) => {
+    calls.push(`rpc:${fn}`);
+    return Promise.resolve(take(`rpc:${fn}`));
   },
 };
 
@@ -67,7 +110,12 @@ vi.mock('@/lib/security/audit-log', () => ({
   logAuditEvent: (...args: unknown[]) => auditSpy(...args),
 }));
 
-import { cancelDeletion, executeDeletion, requestDeletion } from '../deletion';
+import {
+  cancelDeletion,
+  claimPendingDeletions,
+  executeDeletion,
+  requestDeletion,
+} from '../deletion';
 
 beforeEach(() => {
   calls.length = 0;
@@ -78,7 +126,7 @@ beforeEach(() => {
 
 describe('executeDeletion', () => {
   it('stops before deleting anything when audit pseudonymisation fails', async () => {
-    results['update:audit_log'] = { error: { message: 'permission denied for table audit_log' } };
+    program('update:audit_log', { error: { message: 'permission denied for table audit_log' } });
 
     await expect(executeDeletion(USER_ID)).rejects.toThrow(/pseudonymise audit log/i);
 
@@ -89,9 +137,14 @@ describe('executeDeletion', () => {
   });
 
   it('never writes the deleted user id back into the audit trail', async () => {
+    program('update:audit_log', { error: null, count: 3 });
+
     await executeDeletion(USER_ID);
 
-    expect(calls).toEqual(['update:audit_log', 'delete:workspaces', 'auth.deleteUser']);
+    // No `delete:workspaces`. It was redundant with the cascade from
+    // `public.users` (ADR-024 D1), and every redundant statement is one more
+    // way to half-fail.
+    expect(calls).toEqual(['update:audit_log', 'auth.deleteUser']);
     expect(auditSpy).toHaveBeenCalledTimes(1);
 
     const [event, context, metadata] = auditSpy.mock.calls[0] as [
@@ -107,15 +160,8 @@ describe('executeDeletion', () => {
     expect(JSON.stringify(metadata)).not.toContain(USER_ID);
   });
 
-  it('propagates a workspace deletion failure', async () => {
-    results['delete:workspaces'] = { error: { message: 'boom' } };
-
-    await expect(executeDeletion(USER_ID)).rejects.toThrow(/delete workspaces/i);
-    expect(calls).not.toContain('auth.deleteUser');
-  });
-
   it('propagates an auth user deletion failure', async () => {
-    results['auth.deleteUser'] = { error: { message: 'gotrue down' } };
+    program('auth.deleteUser', { error: { message: 'gotrue down' } });
 
     await expect(executeDeletion(USER_ID)).rejects.toThrow(/delete auth user/i);
     expect(auditSpy).not.toHaveBeenCalled();
@@ -136,6 +182,23 @@ describe('requestDeletion', () => {
     expect(scheduled).toBeLessThanOrEqual(after + THIRTY_DAYS);
   });
 
+  it('returns the EXISTING deadline when a request is already in flight', async () => {
+    // 23505 on `deletion_requests_one_active_idx`. Returning the new date would
+    // state a deadline the queue will never honour — it keeps the first one.
+    program('insert:deletion_requests', {
+      error: { code: '23505', message: 'duplicate key value violates unique constraint' },
+    });
+    program('select:deletion_requests', {
+      data: { scheduled_for: '2026-08-10T00:00:00.000Z' },
+      error: null,
+    });
+
+    const { scheduledFor } = await requestDeletion(USER_ID);
+
+    expect(scheduledFor).toBe('2026-08-10T00:00:00.000Z');
+    expect(calls).toEqual(['insert:deletion_requests', 'select:deletion_requests']);
+  });
+
   it('leaves the audit line to its caller, which has the IP and user agent', async () => {
     await requestDeletion(USER_ID);
 
@@ -145,29 +208,61 @@ describe('requestDeletion', () => {
     expect(auditSpy).not.toHaveBeenCalled();
   });
 
-  it('throws when the request cannot be stored', async () => {
-    results['insert:deletion_requests'] = { error: { message: 'unique violation' } };
+  it('throws when the request cannot be stored for any other reason', async () => {
+    program('insert:deletion_requests', { error: { code: '42501', message: 'permission denied' } });
 
     await expect(requestDeletion(USER_ID)).rejects.toThrow(/schedule deletion/i);
   });
 });
 
 describe('cancelDeletion', () => {
-  it('only cancels the caller’s own pending request', async () => {
-    await cancelDeletion(USER_ID);
+  it('cancels the caller’s own pending request', async () => {
+    program('update:deletion_requests', { data: [{ id: 'req-1' }], error: null });
+
+    await expect(cancelDeletion(USER_ID)).resolves.toEqual({ cancelled: true });
 
     expect(calls).toEqual(['update:deletion_requests']);
     // Both filters matter: without `status`, a cancellation would also rewrite
-    // requests already processed.
+    // requests already claimed by a run.
     expect(filters).toEqual([
       { op: 'update:deletion_requests', column: 'user_id', value: USER_ID },
       { op: 'update:deletion_requests', column: 'status', value: 'pending' },
     ]);
   });
 
+  it('reports `in_progress` rather than a false success once a run owns the row', async () => {
+    program('update:deletion_requests', { data: [], error: null });
+    program('select:deletion_requests', { data: { id: 'req-1' }, error: null });
+
+    await expect(cancelDeletion(USER_ID)).resolves.toEqual({
+      cancelled: false,
+      reason: 'in_progress',
+    });
+  });
+
+  it('reports `none` when there was nothing to cancel', async () => {
+    program('update:deletion_requests', { data: [], error: null });
+    program('select:deletion_requests', { data: null, error: null });
+
+    await expect(cancelDeletion(USER_ID)).resolves.toEqual({ cancelled: false, reason: 'none' });
+  });
+
   it('propagates a cancellation failure', async () => {
-    results['update:deletion_requests'] = { error: { message: 'nope' } };
+    program('update:deletion_requests', { error: { message: 'nope' } });
 
     await expect(cancelDeletion(USER_ID)).rejects.toThrow(/cancel deletion/i);
+  });
+});
+
+describe('claimPendingDeletions', () => {
+  it('maps the SQL row shape onto the caller’s shape', async () => {
+    program('rpc:claim_pending_deletions', {
+      data: [{ request_id: 'req-1', target_user_id: USER_ID }],
+      error: null,
+    });
+
+    await expect(claimPendingDeletions(25)).resolves.toEqual([
+      { requestId: 'req-1', userId: USER_ID },
+    ]);
   });
 });

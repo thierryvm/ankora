@@ -941,6 +941,7 @@
       "danger": {
         "scheduledTitle": "Verwijdering in uitvoering",
         "scheduledBody": "Je account wordt verwijderd op <strong>{date}</strong>. Je kunt tot dan op elk moment annuleren.",
+        "scheduledBodyProcessing": "Het verwijderen van je account is gestart. Dit kan niet meer worden geannuleerd.",
         "viewStatus": "Status bekijken",
         "title": "Gevarenzone",
         "description": "Definitieve verwijdering van het account. 30 dagen grace period om te annuleren — daarna wordt alles gewist (audit logs gepseudonimiseerd).",
@@ -1024,6 +1025,8 @@
       "statusLabel": "Status:",
       "requestedOn": "Aangevraagd op {date}.",
       "statusPending": "In afwachting",
+      "statusProcessing": "Bezig",
+      "processingBody": "Het verwijderen van je account is gestart. Dit kan niet meer worden geannuleerd.",
       "statusCancelled": "Geannuleerd",
       "statusCompleted": "Voltooid",
       "scheduledFor": "Verwijdering gepland",
@@ -1408,6 +1411,7 @@
       "profileUpdateFailed": "Kan het profiel niet bijwerken.",
       "deletionRequestFailed": "Kan de verwijdering niet inplannen.",
       "deletionCancelFailed": "Kan de aanvraag niet annuleren.",
+      "deletionCancelTooLate": "Het verwijderen is al gestart en kan niet meer worden geannuleerd.",
       "exportLimited": "Export beperkt tot één keer per 5 minuten.",
       "resteAVivreUpdateFailed": "Kon het leefbudget niet aanpassen. Probeer het zo opnieuw."
     },

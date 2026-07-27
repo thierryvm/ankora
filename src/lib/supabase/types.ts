@@ -440,6 +440,7 @@ export type Database = {
       deletion_requests: {
         Row: {
           cancelled_at: string | null;
+          claimed_at: string | null;
           completed_at: string | null;
           id: string;
           reason: string | null;
@@ -450,6 +451,7 @@ export type Database = {
         };
         Insert: {
           cancelled_at?: string | null;
+          claimed_at?: string | null;
           completed_at?: string | null;
           id?: string;
           reason?: string | null;
@@ -460,6 +462,7 @@ export type Database = {
         };
         Update: {
           cancelled_at?: string | null;
+          claimed_at?: string | null;
           completed_at?: string | null;
           id?: string;
           reason?: string | null;
@@ -743,6 +746,13 @@ export type Database = {
           rls_forced: boolean;
           schema_name: string;
           table_name: string;
+        }[];
+      };
+      claim_pending_deletions: {
+        Args: { batch_size: number };
+        Returns: {
+          request_id: string;
+          target_user_id: string;
         }[];
       };
       is_workspace_editor: { Args: { ws_id: string }; Returns: boolean };
