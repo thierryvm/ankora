@@ -484,6 +484,133 @@ détecte pas un import dynamique. Le prouver a coûté un incident (§10) ; le c
 d'analyser le graphe d'imports plutôt que le texte, ce qui dépasse cette PR. Nommé, pas
 réparé.
 
+## 9quater. `rls-flow-tester` — PASS, et le postulat central enfin mesuré
+
+Verdict **PASS**. Les deux sens sont prouvés par mesure, avec des nombres de lignes
+partout. **Aucun refus silencieux sur le chemin privilégié.** Base locale restaurée,
+`git status` vide, migrations inchangées (`md5sum` vérifiés).
+
+### Ce qui n'était qu'un raisonnement est devenu une mesure
+
+ADR-024 rejetait la conception 1 sur une inférence : une fonction `SECURITY DEFINER` dont
+le propriétaire n'a pas `BYPASSRLS`, sur une table `FORCE RLS`, écrirait zéro ligne **sans
+lever**. L'agent l'a **fabriquée et exécutée** — rôle dédié sans `BYPASSRLS`, 7 lignes
+semées :
+
+```
+A. DEFINER, propriétaire SANS bypassrls, appelée par service_role → rows_deleted = 0, survivants = 7
+B. INVOKER,                              appelée par service_role → rows_deleted = 7, survivants = 0
+```
+
+**Zéro ligne, aucune erreur, retour « succès ».** Le mode de panne est réel et
+reproductible : D4 est justifié par la mesure, plus par le principe.
+
+De même pour l'ordre de D1, mesuré en contrefactuel :
+
+| Compte | Traitement                             | `user_id`          | `ip_address`              | `user_agent`          |
+| ------ | -------------------------------------- | ------------------ | ------------------------- | --------------------- |
+| D      | pseudonymisation **puis** `deleteUser` | `NULL`             | `NULL`                    | `NULL`                |
+| E      | `deleteUser` seul                      | `NULL` _(cascade)_ | **`203.0.113.77` SURVIT** | **`probe-ua` SURVIT** |
+
+Inverser les deux instructions laisse l'IP et le user-agent d'une personne effacée, sans
+plus aucune clé de jointure, **sans erreur**. La spec e2e assert les trois colonnes à
+`null` : une inversion serait rouge en CI.
+
+### Le verrou, les trois cas dans un seul appel
+
+| Ligne                 | `claimed_at` avant | après        | Attendu                                |
+| --------------------- | ------------------ | ------------ | -------------------------------------- |
+| réclamée il y a 5 min | `16:15:32`         | **inchangé** | non volée ✅                           |
+| réclamée il y a 2 h   | `14:20:32`         | `16:20:50`   | remise en file **puis re-réclamée** ✅ |
+| `claimed_at IS NULL`  | `NULL`             | `16:20:50`   | remise en file **puis re-réclamée** ✅ |
+
+Trois `claimed_at` identiques = une seule transaction. La disjonction `claimed_at is null`
+ajoutée après la revue de plan n'était pas du bruit défensif : **mesuré**, sans elle la
+ligne serait gelée pour toujours.
+
+Et le contrefactuel de l'index (recréé sur `pending` seul, état interdit fabriqué) fait
+avorter **l'appel entier** de `claim_pending_deletions` en `23505` — le commentaire qui
+justifie la couverture des deux statuts est mesurément exact.
+
+### Deux imprécisions de commentaire **dans mon diff**
+
+1. **`...000002` lignes 21-24** : « both UPDATE statements match zero rows and the call
+   returns `[]` ». Vrai pour `anon`. **Faux pour un `authenticated` propriétaire d'une
+   ligne échue** — mesuré 5/5 : `42501` / HTTP 403, la transaction avorte sur le
+   `with check` de `deletion_self_update`. La conclusion sécurité tient, **le mécanisme
+   décrit est faux**. Et la correction _renforce_ l'argument : elle montre que la sûreté
+   reposait entièrement sur une policy, ce que la migration affirme deux lignes plus bas.
+2. **`...000001` lignes 51-61** : l'écrasement des doublons utilise `requested_at >`
+   **strict**. Deux `pending` au même instant se protègent mutuellement, `UPDATE 0`, et le
+   `create unique index` **échoue** en `23505`. Gravité faible — l'échec est **bruyant**,
+   la migration avorte au lieu de dériver, et le push était verrouillé par la lecture n° 2
+   qui a renvoyé zéro ligne. Même remarque pour une base où l'exécuteur a déjà tourné : la
+   migration n'est pas rejouable, bruyamment.
+
+**Les deux fichiers ne sont PAS corrigés en place, délibérément.**
+`supabase_migrations.schema_migrations` porte une colonne `statements` : la production
+enregistre le texte exécuté. Éditer un fichier déjà appliqué le ferait diverger de ce qui a
+tourné — sur une migration qui touche à la suppression de comptes, l'immuabilité vaut mieux
+qu'un commentaire plus juste. Les deux corrections vivent ici et dans ADR-024.
+
+### La cause profonde du défaut de grants, décomposée
+
+L'agent est allé plus loin que ma mesure. `aclexplode` sur `is_workspace_member` :
+
+```
+(16384,     0, EXECUTE, f)   ← grantee 0 = PUBLIC, JAMAIS révoqué
+(16384, 16384, EXECUTE, f)   postgres
+(16384, 16444, EXECUTE, f)   authenticated
+(16384, 16445, EXECUTE, f)   service_role
+             ^ 16443 (anon) ABSENT
+```
+
+`20260528000001:70-71` fait `revoke execute … from anon`. Le grant nominatif a bien
+disparu — **et `anon` hérite quand même, par `PUBLIC`**. La migration de mai **n'a rien
+changé**. C'est l'advisor 0028, et c'est exactement la leçon que `...000002` applique
+correctement à la fonction neuve en nommant `public, anon, authenticated`.
+
+**Correctif de la PR dédiée** — noter le `public` dans chaque `revoke`, sans quoi elle
+répétera la faute de mai :
+
+```sql
+revoke execute on function public.is_workspace_member(uuid)  from public, anon;
+revoke execute on function public.is_workspace_editor(uuid)  from public, anon;
+-- `authenticated` doit RESTER : les policies RLS les invoquent dans ce rôle.
+revoke execute on function public.assert_rls_coverage()       from public, anon, authenticated;
+revoke execute on function public.touch_updated_at()          from public, anon, authenticated;
+```
+
+Précision d'impact qu'il apporte et que je n'avais pas : `is_workspace_member` /
+`is_workspace_editor` sont `SECURITY DEFINER` avec `postgres` propriétaire porteur de
+`BYPASSRLS` — elles lisent `workspace_members` **en contournant la RLS**. « La RLS filtre »
+n'est donc pas l'explication de leur innocuité : **seul le corps de la fonction protège**.
+Et `assert_rls_coverage()` divulguerait à un appelant anonyme le nom de toute table partant
+sans RLS — vide aujourd'hui, primitive de reconnaissance le jour de la première régression.
+
+### Le piège local/hébergé, à écrire avant PR-B
+
+`postgres` porte `rolbypassrls = t` **en local**. Conséquence directe : la version
+`SECURITY DEFINER` d'avril de `purge_audit_log_older_than_12_months()` **aurait passé un
+test local avec un compteur correct**. Le défaut a survécu d'avril à aujourd'hui non pas
+faute de test, mais parce qu'un test local vert n'aurait rien prouvé.
+
+Second angle mort, structurel : `test.skip(!isLocalSupabase, …)` est nécessaire — la spec
+supprimerait de vrais comptes sur l'hébergé — mais sa conséquence doit être écrite :
+**aucun job CI ne prouvera jamais le chemin privilégié sur l'hébergé.** La lecture n° 3 en
+production reste le seul test réel.
+
+### Ce que l'audit a révélé sur ma propre discipline
+
+L'agent signale que la pile locale était **partagée avec une autre session** : le HEAD de
+la branche a bougé sous lui, et `audit_log` a reçu 5 `auth.login` qu'il n'a pas produites,
+à cadence régulière. Il a rejoué toutes ses mesures sous conditions contrôlées.
+
+C'est le même défaut que l'incident du §10, vu depuis l'autre bout : deux sessions
+écrivaient dans la même base **et** dans le même dépôt. La règle « un agent par répertoire
+de travail, worktree sinon » ne protège pas que les fichiers — elle protège aussi les
+mesures.
+
 ## 10. Un incident de process, à consigner
 
 `test-quality-auditor`, qui dispose de Bash, a injecté un import dynamique de
