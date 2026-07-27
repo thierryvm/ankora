@@ -253,7 +253,131 @@ d'architecture à part entière.
   est le seul test réel, et il est positif.
 - **`maxDuration = 60 s` suffit-il ?** Non mesuré — question de PR-B.
 
-## 8. Definition of DONE
+## 8. Agents QA — ce qu'ils ont trouvé, et ce qui n'a pas eu lieu
+
+| Agent                     | État                                                            | Verdict                                             |
+| ------------------------- | --------------------------------------------------------------- | --------------------------------------------------- |
+| `i18n-auditor`            | rendu                                                           | **PASS_WITH_NOTES** — aucun défaut bloquant         |
+| `gdpr-compliance-auditor` | rendu                                                           | **COMPLIANT_WITH_NOTES** — 3 défauts réels chez moi |
+| `rls-flow-tester`         | **échec** — limite de session                                   | **non exécuté**                                     |
+| `test-quality-auditor`    | **échec** — limite de session                                   | **non exécuté**                                     |
+| `test-runner`             | non lancé — suite déjà exécutée intégralement en local et en CI | —                                                   |
+
+Deux des cinq agents prévus par le plan **n'ont pas tourné**. Ce n'est pas un vert par
+défaut : `rls-flow-tester` est précisément celui qui devait auditer les deux politiques
+réécrites et le sens privilégié. J'ai repris ses points à la main (§9) plutôt que de
+laisser le trou implicite — mais une vérification faite par l'auteur du code n'a pas la
+valeur d'une vérification indépendante, et il faut le dire.
+
+### Les trois défauts réels trouvés par `gdpr-compliance-auditor`, et corrigés
+
+1. **Un commentaire qui promettait une garantie inexistante.** `deletion-status/page.tsx`
+   affirmait que lister les statuts explicitement ferait apparaître « le prochain statut
+   ajouté au CHECK comme un cas manquant ». **Faux** : `status` est typé `string`, pas une
+   union, et une chaîne de ternaires n'a aucun contrôle d'exhaustivité. Un cinquième
+   statut se serait affiché **« Complétée », en rouge** — on aurait annoncé à quelqu'un que
+   son compte est effacé alors qu'il ne l'est pas.
+   C'est exactement le défaut que ce chantier corrige, écrit de ma main dans un commentaire
+   censé rassurer. Remplacé par une table de correspondance et un repli neutre
+   (`statusUnknown`, 5 locales).
+2. **`migration:92` disait « 14 jours » quand le code en écrit 30.** Le raisonnement tenait
+   _a fortiori_, mais le chiffre était faux dans le commentaire qui fera autorité pour qui
+   touchera au seuil. Rendu indépendant de la valeur.
+3. **`docs/ARCHITECTURE.md` décrivait un flux qui n'existe pas** — deux e-mails jamais
+   envoyés, et **deux affirmations rendues fausses par cette PR même** (`delete cascade
+workspaces`, retiré ; « marque la requête `completed` », désormais inatteignable).
+   Section réécrite sur ce que le code fait.
+
+### Ce que je n'ai pas retenu, et pourquoi
+
+- **« Étendre le scrub aux lignes `user_id NULL` »** — l'agent la qualifie d'atteignable
+  sans privilège nouveau. C'est vrai techniquement et faux en pratique : ces lignes sont
+  **non attribuables**. Rien ne dit quelle ligne `auth.rate_limited` appartient à qui, et
+  nettoyer par IP effacerait les lignes d'autres personnes (NAT, IP partagées). Reste un
+  résidu documenté dans `deletion.ts`, pas un correctif à portée de main.
+- **« Nuancer _ne peut plus être annulée_ au regard de la reprise à 1 h »** — la phrase
+  décrit l'**état courant**, et l'état courant est vrai quand elle s'affiche. Si un run
+  plante et que la ligne repasse `pending`, l'écran repasse à `pending` avec son bouton.
+  Une formulation hésitante (« ne peut probablement plus ») serait moins honnête dans le
+  cas normal, qui est le cas de tous les jours. Choix assumé, pas oubli.
+- **« `danger.description` : _tout est effacé_ »** — surévaluation réelle, **antérieure** à
+  cette PR et vraie dans les 5 locales. Elle relève de la dette documentaire que le plan
+  fait porter à PR-B (§B3), avec les huit autres sites. La corriger ici élargirait le scope
+  d'une PR dont l'invariant est de ne rien armer.
+
+## 9. Le défaut que personne n'a trouvé, sauf la mesure
+
+En reprenant à la main le point que `rls-flow-tester` n'a pas atteint — **lire les
+privilèges réels en base plutôt que le texte de la migration** :
+
+```
+claim_pending_deletions :: postgres=X | anon=X | authenticated=X | service_role=X
+POST /rest/v1/rpc/claim_pending_deletions   avec la clé ANON   →  HTTP 200
+```
+
+`revoke execute … from public` retire le grant du pseudo-rôle `PUBLIC` que Postgres pose à
+la création. Il **ne retire pas** les grants **explicites** que les privilèges par défaut
+de Supabase accordent à `anon` et `authenticated` sur toute nouvelle fonction de `public`.
+Deux choses différentes qui se lisent pareil. `20260528000001` avait déjà appris la leçon
+pour les fonctions plus anciennes ; la nouvelle ne l'a pas héritée.
+
+Et mon commentaire de migration affirmait que le `revoke` suffisait — **une deuxième
+garantie annoncée qui n'existait pas, dans la même PR.**
+
+**Impact mesuré aujourd'hui : nul.** La fonction est `SECURITY INVOKER`, donc un appelant
+`anon` s'exécute avec les privilèges d'`anon` contre une table en `FORCE ROW LEVEL
+SECURITY` dont aucune politique ne lui accorde quoi que ce soit : les deux `UPDATE`
+touchent zéro ligne et l'appel rend `[]`. Aucune ligne mutée, aucune donnée exposée.
+
+**Fermé quand même**, pour deux raisons qui ne dépendent pas de cette mesure : le moindre
+privilège (un appelant non authentifié n'a rien à faire dans une mutation RGPD), et le
+fait que c'est un endpoint non authentifié, non compté, qui émet deux `UPDATE` sur
+`deletion_requests`. La sûreté repose aujourd'hui **entièrement** sur des politiques
+inchangées ; une future édition de politique ne doit pas pouvoir transformer un grant que
+personne ne se rappelle en exposition.
+
+→ Migration `20260727000002_claim_grants_hardening.sql`, appliquée en production.
+
+**Après correctif, les deux sens mesurés :**
+
+| Appelant       | Avant          | Après                                   |
+| -------------- | -------------- | --------------------------------------- |
+| `anon`         | HTTP 200, `[]` | **42501 — permission denied**, HTTP 401 |
+| `service_role` | 200            | **200, 5 lignes réclamées**             |
+
+### Et la purge, enfin observée
+
+`purge_audit_log_older_than_12_months()` n'avait **jamais été appelée depuis avril**, donc
+jamais observée. En `SECURITY DEFINER` sur une table `FORCE RLS`, elle pouvait rendre 0
+sans lever. Passée en `INVOKER` et appelée par `service_role` :
+
+```
+2 lignes semées à −13 et −14 mois  →  la fonction rend 2  →  0 ligne restante
+```
+
+Elle supprime réellement. C'est la première fois que cette fonction est vue faire quelque
+chose.
+
+**Ce qui reste dû** : elle n'a toujours **aucun appelant**. La rétention de 12 mois
+annoncée dans les 5 politiques de confidentialité n'est donc toujours pas implémentée
+(art. 5(1)(e)). PR-B l'arme (plan §B1.5). D'ici là, la fonction est correcte et inerte —
+réparée, pas branchée.
+
+## 10. Un incident de process, à consigner
+
+`test-quality-auditor`, qui dispose de Bash, a injecté un import dynamique de
+`@/lib/supabase/admin` dans `src/lib/gdpr/deletion-core.ts` pour éprouver mon test de
+frontière de module. L'expérience était légitime et sa conclusion est retenue : **le test
+lit les imports de premier niveau et n'aurait pas attrapé un import dynamique.**
+
+Mais la ligne s'est retrouvée **dans le commit `43b8ec8`**, parce que je committais depuis
+le même répertoire de travail que celui où l'agent opérait. Retirée en `2a2d032`.
+
+Cause : la règle « un seul agent par répertoire de travail, worktree sinon » n'a pas été
+appliquée. Un agent QA doté de Bash sur l'arbre de travail depuis lequel on commite est un
+risque que je connaissais et que j'ai quand même pris.
+
+## 11. Definition of DONE
 
 | #   | Critère                                   | État                          |
 | --- | ----------------------------------------- | ----------------------------- |

@@ -88,7 +88,9 @@ begin
   -- guard, and should learn it here rather than from an incident.
   --
   -- `claimed_at`, NOT `requested_at`. A row is only claimable at
-  -- `scheduled_for <= now()`, i.e. 14 days after `requested_at`, so a test on
+  -- `scheduled_for <= now()`, i.e. a whole grace period after `requested_at`
+  -- (30 days today, 14 from PR-B — the argument holds either way, and stating
+  -- a number here would just be one more place to forget), so a test on
   -- `requested_at` would be ALWAYS TRUE: every run would re-queue every
   -- in-flight row — including the ones a concurrent run is processing, its
   -- claiming transaction having already committed before the GoTrue call.

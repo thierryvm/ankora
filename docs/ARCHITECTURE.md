@@ -112,14 +112,32 @@ Schémas **Zod** — source unique de vérité pour les types de formulaires + v
 
 ## Flux critique : suppression GDPR
 
-1. `requestDeletion(userId)` → insert dans `deletion_requests` avec `scheduled_for = now + 30j`
-2. Email envoyé à l'utilisateur (option : annulation en 1 clic pendant 30j)
-3. Cron (Edge Function) : chaque jour, traite les requêtes dont `scheduled_for <= now` :
-   - Pseudonymise `audit_log` (user_id → NULL)
-   - Delete cascade `workspaces` → charges/expenses/categories/consents
-   - `supabase.auth.admin.deleteUser(userId)`
-   - Marque la requête `completed`
-4. Email de confirmation à l'adresse (qui sera invalidée juste après).
+> Décidé dans [ADR-024](adr/ADR-024-file-de-suppression-de-compte.md). Cette section
+> décrivait jusqu'au 27 juillet 2026 un flux qui n'existait pas — deux e-mails jamais
+> envoyés, une suppression de workspaces retirée depuis, et un statut `completed`
+> inatteignable. Réécrite sur ce que le code fait.
+
+1. `requestDeletion(userId)` → insert dans `deletion_requests`, `scheduled_for = now + 30j`
+   (14j à partir de PR-B, cf. ADR-023). Une demande déjà en vol renvoie l'échéance
+   **existante** : l'index unique partiel n'en autorise qu'une active par personne.
+2. **Aucun e-mail.** L'application n'en envoie pas (ADR-023 §2) : l'annulation se fait
+   depuis `/app/settings/deletion-status`, tant que la demande est `pending`.
+3. Cron quotidien — **route Vercel, pas Edge Function** — livré en PR-B :
+   - `claim_pending_deletions(25)` passe les lignes dues de `pending` à `processing`,
+     et remet en file celles qu'un run précédent a laissées bloquées plus d'une heure.
+   - Pseudonymise `audit_log` : `user_id`, `ip_address`, `user_agent` → NULL.
+     **0 ligne est un succès** — un compte peut légitimement n'avoir aucun événement.
+   - `supabase.auth.admin.deleteUser(userId)`. La cascade depuis `auth.users` fait le
+     reste, `workspaces` compris : **pas de suppression explicite**, elle était redondante.
+     Un « user not found » compte comme un succès, sinon la ligne devient une pilule
+     empoisonnée réclamée et échouée chaque jour.
+4. **La demande n'est jamais marquée `completed`** : `deletion_requests.user_id` cascade
+   depuis `public.users`, donc la ligne disparaît avec le compte. `status='completed'` est
+   accepté par la contrainte et ne sera jamais écrit.
+5. **Ce qui survit** : `auth.audit_log_entries` conserve l'e-mail en clair et l'IP, sans
+   clé étrangère vers `auth.users` — écart art. 17 mesuré, issue #278. Les lignes
+   d'`audit_log` écrites avec `user_id: null` (rate-limit, reset de mot de passe) portent
+   une IP qu'aucun `.eq('user_id', …)` ne peut atteindre.
 
 ## Décisions clés
 

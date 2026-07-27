@@ -1026,6 +1026,7 @@
       "requestedOn": "Beantragt am {date}.",
       "statusPending": "Ausstehend",
       "statusProcessing": "Läuft",
+      "statusUnknown": "Unbekannter Status",
       "processingBody": "Die Löschung deines Kontos hat begonnen. Das lässt sich nicht mehr rückgängig machen.",
       "statusCancelled": "Widerrufen",
       "statusCompleted": "Abgeschlossen",

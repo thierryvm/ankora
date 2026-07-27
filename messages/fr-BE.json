@@ -1026,6 +1026,7 @@
       "requestedOn": "Demandée le {date}.",
       "statusPending": "En attente",
       "statusProcessing": "En cours",
+      "statusUnknown": "État inconnu",
       "processingBody": "La suppression de ton compte a commencé. Elle ne peut plus être annulée.",
       "statusCancelled": "Annulée",
       "statusCompleted": "Complétée",

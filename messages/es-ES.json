@@ -1026,6 +1026,7 @@
       "requestedOn": "Solicitada el {date}.",
       "statusPending": "Pendiente",
       "statusProcessing": "En curso",
+      "statusUnknown": "Estado desconocido",
       "processingBody": "La eliminación de tu cuenta ha comenzado. Ya no se puede cancelar.",
       "statusCancelled": "Cancelada",
       "statusCompleted": "Completada",

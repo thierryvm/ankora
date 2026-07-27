@@ -1026,6 +1026,7 @@
       "requestedOn": "Aangevraagd op {date}.",
       "statusPending": "In afwachting",
       "statusProcessing": "Bezig",
+      "statusUnknown": "Onbekende status",
       "processingBody": "Het verwijderen van je account is gestart. Dit kan niet meer worden geannuleerd.",
       "statusCancelled": "Geannuleerd",
       "statusCompleted": "Voltooid",

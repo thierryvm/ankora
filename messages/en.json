@@ -1026,6 +1026,7 @@
       "requestedOn": "Requested on {date}.",
       "statusPending": "Pending",
       "statusProcessing": "In progress",
+      "statusUnknown": "Unknown status",
       "processingBody": "Deletion of your account has started. It can no longer be cancelled.",
       "statusCancelled": "Cancelled",
       "statusCompleted": "Completed",
