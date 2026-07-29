@@ -119,7 +119,21 @@ Répartition des 48 commits `fix` sur 233 **[V]** :
 
 **Le filet de sécurité du cockpit a été vert pendant deux mois sans jamais s'exécuter.** C'est la cause mécanique des « bugs à répétition ». Elle a été corrigée le 26 juillet (job CI `e2e-authenticated` avec Supabase local, `#271`) — trois jours avant cet audit. Les 6 specs restent à réécrire.
 
-**Et 7 issues P0/P1 ouvertes portent sur des composants morts** : `#150` à `#157` visent `Drawer`, `IconPicker`, `ColorPicker`, `Tabs`, `Chip` — tous à **zéro call-site en production** **[V]**. Elles sont ouvertes depuis 80 jours, étiquetées P0/P1, et n'ont **aucun impact utilisateur**. Le backlog signale un incendie dans une pièce vide, ce qui masque les vraies priorités.
+**Et 7 issues P0/P1 ouvertes portent sur des composants morts** : `#150`, `#151`,
+`#152`, `#154`, `#155`, `#156`, `#157` visent `Drawer`, `IconPicker`,
+`ColorPicker`, `Tabs`, `Chip` — tous à **zéro call-site en production** **[V]**.
+Elles sont ouvertes depuis 80 jours, étiquetées P0/P1, et n'ont **aucun impact
+utilisateur**. Le backlog signale un incendie dans une pièce vide, ce qui masque
+les vraies priorités.
+
+> **Correction de formulation (2026-07-30).** Cette phrase écrivait « `#150` à
+> `#157` », soit un intervalle de **8** numéros pour **7** issues. Le compte de 7
+> était juste, l'intervalle non : **`#153` était déjà fermée depuis le 2026-05-10**
+> (`completed` — ThemeToggle, PR-B) et ne concerne pas `atoms/`. Les sept sont
+> donc énumérées ci-dessus plutôt que bornées. Vérifié par l'API issue par issue.
+>
+> **Statut au 2026-07-30** : les sept sont fermées en `not_planned` (2026-07-29),
+> conformément à ADR-034 — le code n'a pas été corrigé, il a été supprimé.
 
 ### Douleur 3 — « Navigation et parcours utilisateur confus »
 

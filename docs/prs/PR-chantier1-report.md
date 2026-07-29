@@ -147,4 +147,20 @@ Ce chantier s'arrête à **« prêt pour revue »**. `CLAUDE.md` : « un push, u
 
 ## 8. Hors périmètre, non fait
 
-Pas de primitive `<Sheet>` (seulement la **récolte écrite** de son contrat, dans [`docs/specs/sheet-primitive-contract.md`](../specs/sheet-primitive-contract.md), avec les 4 exigences d'a11y modale que la source ne couvrait pas) · pas de bouton ⊕ · pas de refonte de l'accueil · pas de saisie 2 taps · pas de cadences 1/2/3/4/6/12 · pas de calculateur de coût du crédit · **aucune issue GitHub fermée** (pas d'accès `gh` sur la machine — les 7 issues P0/P1 #150-#152 et #154-#157 restent à fermer en référençant ADR-034).
+Pas de primitive `<Sheet>` (seulement la **récolte écrite** de son contrat, dans [`docs/specs/sheet-primitive-contract.md`](../specs/sheet-primitive-contract.md), avec les 4 exigences d'a11y modale que la source ne couvrait pas) · pas de bouton ⊕ · pas de refonte de l'accueil · pas de saisie 2 taps · pas de cadences 1/2/3/4/6/12 · pas de calculateur de coût du crédit.
+
+> **Mise à jour du 2026-07-30 — les 7 issues sont fermées.** Ce rapport disait
+> « aucune issue GitHub fermée (pas d'accès `gh` sur la machine) ». `gh` a été
+> installé depuis, et les **7** issues P0/P1 visées par ADR-034 sont closes en
+> `not_planned` le 2026-07-29 : **#150, #151, #152, #154, #155, #156, #157**.
+> Vérifié une par une via l'API (`state`, `state_reason`, `closed_at`).
+>
+> `not_planned` et non `completed`, et c'est le bon état : le code qu'elles
+> décrivaient n'a pas été corrigé, il a été **supprimé** (`src/components/atoms/`
+> et `/design-playground`). Les fermer en `completed` aurait laissé croire à sept
+> correctifs qui n'existent pas.
+>
+> ⚠️ **#153 n'en fait pas partie** : elle était déjà fermée en `completed` depuis
+> le **2026-05-10** (ThemeToggle, PR-B) et ne concerne pas `atoms/`. L'intervalle
+> « #150 à #157 » écrit ailleurs compte 8 numéros pour 7 issues — cf. la note
+> ajoutée à l'audit du 29/07.
