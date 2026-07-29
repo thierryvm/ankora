@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { formatCurrency } from '@/lib/i18n/formatters';
-import { settleSpend, useOptimisticSpend } from '@/lib/expenses/optimistic-spend';
+import { settleSpend, useOptimisticValue } from '@/lib/expenses/optimistic-spend';
 import type { Locale } from '@/i18n/routing';
 
 /**
@@ -25,11 +25,11 @@ import type { Locale } from '@/i18n/routing';
  *
  * ## Two sources, one figure
  *
- * `value` is server truth. `useOptimisticSpend()` carries a spend the ⊕ sheet
- * has just committed but which the server has not echoed back yet, so the
+ * `value` is server truth. `useOptimisticValue()` carries the figure the ⊕ sheet
+ * has just committed to but which the server has not echoed back yet, so the
  * descent starts on the tap rather than on the round-trip (ADR-010's < 100 ms).
- * When fresh truth lands, the pending delta is dropped here — see
- * `optimistic-spend.ts` for why clearing it anywhere else produces a flicker.
+ * It is an absolute amount rather than a delta — `optimistic-spend.ts` records
+ * the frame-accurate bug that distinction fixes.
  *
  * ## No layout shift, ever
  *
@@ -86,21 +86,23 @@ export type HeroAmountProps = {
 };
 
 export function HeroAmount({ value, locale, className, testId }: HeroAmountProps) {
-  const pendingSpend = useOptimisticSpend();
-  const target = value - pendingSpend;
+  // An absolute figure, so applying it twice is applying it once. See
+  // `optimistic-spend.ts` for why a delta was wrong: the revalidated server
+  // value already includes the spend, so subtracting again dipped the hero 18 €
+  // below the truth for one committed render.
+  const optimistic = useOptimisticValue();
+  const target = optimistic ?? value;
 
   // Seeded with the target so the first client render matches what the server
   // rendered — animating on mount would be a hydration mismatch AND would make
   // every page load count up from zero, which says nothing about spending.
   const [displayed, setDisplayed] = useState(target);
   const displayedRef = useRef(target);
-  const lastServerValueRef = useRef(value);
 
-  // Fresh server truth: the optimistic delta has done its job and must go, or
-  // it would be subtracted a second time from a value that already includes it.
+  // Fresh server truth supersedes any optimistic figure. Unconditional: no
+  // comparison, no remembered previous value, so nothing has to be read during
+  // render. In the normal path the two agree and the figure does not move.
   useEffect(() => {
-    if (value === lastServerValueRef.current) return;
-    lastServerValueRef.current = value;
     settleSpend();
   }, [value]);
 

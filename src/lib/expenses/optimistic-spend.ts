@@ -19,26 +19,38 @@ import { useSyncExternalStore } from 'react';
  * So: a module-level store, deliberately tiny, with one job — carry a pending
  * spend from the sheet to the hero.
  *
- * ## Why it cannot drift out of sync with the server
+ * ## An absolute target, not a delta — and why that matters
  *
- * The pending delta is **not** cleared on a timer, and **not** cleared when the
- * action resolves. It is cleared when the hero observes its server `value`
- * actually change (see `HeroAmount`). That ordering is the whole trick: clear on
- * resolve and there is a window where the delta is gone but the RSC payload has
- * not landed, so the figure jumps back up and then down again — a visible
- * flicker on the one number the product is built around.
+ * The first version of this published a delta, and the hero computed
+ * `value − pending`. That is wrong in a way only a test caught: when the
+ * revalidated server value lands, it ALREADY includes the spend, so for one
+ * committed render the hero showed `429,89 − 18,50 = 411,39`. The figure dipped
+ * 18 € below the truth and climbed back — on the one number the product is
+ * built around. Reconciling that needed the component to track which server
+ * value the delta belonged to, which meant reading a ref during render.
  *
- * On failure the sheet calls {@link settleSpend} itself, which reverts the
- * delta immediately, alongside the error toast.
+ * Publishing the **resulting figure** removes the problem instead of managing
+ * it. The sheet already knows it — it is the « Il te restera 429,89 € » it
+ * displays. Applying it twice is applying it once: the operation is idempotent,
+ * so no ordering between the action resolving and the RSC payload arriving can
+ * produce a wrong frame.
+ *
+ * The hero clears it whenever fresh server truth arrives, unconditionally. In
+ * the normal path the two agree and nothing moves. If the sheet's figure was
+ * stale (another device spent meanwhile), there is one frame of the optimistic
+ * value before the correction — which is precisely what optimism means.
+ *
+ * On failure the sheet calls {@link settleSpend} itself, reverting immediately
+ * alongside the error toast.
  *
  * ## Scope
  *
- * Only spends dated inside the current month may be announced — an expense
+ * Only a spend dated inside the current month may be announced — an expense
  * backdated to last month does not move this month's hero. That check belongs
- * to the caller, which is the only place that knows the date.
+ * to the caller, the only place that knows the date.
  */
 
-let pending = 0;
+let pending: number | null = null;
 const listeners = new Set<() => void>();
 
 function emit(): void {
@@ -52,41 +64,44 @@ function subscribe(listener: () => void): () => void {
   };
 }
 
-function getSnapshot(): number {
+function getSnapshot(): number | null {
   return pending;
 }
 
 /** Server render: nothing is pending yet, so hydration matches. */
-function getServerSnapshot(): number {
-  return 0;
+function getServerSnapshot(): number | null {
+  return null;
 }
 
 /**
- * Announce a spend that has just been committed optimistically.
+ * Announce the figure « Il te reste » should show now that a spend has been
+ * committed optimistically.
  *
- * @param amount euros, positive. Ignored when not finite or ≤ 0 — a zero-euro
- *   spend has nothing to show, and a NaN from a half-typed field must never
- *   reach the hero and turn it into « NaN € ».
+ * @param nextValue the RESULTING amount, not the amount spent. Ignored when not
+ *   finite — a NaN from a half-typed field must never reach the hero and turn it
+ *   into « NaN € ».
  */
-export function announceSpend(amount: number): void {
-  if (!Number.isFinite(amount) || amount <= 0) return;
-  pending += amount;
+export function announceOptimisticValue(nextValue: number): void {
+  if (!Number.isFinite(nextValue)) return;
+  pending = nextValue;
   emit();
 }
 
 /**
- * Drop the pending delta.
+ * Drop the optimistic figure and fall back to server truth.
  *
- * Called by the hero when fresh server truth arrives, and by the sheet when the
- * insert failed. Idempotent.
+ * Called by the hero whenever a fresh server value arrives, and by the sheet
+ * when the insert failed. Idempotent.
  */
 export function settleSpend(): void {
-  if (pending === 0) return;
-  pending = 0;
+  if (pending === null) return;
+  pending = null;
   emit();
 }
 
-/** Euros committed optimistically and not yet reflected in server truth. */
-export function useOptimisticSpend(): number {
+/**
+ * The optimistic figure to show, or `null` when server truth should be used.
+ */
+export function useOptimisticValue(): number | null {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }

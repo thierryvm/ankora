@@ -19,7 +19,7 @@ import { todayInAnkoraTz } from '@/lib/date/tz';
 
 const createExpenseAction = vi.fn();
 const getExpenseEntryContextAction = vi.fn();
-const announceSpend = vi.fn();
+const announceOptimisticValue = vi.fn();
 const settleSpend = vi.fn();
 const toastSuccess = vi.fn();
 const toastError = vi.fn();
@@ -33,7 +33,7 @@ vi.mock('@/lib/actions/expense-entry', () => ({
 }));
 
 vi.mock('@/lib/expenses/optimistic-spend', () => ({
-  announceSpend: (...args: unknown[]) => announceSpend(...args),
+  announceOptimisticValue: (...args: unknown[]) => announceOptimisticValue(...args),
   settleSpend: () => settleSpend(),
 }));
 
@@ -269,14 +269,17 @@ describe('« Il te restera X € » — the consequence, before the commit', () 
 });
 
 describe('the hero moves before the server answers (ADR-010)', () => {
-  it('announces the spend optimistically', async () => {
+  it('announces the RESULTING figure, not the amount spent', async () => {
     const user = userEvent.setup();
     await openSheet();
 
     await user.type(screen.getByTestId('add-expense-amount'), '45');
     await user.click(screen.getByTestId('add-expense-submit'));
 
-    expect(announceSpend).toHaveBeenCalledWith(45);
+    // 448,39 − 45 = 403,39. Absolute rather than a delta so that applying it
+    // twice is applying it once — see `optimistic-spend.ts` for the one-frame
+    // dip a delta produced when the revalidated server value landed.
+    expect(announceOptimisticValue).toHaveBeenCalledWith(403.39);
   });
 
   it('reverts the optimistic descent when the insert is rejected', async () => {
@@ -316,7 +319,7 @@ describe('the hero moves before the server answers (ADR-010)', () => {
 
     await waitFor(() => expect(createExpenseAction).toHaveBeenCalled());
     // Recorded, and correctly changes nothing on this month's figure.
-    expect(announceSpend).not.toHaveBeenCalled();
+    expect(announceOptimisticValue).not.toHaveBeenCalled();
     expect(screen.getByTestId('add-expense-past-month')).toBeInTheDocument();
   });
 

@@ -13,7 +13,7 @@ import type {
   ExpenseEntryContext,
 } from '@/lib/actions/expense-entry.types';
 import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
-import { announceSpend, settleSpend } from '@/lib/expenses/optimistic-spend';
+import { announceOptimisticValue, settleSpend } from '@/lib/expenses/optimistic-spend';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 import { formatCurrency } from '@/lib/i18n/formatters';
 import { todayInAnkoraTz } from '@/lib/date/tz';
@@ -182,9 +182,14 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
     const resolvedLabel = label.trim() || selectedName || t('fallbackLabel');
     // Only a spend inside the current month moves this month's hero. A
     // backdated one is recorded, and correctly changes nothing on screen.
-    const affectsHero = isCurrentMonth;
+    // `projection` is null when income is unconfigured (THI-335) — there is no
+    // figure to be optimistic about, so the hero is left alone.
+    const affectsHero = isCurrentMonth && projection !== null;
 
-    if (affectsHero) announceSpend(value);
+    // The RESULTING figure, not the amount spent: it is the « Il te restera X € »
+    // this sheet is already showing, and publishing it absolute makes the
+    // update idempotent (see `optimistic-spend.ts`).
+    if (affectsHero) announceOptimisticValue(projection);
     setPendingLocal((current) => current + value);
 
     startSubmit(async () => {
@@ -226,6 +231,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
     occurredOn,
     categoryId,
     isCurrentMonth,
+    projection,
     onClose,
     translateError,
   ]);
