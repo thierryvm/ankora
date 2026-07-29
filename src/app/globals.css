@@ -135,17 +135,20 @@
      Ratios are computed against --color-card by src/app/__tests__/contrast-ratios.test.ts,
      which fails under 4.5:1. Do not edit a value here without running it.
 
-     Note (2026-07-29, ADR-035): --color-warning moves from amber #d97706 to
-     #a35a06. This reverses a @cowork decision of 2026-04-25 that kept warning
-     visually distinct from the laiton admin pigment. #d97706 sat at 3.19:1 on
-     white — below AA — which is why it moves. The cost is measured and real:
-     against --color-accent-600 #8b6914 the luminance ratio falls from 1.60 to
-     1.03, so warning and the admin pigment become hard to tell apart in light
-     mode. Flagged to @thierry; #9a3412 is the alternative that keeps both AA
-     (7.31:1) and separation (1.44) if he prefers it. */
+     Note (2026-07-29, ADR-035 amended by ADR-036): --color-warning moves from
+     amber #d97706 to #9a3412. #d97706 sat at 3.19:1 on white — below AA — which
+     is why it had to move. The intermediate value #a35a06 reached AA (5.22) but
+     collapsed onto the laiton admin pigment --color-accent-600 #8b6914: a
+     luminance ratio of 1.03, i.e. two colours of near-identical lightness, which
+     is what the @cowork decision of 2026-04-25 existed to prevent.
+
+     #9a3412 is better on BOTH criteria at once — AA 7.31:1 on white, and 1.44
+     of luminance separation from the laiton (vs 1.60 for the original #d97706).
+     Both figures are computed, not copied: contrast-ratios.test.ts recomputes
+     them from this file and fails under 4.5:1 / under 1.30 of separation. */
   --color-success: #047857;
   --color-success-300: #34d399; /* lighter emerald — illustrative decorative use only (cf. cc-design Landing.jsx KPIs, intentionally sub-AA on light) */
-  --color-warning: #a35a06;
+  --color-warning: #9a3412;
   --color-danger: #dc2626;
   --color-info: #0369a1;
 

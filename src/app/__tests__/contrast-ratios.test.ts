@@ -129,6 +129,38 @@ describe('globals.css — WCAG AA contrast of semantic status colours (ADR-035)'
   });
 
   /**
+   * ADR-036 — warning must stay legible AND stay apart from the laiton.
+   *
+   * The @cowork decision of 2026-04-25 pinned `--color-warning` to amber
+   * `#d97706` for one reason: an admin pigment (`--color-accent-*`, laiton
+   * nautique) and a warning colour that read as the same swatch is a semantic
+   * confusion. That decision had no test, so ADR-035 could reach AA with
+   * `#a35a06` without noticing it had dropped the separation to 1.03 — two
+   * colours of practically identical lightness.
+   *
+   * A second criterion therefore gets a second assertion. 1.30 is the floor:
+   * `#d97706` scored 1.60 and was considered distinct, `#a35a06` scored 1.03
+   * and was not, so the threshold sits between them, nearer the failing side.
+   */
+  describe('--color-warning vs the laiton admin pigment', () => {
+    /** Below this, warning and the admin accent read as the same swatch. */
+    const MIN_SEPARATION = 1.3;
+
+    it.each([
+      ['light', THEME_BLOCK, 'color-accent-600'],
+      ['dark', DARK_BLOCK, 'color-accent-text'],
+    ] as const)('stays separable in %s mode', (_theme, block, laitonToken) => {
+      const warning = tokenIn(block, 'color-warning');
+      const laiton = tokenIn(block, laitonToken);
+      const separation = contrastRatio(warning, laiton);
+      expect(
+        separation,
+        `--color-warning ${warning} vs --${laitonToken} ${laiton} → ${separation.toFixed(2)} of luminance separation, under ${MIN_SEPARATION}`,
+      ).toBeGreaterThanOrEqual(MIN_SEPARATION);
+    });
+  });
+
+  /**
    * Anti-regression on the exact defect ADR-035 fixes: before the change, each
    * of these four had one theme below AA. Asserting the *pair* passes stops a
    * future edit from fixing one theme by breaking the other.

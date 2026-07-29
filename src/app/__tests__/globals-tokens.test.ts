@@ -50,17 +50,19 @@ describe('globals.css — Design System tokens (PR-3a, cc-design v1)', () => {
      * one below AA in one theme — warning at 3.19:1 on white, danger at 3.59:1
      * on a dark card, info failing in both.
      *
-     * The @cowork decision of 2026-04-25 that pinned warning to amber #d97706
-     * is deliberately reversed here; see ADR-035 for the measured cost against
-     * the laiton admin pigment and the alternative offered to @thierry.
+     * The @cowork decision of 2026-04-25 pinned warning to amber #d97706 to keep
+     * it apart from the laiton admin pigment. That intent is HONOURED, not
+     * reversed: `#9a3412` (ADR-036) reaches AA 7.31:1 *and* keeps 1.44 of
+     * luminance separation from `--color-accent-600`. The value the decision
+     * document prescribed, `#a35a06`, would have dropped that separation to 1.03.
      *
-     * Legibility itself is asserted by `contrast-ratios.test.ts`, which
-     * computes real WCAG ratios. This block only guards against a token being
-     * silently dropped or renamed.
+     * Legibility and separation are both asserted by `contrast-ratios.test.ts`,
+     * which computes real WCAG ratios. This block only guards against a token
+     * being silently dropped or renamed.
      */
     it('exposes the four status tokens with their light-mode values', () => {
       expect(css).toMatch(/--color-success:\s*#047857/);
-      expect(css).toMatch(/--color-warning:\s*#a35a06/);
+      expect(css).toMatch(/--color-warning:\s*#9a3412/);
       expect(css).toMatch(/--color-danger:\s*#dc2626/);
       expect(css).toMatch(/--color-info:\s*#0369a1/);
     });
