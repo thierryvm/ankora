@@ -6,17 +6,15 @@ import { useLocale, useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/toast';
+import { AddExpenseSheet } from '@/components/expenses/AddExpenseSheet';
 import type { Locale } from '@/i18n/routing';
-import { createExpenseAction, deleteExpenseAction } from '@/lib/actions/expenses';
+import { deleteExpenseAction } from '@/lib/actions/expenses';
 import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
 import { formatCurrency, formatDate, formatMonth } from '@/lib/i18n/formatters';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 
 import { ExpenseEditDrawer, type ExpenseEditDrawerExpense } from './ExpenseEditDrawer';
-import { todayInAnkoraTz } from '@/lib/date/tz';
 
 type RawExpense = {
   id: string;
@@ -55,38 +53,8 @@ export function ExpensesClient({
   const fmt = (value: Parameters<typeof formatCurrency>[0]) => formatCurrency(value, locale);
 
   const [isPending, startTransition] = useTransition();
-  const [label, setLabel] = useState('');
-  const [amount, setAmount] = useState('');
-  const [occurredOn, setOccurredOn] = useState(todayInAnkoraTz());
   const [editingExpense, setEditingExpense] = useState<ExpenseEditDrawerExpense | null>(null);
-
-  function onCreate(e: React.FormEvent) {
-    e.preventDefault();
-    startTransition(async () => {
-      try {
-        const result = await createExpenseAction({
-          label: label.trim(),
-          amount: Number(amount),
-          occurredOn,
-          categoryId: null,
-          note: null,
-        });
-        if (result.ok) {
-          toast.success(t('toastCreated'));
-          setLabel('');
-          setAmount('');
-        } else {
-          toast.error(translateError(result.errorCode));
-        }
-      } catch (err) {
-        // PR-BETA-3 hotfix #3 doctrine — never swallow Next.js control flow.
-        if (isNextControlFlowError(err)) throw err;
-        // eslint-disable-next-line no-console
-        console.error('createExpenseAction threw', err);
-        toast.error(translateError('errors.expenses.createFailed'));
-      }
-    });
-  }
+  const [isAddOpen, setIsAddOpen] = useState(false);
 
   function onDelete(id: string) {
     startTransition(async () => {
@@ -206,58 +174,31 @@ export function ExpensesClient({
         </CardContent>
       </Card>
 
-      {/* Add form stays ALWAYS visible (unlike ChargesClient, which collapses
-          it): logging a daily expense is a frequent, quick action — the whole
-          point of a « vie courante » tracker — so it earns permanent screen
-          real estate. Deliberate cross-page divergence, not an oversight. */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('addFormTitle')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={onCreate} className="grid gap-4 md:grid-cols-3">
-            <div className="flex flex-col gap-2 md:col-span-2">
-              <Label htmlFor="label">{t('labelLabel')}</Label>
-              <Input
-                id="label"
-                value={label}
-                onChange={(e) => setLabel(e.target.value)}
-                required
-                maxLength={120}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="amount">{t('amountLabel')}</Label>
-              <Input
-                id="amount"
-                type="number"
-                inputMode="decimal"
-                min={0}
-                step="0.01"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                required
-              />
-            </div>
-            <div className="flex flex-col gap-2 md:col-span-2">
-              <Label htmlFor="occurredOn">{t('dateLabel')}</Label>
-              <Input
-                id="occurredOn"
-                type="date"
-                value={occurredOn}
-                onChange={(e) => setOccurredOn(e.target.value)}
-                required
-              />
-            </div>
-            <div className="md:col-span-3">
-              <Button type="submit" disabled={isPending}>
-                <Plus className="h-4 w-4" />
-                {isPending ? t('adding') : t('addButton')}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+      {/*
+        The inline add form is gone, replaced by the shared entry sheet.
+
+        It carried `categoryId: null` hardcoded — two lines of UI that
+        disconnected a table, a foreign key and an Accepted ADR (ADR-022) from
+        the product. The fix is not to teach this form about categories: it is
+        to stop having two entry paths. One flow, one implementation, one place
+        where the 2-tap promise and the « Il te restera X € » projection live.
+
+        Kept as a full-width button rather than only the ⊕: this button is
+        visible on desktop, where the bottom tab bar is not rendered at all
+        (`md:hidden`). Without it the expense page would have no way to add one
+        above 768 px. Desktop gets its proper treatment in the next chantier;
+        this is the floor, not the design.
+      */}
+      <Button
+        type="button"
+        size="lg"
+        onClick={() => setIsAddOpen(true)}
+        data-testid="expenses-open-add-sheet"
+        className="self-start"
+      >
+        <Plus className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+        {t('addButton')}
+      </Button>
 
       <Card>
         <CardHeader>
@@ -300,6 +241,7 @@ export function ExpensesClient({
       </Card>
 
       <ExpenseEditDrawer expense={editingExpense} onClose={() => setEditingExpense(null)} />
+      <AddExpenseSheet open={isAddOpen} onClose={() => setIsAddOpen(false)} />
     </div>
   );
 }

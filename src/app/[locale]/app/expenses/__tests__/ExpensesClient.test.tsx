@@ -32,6 +32,17 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: routerRefreshMock, push: vi.fn(), replace: vi.fn() }),
 }));
 
+/**
+ * The inline add form was replaced by the shared entry sheet (chantier 2), which
+ * reaches for a `'use server'` module and therefore for validated env vars.
+ * Stubbed to a marker: this suite is about the list and the edit drawer.
+ * `AddExpenseSheet` has its own suite in `src/components/expenses/__tests__/`.
+ */
+vi.mock('@/components/expenses/AddExpenseSheet', () => ({
+  AddExpenseSheet: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="add-expense-sheet-mock" /> : null,
+}));
+
 import { ExpensesClient } from '../ExpensesClient';
 
 function renderWithIntl(ui: React.ReactNode) {
