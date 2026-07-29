@@ -44,16 +44,32 @@ describe('globals.css — Design System tokens (PR-3a, cc-design v1)', () => {
   });
 
   describe('Semantic status colors', () => {
-    it('keeps --color-warning as amber #d97706 (separate from laiton accent — @cowork decision 2026-04-25)', () => {
-      // Universal UX signal: warning = amber. Aligning with laiton would create
-      // semantic confusion (warning vs admin pigment). Decision documented in ADR-005.
-      expect(css).toMatch(/--color-warning:\s*#d97706/);
+    /**
+     * These values changed on 2026-07-29 (ADR-035) to reach WCAG AA. The old
+     * set was a single value per token shared by both themes, which left each
+     * one below AA in one theme — warning at 3.19:1 on white, danger at 3.59:1
+     * on a dark card, info failing in both.
+     *
+     * The @cowork decision of 2026-04-25 that pinned warning to amber #d97706
+     * is deliberately reversed here; see ADR-035 for the measured cost against
+     * the laiton admin pigment and the alternative offered to @thierry.
+     *
+     * Legibility itself is asserted by `contrast-ratios.test.ts`, which
+     * computes real WCAG ratios. This block only guards against a token being
+     * silently dropped or renamed.
+     */
+    it('exposes the four status tokens with their light-mode values', () => {
+      expect(css).toMatch(/--color-success:\s*#047857/);
+      expect(css).toMatch(/--color-warning:\s*#a35a06/);
+      expect(css).toMatch(/--color-danger:\s*#dc2626/);
+      expect(css).toMatch(/--color-info:\s*#0369a1/);
     });
 
-    it('exposes --color-success, --color-danger, --color-info', () => {
-      expect(css).toMatch(/--color-success:\s*#059669/);
-      expect(css).toMatch(/--color-danger:\s*#dc2626/);
-      expect(css).toMatch(/--color-info:\s*#0284c7/);
+    it('gives each status token a dark-mode override', () => {
+      expect(css).toMatch(/--color-success:\s*#34d399/);
+      expect(css).toMatch(/--color-warning:\s*#fbbf24/);
+      expect(css).toMatch(/--color-danger:\s*#f87171/);
+      expect(css).toMatch(/--color-info:\s*#38bdf8/);
     });
   });
 
