@@ -413,10 +413,18 @@ export function Sheet({
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4">{children}</div>
 
         {/*
-          The footer carries the safe-area inset. When there is no footer the
-          scroll region carries it instead (`pb-[env(...)]` below), so the
-          bottom of the sheet never collides with the iPhone home indicator —
-          issue #152, open against three of the six panels this replaces.
+          The footer carries the safe-area inset. When there is no footer, the
+          spacer below carries it instead, so the bottom of the sheet never
+          collides with the iPhone home indicator — issue #152, open against
+          three of the six panels this replaces.
+
+          ⚠️ Do NOT name a Tailwind arbitrary-value class in prose here.
+          Tailwind v4 scans source files as plain TEXT, so a class written in a
+          comment is generated for real: an earlier draft of this note contained
+          a `padding-bottom` utility with a literal ellipsis inside `env()`,
+          which emitted invalid CSS and took the dev server down with
+          "Unexpected token Delim('.')". `npm run build` swallowed it. Describe
+          the utility, never spell it.
         */}
         {footer ? (
           <div className="border-border/60 shrink-0 border-t px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
