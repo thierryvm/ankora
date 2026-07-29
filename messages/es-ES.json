@@ -880,6 +880,8 @@
         "moreCategories": "Ver todas las categorías",
         "noCategories": "No hay ninguna categoría de gasto en tu espacio. El importe se guardará sin categoría.",
         "dateLabel": "Fecha",
+        "dateToday": "Hoy",
+        "dateYesterday": "Ayer",
         "labelLabel": "Concepto (opcional)",
         "fallbackLabel": "Gasto",
         "projection": "Te quedarán {amount}",

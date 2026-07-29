@@ -880,6 +880,8 @@
         "moreCategories": "Voir toutes les catégories",
         "noCategories": "Aucune catégorie de dépense dans ton espace. Le montant sera enregistré sans catégorie.",
         "dateLabel": "Date",
+        "dateToday": "Aujourd'hui",
+        "dateYesterday": "Hier",
         "labelLabel": "Libellé (facultatif)",
         "fallbackLabel": "Dépense",
         "projection": "Il te restera {amount}",

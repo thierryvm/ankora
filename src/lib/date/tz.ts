@@ -37,3 +37,27 @@ export function todayInAnkoraTz(): string {
     day: '2-digit',
   }).format(new Date());
 }
+
+/**
+ * Whole days from `todayIso` to `dateIso`. Negative for the past.
+ *
+ * Both arguments are zone-less calendar dates, so the arithmetic runs through
+ * `Date.UTC` and never touches a local midnight: comparing two ISO days must not
+ * depend on where the reader is standing. `0` is today, `-1` yesterday.
+ *
+ * Returns `null` for anything that is not a `YYYY-MM-DD` pair — a half-typed
+ * date field produces one on nearly every keystroke, and a `NaN` day offset
+ * reaching the UI would render as a label nobody can read.
+ */
+export function dayOffsetFrom(todayIso: string, dateIso: string): number | null {
+  const parse = (iso: string): number | null => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return null;
+    const [y, m, d] = iso.split('-').map(Number);
+    const stamp = Date.UTC(y ?? 0, (m ?? 1) - 1, d ?? 1);
+    return Number.isFinite(stamp) ? stamp : null;
+  };
+  const from = parse(todayIso);
+  const to = parse(dateIso);
+  if (from === null || to === null) return null;
+  return Math.round((to - from) / 86_400_000);
+}

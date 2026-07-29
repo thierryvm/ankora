@@ -880,6 +880,8 @@
         "moreCategories": "Alle Kategorien anzeigen",
         "noCategories": "Keine Ausgabenkategorie in deinem Bereich. Der Betrag wird ohne Kategorie gespeichert.",
         "dateLabel": "Datum",
+        "dateToday": "Heute",
+        "dateYesterday": "Gestern",
         "labelLabel": "Bezeichnung (optional)",
         "fallbackLabel": "Ausgabe",
         "projection": "Dir bleiben {amount}",

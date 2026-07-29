@@ -8,15 +8,12 @@ import { Sheet } from '@/components/primitives/Sheet';
 import { toast } from '@/components/ui/toast';
 import { createExpenseAction } from '@/lib/actions/expenses';
 import { getExpenseEntryContextAction } from '@/lib/actions/expense-entry';
-import type {
-  ExpenseEntryCategory,
-  ExpenseEntryContext,
-} from '@/lib/actions/expense-entry.types';
+import type { ExpenseEntryCategory, ExpenseEntryContext } from '@/lib/actions/expense-entry.types';
 import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
 import { announceOptimisticValue, settleSpend } from '@/lib/expenses/optimistic-spend';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 import { formatCurrency } from '@/lib/i18n/formatters';
-import { todayInAnkoraTz } from '@/lib/date/tz';
+import { dayOffsetFrom, todayInAnkoraTz } from '@/lib/date/tz';
 import type { Locale } from '@/i18n/routing';
 
 /**
@@ -172,6 +169,17 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
     context && !context.incomplet ? context.ilTeReste - pendingLocal - (parsed ?? 0) : null;
 
   const isCurrentMonth = occurredOn.slice(0, 7) === todayInAnkoraTz().slice(0, 7);
+
+  /**
+   * « Aujourd'hui » / « Hier » when the date has a name, `null` otherwise.
+   *
+   * Only two offsets get a word. « Avant-hier » exists in French but is read
+   * more slowly than the date it replaces, and beyond that the figures are
+   * simply clearer — so the friendly label stops exactly where it stops helping.
+   */
+  const dayOffset = dayOffsetFrom(todayInAnkoraTz(), occurredOn);
+  const friendlyDate =
+    dayOffset === 0 ? t('dateToday') : dayOffset === -1 ? t('dateYesterday') : null;
 
   const handleSubmit = useCallback(() => {
     const value = parseAmountInput(amount);
@@ -414,14 +422,44 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
             >
               {t('dateLabel')}
             </label>
-            <input
-              id="add-expense-date"
-              type="date"
-              value={occurredOn}
-              onChange={(e) => setOccurredOn(e.target.value)}
-              data-testid="add-expense-date"
-              className="text-foreground min-h-[26px] border-0 bg-transparent p-0 text-sm tabular-nums outline-none"
-            />
+            {/*
+              A human label over the native field, not instead of it.
+
+              The mockup says « Aujourd'hui »; a native date input can only say
+              « 29-07-2026 ». The gap is small and it lands on the most frequent
+              action in the app, so it is worth closing — but not by building a
+              date picker, which would cost the system picker, the locale, the
+              keyboard support and the screen-reader semantics all at once.
+
+              So the native input stays and does all the work; the label is
+              painted ON it and is `pointer-events-none`, so a tap goes straight
+              through to the field it describes. The input's own text is made
+              transparent only while a friendly label covers it — never hidden
+              outright, because on a date with no friendly name (17/07) the
+              figures ARE the label.
+            */}
+            <div className="relative min-h-[26px]">
+              <input
+                id="add-expense-date"
+                type="date"
+                value={occurredOn}
+                onChange={(e) => setOccurredOn(e.target.value)}
+                data-testid="add-expense-date"
+                className={[
+                  'min-h-[26px] w-full border-0 bg-transparent p-0 text-sm tabular-nums outline-none',
+                  friendlyDate ? 'text-transparent' : 'text-foreground',
+                ].join(' ')}
+              />
+              {friendlyDate && (
+                <span
+                  aria-hidden="true"
+                  data-testid="add-expense-date-friendly"
+                  className="text-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center text-sm"
+                >
+                  {friendlyDate}
+                </span>
+              )}
+            </div>
           </div>
           <div className="bg-surface-soft flex flex-col gap-0.5 rounded-xl px-3 py-2">
             <label

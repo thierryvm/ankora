@@ -880,6 +880,8 @@
         "moreCategories": "See all categories",
         "noCategories": "No expense category in your workspace. The amount will be saved without one.",
         "dateLabel": "Date",
+        "dateToday": "Today",
+        "dateYesterday": "Yesterday",
         "labelLabel": "Label (optional)",
         "fallbackLabel": "Expense",
         "projection": "You'll have {amount} left",

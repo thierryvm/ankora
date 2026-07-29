@@ -175,6 +175,12 @@ describe('the 2-tap promise', () => {
     expect(screen.getByTestId('add-expense-date')).toHaveValue(todayInAnkoraTz());
   });
 
+  it("says « Aujourd'hui » over the native field, not 29-07-2026", async () => {
+    // The mockup's wording, without giving up the system date picker.
+    await openSheet();
+    expect(screen.getByTestId('add-expense-date-friendly')).toHaveTextContent("Aujourd'hui");
+  });
+
   it('refuses to submit until an amount is a real amount', async () => {
     const user = userEvent.setup();
     await openSheet();
@@ -321,6 +327,8 @@ describe('the hero moves before the server answers (ADR-010)', () => {
     // Recorded, and correctly changes nothing on this month's figure.
     expect(announceOptimisticValue).not.toHaveBeenCalled();
     expect(screen.getByTestId('add-expense-past-month')).toBeInTheDocument();
+    // No friendly name for a date two months back: the figures ARE the label.
+    expect(screen.queryByTestId('add-expense-date-friendly')).not.toBeInTheDocument();
   });
 
   it('closes and confirms on success', async () => {
