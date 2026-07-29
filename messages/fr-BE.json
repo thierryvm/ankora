@@ -88,7 +88,8 @@
       "bills": "Factures",
       "expenses": "Dépenses",
       "simulate": "Simuler",
-      "more": "Plus"
+      "more": "Plus",
+      "addExpense": "Ajouter une dépense"
     },
     "moreSheet": {
       "title": "Plus",
@@ -103,6 +104,10 @@
         "accounts": "Comptes",
         "commitments": "Engagements",
         "settings": "Paramètres",
+        "simulate": "Simuler",
+        "cockpit": "Cockpit",
+        "bills": "Factures",
+        "expenses": "Dépenses",
         "admin": "Admin",
         "adminAriaLabel": "Espace admin (réservé fondateur)",
         "faq": "FAQ",
@@ -866,6 +871,25 @@
     "expenses": {
       "title": "Mes dépenses",
       "subtitle": "Les sorties hors charges récurrentes — courses, resto, loisirs…",
+      "addSheet": {
+        "title": "Nouvelle dépense",
+        "cancel": "Annuler",
+        "close": "Fermer",
+        "amountLabel": "Montant en euros",
+        "categoryLabel": "Catégorie",
+        "moreCategories": "Voir toutes les catégories",
+        "noCategories": "Aucune catégorie de dépense dans ton espace. Le montant sera enregistré sans catégorie.",
+        "dateLabel": "Date",
+        "labelLabel": "Libellé (facultatif)",
+        "fallbackLabel": "Dépense",
+        "projection": "Il te restera {amount}",
+        "projectionIdle": "Il te reste {amount}",
+        "submit": "Ajouter",
+        "submitting": "Ajout…",
+        "toastCreated": "Dépense de {amount} enregistrée",
+        "pastMonthNotice": "Cette date est hors du mois en cours : le chiffre du mois ne bougera pas.",
+        "contextFailed": "Tes catégories n'ont pas pu être chargées. Tu peux quand même enregistrer le montant."
+      },
       "addFormTitle": "Ajouter une dépense",
       "labelLabel": "Libellé",
       "amountLabel": "Montant (€)",
@@ -1110,7 +1134,14 @@
         "parJour": "≈ {amount}/jour"
       },
       "barAria": "Répartition de tes revenus : {charges} de charges, {provisions} de provisions, {depense} dépensés, {reste} restants.",
-      "barAriaEngagements": "Dont {engagements} d'engagements."
+      "barAriaEngagements": "Dont {engagements} d'engagements.",
+      "pace": {
+        "barAria": "{depense} dépensés sur {budget} de budget du mois, au jour {jours} sur {total}.",
+        "perDay": "{amount} / jour jusqu'au {day}",
+        "onTrack": "dans le rythme",
+        "faster": "au-dessus du rythme",
+        "exceeded": "budget dépassé"
+      }
     },
     "daily": {
       "cta_set_plafond": "Régler le plafond quotidien"

@@ -88,7 +88,8 @@
       "bills": "Rechnungen",
       "expenses": "Ausgaben",
       "simulate": "Simulieren",
-      "more": "Mehr"
+      "more": "Mehr",
+      "addExpense": "Ausgabe hinzufügen"
     },
     "moreSheet": {
       "title": "Mehr",
@@ -103,6 +104,10 @@
         "accounts": "Konten",
         "commitments": "Verpflichtungen",
         "settings": "Einstellungen",
+        "simulate": "Simulieren",
+        "cockpit": "Cockpit",
+        "bills": "Rechnungen",
+        "expenses": "Ausgaben",
         "admin": "Admin",
         "adminAriaLabel": "Adminbereich (nur Gründer)",
         "faq": "FAQ",
@@ -866,6 +871,25 @@
     "expenses": {
       "title": "Meine Ausgaben",
       "subtitle": "Die Ausgaben abseits wiederkehrender Fixkosten — Einkäufe, Restaurant, Freizeit…",
+      "addSheet": {
+        "title": "Neue Ausgabe",
+        "cancel": "Abbrechen",
+        "close": "Schließen",
+        "amountLabel": "Betrag in Euro",
+        "categoryLabel": "Kategorie",
+        "moreCategories": "Alle Kategorien anzeigen",
+        "noCategories": "Keine Ausgabenkategorie in deinem Bereich. Der Betrag wird ohne Kategorie gespeichert.",
+        "dateLabel": "Datum",
+        "labelLabel": "Bezeichnung (optional)",
+        "fallbackLabel": "Ausgabe",
+        "projection": "Dir bleiben {amount}",
+        "projectionIdle": "Dir bleiben {amount}",
+        "submit": "Hinzufügen",
+        "submitting": "Wird hinzugefügt…",
+        "toastCreated": "Ausgabe von {amount} gespeichert",
+        "pastMonthNotice": "Dieses Datum liegt außerhalb des laufenden Monats: die Monatszahl bleibt unverändert.",
+        "contextFailed": "Deine Kategorien konnten nicht geladen werden. Du kannst den Betrag trotzdem speichern."
+      },
       "addFormTitle": "Ausgabe hinzufügen",
       "labelLabel": "Bezeichnung",
       "amountLabel": "Betrag (€)",
@@ -1110,7 +1134,14 @@
         "parJour": "≈ {amount}/Tag"
       },
       "barAria": "Aufteilung deiner Einnahmen: {charges} Fixkosten, {provisions} Rücklagen, {depense} ausgegeben, {reste} übrig.",
-      "barAriaEngagements": "Davon {engagements} an Verpflichtungen."
+      "barAriaEngagements": "Davon {engagements} an Verpflichtungen.",
+      "pace": {
+        "barAria": "{depense} von {budget} Monatsbudget ausgegeben, Tag {jours} von {total}.",
+        "perDay": "{amount} / Tag bis zum {day}.",
+        "onTrack": "im Rhythmus",
+        "faster": "über dem Rhythmus",
+        "exceeded": "Budget überschritten"
+      }
     },
     "daily": {
       "cta_set_plafond": "Tägliches Limit festlegen"

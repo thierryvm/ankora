@@ -88,7 +88,8 @@
       "bills": "Facturas",
       "expenses": "Gastos",
       "simulate": "Simular",
-      "more": "Más"
+      "more": "Más",
+      "addExpense": "Añadir un gasto"
     },
     "moreSheet": {
       "title": "Más",
@@ -103,6 +104,10 @@
         "accounts": "Cuentas",
         "commitments": "Compromisos",
         "settings": "Ajustes",
+        "simulate": "Simular",
+        "cockpit": "Cockpit",
+        "bills": "Facturas",
+        "expenses": "Gastos",
         "admin": "Admin",
         "adminAriaLabel": "Zona admin (solo fundador)",
         "faq": "FAQ",
@@ -866,6 +871,25 @@
     "expenses": {
       "title": "Mis gastos",
       "subtitle": "Las salidas fuera de los gastos fijos recurrentes — compra, restaurantes, ocio…",
+      "addSheet": {
+        "title": "Nuevo gasto",
+        "cancel": "Cancelar",
+        "close": "Cerrar",
+        "amountLabel": "Importe en euros",
+        "categoryLabel": "Categoría",
+        "moreCategories": "Ver todas las categorías",
+        "noCategories": "No hay ninguna categoría de gasto en tu espacio. El importe se guardará sin categoría.",
+        "dateLabel": "Fecha",
+        "labelLabel": "Concepto (opcional)",
+        "fallbackLabel": "Gasto",
+        "projection": "Te quedarán {amount}",
+        "projectionIdle": "Te quedan {amount}",
+        "submit": "Añadir",
+        "submitting": "Añadiendo…",
+        "toastCreated": "Gasto de {amount} guardado",
+        "pastMonthNotice": "Esta fecha está fuera del mes en curso: la cifra del mes no cambiará.",
+        "contextFailed": "No se han podido cargar tus categorías. Puedes guardar el importe de todos modos."
+      },
       "addFormTitle": "Añadir un gasto",
       "labelLabel": "Etiqueta",
       "amountLabel": "Importe (€)",
@@ -1110,7 +1134,14 @@
         "parJour": "≈ {amount}/día"
       },
       "barAria": "Reparto de tus ingresos: {charges} de gastos fijos, {provisions} de reservas, {depense} gastado, {reste} restante.",
-      "barAriaEngagements": "Incluyendo {engagements} de compromisos."
+      "barAriaEngagements": "Incluyendo {engagements} de compromisos.",
+      "pace": {
+        "barAria": "{depense} gastados de {budget} de presupuesto del mes, día {jours} de {total}.",
+        "perDay": "{amount} / día hasta el {day}",
+        "onTrack": "al ritmo",
+        "faster": "por encima del ritmo",
+        "exceeded": "presupuesto superado"
+      }
     },
     "daily": {
       "cta_set_plafond": "Configurar el límite diario"

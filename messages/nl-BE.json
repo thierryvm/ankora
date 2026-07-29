@@ -88,7 +88,8 @@
       "bills": "Facturen",
       "expenses": "Uitgaven",
       "simulate": "Simuleren",
-      "more": "Meer"
+      "more": "Meer",
+      "addExpense": "Een uitgave toevoegen"
     },
     "moreSheet": {
       "title": "Meer",
@@ -103,6 +104,10 @@
         "accounts": "Rekeningen",
         "commitments": "Verbintenissen",
         "settings": "Instellingen",
+        "simulate": "Simuleren",
+        "cockpit": "Cockpit",
+        "bills": "Facturen",
+        "expenses": "Uitgaven",
         "admin": "Admin",
         "adminAriaLabel": "Adminzone (alleen oprichter)",
         "faq": "FAQ",
@@ -866,6 +871,25 @@
     "expenses": {
       "title": "Mijn uitgaven",
       "subtitle": "De uitgaven buiten de terugkerende vaste kosten — boodschappen, resto, vrije tijd…",
+      "addSheet": {
+        "title": "Nieuwe uitgave",
+        "cancel": "Annuleren",
+        "close": "Sluiten",
+        "amountLabel": "Bedrag in euro",
+        "categoryLabel": "Categorie",
+        "moreCategories": "Alle categorieën bekijken",
+        "noCategories": "Geen uitgavecategorie in je ruimte. Het bedrag wordt zonder categorie opgeslagen.",
+        "dateLabel": "Datum",
+        "labelLabel": "Omschrijving (optioneel)",
+        "fallbackLabel": "Uitgave",
+        "projection": "Je houdt {amount} over",
+        "projectionIdle": "Je hebt {amount} over",
+        "submit": "Toevoegen",
+        "submitting": "Toevoegen…",
+        "toastCreated": "Uitgave van {amount} opgeslagen",
+        "pastMonthNotice": "Deze datum valt buiten deze maand: het maandcijfer verandert niet.",
+        "contextFailed": "Je categorieën konden niet worden geladen. Je kan het bedrag toch opslaan."
+      },
       "addFormTitle": "Uitgave toevoegen",
       "labelLabel": "Omschrijving",
       "amountLabel": "Bedrag (€)",
@@ -1110,7 +1134,14 @@
         "parJour": "≈ {amount}/dag"
       },
       "barAria": "Verdeling van je inkomen: {charges} vaste kosten, {provisions} voorzieningen, {depense} uitgegeven, {reste} over.",
-      "barAriaEngagements": "Waarvan {engagements} aan verbintenissen."
+      "barAriaEngagements": "Waarvan {engagements} aan verbintenissen.",
+      "pace": {
+        "barAria": "{depense} besteed van {budget} maandbudget, op dag {jours} van {total}.",
+        "perDay": "{amount} / dag tot de {day}e",
+        "onTrack": "op schema",
+        "faster": "boven schema",
+        "exceeded": "budget overschreden"
+      }
     },
     "daily": {
       "cta_set_plafond": "Dagelijks plafond instellen"

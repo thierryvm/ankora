@@ -88,7 +88,8 @@
       "bills": "Bills",
       "expenses": "Expenses",
       "simulate": "Simulate",
-      "more": "More"
+      "more": "More",
+      "addExpense": "Add an expense"
     },
     "moreSheet": {
       "title": "More",
@@ -103,6 +104,10 @@
         "accounts": "Accounts",
         "commitments": "Commitments",
         "settings": "Settings",
+        "simulate": "Simulate",
+        "cockpit": "Cockpit",
+        "bills": "Bills",
+        "expenses": "Expenses",
         "admin": "Admin",
         "adminAriaLabel": "Admin area (founder only)",
         "faq": "FAQ",
@@ -866,6 +871,25 @@
     "expenses": {
       "title": "My expenses",
       "subtitle": "Spending outside recurring bills — groceries, dining, leisure…",
+      "addSheet": {
+        "title": "New expense",
+        "cancel": "Cancel",
+        "close": "Close",
+        "amountLabel": "Amount in euros",
+        "categoryLabel": "Category",
+        "moreCategories": "See all categories",
+        "noCategories": "No expense category in your workspace. The amount will be saved without one.",
+        "dateLabel": "Date",
+        "labelLabel": "Label (optional)",
+        "fallbackLabel": "Expense",
+        "projection": "You'll have {amount} left",
+        "projectionIdle": "You have {amount} left",
+        "submit": "Add",
+        "submitting": "Adding…",
+        "toastCreated": "{amount} expense saved",
+        "pastMonthNotice": "This date is outside the current month: the monthly figure will not move.",
+        "contextFailed": "Your categories could not be loaded. You can still save the amount."
+      },
       "addFormTitle": "Add an expense",
       "labelLabel": "Label",
       "amountLabel": "Amount (€)",
@@ -1110,7 +1134,14 @@
         "parJour": "≈ {amount}/day"
       },
       "barAria": "How your income splits: {charges} of charges, {provisions} of provisions, {depense} spent, {reste} left.",
-      "barAriaEngagements": "Including {engagements} of commitments."
+      "barAriaEngagements": "Including {engagements} of commitments.",
+      "pace": {
+        "barAria": "{depense} spent of a {budget} monthly budget, on day {jours} of {total}.",
+        "perDay": "{amount} / day until the {day}",
+        "onTrack": "on pace",
+        "faster": "above pace",
+        "exceeded": "budget exceeded"
+      }
     },
     "daily": {
       "cta_set_plafond": "Set my daily allowance"
