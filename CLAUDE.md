@@ -122,9 +122,37 @@ supabase/
 - `npm run lint:use-server` → 0 erreur (vérifié en CI)
 - `npm run typecheck` → 0 erreur
 - `npm run test` → 100% pass
+- **`npm run dev` → démarre, et une page rend réellement** (cf. ci-dessous)
+- `npm run build` → succès
 - `npm run e2e` → 100% pass sur parcours critiques
 - Lighthouse ≥ 95 performance, 100 a11y/BP/SEO
 - Pas de warning console en dev
+
+### `npm run dev` est une porte, pas une commodité (ajouté le 29 juillet 2026)
+
+**Quatre portes vertes ne prouvent pas que l'application démarre.** Démontré au
+chantier 2 : un commentaire JSDoc de `Sheet.tsx` citait un utilitaire Tailwind
+en écrivant `env(...)` avec des points de suspension **littéraux**. Tailwind v4
+scanne les sources **comme du texte**, donc il a généré la classe pour de vrai —
+`padding-bottom: env(...)`, du CSS invalide. Turbopack a refusé la feuille de
+style entière : **toutes** les pages en HTTP 500, `Unexpected token Delim('.')`.
+
+`lint` ✅ `lint:use-server` ✅ `typecheck` ✅ `test` ✅ **`build` ✅**. L'application
+était morte. Le défaut a été trouvé en ouvrant un navigateur, et il ne pouvait
+l'être qu'ainsi : `next build` a toléré la règle invalide que `next dev` refuse.
+
+Donc, avant de rendre une tâche :
+
+1. `npm run dev`, puis **charger au moins une page** et lire le retour HTTP.
+   Un serveur qui affiche « Ready » n'a encore rien compilé.
+2. Vérifier `0` occurrence d'erreur de compilation dans la sortie du serveur.
+3. Si l'UI a changé : une capture en 390 × 844, et **mesurer au DOM** plutôt que
+   juger à l'œil (`getBoundingClientRect`, `getComputedStyle`). Une capture prouve
+   que ça rend ; une mesure prouve que c'est conforme.
+
+**Corollaire de rédaction** : ne jamais épeler une classe Tailwind à valeur
+arbitraire dans un commentaire, une JSDoc ou un Markdown scanné. Décrire
+l'utilitaire, ne pas l'écrire.
 
 ## Définition de DONE (anti "push done = task done")
 

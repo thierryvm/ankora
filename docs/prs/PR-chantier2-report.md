@@ -1,6 +1,6 @@
 # Rapport — Chantier 2 : saisie de dépense + ⊕ central + chiffre-héros temps réel
 
-- **Date** : 2026-07-29
+- **Date** : 2026-07-29, arbitrages appliqués le 2026-07-30
 - **Branche** : `chantier2/saisie-depense` (depuis `chantier1/nettoyage-vocabulaire` @ `d08f4f9`, **pas** depuis `main`)
 - **Modèle exécutant** : Claude Opus 5
 - **Autorité produit** : `DECISIONS-ANKORA.md` (Q2, Q7, Q8, §3.3, §3.4, §3.5) · maquette `maquette-ankora-mobile.html` + captures A/B/C, approuvées par @thierry
@@ -13,33 +13,34 @@
 
 **10 commits · 40 fichiers · +4 490 / −257 (net +4 233).**
 
-| Commit    | Objet                                                       | Δ lignes     |
-| --------- | ----------------------------------------------------------- | ------------ |
-| `91f5aa4` | `fix(tokens)` — `warning` à `#9a3412`, deux critères testés | +136 / −16   |
-| `77470b6` | `feat(ui)` — la primitive `<Sheet>` + garde-fou + ADR-037   | +1 067       |
-| `d79e92f` | `feat(domain)` — catégories + double comptage + migration   | +755         |
-| `3e48df7` | `feat(i18n)` — 3 groupes de clés × 5 locales                | +165 / −10   |
-| `e148c50` | `feat(expenses)` — le Sheet de saisie, `categoryId` branché | +1 131 / −87 |
-| `7943962` | `feat(nav)` — le ⊕ central                                  | +285 / −28   |
-| `0fbca4a` | `feat(cockpit)` — le héros descend                          | +681 / −116  |
-| `7937f84` | `fix(ui)` — une classe Tailwind citée en commentaire (§5.1) | +12 / −4     |
-| `a422d8c` | `fix(expenses)` — le € collé aux chiffres (§5.2)            | +13 / −2     |
-| `e12ba50` | `fix(cockpit)` — figure absolue et non delta (§5.3)         | +300 / −49   |
+| Commit    | Objet                                                         | Δ lignes     |
+| --------- | ------------------------------------------------------------- | ------------ |
+| `91f5aa4` | `fix(tokens)` — `warning` à `#9a3412`, deux critères testés   | +136 / −16   |
+| `77470b6` | `feat(ui)` — la primitive `<Sheet>` + garde-fou + ADR-037     | +1 067       |
+| `d79e92f` | `feat(domain)` — catégories + double comptage + migration     | +755         |
+| `3e48df7` | `feat(i18n)` — 3 groupes de clés × 5 locales                  | +165 / −10   |
+| `e148c50` | `feat(expenses)` — le Sheet de saisie, `categoryId` branché   | +1 131 / −87 |
+| `7943962` | `feat(nav)` — le ⊕ central                                    | +285 / −28   |
+| `0fbca4a` | `feat(cockpit)` — le héros descend                            | +681 / −116  |
+| `7937f84` | `fix(ui)` — une classe Tailwind citée en commentaire (§5.1)   | +12 / −4     |
+| `a422d8c` | `fix(expenses)` — le € collé aux chiffres (§5.2)              | +13 / −2     |
+| `e12ba50` | `fix(cockpit)` — figure absolue et non delta (§5.3)           | +300 / −49   |
+| _(suite)_ | `refactor(ui)` + `feat(expenses)` + `docs` — les 4 arbitrages | cf. §8       |
 
-**Tests : 1 575 → 1 705 (+130).** Aucun test supprimé, aucun désactivé.
+**Tests : 1 575 → 1 723 (+148).** Aucun test supprimé, aucun désactivé.
 
 ## 2. Portes de qualité
 
-| Porte                     | Départ (chantier 1)  | Arrivée mesurée       |    Verdict     |
-| ------------------------- | -------------------- | --------------------- | :------------: |
-| `npm run lint`            | 0 erreur / 9 warn    | 0 erreur / 9 warn     |  ✅ inchangé   |
-| `npm run lint:use-server` | ✓                    | ✓                     |       ✅       |
-| `npm run typecheck`       | 0 erreur             | 0 erreur              |       ✅       |
-| `npm run test`            | 1 575 / 127 fichiers | **1 705 / 134**       | ✅ 100 % vert  |
-| `npm run build`           | succès               | succès (11,7 s)       |       ✅       |
-| `npm run dev`             | **non vérifié**      | **démarre, 0 erreur** |  ✅ cf. §5.1   |
-| `npm run e2e`             | non exécuté          | **non exécuté**       |  ⚠️ cf. §6.1   |
-| `npm run security:audit`  | cassé                | cassé                 | ⚠️ préexistant |
+| Porte                     | Départ (chantier 1)  | Arrivée mesurée                             |    Verdict     |
+| ------------------------- | -------------------- | ------------------------------------------- | :------------: |
+| `npm run lint`            | 0 erreur / 9 warn    | 0 erreur / 9 warn                           |  ✅ inchangé   |
+| `npm run lint:use-server` | ✓                    | ✓                                           |       ✅       |
+| `npm run typecheck`       | 0 erreur             | 0 erreur                                    |       ✅       |
+| `npm run test`            | 1 575 / 127 fichiers | **1 723 / 135**                             | ✅ 100 % vert  |
+| `npm run build`           | succès               | succès (9,8 s)                              |       ✅       |
+| `npm run dev`             | **non vérifié**      | **`/login` → 200, 0 erreur de compilation** |  ✅ cf. §5.1   |
+| `npm run e2e`             | non exécuté          | **non exécuté**                             |  ⚠️ cf. §6.1   |
+| `npm run security:audit`  | cassé                | cassé                                       | ⚠️ préexistant |
 
 **`npm run dev` entre dans le tableau, et ce n'est pas cosmétique.** Le chantier 1 ne
 le listait pas ; §5.1 montre un défaut qui passait les quatre portes et rendait
@@ -220,7 +221,23 @@ La route jetable et le stub temporaire du Server Action ont été **supprimés e
 vérifiés absents** (`grep` → 0) avant les commits. Rien n'en subsiste dans
 l'historique.
 
-### 6.2 La migration est écrite, pas appliquée
+### 6.2 ⚠️ La migration n'est PAS appliquée — la fonctionnalité est incomplète sans elle
+
+> **À NE PAS OUBLIER.** Décision d'orchestration du 2026-07-29 : la migration
+> reste écrite et non appliquée, @thierry verra le SQL avant. C'est la seule
+> action de ce chantier qui écrit dans sa production.
+>
+> **Conséquence utilisateur, en clair** : tant que
+> `20260729000002_expense_categories_taxonomy.sql` n'est pas lancée, **la saisie
+> de dépense ne peut pas nommer une course**. Les puces afficheront « Logement ·
+> Famille · Santé · Transport · Autres » — les cinq catégories `variable` de la
+> taxonomie de **factures** semée en mai — et non « Courses · Essence · Resto »
+> comme sur la maquette B approuvée. Le parcours 2 taps fonctionne, `category_id`
+> est bien écrit, la répartition par catégorie de l'écran Dépenses se remplira ;
+> mais la catégorie la plus fréquente d'un ménage n'existe pas encore.
+>
+> **Ce n'est donc pas un détail d'installation : c'est la moitié produit de la
+> décision ADR-022, en attente d'un GO.**
 
 `supabase/migrations/20260729000002_expense_categories_taxonomy.sql`.
 
@@ -249,12 +266,17 @@ lignes. Quarantaine inchangée à 6.
 toujours : `−2` attendus après la suppression de `/design-playground`, valeur à
 inscrire à la première CI verte. Ce chantier n'ajoute ni ne retire aucune spec e2e.
 
-### 6.4 Deux choses s'appellent `Sheet`
+### 6.4 ~~Deux choses s'appellent `Sheet`~~ — tranché, résolu
 
-`components/primitives/Sheet.tsx` (la primitive) et `components/ui/sheet.tsx` (le
-wrapper Radix, 0 call-site). Le second n'a pas été supprimé : le plan du 26/07
-exige un ADR-028 explicite et dit « sans arbitrage : les garder ». **La
-coexistence est une invitation à importer le mauvais.** Arbitrage demandé (§8).
+**Arbitré le 2026-07-29 : `components/ui/sheet.tsx` est supprimé** (117 lignes,
+wrapper Radix, 0 call-site). Vérification faite avant, comme pour les atoms du
+chantier 1 : `grep` sur `ui/sheet`, `from './sheet'` et `components/ui/sheet`
+→ **0 call-site**, aucun fichier de test associé.
+
+Il ne reste qu'une chose nommée `Sheet`, celle qui vit et qui est testée. Git est
+la référence : `git show 581641d:src/components/ui/sheet.tsx` le restitue. Et un
+cas du garde-fou asserte qu'il **reste** supprimé — il ne peut pas revenir comme
+second candidat primitive sans que quelqu'un le décide.
 
 ### 6.5 Le hook `pre-commit` ne passe toujours pas
 
@@ -290,12 +312,30 @@ que sans elle tu ouvres l'app et « Courses » n'existe pas. **Écart signalé p
 qu'assumé seul** : si tu préfères ne pas la lancer, la saisie fonctionne, avec cinq
 catégories de facture en guise de puces.
 
-### 7.4 La date reste un `<input type="date">`, pas « Aujourd'hui »
+### 7.4 ~~La date reste un `<input type="date">`~~ — tranché, écart fermé
 
-La maquette B affiche « Aujourd'hui ». Un champ date natif ne peut pas. J'ai gardé
-le natif : sélecteur système, locale correcte, accessibilité gratuite, zéro
-composant à maintenir. Le coût est réel — « 29-07-2026 » est moins chaleureux que
-« Aujourd'hui ». Écart de fidélité assumé, à rouvrir si tu y tiens.
+**Arbitré le 2026-07-29 : rapprochement de la maquette, sans perdre le natif.**
+
+Le champ natif reste et fait tout le travail ; un libellé humain est peint **par
+dessus**, en `pointer-events-none`, donc un tap traverse jusqu'au champ qu'il
+décrit. Le texte du champ passe en `text-transparent` **uniquement** quand un
+libellé le couvre — jamais masqué sans remplacement, parce qu'au 17/07 les
+chiffres **sont** le libellé.
+
+« Aujourd'hui » et « Hier », et rien de plus : « avant-hier » existe en français
+mais se lit plus lentement que la date qu'il remplace. Le libellé s'arrête
+exactement là où il cesse d'aider.
+
+Ce qu'on ne perd pas : le sélecteur système, la locale, le clavier, les
+sémantiques lecteur d'écran. Ce qu'on n'a pas construit : un date picker.
+
+`dayOffsetFrom()` fait l'arithmétique via `Date.UTC` — jamais un minuit local.
+Le piège est réel et testé : la nuit du passage à l'heure d'été fait 23 h en
+Belgique, donc une différence de millisecondes divisée par 86 400 000 donne 0,958,
+qu'un `Math.floor` lirait comme « 0 jour » et étiquetterait hier « Aujourd'hui ».
+**16 cas** dans `src/lib/date/__tests__/tz.test.ts`, dont les deux nuits de
+changement d'heure et six entrées partielles (un champ date en produit une à
+presque chaque frappe ; un `NaN` atteignant l'UI afficherait un libellé illisible).
 
 ### 7.5 Le repère de rythme, en mots plutôt qu'en flèche
 
@@ -310,22 +350,44 @@ Le §3.3 prescrit 0,35. Mesuré contre `--color-foreground` sur `--color-brand-5
 à 7 px de haut, 0,35 passe sous les 3:1 de WCAG 1.4.11 pour un objet graphique.
 0,55 tient le contraste et reste discret.
 
-### 7.7 Le skill `ankora-design-system` est périmé sur le vocabulaire
+### 7.7 ~~Le skill `ankora-design-system` est périmé~~ — tranché, corrigé
 
-Son §4.1 recommande encore « Capacité d'épargne réelle », « Reste à vivre » et
-« Reste disponible » — les trois mots **bannis** par ADR-035. Son §11 fixe l'ordre
-de priorité (NORTH_STAR > ADR > Quality Bar > SKILL), donc j'ai suivi l'ADR. **Le
-skill devrait être mis à jour** : un agent qui le lirait sans lire ADR-035
-réintroduirait le vocabulaire supprimé au chantier 1.
+**Corrigé le 2026-07-29.** Le skill vit **dans le repo**
+(`.claude/skills/ankora-design-system/SKILL.md`), donc versionné avec le reste et
+modifiable — pas besoin de le traiter autrement.
 
-## 8. Trois décisions attendues de @thierry
+Son §4.1 recommandait encore « Capacité d'épargne réelle », « Reste à vivre » et
+« Reste disponible » — les trois mots bannis par ADR-035. Son §11 fixait déjà
+l'ordre de priorité (NORTH_STAR > ADR > Quality Bar > SKILL), donc l'ADR
+l'emportait ; mais un skill qui les **recommande** les réintroduit mécaniquement
+à la première session qui le lit sans lire l'ADR. C'était une régression en
+attente, pas une incohérence documentaire.
 
-1. **La migration `20260729000002`** — je te montre le SQL, tu décides. Sans elle,
-   pas de « Courses » (§6.2).
-2. **`components/ui/sheet.tsx`** (Radix, 0 call-site) — supprimer maintenant que la
-   primitive existe, ou garder ? La coexistence de deux `Sheet` est un piège (§6.4).
-3. **La date en clair** — garder l'`<input type="date">` natif, ou construire un
-   champ « Aujourd'hui / Hier / choisir… » ? (§7.4)
+Le tableau des quatre chiffres remplace l'ancien vocabulaire, avec ADR-035 nommé
+source de vérité et un encadré qui dit ce qui a changé et pourquoi. Trois
+références résiduelles nettoyées au passage : le palier « Plafond » de la cascade
+(l'enveloppe a disparu), la description des surfaces du cockpit, et le renvoi à
+ADR-009 cité seul. ADR-036, ADR-037, la primitive `<Sheet>` et la barre de rythme
+sont ajoutés à la doctrine.
+
+`grep` de contrôle : les seules occurrences restantes des mots bannis sont dans
+l'encadré qui explique leur suppression.
+
+## 8. Les trois décisions — tranchées le 2026-07-29
+
+Arbitrées en l'absence de @thierry, par l'orchestrateur.
+
+| #   | Décision                       | Suite donnée                                                                                                     |
+| --- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| 1   | **Migration `20260729000002`** | **Non appliquée.** Reste écrite et documentée, @thierry voit le SQL avant. Conséquence produit inscrite en §6.2. |
+| 2   | **`components/ui/sheet.tsx`**  | **Supprimé** — 0 call-site vérifié, un test le maintient supprimé (§6.4).                                        |
+| 3   | **La date**                    | **Rapprochée de la maquette** — libellé humain sur le champ natif (§7.4).                                        |
+
+Plus une quatrième, hors périmètre initial : le skill `ankora-design-system` est
+**corrigé** (§7.7), et `npm run dev` est **inscrit dans les portes de qualité** du
+`CLAUDE.md`, avec l'incident qui le justifie (§5.1).
+
+**Reste dû à @thierry** : le GO sur la migration. C'est le seul point ouvert.
 
 ## 9. Definition of Done
 
