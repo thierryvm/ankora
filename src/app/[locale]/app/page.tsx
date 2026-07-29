@@ -12,17 +12,9 @@ import { ProchainesFacturesCard } from '@/components/dashboard/ProchainesFacture
 import { EngagementsCard } from '@/components/dashboard/EngagementsCard';
 import { SimulatorDrawer } from '@/components/dashboard/SimulatorDrawer';
 import { Expenses, Transfer, money } from '@/lib/domain';
-import {
-  calculerSituationDuMois,
-  depensesDuMois,
-  engagementsMensuelsLisses,
-  paymentKey,
-  type PaymentLedger,
-} from '@/lib/domain/cockpit';
 import { unpaidChargesForPeriod } from '@/lib/domain/charges';
-import { getWorkspaceSnapshot, toCockpitCharges } from '@/lib/data/workspace-snapshot';
-import { getCommitmentsWithLedger } from '@/lib/data/commitments';
-import { commitmentRowToDomain, hasLiveCommitments } from '@/lib/data/commitment-row';
+import { loadMonthSituation } from '@/lib/data/month-situation';
+import { hasLiveCommitments } from '@/lib/data/commitment-row';
 import type { AccountType } from '@/lib/schemas/account';
 import type { Locale } from '@/i18n/routing';
 import { formatCurrency, formatDate, formatMonth } from '@/lib/i18n/formatters';
@@ -44,11 +36,23 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function DashboardPage() {
   const t = await getTranslations('app.dashboard');
   const locale = (await getLocale()) as Locale;
-  const snapshot = await getWorkspaceSnapshot();
-  // Same read as /app/commitments — the card and the page can never disagree.
-  const { commitments, paidKeysByCommitment } = await getCommitmentsWithLedger(
-    snapshot.workspaceId,
-  );
+  // One assembly of the month's four figures, shared with the ⊕ sheet's context
+  // action so the cockpit and the entry sheet can never quote different
+  // amounts. Also carries the same commitment read as /app/commitments.
+  const {
+    snapshot,
+    commitments,
+    paidKeysByCommitment,
+    situation,
+    engagementsMensuels,
+    paymentsLedger,
+    cockpitCharges,
+    soldeEpargneActuel,
+    joursEcoules,
+    joursRestants,
+    joursDuMois: daysInMonth,
+    todayIso,
+  } = await loadMonthSituation();
   const currentMonth = new Date().getMonth() + 1;
   const monthLabel = formatMonth(currentMonth, locale);
   const fmtMoney = (value: Parameters<typeof formatCurrency>[0]) => formatCurrency(value, locale);
@@ -73,32 +77,6 @@ export default async function DashboardPage() {
     snapshot.monthlyIncome === null || snapshot.vieCouranteMonthlyTransfer === null;
   const accountByType = new Map(snapshot.accounts.map((a) => [a.accountType, a]));
 
-  // PR-D3 — Bloc 2 hero radar inputs.
-  const cockpitCharges = toCockpitCharges(snapshot.charges);
-
-  // THI-192 — "Today" anchored to the canonical Europe/Brussels timezone so
-  // J-7/J-14/J-30 bucketing matches the user's wall-clock perception (rather
-  // than UTC, which drifts one day around midnight). `en-CA` formatter
-  // outputs ISO `YYYY-MM-DD`.
-  const todayIso = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Europe/Brussels',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(new Date());
-
-  // THI-190 — Santé Provisions inputs (ADR-011). The PaymentLedger maps
-  // `(chargeId, year, month) → true` for charges already settled this
-  // period, so `calculerSanteProvisions()` knows which entries to skip in
-  // its cycle math.
-  const provisionsAccount = snapshot.accounts.find((a) => a.accountType === 'provisions');
-  const soldeEpargneActuel = money(provisionsAccount?.balance ?? 0);
-  const paymentsLedger: PaymentLedger = new Map(
-    snapshot.currentMonthPayments.map((p) => [
-      paymentKey(p.chargeId, p.periodYear, p.periodMonth),
-      true,
-    ]),
-  );
   // Daily allowance not yet configured: surface the inline CTA on the
   // daily_card row so the user can complete the cockpit setup without
   // hunting through Settings.
@@ -106,69 +84,11 @@ export default async function DashboardPage() {
     snapshot.vieCouranteMonthlyTransfer === null || snapshot.vieCouranteMonthlyTransfer === 0;
   const tDaily = await getTranslations('dashboard.daily');
 
-  // ADR-021 — smoothed monthly burden of the active finite commitments, so the
-  // hero's « Budget du mois » reconciles with the « Mes engagements » card
-  // (same read via `getCommitmentsWithLedger`). Decimal stays server-side.
-  const commitmentLedger = new Map(
-    Object.entries(paidKeysByCommitment).map(([id, keys]) => [id, new Set(keys)] as const),
-  );
-  const engagementsMensuels = engagementsMensuelsLisses(
-    commitments.map(commitmentRowToDomain),
-    commitmentLedger,
-    snapshot.currentPeriod,
-  );
   // Does « Mes engagements » have anything to show? Drives the desktop layout:
   // Gauge + Engagements share a 2-col row only when the card renders, otherwise
   // the Gauge takes the full width (no empty half-column). Same predicate the
   // card self-hides on, so layout and card never disagree.
   const showCommitments = hasLiveCommitments(commitments, paidKeysByCommitment);
-
-  // Days elapsed / remaining in the current month (Europe/Brussels).
-  // `currentPeriod` is, by the snapshot invariant (workspace-snapshot derives
-  // it from `new Date()` in this same TZ), always the current calendar month.
-  // We still guard defensively: if it ever diverged, `joursRestants = 0`
-  // suppresses the per-day hint (the Hero treats joursRestants <= 0 as
-  // "no per-day"), and a past month counts as fully elapsed so the projection
-  // behind « Épargne estimée » is the completed month, not a partial one.
-  const brusselsNow = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Europe/Brussels',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(new Date()); // "YYYY-MM-DD"
-  const [bYear, bMonth, bDay] = brusselsNow.split('-').map(Number);
-  const isCurrentPeriod =
-    bYear === snapshot.currentPeriod.year && bMonth === snapshot.currentPeriod.month;
-  const daysInMonth = new Date(
-    snapshot.currentPeriod.year,
-    snapshot.currentPeriod.month,
-    0,
-  ).getDate();
-  const joursRestants = isCurrentPeriod ? Math.max(1, daysInMonth - (bDay ?? 1) + 1) : 0;
-  const joursEcoules = isCurrentPeriod
-    ? Math.min(daysInMonth, Math.max(1, bDay ?? 1))
-    : daysInMonth;
-
-  // ADR-035 — « Dépensé ce mois ». `snapshot.monthlyExpenses` is already
-  // server-filtered to the reference month; running the domain filter over it
-  // again is cheap and keeps the figure correct if that guarantee ever moves.
-  const depensesDuMoisTotal = depensesDuMois(snapshot.monthlyExpenses, snapshot.currentPeriod);
-
-  // THI-327 Phase 0 — unified "Situation du mois" hero. Reuses the same
-  // cockpit primitives as the (now removed) Effort + Capacité cards.
-  const situation = calculerSituationDuMois({
-    // Distinct from `monthlyIncome` above (the Transfer plan coerces null→0).
-    // The situation needs the genuine null to drive the THI-335 incomplet state.
-    revenus: snapshot.monthlyIncome === null ? null : money(snapshot.monthlyIncome),
-    charges: cockpitCharges,
-    soldeEpargneActuel,
-    payments: paymentsLedger,
-    ref: snapshot.currentPeriod,
-    engagementsMensuels,
-    depensesDuMois: depensesDuMoisTotal,
-    joursEcoules,
-    joursDuMois: daysInMonth,
-  });
 
   return (
     <div className="flex flex-col gap-8">
@@ -201,6 +121,8 @@ export default async function DashboardPage() {
           rattrapageMensuel={situation.rattrapageMensuel.toNumber()}
           provisionsAJour={situation.provisionsAJour}
           joursRestants={joursRestants}
+          joursEcoules={joursEcoules}
+          joursDuMois={daysInMonth}
           locale={locale}
         />
       </section>

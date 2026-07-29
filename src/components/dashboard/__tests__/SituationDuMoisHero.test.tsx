@@ -59,6 +59,11 @@ const BASE = {
   rattrapageMensuel: 0,
   provisionsAJour: true,
   joursRestants: 18,
+  // Day 13 of 31 — a month whose 200 € of spending (30 % of the 662 € budget) is
+  // slightly ahead of an even pace (42 %), so the pace bar renders neutrally by
+  // default and each state gets an explicit case below.
+  joursEcoules: 13,
+  joursDuMois: 31,
   locale: 'fr-BE' as const,
 };
 
@@ -135,7 +140,10 @@ describe('<SituationDuMoisHero />', () => {
   it('ADR-021: the AllocationBar aria mentions engagements only when present', async () => {
     // Base barAria never contains the word « engagements » — the appended clause does.
     await renderHero({ statut: 'vert', engagementsMensuels: 250, resteDisponible: 412 });
-    expect(screen.getByRole('img').getAttribute('aria-label')).toContain('engagements');
+    // Scoped to the allocation bar: the hero carries TWO role="img" graphics
+    // since the pace bar landed, so a bare getByRole('img') is now ambiguous.
+    const bar = screen.getByTestId('allocation-bar').querySelector('[role="img"]');
+    expect(bar?.getAttribute('aria-label')).toContain('engagements');
   });
 
   it('incomplet (THI-335): shows setup CTA, no AllocationBar, no negative amount', async () => {
