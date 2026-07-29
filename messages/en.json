@@ -1088,8 +1088,8 @@
   },
   "dashboard": {
     "situation": {
-      "heroLabel": "Available leftover",
-      "heroSubtitle": "What's left after your charges and provisions",
+      "heroLabel": "You have left",
+      "heroAnchor": "of {budget} budget · {depense} spent",
       "voirPlan": "See the plan",
       "statut": {
         "vert": "You're on track this month",
@@ -1112,9 +1112,12 @@
         "chargesFixes": "Fixed charges",
         "provisions": "Smoothed provisions",
         "engagements": "Commitments",
-        "resteDisponible": "Available leftover",
+        "resteDisponible": "Monthly budget",
+        "depense": "Spent this month",
+        "ilTeReste": "You have left",
         "resteAVivre": "Living budget",
         "capaciteEpargne": "Savings capacity",
+        "epargneEstimee": "Estimated savings",
         "ajuster": "Adjust this month",
         "parJour": "≈ {amount}/day"
       },

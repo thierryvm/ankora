@@ -28,6 +28,9 @@ describe('calculerSituationDuMois', () => {
       payments: NO_PAYMENTS,
       ref: REF,
       engagementsMensuels: new Decimal(0),
+      depensesDuMois: new Decimal(0),
+      joursEcoules: 15,
+      joursDuMois: 30,
     });
     expect(out.statut).toBe('vert');
     expect(out.hasRevenus).toBe(true);
@@ -45,6 +48,9 @@ describe('calculerSituationDuMois', () => {
       payments: NO_PAYMENTS,
       ref: REF,
       engagementsMensuels: new Decimal(0),
+      depensesDuMois: new Decimal(0),
+      joursEcoules: 15,
+      joursDuMois: 30,
     });
     expect(out.statut).toBe('orange');
     expect(out.resteDisponible.toNumber()).toBe(500);
@@ -62,6 +68,9 @@ describe('calculerSituationDuMois', () => {
       payments: NO_PAYMENTS,
       ref: REF,
       engagementsMensuels: new Decimal(0),
+      depensesDuMois: new Decimal(0),
+      joursEcoules: 15,
+      joursDuMois: 30,
     });
     expect(out.statut).toBe('orange');
     expect(out.capacite.gte(0)).toBe(true);
@@ -78,6 +87,9 @@ describe('calculerSituationDuMois', () => {
       payments: NO_PAYMENTS,
       ref: REF,
       engagementsMensuels: new Decimal(0),
+      depensesDuMois: new Decimal(0),
+      joursEcoules: 15,
+      joursDuMois: 30,
     });
     expect(out.statut).toBe('rouge');
     expect(out.resteDisponible.toNumber()).toBe(-500);
@@ -92,6 +104,9 @@ describe('calculerSituationDuMois', () => {
       payments: NO_PAYMENTS,
       ref: REF,
       engagementsMensuels: new Decimal(0),
+      depensesDuMois: new Decimal(0),
+      joursEcoules: 15,
+      joursDuMois: 30,
     });
     expect(out.statut).toBe('incomplet');
     expect(out.hasRevenus).toBe(false);
@@ -110,6 +125,9 @@ describe('calculerSituationDuMois', () => {
       payments: NO_PAYMENTS,
       ref: REF,
       engagementsMensuels: new Decimal(0),
+      depensesDuMois: new Decimal(0),
+      joursEcoules: 15,
+      joursDuMois: 30,
     });
     expect(out.chargesFixes.toNumber()).toBe(1500);
     expect(out.provisionsLissees.toNumber()).toBe(100); // 1200 / 12
@@ -128,6 +146,9 @@ describe('calculerSituationDuMois', () => {
       payments: NO_PAYMENTS,
       ref: REF,
       engagementsMensuels: new Decimal(0),
+      depensesDuMois: new Decimal(0),
+      joursEcoules: 15,
+      joursDuMois: 30,
     });
     expect(out.chargesFixes.toNumber()).toBe(900);
     // Whole-chain proof: the inactive 800 must not leak past chargesFixes.
@@ -143,6 +164,9 @@ describe('calculerSituationDuMois', () => {
       payments: NO_PAYMENTS,
       ref: REF,
       engagementsMensuels: new Decimal(0),
+      depensesDuMois: new Decimal(0),
+      joursEcoules: 15,
+      joursDuMois: 30,
     });
     expect(out.statut).toBe('vert');
     expect(out.resteDisponible.toNumber()).toBe(2500);
@@ -158,6 +182,9 @@ describe('calculerSituationDuMois', () => {
       payments: NO_PAYMENTS,
       ref: REF,
       engagementsMensuels: new Decimal(300),
+      depensesDuMois: new Decimal(0),
+      joursEcoules: 15,
+      joursDuMois: 30,
     });
     expect(out.engagementsMensuels.toNumber()).toBe(300);
     expect(out.resteDisponible.toNumber()).toBe(1700); // 3000 − 1000 − 0 − 300
@@ -174,6 +201,9 @@ describe('calculerSituationDuMois', () => {
       payments: NO_PAYMENTS,
       ref: REF,
       engagementsMensuels: new Decimal(200),
+      depensesDuMois: new Decimal(0),
+      joursEcoules: 15,
+      joursDuMois: 30,
     });
     // Same base as the first test (was vert, capacité 162); −200 tips capacité negative.
     expect(out.resteDisponible.toNumber()).toBe(462); // 2500 − 1838 − 200
@@ -190,6 +220,9 @@ describe('calculerSituationDuMois', () => {
       payments: NO_PAYMENTS,
       ref: REF,
       engagementsMensuels: new Decimal(300),
+      depensesDuMois: new Decimal(0),
+      joursEcoules: 15,
+      joursDuMois: 30,
     });
     // Without engagements resteDisponible would be 200 (≥ 0); −300 flips it under.
     expect(out.resteDisponible.toNumber()).toBe(-100); // 1000 − 800 − 300

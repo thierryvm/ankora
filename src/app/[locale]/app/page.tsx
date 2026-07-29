@@ -14,6 +14,7 @@ import { SimulatorDrawer } from '@/components/dashboard/SimulatorDrawer';
 import { Expenses, Transfer, money } from '@/lib/domain';
 import {
   calculerSituationDuMois,
+  depensesDuMois,
   engagementsMensuelsLisses,
   paymentKey,
   type PaymentLedger,
@@ -122,26 +123,13 @@ export default async function DashboardPage() {
   // card self-hides on, so layout and card never disagree.
   const showCommitments = hasLiveCommitments(commitments, paidKeysByCommitment);
 
-  // THI-327 Phase 0 — unified "Situation du mois" hero. Reuses the same
-  // cockpit primitives as the (now removed) Effort + Capacité cards.
-  const situation = calculerSituationDuMois({
-    // Distinct from `monthlyIncome` above (the Transfer plan coerces null→0).
-    // The situation needs the genuine null to drive the THI-335 incomplet state.
-    revenus: snapshot.monthlyIncome === null ? null : money(snapshot.monthlyIncome),
-    charges: cockpitCharges,
-    budgetVieCourante: money(snapshot.resteAVivre),
-    soldeEpargneActuel,
-    payments: paymentsLedger,
-    ref: snapshot.currentPeriod,
-    engagementsMensuels,
-  });
-
-  // Days remaining in the current month (Europe/Brussels) for the "≈ X/jour"
-  // living-budget hint. `currentPeriod` is, by the snapshot invariant
-  // (workspace-snapshot derives it from `new Date()` in this same TZ), always
-  // the current calendar month. We still guard defensively: if it ever
-  // diverged, `joursRestants = 0` suppresses the per-day hint (the Hero treats
-  // joursRestants <= 0 as "no per-day").
+  // Days elapsed / remaining in the current month (Europe/Brussels).
+  // `currentPeriod` is, by the snapshot invariant (workspace-snapshot derives
+  // it from `new Date()` in this same TZ), always the current calendar month.
+  // We still guard defensively: if it ever diverged, `joursRestants = 0`
+  // suppresses the per-day hint (the Hero treats joursRestants <= 0 as
+  // "no per-day"), and a past month counts as fully elapsed so the projection
+  // behind « Épargne estimée » is the completed month, not a partial one.
   const brusselsNow = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Europe/Brussels',
     year: 'numeric',
@@ -157,6 +145,31 @@ export default async function DashboardPage() {
     0,
   ).getDate();
   const joursRestants = isCurrentPeriod ? Math.max(1, daysInMonth - (bDay ?? 1) + 1) : 0;
+  const joursEcoules = isCurrentPeriod
+    ? Math.min(daysInMonth, Math.max(1, bDay ?? 1))
+    : daysInMonth;
+
+  // ADR-035 — « Dépensé ce mois ». `snapshot.monthlyExpenses` is already
+  // server-filtered to the reference month; running the domain filter over it
+  // again is cheap and keeps the figure correct if that guarantee ever moves.
+  const depensesDuMoisTotal = depensesDuMois(snapshot.monthlyExpenses, snapshot.currentPeriod);
+
+  // THI-327 Phase 0 — unified "Situation du mois" hero. Reuses the same
+  // cockpit primitives as the (now removed) Effort + Capacité cards.
+  const situation = calculerSituationDuMois({
+    // Distinct from `monthlyIncome` above (the Transfer plan coerces null→0).
+    // The situation needs the genuine null to drive the THI-335 incomplet state.
+    revenus: snapshot.monthlyIncome === null ? null : money(snapshot.monthlyIncome),
+    charges: cockpitCharges,
+    budgetVieCourante: money(snapshot.resteAVivre),
+    soldeEpargneActuel,
+    payments: paymentsLedger,
+    ref: snapshot.currentPeriod,
+    engagementsMensuels,
+    depensesDuMois: depensesDuMoisTotal,
+    joursEcoules,
+    joursDuMois: daysInMonth,
+  });
 
   return (
     <div className="flex flex-col gap-8">
@@ -182,6 +195,9 @@ export default async function DashboardPage() {
           provisionsLissees={situation.provisionsLissees.toNumber()}
           engagementsMensuels={situation.engagementsMensuels.toNumber()}
           resteDisponible={situation.resteDisponible.toNumber()}
+          depensesDuMois={situation.depensesDuMois.toNumber()}
+          ilTeReste={situation.ilTeReste.toNumber()}
+          epargneEstimee={situation.epargneEstimee?.toNumber() ?? null}
           budgetVieCourante={situation.budgetVieCourante.toNumber()}
           capacite={situation.capacite.toNumber()}
           deficitEpargne={situation.deficitEpargne.toNumber()}

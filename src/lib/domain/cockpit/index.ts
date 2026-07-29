@@ -18,3 +18,5 @@ export * from './previsions';
 export * from './simulateur';
 export * from './situation-mois';
 export * from './engagements-lisses';
+export * from './depenses-du-mois';
+export * from './epargne-estimee';

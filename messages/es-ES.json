@@ -1088,8 +1088,8 @@
   },
   "dashboard": {
     "situation": {
-      "heroLabel": "Disponible",
-      "heroSubtitle": "Lo que te queda después de tus gastos fijos y reservas",
+      "heroLabel": "Te queda",
+      "heroAnchor": "de {budget} de presupuesto · {depense} gastado",
       "voirPlan": "Ver el plan",
       "statut": {
         "vert": "Llevas bien este mes",
@@ -1112,9 +1112,12 @@
         "chargesFixes": "Gastos fijos",
         "provisions": "Reservas distribuidas",
         "engagements": "Compromisos",
-        "resteDisponible": "Disponible",
+        "resteDisponible": "Presupuesto del mes",
+        "depense": "Gastado este mes",
+        "ilTeReste": "Te queda",
         "resteAVivre": "Día a día",
         "capaciteEpargne": "Capacidad de ahorro",
+        "epargneEstimee": "Ahorro estimado",
         "ajuster": "Ajustar este mes",
         "parJour": "≈ {amount}/día"
       },

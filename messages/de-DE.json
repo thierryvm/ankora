@@ -1088,8 +1088,8 @@
   },
   "dashboard": {
     "situation": {
-      "heroLabel": "Verfügbarer Betrag",
-      "heroSubtitle": "Was dir nach Fixkosten und Rücklagen bleibt",
+      "heroLabel": "Dir bleibt",
+      "heroAnchor": "von {budget} Budget · {depense} ausgegeben",
       "voirPlan": "Plan ansehen",
       "statut": {
         "vert": "Du hast diesen Monat gut im Griff",
@@ -1112,9 +1112,12 @@
         "chargesFixes": "Fixkosten",
         "provisions": "Verteilte Rücklagen",
         "engagements": "Verpflichtungen",
-        "resteDisponible": "Verfügbarer Betrag",
+        "resteDisponible": "Monatsbudget",
+        "depense": "Diesen Monat ausgegeben",
+        "ilTeReste": "Dir bleibt",
         "resteAVivre": "Alltag",
         "capaciteEpargne": "Sparpotenzial",
+        "epargneEstimee": "Geschätzte Ersparnis",
         "ajuster": "Diesen Monat anpassen",
         "parJour": "≈ {amount}/Tag"
       },

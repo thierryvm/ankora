@@ -2,6 +2,7 @@ import Decimal from 'decimal.js';
 
 import { capaciteEpargneReelle } from './capacite-epargne-reelle';
 import { provisionsMensuellesLissees, totalChargesMensuelles } from './effort-financier-lisse';
+import { epargneEstimee } from './epargne-estimee';
 import { calculerSanteProvisions } from './sante-provisions';
 import type { CockpitCharge, PaymentLedger, ReferencePeriod } from './types';
 
@@ -33,6 +34,17 @@ export type SituationDuMoisInput = Readonly<{
    * oubli de wiring doit casser à la compilation. 0 quand aucun engagement.
    */
   engagementsMensuels: Decimal;
+  /**
+   * « Dépensé ce mois » — somme des dépenses saisies sur le mois de référence,
+   * calculée par la page via `depensesDuMois()`. Requis pour la même raison que
+   * `engagementsMensuels` : un oubli de wiring doit casser à la compilation,
+   * pas rendre un héros silencieusement faux (ADR-035).
+   */
+  depensesDuMois: Decimal;
+  /** Jours écoulés dans le mois de référence, aujourd'hui inclus. */
+  joursEcoules: number;
+  /** Nombre de jours du mois de référence. */
+  joursDuMois: number;
 }>;
 
 export type SituationDuMois = Readonly<{
@@ -44,8 +56,28 @@ export type SituationDuMois = Readonly<{
   provisionsLissees: Decimal;
   /** Mensualités lissées des engagements actifs (ADR-021). 0 si aucun. */
   engagementsMensuels: Decimal;
-  /** Chiffre-héros = revenus − chargesFixes − provisionsLissees − engagementsMensuels. */
+  /**
+   * « Budget du mois » (ADR-035) = revenus − chargesFixes − provisionsLissees
+   * − engagementsMensuels. Nom de code délibérément inchangé : le renommer
+   * dans le domaine était le risque le plus cher du chantier vocabulaire, pour
+   * un gain nul côté utilisateur. Ce n'est plus le chiffre-héros, c'est l'ancre
+   * affichée sous lui.
+   */
   resteDisponible: Decimal;
+  /** « Dépensé ce mois » (ADR-035). */
+  depensesDuMois: Decimal;
+  /**
+   * « Il te reste » (ADR-035) — le chiffre-héros, en temps réel.
+   * `resteDisponible − depensesDuMois`. Descend quand l'utilisateur saisit une
+   * dépense : c'est la boucle de rétroaction que le cockpit n'avait pas.
+   */
+  ilTeReste: Decimal;
+  /**
+   * « Épargne estimée » (ADR-035). `null` avant le 7ᵉ jour du mois — une
+   * projection sur deux jours est du bruit, et « pas encore d'estimation »
+   * n'est pas « une estimation à zéro ».
+   */
+  epargneEstimee: Decimal | null;
   budgetVieCourante: Decimal;
   capacite: Decimal;
   provisionsAJour: boolean;
@@ -78,9 +110,21 @@ export function calculerSituationDuMois(input: SituationDuMoisInput): SituationD
   // mensuelle réelle — on retire leur mensualité lissée du reste disponible
   // (charges-only via `capaciteEpargneReelle`, inchangé) pour que le hero et la
   // carte « Mes engagements » cessent de se contredire.
-  const { engagementsMensuels } = input;
+  const { engagementsMensuels, depensesDuMois } = input;
   const resteDisponible = capac.resteDisponible.minus(engagementsMensuels);
   const capacite = resteDisponible.minus(capac.resteAVivre);
+
+  // ADR-035 — le chiffre-héros passe en temps réel. Aucun double comptage :
+  // `resteDisponible` ne contient que des charges et engagements lissés, et
+  // l'invariant du domaine veut qu'une occurrence de charge/engagement ne soit
+  // jamais une `expense`. Les deux univers sont disjoints.
+  const ilTeReste = resteDisponible.minus(depensesDuMois);
+  const epargne = epargneEstimee({
+    budgetDuMois: resteDisponible,
+    depensesDuMois,
+    joursEcoules: input.joursEcoules,
+    joursDuMois: input.joursDuMois,
+  });
 
   let statut: SituationStatut;
   if (!hasRevenus) {
@@ -101,6 +145,9 @@ export function calculerSituationDuMois(input: SituationDuMoisInput): SituationD
     provisionsLissees,
     engagementsMensuels,
     resteDisponible,
+    depensesDuMois,
+    ilTeReste,
+    epargneEstimee: epargne,
     budgetVieCourante: capac.resteAVivre,
     capacite,
     provisionsAJour,

@@ -56,6 +56,9 @@ const BASE = {
   provisionsLissees: 338,
   engagementsMensuels: 0,
   resteDisponible: 662,
+  depensesDuMois: 200,
+  ilTeReste: 462,
+  epargneEstimee: 318,
   budgetVieCourante: 500,
   capacite: 162,
   deficitEpargne: 0,
@@ -73,7 +76,7 @@ describe('<SituationDuMoisHero />', () => {
   it('vert: shows hero label + reassuring status, AllocationBar + Adjust trigger, no plan link', async () => {
     await renderHero({ statut: 'vert' });
     expect(screen.getByTestId('situation-hero-value')).toBeInTheDocument();
-    // "Reste disponible" is the hero eyebrow AND the flow total row (same number) → appears twice.
+    // « Il te reste » is the hero eyebrow AND the flow row of the same figure.
     expect(screen.getAllByText(messages.dashboard.situation.heroLabel).length).toBeGreaterThan(0);
     expect(screen.getByText(messages.dashboard.situation.statut.vert)).toBeInTheDocument();
     expect(screen.getByTestId('allocation-bar')).toBeInTheDocument();

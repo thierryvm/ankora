@@ -18,7 +18,14 @@ type Props = {
   provisionsLissees: number;
   /** Mensualités lissées des engagements actifs (ADR-021). 0 = masqué. */
   engagementsMensuels: number;
+  /** « Budget du mois » (ADR-035) — l'ancre, plus le chiffre-héros. */
   resteDisponible: number;
+  /** « Dépensé ce mois » (ADR-035). */
+  depensesDuMois: number;
+  /** « Il te reste » (ADR-035) — le chiffre-héros, temps réel. */
+  ilTeReste: number;
+  /** « Épargne estimée » (ADR-035). `null` avant le 7ᵉ jour → affiche « — ». */
+  epargneEstimee: number | null;
   budgetVieCourante: number;
   capacite: number;
   deficitEpargne: number;
@@ -198,18 +205,32 @@ export async function SituationDuMoisHero(props: Props) {
           <p className="text-sm font-semibold tracking-tight">{statusTitle}</p>
         </div>
 
-        {/* Hero number. */}
+        {/*
+          Hero number — « Il te reste », real-time (ADR-035). It goes down when
+          the user records an expense; that feedback loop is the point.
+
+          Colour: neutral ink, danger only when negative. Never green — when
+          everything is green, nothing signals any more. The status pill above
+          already carries the tone, with an icon, so colour is never alone.
+        */}
         <div className="flex flex-col gap-1">
           <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
             {t('heroLabel')}
           </p>
           <p
-            className="text-foreground text-4xl font-bold tracking-tight tabular-nums"
+            className={`text-4xl font-bold tracking-tight tabular-nums ${
+              props.ilTeReste < 0 ? 'text-danger' : 'text-foreground'
+            }`}
             data-testid="situation-hero-value"
           >
-            {fmt(props.resteDisponible)}
+            {fmt(props.ilTeReste)}
           </p>
-          <p className="text-muted-foreground text-sm">{t('heroSubtitle')}</p>
+          <p className="text-muted-foreground text-sm" data-testid="situation-hero-anchor">
+            {t('heroAnchor', {
+              budget: fmt(props.resteDisponible),
+              depense: fmt(props.depensesDuMois),
+            })}
+          </p>
         </div>
 
         {/* Allocation bar (supplementary visual anchor). */}
@@ -256,6 +277,15 @@ export async function SituationDuMoisHero(props: Props) {
           <div className="border-border mt-1 border-t pt-2">
             <FlowRow label={t('flow.resteDisponible')} value={fmt(props.resteDisponible)} strong />
           </div>
+          <FlowRow
+            label={t('flow.depense')}
+            value={`− ${fmt(props.depensesDuMois)}`}
+            muted
+            dotClass="bg-warning"
+          />
+          <div className="border-border border-t pt-2">
+            <FlowRow label={t('flow.ilTeReste')} value={fmt(props.ilTeReste)} strong />
+          </div>
           <div className="text-muted-foreground flex items-center justify-between gap-2 pl-3 text-xs">
             <dt className="flex items-center gap-2">
               <span aria-hidden className="bg-accent-400 h-2 w-2 shrink-0 rounded-full" />
@@ -278,6 +308,21 @@ export async function SituationDuMoisHero(props: Props) {
               {t('flow.capaciteEpargne')}
             </dt>
             <dd className="tabular-nums">{fmt(Math.max(0, props.capacite))}</dd>
+          </div>
+          {/*
+            « Épargne estimée » — a projection of the current spending pace, not
+            an envelope the user has to invent. `null` before the 7th day of the
+            month renders « — »: extrapolating a month from two days is noise,
+            and "no estimate yet" is not "an estimate of zero".
+          */}
+          <div className="text-muted-foreground flex items-center justify-between gap-2 pl-3 text-xs">
+            <dt className="flex items-center gap-2">
+              <span aria-hidden className="bg-brand-500 h-2 w-2 shrink-0 rounded-full" />
+              {t('flow.epargneEstimee')}
+            </dt>
+            <dd className="tabular-nums" data-testid="situation-epargne-estimee">
+              {props.epargneEstimee === null ? '—' : fmt(props.epargneEstimee)}
+            </dd>
           </div>
         </dl>
       </CardContent>

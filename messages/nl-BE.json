@@ -1088,8 +1088,8 @@
   },
   "dashboard": {
     "situation": {
-      "heroLabel": "Beschikbaar saldo",
-      "heroSubtitle": "Wat je overhoudt na je vaste kosten en voorzieningen",
+      "heroLabel": "Je houdt over",
+      "heroAnchor": "van {budget} budget · {depense} uitgegeven",
       "voirPlan": "Bekijk het plan",
       "statut": {
         "vert": "Je houdt deze maand goed overzicht",
@@ -1112,9 +1112,12 @@
         "chargesFixes": "Vaste kosten",
         "provisions": "Gespreide voorzieningen",
         "engagements": "Verbintenissen",
-        "resteDisponible": "Beschikbaar saldo",
+        "resteDisponible": "Maandbudget",
+        "depense": "Deze maand uitgegeven",
+        "ilTeReste": "Je houdt over",
         "resteAVivre": "Dagelijks leven",
         "capaciteEpargne": "Spaarcapaciteit",
+        "epargneEstimee": "Geschat spaarbedrag",
         "ajuster": "Deze maand aanpassen",
         "parJour": "≈ {amount}/dag"
       },

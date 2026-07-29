@@ -1088,8 +1088,8 @@
   },
   "dashboard": {
     "situation": {
-      "heroLabel": "Reste disponible",
-      "heroSubtitle": "Ce qu'il te reste après tes charges et provisions",
+      "heroLabel": "Il te reste",
+      "heroAnchor": "sur {budget} de budget · {depense} dépensés",
       "voirPlan": "Voir le plan",
       "statut": {
         "vert": "Tu gères bien ce mois-ci",
@@ -1112,9 +1112,12 @@
         "chargesFixes": "Charges fixes",
         "provisions": "Provisions lissées",
         "engagements": "Engagements",
-        "resteDisponible": "Reste disponible",
+        "resteDisponible": "Budget du mois",
+        "depense": "Dépensé ce mois",
+        "ilTeReste": "Il te reste",
         "resteAVivre": "Reste à vivre",
         "capaciteEpargne": "Capacité épargne",
+        "epargneEstimee": "Épargne estimée",
         "ajuster": "Ajuster ce mois",
         "parJour": "≈ {amount}/jour"
       },
