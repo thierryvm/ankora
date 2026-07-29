@@ -46,8 +46,17 @@ const PENDING_MIGRATION: readonly string[] = [
 /** The primitive itself is where this behaviour is SUPPOSED to live. */
 const THE_PRIMITIVE = 'components/primitives/Sheet.tsx';
 
-/** shadcn's Radix wrapper: 0 call-sites, kept pending the ADR-028 arbitration. */
-const UNUSED_SHADCN = 'components/ui/sheet.tsx';
+/**
+ * `components/ui/sheet.tsx` — shadcn's Radix wrapper, 117 lines, 0 call-sites —
+ * was DELETED on 2026-07-29. Two things named `Sheet` in one project is the
+ * exact ambiguity this refonte is cleaning up, and the dead one was an
+ * invitation to import the wrong one. `git show 581641d:src/components/ui/sheet.tsx`
+ * restores it; git is the reference, not a file kept alive to be looked at.
+ *
+ * The case below asserts it stays gone, so it cannot come back as a second
+ * candidate primitive without someone deciding to.
+ */
+const DELETED_SHADCN_SHEET = 'components/ui/sheet.tsx';
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -107,9 +116,15 @@ describe('the Sheet primitive is the only place modal behaviour is implemented',
     expect(files.length).toBeGreaterThan(PENDING_MIGRATION.length);
   });
 
+  it('keeps exactly ONE thing named Sheet — the dead shadcn wrapper stays deleted', () => {
+    // Arbitrated 2026-07-29. Restoring it would put a second, untested
+    // candidate primitive back in the tree under the same name.
+    expect(files.map((f) => f.path)).not.toContain(DELETED_SHADCN_SHEET);
+  });
+
   it('has no panel outside the primitive re-implementing Escape or the scroll lock', () => {
     const offenders = files
-      .filter((f) => f.path !== THE_PRIMITIVE && f.path !== UNUSED_SHADCN)
+      .filter((f) => f.path !== THE_PRIMITIVE)
       .filter((f) => ownsEscape(f.source) || ownsScrollLock(f.source))
       .map((f) => f.path)
       .filter((path) => !PENDING_MIGRATION.includes(path));
