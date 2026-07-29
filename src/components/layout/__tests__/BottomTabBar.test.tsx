@@ -60,6 +60,17 @@ vi.mock('@/components/gdpr/ConsentBanner', () => ({
   reopenConsentBanner: vi.fn(),
 }));
 
+/**
+ * The ⊕ mounts the real entry sheet, which reaches for server actions on open.
+ * Stubbed to a marker: this suite is about the BAR — that the ⊕ sits in the
+ * middle, is a ≥44 px target, and opens something. `AddExpenseSheet` has its own
+ * 30-case suite next door.
+ */
+vi.mock('@/components/expenses/AddExpenseSheet', () => ({
+  AddExpenseSheet: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="add-expense-sheet-mock" /> : null,
+}));
+
 import { BottomTabBar } from '../BottomTabBar';
 import { MOBILE_SHEET_DESTINATIONS } from '../app-destinations';
 import {
@@ -77,14 +88,17 @@ beforeEach(() => {
   document.body.style.overflow = '';
 });
 
-describe('<BottomTabBar /> — 5 tabs, Apple HIG hard cap', () => {
-  it('renders the 4 destination tabs + the More trigger', () => {
+describe('<BottomTabBar /> — 5 slots, Apple HIG hard cap', () => {
+  it('renders the 3 destination tabs + the ⊕ + the More trigger', () => {
+    // Composition changed on 2026-07-29 (décision Q7): `simulate` moved to the
+    // More sheet to free the centre slot for the ⊕. Still five slots.
     render(<BottomTabBar />);
     expect(screen.getByTestId('bottom-tab-cockpit')).toBeInTheDocument();
     expect(screen.getByTestId('bottom-tab-bills')).toBeInTheDocument();
+    expect(screen.getByTestId('bottom-tab-add-expense')).toBeInTheDocument();
     expect(screen.getByTestId('bottom-tab-expenses')).toBeInTheDocument();
-    expect(screen.getByTestId('bottom-tab-simulate')).toBeInTheDocument();
     expect(screen.getByTestId('bottom-tab-more')).toBeInTheDocument();
+    expect(screen.queryByTestId('bottom-tab-simulate')).not.toBeInTheDocument();
   });
 
   it('uses the localised label set from layout.bottomTab', () => {
@@ -92,7 +106,6 @@ describe('<BottomTabBar /> — 5 tabs, Apple HIG hard cap', () => {
     expect(screen.getByText('Cockpit')).toBeInTheDocument();
     expect(screen.getByText('Factures')).toBeInTheDocument();
     expect(screen.getByText('Dépenses')).toBeInTheDocument();
-    expect(screen.getByText('Simuler')).toBeInTheDocument();
     expect(screen.getByText('Plus')).toBeInTheDocument();
   });
 
@@ -101,7 +114,6 @@ describe('<BottomTabBar /> — 5 tabs, Apple HIG hard cap', () => {
     expect(screen.getByTestId('bottom-tab-cockpit')).toHaveAttribute('href', '/app');
     expect(screen.getByTestId('bottom-tab-bills')).toHaveAttribute('href', '/app/charges');
     expect(screen.getByTestId('bottom-tab-expenses')).toHaveAttribute('href', '/app/expenses');
-    expect(screen.getByTestId('bottom-tab-simulate')).toHaveAttribute('href', '/app/simulator');
   });
 
   it('renders only one nav landmark with the localised aria-label', () => {
@@ -109,6 +121,87 @@ describe('<BottomTabBar /> — 5 tabs, Apple HIG hard cap', () => {
     const nav = screen.getByRole('navigation', { name: 'Navigation principale mobile' });
     expect(nav).toBeInTheDocument();
     expect(nav.getAttribute('data-testid')).toBe('bottom-tab-bar');
+  });
+});
+
+/**
+ * The ⊕ (décision Q7). Q7 also names the tension it creates — four tabs change
+ * view and keep state, the fifth opens a modal — and keeps it anyway for
+ * frequency: recording an expense is the most frequent action in the app and
+ * costs 4 taps plus a scroll today. These cases pin the parts of the spec that
+ * are checkable, and the ones a redesign would quietly break first.
+ */
+describe('<BottomTabBar /> — the ⊕ at the centre', () => {
+  const slots = () =>
+    Array.from(
+      screen.getByTestId('bottom-tab-bar').querySelectorAll('[data-testid^="bottom-tab-"]'),
+    )
+      .filter((el) => el.getAttribute('data-testid') !== 'bottom-tab-bar')
+      .map((el) => el.getAttribute('data-testid'));
+
+  it('sits in the third of five slots', () => {
+    render(<BottomTabBar />);
+    expect(slots()).toEqual([
+      'bottom-tab-cockpit',
+      'bottom-tab-bills',
+      'bottom-tab-add-expense',
+      'bottom-tab-expenses',
+      'bottom-tab-more',
+    ]);
+  });
+
+  it('opens the entry sheet', async () => {
+    const user = userEvent.setup();
+    render(<BottomTabBar />);
+    expect(screen.queryByTestId('add-expense-sheet-mock')).not.toBeInTheDocument();
+
+    await user.click(screen.getByTestId('bottom-tab-add-expense'));
+
+    expect(screen.getByTestId('add-expense-sheet-mock')).toBeInTheDocument();
+  });
+
+  it('announces itself as a dialog trigger, not a link', async () => {
+    const user = userEvent.setup();
+    render(<BottomTabBar />);
+    const button = screen.getByTestId('bottom-tab-add-expense');
+
+    expect(button.tagName).toBe('BUTTON');
+    expect(button).toHaveAttribute('aria-haspopup', 'dialog');
+    expect(button).toHaveAttribute('aria-expanded', 'false');
+    expect(button).not.toHaveAttribute('href');
+
+    await user.click(button);
+    expect(screen.getByTestId('bottom-tab-add-expense')).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('carries an accessible name — it has no visible label by design', () => {
+    // Q7: no label is what distinguishes an action from the four destinations.
+    // Which makes the aria-label the ONLY name it has, so it cannot be dropped.
+    render(<BottomTabBar />);
+    expect(screen.getByRole('button', { name: 'Ajouter une dépense' })).toHaveAttribute(
+      'data-testid',
+      'bottom-tab-add-expense',
+    );
+  });
+
+  it('paints a 46 × 33 block CONTAINED in the bar, not a floating FAB', () => {
+    render(<BottomTabBar />);
+    const painted = screen.getByTestId('bottom-tab-add-expense').firstElementChild;
+    expect(painted?.className).toContain('w-[46px]');
+    expect(painted?.className).toContain('h-[33px]');
+    expect(painted?.className).toContain('rounded-[11px]');
+    // A Material FAB overflows above the bar. Nothing here may translate it out.
+    expect(painted?.className).not.toMatch(/-translate-y|absolute|rounded-full/);
+  });
+
+  it('keeps a ≥44 px touch target despite the 33 px paint', () => {
+    // Q7 specifies the VISUAL size; the HIG specifies the HIT AREA. Shrinking
+    // the target to match the paint would have been the wrong reading — the
+    // button is h-12 (48 px) and flex-1 like every other slot.
+    render(<BottomTabBar />);
+    const button = screen.getByTestId('bottom-tab-add-expense');
+    expect(button.className).toContain('flex-1');
+    expect(button.parentElement?.className).toContain('h-12');
   });
 });
 
@@ -134,10 +227,15 @@ describe('<BottomTabBar /> — active tab detection', () => {
     expect(screen.getByTestId('bottom-tab-bills')).not.toHaveAttribute('aria-current');
   });
 
-  it('matches simulate at /app/simulator', () => {
+  it('lights up nothing at /app/simulator — that tab moved to the More sheet', () => {
     currentPathname = '/app/simulator';
     render(<BottomTabBar />);
-    expect(screen.getByTestId('bottom-tab-simulate')).toHaveAttribute('aria-current', 'page');
+    // `simulate` left the bar for the More sheet when the ⊕ took the third slot
+    // (décision Q7), so no tab lights up here — the bar acts as a "return to
+    // cockpit" surface, exactly as it does on /admin and /faq.
+    expect(screen.queryByTestId('bottom-tab-simulate')).not.toBeInTheDocument();
+    expect(screen.getByTestId('bottom-tab-cockpit')).not.toHaveAttribute('aria-current');
+    expect(screen.getByTestId('bottom-tab-expenses')).not.toHaveAttribute('aria-current');
   });
 });
 

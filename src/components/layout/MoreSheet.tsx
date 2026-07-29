@@ -71,14 +71,29 @@ export type MoreSheetProps = {
  * them — `Record` demands exhaustiveness, and the day one of them moves to the
  * sheet its label is already there.
  */
-const SHEET_LABELS: Record<AppDestinationId, 'accounts' | 'settings' | 'commitments'> = {
+/**
+ * ⚠️ The fallbacks below are load-bearing and were nearly a shipped bug.
+ *
+ * When `simulate` moved from the tab bar to this sheet on 2026-07-29 (the ⊕
+ * took its slot), it started rendering through `SHEET_LABELS` — where it was
+ * mapped to `'accounts'` as an inert placeholder. The simulator link would have
+ * read « Comptes ». `Record` exhaustiveness made the map compile; it says
+ * nothing about the values being right.
+ *
+ * The three tab destinations keep a placeholder because `Record` demands one,
+ * but each now points at its own key, so the same move cannot mislabel them.
+ */
+const SHEET_LABELS: Record<
+  AppDestinationId,
+  'accounts' | 'settings' | 'commitments' | 'simulate' | 'cockpit' | 'bills' | 'expenses'
+> = {
   accounts: 'accounts',
   settings: 'settings',
   commitments: 'commitments',
-  cockpit: 'accounts',
-  bills: 'accounts',
-  expenses: 'accounts',
-  simulate: 'accounts',
+  simulate: 'simulate',
+  cockpit: 'cockpit',
+  bills: 'bills',
+  expenses: 'expenses',
 };
 
 export function MoreSheet({ isOpen, onClose, isAdmin = false }: MoreSheetProps) {
