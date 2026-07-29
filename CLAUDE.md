@@ -163,6 +163,18 @@ ininterprétable au premier conflit, donc ignoré :
 | `Playwright E2E`                 | **224 passed** (215 avant, +9 `cron-gdpr-auth`, PR-3B-B)    |
 | `Playwright E2E (authenticated)` | **31 passed** (25 avant, +6 `gdpr-deletion-queue`, PR-3B-A) |
 
+> **⚠️ Plancher public à re-mesurer (chantier 1, 29 juillet 2026).** ADR-034 a
+> supprimé `/design-playground` et sa spec `e2e/design-playground.spec.ts`
+> (1 cas × 2 projets non-webkit → **−2 attendus**). Le chiffre **n'est pas
+> corrigé ici** : la doctrine exige un nombre **observé**, et il ne l'a pas été.
+> Les e2e n'ont pas pu tourner sur la machine du chantier — Docker absent, donc
+> pas de `supabase start`, et le projet Supabase lié est la **production** :
+> les specs authentifiées ne sautent qu'en l'absence de clé `service_role`, donc
+> les lancer aurait écrit de vraies lignes en prod. **À la première CI verte
+> après ce chantier : relever la ligne `N passed` du job public et inscrire la
+> valeur mesurée ici.** Le job authentifié (31) n'est pas affecté — aucune spec
+> n'entre ni ne sort de la liste, la quarantaine reste à 6.
+
 Le relèvement du 27 juillet est mesuré, pas déduit : `gdpr-deletion-queue.spec.ts`
 n'apparaît que dans **un** des deux projets du job authentifié (`iPhone 14` filtre sur
 `**/mobile-ios/**`), d'où +6 et non +12. Dans le job public elle ajoute **18 sautés et

@@ -20,9 +20,28 @@ const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
 );
 CardHeader.displayName = 'CardHeader';
 
-const CardTitle = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div
+type CardTitleProps = React.HTMLAttributes<HTMLHeadingElement> & {
+  /**
+   * Heading level. Defaults to `h3`, which is right for a card sitting under a
+   * page `h1` and a section `h2`. Override when the surrounding outline
+   * differs — a wrong level is its own accessibility defect, so this is a real
+   * prop rather than a fixed tag.
+   */
+  as?: 'h2' | 'h3' | 'h4';
+};
+
+/**
+ * Card heading.
+ *
+ * Renders a real heading element. It used to be a `<div>`, which meant no card
+ * in the app existed in a screen reader's heading navigation — and, less
+ * visibly, that three e2e specs written against `getByRole('heading')` could
+ * never pass. They sat green in CI for two months because the authenticated
+ * job had no Supabase and skipped them entirely.
+ */
+const CardTitle = React.forwardRef<HTMLHeadingElement, CardTitleProps>(
+  ({ className, as: Tag = 'h3', ...props }, ref) => (
+    <Tag
       ref={ref}
       className={cn('text-lg leading-none font-semibold tracking-tight', className)}
       {...props}
