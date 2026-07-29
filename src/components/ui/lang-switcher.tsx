@@ -6,30 +6,22 @@ import { LOCALES_VISIBLE } from '@/i18n/routing';
 import { cn } from '@/lib/utils';
 
 /**
- * Atom 11 — LangSwitcher
- * Headless dropdown listbox a11y (FR-BE / EN par défaut, v1.0 Belgique-first).
+ * Headless locale dropdown (a11y listbox).
  *
- * Source: design_handoff_ankora_v1/atoms/11-LangSwitcher.jsx
+ * Ported from the deleted `atoms/LangSwitcher.tsx` (ADR-034). Behaviour is
+ * unchanged — only the styling moved from `atoms.css` to Tailwind utilities.
+ * The decorative pop-in keyframe of the original was not carried over.
  *
- * Headless / wiring next-intl en PR-B :
- * - PR-A : composant pur, `onChange(localeId)` exposé. Aucune dépendance
- *   `next-intl`/router. Le consumer décide quoi faire (typiquement
- *   `router.replace(...)` avec préfixe locale).
- * - PR-B : wiring sur `useRouter` + `usePathname` de `next-intl/navigation`.
+ * A11y contract:
+ * - trigger: `aria-haspopup="listbox"`, `aria-expanded`, `aria-controls` when open;
+ * - menu: `role="listbox"`, each option `role="option"` + `aria-selected`;
+ * - `Escape` closes and returns focus to the trigger;
+ * - mousedown outside trigger+listbox closes;
+ * - listeners are added/removed with an explicit cleanup (anti-leak).
  *
- * A11y :
- * - Trigger button : `aria-haspopup="listbox"`, `aria-expanded`,
- *   `aria-controls={listboxId}` quand ouvert.
- * - Listbox : `role="listbox"` ; chaque option `role="option"` +
- *   `aria-selected={current === id}`.
- * - ESC ferme + retour focus trigger.
- * - Mousedown OUTSIDE trigger+listbox ferme.
- * - useEffect ajoute/retire les listeners document avec cleanup explicite
- *   (anti-leak).
- *
- * v1.0 locales lockés : FR-BE + EN. NL/DE/ES post-launch
- * (cf. NORTH_STAR.md). Les consumers peuvent fournir un `locales` custom
- * si besoin de tests ou de futures préviews.
+ * The component is fully controlled: `current` drives the visible flag/label,
+ * the consumer owns what `onChange` does (typically a locale-aware router
+ * replace).
  */
 
 export interface LangSwitcherLocale {
@@ -54,7 +46,7 @@ export interface LangSwitcherProps {
  * a new locale to `LOCALES_VISIBLE` in `src/i18n/routing.ts` will fail
  * compilation here until its flag/label entry is added — the doctrine cannot
  * drift between the plain header `<select>` (which consumes the ID list) and
- * this richer atom switcher (which consumes the same IDs + metadata).
+ * this richer switcher (which consumes the same IDs + metadata).
  */
 const LOCALE_DISPLAY_METADATA: Record<
   (typeof LOCALES_VISIBLE)[number],
@@ -111,24 +103,27 @@ export function LangSwitcher({
 
   const currentLocale = locales.find((l) => l.id === current);
 
-  const classes = cn('atm-lang-switcher', className);
-
   return (
-    <div className={classes}>
+    <div className={cn('relative inline-block', className)}>
       <button
         ref={triggerRef}
         type="button"
-        className="atm-lang-switcher-trigger"
+        className={cn(
+          'bg-surface-soft text-foreground border-border inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-1',
+          'text-xs font-medium',
+          'hover:bg-surface-muted transition-colors',
+          'focus-visible:outline-brand-600 focus-visible:outline-2 focus-visible:outline-offset-2',
+        )}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={open ? listboxId : undefined}
         aria-label={ariaLabel}
         onClick={() => setOpen((v) => !v)}
       >
-        <span className="atm-lang-switcher-flag" aria-hidden="true">
+        <span className="text-sm leading-none" aria-hidden="true">
           {currentLocale?.flag ?? '🌐'}
         </span>
-        <span className="atm-lang-switcher-code">{currentLocale?.code ?? current}</span>
+        <span>{currentLocale?.code ?? current}</span>
       </button>
       {open && (
         <ul
@@ -136,27 +131,31 @@ export function LangSwitcher({
           id={listboxId}
           role="listbox"
           aria-label={ariaLabel}
-          className="atm-lang-switcher-menu"
+          className="bg-card border-border absolute top-full right-0 z-30 mt-1 min-w-[180px] list-none rounded-md border p-1 shadow-md"
         >
           {locales.map((l) => {
             const isSelected = l.id === current;
-            const optionClasses = `atm-lang-switcher-option${isSelected ? ' is-selected' : ''}`;
             return (
               <li key={l.id} role="presentation">
                 <button
                   type="button"
                   role="option"
                   aria-selected={isSelected}
-                  className={optionClasses}
+                  className={cn(
+                    'text-foreground flex w-full cursor-pointer items-center gap-2 rounded-sm border-0 bg-transparent px-2 py-1.5 text-left text-sm',
+                    'hover:bg-surface-soft transition-colors',
+                    'focus-visible:outline-brand-600 focus-visible:outline-2 focus-visible:-outline-offset-2',
+                    isSelected && 'bg-brand-surface text-brand-text',
+                  )}
                   onClick={() => {
                     onChange(l.id);
                     setOpen(false);
                   }}
                 >
-                  <span className="atm-lang-switcher-flag" aria-hidden="true">
+                  <span className="text-sm leading-none" aria-hidden="true">
                     {l.flag}
                   </span>
-                  <span className="atm-lang-switcher-label">{l.label}</span>
+                  <span>{l.label}</span>
                 </button>
               </li>
             );

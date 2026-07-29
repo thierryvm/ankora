@@ -2,27 +2,22 @@
 
 import * as React from 'react';
 
+import { cn } from '@/lib/utils';
+
 /**
- * Atom 10 — ThemeToggle
- * Bouton SSR-safe pour basculer light/dark.
+ * Light/dark toggle, SSR-safe.
  *
- * Source: design_handoff_ankora_v1/atoms/10-ThemeToggle.jsx
+ * Ported from the deleted `atoms/ThemeToggle.tsx` (ADR-034). Behaviour is
+ * unchanged — only the styling moved from `atoms.css` to Tailwind utilities.
  *
- * SSR-safe pattern :
- * - `'use client'` (utilise useState + useEffect pour DOM/cookie writes)
- * - Theme initial fourni via prop `initialTheme` (PR-B branchera la lecture
- *   cookie SSR via AppShell) — default `light` quand non fourni.
- * - Au toggle : écrit `document.cookie` (max-age 1 an, SameSite=Lax, path=/)
- *   et applique `document.documentElement.dataset.theme`. Aucune écriture
- *   au render — uniquement dans `useEffect` après vérification
- *   `typeof document !== 'undefined'`.
- * - Pas d'accès `localStorage` au render time (PR-B câble cookie SSR ; pas
- *   besoin de localStorage côté client pour la PR atomique).
+ * SSR-safe pattern:
+ * - initial theme comes from the `theme` cookie, read server-side by the
+ *   consumer and passed as `initialTheme` (no hydration flash);
+ * - nothing is written during render — the cookie and the
+ *   `document.documentElement.dataset.theme` mutation happen in `useEffect`.
  *
- * A11y :
- * - `aria-pressed` reflète l'état (true = dark, false = light)
- * - `aria-label` dynamique selon le thème courant
- * - SVG inline avec `aria-hidden="true"` (icône décorative)
+ * Touch target: `md` is the canonical 44×44 (Apple HIG minimum, GH #153).
+ * `sm` keeps a denser 36×36 for compact surfaces.
  */
 
 export type Theme = 'light' | 'dark';
@@ -34,6 +29,11 @@ export interface ThemeToggleProps {
   readonly className?: string;
   readonly size?: 'sm' | 'md';
 }
+
+const SIZE_CLASS: Readonly<Record<'sm' | 'md', string>> = {
+  sm: 'size-9',
+  md: 'size-11',
+};
 
 export function ThemeToggle({
   initialTheme = 'light',
@@ -57,14 +57,16 @@ export function ThemeToggle({
     onChange?.(next);
   }, [isDark, onChange]);
 
-  const classes = ['atm-theme-toggle', `atm-theme-toggle--${size}`, className ?? '']
-    .filter(Boolean)
-    .join(' ');
-
   return (
     <button
       type="button"
-      className={classes}
+      className={cn(
+        'bg-surface-soft text-foreground border-border inline-flex cursor-pointer items-center justify-center rounded-full border',
+        'hover:bg-surface-muted transition-colors',
+        'focus-visible:outline-brand-600 focus-visible:outline-2 focus-visible:outline-offset-2',
+        SIZE_CLASS[size],
+        className,
+      )}
       onClick={toggle}
       aria-pressed={isDark}
       aria-label={isDark ? 'Activer le thème clair' : 'Activer le thème sombre'}
@@ -72,7 +74,7 @@ export function ThemeToggle({
     >
       {isDark ? (
         <svg
-          data-testid="atm-theme-icon-moon"
+          data-testid="theme-icon-moon"
           width="16"
           height="16"
           viewBox="0 0 24 24"
@@ -87,7 +89,7 @@ export function ThemeToggle({
         </svg>
       ) : (
         <svg
-          data-testid="atm-theme-icon-sun"
+          data-testid="theme-icon-sun"
           width="16"
           height="16"
           viewBox="0 0 24 24"

@@ -2,11 +2,11 @@
 
 import * as React from 'react';
 
-import { LangSwitcher } from '@/components/atoms';
+import { LangSwitcher } from '@/components/ui/lang-switcher';
 import { usePathname, useRouter } from '@/i18n/navigation';
 
 /**
- * Client wrapper for the LangSwitcher atom — wires `onChange` to next-intl's
+ * Client wrapper for `LangSwitcher` — wires `onChange` to next-intl's
  * router. Required because the handler closes over `useRouter()` /
  * `usePathname()` hooks (Client-only) and cannot be defined Server-side
  * (function not serializable to RSC).
@@ -17,8 +17,8 @@ import { usePathname, useRouter } from '@/i18n/navigation';
  * URL with the new locale prefix and triggers a full re-render server-side
  * (so Server Components pick up the new `getTranslations()` namespace).
  *
- * The atom's `current` prop drives the visible flag/label and aria-checked
- * state; the consumer is fully controlled.
+ * The `current` prop drives the visible flag/label and aria-selected state;
+ * the consumer is fully controlled.
  */
 export function LangSwitcherClient({
   currentLocale,

@@ -17,11 +17,12 @@ import { logoutAction } from '@/lib/actions/auth';
  *
  * Three deliberate deviations from the original spec, each code-verified:
  *
- * 1. NO `Avatar` atom. `Avatar.tsx` tints the tile with inline `style={{…}}`
- *    (color-mix). The prod CSP is `style-src 'self' 'nonce-…'` with no
- *    `'unsafe-inline'` (proxy.ts) → inline `style` attributes are blocked,
- *    and `Avatar` is only ever exercised in `design-playground` (never on a
- *    CSP-enforced surface). The avatar here is Tailwind classes only.
+ * 1. NO shared `Avatar` component. The former `atoms/Avatar.tsx` tinted the
+ *    tile with an inline `style={{…}}` (color-mix). The prod CSP is
+ *    `style-src 'self' 'nonce-…'` with no `'unsafe-inline'` (proxy.ts) →
+ *    inline `style` attributes are blocked, and that component was only ever
+ *    exercised in the design playground (never on a CSP-enforced surface).
+ *    Both were deleted by ADR-034. The avatar here is Tailwind classes only.
  *
  * 2. NO portal (unlike MoreSheet). An anchored dropdown needs runtime
  *    positioning, which would require an inline `style` — blocked by the same

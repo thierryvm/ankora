@@ -36,7 +36,6 @@ const serverSchema = z
       .min(32)
       .regex(/^\S+$/, 'CRON_SECRET must not contain whitespace')
       .optional(),
-    ANKORA_PLAYGROUND_ENABLED: z.enum(['true', 'false']).default('false').optional(),
     // Comma-separated list of Supabase user IDs allowed in /admin/* routes.
     // PR-D4-PHASE2-B initial: contains @thierry's user_id only. Future PRs
     // may move this to a workspace_members.role-based check.

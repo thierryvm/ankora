@@ -20,8 +20,8 @@ beforeEach(() => {
  *
  * Pinning the contract here means a future refactor (e.g. switching to
  * `router.push` instead of `replace`, or dropping the locale param) breaks
- * this test before it ships to prod. Atom-level tests live in
- * `src/components/atoms/__tests__/LangSwitcher.test.tsx`.
+ * this test before it ships to prod. Component-level tests live in
+ * `src/components/ui/__tests__/lang-switcher.test.tsx`.
  */
 describe('<LangSwitcherClient /> consumer wiring', () => {
   it('renders LangSwitcher with current locale prop', () => {

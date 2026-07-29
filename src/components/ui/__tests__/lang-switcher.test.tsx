@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import { LangSwitcher, ANKORA_V1_LOCALES, type LangSwitcherLocale } from '../LangSwitcher';
+import { LangSwitcher, ANKORA_V1_LOCALES, type LangSwitcherLocale } from '../lang-switcher';
 
 const customLocales: readonly LangSwitcherLocale[] = [
   { id: 'fr-BE', code: 'FR', flag: '🇧🇪', label: 'Français (Belgique)' },
@@ -11,7 +11,7 @@ const customLocales: readonly LangSwitcherLocale[] = [
   { id: 'de-DE', code: 'DE', flag: '🇩🇪', label: 'Deutsch' },
 ];
 
-describe('<LangSwitcher /> (atom CD#3)', () => {
+describe('<LangSwitcher />', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -174,8 +174,8 @@ describe('<LangSwitcher /> (atom CD#3)', () => {
     const { container } = render(
       <LangSwitcher current="fr-BE" onChange={vi.fn()} className="extra-class" />,
     );
-    const root = container.querySelector('.atm-lang-switcher');
-    expect(root?.className).toContain('atm-lang-switcher');
+    const root = container.querySelector('.extra-class');
+    expect(root?.className).toContain('relative');
     expect(root?.className).toContain('extra-class');
   });
 
@@ -189,13 +189,17 @@ describe('<LangSwitcher /> (atom CD#3)', () => {
     expect(screen.queryByRole('listbox')).toBeNull();
   });
 
-  it('selected option carries is-selected class', async () => {
+  // The selected state used to be an `is-selected` class from atoms.css; since
+  // ADR-034 it is a pair of Tailwind token utilities. `aria-selected` (asserted
+  // above) carries the a11y contract — this only pins the visual distinction.
+  it('selected option is visually distinguished from the others', async () => {
     const user = userEvent.setup();
     render(<LangSwitcher current="en" onChange={vi.fn()} />);
     await user.click(screen.getByRole('button', { name: /changer de langue/i }));
     const enOption = screen.getAllByRole('option').find((o) => o.textContent?.includes('English'));
-    expect(enOption?.className).toContain('is-selected');
+    expect(enOption?.className).toContain('bg-brand-surface');
+    expect(enOption?.className).toContain('text-brand-text');
     const frOption = screen.getAllByRole('option').find((o) => o.textContent?.includes('Français'));
-    expect(frOption?.className).not.toContain('is-selected');
+    expect(frOption?.className).not.toContain('bg-brand-surface');
   });
 });

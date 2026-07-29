@@ -10,9 +10,9 @@ export type Locale = (typeof LOCALES)[number];
  * v1.0 / Beta scope. Doctrine: `CLAUDE.md` "Cap v1.0 publique — Langues v1.0 :
  * FR + EN seulement. NL/DE/ES annoncées dans /roadmap publique, livrées
  * post-launch." Mirrors `ANKORA_V1_LOCALES` in
- * `src/components/atoms/LangSwitcher.tsx` (same intent, different shape — the
- * atom carries flag + label metadata, this constant is just the ids for the
- * segmented-control (radiogroup) consumer in
+ * `src/components/ui/lang-switcher.tsx` (same intent, different shape — the
+ * switcher carries flag + label metadata, this constant is just the ids for
+ * the segmented-control (radiogroup) consumer in
  * `src/components/layout/LocaleSwitcher.tsx`).
  *
  * Note on URL routing: the full `LOCALES` array stays the source of truth for

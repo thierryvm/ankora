@@ -1,11 +1,8 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import { ThemeToggle } from '../index';
+import { ThemeToggle } from '../theme-toggle';
 
 /**
  * Reset DOM state between tests:
@@ -24,35 +21,35 @@ beforeEach(() => {
   document.documentElement.dataset.theme = '';
 });
 
-describe('<ThemeToggle /> (atom CD#3)', () => {
+describe('<ThemeToggle />', () => {
   it('renders sun icon when theme=light (default initialTheme)', () => {
     render(<ThemeToggle />);
-    expect(screen.getByTestId('atm-theme-icon-sun')).toBeTruthy();
-    expect(screen.queryByTestId('atm-theme-icon-moon')).toBeNull();
+    expect(screen.getByTestId('theme-icon-sun')).toBeTruthy();
+    expect(screen.queryByTestId('theme-icon-moon')).toBeNull();
   });
 
   it('renders moon icon when initialTheme=dark', () => {
     render(<ThemeToggle initialTheme="dark" />);
-    expect(screen.getByTestId('atm-theme-icon-moon')).toBeTruthy();
-    expect(screen.queryByTestId('atm-theme-icon-sun')).toBeNull();
+    expect(screen.getByTestId('theme-icon-moon')).toBeTruthy();
+    expect(screen.queryByTestId('theme-icon-sun')).toBeNull();
   });
 
   it('click toggles light → dark (icon swaps from sun to moon)', async () => {
     const user = userEvent.setup();
     render(<ThemeToggle initialTheme="light" />);
-    expect(screen.getByTestId('atm-theme-icon-sun')).toBeTruthy();
+    expect(screen.getByTestId('theme-icon-sun')).toBeTruthy();
     await user.click(screen.getByRole('button'));
-    expect(screen.getByTestId('atm-theme-icon-moon')).toBeTruthy();
-    expect(screen.queryByTestId('atm-theme-icon-sun')).toBeNull();
+    expect(screen.getByTestId('theme-icon-moon')).toBeTruthy();
+    expect(screen.queryByTestId('theme-icon-sun')).toBeNull();
   });
 
   it('click toggles dark → light (icon swaps from moon to sun)', async () => {
     const user = userEvent.setup();
     render(<ThemeToggle initialTheme="dark" />);
-    expect(screen.getByTestId('atm-theme-icon-moon')).toBeTruthy();
+    expect(screen.getByTestId('theme-icon-moon')).toBeTruthy();
     await user.click(screen.getByRole('button'));
-    expect(screen.getByTestId('atm-theme-icon-sun')).toBeTruthy();
-    expect(screen.queryByTestId('atm-theme-icon-moon')).toBeNull();
+    expect(screen.getByTestId('theme-icon-sun')).toBeTruthy();
+    expect(screen.queryByTestId('theme-icon-moon')).toBeNull();
   });
 
   it('aria-pressed="false" when light, "true" when dark', async () => {
@@ -115,41 +112,29 @@ describe('<ThemeToggle /> (atom CD#3)', () => {
     expect(document.cookie).toContain('ankora.theme=dark');
   });
 
-  it('size="sm" → root has class atm-theme-toggle--sm', () => {
-    const { container } = render(<ThemeToggle size="sm" />);
-    const root = container.querySelector('button');
-    expect(root?.className).toContain('atm-theme-toggle--sm');
-    expect(root?.className).not.toContain('atm-theme-toggle--md');
-  });
-
-  it('size="md" (default) → root has class atm-theme-toggle--md', () => {
+  /**
+   * Touch target hit area pinning (GH issue #153).
+   *
+   * The size used to live in `atoms.css` and was asserted by reading that file
+   * (jsdom does not load external CSS). Since ADR-034 the size is a Tailwind
+   * utility, so the assertion is on the class — which is the thing that would
+   * actually change in a careless refactor.
+   *
+   * Tailwind scale: `size-11` = 2.75rem = 44px (Apple HIG / WCAG 2.5.8 AAA),
+   * `size-9` = 2.25rem = 36px (denser variant, still above the 24px WCAG
+   * 2.5.8 AA minimum).
+   */
+  it('size="md" (default) → 44×44 hit area (size-11, Apple HIG, GH #153)', () => {
     const { container } = render(<ThemeToggle />);
     const root = container.querySelector('button');
-    expect(root?.className).toContain('atm-theme-toggle--md');
+    expect(root?.className, 'md must keep the 44×44 hit area').toContain('size-11');
   });
 
-  /**
-   * Touch target hit area pinning (GH issue #153, fixed in PR-D4-PHASE2-B).
-   * Reads atoms.css directly because jsdom does not load external CSS.
-   * Anti-regression: prevents a future refactor from shrinking the hit
-   * target back below WCAG 2.5.8 / Apple HIG 44×44.
-   */
-  it('CSS pins .atm-theme-toggle--md ≥ 44×44 (Apple HIG, GH #153)', () => {
-    const css = readFileSync(resolve(__dirname, '../atoms.css'), 'utf-8');
-    const mdRule = css.match(/\.atm-theme-toggle--md\s*\{[^}]*\}/)?.[0] ?? '';
-    const width = Number(mdRule.match(/width:\s*(\d+)px/)?.[1] ?? '0');
-    const height = Number(mdRule.match(/height:\s*(\d+)px/)?.[1] ?? '0');
-    expect(width, 'md width must satisfy Apple HIG 44×44').toBeGreaterThanOrEqual(44);
-    expect(height, 'md height must satisfy Apple HIG 44×44').toBeGreaterThanOrEqual(44);
-  });
-
-  it('CSS pins .atm-theme-toggle--sm ≥ 24×24 (WCAG 2.5.8 minimum)', () => {
-    const css = readFileSync(resolve(__dirname, '../atoms.css'), 'utf-8');
-    const smRule = css.match(/\.atm-theme-toggle--sm\s*\{[^}]*\}/)?.[0] ?? '';
-    const width = Number(smRule.match(/width:\s*(\d+)px/)?.[1] ?? '0');
-    const height = Number(smRule.match(/height:\s*(\d+)px/)?.[1] ?? '0');
-    expect(width, 'sm width must satisfy WCAG 2.5.8 minimum').toBeGreaterThanOrEqual(24);
-    expect(height, 'sm height must satisfy WCAG 2.5.8 minimum').toBeGreaterThanOrEqual(24);
+  it('size="sm" → denser 36×36 hit area (size-9, above WCAG 2.5.8 AA)', () => {
+    const { container } = render(<ThemeToggle size="sm" />);
+    const root = container.querySelector('button');
+    expect(root?.className).toContain('size-9');
+    expect(root?.className).not.toContain('size-11');
   });
 
   it('default theme is light, default cookieKey is "theme"', async () => {
@@ -169,14 +154,14 @@ describe('<ThemeToggle /> (atom CD#3)', () => {
 
   it('SVG icon has aria-hidden="true" (decorative)', () => {
     render(<ThemeToggle initialTheme="light" />);
-    const svg = screen.getByTestId('atm-theme-icon-sun');
+    const svg = screen.getByTestId('theme-icon-sun');
     expect(svg.getAttribute('aria-hidden')).toBe('true');
   });
 
   it('passes through className on root', () => {
     const { container } = render(<ThemeToggle className="extra-class" />);
     const root = container.querySelector('button');
-    expect(root?.className).toContain('atm-theme-toggle');
+    expect(root?.className).toContain('rounded-full');
     expect(root?.className).toContain('extra-class');
   });
 

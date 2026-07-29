@@ -11,8 +11,9 @@ import { test, expect } from '@playwright/test';
  *
  * Additional consumer-integration coverage lives in Vitest unit tests
  * (LangSwitcherClient mocks the next-intl router, AdminTopbar tests cookie
- * SSR seeding) and in the existing `design-playground.spec.ts` smoke that
- * already exercises the atoms in isolation.
+ * SSR seeding, and `src/components/ui/__tests__/` covers the switcher and
+ * theme toggle in isolation). The former `design-playground.spec.ts` smoke
+ * was deleted with the playground itself by ADR-034.
  */
 test.describe('Admin topbar consumer (PR-D4-PHASE2-B)', () => {
   // TODO(THI-181): add a dedicated E2E with real Upstash secrets (or fake
