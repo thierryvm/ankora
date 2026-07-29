@@ -285,9 +285,20 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
               placeholder="0"
               aria-describedby={projection !== null ? 'add-expense-projection' : undefined}
               data-testid="add-expense-amount"
-              className="text-foreground caret-brand-600 placeholder:text-muted-foreground/50 w-full max-w-[8ch] border-0 bg-transparent text-center text-[44px] font-bold tracking-tight tabular-nums outline-none"
+              /*
+                `text-right` on a fixed 6ch box, not `text-center`: the digits
+                grow leftward from a fixed point so the € stays glued to them.
+                Centred, the input kept its full 6ch and left a gap of up to
+                five characters between « 0 » and « € » — the field read as two
+                unrelated things. `field-sizing-content` would be the elegant
+                fix and is outside the Chrome 111 / Safari 16.2 baseline.
+              */
+              className="text-foreground caret-brand-600 placeholder:text-muted-foreground/40 w-[6ch] border-0 bg-transparent text-right text-[44px] font-bold tracking-tight tabular-nums outline-none"
             />
-            <span aria-hidden="true" className="text-muted-foreground text-2xl font-semibold">
+            <span
+              aria-hidden="true"
+              className="text-muted-foreground ml-1.5 text-2xl font-semibold"
+            >
               €
             </span>
           </div>
