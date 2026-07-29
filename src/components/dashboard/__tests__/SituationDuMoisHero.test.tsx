@@ -32,12 +32,6 @@ vi.mock('next-intl/server', () => ({
   },
 }));
 
-// AjusterResteAVivreDrawer is a client component with its own Server Action +
-// next-intl client hooks; stub it so the server-rendered Hero test stays pure.
-vi.mock('../AjusterResteAVivreDrawer', () => ({
-  AjusterResteAVivreDrawer: () => <button data-testid="reste-a-vivre-trigger">Ajuster</button>,
-}));
-
 // The Hero uses the locale-aware `Link` (plan + setup CTAs). next-intl's real
 // `createNavigation` imports `next/navigation`, unresolvable under jsdom —
 // mock it to a plain anchor, same pattern as the sibling card tests.
@@ -65,7 +59,6 @@ const BASE = {
   rattrapageMensuel: 0,
   provisionsAJour: true,
   joursRestants: 18,
-  currentMonthYYYYMM: '2026-06',
   locale: 'fr-BE' as const,
 };
 
@@ -80,15 +73,15 @@ describe('<SituationDuMoisHero />', () => {
     expect(screen.getAllByText(messages.dashboard.situation.heroLabel).length).toBeGreaterThan(0);
     expect(screen.getByText(messages.dashboard.situation.statut.vert)).toBeInTheDocument();
     expect(screen.getByTestId('allocation-bar')).toBeInTheDocument();
-    expect(screen.getByTestId('reste-a-vivre-trigger')).toBeInTheDocument();
+    // ADR-035 — the « Ajuster ce mois » trigger went with the envelope: there is
+    // no longer a number for the user to set.
+    expect(screen.queryByTestId('reste-a-vivre-trigger')).toBeNull();
     expect(screen.queryByTestId('situation-nudge-link')).toBeNull();
   });
 
-  it('orange (capacité < 0): shows the capacité nudge + a plan link', async () => {
-    await renderHero({ statut: 'orange', capacite: -60, resteDisponible: 440 });
-    expect(
-      screen.getByText(messages.dashboard.situation.statut.orangeCapacite),
-    ).toBeInTheDocument();
+  it('orange (« Il te reste » < 0): shows the overspend nudge + a plan link', async () => {
+    await renderHero({ statut: 'orange', ilTeReste: -60, resteDisponible: 440 });
+    expect(screen.getByText(messages.dashboard.situation.statut.orangeDepasse)).toBeInTheDocument();
     expect(screen.getByTestId('situation-nudge-link')).toBeInTheDocument();
   });
 

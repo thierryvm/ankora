@@ -890,11 +890,8 @@
         "confirmDelete": "Supprimer « {label} » — {amount} ? Cette dépense sera définitivement effacée.",
         "confirmDeleteAction": "Oui, supprimer"
       },
-      "resteAVivreLabel": "Reste à vivre — {month}",
-      "overBudget": "Dépassé de {amount}",
-      "spentOfBudget": "{spent} dépensés sur {budget}",
-      "perDay": "≈ {amount}/jour ({days} j restants)",
-      "barAria": "Budget vie courante : {spent} dépensés sur {budget}.",
+      "depenseMoisLabel": "Dépensé ce mois — {month}",
+      "perDayElapsed": "≈ {amount}/jour sur {days} jours",
       "earlierToggle": "Mois précédents ({count})"
     },
     "settings": {
@@ -995,8 +992,8 @@
       "impact": {
         "title": "Impact",
         "empty": "Choisis une charge pour voir l'impact.",
-        "resteDisponible": "Reste disponible",
-        "resteDisponibleRange": "Reste disponible : de {from} à {to} par mois",
+        "resteDisponible": "Budget du mois",
+        "resteDisponibleRange": "Budget du mois : de {from} à {to} par mois",
         "perMonth": "/ mois",
         "annualSavings": "Économie annuelle",
         "effortAnchor": "Effort lissé : {current} → {projected}",
@@ -1007,7 +1004,7 @@
         "cumul6mGain": "En 6 mois, +{amount} en réserve libre",
         "cumul6mLoss": "En 6 mois, −{amount} de réserve libre",
         "cumul6mNeutral": "Aucun impact sur 6 mois",
-        "incomeHint": "Ajoute tes revenus pour voir l'impact sur ton reste disponible.",
+        "incomeHint": "Ajoute tes revenus pour voir l'impact sur ton budget du mois.",
         "incomeHintCta": "Configurer mes revenus",
         "pedago": {
           "gainTitle": "Bon choix.",
@@ -1043,12 +1040,6 @@
       "toastCancelled": "Demande annulée — ton compte est conservé"
     },
     "cockpit": {
-      "capaciteEpargneReelle": {
-        "title": "Capacité d'Épargne Réelle",
-        "messagePositive": "C'est ton vrai reste à vivre chaque mois, sans surprise.",
-        "messageNegative": "Attention, ton train de vie global dépasse tes revenus.",
-        "tooltip": "Cette valeur soustrait toutes tes charges (lissées sur l'année) et ton plafond Quotidien à tes revenus mensuels. C'est ce qu'il te reste réellement chaque mois pour épargner ou pour les imprévus."
-      },
       "santeProvisions": {
         "title": "Santé des Provisions",
         "cibleTheorique": "Cible théorique idéale :",
@@ -1093,18 +1084,18 @@
       "voirPlan": "Voir le plan",
       "statut": {
         "vert": "Tu gères bien ce mois-ci",
-        "orangeCapacite": "À ajuster ce mois-ci",
+        "orangeDepasse": "Tu as dépassé ce mois-ci",
         "orangeProvisions": "Provisions à renflouer",
         "rouge": "Tes charges dépassent tes revenus"
       },
       "nudge": {
-        "orangeCapacite": "Ton épargne passe sous zéro ({capacite}). Regarde le plan pour rééquilibrer.",
+        "orangeDepasse": "Tu as dépensé {montant} de plus que ce dont tu disposais ce mois-ci. On regarde ensemble ce qui peut bouger.",
         "orangeProvisions": "Il manque {deficit} pour couvrir tes charges à venir. Rattrapage suggéré : {rattrapage}/mois.",
         "rouge": "Tes charges et provisions ({obligations}) dépassent tes revenus ({revenus}). On regarde ensemble ce qui peut bouger."
       },
       "incomplet": {
         "title": "Complète ta situation",
-        "body": "Ajoute tes revenus pour voir ton reste disponible ce mois.",
+        "body": "Ajoute tes revenus pour voir ce qu'il te reste ce mois.",
         "cta": "Configurer mes revenus"
       },
       "flow": {
@@ -1115,50 +1106,11 @@
         "resteDisponible": "Budget du mois",
         "depense": "Dépensé ce mois",
         "ilTeReste": "Il te reste",
-        "resteAVivre": "Reste à vivre",
-        "capaciteEpargne": "Capacité épargne",
         "epargneEstimee": "Épargne estimée",
-        "ajuster": "Ajuster ce mois",
         "parJour": "≈ {amount}/jour"
       },
-      "barAria": "Répartition de tes revenus : {charges} de charges, {provisions} de provisions, {vieCourante} de vie courante, {epargne} d'épargne possible.",
+      "barAria": "Répartition de tes revenus : {charges} de charges, {provisions} de provisions, {depense} dépensés, {reste} restants.",
       "barAriaEngagements": "Dont {engagements} d'engagements."
-    },
-    "effort": {
-      "title": "Effort financier lissé",
-      "charges_fixes": "Charges fixes",
-      "provisions": "Provisions"
-    },
-    "capacite": {
-      "title": "Capacité d'épargne réelle",
-      "message_positive": "C'est ton vrai reste à vivre chaque mois, sans surprise.",
-      "message_negative": "Attention, ton train de vie global dépasse tes revenus.",
-      "breakdown": {
-        "revenus": "Revenus",
-        "effort": "Effort financier lissé",
-        "plafond": "Plafond quotidien"
-      },
-      "subStats": {
-        "resteDisponible": "Reste disponible",
-        "resteAVivre": "Reste à vivre",
-        "capaciteEpargne": "Capacité épargne",
-        "ajusterCeMois": "Ajuster ce mois"
-      },
-      "ledePositif": "Tu peux mettre {amount} de côté ce mois en plus de tes virements automatiques. Tu décides combien tu y mets vraiment.",
-      "ledeNegatif": "Ton train de vie dépasse tes revenus ce mois. On peut regarder ensemble ce qui peut être ajusté.",
-      "tooltip": "Cette valeur soustrait tes charges fixes, tes provisions lissées sur l'année, ET ton estimation de vie courante ({resteAVivre}). C'est ce que tu peux choisir d'épargner en plus.",
-      "drawer": {
-        "title": "Ajuster le reste à vivre pour ce mois",
-        "inputLabel": "Combien tu dépenses pour vivre ce mois ?",
-        "inputHint": "Courses, sorties, loisirs, plaisir, imprévus quotidiens",
-        "helperCoherent": "Estimation cohérente avec un budget belge typique.",
-        "helperBas": "Estimation basse. Tu peux ajuster plus tard si besoin.",
-        "helperHaut": "Estimation haute. Ankora respecte ton budget — pas de jugement.",
-        "save": "Enregistrer",
-        "cancel": "Annuler",
-        "success": "Reste à vivre ajusté pour ce mois.",
-        "errorGeneric": "L'ajustement n'a pas pu être enregistré. Réessaye dans un instant."
-      }
     },
     "daily": {
       "cta_set_plafond": "Régler le plafond quotidien"
@@ -1416,8 +1368,7 @@
       "deletionRequestFailed": "Impossible de programmer la suppression.",
       "deletionCancelFailed": "Impossible d'annuler la demande.",
       "deletionCancelTooLate": "La suppression a déjà commencé : elle ne peut plus être annulée.",
-      "exportLimited": "Export limité à une fois toutes les 5 minutes.",
-      "resteAVivreUpdateFailed": "Impossible d'ajuster le reste à vivre. Réessaie dans un instant."
+      "exportLimited": "Export limité à une fois toutes les 5 minutes."
     },
     "onboarding": {
       "workspaceNotFound": "Workspace introuvable. Contacte le support.",

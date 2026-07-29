@@ -35,20 +35,19 @@ export default async function ExpensesPage() {
     .split('-')
     .map(Number);
   const daysInMonth = new Date(year, month, 0).getDate();
-  const joursRestants = Math.max(1, daysInMonth - (bDay ?? 1) + 1);
+  const joursEcoules = Math.min(daysInMonth, Math.max(1, bDay ?? 1));
 
   // Authoritative current-month spend: summed from `monthlyExpenses` (complete,
-  // no 50-row cap) so the reste-à-vivre widget never under-reports (Sourcery #242).
+  // no 50-row cap) so the figure never under-reports (Sourcery #242).
   const spentThisMonth = Expenses.totalAmount(snapshot.monthlyExpenses).toNumber();
 
   return (
     <ExpensesClient
       expenses={rawExpenses}
-      resteAVivre={snapshot.resteAVivre}
       spentThisMonth={spentThisMonth}
       currentYear={year}
       currentMonth={month}
-      joursRestants={joursRestants}
+      joursEcoules={joursEcoules}
     />
   );
 }

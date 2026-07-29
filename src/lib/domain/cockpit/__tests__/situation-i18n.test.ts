@@ -11,10 +11,12 @@ const LEAF_KEYS = [
   'heroAnchor',
   'voirPlan',
   'statut.vert',
-  'statut.orangeCapacite',
+  // ADR-035 — `orangeCapacite` described a user-invented envelope being
+  // exceeded. `orangeDepasse` describes « Il te reste » going below zero.
+  'statut.orangeDepasse',
   'statut.orangeProvisions',
   'statut.rouge',
-  'nudge.orangeCapacite',
+  'nudge.orangeDepasse',
   'nudge.orangeProvisions',
   'nudge.rouge',
   'incomplet.title',
@@ -26,12 +28,27 @@ const LEAF_KEYS = [
   'flow.resteDisponible',
   'flow.depense',
   'flow.ilTeReste',
-  'flow.resteAVivre',
-  'flow.capaciteEpargne',
   'flow.epargneEstimee',
-  'flow.ajuster',
   'flow.parJour',
   'barAria',
+] as const;
+
+/**
+ * Words banned from the whole UI by ADR-035, checked against the namespace
+ * this chantier owns.
+ *
+ * Scoped to `dashboard.situation` on purpose. A repo-wide grep would also flag
+ * « Vie Courante » as an ACCOUNT name — that is ADR-008's naming, a different
+ * subject from the envelope removed here — and would turn this guard into
+ * either a permanent failure or a licence to rename things out of scope.
+ */
+const BANNED_IN_SITUATION = [
+  'reste à vivre',
+  'reste disponible',
+  'vie courante',
+  "disponible aujourd'hui",
+  "capacité d'épargne",
+  'reste du mois',
 ] as const;
 
 /**
@@ -98,6 +115,15 @@ describe('dashboard.situation — i18n parity (5 locales)', () => {
    * silent failure: next-intl renders the sentence without the number, so the
    * user sees "sur de budget · dépensés" and nothing throws.
    */
+  it('fr-BE carries none of the banned words in dashboard.situation', async () => {
+    const m = (await import('../../../../../messages/fr-BE.json')).default as {
+      dashboard: { situation: unknown };
+    };
+    const blob = JSON.stringify(m.dashboard.situation).toLocaleLowerCase();
+    const found = BANNED_IN_SITUATION.filter((word) => blob.includes(word));
+    expect(found, `banned wording still present: ${found.join(', ')}`).toEqual([]);
+  });
+
   it.each(LOCALES)('locale %s keeps both placeholders in heroAnchor', async (locale) => {
     const m = (await import(`../../../../../messages/${locale}.json`)).default as {
       dashboard: { situation: unknown };

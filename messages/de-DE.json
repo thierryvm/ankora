@@ -890,11 +890,8 @@
         "confirmDelete": "„{label}“ — {amount} löschen? Diese Ausgabe wird endgültig entfernt.",
         "confirmDeleteAction": "Ja, löschen"
       },
-      "resteAVivreLabel": "Alltag — {month}",
-      "overBudget": "{amount} über Budget",
-      "spentOfBudget": "{spent} von {budget} ausgegeben",
-      "perDay": "≈ {amount}/Tag (noch {days} Tage)",
-      "barAria": "Alltagsbudget: {spent} von {budget} ausgegeben.",
+      "depenseMoisLabel": "Diesen Monat ausgegeben — {month}",
+      "perDayElapsed": "≈ {amount}/Tag über {days} Tage",
       "earlierToggle": "Frühere Monate ({count})"
     },
     "settings": {
@@ -995,8 +992,8 @@
       "impact": {
         "title": "Auswirkung",
         "empty": "Wähle einen Posten, um die Auswirkung zu sehen.",
-        "resteDisponible": "Verfügbar",
-        "resteDisponibleRange": "Verfügbar: von {from} auf {to} pro Monat",
+        "resteDisponible": "Monatsbudget",
+        "resteDisponibleRange": "Monatsbudget: von {from} bis {to} pro Monat",
         "perMonth": "/ Monat",
         "annualSavings": "Jährliche Ersparnis",
         "effortAnchor": "Geglätteter Aufwand: {current} → {projected}",
@@ -1007,7 +1004,7 @@
         "cumul6mGain": "In 6 Monaten, +{amount} verfügbar",
         "cumul6mLoss": "In 6 Monaten, −{amount} verfügbar",
         "cumul6mNeutral": "Keine Auswirkung über 6 Monate",
-        "incomeHint": "Füge dein Einkommen hinzu, um die Auswirkung auf dein verfügbares Budget zu sehen.",
+        "incomeHint": "Trag dein Einkommen ein, um die Auswirkung auf dein Monatsbudget zu sehen.",
         "incomeHintCta": "Einkommen einrichten",
         "pedago": {
           "gainTitle": "Gute Wahl.",
@@ -1043,12 +1040,6 @@
       "toastCancelled": "Antrag widerrufen — dein Konto bleibt erhalten"
     },
     "cockpit": {
-      "capaciteEpargneReelle": {
-        "title": "Real Savings Capacity",
-        "messagePositive": "This is what you truly have left every month, with no surprises.",
-        "messageNegative": "Warning — your overall lifestyle exceeds your income.",
-        "tooltip": "This subtracts every charge (smoothed over the year) and your daily allowance from your monthly income. That is what is actually left for savings or unexpected expenses."
-      },
       "santeProvisions": {
         "title": "Provisions Health",
         "cibleTheorique": "Ideal theoretical target:",
@@ -1093,18 +1084,18 @@
       "voirPlan": "Plan ansehen",
       "statut": {
         "vert": "Du hast diesen Monat gut im Griff",
-        "orangeCapacite": "Diesen Monat anpassen",
+        "orangeDepasse": "Du hast diesen Monat zu viel ausgegeben",
         "orangeProvisions": "Rücklagen auffüllen",
         "rouge": "Deine Fixkosten übersteigen dein Einkommen"
       },
       "nudge": {
-        "orangeCapacite": "Deine Ersparnisse rutschen unter null ({capacite}). Sieh dir den Plan an, um auszugleichen.",
+        "orangeDepasse": "Du hast {montant} mehr ausgegeben, als dir diesen Monat zur Verfügung stand. Schauen wir gemeinsam, was sich ändern lässt.",
         "orangeProvisions": "Es fehlen {deficit}, um deine kommenden Kosten zu decken. Vorgeschlagener Ausgleich: {rattrapage}/Monat.",
         "rouge": "Deine Fixkosten und Rücklagen ({obligations}) übersteigen dein Einkommen ({revenus}). Wir sehen uns gemeinsam an, was sich bewegen lässt."
       },
       "incomplet": {
         "title": "Vervollständige deine Übersicht",
-        "body": "Füge dein Einkommen hinzu, um deinen verfügbaren Betrag diesen Monat zu sehen.",
+        "body": "Trag dein Einkommen ein, um zu sehen, was dir diesen Monat bleibt.",
         "cta": "Mein Einkommen einrichten"
       },
       "flow": {
@@ -1115,50 +1106,11 @@
         "resteDisponible": "Monatsbudget",
         "depense": "Diesen Monat ausgegeben",
         "ilTeReste": "Dir bleibt",
-        "resteAVivre": "Alltag",
-        "capaciteEpargne": "Sparpotenzial",
         "epargneEstimee": "Geschätzte Ersparnis",
-        "ajuster": "Diesen Monat anpassen",
         "parJour": "≈ {amount}/Tag"
       },
-      "barAria": "Aufteilung deines Einkommens: {charges} Fixkosten, {provisions} Rücklagen, {vieCourante} Alltag, {epargne} mögliche Ersparnisse.",
+      "barAria": "Aufteilung deiner Einnahmen: {charges} Fixkosten, {provisions} Rücklagen, {depense} ausgegeben, {reste} übrig.",
       "barAriaEngagements": "Davon {engagements} an Verpflichtungen."
-    },
-    "effort": {
-      "title": "Geglätteter finanzieller Aufwand",
-      "charges_fixes": "Fixe Ausgaben",
-      "provisions": "Rückstellungen"
-    },
-    "capacite": {
-      "title": "Reale Sparkapazität",
-      "message_positive": "Das bleibt dir wirklich jeden Monat — keine Überraschungen.",
-      "message_negative": "Achtung: dein gesamter Lebensstil übersteigt dein Einkommen.",
-      "breakdown": {
-        "revenus": "Einkommen",
-        "effort": "Geglätteter finanzieller Aufwand",
-        "plafond": "Tägliches Limit"
-      },
-      "subStats": {
-        "resteDisponible": "Verfügbar",
-        "resteAVivre": "Lebenshaltung",
-        "capaciteEpargne": "Sparkapazität",
-        "ajusterCeMois": "Diesen Monat anpassen"
-      },
-      "ledePositif": "Du kannst diesen Monat {amount} zusätzlich zu deinen automatischen Überweisungen zur Seite legen. Du entscheidest, wie viel du wirklich sparst.",
-      "ledeNegatif": "Dein Lebensstil übersteigt diesen Monat dein Einkommen. Wir können gemeinsam schauen, was angepasst werden kann.",
-      "tooltip": "Dieser Wert zieht deine Fixkosten, deine jährlich geglätteten Rückstellungen und dein geschätztes Lebenshaltungsbudget ({resteAVivre}) ab. Es ist das, was du zusätzlich sparen kannst.",
-      "drawer": {
-        "title": "Lebenshaltungsbudget für diesen Monat anpassen",
-        "inputLabel": "Wie viel gibst du diesen Monat fürs Leben aus?",
-        "inputHint": "Einkäufe, Ausgehen, Freizeit, Vergnügen, alltägliche Überraschungen",
-        "helperCoherent": "Schätzung, die zu einem typisch belgischen Budget passt.",
-        "helperBas": "Niedrige Schätzung. Du kannst sie später anpassen, falls nötig.",
-        "helperHaut": "Hohe Schätzung. Ankora respektiert dein Budget — kein Urteil.",
-        "save": "Speichern",
-        "cancel": "Abbrechen",
-        "success": "Lebenshaltungsbudget für diesen Monat angepasst.",
-        "errorGeneric": "Die Anpassung konnte nicht gespeichert werden. Bitte versuche es gleich erneut."
-      }
     },
     "daily": {
       "cta_set_plafond": "Tägliches Limit festlegen"
@@ -1416,8 +1368,7 @@
       "deletionRequestFailed": "Löschung konnte nicht geplant werden.",
       "deletionCancelFailed": "Antrag konnte nicht widerrufen werden.",
       "deletionCancelTooLate": "Die Löschung hat bereits begonnen und kann nicht mehr widerrufen werden.",
-      "exportLimited": "Export auf einmal alle 5 Minuten begrenzt.",
-      "resteAVivreUpdateFailed": "Lebenshaltungsbudget konnte nicht angepasst werden. Bitte gleich erneut versuchen."
+      "exportLimited": "Export auf einmal alle 5 Minuten begrenzt."
     },
     "onboarding": {
       "workspaceNotFound": "Workspace nicht gefunden. Kontaktiere den Support.",

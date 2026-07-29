@@ -60,11 +60,10 @@ const sampleExpenses = [
 ];
 
 type RenderOpts = {
-  resteAVivre?: number;
   spentThisMonth?: number;
   currentYear?: number;
   currentMonth?: number;
-  joursRestants?: number;
+  joursEcoules?: number;
 };
 
 /** Default month = May 2026 so the sample expenses count as « this month ». */
@@ -80,11 +79,10 @@ function renderExpenses(expenses = sampleExpenses, opts: RenderOpts = {}) {
   return renderWithIntl(
     <ExpensesClient
       expenses={expenses}
-      resteAVivre={opts.resteAVivre ?? 500}
       spentThisMonth={spentThisMonth}
       currentYear={cy}
       currentMonth={cm}
-      joursRestants={opts.joursRestants ?? 10}
+      joursEcoules={opts.joursEcoules ?? 20}
     />,
   );
 }
@@ -197,25 +195,28 @@ describe('<ExpensesClient /> — PR-BETA-CLEANUP-3 edit drawer', () => {
   });
 });
 
-describe('<ExpensesClient /> — reste à vivre (this-month budget)', () => {
-  it('shows the remaining living budget and a per-day figure for the current month', () => {
-    renderExpenses(); // budget 500, spent 87.5 + 42 = 129.5 this month → 370.5 left
-    expect(screen.getByTestId('reste-a-vivre-remaining')).toHaveTextContent(/370/);
-    expect(screen.getByTestId('reste-a-vivre-perday')).toBeInTheDocument();
+describe('<ExpensesClient /> — « Dépensé ce mois » (ADR-035)', () => {
+  it('shows the month total and the average daily rate so far', () => {
+    renderExpenses(); // spent 87.5 + 42 = 129.5 this month
+    expect(screen.getByTestId('depense-mois-total')).toHaveTextContent(/129/);
+    expect(screen.getByTestId('depense-mois-perday')).toBeInTheDocument();
+  });
+
+  it('no longer scores the month against an envelope', () => {
+    // ADR-035 — the progress bar and the « dépassé » badge measured spending
+    // against `reste_a_vivre_default`, a 500 € constant most users never chose.
+    // Both are gone; nothing here derives from a number the user did not enter.
+    renderExpenses();
+    expect(screen.queryByTestId('reste-a-vivre-bar')).toBeNull();
     expect(screen.queryByTestId('reste-a-vivre-over')).toBeNull();
+    expect(screen.queryByTestId('reste-a-vivre-remaining')).toBeNull();
   });
 
-  it('flags an over-budget month and drops the per-day figure', () => {
-    renderExpenses(sampleExpenses, { resteAVivre: 100 }); // spent 129.5 > 100
-    expect(screen.getByTestId('reste-a-vivre-over')).toBeInTheDocument();
-    expect(screen.queryByTestId('reste-a-vivre-perday')).toBeNull();
-  });
-
-  it('drives the budget from the authoritative spentThisMonth, not the capped list', () => {
+  it('takes the total from the authoritative spentThisMonth, not the capped list', () => {
     // Only 2 rows are loaded (list capped at 50), but the true month total is 300.
+    // Sourcery #242 — past the 51st expense the visible rows under-report.
     renderExpenses(sampleExpenses, { spentThisMonth: 300 });
-    // 500 − 300 = 200 (NOT 500 − 129.5 from the two visible rows). Sourcery #242.
-    expect(screen.getByTestId('reste-a-vivre-remaining')).toHaveTextContent(/200/);
+    expect(screen.getByTestId('depense-mois-total')).toHaveTextContent(/300/);
   });
 
   it('splits current-month from earlier months into a collapsible section', () => {
@@ -230,8 +231,8 @@ describe('<ExpensesClient /> — reste à vivre (this-month budget)', () => {
     expect(within(list).queryByTestId('expenses-row-e3')).toBeNull();
     const earlier = screen.getByTestId('expenses-earlier');
     expect(within(earlier).getByTestId('expenses-row-e3')).toBeInTheDocument();
-    // Only e1 (87.5) counts against the budget → 412.5 left.
-    expect(screen.getByTestId('reste-a-vivre-remaining')).toHaveTextContent(/412/);
+    // Only e1 (87.5) is in the current month, so that is the month total.
+    expect(screen.getByTestId('depense-mois-total')).toHaveTextContent(/87/);
   });
 
   it('has no earlier section when every expense is in the current month', () => {
@@ -250,8 +251,8 @@ describe('<ExpensesClient /> — reste à vivre (this-month budget)', () => {
     // The earlier expense still lives in the collapsible « Mois précédents ».
     const earlier = screen.getByTestId('expenses-earlier');
     expect(within(earlier).getByTestId('expenses-row-e3')).toBeInTheDocument();
-    // A 0-spend month leaves the full budget available.
-    expect(screen.getByTestId('reste-a-vivre-remaining')).toHaveTextContent(/500/);
+    // Nothing spent this month → the total reads zero, not a leftover budget.
+    expect(screen.getByTestId('depense-mois-total')).toHaveTextContent(/0/);
   });
 });
 
@@ -322,11 +323,13 @@ describe('app.expenses — i18n parity (5 locales, PR-BETA-CLEANUP-3)', () => {
         expect(e[key]).toBeTypeOf('string');
         for (const tok of tokens) expect(e[key] ?? '').toContain(tok);
       };
-      has('resteAVivreLabel', ['{month}']);
-      has('overBudget', ['{amount}']);
-      has('spentOfBudget', ['{spent}', '{budget}']);
-      has('perDay', ['{amount}', '{days}']);
-      has('barAria', ['{spent}', '{budget}']);
+      has('depenseMoisLabel', ['{month}']);
+      has('perDayElapsed', ['{amount}', '{days}']);
+      // ADR-035 — these five keys described the envelope and are gone. Pinning
+      // their absence stops a copy-paste from resurrecting the vocabulary.
+      for (const gone of ['resteAVivreLabel', 'overBudget', 'spentOfBudget', 'perDay', 'barAria']) {
+        expect(e[gone], `${locale} → app.expenses.${gone} should be gone`).toBeUndefined();
+      }
       has('earlierToggle', ['{count}']);
     },
   );

@@ -23,7 +23,13 @@ export const AuditEvent = {
   WORKSPACE_CREATED: 'workspace.created',
   WORKSPACE_UPDATED: 'workspace.updated',
   WORKSPACE_DELETED: 'workspace.deleted',
-  // PR-BETA-3 (THI-267) — tryptique Capacité Épargne Réelle "Ajuster ce mois"
+  // RETIRED (ADR-035, 2026-07-29) — nothing emits this any more: the
+  // daily-living envelope and its "Ajuster ce mois" action are gone.
+  //
+  // The constant stays. `audit_log` rows already written in production carry
+  // this `event_type`, and the table is append-only by design. Removing the
+  // name would leave those rows readable but unnamed in code — the audit trail
+  // would still be there, and nothing would explain it.
   WORKSPACE_RESTE_A_VIVRE_UPDATED: 'workspace.reste_a_vivre_updated',
 
   // Financial data

@@ -1,7 +1,10 @@
 import Decimal from 'decimal.js';
 
-import { capaciteEpargneReelle } from './capacite-epargne-reelle';
-import { provisionsMensuellesLissees, totalChargesMensuelles } from './effort-financier-lisse';
+import {
+  effortFinancierLisse,
+  provisionsMensuellesLissees,
+  totalChargesMensuelles,
+} from './effort-financier-lisse';
 import { epargneEstimee } from './epargne-estimee';
 import { calculerSanteProvisions } from './sante-provisions';
 import type { CockpitCharge, PaymentLedger, ReferencePeriod } from './types';
@@ -23,8 +26,6 @@ export type SituationDuMoisInput = Readonly<{
   /** Revenus mensuels. `null` = non configuré → statut incomplet (THI-335). */
   revenus: Decimal | null;
   charges: readonly CockpitCharge[];
-  /** Budget « vie courante » (domaine resteAVivre). */
-  budgetVieCourante: Decimal;
   soldeEpargneActuel: Decimal;
   payments: PaymentLedger;
   ref: ReferencePeriod;
@@ -78,8 +79,6 @@ export type SituationDuMois = Readonly<{
    * n'est pas « une estimation à zéro ».
    */
   epargneEstimee: Decimal | null;
-  budgetVieCourante: Decimal;
-  capacite: Decimal;
   provisionsAJour: boolean;
   deficitEpargne: Decimal;
   rattrapageMensuel: Decimal;
@@ -89,11 +88,12 @@ export function calculerSituationDuMois(input: SituationDuMoisInput): SituationD
   const hasRevenus = input.revenus !== null;
   const revenus = input.revenus ?? new Decimal(0);
 
-  const capac = capaciteEpargneReelle({
-    revenus,
-    charges: input.charges,
-    resteAVivre: input.budgetVieCourante,
-  });
+  // ADR-035 — l'enveloppe « vie courante » a disparu, et avec elle
+  // `capaciteEpargneReelle()` : privée de son `resteAVivre`, elle ne calculait
+  // plus aucune capacité et ne gardait qu'un nom trompeur. Ses deux lignes
+  // utiles sont ici.
+  const effort = effortFinancierLisse(input.charges);
+  const resteAvantEngagements = revenus.minus(effort);
 
   const sante = calculerSanteProvisions({
     charges: input.charges,
@@ -107,12 +107,10 @@ export function calculerSituationDuMois(input: SituationDuMoisInput): SituationD
   const provisionsAJour = sante.statut === 'a_jour';
 
   // ADR-021: engagements (dettes/échéanciers actifs) sont une sortie fixe
-  // mensuelle réelle — on retire leur mensualité lissée du reste disponible
-  // (charges-only via `capaciteEpargneReelle`, inchangé) pour que le hero et la
+  // mensuelle réelle — on retire leur mensualité lissée pour que le hero et la
   // carte « Mes engagements » cessent de se contredire.
   const { engagementsMensuels, depensesDuMois } = input;
-  const resteDisponible = capac.resteDisponible.minus(engagementsMensuels);
-  const capacite = resteDisponible.minus(capac.resteAVivre);
+  const resteDisponible = resteAvantEngagements.minus(engagementsMensuels);
 
   // ADR-035 — le chiffre-héros passe en temps réel. Aucun double comptage :
   // `resteDisponible` ne contient que des charges et engagements lissés, et
@@ -131,7 +129,11 @@ export function calculerSituationDuMois(input: SituationDuMoisInput): SituationD
     statut = 'incomplet';
   } else if (resteDisponible.lt(0)) {
     statut = 'rouge';
-  } else if (capacite.lt(0) || !provisionsAJour) {
+  } else if (ilTeReste.lt(0) || !provisionsAJour) {
+    // ADR-035 — la branche « capacité < 0 » disparaît avec l'enveloppe. Ce qui
+    // la remplace n'est pas un équivalent mais une meilleure question : le mois
+    // est à surveiller quand ce qu'il reste réellement est passé sous zéro,
+    // pas quand un budget inventé par l'utilisateur l'est.
     statut = 'orange';
   } else {
     statut = 'vert';
@@ -148,8 +150,6 @@ export function calculerSituationDuMois(input: SituationDuMoisInput): SituationD
     depensesDuMois,
     ilTeReste,
     epargneEstimee: epargne,
-    budgetVieCourante: capac.resteAVivre,
-    capacite,
     provisionsAJour,
     deficitEpargne: sante.deficitEpargne,
     rattrapageMensuel: sante.rattrapageMensuel,

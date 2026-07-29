@@ -22,7 +22,6 @@ describe('genererPrevisions', () => {
       charges: [],
       ref: ref(2026, 5),
       revenus: new Decimal(2000),
-      plafondQuotidien: new Decimal(500),
     });
     expect(out).toHaveLength(6);
   });
@@ -32,7 +31,6 @@ describe('genererPrevisions', () => {
       charges: [],
       ref: ref(2026, 5),
       revenus: new Decimal(2000),
-      plafondQuotidien: new Decimal(500),
     });
     expect(out[0]).toMatchObject({ year: 2026, month: 5 });
     expect(out[1]).toMatchObject({ year: 2026, month: 6 });
@@ -44,7 +42,6 @@ describe('genererPrevisions', () => {
       charges: [],
       ref: ref(2026, 10),
       revenus: new Decimal(2000),
-      plafondQuotidien: new Decimal(500),
     });
     expect(out[0]).toMatchObject({ year: 2026, month: 10 });
     expect(out[2]).toMatchObject({ year: 2026, month: 12 });
@@ -61,7 +58,6 @@ describe('genererPrevisions', () => {
       charges,
       ref: ref(2026, 5),
       revenus: new Decimal(2000),
-      plafondQuotidien: new Decimal(500),
     });
     // May: 900 (monthly) → 900
     // June: 900 + 300 → 1200
@@ -69,23 +65,24 @@ describe('genererPrevisions', () => {
     expect(out[1]!.totalCharges.toNumber()).toBe(1200);
   });
 
-  it('marges = revenus - charges - plafond', () => {
+  // ADR-035 — `margePrevue` used to subtract a `plafondQuotidien` (the
+  // daily-living envelope) on top of the charges. The envelope is gone, and no
+  // production screen ever supplied that input here.
+  it('marges = revenus - charges', () => {
     const out = genererPrevisions({
       charges: [charge({ amount: new Decimal(900), frequency: 'monthly' })],
       ref: ref(2026, 5),
       revenus: new Decimal(2000),
-      plafondQuotidien: new Decimal(500),
     });
-    // 2000 - 900 - 500 = 600
-    expect(out[0]!.margePrevue.toNumber()).toBe(600);
+    // 2000 - 900 = 1100
+    expect(out[0]!.margePrevue.toNumber()).toBe(1100);
   });
 
-  it('produces negative marge when charges + plafond exceed revenus', () => {
+  it('produces negative marge when charges exceed revenus', () => {
     const out = genererPrevisions({
-      charges: [charge({ amount: new Decimal(2000), frequency: 'monthly' })],
+      charges: [charge({ amount: new Decimal(2500), frequency: 'monthly' })],
       ref: ref(2026, 5),
       revenus: new Decimal(2000),
-      plafondQuotidien: new Decimal(500),
     });
     expect(out[0]!.margePrevue.toNumber()).toBe(-500);
   });
@@ -95,7 +92,6 @@ describe('genererPrevisions', () => {
       charges: [],
       ref: ref(2026, 5),
       revenus: new Decimal(2000),
-      plafondQuotidien: new Decimal(0),
       horizonMonths: 12,
     });
     expect(out).toHaveLength(12);
@@ -108,7 +104,6 @@ describe('genererPrevisions', () => {
         charges: [],
         ref: ref(2026, 5),
         revenus: new Decimal(2000),
-        plafondQuotidien: new Decimal(0),
         horizonMonths: 0,
       }),
     ).toThrow(RangeError);
@@ -119,7 +114,6 @@ describe('genererPrevisions', () => {
       charges: [charge({ amount: new Decimal(900), frequency: 'monthly', isActive: false })],
       ref: ref(2026, 5),
       revenus: new Decimal(2000),
-      plafondQuotidien: new Decimal(0),
     });
     expect(out[0]!.totalCharges.toNumber()).toBe(0);
   });

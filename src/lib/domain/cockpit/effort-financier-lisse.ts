@@ -32,7 +32,7 @@ export function provisionsMensuellesLissees(charges: readonly CockpitCharge[]): 
  *
  * Cf. spec dashboard-cockpit-vraie-vision-2026-05-03 §1.
  * This is what the user "really" pays each month once you smooth out the
- * periodic bills. It's the input to `capaciteEpargneReelle`.
+ * periodic bills. It feeds the « Budget du mois » figure (ADR-035).
  */
 export function effortFinancierLisse(charges: readonly CockpitCharge[]): Decimal {
   return totalChargesMensuelles(charges).plus(provisionsMensuellesLissees(charges));

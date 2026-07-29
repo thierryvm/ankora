@@ -107,7 +107,7 @@ export default async function DashboardPage() {
   const tDaily = await getTranslations('dashboard.daily');
 
   // ADR-021 — smoothed monthly burden of the active finite commitments, so the
-  // hero's « Reste disponible » reconciles with the « Mes engagements » card
+  // hero's « Budget du mois » reconciles with the « Mes engagements » card
   // (same read via `getCommitmentsWithLedger`). Decimal stays server-side.
   const commitmentLedger = new Map(
     Object.entries(paidKeysByCommitment).map(([id, keys]) => [id, new Set(keys)] as const),
@@ -161,7 +161,6 @@ export default async function DashboardPage() {
     // The situation needs the genuine null to drive the THI-335 incomplet state.
     revenus: snapshot.monthlyIncome === null ? null : money(snapshot.monthlyIncome),
     charges: cockpitCharges,
-    budgetVieCourante: money(snapshot.resteAVivre),
     soldeEpargneActuel,
     payments: paymentsLedger,
     ref: snapshot.currentPeriod,
@@ -198,13 +197,10 @@ export default async function DashboardPage() {
           depensesDuMois={situation.depensesDuMois.toNumber()}
           ilTeReste={situation.ilTeReste.toNumber()}
           epargneEstimee={situation.epargneEstimee?.toNumber() ?? null}
-          budgetVieCourante={situation.budgetVieCourante.toNumber()}
-          capacite={situation.capacite.toNumber()}
           deficitEpargne={situation.deficitEpargne.toNumber()}
           rattrapageMensuel={situation.rattrapageMensuel.toNumber()}
           provisionsAJour={situation.provisionsAJour}
           joursRestants={joursRestants}
-          currentMonthYYYYMM={`${snapshot.currentPeriod.year}-${String(snapshot.currentPeriod.month).padStart(2, '0')}`}
           locale={locale}
         />
       </section>

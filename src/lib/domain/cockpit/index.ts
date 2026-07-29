@@ -10,7 +10,6 @@
 
 export * from './types';
 export * from './effort-financier-lisse';
-export * from './capacite-epargne-reelle';
 export * from './assistant-virements';
 export * from './sante-provisions';
 export * from './notifications';

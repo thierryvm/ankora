@@ -9,7 +9,6 @@ import type { SituationStatut } from '@/lib/domain/cockpit';
 import type { Locale } from '@/i18n/routing';
 
 import { AllocationBar, type AllocationSegment } from './AllocationBar';
-import { AjusterResteAVivreDrawer } from './AjusterResteAVivreDrawer';
 
 type Props = {
   statut: SituationStatut;
@@ -26,13 +25,10 @@ type Props = {
   ilTeReste: number;
   /** « Épargne estimée » (ADR-035). `null` avant le 7ᵉ jour → affiche « — ». */
   epargneEstimee: number | null;
-  budgetVieCourante: number;
-  capacite: number;
   deficitEpargne: number;
   rattrapageMensuel: number;
   provisionsAJour: boolean;
   joursRestants: number;
-  currentMonthYYYYMM: string;
   locale: Locale;
 };
 
@@ -54,9 +50,10 @@ const STATUT_ACCENT = {
 
 /**
  * Hero « Situation du mois » — cockpit dashboard #1 (NORTH_STAR waterfall),
- * THI-327 Phase 0. Subsume les anciennes cartes Effort + Capacité en une
- * narration unique : statut calme + chiffre-héros « Reste disponible » +
- * AllocationBar fine (SVG-maison, CSP-safe) + flow vertical + nudge FSMA-safe.
+ * THI-327 Phase 0, revu par ADR-035. Narration unique : statut calme +
+ * chiffre-héros « Il te reste » (temps réel) + ligne d'ancrage « Budget du
+ * mois » + AllocationBar fine (SVG-maison, CSP-safe) + flow vertical + nudge
+ * FSMA-safe.
  *
  * Server Component : reçoit des `number` (un `Decimal` ne traverse jamais la
  * frontière RSC — la page convertit via `.toNumber()`).
@@ -101,8 +98,8 @@ export async function SituationDuMoisHero(props: Props) {
       ? t('statut.vert')
       : props.statut === 'rouge'
         ? t('statut.rouge')
-        : props.capacite < 0
-          ? t('statut.orangeCapacite')
+        : props.ilTeReste < 0
+          ? t('statut.orangeDepasse')
           : t('statut.orangeProvisions');
 
   let nudge: string | null = null;
@@ -112,9 +109,12 @@ export async function SituationDuMoisHero(props: Props) {
       revenus: fmt(props.revenus),
     });
   } else if (props.statut === 'orange') {
+    // ADR-035 — the orange branch used to fire when a user-invented envelope
+    // was exceeded. It now fires on « Il te reste » going below zero, which is
+    // a fact about their month rather than about a number they guessed.
     nudge =
-      props.capacite < 0
-        ? t('nudge.orangeCapacite', { capacite: fmt(props.capacite) })
+      props.ilTeReste < 0
+        ? t('nudge.orangeDepasse', { montant: fmt(Math.abs(props.ilTeReste)) })
         : t('nudge.orangeProvisions', {
             deficit: fmt(props.deficitEpargne),
             rattrapage: fmt(props.rattrapageMensuel),
@@ -148,29 +148,26 @@ export async function SituationDuMoisHero(props: Props) {
                 },
               ]
             : []),
+          // ADR-035 — this used to be two segments sized by the envelope: what
+          // the user had budgeted for daily living, and the leftover called
+          // « capacité d'épargne ». Both were downstream of a number they had
+          // to invent. One segment replaces them: what they have actually
+          // spent. The unfilled remainder is what is left, which is the
+          // question the screen exists to answer.
           {
-            key: 'vie',
+            key: 'depense',
             ratio:
-              Math.max(0, Math.min(props.budgetVieCourante, props.resteDisponible)) / props.revenus,
+              Math.max(0, Math.min(props.depensesDuMois, props.resteDisponible)) / props.revenus,
             fill: 'var(--color-accent-400)',
           },
-          ...(props.capacite > 0
-            ? [
-                {
-                  key: 'epargne',
-                  ratio: props.capacite / props.revenus,
-                  fill: 'var(--color-success)',
-                },
-              ]
-            : []),
         ];
 
   const barAria =
     t('barAria', {
       charges: fmt(props.chargesFixes),
       provisions: fmt(props.provisionsLissees),
-      vieCourante: fmt(props.budgetVieCourante),
-      epargne: fmt(Math.max(0, props.capacite)),
+      depense: fmt(props.depensesDuMois),
+      reste: fmt(Math.max(0, props.ilTeReste)),
     }) +
     // Optional clause, appended only when there are engagements — keeps the
     // canonical 4-part string untouched (no i18n regression) while still
@@ -179,9 +176,12 @@ export async function SituationDuMoisHero(props: Props) {
       ? ` ${t('barAriaEngagements', { engagements: fmt(props.engagementsMensuels) })}`
       : '');
 
+  // What is left, per remaining day. Derived from « Il te reste », so it falls
+  // as the month is spent instead of restating a fixed envelope divided by a
+  // shrinking number of days.
   const perJour =
-    props.joursRestants > 0 && props.budgetVieCourante > 0
-      ? t('flow.parJour', { amount: fmt(props.budgetVieCourante / props.joursRestants) })
+    props.joursRestants > 0 && props.ilTeReste > 0
+      ? t('flow.parJour', { amount: fmt(props.ilTeReste / props.joursRestants) })
       : null;
 
   return (
@@ -286,29 +286,11 @@ export async function SituationDuMoisHero(props: Props) {
           <div className="border-border border-t pt-2">
             <FlowRow label={t('flow.ilTeReste')} value={fmt(props.ilTeReste)} strong />
           </div>
-          <div className="text-muted-foreground flex items-center justify-between gap-2 pl-3 text-xs">
-            <dt className="flex items-center gap-2">
-              <span aria-hidden className="bg-accent-400 h-2 w-2 shrink-0 rounded-full" />
-              <span>{t('flow.resteAVivre')}</span>
-              <AjusterResteAVivreDrawer
-                currentMonthYYYYMM={props.currentMonthYYYYMM}
-                initialResteAVivre={props.budgetVieCourante}
-                monthlyIncome={props.revenus}
-                triggerLabel={t('flow.ajuster')}
-              />
-            </dt>
-            <dd className="tabular-nums">
-              {fmt(props.budgetVieCourante)}
-              {perJour ? <span className="ml-2">{perJour}</span> : null}
-            </dd>
-          </div>
-          <div className="text-muted-foreground flex items-center justify-between gap-2 pl-3 text-xs">
-            <dt className="flex items-center gap-2">
-              <span aria-hidden className="bg-success h-2 w-2 shrink-0 rounded-full" />
-              {t('flow.capaciteEpargne')}
-            </dt>
-            <dd className="tabular-nums">{fmt(Math.max(0, props.capacite))}</dd>
-          </div>
+          {perJour ? (
+            <div className="text-muted-foreground pl-3 text-xs" data-testid="situation-par-jour">
+              {perJour}
+            </div>
+          ) : null}
           {/*
             « Épargne estimée » — a projection of the current spending pace, not
             an envelope the user has to invent. `null` before the 7th day of the

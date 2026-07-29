@@ -23,7 +23,6 @@ describe('calculerSituationDuMois', () => {
     const out = calculerSituationDuMois({
       revenus: new Decimal(2500),
       charges: [charge({ amount: new Decimal(1838), frequency: 'monthly' })],
-      budgetVieCourante: new Decimal(500),
       soldeEpargneActuel: new Decimal(0),
       payments: NO_PAYMENTS,
       ref: REF,
@@ -35,15 +34,36 @@ describe('calculerSituationDuMois', () => {
     expect(out.statut).toBe('vert');
     expect(out.hasRevenus).toBe(true);
     expect(out.resteDisponible.toNumber()).toBe(662);
-    expect(out.capacite.toNumber()).toBe(162);
     expect(out.provisionsAJour).toBe(true);
   });
 
-  it('statut orange when capacité < 0 but resteDisponible ≥ 0', () => {
+  // ADR-035 — the orange branch used to fire on `capacité < 0`, i.e. on a
+  // user-invented envelope being exceeded. It now fires on « Il te reste »
+  // going below zero: spending more this month than the month actually had.
+  it('statut orange when ilTeReste < 0 but resteDisponible ≥ 0', () => {
     const out = calculerSituationDuMois({
       revenus: new Decimal(2000),
       charges: [charge({ amount: new Decimal(1500), frequency: 'monthly' })],
-      budgetVieCourante: new Decimal(800),
+      soldeEpargneActuel: new Decimal(0),
+      payments: NO_PAYMENTS,
+      ref: REF,
+      engagementsMensuels: new Decimal(0),
+      depensesDuMois: new Decimal(600), // 500 available, 600 spent
+      joursEcoules: 15,
+      joursDuMois: 30,
+    });
+    expect(out.statut).toBe('orange');
+    expect(out.resteDisponible.toNumber()).toBe(500);
+    expect(out.ilTeReste.toNumber()).toBe(-100);
+  });
+
+  it('statut vert when the month is untouched — no envelope to fall short of', () => {
+    // Before ADR-035 this exact input was orange, because 500 € of income left
+    // over was less than the 800 € the user had told the app they wanted to
+    // spend. Nothing about their month was wrong; only the guess was.
+    const out = calculerSituationDuMois({
+      revenus: new Decimal(2000),
+      charges: [charge({ amount: new Decimal(1500), frequency: 'monthly' })],
       soldeEpargneActuel: new Decimal(0),
       payments: NO_PAYMENTS,
       ref: REF,
@@ -52,9 +72,8 @@ describe('calculerSituationDuMois', () => {
       joursEcoules: 15,
       joursDuMois: 30,
     });
-    expect(out.statut).toBe('orange');
-    expect(out.resteDisponible.toNumber()).toBe(500);
-    expect(out.capacite.toNumber()).toBe(-300);
+    expect(out.statut).toBe('vert');
+    expect(out.ilTeReste.toNumber()).toBe(500);
   });
 
   it('statut orange when provisions en déficit even if capacité ≥ 0', () => {
@@ -63,7 +82,6 @@ describe('calculerSituationDuMois', () => {
     const out = calculerSituationDuMois({
       revenus: new Decimal(3000),
       charges: [charge({ amount: new Decimal(1200), frequency: 'annual', paymentMonths: [3] })],
-      budgetVieCourante: new Decimal(500),
       soldeEpargneActuel: new Decimal(0),
       payments: NO_PAYMENTS,
       ref: REF,
@@ -73,7 +91,6 @@ describe('calculerSituationDuMois', () => {
       joursDuMois: 30,
     });
     expect(out.statut).toBe('orange');
-    expect(out.capacite.gte(0)).toBe(true);
     expect(out.provisionsAJour).toBe(false);
     expect(out.deficitEpargne.toNumber()).toBe(300);
   });
@@ -82,7 +99,6 @@ describe('calculerSituationDuMois', () => {
     const out = calculerSituationDuMois({
       revenus: new Decimal(1000),
       charges: [charge({ amount: new Decimal(1500), frequency: 'monthly' })],
-      budgetVieCourante: new Decimal(500),
       soldeEpargneActuel: new Decimal(0),
       payments: NO_PAYMENTS,
       ref: REF,
@@ -99,7 +115,6 @@ describe('calculerSituationDuMois', () => {
     const out = calculerSituationDuMois({
       revenus: null,
       charges: [charge({ amount: new Decimal(900), frequency: 'monthly' })],
-      budgetVieCourante: new Decimal(500),
       soldeEpargneActuel: new Decimal(0),
       payments: NO_PAYMENTS,
       ref: REF,
@@ -120,7 +135,6 @@ describe('calculerSituationDuMois', () => {
         charge({ amount: new Decimal(1500), frequency: 'monthly' }),
         charge({ amount: new Decimal(1200), frequency: 'annual', paymentMonths: [3] }),
       ],
-      budgetVieCourante: new Decimal(0),
       soldeEpargneActuel: new Decimal(10000),
       payments: NO_PAYMENTS,
       ref: REF,
@@ -141,7 +155,6 @@ describe('calculerSituationDuMois', () => {
         charge({ amount: new Decimal(900), frequency: 'monthly' }),
         charge({ amount: new Decimal(800), frequency: 'monthly', isActive: false }),
       ],
-      budgetVieCourante: new Decimal(0),
       soldeEpargneActuel: new Decimal(0),
       payments: NO_PAYMENTS,
       ref: REF,
@@ -155,11 +168,10 @@ describe('calculerSituationDuMois', () => {
     expect(out.resteDisponible.toNumber()).toBe(1100); // 2000 − 900 − 0
   });
 
-  it('statut vert on an empty workspace with budgetVieCourante only', () => {
+  it('statut vert on an empty workspace', () => {
     const out = calculerSituationDuMois({
       revenus: new Decimal(2500),
       charges: [],
-      budgetVieCourante: new Decimal(700),
       soldeEpargneActuel: new Decimal(0),
       payments: NO_PAYMENTS,
       ref: REF,
@@ -170,14 +182,12 @@ describe('calculerSituationDuMois', () => {
     });
     expect(out.statut).toBe('vert');
     expect(out.resteDisponible.toNumber()).toBe(2500);
-    expect(out.capacite.toNumber()).toBe(1800);
   });
 
   it('ADR-021: engagements lower resteDisponible and capacité by their amount', () => {
     const out = calculerSituationDuMois({
       revenus: new Decimal(3000),
       charges: [charge({ amount: new Decimal(1000), frequency: 'monthly' })],
-      budgetVieCourante: new Decimal(500),
       soldeEpargneActuel: new Decimal(0),
       payments: NO_PAYMENTS,
       ref: REF,
@@ -188,26 +198,23 @@ describe('calculerSituationDuMois', () => {
     });
     expect(out.engagementsMensuels.toNumber()).toBe(300);
     expect(out.resteDisponible.toNumber()).toBe(1700); // 3000 − 1000 − 0 − 300
-    expect(out.capacite.toNumber()).toBe(1200); // 1700 − 500
     expect(out.statut).toBe('vert');
   });
 
-  it('ADR-021: engagements can tip statut vert → orange (capacité < 0)', () => {
+  it('ADR-021 + ADR-035: engagements shrink what is left, and spending can tip it orange', () => {
     const out = calculerSituationDuMois({
       revenus: new Decimal(2500),
       charges: [charge({ amount: new Decimal(1838), frequency: 'monthly' })],
-      budgetVieCourante: new Decimal(500),
       soldeEpargneActuel: new Decimal(0),
       payments: NO_PAYMENTS,
       ref: REF,
       engagementsMensuels: new Decimal(200),
-      depensesDuMois: new Decimal(0),
+      depensesDuMois: new Decimal(500), // 462 available, 500 spent
       joursEcoules: 15,
       joursDuMois: 30,
     });
-    // Same base as the first test (was vert, capacité 162); −200 tips capacité negative.
     expect(out.resteDisponible.toNumber()).toBe(462); // 2500 − 1838 − 200
-    expect(out.capacite.toNumber()).toBe(-38);
+    expect(out.ilTeReste.toNumber()).toBe(-38);
     expect(out.statut).toBe('orange');
   });
 
@@ -215,7 +222,6 @@ describe('calculerSituationDuMois', () => {
     const out = calculerSituationDuMois({
       revenus: new Decimal(1000),
       charges: [charge({ amount: new Decimal(800), frequency: 'monthly' })],
-      budgetVieCourante: new Decimal(100),
       soldeEpargneActuel: new Decimal(0),
       payments: NO_PAYMENTS,
       ref: REF,
