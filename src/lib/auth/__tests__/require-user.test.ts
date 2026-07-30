@@ -28,11 +28,9 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: () => createClientMock(),
 }));
 
-// 503-diag (2026-05-27): the helper now imports `@/lib/log` to emit
-// observation traces. Stub it minimally so the test runner doesn't have
-// to parse `@/lib/env` (which fails without Supabase env vars in test
-// context) AND so we can assert the instrumentation triggers on the right
-// branches.
+// Stub `@/lib/log` so the test runner doesn't have to parse `@/lib/env` (which
+// fails without Supabase env vars in test context) AND so we can assert the
+// instrumentation triggers on the right branches.
 vi.mock('@/lib/log', () => ({
   log: {
     trace: vi.fn(),
@@ -45,7 +43,7 @@ vi.mock('@/lib/log', () => ({
   },
 }));
 
-import { getOptionalUser } from '../require-user';
+import { AuthBackendUnavailableError, getOptionalUser, requireUser } from '../require-user';
 
 const fakeUser = {
   id: 'user-123',
@@ -76,7 +74,7 @@ describe('getOptionalUser() — non-redirecting session check', () => {
   it('returns null when supabase returns an auth error', async () => {
     getUserMock.mockResolvedValue({
       data: { user: null },
-      error: { name: 'AuthApiError', message: 'JWT expired', status: 401 },
+      error: { name: 'AuthApiError', message: 'JWT expired', status: 401, __isAuthError: true },
     });
 
     const result = await getOptionalUser();
@@ -92,59 +90,139 @@ describe('getOptionalUser() — non-redirecting session check', () => {
     expect(result).toEqual(fakeUser);
   });
 
-  it('swallows transient Supabase failures and resolves to null', async () => {
-    // Defensive — if Supabase throws (network blip, JWT secret rotation,
-    // transient DB outage), the helper degrades to anonymous chrome rather
-    // than bubbling the error up to the public layout. Public surfaces
-    // must always render.
+  it('still degrades to null when Supabase is unreachable', async () => {
+    // Correct FOR THIS FUNCTION and only for it: a marketing page must render
+    // anonymous chrome rather than 500. `requireUser` makes the opposite call —
+    // see the outage suite below.
     getUserMock.mockRejectedValueOnce(new Error('Network down'));
 
     await expect(getOptionalUser()).resolves.toBeNull();
   });
 });
 
-// 503-diag (2026-05-27): instrumentation contract — every silent failure
-// path in the auth helpers MUST emit a `[503-diag]` log line so Cowork can
-// filter Vercel runtime logs and identify which branch produced the 503.
-// These assertions lock the contract; if a future refactor drops a log,
-// the suite fails loudly.
-describe('getOptionalUser() — 503-diag instrumentation contract', () => {
-  it('emits [503-diag] warn when supabase returns an auth error (silent null path)', async () => {
+/**
+ * The instrumentation contract, rewritten on 2026-07-30.
+ *
+ * It used to assert `[503-diag]` prefixed warnings on every failure path. Those
+ * were explicitly temporary — `require-user.ts` carried "Remove this helper +
+ * every `[503-diag]` log call once Étape 2 has shipped the targeted fix" — and
+ * they encoded the thing that turned out to be wrong: that every failure is the
+ * same kind of failure, worth the same log level. Flattening an outage and an
+ * expired session into one `warn` is precisely what let a Supabase outage read as
+ * "users keep having to sign in again".
+ *
+ * The replacement contract is stronger, not weaker: an outage must be `error`
+ * (it is an incident), an ended session must not be logged as one, and the
+ * nominal path must stay silent.
+ */
+describe('getOptionalUser() — an outage is reported as an incident, not as a logout', () => {
+  it('logs at error level when the backend is unreachable', async () => {
     getUserMock.mockResolvedValue({
       data: { user: null },
-      error: { name: 'AuthApiError', message: 'JWT expired', status: 401 },
+      error: { name: 'AuthRetryableFetchError', status: 0, __isAuthError: true },
     });
 
     await getOptionalUser();
 
-    expect(logWarnMock).toHaveBeenCalledTimes(1);
-    const [msg, bindings] = logWarnMock.mock.calls[0] ?? [];
-    expect(msg).toContain('[503-diag]');
+    expect(logErrorMock).toHaveBeenCalledTimes(1);
+    const [msg, bindings] = logErrorMock.mock.calls[0] ?? [];
+    expect(msg).toMatch(/unavailable/i);
     expect(msg).toContain('getOptionalUser');
-    expect(bindings).toMatchObject({ status: 401, msg: 'JWT expired' });
+    expect(bindings).toMatchObject({ name: 'AuthRetryableFetchError' });
   });
 
-  it('emits [503-diag] warn with stack details when getUser() throws', async () => {
-    const thrown = new Error('Network down');
-    getUserMock.mockRejectedValueOnce(thrown);
+  it('does not report an ended session as an incident', async () => {
+    getUserMock.mockResolvedValue({
+      data: { user: null },
+      error: {
+        name: 'AuthApiError',
+        message: 'Invalid Refresh Token: Refresh Token Not Found',
+        status: 400,
+        code: 'refresh_token_not_found',
+        __isAuthError: true,
+      },
+    });
 
     await getOptionalUser();
 
-    expect(logWarnMock).toHaveBeenCalledTimes(1);
-    const [msg, bindings] = logWarnMock.mock.calls[0] ?? [];
-    expect(msg).toContain('[503-diag]');
-    expect(msg).toContain('caught throw');
-    expect(bindings).toMatchObject({ name: 'Error', msg: 'Network down' });
-    // Stack is captured so Cowork can identify where the throw originated.
-    expect(bindings).toHaveProperty('stack');
+    expect(logErrorMock).not.toHaveBeenCalled();
   });
 
-  it('does NOT emit any [503-diag] log when the session is valid (no noise in nominal path)', async () => {
+  it('stays silent when the session is valid', async () => {
     getUserMock.mockResolvedValue({ data: { user: fakeUser }, error: null });
 
     await getOptionalUser();
 
     expect(logWarnMock).not.toHaveBeenCalled();
     expect(logErrorMock).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * The measured defect, locked. On 2026-07-30, with Supabase unreachable and a
+ * perfectly valid session, `/app` answered `307 → /login`: an outage was being
+ * laundered into a mass logout, and the incident was invisible because it looked
+ * like ordinary session churn.
+ */
+describe('requireUser() — an outage surfaces, an expired session redirects', () => {
+  it('throws AuthBackendUnavailableError when the backend is unreachable', async () => {
+    getUserMock.mockResolvedValue({
+      data: { user: null },
+      error: { name: 'AuthRetryableFetchError', status: 0, __isAuthError: true },
+    });
+
+    await expect(requireUser()).rejects.toBeInstanceOf(AuthBackendUnavailableError);
+  });
+
+  it('throws — never redirects — when getUser() throws outright', async () => {
+    getUserMock.mockRejectedValueOnce(new TypeError('fetch failed'));
+
+    // The redirect stub for this file throws `NEXT_REDIRECT`; asserting on the
+    // error type is what distinguishes "surfaced" from "silently logged out".
+    await expect(requireUser()).rejects.toBeInstanceOf(AuthBackendUnavailableError);
+  });
+
+  it.each([500, 503, 429])('throws rather than redirecting on a %s', async (status) => {
+    getUserMock.mockResolvedValue({
+      data: { user: null },
+      error: { name: 'AuthApiError', status, message: 'upstream', __isAuthError: true },
+    });
+
+    await expect(requireUser()).rejects.toBeInstanceOf(AuthBackendUnavailableError);
+  });
+
+  it('redirects — does NOT 500 — when the session cookie is unreadable', async () => {
+    // The regression this assertion exists for: the first cut of the classifier
+    // called a decode failure an outage, so `/app` answered 500 with the corrupt
+    // cookie still set. Measured 2026-07-30. Purge-and-login is recoverable; a 500
+    // caused by the cookie itself is not.
+    getUserMock.mockRejectedValueOnce(
+      new Error('Invalid Base64-URL character "%" at position 3'),
+    );
+
+    await expect(requireUser()).rejects.toThrow('NEXT_REDIRECT');
+  });
+
+  it('redirects — does NOT throw an outage — when the refresh token is dead', async () => {
+    getUserMock.mockResolvedValue({
+      data: { user: null },
+      error: {
+        name: 'AuthApiError',
+        message: 'Invalid Refresh Token: Refresh Token Not Found',
+        status: 400,
+        code: 'refresh_token_not_found',
+        __isAuthError: true,
+      },
+    });
+
+    // `NEXT_REDIRECT` comes from this file's `@/i18n/navigation` stub — reaching
+    // it proves the expired session took the login path, not the outage path.
+    await expect(requireUser()).rejects.toThrow('NEXT_REDIRECT');
+  });
+
+  it('returns the user untouched when the session is valid', async () => {
+    getUserMock.mockResolvedValue({ data: { user: fakeUser }, error: null });
+
+    await expect(requireUser()).resolves.toEqual(fakeUser);
   });
 });
