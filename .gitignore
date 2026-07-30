@@ -118,3 +118,4 @@ cc-handoffs/
 
 # Build artefact (npm run build > build-output.log)
 build-output.log
+.env*
