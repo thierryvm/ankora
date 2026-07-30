@@ -7,6 +7,7 @@ import { getLocale } from 'next-intl/server';
 import { redirect } from '@/i18n/navigation';
 
 import { env } from '@/lib/env';
+import { describeReadFailure } from '@/lib/data/read-failure';
 import { createClient } from '@/lib/supabase/server';
 import {
   signupSchema,
@@ -152,14 +153,36 @@ export async function loginAction(formData: FormData): Promise<ActionResult> {
 
   await logAuditEvent(AuditEvent.AUTH_LOGIN, { userId: data.user.id, ipAddress: ip, userAgent });
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('users')
     .select('onboarded_at')
     .eq('id', data.user.id)
     .maybeSingle();
 
+  // A failed read must not be answered with "you have not onboarded". Sending a
+  // returning user to /onboarding right after they signed in is how a blip on
+  // one SELECT turns into "my budget is gone" — and this is the exact moment a
+  // user is most likely to believe it, since they just proved who they are.
+  //
+  // So on a read failure we decline to conclude and route to /app instead. That
+  // is self-correcting rather than optimistic: /app runs its own guard, which
+  // now either finds the workspace, honestly reports it cannot read, or — for a
+  // genuinely new user — redirects to /onboarding on a clean answer.
+  // Truthiness, not `!== null`: a client with nothing to report may hand back
+  // `undefined`, and treating that as a failure would route every sign-in to
+  // /app — silently disabling onboarding for genuinely new users.
+  const readFailed = Boolean(profileError);
+
+  if (readFailed) {
+    log.error('loginAction: users.onboarded_at unreadable, deferring to /app', {
+      ...describeReadFailure(profileError),
+    });
+  }
+
+  const onboarded = readFailed || profile?.onboarded_at != null;
+
   return redirect({
-    href: profile?.onboarded_at ? '/app' : '/onboarding',
+    href: onboarded ? '/app' : '/onboarding',
     locale: await getLocale(),
   });
 }

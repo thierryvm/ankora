@@ -1,7 +1,9 @@
 import { cookies } from 'next/headers';
 import { NextResponse, type NextRequest } from 'next/server';
 
+import { describeReadFailure } from '@/lib/data/read-failure';
 import { createClient } from '@/lib/supabase/server';
+import { log } from '@/lib/log';
 import { routing, type Locale } from '@/i18n/routing';
 
 /**
@@ -85,12 +87,32 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL(localiseTarget(locale, '/login'), request.url));
   }
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('users')
     .select('onboarded_at')
     .eq('id', user.id)
     .maybeSingle();
 
-  const target = profile?.onboarded_at ? next : '/onboarding';
+  // Same rule as `loginAction`: a read that failed is not an answer, and the
+  // answer it used to be mistaken for — "you have not onboarded" — is the one
+  // that makes a returning user think their workspace is gone. Decline to
+  // conclude and let the destination's own guard decide on a clean read.
+  //
+  // A route handler has no error boundary above it, so throwing here would
+  // produce a bare 500 mid-OAuth with no way back. Deferring is the honest move
+  // that also keeps the visitor moving.
+  // Truthiness, not `!== null`: a PostgREST client that has nothing to report
+  // may hand back `undefined` rather than `null`, and treating that as a failure
+  // would send every single sign-in to `next` — silently disabling onboarding
+  // for genuinely new users.
+  const readFailed = Boolean(profileError);
+
+  if (readFailed) {
+    log.error('auth/callback: users.onboarded_at unreadable, deferring to target', {
+      ...describeReadFailure(profileError),
+    });
+  }
+
+  const target = readFailed || profile?.onboarded_at ? next : '/onboarding';
   return NextResponse.redirect(new URL(localiseTarget(locale, target), request.url));
 }

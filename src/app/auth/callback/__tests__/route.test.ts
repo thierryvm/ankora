@@ -17,6 +17,21 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
  *   - Query string (`code`, `next`) via the input URL
  */
 
+// The route logs an unreadable profile read, and `@/lib/log` parses `@/lib/env`
+// at import — which throws in CI, where the `quality` job declares no `env:`
+// block. Stubbed the same way eight other suites do it.
+vi.mock('@/lib/log', () => ({
+  log: {
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    fatal: vi.fn(),
+    child: vi.fn(),
+  },
+}));
+
 const cookieRef = { value: undefined as string | undefined };
 
 vi.mock('next/headers', () => ({
@@ -31,12 +46,15 @@ type SupabaseFixtures = {
   exchangeError: { message: string } | null;
   userId: string | null;
   onboardedAt: string | null;
+  /** PostgREST error on the `users` read. `null` = the read succeeded. */
+  profileError: { code: string; message: string } | null;
 };
 
 const supabaseRef: SupabaseFixtures = {
   exchangeError: null,
   userId: 'user-thierry',
   onboardedAt: '2026-04-23T00:00:00.000Z',
+  profileError: null,
 };
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -52,6 +70,7 @@ vi.mock('@/lib/supabase/server', () => ({
         eq: () => ({
           maybeSingle: async () => ({
             data: supabaseRef.onboardedAt ? { onboarded_at: supabaseRef.onboardedAt } : null,
+            error: supabaseRef.profileError,
           }),
         }),
       }),
@@ -80,7 +99,44 @@ beforeEach(() => {
     exchangeError: null,
     userId: 'user-thierry',
     onboardedAt: '2026-04-23T00:00:00.000Z',
+    profileError: null,
   } satisfies SupabaseFixtures);
+});
+
+/**
+ * The sign-in moment is where "we could not read your profile" does the most
+ * damage if it is mistaken for "you have never onboarded". The visitor has just
+ * proved who they are; being dropped into onboarding one second later reads as
+ * "my account is empty".
+ *
+ * A route handler has no error boundary above it, so this path cannot throw the
+ * way the RSC guards do — a bare 500 mid-OAuth leaves the visitor nowhere. It
+ * declines to conclude instead and forwards to the target, whose own guard will
+ * decide on a clean read (and will itself report honestly if it cannot get one).
+ */
+describe('auth/callback — a failed profile read is not "never onboarded"', () => {
+  it.each([
+    ['a connection failure', { code: '08006', message: 'connection failure' }],
+    ['an RLS denial', { code: '42501', message: 'permission denied' }],
+  ])('forwards to the target rather than /onboarding on %s', async (_label, profileError) => {
+    setLocaleCookie('en');
+    // `onboardedAt: null` is what the failed read leaves behind — the exact
+    // combination that used to route straight into onboarding.
+    setSupabaseFixtures({ onboardedAt: null, profileError });
+
+    const response = await GET(buildRequest('?code=test-code'));
+
+    expect(response.headers.get('location')).toBe('https://ankora.be/en/app');
+  });
+
+  it('still sends a genuinely new user to /onboarding when the read succeeded', async () => {
+    setLocaleCookie('en');
+    setSupabaseFixtures({ onboardedAt: null, profileError: null });
+
+    const response = await GET(buildRequest('?code=test-code'));
+
+    expect(response.headers.get('location')).toBe('https://ankora.be/en/onboarding');
+  });
 });
 
 describe('auth/callback — locale preservation (PR-BETA-CLEANUP / THI-279)', () => {
