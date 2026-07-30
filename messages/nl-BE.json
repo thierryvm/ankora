@@ -1226,6 +1226,12 @@
       "ctaRetry": "Opnieuw proberen",
       "ctaHome": "Terug naar de startpagina"
     },
+    "dataUnavailable": {
+      "title": "Je gegevens kunnen niet geladen worden",
+      "description": "We kunnen je werkruimte nu niet lezen. Er is niets verloren en niets gewijzigd — het lezen is mislukt, niet je gegevens. Probeer het straks opnieuw.",
+      "ctaRetry": "Opnieuw proberen",
+      "ctaHome": "Terug naar de startpagina"
+    },
     "session": {
       "expired": "Sessie verlopen. Log opnieuw in.",
       "rateLimited": "Te veel aanvragen. Wacht een minuut."

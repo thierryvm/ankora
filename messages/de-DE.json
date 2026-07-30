@@ -1226,6 +1226,12 @@
       "ctaRetry": "Erneut versuchen",
       "ctaHome": "Zurück zur Startseite"
     },
+    "dataUnavailable": {
+      "title": "Deine Daten können nicht geladen werden",
+      "description": "Wir können deinen Arbeitsbereich gerade nicht lesen. Nichts ist verloren und nichts wurde geändert — der Lesevorgang ist fehlgeschlagen, nicht deine Daten. Versuche es in einem Moment erneut.",
+      "ctaRetry": "Erneut versuchen",
+      "ctaHome": "Zurück zur Startseite"
+    },
     "session": {
       "expired": "Session abgelaufen. Melde dich erneut an.",
       "rateLimited": "Zu viele Anfragen. Warte eine Minute."

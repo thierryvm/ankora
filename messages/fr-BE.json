@@ -1226,6 +1226,12 @@
       "ctaRetry": "Réessayer",
       "ctaHome": "Retour à l'accueil"
     },
+    "dataUnavailable": {
+      "title": "Impossible de charger tes données",
+      "description": "Nous n'arrivons pas à lire ton espace pour l'instant. Rien n'a été perdu et rien n'a été modifié — c'est la lecture qui a échoué, pas tes données. Réessaie dans un instant.",
+      "ctaRetry": "Réessayer",
+      "ctaHome": "Retour à l'accueil"
+    },
     "session": {
       "expired": "Session expirée. Reconnecte-toi.",
       "rateLimited": "Trop de requêtes. Attends une minute."

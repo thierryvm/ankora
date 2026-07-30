@@ -1226,6 +1226,12 @@
       "ctaRetry": "Try again",
       "ctaHome": "Back to home"
     },
+    "dataUnavailable": {
+      "title": "Can't load your data",
+      "description": "We can't read your workspace right now. Nothing has been lost and nothing has been changed — the read failed, not your data. Try again in a moment.",
+      "ctaRetry": "Try again",
+      "ctaHome": "Back to home"
+    },
     "session": {
       "expired": "Session expired. Log in again.",
       "rateLimited": "Too many requests. Wait a minute."

@@ -1226,6 +1226,12 @@
       "ctaRetry": "Reintentar",
       "ctaHome": "Volver al inicio"
     },
+    "dataUnavailable": {
+      "title": "No podemos cargar tus datos",
+      "description": "No podemos leer tu espacio en este momento. No se ha perdido nada ni se ha modificado nada: ha fallado la lectura, no tus datos. Vuelve a intentarlo en un instante.",
+      "ctaRetry": "Reintentar",
+      "ctaHome": "Volver al inicio"
+    },
     "session": {
       "expired": "Sesión expirada. Vuelve a iniciar sesión.",
       "rateLimited": "Demasiadas solicitudes. Espera un minuto."
