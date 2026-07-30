@@ -1220,6 +1220,12 @@
       "ctaRetry": "Réessayer",
       "ctaHome": "Retour à l'accueil"
     },
+    "unavailable": {
+      "title": "Service temporairement indisponible",
+      "description": "Nous n'arrivons pas à joindre le service d'authentification en ce moment. Tes données sont intactes et ta session n'a pas été fermée. Réessaie dans un instant.",
+      "ctaRetry": "Réessayer",
+      "ctaHome": "Retour à l'accueil"
+    },
     "session": {
       "expired": "Session expirée. Reconnecte-toi.",
       "rateLimited": "Trop de requêtes. Attends une minute."

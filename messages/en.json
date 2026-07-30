@@ -1220,6 +1220,12 @@
       "ctaRetry": "Try again",
       "ctaHome": "Back to home"
     },
+    "unavailable": {
+      "title": "Service temporarily unavailable",
+      "description": "We can't reach the authentication service right now. Your data is intact and your session has not been closed. Try again in a moment.",
+      "ctaRetry": "Try again",
+      "ctaHome": "Back to home"
+    },
     "session": {
       "expired": "Session expired. Log in again.",
       "rateLimited": "Too many requests. Wait a minute."

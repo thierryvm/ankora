@@ -1220,6 +1220,12 @@
       "ctaRetry": "Opnieuw proberen",
       "ctaHome": "Terug naar startpagina"
     },
+    "unavailable": {
+      "title": "Dienst tijdelijk niet beschikbaar",
+      "description": "We kunnen de authenticatiedienst momenteel niet bereiken. Je gegevens zijn intact en je sessie is niet afgesloten. Probeer het straks opnieuw.",
+      "ctaRetry": "Opnieuw proberen",
+      "ctaHome": "Terug naar de startpagina"
+    },
     "session": {
       "expired": "Sessie verlopen. Log opnieuw in.",
       "rateLimited": "Te veel aanvragen. Wacht een minuut."

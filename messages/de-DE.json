@@ -1220,6 +1220,12 @@
       "ctaRetry": "Erneut versuchen",
       "ctaHome": "Zurück zur Startseite"
     },
+    "unavailable": {
+      "title": "Dienst zeitweise nicht verfügbar",
+      "description": "Wir erreichen den Authentifizierungsdienst gerade nicht. Deine Daten sind unversehrt und deine Sitzung wurde nicht beendet. Versuche es in einem Moment erneut.",
+      "ctaRetry": "Erneut versuchen",
+      "ctaHome": "Zurück zur Startseite"
+    },
     "session": {
       "expired": "Session abgelaufen. Melde dich erneut an.",
       "rateLimited": "Zu viele Anfragen. Warte eine Minute."

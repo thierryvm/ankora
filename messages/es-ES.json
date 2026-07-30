@@ -1220,6 +1220,12 @@
       "ctaRetry": "Reintentar",
       "ctaHome": "Volver al inicio"
     },
+    "unavailable": {
+      "title": "Servicio temporalmente no disponible",
+      "description": "No podemos contactar con el servicio de autenticación en este momento. Tus datos están intactos y tu sesión no se ha cerrado. Vuelve a intentarlo en un instante.",
+      "ctaRetry": "Reintentar",
+      "ctaHome": "Volver al inicio"
+    },
     "session": {
       "expired": "Sesión expirada. Vuelve a iniciar sesión.",
       "rateLimited": "Demasiadas solicitudes. Espera un minuto."
