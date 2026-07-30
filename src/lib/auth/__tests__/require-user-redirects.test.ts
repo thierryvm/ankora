@@ -62,6 +62,8 @@ vi.mock('@/lib/log', () => ({
   },
 }));
 
+import { DataReadUnavailableError } from '@/lib/data/read-failure';
+
 import { requireUser, requireUserWithWorkspace } from '../require-user';
 
 const fakeUser = {
@@ -138,6 +140,50 @@ describe('requireUserWithWorkspace — the onboarding redirect carries the local
       role: 'owner',
     });
     expect(redirectMock).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * "You have no workspace" and "I could not read your workspace" are different
+ * sentences, and until 2026-07-30 this function said the first one for both.
+ *
+ * The harm is specific to what Ankora is. Someone who tracks their budget here
+ * opens the app, is asked to create their space again, and the only reasonable
+ * conclusion is that their data is gone. It is not: a SELECT failed. The
+ * information to tell them apart was already being computed — the previous
+ * version put `hadError` in a log line and then routed identically either way.
+ */
+describe('requireUserWithWorkspace — an unreadable membership is not an absent one', () => {
+  const readFailures = [
+    ['a connection failure', { code: '08006', message: 'connection failure' }],
+    ['an RLS denial', { code: '42501', message: 'permission denied' }],
+    ['a statement timeout', { code: '57014', message: 'canceling statement' }],
+  ] as const;
+
+  it.each(readFailures)('throws instead of redirecting to onboarding on %s', async (_l, error) => {
+    getUserMock.mockResolvedValue({ data: { user: fakeUser }, error: null });
+    fromMock.mockReturnValue(membershipQuery({ data: null, error }));
+
+    await expect(requireUserWithWorkspace()).rejects.toBeInstanceOf(DataReadUnavailableError);
+    // The assertion that matters: the visitor was NOT walked into onboarding.
+    expect(redirectMock).not.toHaveBeenCalled();
+  });
+
+  it('still redirects to onboarding when the read succeeded and found nothing', async () => {
+    getUserMock.mockResolvedValue({ data: { user: fakeUser }, error: null });
+    fromMock.mockReturnValue(membershipQuery({ data: null, error: null }));
+
+    await expect(requireUserWithWorkspace()).rejects.toThrow('NEXT_REDIRECT');
+    expect(redirectMock).toHaveBeenCalledWith({ href: '/onboarding', locale: 'fr-BE' });
+  });
+
+  it('carries the digest that renders the "cannot load your data" screen', async () => {
+    getUserMock.mockResolvedValue({ data: { user: fakeUser }, error: null });
+    fromMock.mockReturnValue(membershipQuery({ data: null, error: { code: '08006' } }));
+
+    const thrown = await requireUserWithWorkspace().catch((e: unknown) => e);
+
+    expect((thrown as { digest?: string }).digest).toBe('ANKORA_DATA_READ_UNAVAILABLE');
   });
 });
 

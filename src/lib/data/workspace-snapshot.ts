@@ -4,6 +4,7 @@ import { ANKORA_TIMEZONE } from '@/lib/date/tz';
 
 import { redirect } from '@/i18n/navigation';
 
+import { assertReadable } from '@/lib/data/read-failure';
 import { createClient } from '@/lib/supabase/server';
 import { log } from '@/lib/log';
 import {
@@ -130,6 +131,14 @@ export type WorkspaceSnapshot = {
 /**
  * Fetch the authenticated user's primary workspace snapshot.
  * Redirects to /onboarding if the user has no workspace or hasn't completed onboarding.
+ *
+ * Every read below whose result decides a redirect goes through `assertReadable`
+ * first. Until 2026-07-30 the `error` field of all three was discarded and only
+ * `!data` was tested, so a failed SELECT was indistinguishable from a user who
+ * had never onboarded — and the dashboard answered a database outage by asking
+ * its owner to create their workspace again. The 2026-07-18 note further down
+ * this file records the same motif on `charges`; this is that lesson applied to
+ * the reads that route rather than the reads that render.
  */
 export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
   const supabase = await createClient();
@@ -138,20 +147,22 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
   } = await supabase.auth.getUser();
   if (!user) return redirect({ href: '/login', locale: await getLocale() });
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('users')
     .select('onboarded_at')
     .eq('id', user.id)
     .maybeSingle();
+  assertReadable(profileError, 'workspace-snapshot: users.onboarded_at');
   if (!profile?.onboarded_at) return redirect({ href: '/onboarding', locale: await getLocale() });
 
-  const { data: membership } = await supabase
+  const { data: membership, error: membershipError } = await supabase
     .from('workspace_members')
     .select('workspace_id')
     .eq('user_id', user.id)
     .order('joined_at', { ascending: true })
     .limit(1)
     .maybeSingle();
+  assertReadable(membershipError, 'workspace-snapshot: workspace_members');
   if (!membership) return redirect({ href: '/onboarding', locale: await getLocale() });
 
   const workspaceId = membership.workspace_id;
@@ -231,8 +242,12 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
       .eq('period_month', previousMonth),
   ]);
 
-  if (wsRes.error || !wsRes.data)
-    return redirect({ href: '/onboarding', locale: await getLocale() });
+  // The workspace row is reached through a membership we just read successfully,
+  // so "it failed" and "it is not there" have genuinely different meanings here —
+  // the second would be a broken foreign key, the first a blip. Only the second
+  // is a reason to send someone to onboarding.
+  assertReadable(wsRes.error, 'workspace-snapshot: workspaces');
+  if (!wsRes.data) return redirect({ href: '/onboarding', locale: await getLocale() });
 
   // Never swallow a charges read failure silently again (incident 2026-07-18:
   // the `?? []` fallback made a failing SELECT look like an empty workspace).

@@ -7,6 +7,7 @@ import {
   classifyAuthFailure,
   endsSession,
 } from '@/lib/auth/auth-error';
+import { assertReadable, describeReadFailure } from '@/lib/data/read-failure';
 import { createClient } from '@/lib/supabase/server';
 import { log } from '@/lib/log';
 
@@ -157,7 +158,17 @@ export async function requireUser(): Promise<User> {
 
 /**
  * Like requireUser but also returns the workspace_member row.
- * Redirects to /onboarding if user has no workspace yet.
+ *
+ * Three outcomes, same shape as `requireUser`:
+ *   - a membership exists   → it is returned
+ *   - the query found none  → redirect to /onboarding
+ *   - the query FAILED      → throws `DataReadUnavailableError`
+ *
+ * The third used to be folded into the second. A transient Postgres error or an
+ * RLS regression sent an established user to onboarding — which, to someone who
+ * tracks their budget here, reads as "my workspace and my data are gone". The
+ * information to tell them apart was already on hand: the old code computed
+ * `hadError` purely to put it in a log line, then routed identically either way.
  */
 export async function requireUserWithWorkspace(): Promise<{
   user: User;
@@ -167,10 +178,6 @@ export async function requireUserWithWorkspace(): Promise<{
   const user = await requireUser();
   const supabase = await createClient();
 
-  // 503-diag (2026-05-27): the previous version silently ignored the
-  // Supabase `error` field. A PGRST transient or RLS denial would surface
-  // as `data === null` and bounce the user to `/onboarding` falsely, which
-  // is exactly the silent failure mode @cowork suspects on the 503.
   const { data: membership, error } = await supabase
     .from('workspace_members')
     .select('workspace_id, role')
@@ -180,18 +187,18 @@ export async function requireUserWithWorkspace(): Promise<{
     .maybeSingle();
 
   if (error) {
-    log.error('[503-diag] require-user workspace_members query error', {
+    log.error('require-user: workspace_members unreadable', {
       userId: user.id,
-      code: error.code,
-      msg: error.message,
+      ...describeReadFailure(error),
     });
   }
 
+  // Throws on a failed read; returns quietly when the query simply matched
+  // nothing. Ordering matters: this must run BEFORE the `!membership` branch,
+  // or a failed read falls straight through into "you have no workspace".
+  assertReadable(error, 'require-user: workspace_members');
+
   if (!membership) {
-    log.warn('[503-diag] require-user no membership redirect onboarding', {
-      userId: user.id,
-      hadError: !!error,
-    });
     return redirect({ href: '/onboarding', locale: await getLocale() });
   }
 
