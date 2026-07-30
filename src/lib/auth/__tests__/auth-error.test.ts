@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  AUTH_BACKEND_UNAVAILABLE_DIGEST,
   EXPECTED_SESSION_END_CODES,
   classifyAuthFailure,
   endsSession,
@@ -131,6 +132,22 @@ describe('classifyAuthFailure — a cookie we cannot read is a session end, not 
       expect(classifyAuthFailure(value)).toBe('session-unreadable');
     },
   );
+});
+
+/**
+ * The digest is a contract between a server throw and a client boundary, and the
+ * two ends cannot see each other. Nothing else fails if it drifts — the boundary
+ * simply stops recognising the outage and quietly starts telling users their app
+ * is broken. Pinning the literal is the only thing that makes the drift loud.
+ */
+describe('AUTH_BACKEND_UNAVAILABLE_DIGEST', () => {
+  it('is the exact string the error boundary matches on', () => {
+    expect(AUTH_BACKEND_UNAVAILABLE_DIGEST).toBe('ANKORA_AUTH_BACKEND_UNAVAILABLE');
+  });
+
+  it('does not collide with the NEXT_* digests the framework owns', () => {
+    expect(AUTH_BACKEND_UNAVAILABLE_DIGEST.startsWith('NEXT_')).toBe(false);
+  });
 });
 
 describe('findSessionCookieNames', () => {

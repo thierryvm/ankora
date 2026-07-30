@@ -64,6 +64,28 @@ export function endsSession(kind: AuthFailureKind): boolean {
   return kind === 'session-ended' || kind === 'session-unreadable';
 }
 
+/**
+ * Stable `digest` carried by `AuthBackendUnavailableError` so the client error
+ * boundary can recognise it **in production**.
+ *
+ * Why a digest and not `error.name`: React strips server error messages, names
+ * and stacks before they reach a client `error.tsx` — by design, so a stack never
+ * leaks to a browser. `digest` is the one field that survives, which is exactly
+ * how `redirect()` and `notFound()` signal themselves across the same boundary.
+ * Setting our own means the boundary can tell "Supabase is unreachable" from "a
+ * genuine bug", and show an honest degraded screen for the first without
+ * mislabelling the second.
+ *
+ * It lives in this module — not in `require-user.ts` — because `error.tsx` is a
+ * client component: importing the server-only auth module would drag
+ * `next/headers` into the client bundle and fail the build. This file imports
+ * nothing, so it is safe on both sides.
+ *
+ * The `ANKORA_` prefix keeps it clear of Next.js's own `NEXT_*` digests.
+ * Changing this string breaks the boundary silently — a test pins the literal.
+ */
+export const AUTH_BACKEND_UNAVAILABLE_DIGEST = 'ANKORA_AUTH_BACKEND_UNAVAILABLE';
+
 type MaybeAuthError = {
   __isAuthError?: unknown;
   name?: unknown;

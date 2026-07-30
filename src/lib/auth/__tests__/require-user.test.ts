@@ -43,6 +43,7 @@ vi.mock('@/lib/log', () => ({
   },
 }));
 
+import { AUTH_BACKEND_UNAVAILABLE_DIGEST } from '../auth-error';
 import { AuthBackendUnavailableError, getOptionalUser, requireUser } from '../require-user';
 
 const fakeUser = {
@@ -172,6 +173,22 @@ describe('requireUser() — an outage surfaces, an expired session redirects', (
     });
 
     await expect(requireUser()).rejects.toBeInstanceOf(AuthBackendUnavailableError);
+  });
+
+  // Without the digest the throw reaches `[locale]/error.tsx` anonymous and the
+  // visitor is told "Quelque chose s'est cassé" — a crash message for a
+  // dependency blip, with their session still perfectly valid. React strips the
+  // message, name and stack in production; `digest` is the only field that
+  // crosses, so it is the whole contract.
+  it('carries the digest the error boundary needs to show the outage screen', async () => {
+    getUserMock.mockResolvedValue({
+      data: { user: null },
+      error: { name: 'AuthRetryableFetchError', status: 0, __isAuthError: true },
+    });
+
+    const thrown = await requireUser().catch((e: unknown) => e);
+
+    expect((thrown as { digest?: string }).digest).toBe(AUTH_BACKEND_UNAVAILABLE_DIGEST);
   });
 
   it('throws — never redirects — when getUser() throws outright', async () => {

@@ -2,7 +2,11 @@ import type { User } from '@supabase/supabase-js';
 import { getLocale } from 'next-intl/server';
 
 import { redirect } from '@/i18n/navigation';
-import { classifyAuthFailure, endsSession } from '@/lib/auth/auth-error';
+import {
+  AUTH_BACKEND_UNAVAILABLE_DIGEST,
+  classifyAuthFailure,
+  endsSession,
+} from '@/lib/auth/auth-error';
 import { createClient } from '@/lib/supabase/server';
 import { log } from '@/lib/log';
 
@@ -11,9 +15,17 @@ import { log } from '@/lib/log';
  * that the session is over. It exists so `requireUser()` has something to throw
  * that is unmistakably "infrastructure", and so a caller that genuinely wants to
  * degrade (a public page) can tell the two apart.
+ *
+ * It carries a fixed `digest`. Throwing without one would reach
+ * `src/app/[locale]/error.tsx` as an anonymous error and render "Quelque chose
+ * s'est cassé" — telling a user their app is broken when in fact a dependency is
+ * briefly unreachable and their data is untouched. The digest is what lets that
+ * boundary say so honestly. See `AUTH_BACKEND_UNAVAILABLE_DIGEST`.
  */
 export class AuthBackendUnavailableError extends Error {
   override readonly name = 'AuthBackendUnavailableError';
+
+  readonly digest = AUTH_BACKEND_UNAVAILABLE_DIGEST;
 
   constructor(override readonly cause: unknown) {
     super('Supabase auth backend unavailable');
