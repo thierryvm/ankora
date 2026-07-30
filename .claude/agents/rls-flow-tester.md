@@ -25,6 +25,29 @@ For each workspace-scoped table (`charges`, `expenses`, `categories`, `workspace
    - `INSERT` into Wa (even with `workspace_id = Wa` in the payload)
 4. Verify User B **can** still fully manage Rb.
 
+## Functions that take the tenant as an argument (run this before the table matrix)
+
+The table matrix above tests the paths RLS guards. A `SECURITY DEFINER` function that
+accepts `ws_id` / `workspace_id` / `owner_id` is a path RLS **does not** guard — the body
+runs as the owner, so no policy is consulted, and the caller names the tenant. For each
+such function the diff touches or that already exists:
+
+1. List them: `grep -n "security definer" supabase/migrations/*.sql` then read each
+   signature for a tenant-shaped parameter.
+2. For each, answer in one line: **which role is supposed to call this, from where?**
+   Cite the caller (`file:line` in `src/`, or the `PERFORM` in another function body).
+   No caller → no grant → the ACL must show `{postgres=X/postgres}` alone.
+3. Attempt the cross-tenant write from every role that holds `EXECUTE`, with User B's
+   session and User A's workspace id:
+   ```sql
+   set role authenticated;  select public.seed_default_accounts('<Wa>'::uuid);
+   reset role;
+   -- then, as the same non-member, read back what landed in Wa:
+   select count(*) from public.accounts where workspace_id = '<Wa>';
+   ```
+   Report the **row count in Wa**. A write that lands is a leak even though every table
+   policy passed — that is the whole point of this section.
+
 ## For self-scoped tables (`user_consents`, `deletion_requests`, `users`)
 
 1. User B must not be able to read User A's consents.
@@ -61,9 +84,54 @@ defect as a leak, and far harder to notice.
    reset role;
    ```
    Report the **row count**, not "no error".
-4. **Grants**: `revoke … from anon` does **not** remove the `EXECUTE` Postgres grants to
-   `PUBLIC` at creation. Every `revoke` on a function must name `public` (advisor 0028 —
-   the May migration that missed this changed nothing).
+4. **Grants — and this rule was itself wrong until 29 July 2026.** It used to read
+   "every `revoke` on a function must name `public`". That is the half-measure, not the
+   fix, and stating it here is part of why the hole stayed open: there are **two**
+   grants, not one. Postgres grants `EXECUTE` to the `PUBLIC` pseudo-role at creation;
+   Supabase's default privileges _separately_ grant `EXECUTE` to `anon`, `authenticated`
+   **and `service_role`** on every new function in `public`. `revoke … from public`
+   removes only the first. So:
+   - the revoke must name **`public, anon, authenticated`** — all four grantees;
+   - `service_role` keeps `EXECUTE` unless it too is revoked, and for a
+     `SECURITY DEFINER` function that takes the tenant as an argument
+     (`seed_default_accounts(ws_id uuid)`, `seed_default_categories(ws_id, owner_id)`,
+     `seed_expense_categories(ws_id, owner_id)`) that grant **is** a cross-tenant write
+     primitive: the caller chooses the workspace and RLS is bypassed by definition;
+   - a function reached only via `PERFORM` from another `SECURITY DEFINER` body needs
+     **no grant at all** — it already runs in the owner context.
+
+   Settle it by reading the ACL, never the migration:
+
+   ```sql
+   select p.proname,
+          pg_get_function_identity_arguments(p.oid)           as args,
+          p.prosecdef                                         as security_definer,
+          coalesce(p.proacl::text, '⚠ NULL — defaults apply') as acl
+     from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public' and p.prokind = 'f'
+    order by p.prosecdef desc, p.proname;
+   ```
+
+   `proacl IS NULL` is the **most** permissive state — it means the defaults stand, so
+   all three roles hold `EXECUTE` — while reading like "no grants". FAIL on it. The only
+   acceptable ACL for a service_role-only function is
+   `{postgres=X/postgres,service_role=X/postgres}`; for a PERFORM-only helper,
+   `{postgres=X/postgres}`. Any entry you cannot trace to a `grant` in
+   `supabase/migrations/` is a default privilege, not a decision — say so.
+
+   Then prove the closure rather than asserting it, from the role that must be refused:
+
+   ```sql
+   set role anon;            select public.<fn>(…);   -- expect: permission denied
+   reset role;
+   set role authenticated;   select public.<fn>(…);   -- expect: permission denied
+   reset role;
+   ```
+
+   A `permission denied for function` error is the pass. Any other outcome — including
+   a successful call that happens to write nothing today — is a FAIL: today's harmless
+   result rests on policies staying exactly as they are.
+
 5. **Cross-schema**: `service_role` has **no privileges on `auth.*`** in this project
    (measured 27 July 2026 — neither `auth.users` nor `auth.audit_log_entries`). Any plan
    that reaches into `auth` from SQL must go through the GoTrue admin API instead. Flag it.
@@ -76,6 +144,10 @@ Produce a **markdown report** with:
 
 - **Verdict**: PASS / FAIL
 - **Test results table**: table name, attack vector, expected result, actual result, pass/fail
+- **Function ACL table** — mandatory whenever a `create … function` appears in the diff:
+  function(args) · `SECURITY DEFINER`? · tenant argument? · named caller (`file:line`) ·
+  **ACL read from `pg_proc.proacl`** · roles that should hold EXECUTE · pass/fail. A row
+  whose ACL was not read is `UNVERIFIED`, never `PASS`.
 - **Privileged-path table**: role used, statement, **rows affected**, expected, pass/fail
 - **Failing tests**: exact SQL or Supabase JS snippet that demonstrates the leak **or the
   silent refusal**
