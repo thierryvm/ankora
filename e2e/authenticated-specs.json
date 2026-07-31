@@ -48,8 +48,31 @@
     "e2e/accounts.spec.ts": "READY TO VERIFY (2026-07-29). Root cause fixed — CardTitle now renders <h3>, so getByRole('heading', /plan du mois/i) can match. Not yet executed against a real Supabase; remove this entry once seen green.",
     "e2e/dashboard-expenses.spec.ts": "READY TO VERIFY (2026-07-29). Same fix: getByRole('heading', /dépenses —/i) now has a real heading to match. Note the card it targets was relabelled « Dépensé ce mois » by ADR-035, so the regex may need updating alongside verification.",
     "e2e/dashboard-data-flow.spec.ts": "PARTIALLY FIXED (2026-07-29). The heading-role cause is gone (CardTitle is <h3>), but getByText(/^Factures /i) still targets a surface the cockpit rebuild replaced. Needs a rewrite, not just a re-run.",
-    "e2e/dashboard-capacite-tryptique.spec.ts": "STILL INVALID, and now permanently. Asserts testids substat-reste-disponible / substat-reste-a-vivre / capacite-epargne-card / capacite-epargne-substats. ADR-035 removed the « capacité d'épargne » and « reste à vivre » concepts outright, so these surfaces will never come back. Candidate for deletion rather than rewrite.",
-    "e2e/dashboard-cockpit-bloc2.spec.ts": "STILL INVALID. Asserts testid effort-financier-card — present in ZERO files under src/. Tests the 'Bloc 2 hero radar' that the Situation Hero superseded.",
-    "e2e/dashboard-simulator-drawer.spec.ts": "STILL INVALID, one cause resolved differently than expected. It asserts [aria-label=\"Notifications\"], a control the app no longer renders, AND expects the text 'Reste disponible' — which ADR-035 retired app-wide; the simulator now says « Budget du mois »."
-  }
+    "e2e/dashboard-capacite-tryptique.spec.ts": "STILL INVALID, and now permanently. Asserts testids substat-reste-disponible / substat-reste-a-vivre / capacite-epargne-card / capacite-epargne-substats. ADR-035 removed the « capacité d'épargne » and « reste à vivre » concepts outright, so these surfaces will never come back. Candidate for deletion rather than rewrite."
+  },
+
+  "$quarantine_is_keyed_by_spec_path": [
+    "Toute clé de `quarantine` est lue comme un chemin de spec. Ne rien y écrire",
+    "d'autre : une note ajoutée dans cet objet le 2026-07-31 a fait compter 16",
+    "specs au lieu de 15, sans que la vérification de sélection ne bronche —",
+    "elle compare le tableau `specs`, pas les clés de `quarantine`.",
+    "",
+    "2026-07-31 — DÉCOUPAGE AU CAS. dashboard-cockpit-bloc2 et",
+    "dashboard-simulator-drawer sont sortis de la quarantaine. Mesuré en parité",
+    "CI (CLI Supabase 2.84.2, retries 2, chromium-desktop + iPhone 14) : 7 de",
+    "leurs 12 cas passent — 2/6 pour bloc2, 5/6 pour simulator-drawer. Une",
+    "quarantaine au FICHIER retenait les 12. Les 5 cas réellement cassés portent",
+    "désormais un `test.skip(true, raison)` à leur propre niveau, imprimé par le",
+    "reporter. Plancher authentifié : 31 → 38. Un plancher qui monte parce qu'on",
+    "a cessé de retenir du vert est le mouvement sain.",
+    "",
+    "Les 4 entrées restantes ont été VUES ROUGES le 2026-07-31, pas supposées :",
+    "accounts:75 (montant 500,00 absent), dashboard-expenses:64 (5,00 € absent),",
+    "dashboard-data-flow:33 (getByLabel du formulaire charge ne matche plus),",
+    "dashboard-capacite-tryptique 4/4 (testids absents de src/).",
+    "Les deux « READY TO VERIFY » ne le sont donc PAS : elles échouent sur des",
+    "montants, pas sur des libellés. Et le `getByText(/^Factures /i)` que la",
+    "raison de dashboard-data-flow lui attribue n'est pas dans ce fichier — il",
+    "est dans dashboard-cockpit-bloc2.spec.ts."
+  ]
 }

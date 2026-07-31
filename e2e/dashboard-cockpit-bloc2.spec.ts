@@ -7,6 +7,13 @@ test.describe('PR-D3 — Bloc 2 hero radar (Effort Lissé + Capacité Réelle)',
   test.skip(!admin, 'Needs real Supabase (NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY).');
 
   test('renders both hero cards on the dashboard for an authenticated user', async ({ page }) => {
+    // QUARANTAINE AU CAS (2026-07-31). Mesuré : `effort-financier-card` est
+    // absent de src/ (0 occurrence). Le « Bloc 2 hero radar » a été remplacé par
+    // le Situation Hero. À réécrire ou supprimer, pas à relancer.
+    test.skip(
+      true,
+      'testid effort-financier-card supprimé — spec à réécrire contre le Situation Hero',
+    );
     if (!admin) return;
     const user = await seedOnboardedUser(admin, [
       { label: 'Loyer', amount: 900, frequency: 'monthly', dueMonth: 1, paidFrom: 'principal' },
@@ -85,6 +92,10 @@ test.describe('PR-D3 — Bloc 2 hero radar (Effort Lissé + Capacité Réelle)',
   test('PR-D3-bis cleanup — legacy KPI cards are gone (no provisions/health/bills tiles above the radar)', async ({
     page,
   }) => {
+    // QUARANTAINE AU CAS (2026-07-31). `getByText(/^Factures /i)` attend 0
+    // occurrence, or « Prochaines factures » en rend. C'est CETTE assertion que
+    // le rapport du chantier 1 attribuait par erreur à dashboard-data-flow.
+    test.skip(true, 'attend 0 occurrence de /^Factures /i — la carte Prochaines factures en rend');
     if (!admin) return;
     const user = await seedOnboardedUser(admin, [
       { label: 'Loyer', amount: 800, frequency: 'monthly', dueMonth: 1, paidFrom: 'principal' },
@@ -115,6 +126,11 @@ test.describe('PR-D3 — Bloc 2 hero radar (Effort Lissé + Capacité Réelle)',
   });
 
   test('renders the negative variant in rose when charges exceed income', async ({ page }) => {
+    // QUARANTAINE AU CAS (2026-07-31). Dépend du même `effort-financier-card`.
+    test.skip(
+      true,
+      'testid effort-financier-card supprimé — spec à réécrire contre le Situation Hero',
+    );
     if (!admin) return;
     const user = await seedOnboardedUser(admin, [
       { label: 'Big bill', amount: 1500, frequency: 'monthly', dueMonth: 1, paidFrom: 'principal' },
@@ -178,6 +194,11 @@ test.describe('PR-D3 — Bloc 2 hero radar (Effort Lissé + Capacité Réelle)',
   });
 
   test('Bloc 2 stays visible on iPhone viewport (mobile-first)', async ({ page }) => {
+    // QUARANTAINE AU CAS (2026-07-31). Dépend du même `effort-financier-card`.
+    test.skip(
+      true,
+      'testid effort-financier-card supprimé — spec à réécrire contre le Situation Hero',
+    );
     if (!admin) return;
     const user = await seedOnboardedUser(admin, [
       { label: 'Loyer', amount: 700, frequency: 'monthly', dueMonth: 1, paidFrom: 'principal' },

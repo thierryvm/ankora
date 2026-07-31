@@ -158,10 +158,10 @@ les plus sensibles de l'app.
 Deux jobs, donc **deux planchers distincts** — un chiffre global agrégé serait
 ininterprétable au premier conflit, donc ignoré :
 
-| Job                              | Plancher au 27 juillet 2026                                 |
-| -------------------------------- | ----------------------------------------------------------- |
-| `Playwright E2E`                 | **224 passed** (215 avant, +9 `cron-gdpr-auth`, PR-3B-B)    |
-| `Playwright E2E (authenticated)` | **31 passed** (25 avant, +6 `gdpr-deletion-queue`, PR-3B-A) |
+| Job                              | Plancher au 31 juillet 2026                              |
+| -------------------------------- | -------------------------------------------------------- |
+| `Playwright E2E`                 | **224 passed** (215 avant, +9 `cron-gdpr-auth`, PR-3B-B) |
+| `Playwright E2E (authenticated)` | **38 passed** (31 avant, +7 découpage au cas du 31/07)   |
 
 > **⚠️ Plancher public à re-mesurer (chantier 1, 29 juillet 2026).** ADR-034 a
 > supprimé `/design-playground` et sa spec `e2e/design-playground.spec.ts`
@@ -172,8 +172,30 @@ ininterprétable au premier conflit, donc ignoré :
 > les specs authentifiées ne sautent qu'en l'absence de clé `service_role`, donc
 > les lancer aurait écrit de vraies lignes en prod. **À la première CI verte
 > après ce chantier : relever la ligne `N passed` du job public et inscrire la
-> valeur mesurée ici.** Le job authentifié (31) n'est pas affecté — aucune spec
-> n'entre ni ne sort de la liste, la quarantaine reste à 6.
+> valeur mesurée ici.** Le job authentifié n'est pas affecté par ADR-034.
+>
+> **Toujours pas mesuré au 31 juillet 2026** — Docker est installé depuis, mais le
+> plancher public exige un second build (les `NEXT_PUBLIC_*` sont inlinées à la
+> compilation, et le job public tourne sur un Supabase factice) plus les six
+> projets. Reporté délibérément par @thierry : coût élevé, valeur documentaire.
+> Le chiffre reste **attendu à −2, jamais observé** — donc pas inscrit.
+
+> **Job authentifié : 31 → 38, mesuré le 31 juillet 2026.** Première exécution
+> réelle de ce job depuis sa création : Docker n'existait pas sur la machine, et
+> le projet Supabase lié était la production. Relevé en parité CI (stack locale,
+> CLI Supabase épinglée 2.84.2, `retries: 2`, `--workers=1`, `chromium-desktop` +
+> `iPhone 14`) : **`38 passed, 5 skipped`**, aucun échec, aucun flaky.
+>
+> Le +7 ne vient d'aucune spec nouvelle : la quarantaine était appliquée au
+> **fichier** alors que les échecs sont par **cas**. `dashboard-cockpit-bloc2`
+> (2 cas verts sur 6) et `dashboard-simulator-drawer` (5 sur 6) retenaient sept
+> cas qui passaient. Ils sortent de la liste ; leurs 5 cas réellement cassés
+> portent un `test.skip(true, raison)` à leur propre niveau.
+>
+> Les 4 entrées restantes ont été **vues rouges**, pas supposées. Les deux
+> étiquetées « READY TO VERIFY » au chantier 1 ne le sont pas : elles échouent sur
+> des **montants** (`accounts:75` attend `500,00`, `dashboard-expenses:64` attend
+> `5,00 €`), ce qu'une relecture de libellés ne pouvait pas voir.
 
 Le relèvement du 27 juillet est mesuré, pas déduit : `gdpr-deletion-queue.spec.ts`
 n'apparaît que dans **un** des deux projets du job authentifié (`iPhone 14` filtre sur
@@ -207,8 +229,22 @@ le rapport de PR, jamais un raccourci pour faire passer une CI.
 Mesure — relever la ligne `N passed` / `N skipped` du reporter de **chaque** job :
 
 ```bash
-gh run view <run-id> --log | grep -E "^\s+[0-9]+ (passed|skipped)"
+gh run view <run-id> --log | grep -E "^\s+[0-9]+ (passed|failed|flaky|skipped)"
 ```
+
+> **`flaky` fait partie de l'alternance depuis le 31 juillet 2026, et ce n'est pas
+> cosmétique.** Playwright compte à part un cas qui échoue puis passe au retry : il
+> sort de `N passed` et gagne sa propre ligne `N flaky`. La commande précédente ne
+> filtrait que `passed|skipped` — un cas devenu instable faisait donc **baisser le
+> plancher sans qu'aucune ligne n'explique pourquoi**, sur un job pourtant vert.
+> Mesuré : `dashboard-account-rename.spec.ts:9` s'est comportée exactement ainsi en
+> local (`1 flaky, 1 passed` après échec puis succès au retry #1). Un plancher qui
+> baisse sans cause visible se fait arrondir ; c'est la faute que toute cette
+> section existe pour empêcher. `failed` est ajouté pour la même raison : un zéro
+> absent est une information.
+>
+> **Un cas `flaky` ne compte pas comme vert.** Il compte comme un cas qui a besoin
+> d'être regardé — pas comme un cas qui prouve quelque chose.
 
 Une PR qui fait **baisser** l'un de ces nombres est refusée, sauf justification
 écrite dans le rapport de PR. Supprimer une spec obsolète est légitime ; le faire
