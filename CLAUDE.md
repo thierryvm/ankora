@@ -179,6 +179,13 @@ ininterprétable au premier conflit, donc ignoré :
 > compilation, et le job public tourne sur un Supabase factice) plus les six
 > projets. Reporté délibérément par @thierry : coût élevé, valeur documentaire.
 > Le chiffre reste **attendu à −2, jamais observé** — donc pas inscrit.
+>
+> **Second delta en attente, même jour : +6.** `e2e/consent-first-visit.spec.ts`
+> ajoute 2 cas, exécutés par `chromium-desktop`, `mobile-safari` et
+> `mobile-chrome` (elle n'est pas sous `mobile-ios/`, donc pas par les trois
+> projets iPhone). Vérifié en local sur ces trois projets : **`6 passed`**. Le
+> solde attendu du plancher public est donc **−2 +6 = +4**, à confirmer par
+> mesure — un delta calculé n'est pas un plancher observé.
 
 > **Job authentifié : 31 → 38, mesuré le 31 juillet 2026.** Première exécution
 > réelle de ce job depuis sa création : Docker n'existait pas sur la machine, et
@@ -307,6 +314,42 @@ Pour reconstruire les rôles @cowork sans dépendance Desktop, deux sub-agents v
 - **`spec-translator`** (Sonnet) — invocation **OBLIGATOIRE** quand @thierry envoie une demande informelle (langage naturel non structuré). Transforme la demande en spec Phase 0 + Scope + DoD. Strict séparation : spec-translator écrit la spec, CC Ankora exécute. Jamais le même agent qui spec ET code.
 
 Référence : `Athenaeum/10_Projects/ankora/cc-handoffs/2026-05-27-recovery-session-ankora-post-crash.md` (incident détaillé) + `Athenaeum/10_Projects/ankora/conventions/post-cowork-doctrine.md` (doctrine complète).
+
+### Un harnais ment aussi par l'état qu'il installe (2026-07-31)
+
+La doctrine e2e traquait jusqu'ici ce qu'un job **saute** : specs `test.skip`
+inconditionnelles, quarantaine, planchers qui descendent. Il manquait une
+troisième façon de mentir, et elle a coûté un bug bloquant en production.
+
+`e2e/helpers/test.ts:50` pré-remplit `localStorage['ankora.consent.v1']` avant
+chaque test. Son commentaire dit exactement pourquoi :
+
+> « Pre-seeds the consent banner as dismissed so tests can click through
+> **without the fixed-position dialog intercepting pointer events**. »
+
+Autrement dit : le symptôme était **connu, nommé, et contourné**. Le
+contournement, écrit pour rendre les tests praticables, s'appliquait à **100 %**
+de la suite — les six projets, dont les trois iPhone. Résultat : aucun test n'a
+jamais visité le site comme un nouvel utilisateur, et la bannière recouvrait
+« Se connecter » sur tous les presets iPhone mesurés, interceptant les clics.
+Une CI verte à 224 + 31 cas ne disait rien du premier écran que voit un
+inscrit. Cf. `docs/bugs/2026-07-31-consentement-bloque-login-mobile.md`.
+
+**La règle** : tout état qu'une fixture installe avant le test — `localStorage`,
+cookies, en-têtes, feature flags, session pré-authentifiée — est une
+**hypothèse sur le monde**, et il doit exister au moins un test qui ne la fait
+pas. Sans quoi la classe entière de défauts vivant dans cet état est invisible,
+par construction et pour toujours.
+
+`e2e/consent-first-visit.spec.ts` est ce test pour le consentement : il importe
+délibérément le `test` de base de `@playwright/test`, jamais la fixture
+partagée. Y brancher la fixture reviendrait à le supprimer sans le dire.
+
+**Corollaire pour les agents QA** : `silent-failure-auditor` et
+`test-quality-auditor` doivent poser la question « quel état la fixture
+installe-t-elle, et qui teste son absence ? » au même titre que « quelle spec
+est sautée ? ». Un `beforeEach` qui prépare le terrain est un angle mort aussi
+efficace qu'un `.skip`, et bien plus discret : il ne fait baisser aucun chiffre.
 
 ### Un agent QA doté de Bash ne doit pas pouvoir atteindre un commit (2026-07-27)
 

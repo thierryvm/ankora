@@ -2,7 +2,8 @@
 
 - **Date** : 2026-07-31
 - **Gravité** : bloquant en production, sur tous les iPhone testés
-- **Statut** : **documenté, non corrigé** — mérite son propre correctif prioritaire
+- **Statut** : **corrigé le 2026-07-31**, avec le test de première visite qui
+  manquait. Voir « Correctif » en fin de note.
 - **Mesuré sur** : build de production (`npm run start`), stack Supabase locale,
   Playwright 1.59.1, `chromium.launch()` avec les presets d'appareils officiels
 
@@ -85,14 +86,56 @@ vert qui ne teste pas la chose qui casse.
 `/login` : tout bouton situé bas dans le flux sur un écran court est concerné.
 Seul `/login` a été mesuré ici — le reste est **à vérifier, non mesuré**.
 
-## Pistes, non tranchées
+## Correctif appliqué
 
-1. Réserver l'espace dans le flux (padding bas sur le `main` tant que la bannière
-   est affichée) plutôt que de superposer.
-2. Rendre la bannière non bloquante tant qu'elle n'a pas le focus, ou la réduire
-   à un bandeau compact sous le seuil `md`.
-3. Ajouter **un** test de première visite sans pré-remplissage du consentement,
-   sur un projet iPhone — sinon la régression reviendra sans bruit.
+**Réserver dans le flux la hauteur que la bannière occupe en `fixed`.**
+`ConsentBanner` mesure sa propre hauteur (ResizeObserver) et publie
+`--consent-height` sur `documentElement` ; `globals.css` la consomme en
+`padding-bottom` sur `body`. Zéro quand la bannière est absente — aucun effet sur
+les pages ordinaires.
+
+La hauteur est **mesurée, pas devinée** : la bannière va de 272 à 378 px selon le
+retour à la ligne, et elle est d'autant plus haute que l'écran est étroit.
+
+**Pourquoi réserver plutôt que déplacer.** À 320×568, la bannière fait 378 px : il
+n'existe aucune disposition où le formulaire (qui se termine à `y = 498`) et une
+bannière de bas d'écran tiennent ensemble sans recouvrement. Le défilement est la
+seule réponse possible — et c'est précisément ce qui manquait, les conteneurs
+d'auth étant `min-h-dvh` sans un pixel de marge.
+
+**Vérification du correctif** — `scripts/dev/diag-consent-reserve.mjs` :
+
+| Viewport | Sans réserve (`SANS_RESERVE=1`)                       | Avec réserve                             |
+| -------- | ----------------------------------------------------- | ---------------------------------------- |
+| 320×568  | `scrollMax=95`, reçoit `p#consent-body` → **BLOQUÉ**  | `scrollY=458`, bouton `0→40` → **OK**    |
+| 390×664  | `scrollMax=0`, reçoit `p#consent-body` → **BLOQUÉ**   | `scrollY=310`, bouton `148→188` → **OK** |
+| 430×739  | `scrollMax=0`, reçoit `h2#consent-title` → **BLOQUÉ** | `scrollY=288`, bouton `170→210` → **OK** |
+| 390×780  | `scrollMax=0`, reçoit `div` → **BLOQUÉ**              | `scrollY=310` → **OK**                   |
+| 412×839  | déjà OK                                               | **OK**                                   |
+
+`scrollMax=0` sans le correctif : la page n'avait **aucune** marge de défilement.
+C'est la mesure qui explique pourquoi le bouton était visible, activé, stable —
+et hors d'atteinte.
+
+## Le test qui manquait
+
+`e2e/consent-first-visit.spec.ts`, 2 cas, importés du `test` de base de
+`@playwright/test` — **jamais** de la fixture partagée. Vérifié sur les trois
+projets qui l'exécuteront (`chromium-desktop`, `mobile-safari`, `mobile-chrome`) :
+**`6 passed`**.
+
+Il discrimine : neutraliser la réserve à l'exécution ramène 4 viewports sur 5 à
+l'état bloqué. Un test qui ne sait pas échouer ne prouve rien.
+
+La doctrine générale qu'il en sort est consignée dans `CLAUDE.md`, section
+« Un harnais ment aussi par l'état qu'il installe ».
+
+## Restant à faire, non couvert par ce correctif
+
+1. Réduire la bannière à un bandeau compact sous le seuil `md` — le défilement
+   fonctionne, mais 378 px sur un écran de 568 reste beaucoup.
+2. Vérifier les autres pages : `ConsentBanner` est monté sur le layout racine,
+   seul `/login` a été mesuré.
 
 ## Ce qui n'est pas mesuré
 

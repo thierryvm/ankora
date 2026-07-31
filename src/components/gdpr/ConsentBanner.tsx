@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useSyncExternalStore, useTransition } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { Link } from '@/i18n/navigation';
@@ -179,6 +179,48 @@ export function ConsentBanner() {
 
   const hasDecided = snap.stored !== null;
   const shouldShow = !dismissed && (!hasDecided || snap.reopen);
+
+  /**
+   * Réserve, dans le flux, la hauteur que la bannière occupe en `fixed`.
+   *
+   * Sans cela la bannière recouvre le contenu et **intercepte les clics** : sur
+   * `/login`, le bouton « Se connecter » finit à `y = 498` alors que la bannière
+   * commence à `hauteurViewport − 16 − hauteurBannière`. Mesuré le 2026-07-31 :
+   * bloqué sur TOUS les presets iPhone (SE 320×568, 12/14 390×664, 15 Pro Max
+   * 430×739) et sur Galaxy S9+ ; à 390 px de large, bloqué jusqu'à 780 px de
+   * haut, cliquable à partir de 790. Les conteneurs d'auth sont `min-h-dvh`,
+   * donc la page n'avait **aucune marge de défilement** : le bouton était
+   * visible, activé, stable — et hors d'atteinte.
+   *
+   * La hauteur est mesurée plutôt que devinée : la bannière va de 272 à 378 px
+   * selon le retour à la ligne, et elle est d'autant plus haute que l'écran est
+   * étroit — le pire cas est le plus petit écran. `globals.css` consomme la
+   * variable en `padding-bottom` sur `body`.
+   */
+  const ref = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const root = document.documentElement;
+    const el = ref.current;
+    if (!shouldShow || !el) {
+      root.style.removeProperty('--consent-height');
+      return;
+    }
+    const apply = () => root.style.setProperty('--consent-height', `${el.offsetHeight + 16}px`);
+    apply();
+    // jsdom (Vitest) n'implémente pas ResizeObserver : la réserve est posée une
+    // fois, elle ne suit simplement pas les changements de hauteur. Suffisant
+    // pour les tests unitaires, et le comportement navigateur reste complet.
+    if (typeof ResizeObserver === 'undefined') {
+      return () => root.style.removeProperty('--consent-height');
+    }
+    const ro = new ResizeObserver(apply);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      root.style.removeProperty('--consent-height');
+    };
+  }, [shouldShow, customizing]);
+
   if (!shouldShow) return null;
 
   const accept = (analyticsValue: boolean, marketingValue: boolean) => {
@@ -200,6 +242,7 @@ export function ConsentBanner() {
 
   return (
     <div
+      ref={ref}
       role="dialog"
       aria-labelledby="consent-title"
       aria-describedby="consent-body"
