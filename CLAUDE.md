@@ -351,6 +351,22 @@ installe-t-elle, et qui teste son absence ? » au même titre que « quelle spec
 est sautée ? ». Un `beforeEach` qui prépare le terrain est un angle mort aussi
 efficace qu'un `.skip`, et bien plus discret : il ne fait baisser aucun chiffre.
 
+**Deux variantes de la même faute, rencontrées le 31 juillet** (détail dans
+`docs/audits/2026-07-31-audit-ecrans-profil-test.md`). Toutes deux auraient
+produit un rapport de bug contre une application saine :
+
+- **`innerText` n'expose pas la valeur des champs.** Un écran paraissait afficher
+  cinq champs vides ; ils contenaient leurs valeurs. Toute vérification portant
+  sur un `<input>`/`<select>`/`<textarea>` lit `element.value`, pas le texte.
+- **Chercher le mauvais rôle échoue en silence.** `getByRole('button', …)` sur un
+  élément qui expose `role="combobox"` ne le trouve jamais, même quand son texte
+  visible correspond mot pour mot. Le timeout se lit « le contrôle est cassé »
+  alors qu'il dit « ma sonde regarde ailleurs ». Vérifier le rôle réel avant de
+  conclure.
+
+Un instrument qui regarde au mauvais endroit ne rend pas un résultat vide : il
+rend un **faux positif de défaut**, et celui-là coûte une session entière.
+
 ### Un agent QA doté de Bash ne doit pas pouvoir atteindre un commit (2026-07-27)
 
 `test-quality-auditor.md:73` dit déjà « Never modify code — only report ». Il a quand
