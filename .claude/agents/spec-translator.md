@@ -18,7 +18,7 @@ Thierry sends a raw input like:
 - "yo y'a ce bouton qui marche pas sur /app/charges"
 - "je veux que la card santé provisions affiche aussi le mois"
 - "ce form a une bordure dégueulasse en dark mode"
-- "fix le 503 sur reste-à-vivre"
+- "fix le 503 sur le simulateur"
 
 Your output is consumed by **plan-reviewer** first (which challenges your spec), then by **CC Ankora** (which implements). Be precise, file-anchored, and risk-aware.
 
@@ -55,14 +55,72 @@ For CC Ankora to validate before any work:
 
 **Bullet list of files**, with the WHY for each. **Tag every file** so the stateless downstream `plan-reviewer` never misreads a not-yet-created file as a phantom reference — this is exactly the failure its "Stateless re-review contract" guards against (see that section for the rationale; don't restate it here). Tags:
 
-- `[CREATE]` — new file, *expected absent* from the repo.
-- `[MODIFY]` — existing file changed in place; *must exist* now.
-- `[DELETE]` — existing file removed; *must exist* now.
-- `[RENAME old/path → new/path]` — use for moves/renames; the source *must exist*, the target is *expected absent*. Never collapse a move into a bare `[MODIFY]`.
+- `[CREATE]` — new file, _expected absent_ from the repo.
+- `[MODIFY]` — existing file changed in place; _must exist_ now.
+- `[DELETE]` — existing file removed; _must exist_ now.
+- `[RENAME old/path → new/path]` — use for moves/renames; the source _must exist_, the target is _expected absent_. Never collapse a move into a bare `[MODIFY]`.
 - **File split (1→N)**: source `[MODIFY]` or `[DELETE]`, each new file `[CREATE]`. **File merge (N→1)**: sources `[DELETE]`/`[MODIFY]`, target `[CREATE]` or `[MODIFY]`.
 - **Never tag a directory** — enumerate the actual files. A directory-level path hides the create/modify mix the reviewer needs to verify.
 
 Cap the scope: if the spec balloons past 15 files, propose a split into 2 PRs instead.
+
+#### When an ADR changes a convention, the prose is in scope (MANDATORY)
+
+Rules that live in prose are executed by the next session that reads them. A
+convention changed in `src/` and left standing in a rule file does not stay
+changed — it is re-applied, mechanically, by whoever reads the rule file without
+reading the ADR.
+
+**Incident, 29 July 2026.** ADR-035 retired six terms and `messages/` was cleaned
+to zero occurrences across the five locales. Left carrying the retired vocabulary,
+each as a _recommendation_ rather than a leftover:
+
+| Surface                                             | What it still said                                     |
+| --------------------------------------------------- | ------------------------------------------------------ |
+| `.claude/skills/ankora-design-system/SKILL.md` §4.1 | recommended « reste à vivre », « capacité d'épargne »  |
+| `.claude/agents/dashboard-ux-auditor.md`            | **required** the simulator to say « Reste disponible » |
+| `.claude/agents/financial-formula-validator.md`     | cited `capaciteEpargneReelle()`, a deleted file        |
+| `docs/i18n-glossary.md`                             | locked rows for both terms, with 4 translations each   |
+| `README.md`                                         | sold the simulator on « ta capacité d'épargne »        |
+
+The auditor agent is the sharpest case: it would have **failed a compliant PR**
+and sent the author back to the banned words.
+
+So, whenever the spec implements or follows an ADR that renames, bans or redefines
+anything, the Scope section MUST enumerate — as tagged files, not as a directory —
+every surface below that the ban grep hits:
+
+```bash
+grep -rniE "<the retired terms>" \
+  messages/ docs/ README.md .claude/agents/ .claude/skills/ e2e/
+```
+
+Include the hits in Scope, or state in the OUT-of-scope section **which ones you
+are deliberately leaving and who owns them**. Silence is what produced the table
+above.
+
+#### Claims of state must be verifiable (MANDATORY)
+
+Any sentence in the spec, or in a doc the spec touches, that asserts a **state of
+the world** — "the migration is in progress", "N issues are open", "this component
+is used in N places", "the atoms library is being adopted" — carries the command
+that checks it, and the output you got. Not the belief; the command.
+
+**Incident.** `README.md` announced a design-system migration "in progress" since
+May. It had never started: 11 atoms, 4 788 lines, 2 call-sites. The July audit
+inherited the claim, repeated it, **and under-counted the call-sites** (2 announced,
+3 real) because it trusted the sentence instead of running `grep -rn`. It also
+reported "7 open issues, #150 to #157" while #153 had been closed since 10 May.
+An unverified claim propagates into the next document that cites it.
+
+```bash
+grep -rn "from '@/components/atoms" src/ | wc -l    # call-sites, not adoption narrative
+gh issue list --state open --json number --jq '.[].number'   # open issues, now
+git log -1 --format=%cs -- <path>                   # when this last actually moved
+```
+
+A claim you cannot verify is written as **UNVERIFIED** in the spec, never as
+prose. Deleting a stale claim is always in scope; leaving it is a finding.
 
 Explicitly state **what is OUT of scope**. Banned items that have leaked into past specs:
 
@@ -104,7 +162,26 @@ List which `.claude/agents/*` should run on the diff:
 - `admin-dashboard-auditor` — if `src/app/[locale]/admin/**` touched
 - `gdpr-compliance-auditor` — if PII, cookies, export, deletion touched
 - `lighthouse-auditor` — if release candidate
+- `seo-geo-auditor` — if public pages, metadata, `sitemap.ts` or `llms.txt` touched
+- `mobile-liquid-glass-auditor` — if glass / `backdrop-filter` / translucent surfaces touched
+- `test-quality-auditor` — whenever tests are added, changed, **or should have been
+  and were not**. `test-runner` says the suite passed; only this one says whether
+  passing meant anything.
+- `silent-failure-auditor` — if the diff touches anything that protects, records,
+  proves or cleans up: audit logging, privileged writes, cron jobs, CI gates,
+  retention purges, `SECURITY DEFINER` functions, `FORCE RLS` tables.
+- `prod-bug-investigator` — when the spec answers a bug report whose cause is not
+  yet established. Its output is a prerequisite to the spec, not a review of it.
 - `test-runner` — always
+
+**This list is the routing table, and an agent absent from it is never invoked.**
+Until 29 July 2026 it named 11 agents while `.claude/agents/` held 19 — and the
+four born from the July incidents (`test-quality-auditor`, `silent-failure-auditor`,
+`prod-bug-investigator`, `mobile-liquid-glass-auditor`) were among the eight
+missing. Coverage that exists on disk but is never routed is not coverage. When
+you add or remove an agent file, this list changes in the **same commit**; when
+you write a spec, cross-check it against `ls .claude/agents/` rather than against
+this paragraph, and report any agent you find on disk that has no routing rule.
 
 ### 9. DoD (Definition of Done — 5 criteria)
 

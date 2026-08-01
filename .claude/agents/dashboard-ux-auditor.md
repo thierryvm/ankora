@@ -38,21 +38,23 @@ Verify that the user dashboard maintains **coherence in design tokens, micro-int
       action, (3) upcoming risk, (4) explorable detail. A bare KPI without
       "what it means + what to do" is a FAIL.
 - [ ] **Hero is the cashflow waterfall (NORTH_STAR #1)** — the hero shows the
-      narrative salaire → charges → provisions → reste-à-vivre → capacité with a
-      vert/orange/rouge state, NOT a lone "Effort financier lissé" number.
+      narrative revenus → charges → provisions → **Budget du mois** → **Dépensé
+      ce mois** → **Il te reste** (ADR-035 §1) with a vert/orange/rouge state,
+      NOT a lone "Effort financier lissé" number.
 - [ ] **Lists never dominate** — a long itemised list (e.g. all recurring bills)
       must NOT be the visual center. Show a bucket SUMMARY (cette semaine / ce
       mois / mois prochain + nearest item), full list behind "Voir tout" or on
       its dedicated page. > ~6 raw rows visible at top level → FAIL.
 - [ ] **Empty / zero / no-income state sanity** — a fresh user (charges but no
-      income/accounts yet) must NOT see an alarming red negative (e.g. capacité
+      income/accounts yet) must NOT see an alarming red negative (e.g.
       "-1 711 €"). Zero/empty states show a calm onboarding nudge, never a
-      scary computed deficit. (Found live 2026-06-02.)
+      scary computed deficit. (Found live 2026-06-02. `SituationDuMoisInput.revenus`
+      is `null`-able for exactly this: statut `incomplet`, no negative exposed.)
 - [ ] **Cross-page grammar coherence** — `/app`, `/app/charges`, `/app/expenses`
       share the SAME visual grammar (summary-first → form/detail). Charges must
       not be a heavy grouped table while Dépenses is a clean form+list. Each page
       opens with a decision summary before any CRUD form.
-- [ ] **Per-page mission** — Dashboard = "mois maîtrisé ?", Charges = "coût fixe + lissage + échéances", Dépenses = "rythme de vie courante", Comptes = "où
+- [ ] **Per-page mission** — Dashboard = "mois maîtrisé ?", Charges = "coût fixe + lissage + échéances", Dépenses = "rythme des dépenses courantes", Comptes = "où
       est l'argent", Simulateur = "impact d'une décision". A page that is just
       "form + list" with no decision framing → FAIL.
 - [ ] **Human copy in the lead, jargon in tooltips** — primary reading is human
@@ -69,6 +71,39 @@ rendered screens, not assumptions. Use the seeded Playwright screenshot harness
 (THI-331 — `seedOnboardedUser` + `fillLogin`, captures `/app`, `/app/charges`,
 `/app/expenses` desktop + mobile) so this layer is judged on the actual product,
 including the empty/no-income state.
+
+## ADR-035 — the four numbers, and the rule that keeps them
+
+Every amount the cockpit displays is one of exactly four, and no fifth name may
+enter i18n keys, test ids, component names or **this file**:
+
+| Displayed (fr-BE)   | Code name         | Formula                                                            |
+| ------------------- | ----------------- | ------------------------------------------------------------------ |
+| **Il te reste**     | `ilTeReste`       | `resteDisponible − depensesDuMois` — hero, real time               |
+| **Budget du mois**  | `resteDisponible` | `revenus − chargesFixes − provisionsLissees − engagementsMensuels` |
+| **Dépensé ce mois** | `depensesDuMois`  | `Σ expenses.amount` over the reference month                       |
+| **Épargne estimée** | `epargneEstimee`  | rhythm projection; `null` before day 7                             |
+
+Banned app-wide: _reste à vivre · reste disponible · budget vie courante ·
+disponible aujourd'hui · capacité d'épargne · reste du mois_.
+
+```bash
+# The canonical pattern. Note "budget vie courante", NOT bare "vie courante":
+# « Vie Courante » capitalised is the ACCOUNT name (accounts.kind = 'vie_courante')
+# and is untouched by ADR-035 — the bare form returns 6 legitimate hits in
+# fr-BE.json and trains everyone to ignore this grep.
+BAN="reste à vivre|reste disponible|budget vie courante|disponible aujourd'hui|capacité d'épargne|reste du mois"
+
+grep -ricE "$BAN" messages/                              # → 0 on all five locales
+grep -rniE "$BAN" .claude/agents/ .claude/skills/ docs/ README.md
+```
+
+**Run the second grep as well as the first.** On 29 July 2026 the first returned
+0 across all five locales while this very file still demanded « Reste disponible »
+from the simulator. The code was clean; the rule file was not, and a rule file is
+read by the next session as if it were current. Whenever an ADR retires a term,
+the auditable surface is `messages/` **plus** `.claude/agents/`, `.claude/skills/`,
+`docs/` and `README.md` — flag the ones that were missed.
 
 ## Checklist (≥15 points verified)
 
@@ -119,11 +154,19 @@ The simulator is a **decision tool**, not a planning toy. The drawer
 `SimulatorClient` (`src/app/[locale]/app/simulator/SimulatorClient.tsx`) — both
 surfaces must stay coherent.
 
-- [ ] **Réserve libre framing** — the headline impact is "Réserve libre :
-      507 €/mois → 585 €/mois", NOT "effort financier" / "total des charges" /
-      a bare percentage. Metric = `resteDisponible` (Revenus − Effort lissé).
+> ⚠️ **Corrected 2026-07-29.** The two checks below required the labels
+> « Réserve libre » and « Reste disponible » — both **banned by ADR-035**, which
+> landed the same day. `messages/` had already been cleaned to zero occurrences;
+> this agent had not, so it would have failed a compliant simulator and pushed
+> the author back to the retired vocabulary. See §ADR-035 below.
+
+- [ ] **Budget-du-mois framing** — the headline impact is
+      "Budget du mois : 507 €/mois → 585 €/mois", NOT "effort financier" /
+      "total des charges" / a bare percentage. Metric = `resteDisponible`
+      (`revenus − chargesFixes − provisionsLissees − engagementsMensuels`) —
+      the code name is unchanged, only the label moved.
 - [ ] **Label parity with the hero** — the word + metric shown in the simulator
-      match the dashboard hero (`SituationDuMoisHero` / "Reste disponible").
+      match the dashboard hero (`SituationDuMoisHero`, « Il te reste »).
       No synonym drift that re-creates the audit §2 disconnect.
 - [ ] **No isolated-charge %** — the old "+37,26 %/mois" faux-ami is gone. No
       green `+` percentage implying a recurring monthly gain.

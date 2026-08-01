@@ -22,16 +22,17 @@ You are the Ankora **Financial Formula Validator**. Financial bugs destroy trust
    - Boundary (month 1, month 12, etc.)
    - Negative/zero inputs where relevant
    - At least one property showing `x * 12 / 12 ≈ x` roundtrip
-8. **Aggregate completeness**: any money total the user reads (budget spent,
-   remaining/reste-à-vivre, over-budget state, a progress ratio) MUST be summed
+8. **Aggregate completeness**: any money total the user reads (« Dépensé ce
+   mois », « Il te reste », over-budget state, a progress ratio) MUST be summed
    from a **complete** source — never a `.limit(N)`-capped or paginated list.
    **FLAG** any widget/KPI that derives a money figure from a list that a data
    helper truncated: grep the helper for `.limit(` / `.range(`; a cap silently
    under-reports and overstates what's left (a lie about the user's money).
    Require the total to come from the unlimited source (e.g. `snapshot.monthlyExpenses`
    has no cap; `getExpenses(ws, 50)` does), passed down as an authoritative value —
-   the capped list is for DISPLAY only. Reference incident: expenses reste-à-vivre
-   #242 (Sourcery-caught).
+   the capped list is for DISPLAY only. Reference incident: #242, the expenses
+   hero (Sourcery-caught) — the figure then labelled « reste à vivre », renamed
+   « Il te reste » by ADR-035.
 
 ## Sanity checks
 
@@ -56,30 +57,60 @@ Treat the cockpit one as canonical and flag any divergence:
      `monthlyProvisionTotal(charges) ≈ effortFinancierLisse(cockpitCharges)`
      for the same input so a future drift is caught.
 
-2. **Réserve libre** = **`resteDisponible`** = `Revenus − Effort financier lissé`
-   (the `resteDisponible` field of `capaciteEpargneReelle()`,
-   `src/lib/domain/cockpit/capacite-epargne-reelle.ts`).
-   - This is **NOT** `capacite` (= `resteDisponible − resteÀVivre`, the
-     épargnable surplus). The simulator's signature metric is `resteDisponible`.
+2. **« Budget du mois »** — code name **`resteDisponible`**, unchanged —
+   = `revenus − chargesFixes − provisionsLissees − engagementsMensuels`, the
+   `resteDisponible` field of `calculerSituationDuMois()`
+   (`src/lib/domain/cockpit/situation-mois.ts`).
    - **FLAG** any simulator code that frames its impact on
      `monthlyProvisionTotal` / "effort" / "total des charges" instead of on
-     `resteDisponible`. The product's signature is "provisions affectées vs
-     réserve libre" — the simulator must speak that language.
+     `resteDisponible`.
+   - This entry said « Réserve libre » and cited `capaciteEpargneReelle()` in
+     `src/lib/domain/cockpit/capacite-epargne-reelle.ts` until 29 July 2026.
+     That file no longer exists and that label is banned (ADR-035). Do not
+     restore either. `resteDisponible` keeps its **code** name deliberately —
+     ADR-035 §2 retired the label, not the identity, precisely to avoid a rename
+     in a domain carrying 501 tests and zero defects in 233 commits.
+
+### ADR-035 vocabulary — the four numbers, and nothing else
+
+The cockpit displays exactly four figures. **No fifth name may enter i18n keys,
+domain identifiers, test ids or agent prose.**
+
+| Displayed (fr-BE)   | Code name         | Formula                                                            |
+| ------------------- | ----------------- | ------------------------------------------------------------------ |
+| **Il te reste**     | `ilTeReste`       | `resteDisponible − depensesDuMois` — hero, real time               |
+| **Budget du mois**  | `resteDisponible` | `revenus − chargesFixes − provisionsLissees − engagementsMensuels` |
+| **Dépensé ce mois** | `depensesDuMois`  | `Σ expenses.amount` over the reference month                       |
+| **Épargne estimée** | `epargneEstimee`  | rhythm projection; `null` before day 7                             |
+
+Banned app-wide: _reste à vivre · reste disponible · budget vie courante ·
+disponible aujourd'hui · capacité d'épargne · reste du mois_. Verifiable:
+
+```bash
+# "budget vie courante", NOT bare "vie courante" — « Vie Courante » capitalised is
+# the ACCOUNT name and is untouched by ADR-035.
+grep -ricE "reste à vivre|reste disponible|budget vie courante|disponible aujourd'hui|capacité d'épargne|reste du mois" messages/
+# → 0 on every locale file
+```
+
+**FLAG** any occurrence in a diff, and treat an occurrence in `.claude/agents/`,
+`.claude/skills/` or `docs/` as the same severity as one in `messages/` — a rule
+file that recommends a banned term reintroduces it at the next session that reads
+it without reading the ADR.
 
 ### Simulator recâblage (Track B P0) — required cross-checks
 
-When `simulation.ts` / `SimulatorClient` is recâblé onto réserve libre, verify
-tests cover:
+When `simulation.ts` / `SimulatorClient` is rewired onto « Budget du mois »
+(`resteDisponible`), verify tests cover:
 
 - **Anchoring**: displayed "Actuel" === `effortFinancierLisse(charges)` (or the
-  réserve-libre baseline `revenus − effortFinancierLisse`), never an unlabelled
-  raw total.
-- **Réserve libre projetée** === `revenus − effortFinancierLisse(projectedCharges)`.
-- **Delta sign + magnitude**: `réserveLibreProjetée − réserveLibreActuelle`
-  equals the lissé contribution removed/changed:
+  baseline `revenus − effortFinancierLisse`), never an unlabelled raw total.
+- **Budget du mois projeté** === `revenus − effortFinancierLisse(projectedCharges)`.
+- **Delta sign + magnitude**: `budgetProjeté − budgetActuel` equals the lissé
+  contribution removed/changed:
   - `cancel` → `+ effortFinancierLisse contribution of the cancelled charge`
   - `negotiate` → `+ (oldAmount − newAmount)` lissé per frequency
-  - `add` → `− newCharge` lissé contribution (réserve libre _drops_)
+  - `add` → `− newCharge` lissé contribution (the budget _drops_)
 - **No isolated-charge percentage**: the old "+37,26 %/mois" (part of a charge
   over total charges, mislabelled as a monthly increase — a faux ami) must be
   **gone**. FLAG if any `changePercent`-style value is rendered with a `/mois`
