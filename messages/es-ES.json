@@ -88,7 +88,8 @@
       "bills": "Facturas",
       "expenses": "Gastos",
       "simulate": "Simular",
-      "more": "Más"
+      "more": "Más",
+      "addExpense": "Añadir un gasto"
     },
     "moreSheet": {
       "title": "Más",
@@ -103,6 +104,10 @@
         "accounts": "Cuentas",
         "commitments": "Compromisos",
         "settings": "Ajustes",
+        "simulate": "Simular",
+        "cockpit": "Cockpit",
+        "bills": "Facturas",
+        "expenses": "Gastos",
         "admin": "Admin",
         "adminAriaLabel": "Zona admin (solo fundador)",
         "faq": "FAQ",
@@ -866,6 +871,27 @@
     "expenses": {
       "title": "Mis gastos",
       "subtitle": "Las salidas fuera de los gastos fijos recurrentes — compra, restaurantes, ocio…",
+      "addSheet": {
+        "title": "Nuevo gasto",
+        "cancel": "Cancelar",
+        "close": "Cerrar",
+        "amountLabel": "Importe en euros",
+        "categoryLabel": "Categoría",
+        "moreCategories": "Ver todas las categorías",
+        "noCategories": "No hay ninguna categoría de gasto en tu espacio. El importe se guardará sin categoría.",
+        "dateLabel": "Fecha",
+        "dateToday": "Hoy",
+        "dateYesterday": "Ayer",
+        "labelLabel": "Concepto (opcional)",
+        "fallbackLabel": "Gasto",
+        "projection": "Te quedarán {amount}",
+        "projectionIdle": "Te quedan {amount}",
+        "submit": "Añadir",
+        "submitting": "Añadiendo…",
+        "toastCreated": "Gasto de {amount} guardado",
+        "pastMonthNotice": "Esta fecha está fuera del mes en curso: la cifra del mes no cambiará.",
+        "contextFailed": "No se han podido cargar tus categorías. Puedes guardar el importe de todos modos."
+      },
       "addFormTitle": "Añadir un gasto",
       "labelLabel": "Etiqueta",
       "amountLabel": "Importe (€)",
@@ -890,11 +916,8 @@
         "confirmDelete": "¿Eliminar «{label}» — {amount}? Este gasto se borrará definitivamente.",
         "confirmDeleteAction": "Sí, eliminar"
       },
-      "resteAVivreLabel": "Día a día — {month}",
-      "overBudget": "Superado en {amount}",
-      "spentOfBudget": "{spent} gastados de {budget}",
-      "perDay": "≈ {amount}/día ({days} días rest.)",
-      "barAria": "Presupuesto día a día: {spent} gastados de {budget}.",
+      "depenseMoisLabel": "Gastado este mes — {month}",
+      "perDayElapsed": "≈ {amount}/día en {days} días",
       "earlierToggle": "Meses anteriores ({count})"
     },
     "settings": {
@@ -995,8 +1018,8 @@
       "impact": {
         "title": "Impacto",
         "empty": "Elige un gasto para ver el impacto.",
-        "resteDisponible": "Disponible",
-        "resteDisponibleRange": "Disponible: de {from} a {to} al mes",
+        "resteDisponible": "Presupuesto del mes",
+        "resteDisponibleRange": "Presupuesto del mes: de {from} a {to} al mes",
         "perMonth": "/ mes",
         "annualSavings": "Ahorro anual",
         "effortAnchor": "Esfuerzo suavizado: {current} → {projected}",
@@ -1007,7 +1030,7 @@
         "cumul6mGain": "En 6 meses, +{amount} de disponible",
         "cumul6mLoss": "En 6 meses, −{amount} de disponible",
         "cumul6mNeutral": "Sin impacto a 6 meses",
-        "incomeHint": "Añade tus ingresos para ver el impacto en tu disponible.",
+        "incomeHint": "Añade tus ingresos para ver el impacto en tu presupuesto del mes.",
         "incomeHintCta": "Configurar mis ingresos",
         "pedago": {
           "gainTitle": "Buena decisión.",
@@ -1043,12 +1066,6 @@
       "toastCancelled": "Solicitud cancelada — tu cuenta se conserva"
     },
     "cockpit": {
-      "capaciteEpargneReelle": {
-        "title": "Real Savings Capacity",
-        "messagePositive": "This is what you truly have left every month, with no surprises.",
-        "messageNegative": "Warning — your overall lifestyle exceeds your income.",
-        "tooltip": "This subtracts every charge (smoothed over the year) and your daily allowance from your monthly income. That is what is actually left for savings or unexpected expenses."
-      },
       "santeProvisions": {
         "title": "Provisions Health",
         "cibleTheorique": "Ideal theoretical target:",
@@ -1088,23 +1105,23 @@
   },
   "dashboard": {
     "situation": {
-      "heroLabel": "Disponible",
-      "heroSubtitle": "Lo que te queda después de tus gastos fijos y reservas",
+      "heroLabel": "Te queda",
+      "heroAnchor": "de {budget} de presupuesto · {depense} gastado",
       "voirPlan": "Ver el plan",
       "statut": {
         "vert": "Llevas bien este mes",
-        "orangeCapacite": "Ajustar este mes",
+        "orangeDepasse": "Este mes te has pasado",
         "orangeProvisions": "Reponer reservas",
         "rouge": "Tus gastos superan tus ingresos"
       },
       "nudge": {
-        "orangeCapacite": "Tu ahorro cae por debajo de cero ({capacite}). Mira el plan para reequilibrar.",
+        "orangeDepasse": "Has gastado {montant} más de lo que tenías este mes. Veamos juntos qué puede moverse.",
         "orangeProvisions": "Faltan {deficit} para cubrir tus próximos gastos. Recuperación sugerida: {rattrapage}/mes.",
         "rouge": "Tus gastos y reservas ({obligations}) superan tus ingresos ({revenus}). Vemos juntos qué se puede mover."
       },
       "incomplet": {
         "title": "Completa tu situación",
-        "body": "Añade tus ingresos para ver tu disponible este mes.",
+        "body": "Añade tus ingresos para ver lo que te queda este mes.",
         "cta": "Configurar mis ingresos"
       },
       "flow": {
@@ -1112,49 +1129,20 @@
         "chargesFixes": "Gastos fijos",
         "provisions": "Reservas distribuidas",
         "engagements": "Compromisos",
-        "resteDisponible": "Disponible",
-        "resteAVivre": "Día a día",
-        "capaciteEpargne": "Capacidad de ahorro",
-        "ajuster": "Ajustar este mes",
+        "resteDisponible": "Presupuesto del mes",
+        "depense": "Gastado este mes",
+        "ilTeReste": "Te queda",
+        "epargneEstimee": "Ahorro estimado",
         "parJour": "≈ {amount}/día"
       },
-      "barAria": "Distribución de tus ingresos: {charges} de gastos fijos, {provisions} de reservas, {vieCourante} de día a día, {epargne} de ahorro posible.",
-      "barAriaEngagements": "Incluyendo {engagements} de compromisos."
-    },
-    "effort": {
-      "title": "Esfuerzo financiero suavizado",
-      "charges_fixes": "Gastos fijos",
-      "provisions": "Provisiones"
-    },
-    "capacite": {
-      "title": "Capacidad real de ahorro",
-      "message_positive": "Esto es lo que realmente te queda cada mes, sin sorpresas.",
-      "message_negative": "Cuidado: tu nivel de vida global supera tus ingresos.",
-      "breakdown": {
-        "revenus": "Ingresos",
-        "effort": "Esfuerzo financiero suavizado",
-        "plafond": "Límite diario"
-      },
-      "subStats": {
-        "resteDisponible": "Disponible",
-        "resteAVivre": "Presupuesto vital",
-        "capaciteEpargne": "Capacidad de ahorro",
-        "ajusterCeMois": "Ajustar este mes"
-      },
-      "ledePositif": "Puedes apartar {amount} este mes además de tus transferencias automáticas. Tú decides cuánto ahorras realmente.",
-      "ledeNegatif": "Tu nivel de vida supera tus ingresos este mes. Podemos mirar juntos qué se puede ajustar.",
-      "tooltip": "Esta cifra resta tus gastos fijos, tus provisiones suavizadas a lo largo del año y tu presupuesto vital estimado ({resteAVivre}). Es lo que puedes elegir ahorrar además del resto.",
-      "drawer": {
-        "title": "Ajustar el presupuesto vital de este mes",
-        "inputLabel": "¿Cuánto vas a gastar para vivir este mes?",
-        "inputHint": "Compra, salidas, ocio, placer, imprevistos diarios",
-        "helperCoherent": "Estimación coherente con un presupuesto belga típico.",
-        "helperBas": "Estimación baja. Puedes ajustarla más adelante si lo necesitas.",
-        "helperHaut": "Estimación alta. Ankora respeta tu presupuesto — sin juicios.",
-        "save": "Guardar",
-        "cancel": "Cancelar",
-        "success": "Presupuesto vital ajustado para este mes.",
-        "errorGeneric": "El ajuste no se ha podido guardar. Inténtalo de nuevo dentro de un momento."
+      "barAria": "Reparto de tus ingresos: {charges} de gastos fijos, {provisions} de reservas, {depense} gastado, {reste} restante.",
+      "barAriaEngagements": "Incluyendo {engagements} de compromisos.",
+      "pace": {
+        "barAria": "{depense} gastados de {budget} de presupuesto del mes, día {jours} de {total}.",
+        "perDay": "{amount} / día hasta el {day}",
+        "onTrack": "al ritmo",
+        "faster": "por encima del ritmo",
+        "exceeded": "presupuesto superado"
       }
     },
     "daily": {
@@ -1229,6 +1217,18 @@
     "boundary": {
       "title": "Algo se ha roto",
       "description": "Se ha producido un error inesperado. Tus datos están a salvo.",
+      "ctaRetry": "Reintentar",
+      "ctaHome": "Volver al inicio"
+    },
+    "unavailable": {
+      "title": "Servicio temporalmente no disponible",
+      "description": "No podemos contactar con el servicio de autenticación en este momento. Tus datos están intactos y tu sesión no se ha cerrado. Vuelve a intentarlo en un instante.",
+      "ctaRetry": "Reintentar",
+      "ctaHome": "Volver al inicio"
+    },
+    "dataUnavailable": {
+      "title": "No podemos cargar tus datos",
+      "description": "No podemos leer tu espacio en este momento. No se ha perdido nada ni se ha modificado nada: ha fallado la lectura, no tus datos. Vuelve a intentarlo en un instante.",
       "ctaRetry": "Reintentar",
       "ctaHome": "Volver al inicio"
     },
@@ -1413,8 +1413,7 @@
       "deletionRequestFailed": "No se ha podido programar la eliminación.",
       "deletionCancelFailed": "No se ha podido cancelar la solicitud.",
       "deletionCancelTooLate": "La eliminación ya ha comenzado y no se puede cancelar.",
-      "exportLimited": "Exportación limitada a una vez cada 5 minutos.",
-      "resteAVivreUpdateFailed": "No se ha podido ajustar el presupuesto vital. Inténtalo de nuevo dentro de un momento."
+      "exportLimited": "Exportación limitada a una vez cada 5 minutos."
     },
     "onboarding": {
       "workspaceNotFound": "Workspace no encontrado. Contacta con el soporte.",

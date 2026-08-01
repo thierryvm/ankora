@@ -23,6 +23,9 @@ vi.mock('@/i18n/navigation', () => ({
   ),
 }));
 
+import { AUTH_BACKEND_UNAVAILABLE_DIGEST } from '@/lib/auth/auth-error';
+import { DATA_READ_UNAVAILABLE_DIGEST } from '@/lib/data/read-failure';
+
 import ErrorBoundary from '../error';
 
 const renderBoundary = (resetFn = vi.fn()) =>
@@ -84,6 +87,219 @@ describe('<ErrorBoundary /> — error.tsx route-level', () => {
     const heading = container.querySelector('h1');
     expect(heading?.className).toContain('font-display');
     expect(heading?.hasAttribute('style')).toBe(false);
+  });
+});
+
+/**
+ * A brief Supabase outage is not a crash, and must not be dressed up as one.
+ *
+ * Context, because the wording here is load-bearing. Before 2026-07-30 an
+ * unreachable auth backend redirected every signed-in visitor to `/login` — an
+ * outage laundered into a mass logout, invisible in the logs as anything but
+ * ordinary session churn. Surfacing it was the fix; surfacing it as "Quelque
+ * chose s'est cassé" would have been the next mistake, telling users their app
+ * broke and implying their data might be gone. Neither. This screen says what is
+ * actually true: a dependency is unreachable, the session stands, retry.
+ */
+describe('<ErrorBoundary /> — a backend outage gets its own honest screen', () => {
+  beforeEach(() => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  });
+
+  const renderUnavailable = (
+    messages: typeof messagesFrBE = messagesFrBE,
+    locale: 'fr-BE' | 'en' | 'de-DE' | 'es-ES' | 'nl-BE' = 'fr-BE',
+    reset = vi.fn(),
+  ) => {
+    const error = Object.assign(new Error('Supabase auth backend unavailable'), {
+      digest: AUTH_BACKEND_UNAVAILABLE_DIGEST,
+    });
+    return render(
+      <NextIntlClientProvider locale={locale} messages={messages}>
+        <ErrorBoundary error={error} reset={reset} />
+      </NextIntlClientProvider>,
+    );
+  };
+
+  it('says the service is unavailable, not that something broke', () => {
+    renderUnavailable();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+      'Service temporairement indisponible',
+    );
+    expect(screen.queryByText(/Quelque chose s'est cassé/)).not.toBeInTheDocument();
+  });
+
+  it('tells the visitor their data and their session are intact', () => {
+    renderUnavailable();
+    // The two reassurances that distinguish an outage from a crash. A visitor
+    // who is told "something broke" has no way to know either of these.
+    expect(screen.getByText(/données sont intactes/)).toBeInTheDocument();
+    expect(screen.getByText(/session n'a pas été fermée/)).toBeInTheDocument();
+  });
+
+  it('still offers a retry that calls reset()', () => {
+    const reset = vi.fn();
+    renderUnavailable(messagesFrBE, 'fr-BE', reset);
+    fireEvent.click(screen.getByRole('button', { name: 'Réessayer' }));
+    expect(reset).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps role="alert" so assistive tech announces it', () => {
+    renderUnavailable();
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+  });
+
+  it('renders the outage screen in English too', () => {
+    renderUnavailable(messagesEn as typeof messagesFrBE, 'en');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+      'Service temporarily unavailable',
+    );
+  });
+
+  // The generic screen must remain the default: an unknown digest is a real bug,
+  // and calling a bug "temporarily unavailable" hides it.
+  it.each([undefined, 'some-other-digest', 'ANKORA_SOMETHING_ELSE'])(
+    'falls back to the generic screen for digest %s',
+    (digest) => {
+      const error = Object.assign(new Error('boom'), digest ? { digest } : {});
+      render(
+        <NextIntlClientProvider locale="fr-BE" messages={messagesFrBE}>
+          <ErrorBoundary error={error} reset={vi.fn()} />
+        </NextIntlClientProvider>,
+      );
+      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+        "Quelque chose s'est cassé",
+      );
+    },
+  );
+
+  it('logs only the digest on the outage path too (PII safety)', () => {
+    const spy = vi.spyOn(console, 'error');
+    renderUnavailable();
+    const haystack = JSON.stringify(spy.mock.calls.flat());
+    expect(haystack).toContain(AUTH_BACKEND_UNAVAILABLE_DIGEST);
+  });
+});
+
+/**
+ * The data-read screen. Its promise is deliberately different from the auth
+ * one's: there the session might be in doubt, here it is fine and it is the data
+ * that would not load. Saying "nothing was modified" is the sentence that
+ * matters, because the failure this replaces implied the opposite.
+ */
+describe('<ErrorBoundary /> — an unreadable workspace gets its own screen', () => {
+  beforeEach(() => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  });
+
+  const renderDataUnavailable = (
+    messages: typeof messagesFrBE = messagesFrBE,
+    locale: 'fr-BE' | 'en' | 'de-DE' | 'es-ES' | 'nl-BE' = 'fr-BE',
+  ) => {
+    const error = Object.assign(new Error('Supabase read unavailable'), {
+      digest: DATA_READ_UNAVAILABLE_DIGEST,
+    });
+    return render(
+      <NextIntlClientProvider locale={locale} messages={messages}>
+        <ErrorBoundary error={error} reset={vi.fn()} />
+      </NextIntlClientProvider>,
+    );
+  };
+
+  it('says the data could not be loaded, not that something broke', () => {
+    renderDataUnavailable();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+      'Impossible de charger tes données',
+    );
+    expect(screen.queryByText(/Quelque chose s'est cassé/)).not.toBeInTheDocument();
+  });
+
+  it('promises nothing was lost and nothing was modified', () => {
+    renderDataUnavailable();
+    expect(screen.getByText(/Rien n'a été perdu et rien n'a été modifié/)).toBeInTheDocument();
+  });
+
+  it('does not reuse the auth screen, whose promise is about the session', () => {
+    // Two digests, two screens. Collapsing them would force one of the two
+    // promises to become vague, and vague is how this whole family started.
+    renderDataUnavailable();
+    expect(screen.queryByText(/session n'a pas été fermée/)).not.toBeInTheDocument();
+  });
+
+  it('renders in English too', () => {
+    renderDataUnavailable(messagesEn as typeof messagesFrBE, 'en');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent("Can't load your data");
+  });
+});
+
+describe('errors.dataUnavailable — i18n parity (5 locales)', () => {
+  it.each([
+    ['fr-BE', messagesFrBE],
+    ['en', messagesEn],
+    ['de-DE', messagesDeDE],
+    ['es-ES', messagesEsES],
+    ['nl-BE', messagesNlBE],
+  ] as const)('locale %s exposes title/description/ctaRetry/ctaHome', (_, m) => {
+    const d = (m as { errors: { dataUnavailable: Record<string, string | undefined> } }).errors
+      .dataUnavailable;
+    expect(d.title).toBeTypeOf('string');
+    expect((d.title ?? '').length).toBeGreaterThan(0);
+    expect(d.description).toBeTypeOf('string');
+    expect(d.ctaRetry).toBeTypeOf('string');
+    expect(d.ctaHome).toBeTypeOf('string');
+  });
+
+  it.each([
+    ['fr-BE', messagesFrBE],
+    ['en', messagesEn],
+    ['de-DE', messagesDeDE],
+    ['es-ES', messagesEsES],
+    ['nl-BE', messagesNlBE],
+  ] as const)('locale %s keeps all three screens worded differently', (_, m) => {
+    const e = (
+      m as {
+        errors: {
+          boundary: { title: string };
+          unavailable: { title: string };
+          dataUnavailable: { title: string };
+        };
+      }
+    ).errors;
+    const titles = [e.boundary.title, e.unavailable.title, e.dataUnavailable.title];
+    expect(new Set(titles).size).toBe(3);
+  });
+});
+
+describe('errors.unavailable — i18n parity (5 locales)', () => {
+  it.each([
+    ['fr-BE', messagesFrBE],
+    ['en', messagesEn],
+    ['de-DE', messagesDeDE],
+    ['es-ES', messagesEsES],
+    ['nl-BE', messagesNlBE],
+  ] as const)('locale %s exposes title/description/ctaRetry/ctaHome', (_, m) => {
+    const u = (m as { errors: { unavailable: Record<string, string | undefined> } }).errors
+      .unavailable;
+    expect(u.title).toBeTypeOf('string');
+    expect((u.title ?? '').length).toBeGreaterThan(0);
+    expect(u.description).toBeTypeOf('string');
+    expect(u.ctaRetry).toBeTypeOf('string');
+    expect(u.ctaHome).toBeTypeOf('string');
+  });
+
+  // The wording must not drift back into crash language. `errors.boundary` owns
+  // "broken"; `errors.unavailable` owns "unavailable". Swapping them silently is
+  // the regression this asserts against.
+  it.each([
+    ['fr-BE', messagesFrBE],
+    ['en', messagesEn],
+    ['de-DE', messagesDeDE],
+    ['es-ES', messagesEsES],
+    ['nl-BE', messagesNlBE],
+  ] as const)('locale %s keeps the two screens worded differently', (_, m) => {
+    const e = (m as { errors: { boundary: { title: string }; unavailable: { title: string } } })
+      .errors;
+    expect(e.unavailable.title).not.toBe(e.boundary.title);
   });
 });
 

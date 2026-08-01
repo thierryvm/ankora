@@ -31,14 +31,25 @@
     "because they had never executed anywhere: CI skipped them for want of a Supabase.",
     "Running them for the first time on 2026-07-26 is what surfaced this.",
     "They are listed, printed on every run with their reason, and NOT silently skipped.",
-    "Follow-up: rewrite each against the current dashboard, then delete its entry here."
+    "Follow-up: rewrite each against the current dashboard, then delete its entry here.",
+    "",
+    "2026-07-29 (ADR-034 / ADR-035, chantier 1). The ROOT CAUSE of the first three",
+    "is fixed: CardTitle now renders a real <h3> (src/components/ui/card.tsx), so",
+    "getByRole('heading', ...) can match. NONE of the six leaves quarantine in this",
+    "commit, on purpose. Releasing a spec that has not been SEEN green sends it",
+    "straight into the authenticated job (floor: 31 passed) and turns that job red —",
+    "which is the same 'a suite that shrinks in silence' failure, pointing the other",
+    "way. Verifying them needs a local Supabase: `supabase start` requires Docker,",
+    "which is not installed on the machine this ran on, and the linked project is",
+    "PRODUCTION, so pointing the authenticated job at it would write real rows.",
+    "Whoever has Docker: run the job, then remove the entries that pass."
   ],
   "quarantine": {
-    "e2e/accounts.spec.ts": "Locates the plan section via getByRole('heading', /plan du mois/i), but CardTitle renders a <div> (src/components/ui/card.tsx:23) — the heading role does not exist, so this could never pass.",
-    "e2e/dashboard-expenses.spec.ts": "Same cause: getByRole('heading', /dépenses —/i) against a CardTitle <div>.",
-    "e2e/dashboard-data-flow.spec.ts": "Same heading-role cause, plus getByText(/^Factures /i) on a surface the cockpit rebuild replaced.",
-    "e2e/dashboard-capacite-tryptique.spec.ts": "Asserts testids substat-reste-disponible / substat-reste-a-vivre / capacite-epargne-card / capacite-epargne-substats — all present in ZERO files under src/.",
-    "e2e/dashboard-cockpit-bloc2.spec.ts": "Asserts testid effort-financier-card — present in ZERO files under src/. Tests the 'Bloc 2 hero radar' that the Situation Hero superseded.",
-    "e2e/dashboard-simulator-drawer.spec.ts": "One case asserts [aria-label=\"Notifications\"], a control the app no longer renders; another expects 'Reste disponible' text inside the drawer."
+    "e2e/accounts.spec.ts": "READY TO VERIFY (2026-07-29). Root cause fixed — CardTitle now renders <h3>, so getByRole('heading', /plan du mois/i) can match. Not yet executed against a real Supabase; remove this entry once seen green.",
+    "e2e/dashboard-expenses.spec.ts": "READY TO VERIFY (2026-07-29). Same fix: getByRole('heading', /dépenses —/i) now has a real heading to match. Note the card it targets was relabelled « Dépensé ce mois » by ADR-035, so the regex may need updating alongside verification.",
+    "e2e/dashboard-data-flow.spec.ts": "PARTIALLY FIXED (2026-07-29). The heading-role cause is gone (CardTitle is <h3>), but getByText(/^Factures /i) still targets a surface the cockpit rebuild replaced. Needs a rewrite, not just a re-run.",
+    "e2e/dashboard-capacite-tryptique.spec.ts": "STILL INVALID, and now permanently. Asserts testids substat-reste-disponible / substat-reste-a-vivre / capacite-epargne-card / capacite-epargne-substats. ADR-035 removed the « capacité d'épargne » and « reste à vivre » concepts outright, so these surfaces will never come back. Candidate for deletion rather than rewrite.",
+    "e2e/dashboard-cockpit-bloc2.spec.ts": "STILL INVALID. Asserts testid effort-financier-card — present in ZERO files under src/. Tests the 'Bloc 2 hero radar' that the Situation Hero superseded.",
+    "e2e/dashboard-simulator-drawer.spec.ts": "STILL INVALID, one cause resolved differently than expected. It asserts [aria-label=\"Notifications\"], a control the app no longer renders, AND expects the text 'Reste disponible' — which ADR-035 retired app-wide; the simulator now says « Budget du mois »."
   }
 }

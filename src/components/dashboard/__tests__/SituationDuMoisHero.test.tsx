@@ -32,12 +32,6 @@ vi.mock('next-intl/server', () => ({
   },
 }));
 
-// AjusterResteAVivreDrawer is a client component with its own Server Action +
-// next-intl client hooks; stub it so the server-rendered Hero test stays pure.
-vi.mock('../AjusterResteAVivreDrawer', () => ({
-  AjusterResteAVivreDrawer: () => <button data-testid="reste-a-vivre-trigger">Ajuster</button>,
-}));
-
 // The Hero uses the locale-aware `Link` (plan + setup CTAs). next-intl's real
 // `createNavigation` imports `next/navigation`, unresolvable under jsdom —
 // mock it to a plain anchor, same pattern as the sibling card tests.
@@ -56,13 +50,20 @@ const BASE = {
   provisionsLissees: 338,
   engagementsMensuels: 0,
   resteDisponible: 662,
+  depensesDuMois: 200,
+  ilTeReste: 462,
+  epargneEstimee: 318,
   budgetVieCourante: 500,
   capacite: 162,
   deficitEpargne: 0,
   rattrapageMensuel: 0,
   provisionsAJour: true,
   joursRestants: 18,
-  currentMonthYYYYMM: '2026-06',
+  // Day 13 of 31 — a month whose 200 € of spending (30 % of the 662 € budget) is
+  // slightly ahead of an even pace (42 %), so the pace bar renders neutrally by
+  // default and each state gets an explicit case below.
+  joursEcoules: 13,
+  joursDuMois: 31,
   locale: 'fr-BE' as const,
 };
 
@@ -73,19 +74,19 @@ describe('<SituationDuMoisHero />', () => {
   it('vert: shows hero label + reassuring status, AllocationBar + Adjust trigger, no plan link', async () => {
     await renderHero({ statut: 'vert' });
     expect(screen.getByTestId('situation-hero-value')).toBeInTheDocument();
-    // "Reste disponible" is the hero eyebrow AND the flow total row (same number) → appears twice.
+    // « Il te reste » is the hero eyebrow AND the flow row of the same figure.
     expect(screen.getAllByText(messages.dashboard.situation.heroLabel).length).toBeGreaterThan(0);
     expect(screen.getByText(messages.dashboard.situation.statut.vert)).toBeInTheDocument();
     expect(screen.getByTestId('allocation-bar')).toBeInTheDocument();
-    expect(screen.getByTestId('reste-a-vivre-trigger')).toBeInTheDocument();
+    // ADR-035 — the « Ajuster ce mois » trigger went with the envelope: there is
+    // no longer a number for the user to set.
+    expect(screen.queryByTestId('reste-a-vivre-trigger')).toBeNull();
     expect(screen.queryByTestId('situation-nudge-link')).toBeNull();
   });
 
-  it('orange (capacité < 0): shows the capacité nudge + a plan link', async () => {
-    await renderHero({ statut: 'orange', capacite: -60, resteDisponible: 440 });
-    expect(
-      screen.getByText(messages.dashboard.situation.statut.orangeCapacite),
-    ).toBeInTheDocument();
+  it('orange (« Il te reste » < 0): shows the overspend nudge + a plan link', async () => {
+    await renderHero({ statut: 'orange', ilTeReste: -60, resteDisponible: 440 });
+    expect(screen.getByText(messages.dashboard.situation.statut.orangeDepasse)).toBeInTheDocument();
     expect(screen.getByTestId('situation-nudge-link')).toBeInTheDocument();
   });
 
@@ -139,7 +140,10 @@ describe('<SituationDuMoisHero />', () => {
   it('ADR-021: the AllocationBar aria mentions engagements only when present', async () => {
     // Base barAria never contains the word « engagements » — the appended clause does.
     await renderHero({ statut: 'vert', engagementsMensuels: 250, resteDisponible: 412 });
-    expect(screen.getByRole('img').getAttribute('aria-label')).toContain('engagements');
+    // Scoped to the allocation bar: the hero carries TWO role="img" graphics
+    // since the pace bar landed, so a bare getByRole('img') is now ambiguous.
+    const bar = screen.getByTestId('allocation-bar').querySelector('[role="img"]');
+    expect(bar?.getAttribute('aria-label')).toContain('engagements');
   });
 
   it('incomplet (THI-335): shows setup CTA, no AllocationBar, no negative amount', async () => {

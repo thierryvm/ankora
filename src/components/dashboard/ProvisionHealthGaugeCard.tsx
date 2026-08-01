@@ -2,8 +2,8 @@ import Decimal from 'decimal.js';
 import { Activity, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
-import { ProgressBar } from '@/components/atoms';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import {
   calculerSanteProvisions,
   type CockpitCharge,
@@ -116,7 +116,7 @@ export async function ProvisionHealthGaugeCard({
   }[tier];
 
   const statusLabel = tier === 'success' ? t('status.a_jour') : t('status.deficit');
-  // ProgressBar already exposes `role="progressbar"` + `aria-valuenow` and
+  // Progress already exposes `role="progressbar"` + `aria-valuenow` and
   // uses its `label` prop as the accessible name. CardTitle above is read
   // first by screen readers, so the short `t('ratio')` label is enough —
   // no need for a verbose duplicate aria-label on a roleless wrapper
@@ -171,7 +171,7 @@ export async function ProvisionHealthGaugeCard({
               )}
             </div>
             <div className="mt-4 md:mt-0">
-              <ProgressBar
+              <Progress
                 value={Math.min(ratio, 1)}
                 max={1}
                 tone={tier}

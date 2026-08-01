@@ -2,23 +2,87 @@ import type { User } from '@supabase/supabase-js';
 import { getLocale } from 'next-intl/server';
 
 import { redirect } from '@/i18n/navigation';
+import {
+  AUTH_BACKEND_UNAVAILABLE_DIGEST,
+  classifyAuthFailure,
+  endsSession,
+} from '@/lib/auth/auth-error';
+import { assertReadable, describeReadFailure } from '@/lib/data/read-failure';
 import { createClient } from '@/lib/supabase/server';
 import { log } from '@/lib/log';
 
 /**
- * 503-diag instrumentation helper — extracts stack + name when the value
- * is a real `Error`, falls back to `String(e)` otherwise. Stack lines are
- * not redacted by `@/lib/log` (only `email`, `password`, `token`, etc. are),
- * which is what we want during the diagnosis window.
+ * Raised when the auth backend could not be reached, as opposed to having ruled
+ * that the session is over. It exists so `requireUser()` has something to throw
+ * that is unmistakably "infrastructure", and so a caller that genuinely wants to
+ * degrade (a public page) can tell the two apart.
  *
- * Remove this helper + every `[503-diag]` log call once Étape 2 has shipped
- * the targeted fix and the runtime evidence is collected.
+ * It carries a fixed `digest`. Throwing without one would reach
+ * `src/app/[locale]/error.tsx` as an anonymous error and render "Quelque chose
+ * s'est cassé" — telling a user their app is broken when in fact a dependency is
+ * briefly unreachable and their data is untouched. The digest is what lets that
+ * boundary say so honestly. See `AUTH_BACKEND_UNAVAILABLE_DIGEST`.
  */
-function diagDetails(e: unknown): Record<string, unknown> {
-  if (e instanceof Error) {
-    return { name: e.name, msg: e.message, stack: e.stack };
+export class AuthBackendUnavailableError extends Error {
+  override readonly name = 'AuthBackendUnavailableError';
+
+  readonly digest = AUTH_BACKEND_UNAVAILABLE_DIGEST;
+
+  constructor(override readonly cause: unknown) {
+    super('Supabase auth backend unavailable');
   }
-  return { msg: String(e) };
+}
+
+/**
+ * The three — and only three — outcomes of asking "who is this visitor?".
+ *
+ * Collapsing `unavailable` into `anonymous` is what made a Supabase outage look
+ * like a mass session expiry: every signed-in user was redirected to `/login`
+ * while the incident stayed invisible. Measured on 2026-07-30 against an
+ * unreachable auth host with a valid session — `/app` answered `307 → /login`.
+ */
+type SessionLookup =
+  | { status: 'authenticated'; user: User }
+  | { status: 'anonymous' }
+  | { status: 'unavailable'; cause: unknown };
+
+async function lookupSession(): Promise<SessionLookup> {
+  let error: unknown = null;
+  let user: User | null = null;
+
+  try {
+    const supabase = await createClient();
+    const result = await supabase.auth.getUser();
+    user = result.data.user;
+    error = result.error;
+  } catch (thrown) {
+    // auth-js rethrows only what it does not own — a transport failure or a
+    // decode error. Never an auth verdict, so never a reason to sign anyone out.
+    error = thrown;
+  }
+
+  if (user && !error) {
+    return { status: 'authenticated', user };
+  }
+
+  if (error && !endsSession(classifyAuthFailure(error))) {
+    return { status: 'unavailable', cause: error };
+  }
+
+  // Either the session is over (the auth server ruled so, or the cookie is no
+  // longer readable), or there was simply no session to begin with
+  // (`error === null`, `user === null` — an anonymous visitor).
+  return { status: 'anonymous' };
+}
+
+function logUnavailable(where: string, cause: unknown): void {
+  const record =
+    typeof cause === 'object' && cause !== null ? (cause as Record<string, unknown>) : null;
+  log.error(`auth backend unavailable in ${where}`, {
+    name: typeof record?.name === 'string' ? record.name : typeof cause,
+    code: typeof record?.code === 'string' ? record.code : undefined,
+    status: typeof record?.status === 'number' ? record.status : undefined,
+  });
 }
 
 /**
@@ -33,68 +97,79 @@ function diagDetails(e: unknown): Record<string, unknown> {
  * Same anti-spoofing properties as `requireUser`: hits
  * `supabase.auth.getUser()` server-side rather than trusting a cookie claim.
  *
- * Transient Supabase failures (network blip, JWT secret rotation, transient
- * DB outage) are swallowed and surface as `null` — public surfaces must
- * always render, degrading gracefully to anonymous chrome rather than 500.
- *
- * 503-diag (2026-05-27): `error` from `getUser()` and any thrown exception
- * are now logged before being swallowed. Filter Vercel logs on
- * `[503-diag] require-user` to surface the silent failure mode that
- * persisted through hotfix #1–#4 on PR-BETA-3.
+ * A Supabase outage still degrades to `null` here, and that is correct for this
+ * function: a marketing page must render anonymous chrome rather than 500. The
+ * difference from before is that it is now a decision taken with the outage
+ * *identified* and logged at `error` level, instead of every failure being
+ * flattened into "no user" — which is what let an outage masquerade as a mass
+ * session expiry on protected routes. `requireUser()` makes the opposite call.
  */
 export async function getOptionalUser(): Promise<User | null> {
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
+  const lookup = await lookupSession();
 
-    if (error || !user) {
-      if (error) {
-        log.warn('[503-diag] require-user getOptionalUser getUser error', {
-          status: (error as { status?: number }).status,
-          msg: error.message,
-        });
-      }
-      return null;
-    }
-
-    return user;
-  } catch (e) {
-    log.warn('[503-diag] require-user getOptionalUser caught throw', diagDetails(e));
-    return null;
+  if (lookup.status === 'authenticated') {
+    return lookup.user;
   }
+
+  if (lookup.status === 'unavailable') {
+    logUnavailable('getOptionalUser (degrading to anonymous)', lookup.cause);
+  }
+
+  return null;
 }
 
 /**
  * Server-side guard for authenticated routes.
- * Redirects to /login if no session. Never trust the client — always call this from RSC/actions.
+ * Never trust the client — always call this from RSC/actions.
  *
- * Delegates the session lookup to `getOptionalUser` so the Supabase wiring
- * (createClient + getUser + error handling) lives in a single place.
+ * Three outcomes, and the third one is the point of this function:
+ *   - signed in            → the user
+ *   - session over / none  → locale-aware redirect to `/login`
+ *   - auth backend down    → throws `AuthBackendUnavailableError`
+ *
+ * It deliberately does NOT delegate to `getOptionalUser`, which cannot tell an
+ * outage from an expired session. Sharing that path is what made Supabase being
+ * unreachable indistinguishable from every user's session ending at once: the
+ * whole signed-in userbase got bounced to `/login`, and the incident showed up as
+ * "people keep having to log in again" rather than as an outage. Surfacing is the
+ * lesser harm — a visible error is recoverable, a silent logout during an incident
+ * teaches users the app is flaky.
  */
 export async function requireUser(): Promise<User> {
-  const user = await getOptionalUser();
+  const lookup = await lookupSession();
 
-  if (!user) {
-    log.warn('[503-diag] require-user requireUser redirect', { redirectTo: '/login' });
-    // Locale-aware on purpose: `localePrefix: 'as-needed'` means French lives
-    // on unprefixed URLs, so a bare `redirect('/login')` sends an English user
-    // to the French login page. next-intl stopped covering for this when
-    // `localeDetection` was turned off (#258) — the cookie branch that used to
-    // 307 `/login` to `/en/login` is gone. This `redirect` returns `never` and
-    // throws synchronously like the one from `next/navigation`, and its type
-    // forces the locale to be passed.
-    return redirect({ href: '/login', locale: await getLocale() });
+  if (lookup.status === 'authenticated') {
+    return lookup.user;
   }
 
-  return user;
+  if (lookup.status === 'unavailable') {
+    logUnavailable('requireUser', lookup.cause);
+    throw new AuthBackendUnavailableError(lookup.cause);
+  }
+
+  // Locale-aware on purpose: `localePrefix: 'as-needed'` means French lives
+  // on unprefixed URLs, so a bare `redirect('/login')` sends an English user
+  // to the French login page. next-intl stopped covering for this when
+  // `localeDetection` was turned off (#258) — the cookie branch that used to
+  // 307 `/login` to `/en/login` is gone. This `redirect` returns `never` and
+  // throws synchronously like the one from `next/navigation`, and its type
+  // forces the locale to be passed.
+  return redirect({ href: '/login', locale: await getLocale() });
 }
 
 /**
  * Like requireUser but also returns the workspace_member row.
- * Redirects to /onboarding if user has no workspace yet.
+ *
+ * Three outcomes, same shape as `requireUser`:
+ *   - a membership exists   → it is returned
+ *   - the query found none  → redirect to /onboarding
+ *   - the query FAILED      → throws `DataReadUnavailableError`
+ *
+ * The third used to be folded into the second. A transient Postgres error or an
+ * RLS regression sent an established user to onboarding — which, to someone who
+ * tracks their budget here, reads as "my workspace and my data are gone". The
+ * information to tell them apart was already on hand: the old code computed
+ * `hadError` purely to put it in a log line, then routed identically either way.
  */
 export async function requireUserWithWorkspace(): Promise<{
   user: User;
@@ -104,10 +179,6 @@ export async function requireUserWithWorkspace(): Promise<{
   const user = await requireUser();
   const supabase = await createClient();
 
-  // 503-diag (2026-05-27): the previous version silently ignored the
-  // Supabase `error` field. A PGRST transient or RLS denial would surface
-  // as `data === null` and bounce the user to `/onboarding` falsely, which
-  // is exactly the silent failure mode @cowork suspects on the 503.
   const { data: membership, error } = await supabase
     .from('workspace_members')
     .select('workspace_id, role')
@@ -117,18 +188,18 @@ export async function requireUserWithWorkspace(): Promise<{
     .maybeSingle();
 
   if (error) {
-    log.error('[503-diag] require-user workspace_members query error', {
+    log.error('require-user: workspace_members unreadable', {
       userId: user.id,
-      code: error.code,
-      msg: error.message,
+      ...describeReadFailure(error),
     });
   }
 
+  // Throws on a failed read; returns quietly when the query simply matched
+  // nothing. Ordering matters: this must run BEFORE the `!membership` branch,
+  // or a failed read falls straight through into "you have no workspace".
+  assertReadable(error, 'require-user: workspace_members');
+
   if (!membership) {
-    log.warn('[503-diag] require-user no membership redirect onboarding', {
-      userId: user.id,
-      hadError: !!error,
-    });
     return redirect({ href: '/onboarding', locale: await getLocale() });
   }
 

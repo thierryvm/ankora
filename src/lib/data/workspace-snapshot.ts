@@ -4,6 +4,7 @@ import { ANKORA_TIMEZONE } from '@/lib/date/tz';
 
 import { redirect } from '@/i18n/navigation';
 
+import { assertReadable } from '@/lib/data/read-failure';
 import { createClient } from '@/lib/supabase/server';
 import { log } from '@/lib/log';
 import {
@@ -18,7 +19,7 @@ import type { AccountType, CockpitCharge } from '@/lib/domain/cockpit/types';
 /**
  * Adapter from the legacy `Charge` shape (still consumed by Bloc 1 KPI helpers
  * via `Budget.*` / `Transfer.*`) to the cockpit-flavoured `CockpitCharge` that
- * `effortFinancierLisse()` and `capaciteEpargneReelle()` expect (PR-D1).
+ * `effortFinancierLisse()` expects (PR-D1).
  *
  * The cockpit math used by PR-D3 only reads `amount`, `frequency`, and
  * `isActive`; `paymentMonths` and `paymentDay` are stubbed from the legacy
@@ -80,14 +81,6 @@ export type WorkspaceSnapshot = {
   vieCouranteMonthlyTransfer: number | null;
   savingsBalance: number;
   monthsTracked: number;
-  /**
-   * Monthly "vie courante" budget used by the Capacité d'Épargne Réelle
-   * tryptique (ADR-009 amendement 2026-05-09). Resolved per-request as
-   * `workspace_settings.reste_a_vivre_overrides[currentYYYYMM]`
-   * ?? `reste_a_vivre_default`. Always a non-negative finite number.
-   * Added PR-BETA-3 (THI-267).
-   */
-  resteAVivre: number;
   accounts: AccountSnapshot[];
   charges: Charge[];
   rawCharges: Array<{
@@ -138,6 +131,14 @@ export type WorkspaceSnapshot = {
 /**
  * Fetch the authenticated user's primary workspace snapshot.
  * Redirects to /onboarding if the user has no workspace or hasn't completed onboarding.
+ *
+ * Every read below whose result decides a redirect goes through `assertReadable`
+ * first. Until 2026-07-30 the `error` field of all three was discarded and only
+ * `!data` was tested, so a failed SELECT was indistinguishable from a user who
+ * had never onboarded — and the dashboard answered a database outage by asking
+ * its owner to create their workspace again. The 2026-07-18 note further down
+ * this file records the same motif on `charges`; this is that lesson applied to
+ * the reads that route rather than the reads that render.
  */
 export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
   const supabase = await createClient();
@@ -146,20 +147,22 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
   } = await supabase.auth.getUser();
   if (!user) return redirect({ href: '/login', locale: await getLocale() });
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('users')
     .select('onboarded_at')
     .eq('id', user.id)
     .maybeSingle();
+  assertReadable(profileError, 'workspace-snapshot: users.onboarded_at');
   if (!profile?.onboarded_at) return redirect({ href: '/onboarding', locale: await getLocale() });
 
-  const { data: membership } = await supabase
+  const { data: membership, error: membershipError } = await supabase
     .from('workspace_members')
     .select('workspace_id')
     .eq('user_id', user.id)
     .order('joined_at', { ascending: true })
     .limit(1)
     .maybeSingle();
+  assertReadable(membershipError, 'workspace-snapshot: workspace_members');
   if (!membership) return redirect({ href: '/onboarding', locale: await getLocale() });
 
   const workspaceId = membership.workspace_id;
@@ -194,11 +197,11 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
     supabase
       .from('workspace_settings')
       .select(
-        // PR-BETA-3 (THI-267) added `reste_a_vivre_default` +
-        // `reste_a_vivre_overrides` for the Capacité tryptique. Read both
-        // here so the dashboard can resolve the current-month value in a
-        // single round-trip (no extra query in the page component).
-        'savings_balance, months_tracked, reste_a_vivre_default, reste_a_vivre_overrides',
+        // ADR-035 removed the daily-living envelope, so `reste_a_vivre_default`
+        // and `reste_a_vivre_overrides` are no longer read. The columns still
+        // exist in production — the deprecation migration is written but not
+        // applied — they are simply nobody's source of truth any more.
+        'savings_balance, months_tracked',
       )
       .eq('workspace_id', workspaceId)
       .maybeSingle(),
@@ -239,8 +242,12 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
       .eq('period_month', previousMonth),
   ]);
 
-  if (wsRes.error || !wsRes.data)
-    return redirect({ href: '/onboarding', locale: await getLocale() });
+  // The workspace row is reached through a membership we just read successfully,
+  // so "it failed" and "it is not there" have genuinely different meanings here —
+  // the second would be a broken foreign key, the first a blip. Only the second
+  // is a reason to send someone to onboarding.
+  assertReadable(wsRes.error, 'workspace-snapshot: workspaces');
+  if (!wsRes.data) return redirect({ href: '/onboarding', locale: await getLocale() });
 
   // Never swallow a charges read failure silently again (incident 2026-07-18:
   // the `?? []` fallback made a failing SELECT look like an empty workspace).
@@ -335,28 +342,13 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
   }
   const previousMonthPaidChargeIds = (previousMonthPaymentsRes.data ?? []).map((p) => p.charge_id);
 
-  // PR-BETA-3 (THI-267) — resolve the current-month reste-à-vivre using
-  // overrides[YYYY-MM] ?? default. Supabase's generated types may still
-  // type the new JSONB column as `Json | null` until `supabase:types` is
-  // re-run post-migration, hence the defensive cast.
-  const currentYYYYMM = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
-  const settingsRow = settingsRes.data as {
-    savings_balance: number | null;
-    months_tracked: number | null;
-    reste_a_vivre_default: number | string | null;
-    reste_a_vivre_overrides: Record<string, number | string> | null;
-  } | null;
-  const resteAVivreDefault = Number(settingsRow?.reste_a_vivre_default ?? 500);
-  const overrideRaw = settingsRow?.reste_a_vivre_overrides?.[currentYYYYMM];
-  const resteAVivreOverride = overrideRaw === undefined ? undefined : Number(overrideRaw);
-  const resolvedResteAVivre =
-    resteAVivreOverride !== undefined && Number.isFinite(resteAVivreOverride)
-      ? resteAVivreOverride
-      : Number.isFinite(resteAVivreDefault)
-        ? resteAVivreDefault
-        : 500;
-  const resteAVivre = Math.max(0, resolvedResteAVivre);
-
+  // ADR-035 — the daily-living envelope is gone, and with it the resolution of
+  // `reste_a_vivre_overrides[YYYY-MM] ?? reste_a_vivre_default`. The literal
+  // `?? 500` that used to close that expression was a second silent source of
+  // truth alongside the column default: a user who never set the value still
+  // got a progress bar, a "X €/day" and an overspend badge computed against a
+  // number they had never chosen. It looked like a measurement; it was a
+  // factory constant.
   return {
     workspaceId,
     workspaceName: wsRes.data.name,
@@ -364,7 +356,6 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
     vieCouranteMonthlyTransfer: wsRes.data.vie_courante_monthly_transfer,
     savingsBalance: Number(settingsRes.data?.savings_balance ?? 0),
     monthsTracked: Math.max(1, settingsRes.data?.months_tracked ?? 1),
-    resteAVivre,
     accounts,
     charges,
     rawCharges,

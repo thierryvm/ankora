@@ -21,7 +21,7 @@
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const EXPECTED = {
@@ -46,6 +46,76 @@ const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 // commits mal attribués n'existent, sans payer un aller-retour réseau à chaque
 // `git commit`.
 const LOCAL_ONLY = process.argv.includes('--local');
+
+// Racine du clone d'origine — la même que `repoRoot` sur le clone principal,
+// différente dans un worktree. `--git-common-dir` désigne le dépôt PARTAGÉ :
+// depuis un worktree il renvoie un chemin absolu vers le `.git` du clone
+// d'origine, depuis le clone lui-même un simple `.git` relatif. `resolve` couvre
+// les deux formes.
+const mainRepoRoot = (() => {
+  try {
+    const commonDir = execFileSync('git', ['rev-parse', '--git-common-dir'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    }).trim();
+    return dirname(resolve(repoRoot, commonDir));
+  } catch {
+    return null;
+  }
+})();
+
+// Deux preuves de lien vivent dans des fichiers GITIGNORÉS — `.vercel/` et
+// `supabase/.temp/`. Un worktree n'en hérite donc pas : le préflight y déclarait
+// « lien introuvable » alors que le lien existe, simplement rangé dans le clone
+// d'origine. Comme toutes les sessions travaillent en worktrees, la porte qu'on
+// venait de réparer était déjà rouverte partout ailleurs.
+//
+// Ce n'est PAS une exemption. Une exemption serait de sauter le contrôle hors du
+// clone principal — soit exactement le garde-fou qui se tait, c'est-à-dire le
+// défaut que ce script existe pour empêcher. C'est une RÉSOLUTION : on va lire
+// la preuve là où elle est réellement rangée, et on la vérifie à l'identique.
+// Un lien vers le mauvais compte échoue depuis un worktree comme depuis le clone.
+//
+// La provenance est affichée dans le rapport : un contrôle qui va chercher sa
+// preuve ailleurs doit le dire, sinon il devient impossible à auditer.
+const resolveLinkFile = (...segments) => {
+  const local = join(repoRoot, ...segments);
+  if (existsSync(local)) return { path: local, from: null };
+
+  if (mainRepoRoot && resolve(mainRepoRoot) !== resolve(repoRoot)) {
+    const shared = join(mainRepoRoot, ...segments);
+    if (existsSync(shared)) return { path: shared, from: 'clone principal' };
+  }
+
+  return null;
+};
+
+// Troisième fichier gitignoré de la même famille : `.env.local`. Celui-ci n'est
+// pas lu par le script mais chargé par Node via `--env-file`, donc résolu depuis
+// le CWD du hook — la racine du worktree, où il n'existe pas. Les quatre
+// contrôles d'environnement tombaient alors en ❌ et le NO-GO subsistait : avoir
+// réparé les deux premiers n'aurait servi à rien, la porte serait restée fermée
+// dans TOUS les worktrees, c'est-à-dire partout où le travail a lieu.
+//
+// Même résolution, mêmes garanties. On ne charge que si les variables sont
+// absentes ET que le fichier vient du clone d'origine : sur le clone principal,
+// le comportement reste rigoureusement inchangé. Aucune valeur n'est imprimée —
+// les contrôles ci-dessous ne testent qu'une présence ou une correspondance, et
+// un `.env.local` pointant vers le mauvais projet échoue exactement pareil.
+let envLoadedFrom = null;
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  const envFile = resolveLinkFile('.env.local');
+  if (envFile?.from) {
+    try {
+      process.loadEnvFile(envFile.path);
+      envLoadedFrom = envFile.from;
+    } catch {
+      // Illisible : les contrôles ci-dessous le diront en ❌, comme avant.
+    }
+  }
+}
+const envOrigin = envLoadedFrom ? ` [via ${envLoadedFrom}]` : '';
 
 const results = [];
 const check = (name, ok, detail) => results.push({ name, ok, detail });
@@ -94,6 +164,43 @@ const hasBinary = (name) => {
 const fingerprint = (value) =>
   createHash('sha256').update(String(value)).digest('hex').slice(0, 12);
 
+// Emplacements d'installation connus de `gh`, consultés UNIQUEMENT si le PATH ne
+// donne rien. Motif : `gh` est bien installé et bien présent dans le PATH
+// *persistant*, mais un process démarré AVANT l'installation garde son PATH
+// d'origine. Le hook pre-push hérite alors d'un environnement où `gh` est
+// introuvable, et le préflight rend ❌ alors que rien n'est cassé — un faux
+// NO-GO, c'est-à-dire précisément ce qui apprend à taper `--no-verify`.
+// Une absence RÉELLE de la CLI reste un ❌ : cf. l'asymétrie documentée en 1).
+const GH_FALLBACK_DIRS =
+  process.platform === 'win32'
+    ? [
+        join(process.env.LOCALAPPDATA ?? '', 'Microsoft', 'WinGet', 'Links'),
+        join(
+          process.env.LOCALAPPDATA ?? '',
+          'Microsoft',
+          'WinGet',
+          'Packages',
+          'GitHub.cli_Microsoft.Winget.Source_8wekyb3d8bbwe',
+          'bin',
+        ),
+        join(process.env.ProgramFiles ?? '', 'GitHub CLI', 'bin'),
+        join(process.env.LOCALAPPDATA ?? '', 'Programs', 'GitHub CLI', 'bin'),
+      ]
+    : ['/usr/local/bin', '/usr/bin', '/opt/homebrew/bin'];
+
+// Renvoie de quoi lancer `gh` — le nom nu s'il est sur le PATH, sinon un chemin
+// absolu — ou `null` si la CLI est réellement absente de la machine.
+const resolveGh = () => {
+  if (hasBinary('gh')) return 'gh';
+  const exe = process.platform === 'win32' ? 'gh.exe' : 'gh';
+  for (const dir of GH_FALLBACK_DIRS) {
+    if (!dir) continue;
+    const candidate = join(dir, exe);
+    if (existsSync(candidate)) return candidate;
+  }
+  return null;
+};
+
 // ── 1) Compte GitHub actif ───────────────────────────────────────────────────
 // Ankora n'a pas de token GitHub dans .env.local : l'accès passe par la CLI
 // `gh`. C'est aussi là qu'est le vrai risque — le compte ACTIF de la CLI, pas
@@ -105,11 +212,18 @@ const fingerprint = (value) =>
 // on ne peut pas déployer, donc le risque disparaît avec l'outil ; alors que
 // `git push` fonctionne très bien sans `gh`, par un autre assistant
 // d'identifiants. Le risque, lui, reste entier.
+const ghBin = LOCAL_ONLY ? null : resolveGh();
 if (LOCAL_ONLY) {
   // Sauté volontairement : seul appel réseau du script.
+} else if (!ghBin) {
+  check(
+    'Compte GitHub actif',
+    false,
+    'CLI `gh` introuvable — ni dans le PATH, ni aux emplacements d’installation connus',
+  );
 } else
   try {
-    const login = execFileSync('gh', ['api', 'user', '--jq', '.login'], {
+    const login = execFileSync(ghBin, ['api', 'user', '--jq', '.login'], {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
     }).trim();
@@ -156,13 +270,14 @@ try {
 }
 
 // ── 4) Projet Supabase lié à la CLI ──────────────────────────────────────────
-const projectRefPath = join(repoRoot, 'supabase', '.temp', 'project-ref');
-if (existsSync(projectRefPath)) {
-  const ref = readFileSync(projectRefPath, 'utf8').trim();
+const projectRefFile = resolveLinkFile('supabase', '.temp', 'project-ref');
+if (projectRefFile) {
+  const ref = readFileSync(projectRefFile.path, 'utf8').trim();
+  const origin = projectRefFile.from ? ` [via ${projectRefFile.from}]` : '';
   check(
     'Supabase projet lié',
     ref === EXPECTED.supabaseRef,
-    `ref=${ref} (attendu ${EXPECTED.supabaseRef})`,
+    `ref=${ref} (attendu ${EXPECTED.supabaseRef})${origin}`,
   );
 } else {
   check('Supabase projet lié', false, 'project-ref introuvable (`supabase link` ?)');
@@ -214,29 +329,79 @@ check(
   'Supabase de .env.local',
   Boolean(supabaseUrl?.includes(EXPECTED.supabaseRef)),
   supabaseUrl
-    ? `NEXT_PUBLIC_SUPABASE_URL ${supabaseUrl.includes(EXPECTED.supabaseRef) ? 'correspond' : 'pointe AILLEURS'}`
+    ? `NEXT_PUBLIC_SUPABASE_URL ${supabaseUrl.includes(EXPECTED.supabaseRef) ? 'correspond' : 'pointe AILLEURS'}${envOrigin}`
     : 'NEXT_PUBLIC_SUPABASE_URL absent (lancer avec --env-file=.env.local)',
 );
 
 // ── 6) Projet Vercel lié ─────────────────────────────────────────────────────
-const vercelPath = join(repoRoot, '.vercel', 'project.json');
-if (existsSync(vercelPath)) {
-  try {
-    const { orgId, projectId } = JSON.parse(readFileSync(vercelPath, 'utf8'));
-    const orgOk = fingerprint(orgId) === EXPECTED.vercelOrgFingerprint;
-    const projectOk = fingerprint(projectId) === EXPECTED.vercelProjectFingerprint;
+// `vercel link` produit DEUX formes de lien selon qu'on lie un projet ou le
+// dépôt entier, et elles n'écrivent pas le même fichier :
+//   - scope projet : `.vercel/project.json` → { orgId, projectId }
+//   - scope dépôt  : `.vercel/repo.json`    → { projects: [{ id, orgId, directory }] }
+//
+// N'accepter que la première rendait un NO-GO PERMANENT sur une machine liée en
+// scope dépôt — donc sur un dépôt pourtant correctement lié. Mesuré ici du
+// 29 juillet au 1er août 2026 : `--no-verify` était devenu le seul moyen de
+// committer, ce qui emportait aussi le contrôle de compte du pre-push. Un
+// garde-fou qu'on prend l'habitude de contourner ne garde plus rien.
+//
+// Accepter les deux ne baisse pas la barre : les deux formes portent les MÊMES
+// identifiants (organisation + projet), donc la vérification par empreinte est
+// rigoureusement identique. C'est le LIEN qui est validé, pas le fichier qui le
+// porte — et un lien vers le mauvais compte reste un ❌ dans les deux cas.
+const readVercelLink = () => {
+  const projectFile = resolveLinkFile('.vercel', 'project.json');
+  if (projectFile) {
+    const { orgId, projectId } = JSON.parse(readFileSync(projectFile.path, 'utf8'));
+    return { orgId, projectId, source: 'project.json', from: projectFile.from };
+  }
+
+  const repoFile = resolveLinkFile('.vercel', 'repo.json');
+  if (repoFile) {
+    const { projects } = JSON.parse(readFileSync(repoFile.path, 'utf8'));
+    const entries = Array.isArray(projects) ? projects : [];
+    // Un lien de scope dépôt mappe des RÉPERTOIRES vers des projets. Ankora
+    // n'est pas un monorepo : l'entrée qui nous concerne est celle de la racine.
+    // On ne se rabat sur l'entrée unique que s'il n'y en a qu'une — piocher au
+    // hasard parmi plusieurs reviendrait à valider n'importe quel projet, et
+    // c'est exactement le mélange perso/pro que ce script existe pour empêcher.
+    const entry =
+      entries.find((p) => p.directory === '.') ?? (entries.length === 1 ? entries[0] : undefined);
+    if (!entry) {
+      throw new Error(
+        entries.length
+          ? `repo.json ne décrit aucun projet pour la racine (${entries.length} entrées)`
+          : 'repo.json ne contient aucun projet',
+      );
+    }
+    return { orgId: entry.orgId, projectId: entry.id, source: 'repo.json', from: repoFile.from };
+  }
+
+  return null;
+};
+
+try {
+  const link = readVercelLink();
+  if (!link) {
+    check(
+      'Vercel projet lié',
+      false,
+      'aucun lien Vercel — ni .vercel/project.json ni .vercel/repo.json (`vercel link` ?)',
+    );
+  } else {
+    const orgOk = fingerprint(link.orgId) === EXPECTED.vercelOrgFingerprint;
+    const projectOk = fingerprint(link.projectId) === EXPECTED.vercelProjectFingerprint;
+    const origin = link.from ? ` [via ${link.from}]` : '';
     check(
       'Vercel projet lié',
       orgOk && projectOk,
       orgOk && projectOk
-        ? 'organisation et projet correspondent'
-        : `empreinte ${orgOk ? 'projet' : 'organisation'} différente — lié au mauvais compte ?`,
+        ? `organisation et projet correspondent (via ${link.source})${origin}`
+        : `empreinte ${orgOk ? 'projet' : 'organisation'} différente (via ${link.source})${origin} — lié au mauvais compte ?`,
     );
-  } catch (error) {
-    check('Vercel projet lié', false, `project.json illisible : ${error.message.split('\n')[0]}`);
   }
-} else {
-  check('Vercel projet lié', false, '.vercel/project.json introuvable (`vercel link` ?)');
+} catch (error) {
+  check('Vercel projet lié', false, `lien Vercel illisible : ${error.message.split('\n')[0]}`);
 }
 
 // ── 6bis) Compte Vercel réellement connecté ──────────────────────────────────
@@ -277,7 +442,7 @@ check(
   'URL applicative',
   isLocal || isProd,
   appUrl
-    ? `${appUrl} — ${isLocal ? `dev local (prod = ${EXPECTED.appHost}, définie côté Vercel)` : 'production'}`
+    ? `${appUrl} — ${isLocal ? `dev local (prod = ${EXPECTED.appHost}, définie côté Vercel)` : 'production'}${envOrigin}`
     : 'NEXT_PUBLIC_APP_URL absent',
 );
 
@@ -286,13 +451,13 @@ check(
 check(
   'Supabase access token',
   Boolean(process.env.SUPABASE_ACCESS_TOKEN),
-  process.env.SUPABASE_ACCESS_TOKEN ? 'présent' : 'SUPABASE_ACCESS_TOKEN absent',
+  process.env.SUPABASE_ACCESS_TOKEN ? `présent${envOrigin}` : 'SUPABASE_ACCESS_TOKEN absent',
 );
 check(
   'Supabase DB password',
   Boolean(process.env.SUPABASE_DB_PASSWORD),
   process.env.SUPABASE_DB_PASSWORD
-    ? 'présent'
+    ? `présent${envOrigin}`
     : 'SUPABASE_DB_PASSWORD absent (requis pour `supabase db push`)',
 );
 

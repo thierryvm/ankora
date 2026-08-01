@@ -10,9 +10,9 @@ import { cn } from '../utils';
  * 11 atoms duplicated `[...].filter(Boolean).join(' ')` patterns).
  *
  * The atom call sites pass:
- *   cn('atm-X', className)                  // optional className passthrough
+ *   cn('ui-X',className)                  // optional className passthrough
  *   cn('drw-Y', cond && 'is-Z')             // conditional modifier
- *   cn('atm-X', cond ? 'is-Z' : '')         // ternary modifier
+ *   cn('ui-X',cond ? 'is-Z' : '')         // ternary modifier
  *
  * These tests pin the contract so a future refactor (replacing clsx+twMerge,
  * narrowing the signature, etc.) cannot silently break the 12 atom call sites.
@@ -32,12 +32,12 @@ describe('cn() — class-name utility', () => {
 
   it('keeps conditional class when truthy (ternary atom pattern)', () => {
     const isActive = true;
-    expect(cn('atm-tab', isActive ? 'is-active' : '')).toBe('atm-tab is-active');
+    expect(cn('ui-tab', isActive ? 'is-active' : '')).toBe('ui-tab is-active');
   });
 
   it('drops conditional class when falsy (ternary atom pattern)', () => {
     const isActive = false;
-    expect(cn('atm-tab', isActive ? 'is-active' : '')).toBe('atm-tab');
+    expect(cn('ui-tab', isActive ? 'is-active' : '')).toBe('ui-tab');
   });
 
   it('returns empty string when given no truthy input', () => {

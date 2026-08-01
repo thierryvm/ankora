@@ -149,7 +149,8 @@ export async function Header({ variant = 'marketing', isAuthenticated, userEmail
                       WebAIM, both pass WCAG SC 1.4.11 Non-text Contrast 3:1.
                       Bumped from amber-600 (#d97706 ≈ 2.91:1 on white — fails
                       AA in light mode). Kept distinct from `--color-warning`
-                      token (still amber-600 elsewhere @cowork 2026-04-25);
+                      (which itself left amber-600 for #a35a06 on 2026-07-29,
+                      ADR-035, and now carries a dark-mode override);
                       this marker uses the deeper shade only because it
                       doubles as the *only* visual indicator of the private
                       zone. Mirrored in HeaderNav.tsx drawer (PR-UX-1). */}

@@ -9,6 +9,7 @@ import {
   APP_DESTINATIONS,
   MOBILE_SHEET_DESTINATIONS,
   MOBILE_TAB_DESTINATIONS,
+  MOBILE_TAB_ITEMS,
   isDestinationActive,
   type AppDestination,
 } from '../app-destinations';
@@ -101,8 +102,34 @@ describe('app destinations — shape invariants', () => {
     );
   });
 
-  it('keeps the bottom bar at four tabs — the fifth slot is the "more" button', () => {
-    expect(MOBILE_TAB_DESTINATIONS).toHaveLength(4);
+  /**
+   * Five slots, Apple HIG hard cap. The composition changed on 2026-07-29
+   * (décision Q7): three destinations + the ⊕ action + the « Plus » button,
+   * where it used to be four destinations + « Plus ». `simulate` moved to the
+   * More sheet to free the slot.
+   */
+  it('keeps the bottom bar at three destinations — ⊕ and "Plus" take the other two slots', () => {
+    expect(MOBILE_TAB_DESTINATIONS).toHaveLength(3);
+  });
+
+  it('renders exactly four registry-driven slots, the fifth being the "more" button', () => {
+    expect(MOBILE_TAB_ITEMS).toHaveLength(4);
+  });
+
+  it('puts the ⊕ at the CENTRE of the five slots — the whole point of the decision', () => {
+    // Index 2 of [tab, tab, ⊕, tab] + the bar's own « Plus » = the middle of 5.
+    expect(MOBILE_TAB_ITEMS[2]).toEqual({ kind: 'action', id: 'addExpense' });
+  });
+
+  it('loses no tab destination when the ⊕ is spliced in', () => {
+    const destinations = MOBILE_TAB_ITEMS.filter((item) => item.kind === 'destination');
+    expect(destinations.map((d) => d.id)).toEqual(MOBILE_TAB_DESTINATIONS.map((d) => d.id));
+  });
+
+  it('keeps the ⊕ out of APP_DESTINATIONS — it has no route, and the guard must stay total', () => {
+    // Giving it a fake href to fit the shape would have meant loosening the
+    // filesystem check that exists to stop a route going unreachable.
+    expect(APP_DESTINATIONS.map((d) => d.id)).not.toContain('addExpense');
   });
 
   it('matches the cockpit root exactly so it does not light up on sub-routes', () => {

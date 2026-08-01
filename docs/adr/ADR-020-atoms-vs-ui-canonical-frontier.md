@@ -1,7 +1,8 @@
 # ADR-020 — Frontière canonique `atoms/` (identité visuelle CD#3) vs `ui/` (infrastructure Radix)
 
-- **Statut** : Accepted
+- **Statut** : Superseded by [ADR-034](ADR-034-suppression-atoms-et-design-playground.md)
 - **Date** : 2026-05-18
+- **Superseded le** : 2026-07-29 — `atoms/` et `/design-playground` supprimés (décision Q6 de [`docs/specs/2026-07-29-decisions-ankora.md`](../specs/2026-07-29-decisions-ankora.md)). Cet ADR n'est **pas** réécrit : il documente la frontière qui a effectivement gouverné le code du 2026-05-18 au 2026-07-29.
 - **Accepté le** : 2026-05-18 par Thierry vanmeeteren (via délégation @cowork)
 - **Proposé par** : @cowork (orchestration) + @cc-ankora (diagnostic factuel)
 - **À accepter par** : Thierry vanmeeteren (Product Owner)

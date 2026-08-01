@@ -276,7 +276,7 @@ L'app est utilisable depuis toute l'UE. Les avertissements réglementaires sont 
 
 Voir [docs/ROADMAP.md](docs/ROADMAP.md) pour la roadmap détaillée.
 
-**Statut actuel** : design Ankora V1.0 entièrement figé (sessions Claude Design #1 à #5 livrées 2026-05-09). Intégration React/Tailwind en cours via PR-D4 PHASE 2 (atomic design 11 atoms + cockpit + admin RBAC).
+**Statut actuel** : design Ankora V1.0 entièrement figé (sessions Claude Design #1 à #5 livrées 2026-05-09). Les composants d'interface vivent tous dans `src/components/ui/` — la bibliothèque `atoms/` parallèle et sa vitrine `/design-playground`, qu'aucun écran n'importait, ont été supprimées (ADR-034).
 
 **Trois jalons V1.0 publique** :
 

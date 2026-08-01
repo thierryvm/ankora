@@ -6,18 +6,15 @@ import { useLocale, useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/toast';
+import { AddExpenseSheet } from '@/components/expenses/AddExpenseSheet';
 import type { Locale } from '@/i18n/routing';
-import { createExpenseAction, deleteExpenseAction } from '@/lib/actions/expenses';
+import { deleteExpenseAction } from '@/lib/actions/expenses';
 import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
 import { formatCurrency, formatDate, formatMonth } from '@/lib/i18n/formatters';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 
 import { ExpenseEditDrawer, type ExpenseEditDrawerExpense } from './ExpenseEditDrawer';
-import { resteAVivreStatus } from './reste-a-vivre';
-import { todayInAnkoraTz } from '@/lib/date/tz';
 
 type RawExpense = {
   id: string;
@@ -29,29 +26,26 @@ type RawExpense = {
 
 type Props = {
   expenses: RawExpense[];
-  /** Monthly « vie courante » budget (reste à vivre). */
-  resteAVivre: number;
   /**
    * AUTHORITATIVE total spent this month, summed server-side from the COMPLETE
    * (unlimited) `monthlyExpenses`. The `expenses` list is capped at 50 rows, so
-   * the budget/bar/over-budget MUST NOT be derived from it — past the 51st
-   * current-month expense it would under-report spend and overstate what's left
+   * the month total MUST NOT be derived from it — past the 51st
+   * current-month expense it would under-report the spend
    * (a lie about the user's money). Sourcery #242.
    */
   spentThisMonth: number;
   currentYear: number;
   currentMonth: number;
-  /** Days left in the current month (Europe/Brussels), for the per-day figure. */
-  joursRestants: number;
+  /** Days elapsed in the current month, including today. */
+  joursEcoules: number;
 };
 
 export function ExpensesClient({
   expenses,
-  resteAVivre,
   spentThisMonth,
   currentYear,
   currentMonth,
-  joursRestants,
+  joursEcoules,
 }: Props) {
   const t = useTranslations('app.expenses');
   const locale = useLocale() as Locale;
@@ -59,38 +53,8 @@ export function ExpensesClient({
   const fmt = (value: Parameters<typeof formatCurrency>[0]) => formatCurrency(value, locale);
 
   const [isPending, startTransition] = useTransition();
-  const [label, setLabel] = useState('');
-  const [amount, setAmount] = useState('');
-  const [occurredOn, setOccurredOn] = useState(todayInAnkoraTz());
   const [editingExpense, setEditingExpense] = useState<ExpenseEditDrawerExpense | null>(null);
-
-  function onCreate(e: React.FormEvent) {
-    e.preventDefault();
-    startTransition(async () => {
-      try {
-        const result = await createExpenseAction({
-          label: label.trim(),
-          amount: Number(amount),
-          occurredOn,
-          categoryId: null,
-          note: null,
-        });
-        if (result.ok) {
-          toast.success(t('toastCreated'));
-          setLabel('');
-          setAmount('');
-        } else {
-          toast.error(translateError(result.errorCode));
-        }
-      } catch (err) {
-        // PR-BETA-3 hotfix #3 doctrine — never swallow Next.js control flow.
-        if (isNextControlFlowError(err)) throw err;
-        // eslint-disable-next-line no-console
-        console.error('createExpenseAction threw', err);
-        toast.error(translateError('errors.expenses.createFailed'));
-      }
-    });
-  }
+  const [isAddOpen, setIsAddOpen] = useState(false);
 
   function onDelete(id: string) {
     startTransition(async () => {
@@ -118,14 +82,18 @@ export function ExpensesClient({
   }
 
   // Split the (capped) list for DISPLAY by the current calendar month. The
-  // budget math below never uses these sums — it uses the authoritative
-  // `spentThisMonth` (complete, server-side) so pagination can't skew the money.
+  // per-day figure below never uses these sums — it uses the authoritative
+  // `spentThisMonth` (complete, server-side) so pagination cannot skew the money.
   const monthPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
   const thisMonth = expenses.filter((e) => e.occurredOn.startsWith(monthPrefix));
   const earlier = expenses.filter((e) => !e.occurredOn.startsWith(monthPrefix));
-  const status = resteAVivreStatus(resteAVivre, spentThisMonth, joursRestants);
   const monthName = formatMonth(currentMonth, locale, 'long');
-  const barAria = t('barAria', { spent: fmt(spentThisMonth), budget: fmt(resteAVivre) });
+  // ADR-035 — average daily spend so far. Replaces the former progress bar,
+  // which measured spending against `reste_a_vivre_default`: a 500 € constant
+  // most users never chose. A bar needs a denominator, and there is no honest
+  // one here any more — so the page states what actually happened instead of
+  // scoring it against an invented target. "What is left" is the hero's job.
+  const perDayEcoule = joursEcoules > 0 ? spentThisMonth / joursEcoules : null;
 
   const renderRow = (e: RawExpense) => (
     <li key={e.id} data-testid={`expenses-row-${e.id}`}>
@@ -179,115 +147,58 @@ export function ExpensesClient({
         <p className="text-muted-foreground mt-1">{t('subtitle')}</p>
       </header>
 
-      {/* « Reste à vivre » — this month's daily-living budget minus what has
-          actually been spent, with a live per-day figure (real decrement). */}
-      <Card data-testid="reste-a-vivre-card">
+      {/* « Dépensé ce mois » — the authoritative server-side total, with the
+          average daily rate so far. No budget, no bar: ADR-035 removed the
+          envelope this used to be measured against. */}
+      <Card data-testid="depense-mois-card">
         <CardContent className="flex flex-col gap-4 py-6">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            {/* Real <h2> (not a <p>) so screen-reader heading navigation has a
-                landmark for this section — the page otherwise has only the h1. */}
-            <h2 className="text-muted-foreground text-sm font-medium">
-              {t('resteAVivreLabel', { month: monthName })}
-            </h2>
-            {status.isOver && (
-              <span
-                className="bg-danger inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold text-white"
-                data-testid="reste-a-vivre-over"
-              >
-                {t('overBudget', { amount: fmt(Math.abs(status.remaining)) })}
-              </span>
-            )}
-          </div>
+          {/* Real <h2> (not a <p>) so screen-reader heading navigation has a
+              landmark for this section — the page otherwise has only the h1. */}
+          <h2 className="text-muted-foreground text-sm font-medium">
+            {t('depenseMoisLabel', { month: monthName })}
+          </h2>
           <p
-            className={`text-4xl font-bold tracking-tight tabular-nums ${
-              status.isOver ? 'text-danger' : 'text-foreground'
-            }`}
-            data-testid="reste-a-vivre-remaining"
+            className="text-foreground text-4xl font-bold tracking-tight tabular-nums"
+            data-testid="depense-mois-total"
           >
-            {fmt(status.remaining)}
+            {fmt(spentThisMonth)}
           </p>
-          <div
-            className="bg-surface-muted h-2 w-full overflow-hidden rounded-full"
-            role="progressbar"
-            aria-valuenow={Math.round(status.spentRatio * 100)}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={barAria}
-            data-testid="reste-a-vivre-bar"
-          >
-            <div
-              className={`h-full rounded-full ${status.isOver ? 'bg-danger' : 'bg-brand-600'}`}
-              style={{ width: `${status.spentRatio * 100}%` }}
-            />
-          </div>
-          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs">
-            <span className="text-muted-foreground">
-              {t('spentOfBudget', { spent: fmt(spentThisMonth), budget: fmt(resteAVivre) })}
-            </span>
-            {status.perDay !== null && (
-              <span
-                className="text-muted-foreground tabular-nums"
-                data-testid="reste-a-vivre-perday"
-              >
-                {t('perDay', { amount: fmt(status.perDay), days: joursRestants })}
-              </span>
-            )}
-          </div>
+          {perDayEcoule !== null && (
+            <p
+              className="text-muted-foreground text-xs tabular-nums"
+              data-testid="depense-mois-perday"
+            >
+              {t('perDayElapsed', { amount: fmt(perDayEcoule), days: joursEcoules })}
+            </p>
+          )}
         </CardContent>
       </Card>
 
-      {/* Add form stays ALWAYS visible (unlike ChargesClient, which collapses
-          it): logging a daily expense is a frequent, quick action — the whole
-          point of a « vie courante » tracker — so it earns permanent screen
-          real estate. Deliberate cross-page divergence, not an oversight. */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('addFormTitle')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={onCreate} className="grid gap-4 md:grid-cols-3">
-            <div className="flex flex-col gap-2 md:col-span-2">
-              <Label htmlFor="label">{t('labelLabel')}</Label>
-              <Input
-                id="label"
-                value={label}
-                onChange={(e) => setLabel(e.target.value)}
-                required
-                maxLength={120}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="amount">{t('amountLabel')}</Label>
-              <Input
-                id="amount"
-                type="number"
-                inputMode="decimal"
-                min={0}
-                step="0.01"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                required
-              />
-            </div>
-            <div className="flex flex-col gap-2 md:col-span-2">
-              <Label htmlFor="occurredOn">{t('dateLabel')}</Label>
-              <Input
-                id="occurredOn"
-                type="date"
-                value={occurredOn}
-                onChange={(e) => setOccurredOn(e.target.value)}
-                required
-              />
-            </div>
-            <div className="md:col-span-3">
-              <Button type="submit" disabled={isPending}>
-                <Plus className="h-4 w-4" />
-                {isPending ? t('adding') : t('addButton')}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+      {/*
+        The inline add form is gone, replaced by the shared entry sheet.
+
+        It carried `categoryId: null` hardcoded — two lines of UI that
+        disconnected a table, a foreign key and an Accepted ADR (ADR-022) from
+        the product. The fix is not to teach this form about categories: it is
+        to stop having two entry paths. One flow, one implementation, one place
+        where the 2-tap promise and the « Il te restera X € » projection live.
+
+        Kept as a full-width button rather than only the ⊕: this button is
+        visible on desktop, where the bottom tab bar is not rendered at all
+        (`md:hidden`). Without it the expense page would have no way to add one
+        above 768 px. Desktop gets its proper treatment in the next chantier;
+        this is the floor, not the design.
+      */}
+      <Button
+        type="button"
+        size="lg"
+        onClick={() => setIsAddOpen(true)}
+        data-testid="expenses-open-add-sheet"
+        className="self-start"
+      >
+        <Plus className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+        {t('addButton')}
+      </Button>
 
       <Card>
         <CardHeader>
@@ -330,6 +241,7 @@ export function ExpensesClient({
       </Card>
 
       <ExpenseEditDrawer expense={editingExpense} onClose={() => setEditingExpense(null)} />
+      <AddExpenseSheet open={isAddOpen} onClose={() => setIsAddOpen(false)} />
     </div>
   );
 }

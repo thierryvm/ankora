@@ -27,7 +27,11 @@ export function Prose({ children }: { children: ReactNode }) {
         '[&_ul]:my-4 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-6',
         '[&_ol]:my-4 [&_ol]:list-decimal [&_ol]:space-y-2 [&_ol]:pl-6',
         '[&_li]:text-foreground [&_li]:leading-relaxed',
-        '[&_li::marker]:text-brand-600',
+        // `text-brand-text`, not `text-brand-600`: the semantic token already
+        // carries a per-theme value (#0f766e light / #2dd4bf dark, both AA),
+        // whereas the scale step is a single value that fails AA on white
+        // (3.74:1) and is used for focus rings, not text (ADR-035).
+        '[&_li::marker]:text-brand-text',
         // Links — 5.5:1 contrast + clear affordance
         '[&_a]:text-brand-700 [&_a]:decoration-brand-600/40 hover:[&_a]:decoration-brand-700 [&_a]:font-medium [&_a]:underline [&_a]:underline-offset-4',
         'dark:[&_a]:text-brand-300 dark:[&_a]:decoration-brand-300/50',

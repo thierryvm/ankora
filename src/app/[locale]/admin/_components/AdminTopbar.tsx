@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import * as React from 'react';
 
-import { ThemeToggle, type Theme } from '@/components/atoms';
+import { ThemeToggle, type Theme } from '@/components/ui/theme-toggle';
 
 import { LangSwitcherClient } from './_client/LangSwitcherClient';
 
@@ -10,11 +10,11 @@ import { LangSwitcherClient } from './_client/LangSwitcherClient';
  *
  * Reads the `theme` cookie SSR-side to seed `ThemeToggle.initialTheme` so the
  * client toggle shows the correct icon on first render (no hydration flash).
- * The atom itself owns the cookie write + `data-theme` attribute mutation
- * (cf. ThemeToggle Task 12, PR-D4-PHASE2-A) — no Server Action needed.
+ * The toggle itself owns the cookie write + `data-theme` attribute mutation —
+ * no Server Action needed.
  *
- * `LangSwitcherClient` is a thin Client wrapper around the LangSwitcher atom
- * that wires `onChange` to next-intl's `router.replace(pathname, { locale })`.
+ * `LangSwitcherClient` is a thin Client wrapper around `LangSwitcher` that
+ * wires `onChange` to next-intl's `router.replace(pathname, { locale })`.
  * The handler cannot be defined Server-side (function not serializable).
  *
  * Design intent: the topbar surface stays minimal in PR-D4-PHASE2-B — just

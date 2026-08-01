@@ -9,7 +9,11 @@ export type PrevisionMonth = Readonly<{
   month: number;
   /** Sum of every active charge whose paymentMonths includes this month. */
   totalCharges: Decimal;
-  /** revenus - totalCharges - plafondQuotidien — same calc as the marge brute. */
+  /**
+   * `revenus − totalCharges`. Used to subtract a `plafondQuotidien` — the
+   * daily-living envelope — which ADR-035 removed: it was a number the user
+   * had to invent, and no production screen ever supplied it here.
+   */
   margePrevue: Decimal;
 }>;
 
@@ -17,7 +21,6 @@ export type PrevisionsInput = Readonly<{
   charges: readonly CockpitCharge[];
   ref: ReferencePeriod;
   revenus: Decimal;
-  plafondQuotidien: Decimal;
   /** How many months to project. Spec is fixed at 6; exposed for testing. */
   horizonMonths?: number;
 }>;
@@ -48,7 +51,7 @@ export function genererPrevisions(input: PrevisionsInput): readonly PrevisionMon
       .filter((c) => c.isActive && c.paymentMonths.includes(month))
       .reduce((acc, c) => acc.plus(c.amount), new Decimal(0));
 
-    const margePrevue = input.revenus.minus(totalCharges).minus(input.plafondQuotidien);
+    const margePrevue = input.revenus.minus(totalCharges);
 
     out.push({ year, month, totalCharges, margePrevue });
   }

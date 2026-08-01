@@ -88,7 +88,8 @@
       "bills": "Facturen",
       "expenses": "Uitgaven",
       "simulate": "Simuleren",
-      "more": "Meer"
+      "more": "Meer",
+      "addExpense": "Een uitgave toevoegen"
     },
     "moreSheet": {
       "title": "Meer",
@@ -103,6 +104,10 @@
         "accounts": "Rekeningen",
         "commitments": "Verbintenissen",
         "settings": "Instellingen",
+        "simulate": "Simuleren",
+        "cockpit": "Cockpit",
+        "bills": "Facturen",
+        "expenses": "Uitgaven",
         "admin": "Admin",
         "adminAriaLabel": "Adminzone (alleen oprichter)",
         "faq": "FAQ",
@@ -866,6 +871,27 @@
     "expenses": {
       "title": "Mijn uitgaven",
       "subtitle": "De uitgaven buiten de terugkerende vaste kosten — boodschappen, resto, vrije tijd…",
+      "addSheet": {
+        "title": "Nieuwe uitgave",
+        "cancel": "Annuleren",
+        "close": "Sluiten",
+        "amountLabel": "Bedrag in euro",
+        "categoryLabel": "Categorie",
+        "moreCategories": "Alle categorieën bekijken",
+        "noCategories": "Geen uitgavecategorie in je ruimte. Het bedrag wordt zonder categorie opgeslagen.",
+        "dateLabel": "Datum",
+        "dateToday": "Vandaag",
+        "dateYesterday": "Gisteren",
+        "labelLabel": "Omschrijving (optioneel)",
+        "fallbackLabel": "Uitgave",
+        "projection": "Je houdt {amount} over",
+        "projectionIdle": "Je hebt {amount} over",
+        "submit": "Toevoegen",
+        "submitting": "Toevoegen…",
+        "toastCreated": "Uitgave van {amount} opgeslagen",
+        "pastMonthNotice": "Deze datum valt buiten deze maand: het maandcijfer verandert niet.",
+        "contextFailed": "Je categorieën konden niet worden geladen. Je kan het bedrag toch opslaan."
+      },
       "addFormTitle": "Uitgave toevoegen",
       "labelLabel": "Omschrijving",
       "amountLabel": "Bedrag (€)",
@@ -890,11 +916,8 @@
         "confirmDelete": "“{label}” — {amount} verwijderen? Deze uitgave wordt definitief gewist.",
         "confirmDeleteAction": "Ja, verwijderen"
       },
-      "resteAVivreLabel": "Dagelijks leven — {month}",
-      "overBudget": "{amount} over budget",
-      "spentOfBudget": "{spent} besteed van {budget}",
-      "perDay": "≈ {amount}/dag (nog {days} dagen)",
-      "barAria": "Dagelijks leven: {spent} besteed van {budget}.",
+      "depenseMoisLabel": "Deze maand uitgegeven — {month}",
+      "perDayElapsed": "≈ {amount}/dag over {days} dagen",
       "earlierToggle": "Vorige maanden ({count})"
     },
     "settings": {
@@ -995,8 +1018,8 @@
       "impact": {
         "title": "Impact",
         "empty": "Kies een vaste kost om de impact te zien.",
-        "resteDisponible": "Beschikbaar saldo",
-        "resteDisponibleRange": "Beschikbaar saldo: van {from} tot {to} per maand",
+        "resteDisponible": "Maandbudget",
+        "resteDisponibleRange": "Maandbudget: van {from} tot {to} per maand",
         "perMonth": "/ maand",
         "annualSavings": "Jaarlijkse besparing",
         "effortAnchor": "Vereffende inspanning: {current} → {projected}",
@@ -1007,7 +1030,7 @@
         "cumul6mGain": "Over 6 maanden, +{amount} beschikbaar saldo",
         "cumul6mLoss": "Over 6 maanden, −{amount} beschikbaar saldo",
         "cumul6mNeutral": "Geen impact over 6 maanden",
-        "incomeHint": "Voeg je inkomen toe om de impact op je beschikbaar saldo te zien.",
+        "incomeHint": "Voeg je inkomen toe om de impact op je maandbudget te zien.",
         "incomeHintCta": "Mijn inkomen instellen",
         "pedago": {
           "gainTitle": "Goede keuze.",
@@ -1043,12 +1066,6 @@
       "toastCancelled": "Aanvraag geannuleerd — je account blijft behouden"
     },
     "cockpit": {
-      "capaciteEpargneReelle": {
-        "title": "Real Savings Capacity",
-        "messagePositive": "This is what you truly have left every month, with no surprises.",
-        "messageNegative": "Warning — your overall lifestyle exceeds your income.",
-        "tooltip": "This subtracts every charge (smoothed over the year) and your daily allowance from your monthly income. That is what is actually left for savings or unexpected expenses."
-      },
       "santeProvisions": {
         "title": "Provisions Health",
         "cibleTheorique": "Ideal theoretical target:",
@@ -1088,23 +1105,23 @@
   },
   "dashboard": {
     "situation": {
-      "heroLabel": "Beschikbaar saldo",
-      "heroSubtitle": "Wat je overhoudt na je vaste kosten en voorzieningen",
+      "heroLabel": "Je houdt over",
+      "heroAnchor": "van {budget} budget · {depense} uitgegeven",
       "voirPlan": "Bekijk het plan",
       "statut": {
         "vert": "Je houdt deze maand goed overzicht",
-        "orangeCapacite": "Deze maand bijsturen",
+        "orangeDepasse": "Je gaf deze maand te veel uit",
         "orangeProvisions": "Voorzieningen aanvullen",
         "rouge": "Je vaste kosten overstijgen je inkomen"
       },
       "nudge": {
-        "orangeCapacite": "Je spaargeld zakt onder nul ({capacite}). Bekijk het plan om bij te sturen.",
+        "orangeDepasse": "Je gaf {montant} meer uit dan je deze maand had. Laten we samen kijken wat kan bewegen.",
         "orangeProvisions": "Er ontbreekt {deficit} om je komende kosten te dekken. Voorgestelde inhaalbeweging: {rattrapage}/maand.",
         "rouge": "Je vaste kosten en voorzieningen ({obligations}) overstijgen je inkomen ({revenus}). We bekijken samen wat kan bewegen."
       },
       "incomplet": {
         "title": "Vervolledig je situatie",
-        "body": "Voeg je inkomen toe om je beschikbaar saldo deze maand te zien.",
+        "body": "Voeg je inkomen toe om te zien wat je deze maand overhoudt.",
         "cta": "Mijn inkomen instellen"
       },
       "flow": {
@@ -1112,49 +1129,20 @@
         "chargesFixes": "Vaste kosten",
         "provisions": "Gespreide voorzieningen",
         "engagements": "Verbintenissen",
-        "resteDisponible": "Beschikbaar saldo",
-        "resteAVivre": "Dagelijks leven",
-        "capaciteEpargne": "Spaarcapaciteit",
-        "ajuster": "Deze maand aanpassen",
+        "resteDisponible": "Maandbudget",
+        "depense": "Deze maand uitgegeven",
+        "ilTeReste": "Je houdt over",
+        "epargneEstimee": "Geschat spaarbedrag",
         "parJour": "≈ {amount}/dag"
       },
-      "barAria": "Verdeling van je inkomen: {charges} vaste kosten, {provisions} voorzieningen, {vieCourante} dagelijks leven, {epargne} mogelijk spaargeld.",
-      "barAriaEngagements": "Waarvan {engagements} aan verbintenissen."
-    },
-    "effort": {
-      "title": "Vereffende financiële inspanning",
-      "charges_fixes": "Vaste kosten",
-      "provisions": "Voorzieningen"
-    },
-    "capacite": {
-      "title": "Werkelijke spaarcapaciteit",
-      "message_positive": "Dit is wat je elke maand echt overhoudt, zonder verrassingen.",
-      "message_negative": "Let op: je totale levensstijl overschrijdt je inkomen.",
-      "breakdown": {
-        "revenus": "Inkomen",
-        "effort": "Vereffende financiële inspanning",
-        "plafond": "Dagelijks plafond"
-      },
-      "subStats": {
-        "resteDisponible": "Beschikbaar saldo",
-        "resteAVivre": "Leefbudget",
-        "capaciteEpargne": "Spaarcapaciteit",
-        "ajusterCeMois": "Deze maand aanpassen"
-      },
-      "ledePositif": "Je kan deze maand {amount} opzij zetten bovenop je automatische overschrijvingen. Je beslist zelf hoeveel je echt spaart.",
-      "ledeNegatif": "Je levensstijl overschrijdt deze maand je inkomen. We kunnen samen kijken wat aangepast kan worden.",
-      "tooltip": "Dit bedrag trekt je vaste lasten, je over het jaar uitgesmeerde provisies en je geraamde leefbudget ({resteAVivre}) af. Het is wat je extra kan kiezen te sparen.",
-      "drawer": {
-        "title": "Leefbudget voor deze maand aanpassen",
-        "inputLabel": "Hoeveel ga je deze maand uitgeven om te leven?",
-        "inputHint": "Boodschappen, uitgaan, vrije tijd, plezier, dagelijkse onverwachte uitgaven",
-        "helperCoherent": "Schatting die past bij een typisch Belgisch budget.",
-        "helperBas": "Lage schatting. Je kan dit later aanpassen als nodig.",
-        "helperHaut": "Hoge schatting. Ankora respecteert je budget — geen oordeel.",
-        "save": "Opslaan",
-        "cancel": "Annuleren",
-        "success": "Leefbudget aangepast voor deze maand.",
-        "errorGeneric": "De aanpassing kon niet worden opgeslagen. Probeer het zo opnieuw."
+      "barAria": "Verdeling van je inkomen: {charges} vaste kosten, {provisions} voorzieningen, {depense} uitgegeven, {reste} over.",
+      "barAriaEngagements": "Waarvan {engagements} aan verbintenissen.",
+      "pace": {
+        "barAria": "{depense} besteed van {budget} maandbudget, op dag {jours} van {total}.",
+        "perDay": "{amount} / dag tot de {day}e",
+        "onTrack": "op schema",
+        "faster": "boven schema",
+        "exceeded": "budget overschreden"
       }
     },
     "daily": {
@@ -1231,6 +1219,18 @@
       "description": "Er is een onverwachte fout opgetreden. Je gegevens zijn veilig.",
       "ctaRetry": "Opnieuw proberen",
       "ctaHome": "Terug naar startpagina"
+    },
+    "unavailable": {
+      "title": "Dienst tijdelijk niet beschikbaar",
+      "description": "We kunnen de authenticatiedienst momenteel niet bereiken. Je gegevens zijn intact en je sessie is niet afgesloten. Probeer het straks opnieuw.",
+      "ctaRetry": "Opnieuw proberen",
+      "ctaHome": "Terug naar de startpagina"
+    },
+    "dataUnavailable": {
+      "title": "Je gegevens kunnen niet geladen worden",
+      "description": "We kunnen je werkruimte nu niet lezen. Er is niets verloren en niets gewijzigd — het lezen is mislukt, niet je gegevens. Probeer het straks opnieuw.",
+      "ctaRetry": "Opnieuw proberen",
+      "ctaHome": "Terug naar de startpagina"
     },
     "session": {
       "expired": "Sessie verlopen. Log opnieuw in.",
@@ -1413,8 +1413,7 @@
       "deletionRequestFailed": "Kan de verwijdering niet inplannen.",
       "deletionCancelFailed": "Kan de aanvraag niet annuleren.",
       "deletionCancelTooLate": "Het verwijderen is al gestart en kan niet meer worden geannuleerd.",
-      "exportLimited": "Export beperkt tot één keer per 5 minuten.",
-      "resteAVivreUpdateFailed": "Kon het leefbudget niet aanpassen. Probeer het zo opnieuw."
+      "exportLimited": "Export beperkt tot één keer per 5 minuten."
     },
     "onboarding": {
       "workspaceNotFound": "Workspace niet gevonden. Contacteer de support.",

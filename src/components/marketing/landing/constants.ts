@@ -36,7 +36,8 @@ export type HeroKpi = {
 
 export const HERO_KPIS: readonly HeroKpi[] = [
   // Switched from `text-success-300` (#34d399, sub-AA on white at xl size:
-  // 1.78:1) to `text-success` (#059669, AA at xl). axe-core flagged this on
+  // 1.78:1) to `text-success` (#047857 since ADR-035, 5.48:1 — was #059669 at
+  // 3.77:1, AA at xl size only). axe-core flagged this on
   // PR #78 — the KPI amounts ARE read by screen readers (informational), so
   // the "illustrative decorative" reasoning didn't apply. Vivid emerald is
   // gone in light mode but kept in dark via the same token's lightness.

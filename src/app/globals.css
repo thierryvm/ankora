@@ -129,15 +129,28 @@
   --color-accent-surface: #fefce8;
   --color-accent-surface-border: #fef9c3;
 
-  /* ---------- Semantic status colors ----------
-     Note (2026-04-25): --color-warning kept as amber #d97706 by @cowork decision —
-     warning is a universal UX signal (amber = "attention"), kept distinct from the
-     laiton brand accent to avoid sematic confusion (user reads warning vs. admin pigment). */
-  --color-success: #059669;
+  /* ---------- Semantic status colors (Light mode) ----------
+     Each of these needs a different value per theme — a single set cannot pass
+     AA on both #ffffff and #111a2e. Dark overrides live in [data-theme='dark'].
+     Ratios are computed against --color-card by src/app/__tests__/contrast-ratios.test.ts,
+     which fails under 4.5:1. Do not edit a value here without running it.
+
+     Note (2026-07-29, ADR-035 amended by ADR-036): --color-warning moves from
+     amber #d97706 to #9a3412. #d97706 sat at 3.19:1 on white — below AA — which
+     is why it had to move. The intermediate value #a35a06 reached AA (5.22) but
+     collapsed onto the laiton admin pigment --color-accent-600 #8b6914: a
+     luminance ratio of 1.03, i.e. two colours of near-identical lightness, which
+     is what the @cowork decision of 2026-04-25 existed to prevent.
+
+     #9a3412 is better on BOTH criteria at once — AA 7.31:1 on white, and 1.44
+     of luminance separation from the laiton (vs 1.60 for the original #d97706).
+     Both figures are computed, not copied: contrast-ratios.test.ts recomputes
+     them from this file and fails under 4.5:1 / under 1.30 of separation. */
+  --color-success: #047857;
   --color-success-300: #34d399; /* lighter emerald — illustrative decorative use only (cf. cc-design Landing.jsx KPIs, intentionally sub-AA on light) */
-  --color-warning: #d97706;
+  --color-warning: #9a3412;
   --color-danger: #dc2626;
-  --color-info: #0284c7;
+  --color-info: #0369a1;
 
   /* ---------- Typography (with system fallbacks to avoid FOUT) ---------- */
   --font-sans:
@@ -201,6 +214,17 @@
   --color-card: #111a2e;
   --color-surface-soft: #0f172a;
   --color-surface-muted: #0f172a;
+
+  /* Semantic status colors (Dark mode — lighter for contrast on #111a2e cards).
+     Before 2026-07-29 these four had no dark override at all: a single value
+     had to serve both themes, so each one failed AA in one of the two.
+     text-danger sat at 3.59:1 on a dark card while passing on light; warning
+     and success had the mirror problem; info failed in BOTH (4.10 / 4.23).
+     Verified by src/app/__tests__/contrast-ratios.test.ts. */
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+  --color-info: #38bdf8;
 
   /* Semantic text colors (Dark mode — lighter for contrast) */
   --color-brand-text: #2dd4bf;
@@ -555,6 +579,3 @@ body > main {
     accent-color: var(--color-brand-400);
   }
 }
-
-/* ---------- Atoms (CD#3 — PR-D4-PHASE2-A) ---------- */
-@import '../components/atoms/atoms.css';

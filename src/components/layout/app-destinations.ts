@@ -73,11 +73,71 @@ export const APP_DESTINATIONS: readonly AppDestination[] = [
   { id: 'cockpit', href: '/app', match: 'exact', mobilePlacement: 'tab' },
   { id: 'bills', href: '/app/charges', match: 'startsWith', mobilePlacement: 'tab' },
   { id: 'expenses', href: '/app/expenses', match: 'startsWith', mobilePlacement: 'tab' },
-  { id: 'simulate', href: '/app/simulator', match: 'startsWith', mobilePlacement: 'tab' },
+  // Moved from 'tab' to 'sheet' on 2026-07-29 to free the third slot for the ⊕
+  // action (décision Q7). The simulator is a monthly decision tool, not a daily
+  // consultation — of the four tabs it was the one whose visit frequency least
+  // justified a permanent slot, and it keeps a first-class entry in the More
+  // sheet plus its in-page drawer on the cockpit.
+  { id: 'simulate', href: '/app/simulator', match: 'startsWith', mobilePlacement: 'sheet' },
   { id: 'commitments', href: '/app/commitments', match: 'startsWith', mobilePlacement: 'sheet' },
   { id: 'accounts', href: '/app/accounts', match: 'startsWith', mobilePlacement: 'sheet' },
   { id: 'settings', href: '/app/settings', match: 'startsWith', mobilePlacement: 'sheet' },
 ] as const;
+
+/**
+ * The ⊕ at the centre of the bar (décision Q7) — an ACTION, not a destination.
+ *
+ * ## Why it is not in `APP_DESTINATIONS`
+ *
+ * That array is guarded by `app-destinations.test.ts`, which reads the
+ * filesystem and fails when an entry points at a route that does not exist. The
+ * ⊕ opens a sheet; it has no route. Giving it a fake `href` to fit the shape
+ * would have meant loosening the guard that exists to catch precisely that —
+ * and that guard is the reason `/app/commitments` can never go missing on
+ * mobile again. A separate declaration keeps the registry's invariant total.
+ *
+ * ## The tension this records, rather than hides
+ *
+ * Q7 names it: four tabs change view and keep their state, the fifth opens a
+ * modal. That is a genuine break in the tab-bar contract, and the ⊕ centre is an
+ * Instagram/TikTok pattern, not an Apple one — no system iOS app puts an action
+ * in its tab bar, and the HIG treats tabs as persistent destinations.
+ *
+ * It is kept anyway, for a reason that outweighs both: **frequency**. Recording
+ * an expense is the most frequent action in the app and costs 4 taps plus a
+ * scroll today. No other position gives 2 taps from any screen. The visual
+ * treatment carries the difference — a filled block, and no label, where the
+ * four destinations have an outline icon and a label.
+ */
+export type AppAction = { readonly id: 'addExpense' };
+
+export const ADD_EXPENSE_ACTION: AppAction = { id: 'addExpense' } as const;
+
+/** A slot in the mobile tab bar: either a destination or the ⊕ action. */
+export type MobileTabItem =
+  | ({ kind: 'destination' } & AppDestination)
+  | ({ kind: 'action' } & AppAction);
+
+/**
+ * The bar's slots, in display order: Mois · Factures · ⊕ · Dépenses — with
+ * « Plus » rendered as a fifth slot by `BottomTabBar` itself.
+ *
+ * Derived from `APP_DESTINATIONS` rather than re-listed, so a destination
+ * cannot appear here and nowhere else (or vice versa). The ⊕ is spliced into
+ * the middle: index 2 of 5 is the centre of the bar, which is the whole point
+ * of the decision.
+ */
+export const MOBILE_TAB_ITEMS: readonly MobileTabItem[] = (() => {
+  const tabs = APP_DESTINATIONS.filter((d) => d.mobilePlacement === 'tab').map(
+    (d) => ({ kind: 'destination', ...d }) as MobileTabItem,
+  );
+  const middle = Math.ceil(tabs.length / 2);
+  return [
+    ...tabs.slice(0, middle),
+    { kind: 'action', ...ADD_EXPENSE_ACTION },
+    ...tabs.slice(middle),
+  ];
+})();
 
 /** The four bottom-tab destinations, in display order. */
 export const MOBILE_TAB_DESTINATIONS: readonly AppDestination[] = APP_DESTINATIONS.filter(

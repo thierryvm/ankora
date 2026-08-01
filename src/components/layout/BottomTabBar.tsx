@@ -6,6 +6,7 @@ import {
   Landmark,
   LayoutDashboard,
   Menu,
+  Plus,
   Receipt,
   Settings,
   Sparkles,
@@ -16,12 +17,9 @@ import { useTranslations } from 'next-intl';
 
 import { Link } from '@/i18n/navigation';
 import { usePathname } from '@/i18n/navigation';
+import { AddExpenseSheet } from '@/components/expenses/AddExpenseSheet';
 
-import {
-  MOBILE_TAB_DESTINATIONS,
-  isDestinationActive,
-  type AppDestinationId,
-} from './app-destinations';
+import { MOBILE_TAB_ITEMS, isDestinationActive, type AppDestinationId } from './app-destinations';
 import { MoreSheet } from './MoreSheet';
 
 /**
@@ -100,8 +98,10 @@ const TAB_LABELS: Record<AppDestinationId, BottomTabLabelKey | null> = {
   cockpit: 'cockpit',
   bills: 'bills',
   expenses: 'expenses',
+  // Sheet-only destinations have no bottom-tab label. `simulate` joined them on
+  // 2026-07-29 when the ⊕ took the third slot; its key is kept because the
+  // MoreSheet reads a different namespace and this Record must stay exhaustive.
   simulate: 'simulate',
-  // Sheet-only destinations have no bottom-tab label.
   commitments: null,
   accounts: null,
   settings: null,
@@ -131,12 +131,22 @@ export function BottomTabBar({ isAdmin = false }: BottomTabBarProps) {
   const t = useTranslations('layout.bottomTab');
   const pathname = usePathname();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   // Lazy navigation transition — keeps the tab tap feeling instantaneous
   // while the destination Server Component is fetched.
   const [, startTransition] = useTransition();
 
   const handleTabClick = useCallback(() => {
     triggerHapticFeedback();
+  }, []);
+
+  const handleAddExpenseClick = useCallback(() => {
+    triggerHapticFeedback();
+    setIsAddExpenseOpen(true);
+  }, []);
+
+  const handleAddExpenseClose = useCallback(() => {
+    setIsAddExpenseOpen(false);
   }, []);
 
   const handleMoreClick = useCallback(() => {
@@ -168,15 +178,55 @@ export function BottomTabBar({ isAdmin = false }: BottomTabBarProps) {
         className="surface-overlay border-border/40 fixed right-0 bottom-0 left-0 z-40 border-t pb-[env(safe-area-inset-bottom)] md:hidden"
       >
         <div className="flex h-12 items-stretch">
-          {MOBILE_TAB_DESTINATIONS.map((tab) => {
-            const Icon = TAB_ICONS[tab.id];
-            const labelKey = TAB_LABELS[tab.id];
-            const active = isDestinationActive(pathname, tab);
+          {MOBILE_TAB_ITEMS.map((item) => {
+            /*
+             * The ⊕ (décision Q7). Visual spec, and what it deliberately is NOT:
+             *
+             *   NOT a floating circle overflowing above the bar (Material FAB)
+             *       → a block CONTAINED in the bar, 46 × 33, radius 11
+             *   NOT a heavy drop shadow    → 0 2px 8px at 35 % opacity
+             *   NOT an outlined + in a ring → a regular-weight glyph on a flat
+             *                                 --color-brand fill
+             *   NOT labelled « Ajouter »   → no label at all; that is what says
+             *                                 "I am an action, not a destination"
+             *
+             * The painted block is 46 × 33 as specified, but the BUTTON around
+             * it is `h-12` (48 px) and `flex-1` like every other slot, so the
+             * touch target clears the 44 px HIG minimum. Q7 specifies the visual
+             * size; the HIG specifies the hit area. Both are satisfied because
+             * they are different things — shrinking the target to 33 px to match
+             * the paint would have been the wrong reading.
+             */
+            if (item.kind === 'action') {
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  data-testid="bottom-tab-add-expense"
+                  aria-haspopup="dialog"
+                  aria-expanded={isAddExpenseOpen}
+                  aria-label={t('addExpense')}
+                  onClick={handleAddExpenseClick}
+                  className="focus-visible:ring-brand-600 flex flex-1 items-center justify-center focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="bg-brand-700 text-primary-foreground shadow-brand-700/35 flex h-[33px] w-[46px] items-center justify-center rounded-[11px] shadow-[0_2px_8px_var(--tw-shadow-color)]"
+                  >
+                    <Plus className="h-5 w-5" strokeWidth={1.5} />
+                  </span>
+                </button>
+              );
+            }
+
+            const Icon = TAB_ICONS[item.id];
+            const labelKey = TAB_LABELS[item.id];
+            const active = isDestinationActive(pathname, item);
             return (
               <Link
-                key={tab.id}
-                href={tab.href}
-                data-testid={`bottom-tab-${tab.id}`}
+                key={item.id}
+                href={item.href}
+                data-testid={`bottom-tab-${item.id}`}
                 aria-current={active ? 'page' : undefined}
                 onClick={() => {
                   handleTabClick();
@@ -216,6 +266,13 @@ export function BottomTabBar({ isAdmin = false }: BottomTabBarProps) {
       </nav>
 
       <MoreSheet isOpen={isMoreOpen} onClose={handleMoreClose} isAdmin={isAdmin} />
+      {/*
+        Mounted here rather than per-page: the ⊕ is reachable from every screen
+        the bar is on, which is what makes "2 taps from anywhere" true. The sheet
+        fetches its own context on first open, so mounting it costs nothing until
+        it is used.
+      */}
+      <AddExpenseSheet open={isAddExpenseOpen} onClose={handleAddExpenseClose} />
     </>
   );
 }
