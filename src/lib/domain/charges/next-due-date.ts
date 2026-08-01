@@ -1,6 +1,15 @@
 import type { ChargeRecord } from './types';
 
 /**
+ * What this resolver actually reads. Narrowed from `ChargeRecord` so callers
+ * that only hold a schedule — the conversion flow builds one from three DB
+ * columns — do not have to fabricate an id, a workspace and an amount just to
+ * ask when the next occurrence falls. Structurally a supertype, so every
+ * existing `ChargeRecord` call-site still type-checks.
+ */
+export type NextDueSchedule = Pick<ChargeRecord, 'isActive' | 'paymentMonths' | 'paymentDay'>;
+
+/**
  * Compute the next due ISO date (`YYYY-MM-DD`) for a charge, given a
  * reference date (defaults to "today" expressed as YYYY-MM-DD).
  *
@@ -20,7 +29,7 @@ import type { ChargeRecord } from './types';
  *
  * Pure: no `Date.now()`, no I/O. Pass `fromIso` explicitly.
  */
-export function nextDueDateForCharge(charge: ChargeRecord, fromIso: string): string | null {
+export function nextDueDateForCharge(charge: NextDueSchedule, fromIso: string): string | null {
   if (!charge.isActive) return null;
   if (charge.paymentMonths.length === 0) return null;
 
