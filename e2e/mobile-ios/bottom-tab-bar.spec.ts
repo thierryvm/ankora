@@ -50,12 +50,15 @@ test.describe('BottomTabBar — iPhone Safari WebKit (PR-BETA-6 / THI-277)', () 
 
     // L'ordre compte : le ⊕ est au centre (3ᵉ créneau sur 5), pas en bout de
     // barre. C'est la cible du pouce, et c'est ce que le design a payé.
-    const slots = await page
+    // `all()` + `getAttribute` plutôt qu'`evaluateAll` : on lit l'ordre par les
+    // helpers de Playwright au lieu d'exécuter du JS dans la page. Le `.locator()`
+    // ne rend que les DESCENDANTS de la barre, donc l'élément racine ne figure
+    // pas dans la liste et n'a pas à en être filtré.
+    const slotHandles = await page
       .getByTestId('bottom-tab-bar')
       .locator('[data-testid^="bottom-tab-"]')
-      .evaluateAll((els) =>
-        els.map((el) => el.getAttribute('data-testid')).filter((id) => id !== 'bottom-tab-bar'),
-      );
+      .all();
+    const slots = await Promise.all(slotHandles.map((slot) => slot.getAttribute('data-testid')));
     expect(slots).toEqual([
       'bottom-tab-cockpit',
       'bottom-tab-bills',
