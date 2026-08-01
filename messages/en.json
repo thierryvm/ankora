@@ -793,7 +793,6 @@
       "signalMontant": "same amount",
       "signalJour": "same day",
       "signalLibelle": "similar labels",
-      "convertAria": "Convert {label} into a commitment",
       "convert": {
         "title": "Convert into a commitment",
         "intro": "{label} · {amount} per instalment. Only one thing is missing: when it ends.",
@@ -803,8 +802,8 @@
         "endYearLabel": "End year",
         "remainingCountLabel": "Instalments left",
         "remainingBalanceLabel": "Outstanding balance (statement)",
-        "rememberedLabel": "Total you remember (optional)",
-        "rememberedHint": "Enters no calculation — it is only a cross-check.",
+        "rememberedLabel": "Remaining total you remember (optional)",
+        "rememberedHint": "What is left to repay, not the loan’s total cost. Enters no calculation — it is only a cross-check.",
         "preview": "{count} instalments of {amount} · ends {end} · total {total}",
         "needOneDoor": "Fill in at least one of the three.",
         "divergence": "Your answers disagree. Ankora keeps {kept} instalments and corrects nothing.",
@@ -817,7 +816,8 @@
         "submitting": "Converting…",
         "cancel": "Cancel",
         "noHorizon": "Without an horizon the charge stays a charge: the budget stays right, only the countdown is missing.",
-        "toastConverted": "{label} is now a commitment · ends {end}"
+        "toastConverted": "{label} is now a commitment · ends {end}",
+        "drawerHint": "If this charge is a loan that ends, Ankora can show you its countdown."
       }
     },
     "accounts": {

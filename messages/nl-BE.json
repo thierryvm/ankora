@@ -793,7 +793,6 @@
       "signalMontant": "zelfde bedrag",
       "signalJour": "zelfde dag",
       "signalLibelle": "gelijkaardige namen",
-      "convertAria": "{label} omzetten naar een verbintenis",
       "convert": {
         "title": "Omzetten naar een verbintenis",
         "intro": "{label} · {amount} per aflossing. Eén ding ontbreekt: wanneer het eindigt.",
@@ -803,8 +802,8 @@
         "endYearLabel": "Eindjaar",
         "remainingCountLabel": "Aantal resterende aflossingen",
         "remainingBalanceLabel": "Openstaand saldo (rekeninguittreksel)",
-        "rememberedLabel": "Totaal dat je je herinnert (optioneel)",
-        "rememberedHint": "Komt in geen enkele berekening — enkel als controle.",
+        "rememberedLabel": "Resterend totaal dat je je herinnert (optioneel)",
+        "rememberedHint": "Wat je nog moet terugbetalen, niet de totale kostprijs van het krediet. Komt in geen enkele berekening — enkel als controle.",
         "preview": "{count} aflossingen van {amount} · einde {end} · totaal {total}",
         "needOneDoor": "Vul minstens één van de drie in.",
         "divergence": "Je antwoorden komen niet overeen. Ankora houdt {kept} aflossingen aan en corrigeert niets.",
@@ -817,7 +816,8 @@
         "submitting": "Bezig met omzetten…",
         "cancel": "Annuleren",
         "noHorizon": "Zonder horizon blijft de kost een kost: het budget blijft juist, alleen de aftelling ontbreekt.",
-        "toastConverted": "{label} is nu een verbintenis · einde {end}"
+        "toastConverted": "{label} is nu een verbintenis · einde {end}",
+        "drawerHint": "Als deze kost een krediet is dat eindigt, kan Ankora de aftelling tonen."
       }
     },
     "accounts": {
