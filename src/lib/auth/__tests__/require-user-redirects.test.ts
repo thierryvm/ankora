@@ -195,6 +195,12 @@ describe('requireUserWithWorkspace — an unreadable membership is not an absent
  *
  * These cases assert the guard that closes it, and — the third one — that it
  * stays closed during an outage rather than turning into a redirect loop.
+ *
+ * Each case also pins whether `getLocale` ran. It is not decoration: the locale
+ * is resolved ONLY to build the redirect, so a call on a non-redirecting path
+ * means the guard did work it had no business doing — the shape a future
+ * refactor that hoists the lookup above the `if` would take, and the one that
+ * would put a `headers()` read on every anonymous visit to `/login`.
  */
 describe('redirectIfSignedIn — an auth form is not for someone who is already in', () => {
   it('sends a signed-in visitor to their cockpit, locale carried', async () => {
@@ -202,6 +208,7 @@ describe('redirectIfSignedIn — an auth form is not for someone who is already 
 
     await expect(redirectIfSignedIn()).rejects.toThrow('NEXT_REDIRECT');
     expect(redirectMock).toHaveBeenCalledWith({ href: '/app', locale: 'fr-BE' });
+    expect(getLocaleMock).toHaveBeenCalledTimes(1);
   });
 
   it('sends an English visitor to the English cockpit', async () => {
@@ -210,6 +217,7 @@ describe('redirectIfSignedIn — an auth form is not for someone who is already 
 
     await expect(redirectIfSignedIn()).rejects.toThrow('NEXT_REDIRECT');
     expect(redirectMock).toHaveBeenCalledWith({ href: '/app', locale: 'en' });
+    expect(getLocaleMock).toHaveBeenCalledTimes(1);
   });
 
   it('lets an anonymous visitor reach the form', async () => {
@@ -217,6 +225,7 @@ describe('redirectIfSignedIn — an auth form is not for someone who is already 
 
     await expect(redirectIfSignedIn()).resolves.toBeUndefined();
     expect(redirectMock).not.toHaveBeenCalled();
+    expect(getLocaleMock).not.toHaveBeenCalled();
   });
 
   it('renders the form rather than redirecting when the auth backend is down', async () => {
@@ -228,6 +237,7 @@ describe('redirectIfSignedIn — an auth form is not for someone who is already 
 
     await expect(redirectIfSignedIn()).resolves.toBeUndefined();
     expect(redirectMock).not.toHaveBeenCalled();
+    expect(getLocaleMock).not.toHaveBeenCalled();
   });
 });
 
