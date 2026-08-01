@@ -16,7 +16,15 @@ import { expect } from '@playwright/test';
 import { test } from './fixtures/mobile-test';
 
 test.describe('BottomTabBar — iPhone Safari WebKit (PR-BETA-6 / THI-277)', () => {
-  test('renders 5 tabs on /app, hides the legacy hamburger drawer', async ({
+  // Le 3ᵉ des 5 créneaux a changé de nature au chantier 2 : « simuler » était une
+  // DESTINATION, le ⊕ est une ACTION — il ouvre la feuille de saisie sans quitter
+  // la page. Le test unitaire `BottomTabBar.test.tsx` (« sits in the third of five
+  // slots ») a été mis à jour, cette spec ne l'avait pas été : elle exigeait encore
+  // `bottom-tab-simulate` et échouait donc contre l'interface livrée.
+  // Elle affirme désormais les DEUX faces du remplacement — le ⊕ est là, et
+  // l'ancien onglet a bien disparu. N'affirmer que la première laisserait un
+  // retour en arrière silencieux passer.
+  test('renders the 5 slots with the ⊕ action in the centre, and no legacy drawer', async ({
     page,
     seededUser,
   }) => {
@@ -32,8 +40,29 @@ test.describe('BottomTabBar — iPhone Safari WebKit (PR-BETA-6 / THI-277)', () 
     await expect(page.getByTestId('bottom-tab-cockpit')).toBeVisible();
     await expect(page.getByTestId('bottom-tab-bills')).toBeVisible();
     await expect(page.getByTestId('bottom-tab-expenses')).toBeVisible();
-    await expect(page.getByTestId('bottom-tab-simulate')).toBeVisible();
+    await expect(page.getByTestId('bottom-tab-add-expense')).toBeVisible();
     await expect(page.getByTestId('bottom-tab-more')).toBeVisible();
+
+    // L'onglet « simuler » a été retiré, pas déplacé : le simulateur reste
+    // atteignable par la feuille « Plus ». Vérifier son ABSENCE est ce qui
+    // empêche de le réintroduire par accident dans la barre.
+    await expect(page.getByTestId('bottom-tab-simulate')).toHaveCount(0);
+
+    // L'ordre compte : le ⊕ est au centre (3ᵉ créneau sur 5), pas en bout de
+    // barre. C'est la cible du pouce, et c'est ce que le design a payé.
+    const slots = await page
+      .getByTestId('bottom-tab-bar')
+      .locator('[data-testid^="bottom-tab-"]')
+      .evaluateAll((els) =>
+        els.map((el) => el.getAttribute('data-testid')).filter((id) => id !== 'bottom-tab-bar'),
+      );
+    expect(slots).toEqual([
+      'bottom-tab-cockpit',
+      'bottom-tab-bills',
+      'bottom-tab-add-expense',
+      'bottom-tab-expenses',
+      'bottom-tab-more',
+    ]);
 
     // The legacy hamburger trigger MUST NOT be rendered on /app/* for the
     // app variant — the BottomTabBar is the canonical mobile-nav surface.
