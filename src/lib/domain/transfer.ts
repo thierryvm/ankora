@@ -23,13 +23,16 @@ export type MonthlyTransferPlan = {
   /** Sum of charges paid directly from Principal in this month (monthly bills
    *  plus any periodic charge explicitly flagged paid_from='principal'). */
   principalBillsDue: Money;
+  /** Commitment instalments falling due this month — cash, like the bills above. */
+  commitmentsDue: Money;
   /** Sum of smoothed (epargne) charges actually dropping this month. */
   epargneBillsDue: Money;
   /** Total monthly provision target for smoothed charges — the baseline before
    *  netting against bills due. Useful for "healthy flow" UI. */
   epargneProvisionTarget: Money;
   /** Residual on Principal after salary - vieCouranteTransfer - epargneNet
-   *  - principalBillsDue. Negative = the month does not break even. */
+   *  - principalBillsDue - commitmentsDue. Negative = the month does not break
+   *  even. */
   netPrincipalAfterPlan: Money;
 };
 
@@ -38,6 +41,18 @@ export type TransferPlanInput = {
   month: number;
   monthlyIncome: Money;
   vieCouranteMonthlyTransfer: Money;
+  /**
+   * Commitment instalments falling due this month, derived by the caller from
+   * `obligationsDuMois()` — the SAME list the month's bill screen ticks.
+   *
+   * Required, with no silent default. « Restant Principal » used to ignore the
+   * commitments that « Budget du mois » deducts: two "remainings" on one
+   * screen, two perimeters, and no label saying so. Making this a mandatory
+   * input means a forgotten wiring breaks the build instead of quietly
+   * restoring the discrepancy — same doctrine as `engagementsMensuels` in
+   * `calculerSituationDuMois`.
+   */
+  commitmentsDue: Money;
 };
 
 /**
@@ -55,11 +70,13 @@ export function computeMonthlyTransferPlan({
   month,
   monthlyIncome,
   vieCouranteMonthlyTransfer,
+  commitmentsDue,
 }: TransferPlanInput): MonthlyTransferPlan {
   if (month < 1 || month > 12) throw new RangeError(`month must be 1..12, received ${month}`);
   if (monthlyIncome.lt(0)) throw new RangeError('monthlyIncome must be >= 0');
   if (vieCouranteMonthlyTransfer.lt(0))
     throw new RangeError('vieCouranteMonthlyTransfer must be >= 0');
+  if (commitmentsDue.lt(0)) throw new RangeError('commitmentsDue must be >= 0');
 
   const smoothed = charges.filter((c) => c.isActive && c.paidFrom === 'epargne');
   const principalCharges = charges.filter((c) => c.isActive && c.paidFrom === 'principal');
@@ -78,10 +95,16 @@ export function computeMonthlyTransferPlan({
     zero(),
   );
 
+  // The commitment instalment is cash leaving Principal this month, exactly
+  // like a bill. It belongs to the CASH view (« À payer ce mois »), which is
+  // why it is subtracted here and NOT smoothed: the smoothed form of the same
+  // euro lives in « Effort lissé », a different view with a different name.
+  // One rule, one word — the two must never both be called « ce qui reste ».
   const netPrincipalAfterPlan = monthlyIncome
     .minus(vieCouranteMonthlyTransfer)
     .minus(epargneTransferNet)
-    .minus(principalBillsDue);
+    .minus(principalBillsDue)
+    .minus(commitmentsDue);
 
   return {
     month,
@@ -89,6 +112,7 @@ export function computeMonthlyTransferPlan({
     vieCouranteTransfer: vieCouranteMonthlyTransfer,
     epargneTransferNet,
     principalBillsDue,
+    commitmentsDue,
     epargneBillsDue,
     epargneProvisionTarget,
     netPrincipalAfterPlan,

@@ -157,6 +157,29 @@ export function formatInstallmentDate(
   return formatDate(`${date.year}-${pad(date.month)}-${pad(date.day)}`, locale, 'long');
 }
 
+/**
+ * Month name as it should read INSIDE a sentence — « fin juin 2029 », « en mars
+ * 2027 » — rather than at the head of a heading or a table cell.
+ *
+ * `formatMonth` capitalises unconditionally, which is right where it is used
+ * today (titles, cells) and wrong the moment a month is interpolated mid-copy:
+ * French, Spanish and Dutch all lowercase month names there, and only German
+ * capitalises every noun. Delegating to `toLocaleLowerCase(locale)` keeps that
+ * distinction in the CLDR data instead of a per-language exception here.
+ */
+export function formatMonthInSentence(
+  monthIndex: number,
+  locale: Locale,
+  style: MonthStyle = 'long',
+): string {
+  const label = formatMonth(monthIndex, locale, style);
+  if (label === '—') return label;
+  // German capitalises nouns, month names included; every other Ankora locale
+  // lowercases them in running text.
+  if (locale.startsWith('de')) return label;
+  return label.charAt(0).toLocaleLowerCase(locale) + label.slice(1);
+}
+
 export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
