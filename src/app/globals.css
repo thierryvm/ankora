@@ -478,6 +478,16 @@ body {
   /* Mirror the html-level guard. See html block above for rationale. */
   overflow-x: hidden;
   max-width: 100vw;
+
+  /* Réserve la hauteur de la bannière de consentement, publiée par
+     `ConsentBanner` (mesurée, pas devinée : elle va de 272 à 378 px selon le
+     retour à la ligne). Sans cette réserve, la bannière `fixed bottom-4`
+     recouvre le bas du contenu et intercepte les clics — mesuré le 2026-07-31,
+     le bouton « Se connecter » était hors d'atteinte sur TOUS les presets
+     iPhone, les conteneurs d'auth étant `min-h-dvh` sans marge de défilement.
+     0 quand la bannière est absente : aucun effet sur les pages ordinaires.
+     Cf. docs/bugs/2026-07-31-consentement-bloque-login-mobile.md */
+  padding-bottom: var(--consent-height, 0px);
 }
 
 body > main {
