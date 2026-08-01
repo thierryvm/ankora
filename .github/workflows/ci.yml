@@ -1,13 +1,31 @@
 name: CI
 
+# Le push doit déclencher sur TOUTE branche, pas seulement main/develop.
+#
+# Mesuré le 1er août 2026 : les quatre lots livrés ce jour-là — chantier1,
+# chantier2, qa-agents-hardening, fix/auth-only — n'ont déclenché AUCUN run.
+# Zéro, sur les quatre. Aucun ne visait main/develop en push, aucun n'avait de
+# PR ouverte, donc ni l'un ni l'autre des deux déclencheurs ne pouvait s'armer.
+# Le dernier run vert datait du 27 juillet. Deux specs e2e cassées par la refonte
+# de chantier2 sont restées invisibles jusqu'à ce que le merge atterrisse sur
+# main — c'est-à-dire jusqu'à ce qu'elles soient EN PRODUCTION.
+#
+# Une CI qui ne s'exécute qu'après le merge n'est pas une CI, c'est un constat
+# d'échec a posteriori. Le coût est nul ici : dépôt public, minutes GitHub
+# gratuites, et `lighthouse` reste gardé sur `refs/heads/main` (voir son `if:`),
+# donc aucune branche ne déclenche l'audit de la production.
 on:
   push:
-    branches: [main, develop]
+    branches: ['**']
   pull_request:
     branches: [main, develop]
 
+# `head_ref || ref` plutôt que `ref` seul : sur une branche portant une PR, les
+# événements `push` et `pull_request` produisent deux refs différentes et donc
+# deux runs concurrents du même code. Les regrouper sous le nom de branche fait
+# que le second annule le premier, au lieu de payer deux fois.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
