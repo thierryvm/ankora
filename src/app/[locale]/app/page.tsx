@@ -13,8 +13,10 @@ import { EngagementsCard } from '@/components/dashboard/EngagementsCard';
 import { SimulatorDrawer } from '@/components/dashboard/SimulatorDrawer';
 import { Expenses, Transfer, money } from '@/lib/domain';
 import { unpaidChargesForPeriod } from '@/lib/domain/charges';
+import * as Obligations from '@/lib/domain/obligations';
+import type { NamedCommitment } from '@/lib/domain/obligations';
 import { loadMonthSituation } from '@/lib/data/month-situation';
-import { hasLiveCommitments } from '@/lib/data/commitment-row';
+import { commitmentRowToDomain, hasLiveCommitments } from '@/lib/data/commitment-row';
 import type { AccountType } from '@/lib/schemas/account';
 import type { Locale } from '@/i18n/routing';
 import { formatCurrency, formatDate, formatMonth } from '@/lib/i18n/formatters';
@@ -53,6 +55,13 @@ export default async function DashboardPage() {
     joursDuMois: daysInMonth,
     todayIso,
   } = await loadMonthSituation();
+  const namedCommitments: NamedCommitment[] = commitments.map((c) => ({
+    ...commitmentRowToDomain(c),
+    label: c.label,
+  }));
+  const commitmentLedger = new Map(
+    Object.entries(paidKeysByCommitment).map(([id, keys]) => [id, new Set(keys)] as const),
+  );
   const currentMonth = new Date().getMonth() + 1;
   const monthLabel = formatMonth(currentMonth, locale);
   const fmtMoney = (value: Parameters<typeof formatCurrency>[0]) => formatCurrency(value, locale);
@@ -65,11 +74,25 @@ export default async function DashboardPage() {
 
   const monthlyIncome = money(snapshot.monthlyIncome ?? 0);
   const vieCouranteTransferAmount = money(snapshot.vieCouranteMonthlyTransfer ?? 0);
+  // « Restant Principal » used to ignore the commitment instalments that
+  // « Budget du mois » deducts — two "remainings" on one screen, two
+  // perimeters, and no label saying so. Both now belong to the CASH view, and
+  // the block is named « Après tes sorties de <mois> » to say which one it is.
+  const commitmentsDueThisMonth = Obligations.aPayerCeMois(
+    Obligations.obligationsDuMois({
+      charges: cockpitCharges,
+      chargePayments: paymentsLedger,
+      commitments: namedCommitments,
+      paidKeysByCommitment: commitmentLedger,
+      ref: snapshot.currentPeriod,
+    }).filter((o) => o.source === 'commitment'),
+  );
   const plan = Transfer.computeMonthlyTransferPlan({
     charges: snapshot.charges,
     month: currentMonth,
     monthlyIncome,
     vieCouranteMonthlyTransfer: vieCouranteTransferAmount,
+    commitmentsDue: commitmentsDueThisMonth,
   });
   const epargneNetAbs = plan.epargneTransferNet.abs();
   const epargneGoesToEpargne = plan.epargneTransferNet.gte(0);
@@ -345,7 +368,7 @@ export default async function DashboardPage() {
                   >
                     <Landmark className="h-5 w-5" aria-hidden />
                     <CardTitle className="text-sm font-medium">
-                      {t('transferPrincipalRemaining')}
+                      {t('transferPrincipalRemaining', { month: monthLabel })}
                     </CardTitle>
                   </div>
                 </CardHeader>
@@ -360,6 +383,7 @@ export default async function DashboardPage() {
                   <p className="text-muted-foreground mt-1 text-xs">
                     {t('transferPrincipalRemainingHint', {
                       bills: fmtMoney(plan.principalBillsDue),
+                      commitments: fmtMoney(plan.commitmentsDue),
                     })}
                   </p>
                 </CardContent>

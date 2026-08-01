@@ -282,6 +282,63 @@ export function CommitmentsClient({
     });
   }
 
+  /**
+   * What the pending edit would change, computed from the SAME derivations the
+   * list renders (`endPeriod`, `remainingBalance`) — nothing here is stored, so
+   * the preview and the saved row cannot disagree.
+   *
+   * « Ce qui est dérivé reste recalculé, jamais figé » (§1.7): moving
+   * `installmentsTotal` from 35 to 34 shifts the end date and the outstanding
+   * balance with no further action. That consequence belongs on screen BEFORE
+   * validation — same principle as the « Il te restera X € » of the expense
+   * sheet.
+   */
+  const editConsequence = useMemo(() => {
+    if (formMode !== 'edit' || !editingId) return null;
+    const target = commitments.find((c) => c.id === editingId);
+    if (!target) return null;
+
+    const count = Number(installmentsTotal);
+    const perInstallment = Number(installmentAmount.replace(',', '.'));
+    const total = Number(totalAmount.replace(',', '.'));
+    if (!Number.isFinite(count) || count < 1 || !Number.isFinite(total)) return null;
+
+    const before = commitmentRowToDomain(target);
+    const after = {
+      ...before,
+      installmentsTotal: kind === 'one_off' ? 1 : count,
+      installmentAmount:
+        kind === 'one_off' || !Number.isFinite(perInstallment) ? null : perInstallment,
+      totalAmount: total,
+    };
+    const paidKeys = paidKeysOf(target.id);
+    const fromEnd = endPeriod(before);
+    const toEnd = endPeriod(after);
+    const fromBalance = remainingBalance(before, paidKeys);
+    const toBalance = remainingBalance(after, paidKeys);
+    if (
+      fromEnd.year === toEnd.year &&
+      fromEnd.month === toEnd.month &&
+      fromBalance === toBalance
+    ) {
+      return { changed: false as const };
+    }
+    return { changed: true as const, fromEnd, toEnd, fromBalance, toBalance };
+    // `paidKeysOf` reads the optimistic set, which is stable between ticks.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    formMode,
+    editingId,
+    commitments,
+    installmentsTotal,
+    installmentAmount,
+    totalAmount,
+    kind,
+    optimisticPaid,
+  ]);
+
+  const monthLabelOf = (p: Period) => `${formatMonth(p.month, locale, 'long')} ${p.year}`;
+
   const active = commitments.filter((c) => c.isActive);
   const totalRemaining = active.reduce(
     (sum, c) => sum + remainingBalance(toDomain(c), paidKeysOf(c.id)),
@@ -386,6 +443,27 @@ export function CommitmentsClient({
                     onChange={(e) => setInstallmentsTotal(e.target.value)}
                     required
                   />
+                </div>
+              )}
+              {editConsequence && (
+                <div className="md:col-span-2" data-testid="commitment-edit-consequence">
+                  <p className="text-muted-foreground text-xs font-medium">
+                    {t('editConsequenceLabel')}
+                  </p>
+                  <p
+                    className="text-foreground text-sm tabular-nums"
+                    aria-live="polite"
+                    data-testid="commitment-edit-consequence-text"
+                  >
+                    {editConsequence.changed
+                      ? t('editConsequence', {
+                          fromEnd: monthLabelOf(editConsequence.fromEnd),
+                          toEnd: monthLabelOf(editConsequence.toEnd),
+                          fromBalance: formatCurrency(editConsequence.fromBalance, locale),
+                          toBalance: formatCurrency(editConsequence.toBalance, locale),
+                        })
+                      : t('editNoChange')}
+                  </p>
                 </div>
               )}
               <div className="flex items-center gap-3 md:col-span-2">
