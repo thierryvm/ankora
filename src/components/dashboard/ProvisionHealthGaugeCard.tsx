@@ -13,7 +13,7 @@ import {
   type PaymentLedger,
   type ReferencePeriod,
 } from '@/lib/domain/cockpit';
-import { formatCurrency, formatMonth } from '@/lib/i18n/formatters';
+import { formatCurrency, formatMonthInSentence } from '@/lib/i18n/formatters';
 import type { Locale } from '@/i18n/routing';
 
 type Props = {

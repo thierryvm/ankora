@@ -793,7 +793,6 @@
       "signalMontant": "gleicher Betrag",
       "signalJour": "gleicher Tag",
       "signalLibelle": "ähnliche Bezeichnungen",
-      "convertAria": "{label} in eine Verpflichtung umwandeln",
       "convert": {
         "title": "In eine Verpflichtung umwandeln",
         "intro": "{label} · {amount} pro Rate. Nur eines fehlt: wann es endet.",
@@ -803,8 +802,8 @@
         "endYearLabel": "Endjahr",
         "remainingCountLabel": "Verbleibende Raten",
         "remainingBalanceLabel": "Restschuld (Kontoauszug)",
-        "rememberedLabel": "Gesamtsumme aus dem Gedächtnis (optional)",
-        "rememberedHint": "Fließt in keine Berechnung ein — dient nur der Kontrolle.",
+        "rememberedLabel": "Restsumme aus dem Gedächtnis (optional)",
+        "rememberedHint": "Was noch zurückzuzahlen ist, nicht die Gesamtkosten des Kredits. Fließt in keine Berechnung ein — dient nur der Kontrolle.",
         "preview": "{count} Raten zu {amount} · Ende {end} · gesamt {total}",
         "needOneDoor": "Fülle mindestens eine der drei Angaben aus.",
         "divergence": "Deine Angaben stimmen nicht überein. Ankora behält {kept} Raten und korrigiert nichts.",
@@ -817,7 +816,8 @@
         "submitting": "Wird umgewandelt…",
         "cancel": "Abbrechen",
         "noHorizon": "Ohne Horizont bleibt die Kostenposition eine Kostenposition: das Budget bleibt richtig, nur der Countdown fehlt.",
-        "toastConverted": "{label} ist jetzt eine Verpflichtung · Ende {end}"
+        "toastConverted": "{label} ist jetzt eine Verpflichtung · Ende {end}",
+        "drawerHint": "Ist diese Kostenposition ein Kredit mit Ende, kann Ankora den Countdown zeigen."
       }
     },
     "accounts": {

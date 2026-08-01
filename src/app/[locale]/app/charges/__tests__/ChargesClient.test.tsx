@@ -103,8 +103,6 @@ function renderCharges(
   return renderWithIntl(
     <ChargesClient
       charges={charges}
-      monthlyProvisionTotal={overrides.monthlyProvisionTotal ?? 0}
-      annualTotal={overrides.annualTotal ?? 0}
       paidChargeIds={overrides.paidChargeIds ?? []}
       // Chantier 3 — the month's list also carries commitment instalments, the
       // two named views and the bulk gesture. Defaulted to empty/neutral so the
@@ -113,6 +111,7 @@ function renderCharges(
       commitmentInstalments={overrides.commitmentInstalments ?? []}
       aPayerCeMoisTotal={overrides.aPayerCeMoisTotal ?? 0}
       effortLisseTotal={overrides.effortLisseTotal ?? 0}
+      effortLisseAnnuelTotal={overrides.effortLisseAnnuelTotal ?? 0}
       duplicates={overrides.duplicates ?? []}
       bulk={overrides.bulk ?? { gesture: 'rien', pastDueCount: 0 }}
       viewedPeriod={overrides.viewedPeriod ?? { year: 2026, month: 1 }}
@@ -418,12 +417,29 @@ describe('<ChargesClient /> — PR-UI-3a grouping & totals', () => {
   });
 
   it('renders the global total footer with the smoothed monthly and annual figures', () => {
-    renderCharges(sampleCharges, { monthlyProvisionTotal: 1225, annualTotal: 14700 });
+    // Fed by the SAME « Effort lissé » the header names — commitments included.
+    // It used to come from `monthlyProvisionTotal` (charges only) while calling
+    // itself « Effort lissé / mois », which is the two-perimeters-one-name
+    // defect this chantier closes, one screen further down.
+    renderCharges(sampleCharges, {
+      effortLisseTotal: 1863.21,
+      effortLisseAnnuelTotal: 22358.52,
+    });
     const total = screen.getByTestId('charges-total');
     expect(total).toHaveTextContent('Effort lissé / mois');
     expect(total).toHaveTextContent('Équivalent annuel');
-    expect(screen.getByTestId('charges-total-monthly')).toHaveTextContent(/1[  ]225/);
-    expect(screen.getByTestId('charges-total-annual')).toHaveTextContent(/14[  ]700/);
+    expect(screen.getByTestId('charges-total-monthly')).toHaveTextContent(/1[  ]863,21/);
+    expect(screen.getByTestId('charges-total-annual')).toHaveTextContent(/22[  ]358,52/);
+  });
+
+  it('the footer annual is exactly twelve times the header monthly — one perimeter', () => {
+    renderCharges(sampleCharges, {
+      effortLisseTotal: 1863.21,
+      effortLisseAnnuelTotal: 1863.21 * 12,
+    });
+    expect(screen.getByTestId('charges-effort-lisse-total')).toHaveTextContent(/1[  ]863,21/);
+    expect(screen.getByTestId('charges-total-monthly')).toHaveTextContent(/1[  ]863,21/);
+    expect(screen.getByTestId('charges-total-annual')).toHaveTextContent(/22[  ]358,52/);
   });
 
   it('does not render the total footer when there are no charges', () => {
@@ -950,19 +966,44 @@ describe('<ChargesClient /> — chantier 3: the bulk past-due gesture', () => {
 describe('<ChargesClient /> — chantier 3: the conversion entry point', () => {
   const monthly = sampleCharges[0]!;
 
-  it('offers the conversion on an active charge and opens the sheet', async () => {
+  it('is not on the row — converting is rare, ticking and editing are not', () => {
+    // 19 invitations down a list buries the two actions that ARE routine.
+    renderCharges(sampleCharges);
+    expect(screen.queryByTestId('charges-row-convert-a1')).toBeNull();
+  });
+
+  it('lives one tap away, in the edit drawer, and opens the sheet on that charge', async () => {
     renderCharges([monthly]);
-    const entry = screen.getByTestId('charges-row-convert-a1');
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('charges-row-edit-a1'));
+    });
+    const entry = screen.getByTestId('charge-edit-convert');
+    expect(entry).toHaveTextContent('Convertir en engagement');
+
     await act(async () => {
       fireEvent.click(entry);
     });
+    // Sequential panels, never nested: the drawer is gone before the sheet shows.
+    expect(screen.queryByTestId('charge-edit-convert')).toBeNull();
     expect(screen.getByTestId('convert-charge-sheet')).toBeInTheDocument();
     expect(screen.getByTestId('convert-charge-intro')).toHaveTextContent('Loyer appartement');
   });
 
-  it('does not offer it on a deactivated charge — there is nothing to convert', () => {
-    renderCharges([{ ...monthly, isActive: false }]);
-    expect(screen.queryByTestId('charges-row-convert-a1')).toBeNull();
+  it('refuses to submit until one of the three doors is answered', async () => {
+    renderCharges([monthly]);
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('charges-row-edit-a1'));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('charge-edit-convert'));
+    });
+    // No horizon yet: the button is disabled and the degraded-case copy says
+    // what happens if none of the three is known — the charge stays a charge.
+    expect(screen.getByTestId('convert-charge-submit')).toBeDisabled();
+    expect(screen.getByTestId('convert-charge-no-horizon')).toHaveTextContent(
+      /la charge reste une charge/,
+    );
+    expect(convertChargeMock).not.toHaveBeenCalled();
   });
 });
 

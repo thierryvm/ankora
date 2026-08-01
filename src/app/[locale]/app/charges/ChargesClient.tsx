@@ -104,18 +104,24 @@ export type DuplicateWarning = {
 
 type ChargesClientProps = {
   charges: RawCharge[];
-  /** Smoothed monthly provisioning effort across all active charges. */
-  monthlyProvisionTotal: number;
-  /** Annual equivalent of all active charges. */
-  annualTotal: number;
   /** Charge IDs already settled for `viewedPeriod` (seeds the Payé toggle). */
   paidChargeIds: string[];
   /** Commitment instalments falling due in `viewedPeriod`, tickable like bills. */
   commitmentInstalments: CommitmentInstalmentRow[];
   /** « À payer ce mois » — the CASH view: every occurrence due this month. */
   aPayerCeMoisTotal: number;
-  /** « Effort lissé » — the BUDGET view, for the CURRENT month. */
+  /**
+   * « Effort lissé » — the BUDGET view, for the CURRENT month.
+   *
+   * This REPLACED a `monthlyProvisionTotal` fed by `budget.ts`, which summed
+   * charges only. The footer called it « Effort lissé / mois » while the
+   * commitment instalments it omitted were deducted from « Budget du mois » —
+   * the same two-perimeters-one-name defect this chantier exists to close, one
+   * screen further down. One source now feeds both places.
+   */
   effortLisseTotal: number;
+  /** Annual equivalent of the smoothed effort — the same figure × 12. */
+  effortLisseAnnuelTotal: number;
   /** Charge/commitment pairs that look like the same obligation entered twice. */
   duplicates: DuplicateWarning[];
   /** State of the bulk « échéances passées » gesture, derived server-side. */
@@ -142,12 +148,11 @@ type ChargesClientProps = {
 
 export function ChargesClient({
   charges,
-  monthlyProvisionTotal,
-  annualTotal,
   paidChargeIds,
   commitmentInstalments,
   aPayerCeMoisTotal,
   effortLisseTotal,
+  effortLisseAnnuelTotal,
   duplicates,
   bulk,
   viewedPeriod,
@@ -422,6 +427,7 @@ export function ChargesClient({
       frequency: c.frequency,
       dueMonth: c.dueMonth,
       paymentDay: c.paymentDay,
+      paymentMonths: c.paymentMonths,
     });
   }
 
@@ -469,11 +475,7 @@ export function ChargesClient({
         // Due-this-month rows reserve left room (`pl-14`/`md:pl-12`) for the
         // absolutely-positioned Payé toggle — keeps the 6-col desktop grid and
         // its baseline contract untouched (plan-reviewer CR-3).
-        // The 8th column is the « Convertir » affordance (chantier 3): on
-        // mobile it is a text link in the flow, on desktop a cell of its own —
-        // adding a 4th 44px icon to the absolute right cluster would eat 176px
-        // of a 390px row.
-        className={`md:hover:bg-surface-muted relative min-h-14 py-3 pr-36 transition-colors md:grid md:min-h-0 md:grid-cols-[minmax(8rem,10rem)_minmax(0,1fr)_4.5rem_7rem_auto_auto_auto_auto] md:items-baseline md:gap-4 md:py-3 md:pr-2 ${isDue ? 'pl-14 md:pl-12' : 'px-3 md:px-4'}`}
+        className={`md:hover:bg-surface-muted relative min-h-14 py-3 pr-36 transition-colors md:grid md:min-h-0 md:grid-cols-[minmax(8rem,10rem)_minmax(0,1fr)_4.5rem_7rem_auto_auto_auto] md:items-baseline md:gap-4 md:py-3 md:pr-2 ${isDue ? 'pl-14 md:pl-12' : 'px-3 md:px-4'}`}
       >
         {/* Payé toggle — absolute left for due-this-month charges. Lives
             outside the grid + the mobile flow so it never disturbs the four
@@ -567,32 +569,6 @@ export function ChargesClient({
           </span>
         </div>
 
-        {/* The invite lives on the CHARGE, not on a half-created commitment
-            (§1.7). A charge that turns out to be a finite debt is converted in
-            one transaction — the charge is deactivated and the commitment
-            created — which is what makes « one obligation, one table » an
-            invariant held at WRITE time rather than a filter in the money math. */}
-        {c.isActive && (
-          <button
-            type="button"
-            onClick={() =>
-              setConvertingCharge({
-                id: c.id,
-                label: c.label,
-                amount: c.amount,
-                frequency: c.frequency,
-                paymentDay: c.paymentDay,
-                paymentMonths: c.paymentMonths,
-              })
-            }
-            disabled={isPending}
-            data-testid={`charges-row-convert-${c.id}`}
-            aria-label={t('convertAria', { label: c.label })}
-            className="text-brand-text hover:text-brand-text-strong focus-visible:ring-brand-600 mt-1 w-fit rounded text-xs font-medium underline underline-offset-2 transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50 md:order-5 md:mt-0 md:self-center md:whitespace-nowrap"
-          >
-            {t('convert.title')}
-          </button>
-        )}
 
         {/* Watch + Edit + Delete: stacked top-right tap targets on mobile,
             inline cells 5 / 6 / 7 on desktop. The Bookmark fills brand when
@@ -608,7 +584,7 @@ export function ChargesClient({
             watched ? t('unwatchAria', { label: c.label }) : t('watchAria', { label: c.label })
           }
           data-testid={`charges-row-watch-${c.id}`}
-          className="absolute top-2 right-26 size-11 shrink-0 md:static md:order-6 md:size-9 md:self-center"
+          className="absolute top-2 right-26 size-11 shrink-0 md:static md:order-5 md:size-9 md:self-center"
         >
           <Bookmark
             className={`h-4 w-4 ${watched ? 'text-brand-text' : 'text-muted-foreground'}`}
@@ -623,7 +599,7 @@ export function ChargesClient({
           disabled={isPending}
           aria-label={t('editAria', { label: c.label })}
           data-testid={`charges-row-edit-${c.id}`}
-          className="absolute top-2 right-14 size-11 shrink-0 md:static md:order-7 md:size-9 md:self-center"
+          className="absolute top-2 right-14 size-11 shrink-0 md:static md:order-6 md:size-9 md:self-center"
         >
           <Pencil className="text-muted-foreground h-4 w-4" />
         </Button>
@@ -635,7 +611,7 @@ export function ChargesClient({
           disabled={isPending}
           aria-label={t('deleteAria', { label: c.label })}
           data-testid={`charges-row-delete-${c.id}`}
-          className="absolute top-2 right-2 size-11 shrink-0 md:static md:order-8 md:size-9 md:self-center"
+          className="absolute top-2 right-2 size-11 shrink-0 md:static md:order-7 md:size-9 md:self-center"
         >
           <Trash2 className="text-danger h-4 w-4" />
         </Button>
@@ -1202,7 +1178,7 @@ export function ChargesClient({
                     data-testid="charges-total-monthly"
                     className="text-foreground text-base font-semibold tabular-nums"
                   >
-                    {formatCurrency(monthlyProvisionTotal, locale)}
+                    {formatCurrency(effortLisseTotal, locale)}
                   </span>
                 </div>
                 <div className="flex items-baseline justify-between gap-3">
@@ -1211,7 +1187,7 @@ export function ChargesClient({
                     data-testid="charges-total-annual"
                     className="text-muted-foreground text-sm tabular-nums"
                   >
-                    {formatCurrency(annualTotal, locale)}
+                    {formatCurrency(effortLisseAnnuelTotal, locale)}
                   </span>
                 </div>
               </div>
@@ -1220,7 +1196,23 @@ export function ChargesClient({
         </CardContent>
       </Card>
 
-      <ChargeEditDrawer charge={editingCharge} onClose={() => setEditingCharge(null)} />
+      <ChargeEditDrawer
+        charge={editingCharge}
+        onClose={() => setEditingCharge(null)}
+        // Sequential panels, never nested: the drawer closes, then the sheet
+        // opens on the same charge.
+        onConvert={(c) => {
+          setEditingCharge(null);
+          setConvertingCharge({
+            id: c.id,
+            label: c.label,
+            amount: c.amount,
+            frequency: c.frequency,
+            paymentDay: c.paymentDay,
+            paymentMonths: c.paymentMonths,
+          });
+        }}
+      />
       <ConvertChargeSheet
         charge={convertingCharge}
         onClose={() => setConvertingCharge(null)}

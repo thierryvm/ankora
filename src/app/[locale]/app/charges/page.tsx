@@ -6,7 +6,6 @@ import { commitmentRowToDomain } from '@/lib/data/commitment-row';
 import { getCommitmentsWithLedger } from '@/lib/data/commitments';
 import { getWorkspaceSnapshot, toCockpitCharges } from '@/lib/data/workspace-snapshot';
 import { todayInAnkoraTz } from '@/lib/date/tz';
-import { annualTotal, monthlyProvisionTotal } from '@/lib/domain/budget';
 import { engagementsMensuelsLisses } from '@/lib/domain/cockpit';
 import { paymentKey, type PaymentLedger } from '@/lib/domain/cockpit/types';
 import {
@@ -14,6 +13,7 @@ import {
   detecterDoublonsProbables,
   echeancesPassees,
   effortLisse,
+  effortLisseAnnuel,
   gesteGroupePour,
   obligationsDuMois,
   type NamedCommitment,
@@ -152,8 +152,6 @@ export default async function ChargesPage({
     // `number` — Decimal never traverses the RSC boundary.
     <ChargesClient
       charges={snapshot.rawCharges}
-      monthlyProvisionTotal={monthlyProvisionTotal(snapshot.charges).toNumber()}
-      annualTotal={annualTotal(snapshot.charges).toNumber()}
       paidChargeIds={paidChargeIds}
       viewedPeriod={viewed}
       commitmentInstalments={obligations
@@ -169,6 +167,7 @@ export default async function ChargesPage({
         }))}
       aPayerCeMoisTotal={aPayerCeMois(obligations).toNumber()}
       effortLisseTotal={effortLisse(cockpitCharges, engagementsMensuels).toNumber()}
+      effortLisseAnnuelTotal={effortLisseAnnuel(cockpitCharges, engagementsMensuels).toNumber()}
       duplicates={detecterDoublonsProbables({
         charges: cockpitCharges,
         commitments,

@@ -793,7 +793,6 @@
       "signalMontant": "même montant",
       "signalJour": "même jour",
       "signalLibelle": "libellés proches",
-      "convertAria": "Convertir {label} en engagement",
       "convert": {
         "title": "Convertir en engagement",
         "intro": "{label} · {amount} par échéance. Il ne manque qu’une chose : quand ça se termine.",
@@ -803,8 +802,8 @@
         "endYearLabel": "Année de fin",
         "remainingCountLabel": "Nombre d’échéances restantes",
         "remainingBalanceLabel": "Solde restant dû (relevé)",
-        "rememberedLabel": "Total dont tu te souviens (facultatif)",
-        "rememberedHint": "N’entre dans aucun calcul — sert uniquement de contrôle.",
+        "rememberedLabel": "Total restant dont tu te souviens (facultatif)",
+        "rememberedHint": "Ce qu’il te reste à rembourser, pas le coût total du crédit. N’entre dans aucun calcul — sert uniquement de contrôle.",
         "preview": "{count} échéances de {amount} · fin {end} · total {total}",
         "needOneDoor": "Renseigne au moins une des trois informations.",
         "divergence": "Tes réponses ne concordent pas. Ankora retient {kept} échéances et ne corrige rien.",
@@ -817,7 +816,8 @@
         "submitting": "Conversion…",
         "cancel": "Annuler",
         "noHorizon": "Sans horizon, la charge reste une charge : le budget reste juste, seul le compte à rebours manque.",
-        "toastConverted": "{label} est devenu un engagement · fin {end}"
+        "toastConverted": "{label} est devenu un engagement · fin {end}",
+        "drawerHint": "Si cette charge est un crédit qui se termine, Ankora peut afficher son compte à rebours."
       }
     },
     "accounts": {

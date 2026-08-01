@@ -27,11 +27,19 @@ export type ChargeEditDrawerCharge = {
   frequency: string;
   dueMonth: number;
   paymentDay: number;
+  /** Full schedule — the conversion flow derives the anchor from it. */
+  paymentMonths: readonly number[];
 };
 
 type Props = {
   charge: ChargeEditDrawerCharge | null;
   onClose: () => void;
+  /**
+   * Opens the conversion flow for this charge. Optional: when absent the
+   * affordance is not rendered at all, so a caller that has no conversion
+   * sheet mounted cannot offer a dead button.
+   */
+  onConvert?: (charge: ChargeEditDrawerCharge) => void;
 };
 
 /**
@@ -49,7 +57,7 @@ type Props = {
  *
  * Slide-from-right on desktop, full-screen on mobile (h-dvh + sm:max-w-md).
  */
-export function ChargeEditDrawer({ charge, onClose }: Props) {
+export function ChargeEditDrawer({ charge, onClose, onConvert }: Props) {
   const t = useTranslations('app.charges');
   const translateError = useActionErrorTranslator();
   const router = useRouter();
@@ -222,6 +230,28 @@ export function ChargeEditDrawer({ charge, onClose }: Props) {
             }}
           />
         </div>
+
+        {/* « Convertir en engagement » lives here rather than on the row.
+            Converting is a rare, once-per-debt move; an invite on all 19 rows
+            reads as noise and buries the two actions that ARE routine (tick,
+            edit). One tap away, and the drawer closes before the sheet opens —
+            sequential panels, never nested. */}
+        {onConvert && (
+          <div className="border-border/60 border-t px-5 py-3">
+            <button
+              type="button"
+              onClick={() => {
+                if (charge) onConvert(charge);
+              }}
+              disabled={isPending}
+              data-testid="charge-edit-convert"
+              className="text-brand-text hover:text-brand-text-strong focus-visible:ring-brand-600 min-h-11 rounded text-sm font-medium underline underline-offset-2 transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50"
+            >
+              {t('convert.title')}
+            </button>
+            <p className="text-muted-foreground mt-0.5 text-xs">{t('convert.drawerHint')}</p>
+          </div>
+        )}
 
         <footer className="border-border bg-card flex items-center justify-end gap-2 border-t px-5 py-4">
           <Button

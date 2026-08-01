@@ -793,7 +793,6 @@
       "signalMontant": "mismo importe",
       "signalJour": "mismo día",
       "signalLibelle": "nombres parecidos",
-      "convertAria": "Convertir {label} en compromiso",
       "convert": {
         "title": "Convertir en compromiso",
         "intro": "{label} · {amount} por cuota. Solo falta una cosa: cuándo termina.",
@@ -803,8 +802,8 @@
         "endYearLabel": "Año de fin",
         "remainingCountLabel": "Cuotas restantes",
         "remainingBalanceLabel": "Saldo pendiente (extracto)",
-        "rememberedLabel": "Total que recuerdas (opcional)",
-        "rememberedHint": "No entra en ningún cálculo — solo sirve de control.",
+        "rememberedLabel": "Total pendiente que recuerdas (opcional)",
+        "rememberedHint": "Lo que te queda por devolver, no el coste total del crédito. No entra en ningún cálculo — solo sirve de control.",
         "preview": "{count} cuotas de {amount} · fin {end} · total {total}",
         "needOneDoor": "Rellena al menos uno de los tres datos.",
         "divergence": "Tus respuestas no coinciden. Ankora conserva {kept} cuotas y no corrige nada.",
@@ -817,7 +816,8 @@
         "submitting": "Convirtiendo…",
         "cancel": "Cancelar",
         "noHorizon": "Sin horizonte el cargo sigue siendo un cargo: el presupuesto sigue siendo correcto, solo falta la cuenta atrás.",
-        "toastConverted": "{label} ya es un compromiso · fin {end}"
+        "toastConverted": "{label} ya es un compromiso · fin {end}",
+        "drawerHint": "Si este cargo es un crédito que termina, Ankora puede mostrarte su cuenta atrás."
       }
     },
     "accounts": {
