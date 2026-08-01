@@ -694,8 +694,8 @@
       "transferPrincipalToEpargne": "Main → Savings",
       "transferEpargneToPrincipal": "Savings → Main",
       "transferEpargneHint": "Reserve {provision} − bills {bills}",
-      "transferPrincipalRemaining": "Main remaining",
-      "transferPrincipalRemainingHint": "After salary, transfers and Main bills ({bills}).",
+      "transferPrincipalRemaining": "After your {month} outgoings",
+      "transferPrincipalRemainingHint": "After {bills} of bills and {commitments} of instalments.",
       "ctaCharges": "My bills",
       "ctaExpenses": "My expenses",
       "ctaSimulator": "Simulate",
@@ -770,6 +770,54 @@
         "saving": "Saving…",
         "cancel": "Cancel",
         "errorGeneric": "The change couldn't be saved. Please try again in a moment."
+      },
+      "aPayerCeMoisLabel": "Due this month",
+      "aPayerCeMoisHint": "What actually leaves the account — bills and instalments together.",
+      "effortLisseLabel": "Smoothed effort",
+      "effortLisseHint": "Monthly charges + smoothed provisions + commitment instalments.",
+      "commitmentsGroupTitle": "Loans & instalment plans",
+      "installmentPosition": "instalment {index}/{total}",
+      "commitmentRemaining": "{amount} left",
+      "markCommitmentPaidAria": "Mark the {label} instalment as paid",
+      "unmarkCommitmentPaidAria": "Mark the {label} instalment as unpaid",
+      "bulkPastDue": "Mark past instalments as paid",
+      "bulkPastDueUndo": "Undo this bulk tick",
+      "bulkPastDueCount": "{count, plural, one {# past instalment} other {# past instalments}}",
+      "bulkPastDueHint": "Press again to undo.",
+      "bulkToastMarked": "{count, plural, one {# instalment ticked} other {# instalments ticked}} · press again to undo",
+      "bulkToastUnmarked": "{count, plural, one {# tick undone} other {# ticks undone}}",
+      "duplicateTitle": "One obligation looks entered twice",
+      "duplicateBody": "“{charge}” (bill) and “{commitment}” (commitment) both carry the same {amount}.",
+      "duplicateNote": "Ankora counts them separately and corrects no total. If it really is the same debt, convert the bill into a commitment.",
+      "duplicateSignals": "Signals: {signals}.",
+      "signalMontant": "same amount",
+      "signalJour": "same day",
+      "signalLibelle": "similar labels",
+      "convertAria": "Convert {label} into a commitment",
+      "convert": {
+        "title": "Convert into a commitment",
+        "intro": "{label} · {amount} per instalment. Only one thing is missing: when it ends.",
+        "doorsHint": "One answer is enough. Give several and Ankora compares them.",
+        "endDateLabel": "Approximate end date",
+        "endMonthLabel": "End month",
+        "endYearLabel": "End year",
+        "remainingCountLabel": "Instalments left",
+        "remainingBalanceLabel": "Outstanding balance (statement)",
+        "rememberedLabel": "Total you remember (optional)",
+        "rememberedHint": "Enters no calculation — it is only a cross-check.",
+        "preview": "{count} instalments of {amount} · ends {end} · total {total}",
+        "needOneDoor": "Fill in at least one of the three.",
+        "divergence": "Your answers disagree. Ankora keeps {kept} instalments and corrects nothing.",
+        "divergenceItem": "{door} → {count} instalments",
+        "rememberedDivergence": "From your {count} instalments of {amount}, the total would be {derived} rather than {remembered}. Check with the lender.",
+        "doorEcheancesRestantes": "instalments left",
+        "doorDateDeFin": "end date",
+        "doorSoldeRestantDu": "outstanding balance",
+        "submit": "Convert",
+        "submitting": "Converting…",
+        "cancel": "Cancel",
+        "noHorizon": "Without an horizon the charge stays a charge: the budget stays right, only the countdown is missing.",
+        "toastConverted": "{label} is now a commitment · ends {end}"
       }
     },
     "accounts": {
@@ -883,7 +931,10 @@
       "unmarkOneAria": "Undo the last paid instalment for {label}",
       "installmentsCountAria": "{paid} of {total} instalments paid for {label}",
       "toastUpdated": "Commitment updated",
-      "reductionBlocked": "Can’t: {paid} instalments are already ticked. Un-tick some payments first."
+      "reductionBlocked": "Can’t: {paid} instalments are already ticked. Un-tick some payments first.",
+      "editConsequence": "end: {fromEnd} → {toEnd} · left: {fromBalance} → {toBalance}",
+      "editConsequenceLabel": "What this changes",
+      "editNoChange": "No change to the end date or the outstanding balance."
     },
     "expenses": {
       "title": "My expenses",
@@ -1177,7 +1228,16 @@
       "status": {
         "a_jour": "On track",
         "deficit": "Deficit"
-      }
+      },
+      "projectionToggle": "See the next 12 months",
+      "projectionTitle": "The fund, month by month",
+      "projectionIntro": "Each month the fund takes in the smoothed amount and pays the bills that drop.",
+      "projectionMonth": "Month",
+      "projectionOut": "Outflow",
+      "projectionBalance": "Balance",
+      "projectionDeficit": "In {month}, the fund goes below zero.",
+      "projectionHolds": "The fund holds across the next 12 months.",
+      "projectionNegative": "negative balance"
     },
     "upcomingBills": {
       "title": "Upcoming bills",
@@ -1457,6 +1517,12 @@
       "payments": {
         "toggleFailed": "Unable to update the instalment status."
       }
+    },
+    "conversion": {
+      "chargeInactive": "This bill is already disabled.",
+      "noSchedule": "This bill has no usable schedule.",
+      "horizonUnknown": "The end date, the number of instalments or the outstanding balance is missing.",
+      "failed": "The conversion failed. Nothing was changed."
     }
   },
   "opengraphImage": {

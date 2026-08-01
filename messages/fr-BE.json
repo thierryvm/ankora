@@ -694,8 +694,8 @@
       "transferPrincipalToEpargne": "Principal → Épargne",
       "transferEpargneToPrincipal": "Épargne → Principal",
       "transferEpargneHint": "Provision {provision} − factures {bills}",
-      "transferPrincipalRemaining": "Restant Principal",
-      "transferPrincipalRemainingHint": "Après salaire, virements et factures Principal ({bills}).",
+      "transferPrincipalRemaining": "Après tes sorties · {month}",
+      "transferPrincipalRemainingHint": "Après {bills} de factures et {commitments} d’échéances d’engagement.",
       "ctaCharges": "Mes charges",
       "ctaExpenses": "Mes dépenses",
       "ctaSimulator": "Simuler",
@@ -770,6 +770,54 @@
         "saving": "Enregistrement…",
         "cancel": "Annuler",
         "errorGeneric": "La modification n'a pas pu être enregistrée. Réessaye dans un instant."
+      },
+      "aPayerCeMoisLabel": "À payer ce mois",
+      "aPayerCeMoisHint": "Ce qui quitte réellement le compte, factures et échéances confondues.",
+      "effortLisseLabel": "Effort lissé",
+      "effortLisseHint": "Charges mensuelles + provisions lissées + mensualités d’engagement.",
+      "commitmentsGroupTitle": "Crédits & échéanciers",
+      "installmentPosition": "échéance {index}/{total}",
+      "commitmentRemaining": "reste {amount}",
+      "markCommitmentPaidAria": "Marquer l’échéance {label} comme payée",
+      "unmarkCommitmentPaidAria": "Marquer l’échéance {label} comme non payée",
+      "bulkPastDue": "Marquer les échéances passées comme payées",
+      "bulkPastDueUndo": "Annuler ce pointage",
+      "bulkPastDueCount": "{count, plural, one {# échéance passée} other {# échéances passées}}",
+      "bulkPastDueHint": "Appuie une seconde fois pour revenir en arrière.",
+      "bulkToastMarked": "{count, plural, one {# échéance pointée} other {# échéances pointées}} · appuie à nouveau pour annuler",
+      "bulkToastUnmarked": "{count, plural, one {# pointage annulé} other {# pointages annulés}}",
+      "duplicateTitle": "Une obligation semble saisie deux fois",
+      "duplicateBody": "« {charge} » (facture) et « {commitment} » (engagement) portent le même montant de {amount}.",
+      "duplicateNote": "Ankora les compte séparément et ne corrige aucun total. Si c’est bien la même dette, convertis la facture en engagement.",
+      "duplicateSignals": "Signaux : {signals}.",
+      "signalMontant": "même montant",
+      "signalJour": "même jour",
+      "signalLibelle": "libellés proches",
+      "convertAria": "Convertir {label} en engagement",
+      "convert": {
+        "title": "Convertir en engagement",
+        "intro": "{label} · {amount} par échéance. Il ne manque qu’une chose : quand ça se termine.",
+        "doorsHint": "Une seule réponse suffit. Si tu en donnes plusieurs, Ankora les compare.",
+        "endDateLabel": "Date de fin approximative",
+        "endMonthLabel": "Mois de fin",
+        "endYearLabel": "Année de fin",
+        "remainingCountLabel": "Nombre d’échéances restantes",
+        "remainingBalanceLabel": "Solde restant dû (relevé)",
+        "rememberedLabel": "Total dont tu te souviens (facultatif)",
+        "rememberedHint": "N’entre dans aucun calcul — sert uniquement de contrôle.",
+        "preview": "{count} échéances de {amount} · fin {end} · total {total}",
+        "needOneDoor": "Renseigne au moins une des trois informations.",
+        "divergence": "Tes réponses ne concordent pas. Ankora retient {kept} échéances et ne corrige rien.",
+        "divergenceItem": "{door} → {count} échéances",
+        "rememberedDivergence": "D’après tes {count} échéances de {amount}, le total serait {derived} plutôt que {remembered}. Vérifie auprès de l’organisme.",
+        "doorEcheancesRestantes": "échéances restantes",
+        "doorDateDeFin": "date de fin",
+        "doorSoldeRestantDu": "solde restant dû",
+        "submit": "Convertir",
+        "submitting": "Conversion…",
+        "cancel": "Annuler",
+        "noHorizon": "Sans horizon, la charge reste une charge : le budget reste juste, seul le compte à rebours manque.",
+        "toastConverted": "{label} est devenu un engagement · fin {end}"
       }
     },
     "accounts": {
@@ -883,7 +931,10 @@
       "unmarkOneAria": "Annuler la dernière échéance payée pour {label}",
       "installmentsCountAria": "{paid} sur {total} échéances payées pour {label}",
       "toastUpdated": "Engagement modifié",
-      "reductionBlocked": "Impossible : {paid} échéances sont déjà validées. Retire d’abord des paiements."
+      "reductionBlocked": "Impossible : {paid} échéances sont déjà validées. Retire d’abord des paiements.",
+      "editConsequence": "fin : {fromEnd} → {toEnd} · reste : {fromBalance} → {toBalance}",
+      "editConsequenceLabel": "Ce que ça change",
+      "editNoChange": "Aucun changement sur la fin ni sur le reste dû."
     },
     "expenses": {
       "title": "Mes dépenses",
@@ -1177,7 +1228,16 @@
       "status": {
         "a_jour": "À jour",
         "deficit": "Déficit"
-      }
+      },
+      "projectionToggle": "Voir les 12 prochains mois",
+      "projectionTitle": "Le fonds, mois par mois",
+      "projectionIntro": "Chaque mois : le fonds reçoit le lissé et paie les factures qui tombent.",
+      "projectionMonth": "Mois",
+      "projectionOut": "Sortie",
+      "projectionBalance": "Solde",
+      "projectionDeficit": "En {month}, le fonds passe sous zéro.",
+      "projectionHolds": "Le fonds tient sur les 12 prochains mois.",
+      "projectionNegative": "solde négatif"
     },
     "upcomingBills": {
       "title": "Prochaines factures",
@@ -1457,6 +1517,12 @@
       "payments": {
         "toggleFailed": "Impossible de modifier l'état de l'échéance."
       }
+    },
+    "conversion": {
+      "chargeInactive": "Cette facture est déjà désactivée.",
+      "noSchedule": "Cette facture n’a pas d’échéancier exploitable.",
+      "horizonUnknown": "Il manque la date de fin, le nombre d’échéances ou le solde restant dû.",
+      "failed": "La conversion a échoué. Rien n’a été modifié."
     }
   },
   "opengraphImage": {

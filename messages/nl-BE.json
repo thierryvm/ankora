@@ -694,8 +694,8 @@
       "transferPrincipalToEpargne": "Hoofdrekening → Spaarrekening",
       "transferEpargneToPrincipal": "Spaarrekening → Hoofdrekening",
       "transferEpargneHint": "Voorziening {provision} − facturen {bills}",
-      "transferPrincipalRemaining": "Saldo Hoofdrekening",
-      "transferPrincipalRemainingHint": "Na loon, overschrijvingen en facturen Hoofdrekening ({bills}).",
+      "transferPrincipalRemaining": "Na je uitgaven · {month}",
+      "transferPrincipalRemainingHint": "Na {bills} facturen en {commitments} aflossingen.",
       "ctaCharges": "Mijn vaste kosten",
       "ctaExpenses": "Mijn uitgaven",
       "ctaSimulator": "Simuleren",
@@ -770,6 +770,54 @@
         "saving": "Opslaan…",
         "cancel": "Annuleren",
         "errorGeneric": "De wijziging kon niet worden opgeslagen. Probeer het zo opnieuw."
+      },
+      "aPayerCeMoisLabel": "Deze maand te betalen",
+      "aPayerCeMoisHint": "Wat echt van de rekening gaat — facturen en aflossingen samen.",
+      "effortLisseLabel": "Gespreide inspanning",
+      "effortLisseHint": "Maandelijkse kosten + gespreide voorzieningen + aflossingen.",
+      "commitmentsGroupTitle": "Kredieten & afbetalingen",
+      "installmentPosition": "aflossing {index}/{total}",
+      "commitmentRemaining": "nog {amount}",
+      "markCommitmentPaidAria": "Aflossing {label} als betaald markeren",
+      "unmarkCommitmentPaidAria": "Aflossing {label} als niet betaald markeren",
+      "bulkPastDue": "Vervallen aflossingen als betaald markeren",
+      "bulkPastDueUndo": "Deze markering ongedaan maken",
+      "bulkPastDueCount": "{count, plural, one {# vervallen aflossing} other {# vervallen aflossingen}}",
+      "bulkPastDueHint": "Druk nog eens om terug te gaan.",
+      "bulkToastMarked": "{count, plural, one {# aflossing afgevinkt} other {# aflossingen afgevinkt}} · druk nog eens om ongedaan te maken",
+      "bulkToastUnmarked": "{count, plural, one {# markering ongedaan} other {# markeringen ongedaan}}",
+      "duplicateTitle": "Eén verplichting lijkt twee keer ingevoerd",
+      "duplicateBody": "« {charge} » (factuur) en « {commitment} » (verbintenis) dragen hetzelfde bedrag van {amount}.",
+      "duplicateNote": "Ankora telt ze apart en corrigeert geen enkel totaal. Als het echt dezelfde schuld is, zet de factuur om in een verbintenis.",
+      "duplicateSignals": "Signalen: {signals}.",
+      "signalMontant": "zelfde bedrag",
+      "signalJour": "zelfde dag",
+      "signalLibelle": "gelijkaardige namen",
+      "convertAria": "{label} omzetten naar een verbintenis",
+      "convert": {
+        "title": "Omzetten naar een verbintenis",
+        "intro": "{label} · {amount} per aflossing. Eén ding ontbreekt: wanneer het eindigt.",
+        "doorsHint": "Eén antwoord volstaat. Geef er meerdere en Ankora vergelijkt ze.",
+        "endDateLabel": "Geschatte einddatum",
+        "endMonthLabel": "Eindmaand",
+        "endYearLabel": "Eindjaar",
+        "remainingCountLabel": "Aantal resterende aflossingen",
+        "remainingBalanceLabel": "Openstaand saldo (rekeninguittreksel)",
+        "rememberedLabel": "Totaal dat je je herinnert (optioneel)",
+        "rememberedHint": "Komt in geen enkele berekening — enkel als controle.",
+        "preview": "{count} aflossingen van {amount} · einde {end} · totaal {total}",
+        "needOneDoor": "Vul minstens één van de drie in.",
+        "divergence": "Je antwoorden komen niet overeen. Ankora houdt {kept} aflossingen aan en corrigeert niets.",
+        "divergenceItem": "{door} → {count} aflossingen",
+        "rememberedDivergence": "Volgens je {count} aflossingen van {amount} zou het totaal {derived} zijn in plaats van {remembered}. Controleer bij de kredietgever.",
+        "doorEcheancesRestantes": "resterende aflossingen",
+        "doorDateDeFin": "einddatum",
+        "doorSoldeRestantDu": "openstaand saldo",
+        "submit": "Omzetten",
+        "submitting": "Bezig met omzetten…",
+        "cancel": "Annuleren",
+        "noHorizon": "Zonder horizon blijft de kost een kost: het budget blijft juist, alleen de aftelling ontbreekt.",
+        "toastConverted": "{label} is nu een verbintenis · einde {end}"
       }
     },
     "accounts": {
@@ -883,7 +931,10 @@
       "unmarkOneAria": "Laatste betaalde termijn ongedaan maken voor {label}",
       "installmentsCountAria": "{paid} van {total} termijnen betaald voor {label}",
       "toastUpdated": "Verbintenis bijgewerkt",
-      "reductionBlocked": "Niet mogelijk: {paid} termijnen zijn al afgevinkt. Vink eerst betalingen uit."
+      "reductionBlocked": "Niet mogelijk: {paid} termijnen zijn al afgevinkt. Vink eerst betalingen uit.",
+      "editConsequence": "einde: {fromEnd} → {toEnd} · nog: {fromBalance} → {toBalance}",
+      "editConsequenceLabel": "Wat dit verandert",
+      "editNoChange": "Geen wijziging aan het einde of het openstaande saldo."
     },
     "expenses": {
       "title": "Mijn uitgaven",
@@ -1177,7 +1228,16 @@
       "status": {
         "a_jour": "Op koers",
         "deficit": "Tekort"
-      }
+      },
+      "projectionToggle": "Bekijk de volgende 12 maanden",
+      "projectionTitle": "Het fonds, maand per maand",
+      "projectionIntro": "Elke maand ontvangt het fonds het gespreide bedrag en betaalt het de facturen die vervallen.",
+      "projectionMonth": "Maand",
+      "projectionOut": "Uitgaven",
+      "projectionBalance": "Saldo",
+      "projectionDeficit": "In {month} zakt het fonds onder nul.",
+      "projectionHolds": "Het fonds houdt stand over de volgende 12 maanden.",
+      "projectionNegative": "negatief saldo"
     },
     "upcomingBills": {
       "title": "Aankomende facturen",
@@ -1457,6 +1517,12 @@
       "payments": {
         "toggleFailed": "Kan de status van de aflossing niet bijwerken."
       }
+    },
+    "conversion": {
+      "chargeInactive": "Deze factuur is al uitgeschakeld.",
+      "noSchedule": "Deze factuur heeft geen bruikbaar schema.",
+      "horizonUnknown": "De einddatum, het aantal aflossingen of het openstaande saldo ontbreekt.",
+      "failed": "De omzetting is mislukt. Er is niets gewijzigd."
     }
   },
   "opengraphImage": {

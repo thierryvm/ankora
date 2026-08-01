@@ -24,6 +24,9 @@ const toastErrorMock = vi.hoisted(() => vi.fn());
 const routerRefreshMock = vi.hoisted(() => vi.fn());
 const togglePaymentMock = vi.hoisted(() => vi.fn());
 const toggleWatchMock = vi.hoisted(() => vi.fn());
+const toggleCommitmentPaymentMock = vi.hoisted(() => vi.fn());
+const togglePastDueMock = vi.hoisted(() => vi.fn());
+const convertChargeMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/actions/charges', () => ({
   createChargeAction: createChargeMock,
@@ -34,6 +37,21 @@ vi.mock('@/lib/actions/charges', () => ({
 
 vi.mock('@/lib/actions/charge-payments', () => ({
   togglePaymentAction: togglePaymentMock,
+}));
+
+// Chantier 3 — the month's list also ticks commitment instalments, runs the
+// bulk past-due gesture and opens the conversion sheet. Each of those action
+// modules pulls the server Supabase client (and its env parsing) unless mocked.
+vi.mock('@/lib/actions/commitments', () => ({
+  toggleCommitmentPaymentAction: toggleCommitmentPaymentMock,
+}));
+
+vi.mock('@/lib/actions/obligations', () => ({
+  togglePastDueObligationsAction: togglePastDueMock,
+}));
+
+vi.mock('@/lib/actions/charge-conversion', () => ({
+  convertChargeToCommitmentAction: convertChargeMock,
 }));
 
 vi.mock('@/components/ui/toast', () => ({
@@ -88,6 +106,15 @@ function renderCharges(
       monthlyProvisionTotal={overrides.monthlyProvisionTotal ?? 0}
       annualTotal={overrides.annualTotal ?? 0}
       paidChargeIds={overrides.paidChargeIds ?? []}
+      // Chantier 3 — the month's list also carries commitment instalments, the
+      // two named views and the bulk gesture. Defaulted to empty/neutral so the
+      // structural tests below keep asserting layout, not arithmetic; the new
+      // surfaces have their own cases.
+      commitmentInstalments={overrides.commitmentInstalments ?? []}
+      aPayerCeMoisTotal={overrides.aPayerCeMoisTotal ?? 0}
+      effortLisseTotal={overrides.effortLisseTotal ?? 0}
+      duplicates={overrides.duplicates ?? []}
+      bulk={overrides.bulk ?? { gesture: 'rien', pastDueCount: 0 }}
       viewedPeriod={overrides.viewedPeriod ?? { year: 2026, month: 1 }}
       periodNav={
         overrides.periodNav ?? {
@@ -769,6 +796,173 @@ describe('<ChargesClient /> — month-history navigator', () => {
     expect(screen.getByTestId('charges-paid-summary')).toHaveTextContent(
       'Tout est payé pour juin 2026',
     );
+  });
+});
+
+/**
+ * CHANTIER 3 — the month's list is ONE list.
+ *
+ * A bill and a commitment instalment for the same obligation used to live on
+ * two different tabs, which is how the same 220 € came to be counted twice with
+ * nothing on screen able to show it. These cases lock the three surfaces that
+ * close it: the instalment rows, the two NAMED totals, and the warning that
+ * names a probable duplicate without moving a single figure.
+ */
+describe('<ChargesClient /> — chantier 3: obligations in one list', () => {
+  const monthly = sampleCharges[0]!;
+
+  const instalment = {
+    id: 'spf',
+    label: 'SPF Finances',
+    amountDue: 220,
+    paymentDay: 15,
+    isPaid: false,
+    installmentIndex: 5,
+    installmentsTotal: 11,
+  };
+
+  it('renders commitment instalments in their own group, with their position', () => {
+    renderCharges([monthly], { commitmentInstalments: [instalment] });
+    expect(screen.getByTestId('charges-group-commitments')).toBeInTheDocument();
+    expect(screen.getByTestId('charges-instalment-spf')).toBeInTheDocument();
+    expect(screen.getByTestId('charges-instalment-position-spf')).toHaveTextContent('échéance 5/11');
+    expect(screen.getByTestId('charges-instalment-amount-spf')).toHaveTextContent(/220/);
+  });
+
+  it('an instalment is tickable, and the tick writes to commitment_payments', async () => {
+    toggleCommitmentPaymentMock.mockResolvedValue({ ok: true, data: { paid: true } });
+    renderCharges([monthly], { commitmentInstalments: [instalment] });
+
+    const toggle = screen.getByTestId('charges-instalment-paid-spf');
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    await act(async () => {
+      fireEvent.click(toggle);
+    });
+    await waitFor(() =>
+      expect(toggleCommitmentPaymentMock).toHaveBeenCalledWith({
+        commitmentId: 'spf',
+        periodYear: 2026,
+        periodMonth: 1,
+      }),
+    );
+  });
+
+  it('the month countdown covers bills AND instalments — one month, one count', () => {
+    renderCharges([monthly], { commitmentInstalments: [instalment] });
+    // 1 200 € (loyer, unpaid) + 220 € (instalment, unpaid) = 1 420 €, 0/2 ticked.
+    expect(screen.getByTestId('charges-remaining-amount')).toHaveTextContent(/1[  ]420/);
+    expect(screen.getByTestId('charges-paid-summary')).toHaveTextContent('0/2');
+  });
+
+  it('names the two views instead of showing two unlabelled totals', () => {
+    renderCharges([monthly], {
+      commitmentInstalments: [instalment],
+      aPayerCeMoisTotal: 1981.21,
+      effortLisseTotal: 1863.21,
+    });
+    const block = screen.getByTestId('charges-two-views');
+    expect(block).toHaveTextContent('À payer ce mois');
+    expect(block).toHaveTextContent('Effort lissé');
+    expect(screen.getByTestId('charges-a-payer-total')).toHaveTextContent(/1[  ]981/);
+    expect(screen.getByTestId('charges-effort-lisse-total')).toHaveTextContent(/1[  ]863/);
+  });
+
+  it('WARNS about a probable duplicate — and moves no total while doing it', () => {
+    renderCharges([monthly], {
+      commitmentInstalments: [instalment],
+      aPayerCeMoisTotal: 2024.21,
+      effortLisseTotal: 2024.21,
+      duplicates: [
+        {
+          chargeId: 'a1',
+          chargeLabel: 'Impôt',
+          commitmentId: 'spf',
+          commitmentLabel: 'SPF Impôts',
+          montant: 220,
+          signaux: ['montant', 'jour', 'libelle'],
+        },
+      ],
+    });
+    const warning = screen.getByTestId('charges-duplicate-a1');
+    expect(warning).toHaveTextContent('Impôt');
+    expect(warning).toHaveTextContent('SPF Impôts');
+    expect(warning).toHaveTextContent('même montant, même jour, libellés proches');
+    // The totals are exactly what the server passed: nothing was netted off.
+    expect(screen.getByTestId('charges-a-payer-total')).toHaveTextContent(/2[  ]024/);
+    expect(screen.getByTestId('charges-effort-lisse-total')).toHaveTextContent(/2[  ]024/);
+  });
+
+  it('says nothing when there is no probable duplicate', () => {
+    renderCharges([monthly], { commitmentInstalments: [instalment] });
+    expect(screen.queryByTestId('charges-duplicate-a1')).toBeNull();
+  });
+});
+
+describe('<ChargesClient /> — chantier 3: the bulk past-due gesture', () => {
+  const monthly = sampleCharges[0]!;
+
+  it('is hidden when the month has no past occurrence — no offered no-op', () => {
+    renderCharges([monthly], { bulk: { gesture: 'rien', pastDueCount: 0 } });
+    expect(screen.queryByTestId('charges-bulk-past-due')).toBeNull();
+  });
+
+  it('offers ONE press, with no confirmation dialog in the way', async () => {
+    togglePastDueMock.mockResolvedValue({
+      ok: true,
+      data: { mode: 'pointer', charges: 13, commitments: 1 },
+    });
+    renderCharges([monthly], { bulk: { gesture: 'pointer', pastDueCount: 14 } });
+
+    const button = screen.getByTestId('charges-bulk-past-due');
+    expect(button).toHaveTextContent('Marquer les échéances passées comme payées');
+    await act(async () => {
+      fireEvent.click(button);
+    });
+    // Straight to the action: no dialog, no second confirmation step.
+    await waitFor(() =>
+      expect(togglePastDueMock).toHaveBeenCalledWith({ periodYear: 2026, periodMonth: 1 }),
+    );
+    await waitFor(() =>
+      expect(toastSuccessMock).toHaveBeenCalledWith(expect.stringContaining('14')),
+    );
+  });
+
+  it('the SAME button undoes it once everything past is ticked', async () => {
+    togglePastDueMock.mockResolvedValue({
+      ok: true,
+      data: { mode: 'depointer', charges: 14, commitments: 0 },
+    });
+    renderCharges([monthly], { bulk: { gesture: 'depointer', pastDueCount: 14 } });
+
+    const button = screen.getByTestId('charges-bulk-past-due');
+    expect(button).toHaveAttribute('data-gesture', 'depointer');
+    expect(button).toHaveTextContent('Annuler ce pointage');
+    await act(async () => {
+      fireEvent.click(button);
+    });
+    // Same payload — the DIRECTION is the server's call, never the client's.
+    await waitFor(() =>
+      expect(togglePastDueMock).toHaveBeenCalledWith({ periodYear: 2026, periodMonth: 1 }),
+    );
+  });
+});
+
+describe('<ChargesClient /> — chantier 3: the conversion entry point', () => {
+  const monthly = sampleCharges[0]!;
+
+  it('offers the conversion on an active charge and opens the sheet', async () => {
+    renderCharges([monthly]);
+    const entry = screen.getByTestId('charges-row-convert-a1');
+    await act(async () => {
+      fireEvent.click(entry);
+    });
+    expect(screen.getByTestId('convert-charge-sheet')).toBeInTheDocument();
+    expect(screen.getByTestId('convert-charge-intro')).toHaveTextContent('Loyer appartement');
+  });
+
+  it('does not offer it on a deactivated charge — there is nothing to convert', () => {
+    renderCharges([{ ...monthly, isActive: false }]);
+    expect(screen.queryByTestId('charges-row-convert-a1')).toBeNull();
   });
 });
 
