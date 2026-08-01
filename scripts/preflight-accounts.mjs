@@ -91,6 +91,32 @@ const resolveLinkFile = (...segments) => {
   return null;
 };
 
+// Troisième fichier gitignoré de la même famille : `.env.local`. Celui-ci n'est
+// pas lu par le script mais chargé par Node via `--env-file`, donc résolu depuis
+// le CWD du hook — la racine du worktree, où il n'existe pas. Les quatre
+// contrôles d'environnement tombaient alors en ❌ et le NO-GO subsistait : avoir
+// réparé les deux premiers n'aurait servi à rien, la porte serait restée fermée
+// dans TOUS les worktrees, c'est-à-dire partout où le travail a lieu.
+//
+// Même résolution, mêmes garanties. On ne charge que si les variables sont
+// absentes ET que le fichier vient du clone d'origine : sur le clone principal,
+// le comportement reste rigoureusement inchangé. Aucune valeur n'est imprimée —
+// les contrôles ci-dessous ne testent qu'une présence ou une correspondance, et
+// un `.env.local` pointant vers le mauvais projet échoue exactement pareil.
+let envLoadedFrom = null;
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  const envFile = resolveLinkFile('.env.local');
+  if (envFile?.from) {
+    try {
+      process.loadEnvFile(envFile.path);
+      envLoadedFrom = envFile.from;
+    } catch {
+      // Illisible : les contrôles ci-dessous le diront en ❌, comme avant.
+    }
+  }
+}
+const envOrigin = envLoadedFrom ? ` [via ${envLoadedFrom}]` : '';
+
 const results = [];
 const check = (name, ok, detail) => results.push({ name, ok, detail });
 
@@ -303,7 +329,7 @@ check(
   'Supabase de .env.local',
   Boolean(supabaseUrl?.includes(EXPECTED.supabaseRef)),
   supabaseUrl
-    ? `NEXT_PUBLIC_SUPABASE_URL ${supabaseUrl.includes(EXPECTED.supabaseRef) ? 'correspond' : 'pointe AILLEURS'}`
+    ? `NEXT_PUBLIC_SUPABASE_URL ${supabaseUrl.includes(EXPECTED.supabaseRef) ? 'correspond' : 'pointe AILLEURS'}${envOrigin}`
     : 'NEXT_PUBLIC_SUPABASE_URL absent (lancer avec --env-file=.env.local)',
 );
 
@@ -416,7 +442,7 @@ check(
   'URL applicative',
   isLocal || isProd,
   appUrl
-    ? `${appUrl} — ${isLocal ? `dev local (prod = ${EXPECTED.appHost}, définie côté Vercel)` : 'production'}`
+    ? `${appUrl} — ${isLocal ? `dev local (prod = ${EXPECTED.appHost}, définie côté Vercel)` : 'production'}${envOrigin}`
     : 'NEXT_PUBLIC_APP_URL absent',
 );
 
@@ -425,13 +451,13 @@ check(
 check(
   'Supabase access token',
   Boolean(process.env.SUPABASE_ACCESS_TOKEN),
-  process.env.SUPABASE_ACCESS_TOKEN ? 'présent' : 'SUPABASE_ACCESS_TOKEN absent',
+  process.env.SUPABASE_ACCESS_TOKEN ? `présent${envOrigin}` : 'SUPABASE_ACCESS_TOKEN absent',
 );
 check(
   'Supabase DB password',
   Boolean(process.env.SUPABASE_DB_PASSWORD),
   process.env.SUPABASE_DB_PASSWORD
-    ? 'présent'
+    ? `présent${envOrigin}`
     : 'SUPABASE_DB_PASSWORD absent (requis pour `supabase db push`)',
 );
 
