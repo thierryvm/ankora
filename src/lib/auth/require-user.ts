@@ -119,6 +119,37 @@ export async function getOptionalUser(): Promise<User | null> {
 }
 
 /**
+ * Mirror image of `requireUser()`: the guard an AUTH FORM needs.
+ *
+ * The landing sells the product to strangers, so its three « Ouvrir mon
+ * cockpit » CTAs (Hero, Pricing, FooterCTA) point at `/signup` — a literal
+ * href, chosen on 2026-04-27 when a signed-in visitor was not a case anyone
+ * had in mind. For a user who already has an account the button therefore
+ * does the opposite of what it says: it hands them the registration form.
+ * Reported from production on 2026-08-01, read as "I am being logged out".
+ *
+ * The guard lives here rather than in the CTAs on purpose. Making three
+ * marketing components session-aware would add three `auth.getUser()` network
+ * round-trips to the landing — `MktNav` already pays for one — on the page
+ * whose Lighthouse budget is tightest. One check, on the pages an authenticated
+ * visitor has no business seeing, covers every entry point instead: the CTAs,
+ * the drawer, a bookmark, a link from an old email.
+ *
+ * Deliberately built on `getOptionalUser`, which degrades to `null` during an
+ * outage. If Supabase cannot answer, the visitor gets the login form — the
+ * status quo, and recoverable — rather than a redirect loop.
+ *
+ * NOT applied at the `(auth)` layout level: `/reset-password` runs with a live
+ * recovery session, and bouncing it to `/app` would make the password a user
+ * came to change unreachable.
+ */
+export async function redirectIfSignedIn(): Promise<void> {
+  if (await getOptionalUser()) {
+    redirect({ href: '/app', locale: await getLocale() });
+  }
+}
+
+/**
  * Server-side guard for authenticated routes.
  * Never trust the client — always call this from RSC/actions.
  *

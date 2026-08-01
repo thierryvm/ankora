@@ -4,6 +4,7 @@ import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { redirectIfSignedIn } from '@/lib/auth/require-user';
 import { LoginForm } from './LoginForm';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -19,6 +20,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const t = await getTranslations('auth.login');
   const params = await searchParams;
   const resetDone = params.reset === 'done';
+
+  // Same guard as `/signup`, with one exception that is not cosmetic:
+  // `confirmPasswordResetAction` lands here as `?reset=done` while the recovery
+  // session is still live. Redirecting that visitor would swallow the only
+  // confirmation they ever get that their new password was actually saved.
+  if (!resetDone) await redirectIfSignedIn();
 
   return (
     <Card>

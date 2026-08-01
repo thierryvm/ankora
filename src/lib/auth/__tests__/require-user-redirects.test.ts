@@ -64,7 +64,7 @@ vi.mock('@/lib/log', () => ({
 
 import { DataReadUnavailableError } from '@/lib/data/read-failure';
 
-import { requireUser, requireUserWithWorkspace } from '../require-user';
+import { redirectIfSignedIn, requireUser, requireUserWithWorkspace } from '../require-user';
 
 const fakeUser = {
   id: 'user-123',
@@ -184,6 +184,50 @@ describe('requireUserWithWorkspace — an unreadable membership is not an absent
     const thrown = await requireUserWithWorkspace().catch((e: unknown) => e);
 
     expect((thrown as { digest?: string }).digest).toBe('ANKORA_DATA_READ_UNAVAILABLE');
+  });
+});
+
+/**
+ * The landing's three « Ouvrir mon cockpit » CTAs are literal `href="/signup"`
+ * (Hero, Pricing, FooterCTA — unchanged since 2026-04-27). A signed-in visitor
+ * who taps one gets the registration form, which reads as "I have been logged
+ * out". Reported from production on 2026-08-01 against `694d016`.
+ *
+ * These cases assert the guard that closes it, and — the third one — that it
+ * stays closed during an outage rather than turning into a redirect loop.
+ */
+describe('redirectIfSignedIn — an auth form is not for someone who is already in', () => {
+  it('sends a signed-in visitor to their cockpit, locale carried', async () => {
+    getUserMock.mockResolvedValue({ data: { user: fakeUser }, error: null });
+
+    await expect(redirectIfSignedIn()).rejects.toThrow('NEXT_REDIRECT');
+    expect(redirectMock).toHaveBeenCalledWith({ href: '/app', locale: 'fr-BE' });
+  });
+
+  it('sends an English visitor to the English cockpit', async () => {
+    getLocaleMock.mockResolvedValue('en');
+    getUserMock.mockResolvedValue({ data: { user: fakeUser }, error: null });
+
+    await expect(redirectIfSignedIn()).rejects.toThrow('NEXT_REDIRECT');
+    expect(redirectMock).toHaveBeenCalledWith({ href: '/app', locale: 'en' });
+  });
+
+  it('lets an anonymous visitor reach the form', async () => {
+    getUserMock.mockResolvedValue({ data: { user: null }, error: null });
+
+    await expect(redirectIfSignedIn()).resolves.toBeUndefined();
+    expect(redirectMock).not.toHaveBeenCalled();
+  });
+
+  it('renders the form rather than redirecting when the auth backend is down', async () => {
+    // `getOptionalUser` degrades to null on an outage, by design. What must NOT
+    // happen is a redirect to `/app`, which would bounce back here through
+    // `requireUser`'s own outage branch — a loop on a page whose whole job is to
+    // be reachable when things are broken.
+    getUserMock.mockRejectedValue(new TypeError('fetch failed'));
+
+    await expect(redirectIfSignedIn()).resolves.toBeUndefined();
+    expect(redirectMock).not.toHaveBeenCalled();
   });
 });
 
