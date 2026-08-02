@@ -116,6 +116,34 @@ supabase/
 8. **Tests domain ≥ 90% lignes + fonctions, ≥ 85% branches**.
 9. **'use server' exports** : un fichier avec `'use server';` ne peut exporter QUE des fonctions `async` (Server Actions). Infrastructure code (logger factory, clients, helpers) n'a jamais le directive `'use server'`. Vérifié par `npm run lint:use-server` en CI.
 
+## Ce dépôt est PUBLIC (ajouté le 2 août 2026)
+
+`github.com/thierryvm/ankora` est public. Tout ce qui y entre — fichiers, **messages de commit**,
+**descriptions de PR**, commentaires de revue — est lisible par n'importe qui, immédiatement et
+définitivement. Fermer une PR ou supprimer un fichier **ne retire rien** : GitHub conserve les
+objets rattachés à une PR, consultables par URL, et l'historique garde le reste.
+
+**Règle. On décrit ce qu'on corrige, jamais comment l'exploiter.**
+
+Ne portent JAMAIS de valeurs mesurées d'un défaut de sécurité **non encore corrigé** : les
+messages de commit, les descriptions de PR, les fichiers du dépôt. Concrètement, on n'y écrit pas
+la sortie d'une sonde de privilèges, le contenu d'un ACL, le rôle exact qui passe là où il ne
+devrait pas, ni la requête qui le démontre. « Cette fonction était joignable par un rôle client,
+elle ne l'est plus » suffit à un relecteur ; la matrice complète appartient au document
+d'exploitation tenu hors dépôt.
+
+Une fois le défaut corrigé et la correction vérifiée, la divulgation devient normale et utile —
+c'est l'ordre qui compte, pas le secret.
+
+**Ne vont pas non plus dans le dépôt** : les chemins de fichiers hors dépôt (sauvegardes,
+exports, ressources locales), l'état des dispositifs de sauvegarde et de restauration de la
+production, et toute donnée nominative sur les personnes qui utilisent l'application.
+
+Origine : un document de passation a été poussé le 2 août 2026 avec, réunis en une page,
+l'emplacement d'une copie complète des données, l'état des filets de la base et le détail d'un
+défaut de privilèges. Aucun de ces éléments n'était secret pris isolément ; ensemble, ils
+formaient une carte. La règle porte donc sur l'**agrégation** autant que sur chaque élément.
+
 ## Qualité obligatoire avant merge
 
 - `npm run lint` → 0 erreur
