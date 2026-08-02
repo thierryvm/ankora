@@ -138,6 +138,25 @@ export function formatMonth(
   return label.charAt(0).toLocaleUpperCase(locale) + label.slice(1);
 }
 
+/**
+ * A commitment instalment date: full calendar date when a payment day was
+ * actually chosen, month + year otherwise.
+ *
+ * Single formatter for both surfaces (dashboard card + commitments page) so
+ * « dernière en Mars 2027 » and « dernière le 15 mars 2027 » can never diverge
+ * in shape. The `day === null` case is not a fallback, it is the honest render
+ * of a commitment whose payment day was never asked for — see
+ * `hasExplicitPaymentDay` in the commitments domain.
+ */
+export function formatInstallmentDate(
+  date: { year: number; month: number; day?: number | null },
+  locale: Locale,
+): string {
+  if (date.day == null) return `${formatMonth(date.month, locale, 'long')} ${date.year}`;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return formatDate(`${date.year}-${pad(date.month)}-${pad(date.day)}`, locale, 'long');
+}
+
 export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }

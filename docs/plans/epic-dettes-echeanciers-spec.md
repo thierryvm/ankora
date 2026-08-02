@@ -94,10 +94,14 @@ Les paiements réutilisent **le mécanisme existant** (`charge_payments`) via un
 
 **D2 — La facture ponctuelle future (`one_off`) : INCLUSE** dans l'épic (1 échéance, quasi gratuit dans le modèle).
 
-**D3 — Saisie : solde restant + échéances restantes.** Tu tapes « il reste 4 200 € sur 17 mensualités de 250 € » — les chiffres de ton extrait. `total_amount` = capital restant à la création ; `start_year/month` = la **prochaine** échéance.
+**D3 — Saisie : montant total + nombre total d'échéances + date de la première.** ~~Solde restant + échéances restantes ; `start_year/month` = la **prochaine** échéance.~~ **Corrigé le 2026-08-02** (voir ADR-021 § « Correction D3 »). `total_amount` = le montant total du plan, toutes échéances comprises ; `installments_total` = leur nombre total ; `start_year/month/payment_day` = la **première** échéance, même si elle est déjà payée.
+
+Motif de la correction : la formulation d'origine n'a jamais été implémentée. Le grand livre compte les cochages **sur les périodes planifiées à partir de l'ancre**, et le bouton `+` remplit la plus ancienne échéance non payée du calendrier — deux comportements qui n'ont de sens que si l'ancre est la **première** échéance. Seul le formulaire de création suivait D3, et de la pire manière : faute de champ de saisie, il ancrait sur le **mois de création**. Un plan SPF réel dont la première échéance tombait en mai 2026, créé en juillet, annonçait donc une fin en mai 2027 au lieu de mars 2027. Le reste dû et le compteur `4/11`, eux, étaient justes — parce qu'ils lisent le calendrier, pas la doc.
 
 **D4 — Migration : bouton « convertir en engagement »** sur la ligne de charge (PR-2). Pré-remplit label/montant/jour depuis la charge, tu complètes le solde restant ; la charge d'origine est désactivée après conversion (jamais supprimée sans confirmation).
 
 ## 7. Ce qui reste hors épic (tracé, pas oublié)
 
-Intérêts/TAEG · échéances irrégulières (montants différents par échéance — le SPF classique est régulier) · rappels/notifications d'échéance · export du plan de remboursement.
+Intérêts/TAEG · échéances **arbitrairement** irrégulières (un montant libre par échéance) · rappels/notifications d'échéance · export du plan de remboursement.
+
+> **Amendement 2026-08-02** — la **dernière** échéance, elle, est désormais dérivée : `total − (n − 1) × mensualité`. Le « SPF classique est régulier » était faux sur le cas réel — 2 407,93 € sur 11 × 220 € donne dix échéances pleines et un solde de 207,93 €, et la carte annonçait « 11 échéances de 220 € ». Un plan à montants tous différents reste hors épic.

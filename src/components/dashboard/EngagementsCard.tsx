@@ -5,7 +5,8 @@ import { Link } from '@/i18n/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { commitmentRowToDomain, type CommitmentRow } from '@/lib/data/commitment-row';
 import {
-  endPeriod,
+  endInstallmentDate,
+  firstInstallmentDate,
   installmentsPaid,
   isDueInPeriod,
   installmentAmountOf,
@@ -13,7 +14,7 @@ import {
   remainingBalance,
 } from '@/lib/domain/commitments';
 import type { Locale } from '@/i18n/routing';
-import { formatCurrency, formatMonth } from '@/lib/i18n/formatters';
+import { formatCurrency, formatInstallmentDate } from '@/lib/i18n/formatters';
 
 type Props = {
   commitments: readonly CommitmentRow[];
@@ -104,7 +105,6 @@ export async function EngagementsCard({
 
         <ul className="divide-border/60 divide-y">
           {rows.map(({ row, domain, remaining, paid }) => {
-            const end = endPeriod(domain);
             return (
               <li
                 key={row.id}
@@ -115,10 +115,10 @@ export async function EngagementsCard({
                   <p className="text-foreground truncate text-sm font-medium">{row.label}</p>
                   <p className="text-muted-foreground text-xs">
                     {row.kind === 'one_off'
-                      ? `${formatMonth(row.startMonth, locale, 'long')} ${row.startYear}`
+                      ? formatInstallmentDate(firstInstallmentDate(domain), locale)
                       : t('installmentsLeft', {
                           left: row.installmentsTotal - paid,
-                          end: `${formatMonth(end.month, locale, 'long')} ${end.year}`,
+                          end: formatInstallmentDate(endInstallmentDate(domain), locale),
                         })}
                   </p>
                 </div>

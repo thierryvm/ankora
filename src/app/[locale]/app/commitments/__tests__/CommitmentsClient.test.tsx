@@ -258,14 +258,14 @@ describe('<CommitmentsClient />', () => {
 
   // --- Create --------------------------------------------------------------
 
-  it('creates a commitment with the anchor set to the viewed period', async () => {
+  it('creates a commitment with the anchor defaulting to the viewed period', async () => {
     createMock.mockResolvedValue({ ok: true });
     renderPage([], { currentPeriod: { year: 2026, month: 5 } });
     fireEvent.click(screen.getByTestId('commitments-add-toggle'));
     fireEvent.change(screen.getByLabelText('Libellé'), { target: { value: 'Arrangement SPF' } });
-    fireEvent.change(screen.getByLabelText(/Montant restant dû/), { target: { value: '1600' } });
+    fireEvent.change(screen.getByLabelText(/Montant total dû/), { target: { value: '1600' } });
     fireEvent.change(screen.getByLabelText(/Montant par échéance/), { target: { value: '200' } });
-    fireEvent.change(screen.getByLabelText(/Nombre d'échéances/), { target: { value: '8' } });
+    fireEvent.change(screen.getByLabelText(/Nombre total d'échéances/), { target: { value: '8' } });
     await act(async () => {
       fireEvent.submit(screen.getByRole('button', { name: /^ajouter$/i }).closest('form')!);
     });
@@ -280,6 +280,62 @@ describe('<CommitmentsClient />', () => {
     });
   });
 
+  // The regression that started all this: the form used to hard-code the anchor
+  // to the CREATION month, so a plan whose first instalment was two months
+  // earlier ended two months late. The typed date must reach the action.
+  it('sends the FIRST-instalment date the user typed, not the viewed period', async () => {
+    createMock.mockResolvedValue({ ok: true });
+    renderPage([], { currentPeriod: { year: 2026, month: 7 } });
+    fireEvent.click(screen.getByTestId('commitments-add-toggle'));
+    fireEvent.change(screen.getByLabelText('Libellé'), { target: { value: 'SPF impôt' } });
+    fireEvent.change(screen.getByLabelText(/Montant total dû/), { target: { value: '2407.93' } });
+    fireEvent.change(screen.getByLabelText(/Montant par échéance/), { target: { value: '220' } });
+    fireEvent.change(screen.getByLabelText(/Nombre total d'échéances/), {
+      target: { value: '11' },
+    });
+    fireEvent.change(screen.getByTestId('commitment-start-month'), { target: { value: '5' } });
+    fireEvent.change(screen.getByTestId('commitment-start-year'), { target: { value: '2026' } });
+    fireEvent.change(screen.getByTestId('commitment-payment-day'), { target: { value: '15' } });
+    await act(async () => {
+      fireEvent.submit(screen.getByRole('button', { name: /^ajouter$/i }).closest('form')!);
+    });
+    await waitFor(() => expect(createMock).toHaveBeenCalledTimes(1));
+    expect(createMock.mock.calls[0]?.[0]).toMatchObject({
+      startYear: 2026,
+      startMonth: 5,
+      paymentDay: 15,
+      installmentsTotal: 11,
+      frequency: 'monthly',
+    });
+  });
+
+  it('previews the resulting window before the user commits to it', async () => {
+    renderPage([], { currentPeriod: { year: 2026, month: 7 } });
+    fireEvent.click(screen.getByTestId('commitments-add-toggle'));
+    fireEvent.change(screen.getByLabelText(/Nombre total d'échéances/), {
+      target: { value: '11' },
+    });
+    fireEvent.change(screen.getByTestId('commitment-start-month'), { target: { value: '5' } });
+    fireEvent.change(screen.getByTestId('commitment-start-year'), { target: { value: '2026' } });
+    expect(screen.getByTestId('commitment-window-preview')).toHaveTextContent(
+      'Mai 2026 → Mars 2027',
+    );
+  });
+
+  it('leaves the payment day empty when the stored value is the column default', () => {
+    // `payment_day` is `not null default 1`; a stored 1 means "never asked",
+    // not "the 1st" — the form must not present it as a choice made.
+    renderPage([{ ...carLoan, paymentDay: 1 }]);
+    fireEvent.click(screen.getByTestId('commitment-edit-car'));
+    expect(screen.getByTestId('commitment-payment-day')).toHaveValue(null);
+  });
+
+  it('prefills a real payment day so an edit does not silently drop it', () => {
+    renderPage([carLoan]); // paymentDay 15
+    fireEvent.click(screen.getByTestId('commitment-edit-car'));
+    expect(screen.getByTestId('commitment-payment-day')).toHaveValue(15);
+  });
+
   it('hides the instalment fields for a one-off and sends a single instalment', async () => {
     createMock.mockResolvedValue({ ok: true });
     renderPage([], { currentPeriod: { year: 2026, month: 5 } });
@@ -287,7 +343,7 @@ describe('<CommitmentsClient />', () => {
     fireEvent.change(screen.getByTestId('commitment-kind'), { target: { value: 'one_off' } });
     expect(screen.queryByLabelText(/Montant par échéance/)).toBeNull();
     fireEvent.change(screen.getByLabelText('Libellé'), { target: { value: 'Entretien' } });
-    fireEvent.change(screen.getByLabelText(/Montant restant dû/), { target: { value: '340' } });
+    fireEvent.change(screen.getByLabelText(/Montant total dû/), { target: { value: '340' } });
     await act(async () => {
       fireEvent.submit(screen.getByRole('button', { name: /^ajouter$/i }).closest('form')!);
     });
@@ -302,7 +358,7 @@ describe('<CommitmentsClient />', () => {
     renderPage([]);
     fireEvent.click(screen.getByTestId('commitments-add-toggle'));
     fireEvent.change(screen.getByLabelText('Libellé'), { target: { value: 'X' } });
-    fireEvent.change(screen.getByLabelText(/Montant restant dû/), { target: { value: '100' } });
+    fireEvent.change(screen.getByLabelText(/Montant total dû/), { target: { value: '100' } });
     fireEvent.change(screen.getByLabelText(/Montant par échéance/), { target: { value: '10' } });
     await act(async () => {
       fireEvent.submit(screen.getByRole('button', { name: /^ajouter$/i }).closest('form')!);
@@ -315,7 +371,7 @@ describe('<CommitmentsClient />', () => {
     renderPage([]);
     fireEvent.click(screen.getByTestId('commitments-add-toggle'));
     fireEvent.change(screen.getByLabelText('Libellé'), { target: { value: 'X' } });
-    fireEvent.change(screen.getByLabelText(/Montant restant dû/), { target: { value: '-5' } });
+    fireEvent.change(screen.getByLabelText(/Montant total dû/), { target: { value: '-5' } });
     await act(async () => {
       fireEvent.submit(screen.getByRole('button', { name: /^ajouter$/i }).closest('form')!);
     });
@@ -331,7 +387,7 @@ describe('<CommitmentsClient />', () => {
     fireEvent.click(screen.getByTestId('commitment-edit-car'));
     // Form is prefilled with the row's current values.
     expect(screen.getByLabelText('Libellé')).toHaveValue('Crédit voiture');
-    expect(screen.getByLabelText(/Nombre d'échéances/)).toHaveValue(17);
+    expect(screen.getByLabelText(/Nombre total d'échéances/)).toHaveValue(17);
 
     fireEvent.change(screen.getByLabelText('Libellé'), { target: { value: 'Crédit auto' } });
     await act(async () => {
@@ -358,7 +414,7 @@ describe('<CommitmentsClient />', () => {
     updateMock.mockResolvedValue({ ok: true });
     renderPage([carLoan], { paidKeysByCommitment: { car: ['2026-1', '2026-2', '2026-3'] } });
     fireEvent.click(screen.getByTestId('commitment-edit-car'));
-    fireEvent.change(screen.getByLabelText(/Nombre d'échéances/), { target: { value: '2' } });
+    fireEvent.change(screen.getByLabelText(/Nombre total d'échéances/), { target: { value: '2' } });
     await act(async () => {
       fireEvent.submit(screen.getByRole('button', { name: /enregistrer/i }).closest('form')!);
     });
