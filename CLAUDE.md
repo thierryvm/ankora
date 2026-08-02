@@ -186,10 +186,29 @@ les plus sensibles de l'app.
 Deux jobs, donc **deux planchers distincts** — un chiffre global agrégé serait
 ininterprétable au premier conflit, donc ignoré :
 
-| Job                              | Plancher au 31 juillet 2026                              |
-| -------------------------------- | -------------------------------------------------------- |
-| `Playwright E2E`                 | **224 passed** (215 avant, +9 `cron-gdpr-auth`, PR-3B-B) |
-| `Playwright E2E (authenticated)` | **38 passed** (31 avant, +7 découpage au cas du 31/07)   |
+| Job                              | Plancher au 2 août 2026                                     |
+| -------------------------------- | ----------------------------------------------------------- |
+| `Playwright E2E`                 | **228 passed** (224 au 31/07 — **enfin mesuré**, cf. infra) |
+| `Playwright E2E (authenticated)` | **39 passed** (38 avant, +1 `navigation-reachable`)         |
+
+> **Plancher public : 228, OBSERVÉ le 2026-08-02.** Il était attendu à 224 +4
+> depuis le 29 juillet et n'avait jamais été relevé — la note ci-dessous
+> réclamait « la valeur mesurée à la première CI verte ». C'est fait : run
+> `30752902825`, `228 passed, 195 skipped`. Le solde calculé (−2 ADR-034,
+> +6 consentement) tombait juste, mais il ne valait rien tant qu'il n'était pas
+> vu ; il l'est maintenant, et le chiffre remplace l'estimation.
+>
+> **Authentifié : 38 → 39**, `e2e/navigation-reachable.spec.ts` (PR #293), un
+> seul cas, exécuté par `chromium-desktop` uniquement — la spec n'est pas sous
+> `mobile-ios/`, donc le projet `iPhone 14` ne la découvre pas. Dans le job
+> public elle ajoute 3 sautés et 0 passé, donc le plancher public ne bouge pas
+> de son fait.
+>
+> Mesuré aussi en local avant le push, dans les deux sens : `origin/main` rend
+> `37 passed` sur cette machine et la branche `38`. Le delta local (+1) et le
+> delta CI (+1) concordent ; les valeurs absolues diffèrent parce que
+> l'environnement local n'est pas la parité CI. **C'est le delta qui se compare,
+> jamais le nombre absolu d'une machine à l'autre.**
 
 > **⚠️ Plancher public à re-mesurer (chantier 1, 29 juillet 2026).** ADR-034 a
 > supprimé `/design-playground` et sa spec `e2e/design-playground.spec.ts`
