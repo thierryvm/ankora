@@ -2,8 +2,7 @@
 
 - **Date** : 2026-08-02
 - **Gravité** : non bloquant — toutes les catégories restent atteignables d'un
-  balayage. Mais le défaut fait **sous-déclarer ce que l'app propose**, et il a
-  produit un rapport de bug erroné (voir « Origine »).
+  balayage. Mais le défaut fait **sous-déclarer ce que l'app propose**.
 - **Statut** : **non corrigé, volontairement.** Rien n'est fonctionnellement
   cassé et la refonte du design system reprend cette surface. Cette note existe
   pour que le chantier hérite de la mesure plutôt que de la redécouvrir.
@@ -23,12 +22,25 @@ aucun bouton : **rien n'indique qu'il y a autre chose à droite.**
 Un utilisateur qui compte ce qu'il voit conclut que l'app lui propose trois
 catégories. Elle lui en propose cinq.
 
-## Origine
+## Origine, et ce que cette note N'EXPLIQUE PAS
 
-Rapport du 2026-08-01 : « seules deux catégories sont proposées ». Le panneau en
-offrait le nombre normal ; c'est le nombre **vu** qui différait du nombre
-**offert**. La mesure ci-dessous a été prise pour trancher, et c'est elle qui a
-requalifié le rapport.
+Trouvé en instruisant le rapport du 2026-08-01, « seules deux catégories sont
+proposées ».
+
+**Ce n'en est pas la cause.** Une capture de l'espace concerné montre deux
+pastilles au large dans la largeur, sans débordement ni coupure : cet espace n'a
+réellement que deux catégories `variable`. La cause est une dérive de données,
+documentée à part dans
+[`2026-08-02-taxonomie-avril-jamais-migree.md`](2026-08-02-taxonomie-avril-jamais-migree.md).
+
+Ce défaut-ci a été mesuré au passage sur un espace à 5 catégories, et il est réel
+— mais il n'a **encore été observé par aucun utilisateur**, parce qu'aucun espace
+de production n'a aujourd'hui assez de catégories `variable` pour le déclencher
+(2 pour le plus ancien, 5 pour les autres, et 5 tient à 430 px). Il se déclenchera
+le jour où la migration de taxonomie sera appliquée.
+
+C'est la raison d'être de la note : documenter une charge amorcée, pas un
+symptôme vécu.
 
 ## Mesure
 
@@ -78,7 +90,9 @@ Vérifié et écarté, pour que le chantier ne reparte pas dessus :
   **5,69:1** sur 14 px — au-dessus du seuil WCAG AA de 4,5:1.
 - **Le filtre `kind = 'fixed'` fait son travail.** ADR-035 §5 exclut les
   catégories de factures pour empêcher le double comptage. Les 5 chips offertes
-  sont exactement les 5 `variable` du seed. Le compte est juste.
+  sont exactement les 5 `variable` du seed. Le compte est juste — le filtre n'est
+  pour rien dans le symptôme rapporté, c'est la donnée qu'il filtre qui diffère
+  d'un espace à l'autre (voir la note liée).
 - **Il n'existe aucun chemin de création de catégorie**, nulle part dans l'app
   (une seule lecture dans `src/lib/data/categories.ts`, plus l'export GDPR ;
   aucune écriture). ADR-022 diffère explicitement les catégories utilisateur.
