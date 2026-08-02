@@ -175,6 +175,42 @@ gh api repos/thierryvm/ankora/pulls/<N>/comments \
 
 Si output non vide → corriger avant de déclarer DONE.
 
+### Un retour Sourcery se traite, ou se refuse PAR ÉCRIT (verrouillé 2026-08-02)
+
+**Toute session tient compte des retours Sourcery sur ses propres PR.** Trois
+règles, et la troisième est celle qu'on oublie :
+
+1. **Corriger quand c'est fondé.** Sourcery a raison souvent. Le 2 août il a
+   montré qu'un test de navigation ne connaissait qu'un mode de masquage sur
+   trois — il aurait laissé passer une régression en silence. Le test a été
+   supprimé et refait, pas rapiécé.
+2. **Ne pas appliquer par réflexe.** Sourcery a raison souvent, pas toujours.
+   Un correctif appliqué sans conviction est une dette de plus, et une branche
+   que rien n'exerce est une branche que rien ne teste.
+3. **Un commentaire écarté est écarté DANS LE FIL, avec sa raison.** Jamais
+   ignoré, et jamais refusé seulement dans le rapport à @thierry : le prochain
+   qui ouvre la PR doit trouver le refus et son motif au même endroit que la
+   remarque. Un fil laissé sans réponse ne se distingue pas d'un fil non lu.
+
+Les remarques de revue **générale** (celles du corps de la review, pas ancrées
+sur une ligne) comptent au même titre : elles n'ont pas de fil à résoudre, donc
+elles se traitent par un commentaire de PR explicite.
+
+```bash
+# Fils ancrés — doivent finir résolus
+gh api graphql -f query='query { repository(owner:"thierryvm", name:"ankora") {
+  pullRequest(number:<N>) { reviewThreads(first:50) { nodes { isResolved path line } } } } }'
+
+# Remarques générales — n'apparaissent PAS dans /pulls/<N>/comments
+gh api repos/thierryvm/ankora/pulls/<N>/reviews \
+  --jq '.[] | select(.user.login == "sourcery-ai[bot]") | .body'
+```
+
+**Piège mesuré le 2026-08-02** : `check-sourcery-resolved` tourne au push, donc
+AVANT qu'un fil ouvert par la review du même push soit résolu. Il rougit alors
+sans qu'aucun code soit en cause. Résoudre le fil puis `gh run rerun <id>` — ne
+pas chercher un défaut dans le code, il n'y en a pas.
+
 ### Le nombre de cas e2e exécutés ne descend jamais
 
 **Critère permanent, ajouté le 26 juillet 2026.** Une CI verte ne vaut que ce
