@@ -4,6 +4,7 @@ import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { redirectIfSignedIn } from '@/lib/auth/require-user';
 import { SignupForm } from './SignupForm';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -12,6 +13,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function SignupPage() {
+  // The landing's « Ouvrir mon cockpit » CTAs point here unconditionally, so a
+  // signed-in visitor who takes them lands on the registration form. Send them
+  // where the button said they were going.
+  await redirectIfSignedIn();
+
   const t = await getTranslations('auth.signup');
 
   return (
