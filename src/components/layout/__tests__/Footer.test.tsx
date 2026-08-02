@@ -131,7 +131,10 @@ describe('<Footer />', () => {
   // footer's link nav is fully redundant with the BottomTabBar More sheet
   // once the bar is mounted (same five entries — CGU, Privacy, Cookies,
   // FAQ, Cookie Preferences). Hide the nav on mobile when the bar is
-  // mounted; keep it on desktop (≥ md) because the bar is `md:hidden`.
+  // mounted; bring it back only where the bar is gone — `lg` since
+  // 2026-08-02, when the bar's own breakpoint moved from 768 to 1024 to
+  // close the 256 px band that had no navigation at all. The two must
+  // stay in step: `navigation-reachable.test.tsx` asserts it structurally.
   describe('Hotfix #4 — redundant nav hidden on mobile when BottomTabBar mounts', () => {
     it('renders the nav with `flex` (visible on every breakpoint) by default', async () => {
       setBottomTabBarMounted(false);
@@ -141,12 +144,16 @@ describe('<Footer />', () => {
       expect(nav.className).not.toContain('hidden');
     });
 
-    it('hides the nav on mobile (`hidden md:flex`) when the bar is mounted', async () => {
+    it('hides the nav until the bar is gone (`hidden lg:flex`) when the bar is mounted', async () => {
       setBottomTabBarMounted(true);
       await renderFooter();
       const nav = screen.getByTestId('footer-nav');
       expect(nav.className).toContain('hidden');
-      expect(nav.className).toContain('md:flex');
+      expect(nav.className).toContain('lg:flex');
+      // Revealing it at `md:` would put these five links — including the
+      // GDPR art. 7(3) cookie preferences one — on screen at 768–1023 while
+      // the bar still covers the foot of the viewport.
+      expect(nav.className).not.toContain('md:flex');
     });
 
     it('always keeps the BrandHomeLink + copyright (never hidden, legal info)', async () => {

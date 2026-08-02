@@ -31,7 +31,14 @@ import { MoreSheet } from './MoreSheet';
  *
  * Visibility rules (Hotfix Option A v3, 2026-05-25 — Apple HIG iOS 18
  * "persistent tab bar across in-app destinations"):
- * - Hidden ≥ 768px (`md:hidden`) — desktop keeps the top-of-page nav.
+ * - Hidden ≥ 1024px (`lg:hidden`) — and NOT ≥ 768px, which is where it used to
+ *   stop. The header's app nav is `hidden lg:flex`, so between 768 and 1023 the
+ *   bar had already gone and the nav had not yet arrived: a 256 px band with no
+ *   navigation chrome at all. Measured on 2026-08-02 from an installed PWA
+ *   window on Windows. The two breakpoints are now the same seam, which is the
+ *   only arrangement in which neither can leave before the other arrives.
+ *   Anything that reserves space for this bar must move with it — see the
+ *   callers listed in `__tests__/navigation-reachable.test.tsx`.
  * - Mounted at the locale root `src/app/[locale]/layout.tsx` and gated by
  *   `isAuthenticated && !isExcludedRoute(pathname)`. So the bar is present
  *   on `/app/*`, `/admin/*`, `/faq`, `/glossaire`, `/legal/*` once the user
@@ -175,7 +182,7 @@ export function BottomTabBar({ isAdmin = false }: BottomTabBarProps) {
       <nav
         aria-label={t('label')}
         data-testid="bottom-tab-bar"
-        className="surface-overlay border-border/40 fixed right-0 bottom-0 left-0 z-40 border-t pb-[env(safe-area-inset-bottom)] md:hidden"
+        className="surface-overlay border-border/40 fixed right-0 bottom-0 left-0 z-40 border-t pb-[env(safe-area-inset-bottom)] lg:hidden"
       >
         <div className="flex h-12 items-stretch">
           {MOBILE_TAB_ITEMS.map((item) => {

@@ -11,9 +11,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // now mounted ONCE at the locale root `src/app/[locale]/layout.tsx` so it
   // stays mounted across in-app navigation (cockpit → admin → faq → legal).
   // The mount + isAdmin gating both live there; this layout only needs to
-  // keep the cockpit chrome (Header, breadcrumbs, footer) and the
-  // `pb-24 md:py-12` main padding that reserves space below the bar on
-  // mobile (the bar is `md:hidden`, so desktop keeps the original `py-12`).
+  // keep the cockpit chrome (Header, breadcrumbs, footer) and the bottom
+  // padding that reserves space below the bar. That reserve now releases at
+  // `lg:` rather than `md:` (2026-08-02): the bar hides at 1024px, so releasing
+  // it at 768px put the last section of every page behind the bar for the
+  // whole 768–1023 band.
   return (
     <>
       {/* AppBreadcrumbs removed (@thierry 2026-07-19): with the header nav
@@ -21,7 +23,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           confusing "double menu" on every app page. The public glossary keeps
           its own breadcrumb (deep SEO pages, different context). */}
       <Header variant="app" isAuthenticated userEmail={user.email ?? null} />
-      <main id="main" className="mx-auto w-full max-w-6xl px-4 pt-8 pb-24 md:px-6 md:py-12">
+      <main
+        id="main"
+        className="mx-auto w-full max-w-6xl px-4 pt-8 pb-24 md:px-6 md:pt-12 lg:py-12"
+      >
         {children}
       </main>
       <Footer />

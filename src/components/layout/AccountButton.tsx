@@ -9,11 +9,17 @@ import { logoutAction } from '@/lib/actions/auth';
 
 /**
  * AccountButton (PR-A) — persistent account menu for authenticated visitors
- * on tablet + desktop (`hidden md:flex`). Resolves "no way to log out from
- * the chrome": before this, `logoutAction` was rendered ONLY in the mobile
- * `MoreSheet` (`md:hidden`), so desktop/tablet sessions had no logout at all.
- * Mobile (< 768px) stays served by the BottomTabBar + MoreSheet (THI-277),
- * hence `md:flex` here keeps the two surfaces mutually exclusive.
+ * on desktop (`hidden lg:flex`). Resolves "no way to log out from the chrome":
+ * before this, `logoutAction` was rendered ONLY in the `MoreSheet`, so desktop
+ * sessions had no logout at all. Compact widths stay served by the
+ * BottomTabBar + MoreSheet (THI-277), and this breakpoint keeps the two
+ * surfaces mutually exclusive.
+ *
+ * Was `md:flex` until 2026-08-02, matching a bar that stopped at 768px. The bar
+ * now stops at 1024px, so this follows it — otherwise 768–1023 would show the
+ * account menu AND the More sheet, offering logout twice. That is the harmless
+ * half of the mismatch; the harmful half was that the same 256 px band showed
+ * NO navigation at all, and it is what the move fixes.
  *
  * Three deliberate deviations from the original spec, each code-verified:
  *
@@ -112,7 +118,7 @@ export function AccountButton({ email }: { email: string }) {
   }, [isOpen, close]);
 
   return (
-    <div ref={containerRef} className="relative hidden md:flex">
+    <div ref={containerRef} className="relative hidden lg:flex">
       <button
         ref={triggerRef}
         type="button"

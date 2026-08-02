@@ -365,7 +365,8 @@ export function HeaderNav({
   // /glossaire / /legal/*). Two nav surfaces side-by-side is an Apple
   // HIG / Material 3 mobile-first 2026 anti-pattern. Desktop (≥ lg)
   // keeps the ThemeToggle + LocaleSwitcher pair for every variant —
-  // the bar is `md:hidden`, so it never overlaps the desktop chrome.
+  // the bar hides at that same breakpoint, so it never overlaps the
+  // desktop chrome.
   const shouldRenderMobileTrigger = variant === 'marketing' && !hideMobileTrigger;
 
   return (

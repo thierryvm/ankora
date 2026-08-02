@@ -182,8 +182,8 @@ export async function Header({ variant = 'marketing', isAuthenticated, userEmail
           )}
 
           {/* PR-A — persistent account menu (identity + Settings + logout) for
-              authenticated visitors on tablet+desktop. Self-hides < 768px
-              (`hidden md:flex` inside the component), where the BottomTabBar +
+              authenticated visitors on desktop. Self-hides < 1024px
+              (`hidden lg:flex` inside the component), where the BottomTabBar +
               MoreSheet own the secondary nav (THI-277). Resolves "no logout in
               the chrome on desktop". The landing (`MktNav`) intentionally keeps
               its conversion-first "Mon cockpit" CTA only — documented exception,
