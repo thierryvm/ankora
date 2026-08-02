@@ -121,7 +121,42 @@ begin
   );
 end $$;
 
-revoke execute on function public.seed_expense_categories(uuid, uuid) from public;
+-- `from public` seul ne suffit pas. Les *default privileges* de la plateforme
+-- Supabase accordent EXECUTE à `anon`, `authenticated` et `service_role` sur
+-- toute fonction nouvellement créée dans le schéma `public` : ces trois grants
+-- sont posés à la création, indépendamment de PUBLIC, et un `revoke ... from
+-- public` ne les retire pas. La fonction serait donc appelable par un porteur
+-- de la clé anon — et elle est SECURITY DEFINER.
+--
+-- MESURÉ le 1er août 2026, et c'est la production qui tranche. `pg_default_acl`
+-- y porte, pour le donneur `postgres` et le type `f` :
+--     postgres=X | anon=X | authenticated=X | service_role=X
+-- Les migrations s'exécutent en `postgres` (vérifié : `handle_new_user` a
+-- `proowner = postgres`), donc cette fonction naîtra en production avec ces
+-- trois droits. Reproduit sur une stack locale portant les mêmes défauts :
+-- après `revoke ... from public` seul, `has_function_privilege` rend `true`
+-- pour les trois rôles ; après la ligne ci-dessous, `false` pour les trois.
+--
+-- Nuance à ne pas confondre avec la précédente : une base reconstruite avec la
+-- CLI Supabase COURANTE naît déjà avec des défauts restreints, et le correctif
+-- y est sans effet observable. Ce n'est pas une raison de s'en passer — c'est
+-- l'inverse : le comportement dépend de la version qui a créé la base, donc la
+-- seule fermeture fiable est celle qui est écrite dans la migration.
+--
+-- L'étape 1 du plan de remise en ordre (audit BDD du 31/07/2026,
+-- `20260731000001_declare_privileges`) neutralise ces défauts globalement, et
+-- l'audit prévoit qu'elle parte AVANT cette migration. Nommer les rôles ici
+-- reste la ceinture qui ne dépend pas de cet ordre.
+-- AUCUN grant en retour, pas même à `service_role` — c'est la règle appliquée
+-- à ses fonctions sœurs (§8c de l'étape 1 : `handle_new_user`,
+-- `seed_default_accounts`, `seed_default_categories`). Celle-ci n'est appelée
+-- que par `PERFORM` depuis `handle_new_user`, donc en contexte propriétaire, et
+-- par le bloc de rattrapage plus bas dans cette même migration. Aucun rôle
+-- client n'a besoin de l'appeler. Un grant « au cas où » est un privilège
+-- concédé contre une hypothèse d'usage futur, et c'est exactement ce que le
+-- moindre privilège refuse.
+revoke execute on function public.seed_expense_categories(uuid, uuid)
+  from public, anon, authenticated, service_role;
 
 comment on function public.seed_expense_categories(uuid, uuid) is
   'Seeds the 10 expense categories of ADR-022 that the 2026-05-03 bill taxonomy lacked. Idempotent per (workspace_id, name) — safe to re-run, and preserves a category the user created themselves under the same name.';
