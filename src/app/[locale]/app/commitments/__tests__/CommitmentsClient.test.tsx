@@ -96,6 +96,31 @@ describe('<CommitmentsClient />', () => {
     expect(within(row).getByText(/2\/17 échéances/)).toBeInTheDocument();
   });
 
+  // The four assertions around this one all read `aria-valuenow`, which stayed
+  // correct throughout the defect: the bar was drawn at 100 % for every value
+  // because the strict CSP (`style-src 'self' 'nonce-…'`, src/proxy.ts) drops
+  // style ATTRIBUTES, and the fill's width lived in one. Screen readers were
+  // told the truth while sighted users read « soldé » at 4/11. So the assertion
+  // has to be about the MECHANISM the policy kills, not about the value.
+  it('draws the fill without any inline style attribute (the CSP drops those)', () => {
+    renderPage([carLoan], { paidKeysByCommitment: { car: ['2026-1', '2026-2'] } });
+    const bar = screen.getByTestId('commitment-progress-car');
+    expect(bar).toHaveAttribute('aria-valuenow', '12');
+    expect(bar.querySelectorAll('[style]')).toHaveLength(0);
+    expect(bar.getAttribute('style')).toBeNull();
+    // The geometry is an SVG attribute, so it survives the policy — and it
+    // tracks the value rather than sitting at full width.
+    const rect = bar.querySelector('rect');
+    expect(rect).not.toBeNull();
+    expect(Number(rect?.getAttribute('width'))).toBeCloseTo(12, 0);
+  });
+
+  it('draws an empty fill at 0 paid rather than a full one', () => {
+    renderPage([carLoan]);
+    const rect = screen.getByTestId('commitment-progress-car').querySelector('rect');
+    expect(Number(rect?.getAttribute('width'))).toBe(0);
+  });
+
   it('lands on 0 € with a full bar once every instalment is ticked', () => {
     const all = Array.from(
       { length: 17 },

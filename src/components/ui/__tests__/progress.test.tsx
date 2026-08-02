@@ -92,4 +92,35 @@ describe('<Progress />', () => {
     const { container } = render(<Progress value={-0.5} />);
     expect(fillOf(container)?.getAttribute('width')).toBe('0');
   });
+
+  it('names the bar without a visible caption when given ariaLabel', () => {
+    render(<Progress value={0.5} ariaLabel="Progression du remboursement de X" />);
+    expect(screen.getByRole('progressbar')).toHaveAttribute(
+      'aria-label',
+      'Progression du remboursement de X',
+    );
+    expect(screen.queryByText('Progression du remboursement de X')).toBeNull();
+  });
+
+  it('prefers ariaLabel over a visible label when both are given', () => {
+    render(<Progress value={0.5} label="Visible" ariaLabel="Pour les lecteurs d’écran" />);
+    expect(screen.getByText('Visible')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toHaveAttribute(
+      'aria-label',
+      'Pour les lecteurs d’écran',
+    );
+  });
+
+  it('puts testId on the progressbar element, where assertions look', () => {
+    render(<Progress value={0.5} testId="bar-1" />);
+    expect(screen.getByTestId('bar-1')).toHaveAttribute('role', 'progressbar');
+  });
+
+  // The reason this primitive draws an SVG rect instead of a styled div: the
+  // strict CSP drops style ATTRIBUTES, so a `style={{ width }}` fill renders at
+  // full width for every value. Assert the absence, not just the geometry.
+  it('never expresses its geometry through an inline style attribute', () => {
+    const { container } = render(<Progress value={0.37} />);
+    expect(container.querySelectorAll('[style]')).toHaveLength(0);
+  });
 });
