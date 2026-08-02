@@ -148,12 +148,18 @@ describe('<Footer />', () => {
       setBottomTabBarMounted(true);
       await renderFooter();
       const nav = screen.getByTestId('footer-nav');
-      expect(nav.className).toContain('hidden');
-      expect(nav.className).toContain('lg:flex');
+      const classes = nav.className.split(/\s+/);
+      expect(classes).toContain('hidden');
+      expect(classes).toContain('lg:flex');
       // Revealing it at `md:` would put these five links — including the
       // GDPR art. 7(3) cookie preferences one — on screen at 768–1023 while
       // the bar still covers the foot of the viewport.
-      expect(nav.className).not.toContain('md:flex');
+      expect(classes).not.toContain('md:flex');
+      // And an UNPREFIXED `flex` would beat the `hidden` at every width, so
+      // the nav would be back on mobile with all three assertions above still
+      // green. Word-level comparison on purpose: `toContain` on the raw string
+      // cannot tell `flex` from `lg:flex`.
+      expect(classes).not.toContain('flex');
     });
 
     it('always keeps the BrandHomeLink + copyright (never hidden, legal info)', async () => {
