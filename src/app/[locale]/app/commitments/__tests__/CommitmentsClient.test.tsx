@@ -309,6 +309,86 @@ describe('<CommitmentsClient />', () => {
     });
   });
 
+  // --- The date guards (Sourcery #296) -------------------------------------
+  //
+  // `type="number"` with min/max does NOT stop a value from reaching the
+  // handler — the browser flags the field invalid, the value still arrives.
+  // So each guard is a real branch, and each needs its own case.
+  describe('refuses to submit an impossible first-instalment date', () => {
+    /** Fills everything the form needs EXCEPT the date fields under test. */
+    function fillValidBaseline() {
+      fireEvent.click(screen.getByTestId('commitments-add-toggle'));
+      fireEvent.change(screen.getByLabelText('Libellé'), { target: { value: 'SPF impôt' } });
+      fireEvent.change(screen.getByLabelText(/Montant total dû/), { target: { value: '2200' } });
+      fireEvent.change(screen.getByLabelText(/Montant par échéance/), { target: { value: '200' } });
+      fireEvent.change(screen.getByLabelText(/Nombre total d'échéances/), {
+        target: { value: '11' },
+      });
+      fireEvent.change(screen.getByTestId('commitment-start-month'), { target: { value: '5' } });
+      fireEvent.change(screen.getByTestId('commitment-start-year'), { target: { value: '2026' } });
+    }
+
+    async function submit() {
+      await act(async () => {
+        fireEvent.submit(screen.getByRole('button', { name: /^ajouter$/i }).closest('form')!);
+      });
+    }
+
+    it.each([
+      ['a year before the DB CHECK floor', '1999'],
+      ['a year past the DB CHECK ceiling', '2101'],
+      ['a non-numeric year', 'abcd'],
+      ['an empty year', ''],
+    ])('rejects %s', async (_label, value) => {
+      renderPage([], { currentPeriod: { year: 2026, month: 7 } });
+      fillValidBaseline();
+      fireEvent.change(screen.getByTestId('commitment-start-year'), { target: { value } });
+      await submit();
+      expect(createMock).not.toHaveBeenCalled();
+      expect(toastErrorMock).toHaveBeenCalled();
+    });
+
+    // Only 0 and 32 are listed: a `type="number"` input cannot HOLD
+    // non-numeric text — the DOM blanks it — and a blank day legitimately
+    // means "not chosen". Measured, after a case asserting the opposite
+    // failed against correct behaviour.
+    it.each([
+      ['a day of 0', '0'],
+      ['a day of 32', '32'],
+    ])('rejects %s', async (_label, value) => {
+      renderPage([], { currentPeriod: { year: 2026, month: 7 } });
+      fillValidBaseline();
+      fireEvent.change(screen.getByTestId('commitment-payment-day'), { target: { value } });
+      await submit();
+      expect(createMock).not.toHaveBeenCalled();
+      expect(toastErrorMock).toHaveBeenCalled();
+    });
+
+    it('accepts an empty payment day — it is optional, and stores the "unset" 1', async () => {
+      createMock.mockResolvedValue({ ok: true });
+      renderPage([], { currentPeriod: { year: 2026, month: 7 } });
+      fillValidBaseline();
+      await submit();
+      await waitFor(() => expect(createMock).toHaveBeenCalledTimes(1));
+      expect(createMock.mock.calls[0]?.[0]).toMatchObject({ paymentDay: 1 });
+    });
+
+    // No case for an invalid MONTH, deliberately. It is a controlled <select>
+    // holding exactly 1..12: pushing an absent value through it leaves a valid
+    // option selected (measured — React re-renders it back to '1'), so the
+    // month branch is unreachable from the UI. A test for it could only assert
+    // that a valid month is accepted, dressed up as a guard. The guard stays as
+    // payload defence; Zod and the DB CHECK are the backstop that can fail.
+    it('keeps a valid month selected when an absent option is pushed at it', () => {
+      renderPage([], { currentPeriod: { year: 2026, month: 7 } });
+      fillValidBaseline();
+      const monthSelect = screen.getByTestId('commitment-start-month') as HTMLSelectElement;
+      fireEvent.change(monthSelect, { target: { value: '13' } });
+      expect(Number(monthSelect.value)).toBeGreaterThanOrEqual(1);
+      expect(Number(monthSelect.value)).toBeLessThanOrEqual(12);
+    });
+  });
+
   it('previews the resulting window before the user commits to it', async () => {
     renderPage([], { currentPeriod: { year: 2026, month: 7 } });
     fireEvent.click(screen.getByTestId('commitments-add-toggle'));
