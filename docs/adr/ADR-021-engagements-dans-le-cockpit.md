@@ -342,6 +342,12 @@ montant total du plan ; `installments_total` = le nombre total d'échéances.
   propriétaire sait quelle était la vraie première échéance, et un script qui
   devinerait serait une correction silencieuse de données financières. La
   correction se fait à la main, depuis le formulaire d'édition.
+- **`supabase/migrations/20260719000001_commitments.sql:28` dit encore l'inverse** —
+  « Anchor = the NEXT instalment (D3) ». Ce commentaire est **volontairement laissé
+  tel quel** : la migration est appliquée sur une base de production partagée, et on
+  ne retouche pas le contenu d'une migration appliquée, fût-ce un commentaire. La
+  présente ADR fait foi ; ce n'est pas une contradiction non résolue mais une trace
+  historique.
 - Le **jour** de prélèvement n'est affiché que s'il a été explicitement saisi
   (`payment_day > 1`). La colonne est `not null default 1` et l'ancien
   formulaire y écrivait 1 en dur : afficher ce 1 montrerait une date fausse à
