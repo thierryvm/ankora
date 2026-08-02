@@ -183,7 +183,7 @@ export function MoreSheet({ isOpen, onClose, isAdmin = false }: MoreSheetProps) 
     <>
       <div
         data-testid="more-sheet-backdrop"
-        className="bg-foreground/40 fixed inset-0 z-50 lg:hidden"
+        className="bg-foreground/40 fixed inset-0 z-50 xl:hidden"
         onClick={handleClose}
         aria-hidden="true"
       />
@@ -194,7 +194,7 @@ export function MoreSheet({ isOpen, onClose, isAdmin = false }: MoreSheetProps) 
         aria-modal="true"
         aria-label={t('title')}
         data-testid="more-sheet"
-        className="bg-card border-border fixed right-0 bottom-0 left-0 z-50 max-h-[85vh] overflow-y-auto rounded-t-2xl border-t pb-[env(safe-area-inset-bottom)] shadow-xl lg:hidden"
+        className="bg-card border-border fixed right-0 bottom-0 left-0 z-50 max-h-[85vh] overflow-y-auto rounded-t-2xl border-t pb-[env(safe-area-inset-bottom)] shadow-xl xl:hidden"
       >
         {/* Drag handle — visual affordance only. Real drag-to-dismiss is a
             follow-up; for now the backdrop tap and the close button cover

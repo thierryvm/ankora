@@ -60,7 +60,7 @@ export function ScrollToTop({ liftedForBottomBar = false }: ScrollToTopProps) {
       aria-label={t('scrollToTop')}
       data-testid="scroll-to-top"
       data-lifted-for-bottom-bar={String(liftedForBottomBar)}
-      className={`bg-brand-700 hover:bg-brand-800 focus-visible:ring-brand-600 ${mobileBottom} fixed right-4 z-40 inline-flex h-11 w-11 items-center justify-center rounded-full text-white shadow-lg transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none md:right-6 lg:bottom-[max(1.5rem,env(safe-area-inset-bottom))]`}
+      className={`bg-brand-700 hover:bg-brand-800 focus-visible:ring-brand-600 ${mobileBottom} fixed right-4 z-40 inline-flex h-11 w-11 items-center justify-center rounded-full text-white shadow-lg transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none md:right-6 xl:bottom-[max(1.5rem,env(safe-area-inset-bottom))]`}
     >
       <ArrowUp className="h-5 w-5" aria-hidden />
     </button>

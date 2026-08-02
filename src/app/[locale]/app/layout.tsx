@@ -25,7 +25,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <Header variant="app" isAuthenticated userEmail={user.email ?? null} />
       <main
         id="main"
-        className="mx-auto w-full max-w-6xl px-4 pt-8 pb-24 md:px-6 md:pt-12 lg:py-12"
+        className="mx-auto w-full max-w-6xl px-4 pt-8 pb-24 md:px-6 md:pt-12 xl:py-12"
       >
         {children}
       </main>

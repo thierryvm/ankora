@@ -20,7 +20,7 @@ export async function Footer() {
   // /onboarding) keep the full footer because no bar competes.
   const bottomTabBarMounted = await shouldMountBottomTabBar();
   const footerNavClass = bottomTabBarMounted
-    ? 'hidden flex-wrap gap-4 text-sm lg:flex'
+    ? 'hidden flex-wrap gap-4 text-sm xl:flex'
     : 'flex flex-wrap gap-4 text-sm';
 
   return (
@@ -40,7 +40,7 @@ export async function Footer() {
        * dropped the clearance at 768–1023 while the bar was still on screen,
        * hiding the GDPR art. 7(3) cookie link behind it.
        */}
-      <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-4 pt-10 pb-[calc(env(safe-area-inset-bottom)+3.5rem)] md:flex-row md:items-center md:px-6 lg:pb-10">
+      <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-4 pt-10 pb-[calc(env(safe-area-inset-bottom)+3.5rem)] md:flex-row md:items-center md:px-6 xl:pb-10">
         <div className="flex items-center gap-2">
           <BrandHomeLink ariaLabel={tCommon('homeAria')} logoClassName="h-7 w-auto" />
           <span className="text-muted-foreground text-sm">

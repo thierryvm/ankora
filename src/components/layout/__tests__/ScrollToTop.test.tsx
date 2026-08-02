@@ -40,11 +40,12 @@ describe('<ScrollToTop /> — PR-BETA-6 hotfix #4 lift-for-bottom-bar', () => {
     expect(button).toHaveAttribute('data-lifted-for-bottom-bar', 'true');
     // Lifted: 4.5rem (bar h-12 + ~1rem air) + safe-area inset.
     expect(button.className).toContain('bottom-[calc(env(safe-area-inset-bottom)+4.5rem)]');
-    // The desktop offset returns exactly where the bar goes away — `lg`, not
-    // `md`. Restoring it at `md:` parked the FAB behind the bar for the whole
-    // 768–1023 band, which is the same off-by-one-breakpoint mistake that hid
-    // every navigation surface there (fixed 2026-08-02).
-    expect(button.className).toContain('lg:bottom-');
+    // The desktop offset returns exactly where the bar goes away — `xl`.
+    // Restoring it any earlier parks the FAB behind the bar: the same
+    // off-by-one-breakpoint mistake that hid every navigation surface between
+    // 768 and 1023 (fixed 2026-08-02).
+    expect(button.className).toContain('xl:bottom-');
     expect(button.className).not.toContain('md:bottom-');
+    expect(button.className).not.toContain('lg:bottom-');
   });
 });

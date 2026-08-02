@@ -131,10 +131,12 @@ describe('<Footer />', () => {
   // footer's link nav is fully redundant with the BottomTabBar More sheet
   // once the bar is mounted (same five entries — CGU, Privacy, Cookies,
   // FAQ, Cookie Preferences). Hide the nav on mobile when the bar is
-  // mounted; bring it back only where the bar is gone — `lg` since
-  // 2026-08-02, when the bar's own breakpoint moved from 768 to 1024 to
-  // close the 256 px band that had no navigation at all. The two must
-  // stay in step: `navigation-reachable.test.tsx` asserts it structurally.
+  // mounted; bring it back only where the bar is gone — `xl` since
+  // 2026-08-02, when the bar's breakpoint moved to 1280: at 768 it left a
+  // 256 px band with no navigation at all, and at 1024 the header row did
+  // not fit, pushing the locale switcher off-screen. The two must stay in
+  // step. This spec pins the class; `e2e/navigation-reachable.spec.ts` pins
+  // what a user actually gets, in a real browser at 14 widths.
   describe('Hotfix #4 — redundant nav hidden on mobile when BottomTabBar mounts', () => {
     it('renders the nav with `flex` (visible on every breakpoint) by default', async () => {
       setBottomTabBarMounted(false);
@@ -144,21 +146,22 @@ describe('<Footer />', () => {
       expect(nav.className).not.toContain('hidden');
     });
 
-    it('hides the nav until the bar is gone (`hidden lg:flex`) when the bar is mounted', async () => {
+    it('hides the nav until the bar is gone (`hidden xl:flex`) when the bar is mounted', async () => {
       setBottomTabBarMounted(true);
       await renderFooter();
       const nav = screen.getByTestId('footer-nav');
       const classes = nav.className.split(/\s+/);
       expect(classes).toContain('hidden');
-      expect(classes).toContain('lg:flex');
-      // Revealing it at `md:` would put these five links — including the
-      // GDPR art. 7(3) cookie preferences one — on screen at 768–1023 while
+      expect(classes).toContain('xl:flex');
+      // Revealing it before the bar leaves would put these five links —
+      // including the GDPR art. 7(3) cookie preferences one — on screen while
       // the bar still covers the foot of the viewport.
       expect(classes).not.toContain('md:flex');
+      expect(classes).not.toContain('lg:flex');
       // And an UNPREFIXED `flex` would beat the `hidden` at every width, so
-      // the nav would be back on mobile with all three assertions above still
+      // the nav would be back on mobile with all the assertions above still
       // green. Word-level comparison on purpose: `toContain` on the raw string
-      // cannot tell `flex` from `lg:flex`.
+      // cannot tell `flex` from `xl:flex`.
       expect(classes).not.toContain('flex');
     });
 

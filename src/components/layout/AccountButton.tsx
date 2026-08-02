@@ -9,7 +9,7 @@ import { logoutAction } from '@/lib/actions/auth';
 
 /**
  * AccountButton (PR-A) — persistent account menu for authenticated visitors
- * on desktop (`hidden lg:flex`). Resolves "no way to log out from the chrome":
+ * on desktop (`hidden xl:flex`). Resolves "no way to log out from the chrome":
  * before this, `logoutAction` was rendered ONLY in the `MoreSheet`, so desktop
  * sessions had no logout at all. Compact widths stay served by the
  * BottomTabBar + MoreSheet (THI-277), and this breakpoint keeps the two
@@ -118,7 +118,7 @@ export function AccountButton({ email }: { email: string }) {
   }, [isOpen, close]);
 
   return (
-    <div ref={containerRef} className="relative hidden lg:flex">
+    <div ref={containerRef} className="relative hidden xl:flex">
       <button
         ref={triggerRef}
         type="button"
