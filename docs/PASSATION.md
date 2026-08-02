@@ -85,8 +85,12 @@ tranches leurs questions, et tu relaies en français clair — jamais en jargon 
 | Cap produit et ordre des chantiers | `docs/NORTH_STAR.md`, `docs/ROADMAP.md`                           |
 | Règles de travail détaillées       | `CLAUDE.md` — prévaut sur ce document en cas de conflit technique |
 
-Les chemins de travail locaux (clone, worktrees, ressources hors dépôt) et les documents
-d'exploitation sont transmis par le canal privé, pas ici.
+**Documents hors dépôt.** Certains livrables — audit de base de données, sauvegardes, notes de
+sécurité — ne sont volontairement pas versionnés ici : ce dépôt est public. Ils vivent sur la
+machine de Thierry. Demande-lui où avant de chercher, et ne les committe jamais.
+
+Les chemins de travail locaux (clone, worktrees, ressources hors dépôt) sont transmis par le
+même canal, pas ici.
 
 ---
 
