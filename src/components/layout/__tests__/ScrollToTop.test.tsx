@@ -40,7 +40,12 @@ describe('<ScrollToTop /> — PR-BETA-6 hotfix #4 lift-for-bottom-bar', () => {
     expect(button).toHaveAttribute('data-lifted-for-bottom-bar', 'true');
     // Lifted: 4.5rem (bar h-12 + ~1rem air) + safe-area inset.
     expect(button.className).toContain('bottom-[calc(env(safe-area-inset-bottom)+4.5rem)]');
-    // Mobile lift only — desktop md:bottom override is preserved either way.
-    expect(button.className).toContain('md:bottom-');
+    // The desktop offset returns exactly where the bar goes away — `xl`.
+    // Restoring it any earlier parks the FAB behind the bar: the same
+    // off-by-one-breakpoint mistake that hid every navigation surface between
+    // 768 and 1023 (fixed 2026-08-02).
+    expect(button.className).toContain('xl:bottom-');
+    expect(button.className).not.toContain('md:bottom-');
+    expect(button.className).not.toContain('lg:bottom-');
   });
 });

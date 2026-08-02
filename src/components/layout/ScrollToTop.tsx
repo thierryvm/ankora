@@ -13,9 +13,8 @@ export type ScrollToTopProps = {
    * `shouldMountBottomTabBar()`), the FAB's default `bottom-4` puts it
    * BEHIND the bar on iPhone Safari (smoke report @thierry 2026-05-25).
    * Pass `liftedForBottomBar={true}` from the parent layout to push the
-   * FAB above the bar (h-12 + safe-area + a bit of air). The lift only
-   * matters on mobile — desktop (≥ md) keeps the original offset
-   * because the bar is `md:hidden`.
+   * FAB above the bar (h-12 + safe-area + a bit of air). The lift matters
+   * wherever the bar is on screen — up to 1024px since 2026-08-02, not 768px.
    */
   liftedForBottomBar?: boolean;
 };
@@ -46,8 +45,10 @@ export function ScrollToTop({ liftedForBottomBar = false }: ScrollToTopProps) {
   //
   // PR-BETA-6 hotfix #4: when the BottomTabBar mounts, add ~4.5rem (the
   // bar's h-12 + visual breathing room) to the bottom offset so the FAB
-  // sits above the bar. Mobile lift only — `md:bottom-…` keeps the
-  // original desktop offset because the bar is `md:hidden`.
+  // sits above the bar. The desktop offset is restored at `lg:`, in step with
+  // the bar — restoring it at `md:` would have parked the FAB behind the bar
+  // across 768–1023. The horizontal inset stays at `md:`: it never depended
+  // on the bar.
   const mobileBottom = liftedForBottomBar
     ? 'bottom-[calc(env(safe-area-inset-bottom)+4.5rem)]'
     : 'bottom-[max(1rem,env(safe-area-inset-bottom))]';
@@ -59,7 +60,7 @@ export function ScrollToTop({ liftedForBottomBar = false }: ScrollToTopProps) {
       aria-label={t('scrollToTop')}
       data-testid="scroll-to-top"
       data-lifted-for-bottom-bar={String(liftedForBottomBar)}
-      className={`bg-brand-700 hover:bg-brand-800 focus-visible:ring-brand-600 ${mobileBottom} fixed right-4 z-40 inline-flex h-11 w-11 items-center justify-center rounded-full text-white shadow-lg transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none md:right-6 md:bottom-[max(1.5rem,env(safe-area-inset-bottom))]`}
+      className={`bg-brand-700 hover:bg-brand-800 focus-visible:ring-brand-600 ${mobileBottom} fixed right-4 z-40 inline-flex h-11 w-11 items-center justify-center rounded-full text-white shadow-lg transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none md:right-6 xl:bottom-[max(1.5rem,env(safe-area-inset-bottom))]`}
     >
       <ArrowUp className="h-5 w-5" aria-hidden />
     </button>

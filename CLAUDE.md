@@ -203,6 +203,42 @@ gh api repos/thierryvm/ankora/pulls/<N>/comments \
 
 Si output non vide → corriger avant de déclarer DONE.
 
+### Un retour Sourcery se traite, ou se refuse PAR ÉCRIT (verrouillé 2026-08-02)
+
+**Toute session tient compte des retours Sourcery sur ses propres PR.** Trois
+règles, et la troisième est celle qu'on oublie :
+
+1. **Corriger quand c'est fondé.** Sourcery a raison souvent. Le 2 août il a
+   montré qu'un test de navigation ne connaissait qu'un mode de masquage sur
+   trois — il aurait laissé passer une régression en silence. Le test a été
+   supprimé et refait, pas rapiécé.
+2. **Ne pas appliquer par réflexe.** Sourcery a raison souvent, pas toujours.
+   Un correctif appliqué sans conviction est une dette de plus, et une branche
+   que rien n'exerce est une branche que rien ne teste.
+3. **Un commentaire écarté est écarté DANS LE FIL, avec sa raison.** Jamais
+   ignoré, et jamais refusé seulement dans le rapport à @thierry : le prochain
+   qui ouvre la PR doit trouver le refus et son motif au même endroit que la
+   remarque. Un fil laissé sans réponse ne se distingue pas d'un fil non lu.
+
+Les remarques de revue **générale** (celles du corps de la review, pas ancrées
+sur une ligne) comptent au même titre : elles n'ont pas de fil à résoudre, donc
+elles se traitent par un commentaire de PR explicite.
+
+```bash
+# Fils ancrés — doivent finir résolus
+gh api graphql -f query='query { repository(owner:"thierryvm", name:"ankora") {
+  pullRequest(number:<N>) { reviewThreads(first:50) { nodes { isResolved path line } } } } }'
+
+# Remarques générales — n'apparaissent PAS dans /pulls/<N>/comments
+gh api repos/thierryvm/ankora/pulls/<N>/reviews \
+  --jq '.[] | select(.user.login == "sourcery-ai[bot]") | .body'
+```
+
+**Piège mesuré le 2026-08-02** : `check-sourcery-resolved` tourne au push, donc
+AVANT qu'un fil ouvert par la review du même push soit résolu. Il rougit alors
+sans qu'aucun code soit en cause. Résoudre le fil puis `gh run rerun <id>` — ne
+pas chercher un défaut dans le code, il n'y en a pas.
+
 ### Le nombre de cas e2e exécutés ne descend jamais
 
 **Critère permanent, ajouté le 26 juillet 2026.** Une CI verte ne vaut que ce
@@ -214,10 +250,29 @@ les plus sensibles de l'app.
 Deux jobs, donc **deux planchers distincts** — un chiffre global agrégé serait
 ininterprétable au premier conflit, donc ignoré :
 
-| Job                              | Plancher au 31 juillet 2026                              |
-| -------------------------------- | -------------------------------------------------------- |
-| `Playwright E2E`                 | **224 passed** (215 avant, +9 `cron-gdpr-auth`, PR-3B-B) |
-| `Playwright E2E (authenticated)` | **38 passed** (31 avant, +7 découpage au cas du 31/07)   |
+| Job                              | Plancher au 2 août 2026                                     |
+| -------------------------------- | ----------------------------------------------------------- |
+| `Playwright E2E`                 | **228 passed** (224 au 31/07 — **enfin mesuré**, cf. infra) |
+| `Playwright E2E (authenticated)` | **39 passed** (38 avant, +1 `navigation-reachable`)         |
+
+> **Plancher public : 228, OBSERVÉ le 2026-08-02.** Il était attendu à 224 +4
+> depuis le 29 juillet et n'avait jamais été relevé — la note ci-dessous
+> réclamait « la valeur mesurée à la première CI verte ». C'est fait : run
+> `30752902825`, `228 passed, 195 skipped`. Le solde calculé (−2 ADR-034,
+> +6 consentement) tombait juste, mais il ne valait rien tant qu'il n'était pas
+> vu ; il l'est maintenant, et le chiffre remplace l'estimation.
+>
+> **Authentifié : 38 → 39**, `e2e/navigation-reachable.spec.ts` (PR #293), un
+> seul cas, exécuté par `chromium-desktop` uniquement — la spec n'est pas sous
+> `mobile-ios/`, donc le projet `iPhone 14` ne la découvre pas. Dans le job
+> public elle ajoute 3 sautés et 0 passé, donc le plancher public ne bouge pas
+> de son fait.
+>
+> Mesuré aussi en local avant le push, dans les deux sens : `origin/main` rend
+> `37 passed` sur cette machine et la branche `38`. Le delta local (+1) et le
+> delta CI (+1) concordent ; les valeurs absolues diffèrent parce que
+> l'environnement local n'est pas la parité CI. **C'est le delta qui se compare,
+> jamais le nombre absolu d'une machine à l'autre.**
 
 > **⚠️ Plancher public à re-mesurer (chantier 1, 29 juillet 2026).** ADR-034 a
 > supprimé `/design-playground` et sa spec `e2e/design-playground.spec.ts`

@@ -131,7 +131,12 @@ describe('<Footer />', () => {
   // footer's link nav is fully redundant with the BottomTabBar More sheet
   // once the bar is mounted (same five entries — CGU, Privacy, Cookies,
   // FAQ, Cookie Preferences). Hide the nav on mobile when the bar is
-  // mounted; keep it on desktop (≥ md) because the bar is `md:hidden`.
+  // mounted; bring it back only where the bar is gone — `xl` since
+  // 2026-08-02, when the bar's breakpoint moved to 1280: at 768 it left a
+  // 256 px band with no navigation at all, and at 1024 the header row did
+  // not fit, pushing the locale switcher off-screen. The two must stay in
+  // step. This spec pins the class; `e2e/navigation-reachable.spec.ts` pins
+  // what a user actually gets, in a real browser at 14 widths.
   describe('Hotfix #4 — redundant nav hidden on mobile when BottomTabBar mounts', () => {
     it('renders the nav with `flex` (visible on every breakpoint) by default', async () => {
       setBottomTabBarMounted(false);
@@ -141,12 +146,23 @@ describe('<Footer />', () => {
       expect(nav.className).not.toContain('hidden');
     });
 
-    it('hides the nav on mobile (`hidden md:flex`) when the bar is mounted', async () => {
+    it('hides the nav until the bar is gone (`hidden xl:flex`) when the bar is mounted', async () => {
       setBottomTabBarMounted(true);
       await renderFooter();
       const nav = screen.getByTestId('footer-nav');
-      expect(nav.className).toContain('hidden');
-      expect(nav.className).toContain('md:flex');
+      const classes = nav.className.split(/\s+/);
+      expect(classes).toContain('hidden');
+      expect(classes).toContain('xl:flex');
+      // Revealing it before the bar leaves would put these five links —
+      // including the GDPR art. 7(3) cookie preferences one — on screen while
+      // the bar still covers the foot of the viewport.
+      expect(classes).not.toContain('md:flex');
+      expect(classes).not.toContain('lg:flex');
+      // And an UNPREFIXED `flex` would beat the `hidden` at every width, so
+      // the nav would be back on mobile with all the assertions above still
+      // green. Word-level comparison on purpose: `toContain` on the raw string
+      // cannot tell `flex` from `xl:flex`.
+      expect(classes).not.toContain('flex');
     });
 
     it('always keeps the BrandHomeLink + copyright (never hidden, legal info)', async () => {

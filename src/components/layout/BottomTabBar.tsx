@@ -31,7 +31,20 @@ import { MoreSheet } from './MoreSheet';
  *
  * Visibility rules (Hotfix Option A v3, 2026-05-25 — Apple HIG iOS 18
  * "persistent tab bar across in-app destinations"):
- * - Hidden ≥ 768px (`md:hidden`) — desktop keeps the top-of-page nav.
+ * - Hidden ≥ 1280px (`xl:hidden`), the SAME breakpoint at which the header's
+ *   app nav appears. Not 768px, where it used to stop: the nav did not arrive
+ *   until 1024px, leaving a 256 px band with no navigation chrome at all
+ *   (measured 2026-08-02 from an installed PWA window). And not 1024px either,
+ *   the first attempt: with the admin link the header nav is 808 px wide, so
+ *   at 1024–1279 the account/theme/locale block was pushed off-screen — up to
+ *   155 px of it — and `overflow-x: hidden` on html+body amputated it silently
+ *   instead of showing a scrollbar. 1280 px is the first width where the whole
+ *   header row measures inside the viewport.
+ *
+ *   One seam, placed where the content actually fits, is the only arrangement
+ *   in which neither surface can leave before the other arrives. Anything that
+ *   reserves space for this bar moves with it; `e2e/navigation-reachable.spec.ts`
+ *   asserts the whole contract against a real browser at 14 widths.
  * - Mounted at the locale root `src/app/[locale]/layout.tsx` and gated by
  *   `isAuthenticated && !isExcludedRoute(pathname)`. So the bar is present
  *   on `/app/*`, `/admin/*`, `/faq`, `/glossaire`, `/legal/*` once the user
@@ -175,7 +188,7 @@ export function BottomTabBar({ isAdmin = false }: BottomTabBarProps) {
       <nav
         aria-label={t('label')}
         data-testid="bottom-tab-bar"
-        className="surface-overlay border-border/40 fixed right-0 bottom-0 left-0 z-40 border-t pb-[env(safe-area-inset-bottom)] md:hidden"
+        className="surface-overlay border-border/40 fixed right-0 bottom-0 left-0 z-40 border-t pb-[env(safe-area-inset-bottom)] xl:hidden"
       >
         <div className="flex h-12 items-stretch">
           {MOBILE_TAB_ITEMS.map((item) => {

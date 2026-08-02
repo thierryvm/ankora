@@ -15,12 +15,12 @@ export async function Footer() {
   // Preferences) is fully redundant with the More sheet — the visitor
   // sees the same five entries twice on mobile. Hide the nav on the
   // mobile breakpoint when the bar will mount; keep it on desktop
-  // (≥ md, where the bar is `md:hidden`). Anonymous mobile visitors
+  // (≥ lg, where the bar is hidden). Anonymous mobile visitors
   // and authenticated visitors on excluded routes (/login, /signup,
   // /onboarding) keep the full footer because no bar competes.
   const bottomTabBarMounted = await shouldMountBottomTabBar();
   const footerNavClass = bottomTabBarMounted
-    ? 'hidden flex-wrap gap-4 text-sm md:flex'
+    ? 'hidden flex-wrap gap-4 text-sm xl:flex'
     : 'flex flex-wrap gap-4 text-sm';
 
   return (
@@ -34,10 +34,13 @@ export async function Footer() {
        * required by GDPR art. 7(3) — would otherwise hide behind the bar
        * on `/faq`, `/legal/*`, `/glossaire`. Reserve enough room for the
        * bar (~3.5rem = 56px ≥ h-12) plus the safe-area inset on mobile;
-       * restore the original `pb-10` (40px) on `md:` where the bar is
-       * `md:hidden` and would never overlap.
+       * restore the original 40px bottom padding at `lg:`, where the bar is
+       * hidden and would never overlap. The reset moved from `md:` to `lg:` on
+       * 2026-08-02 along with the bar itself: leaving it at `md:` would have
+       * dropped the clearance at 768–1023 while the bar was still on screen,
+       * hiding the GDPR art. 7(3) cookie link behind it.
        */}
-      <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-4 pt-10 pb-[calc(env(safe-area-inset-bottom)+3.5rem)] md:flex-row md:items-center md:px-6 md:pb-10">
+      <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-4 pt-10 pb-[calc(env(safe-area-inset-bottom)+3.5rem)] md:flex-row md:items-center md:px-6 xl:pb-10">
         <div className="flex items-center gap-2">
           <BrandHomeLink ariaLabel={tCommon('homeAria')} logoClassName="h-7 w-auto" />
           <span className="text-muted-foreground text-sm">

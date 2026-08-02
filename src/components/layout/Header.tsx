@@ -126,7 +126,7 @@ export async function Header({ variant = 'marketing', isAuthenticated, userEmail
             </Link>
           </nav>
         ) : (
-          <nav aria-label={t('nav.appLabel')} className="hidden items-center gap-1 lg:flex">
+          <nav aria-label={t('nav.appLabel')} className="hidden items-center gap-1 xl:flex">
             {/*
               Renders the FULL registry, deliberately ignoring `mobilePlacement`
               — that field governs the mobile split (bottom tab vs "more"
@@ -182,8 +182,8 @@ export async function Header({ variant = 'marketing', isAuthenticated, userEmail
           )}
 
           {/* PR-A — persistent account menu (identity + Settings + logout) for
-              authenticated visitors on tablet+desktop. Self-hides < 768px
-              (`hidden md:flex` inside the component), where the BottomTabBar +
+              authenticated visitors on desktop. Self-hides < 1280px
+              (`hidden xl:flex` inside the component), where the BottomTabBar +
               MoreSheet own the secondary nav (THI-277). Resolves "no logout in
               the chrome on desktop". The landing (`MktNav`) intentionally keeps
               its conversion-first "Mon cockpit" CTA only — documented exception,
