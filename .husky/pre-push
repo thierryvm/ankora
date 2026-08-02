@@ -16,4 +16,14 @@
 #
 # Urgence : `git push --no-verify` contourne — à n'utiliser qu'en sachant
 # précisément pourquoi.
+#
+# `npm run preflight` charge `.env.local` en `--env-file-if-exists`, pas en
+# `--env-file` : dans un worktree le fichier est absent (il est gitignoré, donc
+# non hérité), et `--env-file` faisait PLANTER Node avant même que le script
+# démarre — `exit 9`, aucun rapport, aucun verdict. Un garde-fou qui plante au
+# lieu de refuser est pire qu'un garde-fou permissif : il n'apprend rien, il
+# apprend juste `--no-verify`. Le script sait déjà aller chercher le fichier
+# dans le clone d'origine (cf. `resolveLinkFile`) ; encore fallait-il le
+# laisser démarrer. Même correctif que `08d9bae`, appliqué au chemin qu'il
+# avait manqué.
 npm run preflight
