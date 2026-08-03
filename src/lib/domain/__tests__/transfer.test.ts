@@ -59,6 +59,7 @@ describe('computeMonthlyTransferPlan — lightest case', () => {
       month: 1,
       monthlyIncome: money(0),
       vieCouranteMonthlyTransfer: money(0),
+      commitmentsDue: money(0),
     });
 
     expect(plan.epargneProvisionTarget.toNumber()).toBe(0);
@@ -76,6 +77,7 @@ describe('computeMonthlyTransferPlan — monthly bills paid from Principal', () 
       month: 5,
       monthlyIncome: money(2500),
       vieCouranteMonthlyTransfer: money(500),
+      commitmentsDue: money(0),
     });
 
     expect(plan.principalBillsDue.toNumber()).toBe(900);
@@ -119,6 +121,7 @@ describe('computeMonthlyTransferPlan — "Virement Intelligent"', () => {
       month: 4,
       monthlyIncome: money(2500),
       vieCouranteMonthlyTransfer: money(500),
+      commitmentsDue: money(0),
     });
 
     expect(plan.epargneProvisionTarget.toNumber()).toBe(59);
@@ -134,6 +137,7 @@ describe('computeMonthlyTransferPlan — heavy-bill month', () => {
       month: 6,
       monthlyIncome: money(2500),
       vieCouranteMonthlyTransfer: money(500),
+      commitmentsDue: money(0),
     });
 
     expect(plan.epargneProvisionTarget.toNumber()).toBe(100);
@@ -151,6 +155,7 @@ describe('computeMonthlyTransferPlan — periodic charge flagged principal', () 
       month: 6,
       monthlyIncome: money(2500),
       vieCouranteMonthlyTransfer: money(500),
+      commitmentsDue: money(0),
     });
 
     expect(plan.epargneProvisionTarget.toNumber()).toBe(0);
@@ -165,6 +170,7 @@ describe('computeMonthlyTransferPlan — periodic charge flagged principal', () 
       month: 5,
       monthlyIncome: money(2500),
       vieCouranteMonthlyTransfer: money(500),
+      commitmentsDue: money(0),
     });
     expect(plan.principalBillsDue.toNumber()).toBe(0);
   });
@@ -177,6 +183,7 @@ describe('computeMonthlyTransferPlan — full mix', () => {
       month: 2,
       monthlyIncome: money(2500),
       vieCouranteMonthlyTransfer: money(500),
+      commitmentsDue: money(0),
     });
 
     // Monthly provision of smoothed set = 90/3 + 1200/12 = 30 + 100 = 130
@@ -200,6 +207,7 @@ describe('computeMonthlyTransferPlan — input validation', () => {
         month: 0,
         monthlyIncome: money(0),
         vieCouranteMonthlyTransfer: money(0),
+        commitmentsDue: money(0),
       }),
     ).toThrow(RangeError);
     expect(() =>
@@ -208,6 +216,7 @@ describe('computeMonthlyTransferPlan — input validation', () => {
         month: 13,
         monthlyIncome: money(0),
         vieCouranteMonthlyTransfer: money(0),
+        commitmentsDue: money(0),
       }),
     ).toThrow(RangeError);
   });
@@ -219,6 +228,7 @@ describe('computeMonthlyTransferPlan — input validation', () => {
         month: 1,
         monthlyIncome: money(-1),
         vieCouranteMonthlyTransfer: money(0),
+        commitmentsDue: money(0),
       }),
     ).toThrow(RangeError);
   });
@@ -230,6 +240,7 @@ describe('computeMonthlyTransferPlan — input validation', () => {
         month: 1,
         monthlyIncome: money(0),
         vieCouranteMonthlyTransfer: money(-1),
+        commitmentsDue: money(0),
       }),
     ).toThrow(RangeError);
   });
@@ -242,10 +253,71 @@ describe('computeMonthlyTransferPlan — inactive charges', () => {
       month: 6,
       monthlyIncome: money(2500),
       vieCouranteMonthlyTransfer: money(500),
+      commitmentsDue: money(0),
     });
     expect(plan.epargneProvisionTarget.toNumber()).toBe(0);
     expect(plan.epargneBillsDue.toNumber()).toBe(0);
     expect(plan.principalBillsDue.toNumber()).toBe(0);
+  });
+});
+
+/**
+ * « RESTANT PRINCIPAL » STOPS IGNORING THE COMMITMENTS.
+ *
+ * The cockpit carried two "remainings" with two perimeters and no label saying
+ * so: « Budget du mois » deducted the smoothed commitment burden while
+ * « Restant Principal » (`netPrincipalAfterPlan`) did not deduct the instalment
+ * at all. One screen, two answers to « ce qui me reste ».
+ *
+ * One rule, one word: an instalment is CASH leaving Principal this month, like
+ * a bill, so it belongs to this figure — and the block is renamed « Après tes
+ * sorties de <mois> » so it can never be read as the budget view.
+ */
+describe('computeMonthlyTransferPlan — commitment instalments are cash', () => {
+  it('subtracts the month’s instalment from what is left on Principal', () => {
+    const withoutCommitment = computeMonthlyTransferPlan({
+      charges: [monthlyCharge()],
+      month: 5,
+      monthlyIncome: money(2500),
+      vieCouranteMonthlyTransfer: money(500),
+      commitmentsDue: money(0),
+    });
+    const withCommitment = computeMonthlyTransferPlan({
+      charges: [monthlyCharge()],
+      month: 5,
+      monthlyIncome: money(2500),
+      vieCouranteMonthlyTransfer: money(500),
+      commitmentsDue: money(250),
+    });
+
+    expect(withCommitment.commitmentsDue.toNumber()).toBe(250);
+    expect(
+      withoutCommitment.netPrincipalAfterPlan.minus(withCommitment.netPrincipalAfterPlan).toNumber(),
+    ).toBe(250);
+  });
+
+  it('leaves the Épargne movements untouched — an instalment is not a provision', () => {
+    const plan = computeMonthlyTransferPlan({
+      charges: [annualSmoothed()],
+      month: 1,
+      monthlyIncome: money(2500),
+      vieCouranteMonthlyTransfer: money(500),
+      commitmentsDue: money(250),
+    });
+    expect(plan.epargneProvisionTarget.toNumber()).toBe(100);
+    expect(plan.epargneTransferNet.toNumber()).toBe(100);
+  });
+
+  it('refuses a negative instalment total rather than silently adding cash', () => {
+    expect(() =>
+      computeMonthlyTransferPlan({
+        charges: [],
+        month: 1,
+        monthlyIncome: money(1000),
+        vieCouranteMonthlyTransfer: money(0),
+        commitmentsDue: money(-1),
+      }),
+    ).toThrow(RangeError);
   });
 });
 
@@ -256,6 +328,7 @@ describe('projectedEpargneBalance', () => {
       month: 1,
       monthlyIncome: money(2500),
       vieCouranteMonthlyTransfer: money(500),
+      commitmentsDue: money(0),
     });
     expect(projectedEpargneBalance(money(300), plan).toNumber()).toBe(400);
   });
@@ -266,6 +339,7 @@ describe('projectedEpargneBalance', () => {
       month: 6,
       monthlyIncome: money(2500),
       vieCouranteMonthlyTransfer: money(500),
+      commitmentsDue: money(0),
     });
     expect(projectedEpargneBalance(money(1500), plan).toNumber()).toBe(400);
   });

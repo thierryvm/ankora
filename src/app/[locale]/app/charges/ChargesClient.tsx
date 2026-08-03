@@ -2,10 +2,12 @@
 
 import { useMemo, useOptimistic, useState, useTransition } from 'react';
 import {
+  AlertTriangle,
   Bookmark,
   Check,
   ChevronLeft,
   ChevronRight,
+  ListChecks,
   Pencil,
   Plus,
   Repeat,
@@ -20,11 +22,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/toast';
+import {
+  ConvertChargeSheet,
+  type ConvertibleCharge,
+} from '@/components/charges/ConvertChargeSheet';
 import type { Locale } from '@/i18n/routing';
 import { createChargeAction, deleteChargeAction, toggleWatchAction } from '@/lib/actions/charges';
 import { togglePaymentAction } from '@/lib/actions/charge-payments';
+import { toggleCommitmentPaymentAction } from '@/lib/actions/commitments';
+import { togglePastDueObligationsAction } from '@/lib/actions/obligations';
 import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
 import { currentPeriodDueDate, paymentMonthsFromFrequency } from '@/lib/domain/charges';
+import type { SignalDoublon } from '@/lib/domain/obligations';
 import { CHARGE_FREQUENCIES, type ChargeFrequency } from '@/lib/domain/types';
 import { formatCurrency, formatDate, formatMonth } from '@/lib/i18n/formatters';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
@@ -68,14 +77,55 @@ function todayBrusselsIso(): string {
   }).format(new Date());
 }
 
+/**
+ * ONE instalment of a commitment, falling due in the viewed period. Derived
+ * server-side by `obligationsDuMois()` from the anchor + cadence + instalment
+ * count — never a stored row (ADR-021). The tick it carries writes to
+ * `commitment_payments`, the same table the commitment page ticks.
+ */
+export type CommitmentInstalmentRow = {
+  id: string;
+  label: string;
+  amountDue: number;
+  paymentDay: number;
+  isPaid: boolean;
+  installmentIndex: number;
+  installmentsTotal: number;
+};
+
+export type DuplicateWarning = {
+  chargeId: string;
+  chargeLabel: string;
+  commitmentId: string;
+  commitmentLabel: string;
+  montant: number;
+  signaux: readonly SignalDoublon[];
+};
+
 type ChargesClientProps = {
   charges: RawCharge[];
-  /** Smoothed monthly provisioning effort across all active charges. */
-  monthlyProvisionTotal: number;
-  /** Annual equivalent of all active charges. */
-  annualTotal: number;
   /** Charge IDs already settled for `viewedPeriod` (seeds the Payé toggle). */
   paidChargeIds: string[];
+  /** Commitment instalments falling due in `viewedPeriod`, tickable like bills. */
+  commitmentInstalments: CommitmentInstalmentRow[];
+  /** « À payer ce mois » — the CASH view: every occurrence due this month. */
+  aPayerCeMoisTotal: number;
+  /**
+   * « Effort lissé » — the BUDGET view, for the CURRENT month.
+   *
+   * This REPLACED a `monthlyProvisionTotal` fed by `budget.ts`, which summed
+   * charges only. The footer called it « Effort lissé / mois » while the
+   * commitment instalments it omitted were deducted from « Budget du mois » —
+   * the same two-perimeters-one-name defect this chantier exists to close, one
+   * screen further down. One source now feeds both places.
+   */
+  effortLisseTotal: number;
+  /** Annual equivalent of the smoothed effort — the same figure × 12. */
+  effortLisseAnnuelTotal: number;
+  /** Charge/commitment pairs that look like the same obligation entered twice. */
+  duplicates: DuplicateWarning[];
+  /** State of the bulk « échéances passées » gesture, derived server-side. */
+  bulk: { gesture: 'pointer' | 'depointer' | 'rien'; pastDueCount: number };
   /**
    * The period IN VIEW (month-history navigation) — the ledger `paidChargeIds`
    * belongs to it and the Payé toggle writes to it. Usually today's month;
@@ -98,9 +148,13 @@ type ChargesClientProps = {
 
 export function ChargesClient({
   charges,
-  monthlyProvisionTotal,
-  annualTotal,
   paidChargeIds,
+  commitmentInstalments,
+  aPayerCeMoisTotal,
+  effortLisseTotal,
+  effortLisseAnnuelTotal,
+  duplicates,
+  bulk,
   viewedPeriod,
   periodNav,
 }: ChargesClientProps) {
@@ -121,6 +175,7 @@ export function ChargesClient({
   // bills, not adding charges — the list must own the first screen
   // (dashboard-ux M1, scope validated @thierry 2026-07-18).
   const [showAddForm, setShowAddForm] = useState(false);
+  const [convertingCharge, setConvertingCharge] = useState<ConvertibleCharge | null>(null);
 
   const todayIso = useMemo(() => todayBrusselsIso(), []);
 
@@ -171,6 +226,79 @@ export function ChargesClient({
     () => charges.filter((c) => c.isActive && c.paymentMonths.includes(viewedPeriod.month)),
     [charges, viewedPeriod.month],
   );
+
+  // Commitment instalments carry their own optimistic set, seeded from the
+  // server-derived rows. Same contract as `optimisticPaid` above: the action's
+  // revalidate is the single source of truth once it settles.
+  const instalmentPaidBase = useMemo(
+    () => new Set(commitmentInstalments.filter((i) => i.isPaid).map((i) => i.id)),
+    [commitmentInstalments],
+  );
+  const [optimisticInstalmentPaid, applyOptimisticInstalmentPaid] = useOptimistic(
+    instalmentPaidBase,
+    (current: ReadonlySet<string>, commitmentId: string) => {
+      const next = new Set(current);
+      if (next.has(commitmentId)) next.delete(commitmentId);
+      else next.add(commitmentId);
+      return next;
+    },
+  );
+
+  function onToggleInstalmentPaid(row: CommitmentInstalmentRow) {
+    startTransition(async () => {
+      applyOptimisticInstalmentPaid(row.id);
+      try {
+        const result = await toggleCommitmentPaymentAction({
+          commitmentId: row.id,
+          periodYear: viewedPeriod.year,
+          periodMonth: viewedPeriod.month,
+        });
+        if (result.ok) {
+          toast.success(result.data.paid ? t('toastMarkedPaid') : t('toastMarkedUnpaid'));
+        } else {
+          toast.error(translateError(result.errorCode));
+        }
+      } catch (err) {
+        if (isNextControlFlowError(err)) throw err;
+        // eslint-disable-next-line no-console
+        console.error('toggleCommitmentPaymentAction threw', err);
+        toast.error(translateError('errors.commitments.payments.toggleFailed'));
+      }
+    });
+  }
+
+  /**
+   * ONE press for the whole month's past instalments — and the SAME press undoes
+   * it. No confirmation dialog: the gesture is its own undo, and a dialog in
+   * front of a reversible action costs a tap every month for nothing.
+   *
+   * The direction is decided by the SERVER from the current ledger, never sent
+   * from here — a stale tab cannot make this wipe a month.
+   */
+  function onBulkPastDue() {
+    startTransition(async () => {
+      try {
+        const result = await togglePastDueObligationsAction({
+          periodYear: viewedPeriod.year,
+          periodMonth: viewedPeriod.month,
+        });
+        if (!result.ok) {
+          toast.error(translateError(result.errorCode));
+          return;
+        }
+        const count = result.data.charges + result.data.commitments;
+        if (result.data.mode === 'pointer') toast.success(t('bulkToastMarked', { count }));
+        else if (result.data.mode === 'depointer') {
+          toast.success(t('bulkToastUnmarked', { count }));
+        }
+      } catch (err) {
+        if (isNextControlFlowError(err)) throw err;
+        // eslint-disable-next-line no-console
+        console.error('togglePastDueObligationsAction threw', err);
+        toast.error(translateError('errors.charges.payments.toggleFailed'));
+      }
+    });
+  }
 
   // Optimistic "à surveiller" set — same seeding/reconciliation contract as
   // `optimisticPaid` above (server truth via revalidateAppPath on success).
@@ -299,6 +427,7 @@ export function ChargesClient({
       frequency: c.frequency,
       dueMonth: c.dueMonth,
       paymentDay: c.paymentDay,
+      paymentMonths: c.paymentMonths,
     });
   }
 
@@ -440,6 +569,7 @@ export function ChargesClient({
           </span>
         </div>
 
+
         {/* Watch + Edit + Delete: stacked top-right tap targets on mobile,
             inline cells 5 / 6 / 7 on desktop. The Bookmark fills brand when
             the charge is flagged "à surveiller" (dashboard section). */}
@@ -489,14 +619,93 @@ export function ChargesClient({
     );
   }
 
-  // "Ce mois" summary, derived from the optimistic paid set so it updates the
+  /**
+   * Render ONE commitment instalment, in the same visual language as a charge
+   * row. It is the point of the whole chantier: a duplicate between the two
+   * families is only visible to the eye when both are in the same list.
+   */
+  function renderInstalmentRow(row: CommitmentInstalmentRow) {
+    const paid = optimisticInstalmentPaid.has(row.id);
+    const dueIso = `${viewedPeriod.year}-${String(viewedPeriod.month).padStart(2, '0')}-${String(
+      Math.min(row.paymentDay, 28),
+    ).padStart(2, '0')}`;
+    return (
+      <li
+        key={row.id}
+        data-testid={`charges-instalment-${row.id}`}
+        className="md:hover:bg-surface-muted relative min-h-14 py-3 pr-3 pl-14 transition-colors md:grid md:min-h-0 md:grid-cols-[minmax(8rem,10rem)_minmax(0,1fr)_minmax(0,8rem)_7rem] md:items-baseline md:gap-4 md:py-3 md:pl-12"
+      >
+        <button
+          type="button"
+          onClick={() => onToggleInstalmentPaid(row)}
+          disabled={isPending}
+          aria-pressed={paid}
+          aria-label={
+            paid
+              ? t('unmarkCommitmentPaidAria', { label: row.label })
+              : t('markCommitmentPaidAria', { label: row.label })
+          }
+          data-testid={`charges-instalment-paid-${row.id}`}
+          className={`focus-visible:ring-brand-600 absolute top-2 left-2 flex size-11 cursor-pointer items-center justify-center rounded-full border-2 transition-colors [-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:top-1/2 md:left-3 md:size-7 md:-translate-y-1/2 ${
+            paid
+              ? 'border-brand-600 bg-brand-600 text-white'
+              : 'border-border hover:border-brand-600 text-transparent'
+          }`}
+        >
+          <Check className="h-4 w-4 md:h-3.5 md:w-3.5" strokeWidth={3} aria-hidden />
+        </button>
+
+        <div className="flex items-baseline justify-between gap-3 md:contents">
+          <span className="text-muted-foreground md:order-1 text-xs font-medium tracking-wide md:text-sm">
+            {formatDate(dueIso, locale, 'medium')}
+          </span>
+          <span
+            data-testid={`charges-instalment-amount-${row.id}`}
+            className={`md:order-4 shrink-0 text-base font-semibold tabular-nums md:text-right md:text-sm md:font-medium ${
+              paid ? 'text-muted-foreground line-through' : 'text-foreground'
+            }`}
+          >
+            {formatCurrency(row.amountDue, locale)}
+          </span>
+        </div>
+
+        <div className="mt-2 flex flex-wrap items-center gap-2 md:mt-0 md:contents">
+          <span className="text-foreground md:order-2 min-w-0 truncate text-sm font-medium md:text-base">
+            {row.label}
+          </span>
+          {/* The instalment carries its position in the schedule — « échéance
+              5/11 » — which a perpetual charge cannot have. Derived from the
+              anchor + cadence, never stored. */}
+          <span
+            data-testid={`charges-instalment-position-${row.id}`}
+            className="text-muted-foreground md:order-3 shrink-0 text-xs tabular-nums"
+          >
+            {t('installmentPosition', {
+              index: row.installmentIndex,
+              total: row.installmentsTotal,
+            })}
+          </span>
+        </div>
+      </li>
+    );
+  }
+
+  // "Ce mois" summary, derived from the optimistic paid sets so it updates the
   // instant a toggle is hit (distinct from the smoothed "Effort lissé" total).
-  const paidThisMonthCount = dueThisMonth.filter((c) => optimisticPaid.has(c.id)).length;
-  const remainingThisMonth = dueThisMonth
-    .filter((c) => !optimisticPaid.has(c.id))
-    .reduce((sum, c) => sum + c.amount, 0);
+  // Charges AND instalments: they are one month, so they are one countdown.
+  const paidThisMonthCount =
+    dueThisMonth.filter((c) => optimisticPaid.has(c.id)).length +
+    commitmentInstalments.filter((i) => optimisticInstalmentPaid.has(i.id)).length;
+  const dueThisMonthCount = dueThisMonth.length + commitmentInstalments.length;
+  const remainingThisMonth =
+    dueThisMonth
+      .filter((c) => !optimisticPaid.has(c.id))
+      .reduce((sum, c) => sum + c.amount, 0) +
+    commitmentInstalments
+      .filter((i) => !optimisticInstalmentPaid.has(i.id))
+      .reduce((sum, i) => sum + i.amountDue, 0);
   // Count-based (not amount-based) so a 0 € bill still has to be ticked.
-  const allPaidThisMonth = dueThisMonth.length > 0 && paidThisMonthCount === dueThisMonth.length;
+  const allPaidThisMonth = dueThisMonthCount > 0 && paidThisMonthCount === dueThisMonthCount;
 
   return (
     <div className="flex flex-col gap-6">
@@ -592,9 +801,9 @@ export function ChargesClient({
             {/* Explains the "19 charges vs 16/16 paid" gap: charges not due
                 this month (e.g. annual bills anchored elsewhere) have no
                 toggle and are excluded from the paid countdown. */}
-            {dueThisMonth.length > 0 && (
+            {dueThisMonthCount > 0 && (
               <span className="text-muted-foreground ml-2 text-sm font-normal">
-                · {t('dueCount', { due: dueThisMonth.length })}
+                · {t('dueCount', { due: dueThisMonthCount })}
               </span>
             )}
           </CardTitle>
@@ -664,7 +873,91 @@ export function ChargesClient({
                   rows). Derived from `optimisticPaid`, so the amount counts down
                   the instant a bill is ticked. Distinct from the smoothed
                   "Effort lissé" total below (which intentionally never moves). */}
-              {dueThisMonth.length > 0 && (
+              {/* THE TWO NAMED VIEWS (chantier 3).
+                  « À payer ce mois » is CASH: every occurrence falling due,
+                  bills and instalments together. « Effort lissé » is BUDGET:
+                  monthly charges + smoothed provisions + instalments. They are
+                  different numbers on purpose, and the whole class of bugs
+                  being closed here came from a screen carrying two totals whose
+                  periods nobody had named. */}
+              <div
+                data-testid="charges-two-views"
+                className="border-border/60 mb-4 grid gap-3 rounded-lg border p-3 sm:grid-cols-2"
+              >
+                <div>
+                  <p className="text-muted-foreground text-xs font-medium">
+                    {t('aPayerCeMoisLabel')}
+                  </p>
+                  <p
+                    data-testid="charges-a-payer-total"
+                    className="text-foreground text-xl font-bold tabular-nums"
+                  >
+                    {formatCurrency(aPayerCeMoisTotal, locale)}
+                  </p>
+                  <p className="text-muted-foreground mt-0.5 text-[11px] leading-snug">
+                    {t('aPayerCeMoisHint')}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs font-medium">
+                    {t('effortLisseLabel')}
+                  </p>
+                  <p
+                    data-testid="charges-effort-lisse-total"
+                    className="text-foreground text-xl font-bold tabular-nums"
+                  >
+                    {formatCurrency(effortLisseTotal, locale)}
+                  </p>
+                  <p className="text-muted-foreground mt-0.5 text-[11px] leading-snug">
+                    {t('effortLisseHint')}
+                  </p>
+                </div>
+              </div>
+
+              {/* The heuristic WARNS. It never calculates — no total above or
+                  below moves because of what is said here. */}
+              {duplicates.map((d) => (
+                <div
+                  key={`${d.chargeId}-${d.commitmentId}`}
+                  data-testid={`charges-duplicate-${d.chargeId}`}
+                  role="status"
+                  className="border-warning/40 bg-warning/10 mb-4 flex gap-3 rounded-lg border p-3"
+                >
+                  <AlertTriangle
+                    aria-hidden
+                    className="text-warning mt-0.5 h-4 w-4 shrink-0"
+                    strokeWidth={2}
+                  />
+                  <div className="min-w-0 text-xs leading-relaxed">
+                    <p className="text-foreground font-semibold">{t('duplicateTitle')}</p>
+                    <p className="text-foreground mt-0.5">
+                      {t('duplicateBody', {
+                        charge: d.chargeLabel,
+                        commitment: d.commitmentLabel,
+                        amount: formatCurrency(d.montant, locale),
+                      })}
+                    </p>
+                    <p className="text-muted-foreground mt-0.5">
+                      {t('duplicateSignals', {
+                        signals: d.signaux
+                          .map((s) =>
+                            t(
+                              s === 'montant'
+                                ? 'signalMontant'
+                                : s === 'jour'
+                                  ? 'signalJour'
+                                  : 'signalLibelle',
+                            ),
+                          )
+                          .join(', '),
+                      })}
+                    </p>
+                    <p className="text-muted-foreground mt-0.5">{t('duplicateNote')}</p>
+                  </div>
+                </div>
+              ))}
+
+              {dueThisMonthCount > 0 && (
                 <div
                   data-testid="charges-paid-summary"
                   className={`mb-4 flex items-center justify-between gap-3 rounded-lg px-4 py-3 ${
@@ -703,14 +996,50 @@ export function ChargesClient({
                     </p>
                   </div>
                   <span className="text-muted-foreground shrink-0 text-sm tabular-nums">
-                    {t('paidCount', { paid: paidThisMonthCount, total: dueThisMonth.length })}
+                    {t('paidCount', { paid: paidThisMonthCount, total: dueThisMonthCount })}
                   </span>
                 </div>
               )}
+
+              {/* ONE gesture for the month's past instalments, and the same
+                  gesture undoes it. Deliberately NOT behind a confirmation
+                  dialog: the undo IS the button, so a dialog would only add a
+                  tap to a monthly routine. The label says which way the next
+                  press goes, so nothing has to be remembered. */}
+              {bulk.gesture !== 'rien' && (
+                <div className="mb-4 flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={onBulkPastDue}
+                    disabled={isPending}
+                    // Le libellé est une PHRASE, pas un verbe : « Marquer les
+                    // échéances passées comme payées » mesure 372 px, et la
+                    // primitive Button impose `whitespace-nowrap`. Sur un écran
+                    // de 375 px la ligne ne peut pas revenir, donc la PAGE
+                    // débordait de 38 px — attrapé par la spec d'anti-débordement.
+                    // On rend le retour à la ligne possible ici seulement, et la
+                    // hauteur suit (`h-auto`), sinon le texte replié sortirait du
+                    // bouton. `min-w-0` pour que le conteneur flex puisse le
+                    // rétrécir. Aucun autre bouton n'est touché.
+                    className="h-auto min-w-0 py-2 text-left whitespace-normal"
+                    data-testid="charges-bulk-past-due"
+                    data-gesture={bulk.gesture}
+                  >
+                    <ListChecks className="h-4 w-4 shrink-0" aria-hidden />
+                    {bulk.gesture === 'pointer' ? t('bulkPastDue') : t('bulkPastDueUndo')}
+                  </Button>
+                  <span className="text-muted-foreground text-xs">
+                    {t('bulkPastDueCount', { count: bulk.pastDueCount })} · {t('bulkPastDueHint')}
+                  </span>
+                </div>
+              )}
+
               {/* One-time hint teaching the Payé toggle convention
                   (dashboard-ux F2) — shown only while there is still something
                   to tick; once the month is fully paid it is pure noise. */}
-              {dueThisMonth.length > 0 && !allPaidThisMonth && (
+              {dueThisMonthCount > 0 && !allPaidThisMonth && (
                 <p className="text-muted-foreground mb-4 text-xs" data-testid="charges-paid-hint">
                   {t('paidHint')}
                 </p>
@@ -804,6 +1133,40 @@ export function ChargesClient({
                     </section>
                   );
                 })}
+
+                {/* « Crédits & échéanciers » — the third family, in the SAME
+                    list. Its rows are DERIVED from each commitment's anchor +
+                    cadence + instalment count (`isDueInPeriod`), never stored:
+                    generating instalment rows would reintroduce exactly the
+                    drift ADR-021 removed, and cost a migration.
+
+                    This group is the structural guard-rail of the whole
+                    chantier — a bill and an instalment for the same obligation
+                    are now visible side by side, and the warning above names
+                    them. */}
+                {commitmentInstalments.length > 0 && (
+                  <section
+                    data-testid="charges-group-commitments"
+                    aria-labelledby="charges-group-commitments-heading"
+                  >
+                    <h2
+                      id="charges-group-commitments-heading"
+                      className="text-muted-foreground mb-2 flex items-center gap-2 text-xs font-semibold tracking-wide uppercase"
+                    >
+                      <Repeat aria-hidden strokeWidth={1.5} className="h-4 w-4" />
+                      {t('commitmentsGroupTitle')}
+                      <span className="text-muted-foreground/70 ml-0.5 text-[11px] font-medium normal-case">
+                        {t('count', { count: commitmentInstalments.length })}
+                      </span>
+                    </h2>
+                    <ul
+                      role="list"
+                      className="border-border divide-border/60 divide-y overflow-hidden rounded-xl border"
+                    >
+                      {commitmentInstalments.map((row) => renderInstalmentRow(row))}
+                    </ul>
+                  </section>
+                )}
               </div>
 
               {/* Global total — the headline @thierry asked for ("on ne voit
@@ -825,7 +1188,7 @@ export function ChargesClient({
                     data-testid="charges-total-monthly"
                     className="text-foreground text-base font-semibold tabular-nums"
                   >
-                    {formatCurrency(monthlyProvisionTotal, locale)}
+                    {formatCurrency(effortLisseTotal, locale)}
                   </span>
                 </div>
                 <div className="flex items-baseline justify-between gap-3">
@@ -834,7 +1197,7 @@ export function ChargesClient({
                     data-testid="charges-total-annual"
                     className="text-muted-foreground text-sm tabular-nums"
                   >
-                    {formatCurrency(annualTotal, locale)}
+                    {formatCurrency(effortLisseAnnuelTotal, locale)}
                   </span>
                 </div>
               </div>
@@ -843,7 +1206,28 @@ export function ChargesClient({
         </CardContent>
       </Card>
 
-      <ChargeEditDrawer charge={editingCharge} onClose={() => setEditingCharge(null)} />
+      <ChargeEditDrawer
+        charge={editingCharge}
+        onClose={() => setEditingCharge(null)}
+        // Sequential panels, never nested: the drawer closes, then the sheet
+        // opens on the same charge.
+        onConvert={(c) => {
+          setEditingCharge(null);
+          setConvertingCharge({
+            id: c.id,
+            label: c.label,
+            amount: c.amount,
+            frequency: c.frequency,
+            paymentDay: c.paymentDay,
+            paymentMonths: c.paymentMonths,
+          });
+        }}
+      />
+      <ConvertChargeSheet
+        charge={convertingCharge}
+        onClose={() => setConvertingCharge(null)}
+        locale={locale}
+      />
     </div>
   );
 }

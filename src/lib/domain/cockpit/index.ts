@@ -14,6 +14,7 @@ export * from './assistant-virements';
 export * from './sante-provisions';
 export * from './notifications';
 export * from './previsions';
+export * from './projection-fonds';
 export * from './simulateur';
 export * from './situation-mois';
 export * from './engagements-lisses';

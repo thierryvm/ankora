@@ -4,13 +4,16 @@ import { getTranslations } from 'next-intl/server';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { ProvisionFundProjection } from '@/components/dashboard/ProvisionFundProjection';
 import {
   calculerSanteProvisions,
+  premierMoisEnDeficit,
+  projeterFondsProvision,
   type CockpitCharge,
   type PaymentLedger,
   type ReferencePeriod,
 } from '@/lib/domain/cockpit';
-import { formatCurrency } from '@/lib/i18n/formatters';
+import { formatCurrency, formatMonthInSentence } from '@/lib/i18n/formatters';
 import type { Locale } from '@/i18n/routing';
 
 type Props = {
@@ -66,6 +69,16 @@ export async function ProvisionHealthGaugeCard({
   const fmt = (value: Parameters<typeof formatCurrency>[0]) => formatCurrency(value, locale);
 
   const hasTarget = result.totalEpargneTheorique.gt(0);
+
+  // The 12-month accumulator (`solde = solde + lissé − sortie`). Computed here
+  // rather than in the child so the projection stays a synchronous, purely
+  // presentational component.
+  const projection = projeterFondsProvision({
+    charges,
+    soldeInitial: soldeEpargneActuel,
+    ref: period,
+  });
+  const deficit = premierMoisEnDeficit(projection);
 
   // Ratio in [0, ~Infinity[. Clamped to [0, ∞) for math, displayed below.
   const rawRatio = hasTarget
@@ -204,6 +217,28 @@ export async function ProvisionHealthGaugeCard({
                   {t('deficit', { amount: fmt(result.rattrapageMensuel) })}
                 </p>
               )}
+              {/* The gauge says « à jour » TODAY. The projection says whether
+                  the fund still holds in March — a different question, and the
+                  one the smoothing actually raises. */}
+              <ProvisionFundProjection
+                projection={projection}
+                locale={locale}
+                labels={{
+                  toggle: t('projectionToggle'),
+                  title: t('projectionTitle'),
+                  intro: t('projectionIntro'),
+                  month: t('projectionMonth'),
+                  out: t('projectionOut'),
+                  balance: t('projectionBalance'),
+                  verdict: deficit
+                    ? t('projectionDeficit', {
+                        // Mid-sentence: « en mars 2027 », not « en Mars 2027 ».
+                        month: `${formatMonthInSentence(deficit.month, locale)} ${deficit.year}`,
+                      })
+                    : t('projectionHolds'),
+                  negative: t('projectionNegative'),
+                }}
+              />
             </div>
           </div>
         ) : (

@@ -694,8 +694,8 @@
       "transferPrincipalToEpargne": "Principal → Ahorro",
       "transferEpargneToPrincipal": "Ahorro → Principal",
       "transferEpargneHint": "Reserva {provision} − facturas {bills}",
-      "transferPrincipalRemaining": "Restante en Principal",
-      "transferPrincipalRemainingHint": "Tras el salario, las transferencias y las facturas de Principal ({bills}).",
+      "transferPrincipalRemaining": "Tras tus salidas · {month}",
+      "transferPrincipalRemainingHint": "Tras {bills} de facturas y {commitments} de cuotas.",
       "ctaCharges": "Mis gastos fijos",
       "ctaExpenses": "Mis gastos",
       "ctaSimulator": "Simular",
@@ -770,6 +770,54 @@
         "saving": "Guardando…",
         "cancel": "Cancelar",
         "errorGeneric": "El cambio no se ha podido guardar. Inténtalo de nuevo dentro de un momento."
+      },
+      "aPayerCeMoisLabel": "A pagar este mes",
+      "aPayerCeMoisHint": "Lo que sale realmente de la cuenta — facturas y cuotas juntas.",
+      "effortLisseLabel": "Esfuerzo prorrateado",
+      "effortLisseHint": "Cargos mensuales + provisiones prorrateadas + cuotas de compromisos.",
+      "commitmentsGroupTitle": "Créditos y planes de pago",
+      "installmentPosition": "cuota {index}/{total}",
+      "commitmentRemaining": "quedan {amount}",
+      "markCommitmentPaidAria": "Marcar la cuota {label} como pagada",
+      "unmarkCommitmentPaidAria": "Marcar la cuota {label} como no pagada",
+      "bulkPastDue": "Marcar las cuotas vencidas como pagadas",
+      "bulkPastDueUndo": "Deshacer este marcado",
+      "bulkPastDueCount": "{count, plural, one {# cuota vencida} other {# cuotas vencidas}}",
+      "bulkPastDueHint": "Pulsa otra vez para deshacer.",
+      "bulkToastMarked": "{count, plural, one {# cuota marcada} other {# cuotas marcadas}} · pulsa otra vez para deshacer",
+      "bulkToastUnmarked": "{count, plural, one {# marcado deshecho} other {# marcados deshechos}}",
+      "duplicateTitle": "Una obligación parece registrada dos veces",
+      "duplicateBody": "«{charge}» (factura) y «{commitment}» (compromiso) llevan el mismo importe de {amount}.",
+      "duplicateNote": "Ankora las cuenta por separado y no corrige ningún total. Si es la misma deuda, convierte la factura en compromiso.",
+      "duplicateSignals": "Señales: {signals}.",
+      "signalMontant": "mismo importe",
+      "signalJour": "mismo día",
+      "signalLibelle": "nombres parecidos",
+      "convert": {
+        "title": "Convertir en compromiso",
+        "intro": "{label} · {amount} por cuota. Solo falta una cosa: cuándo termina.",
+        "doorsHint": "Basta con una respuesta. Si das varias, Ankora las compara.",
+        "endDateLabel": "Fecha de fin aproximada",
+        "endMonthLabel": "Mes de fin",
+        "endYearLabel": "Año de fin",
+        "remainingCountLabel": "Cuotas restantes",
+        "remainingBalanceLabel": "Saldo pendiente (extracto)",
+        "rememberedLabel": "Total pendiente que recuerdas (opcional)",
+        "rememberedHint": "Lo que te queda por devolver, no el coste total del crédito. No entra en ningún cálculo — solo sirve de control.",
+        "preview": "{count} cuotas de {amount} · fin {end} · total {total}",
+        "needOneDoor": "Rellena al menos uno de los tres datos.",
+        "divergence": "Tus respuestas no coinciden. Ankora conserva {kept} cuotas y no corrige nada.",
+        "divergenceItem": "{door} → {count} cuotas",
+        "rememberedDivergence": "Según tus {count} cuotas de {amount}, el total sería {derived} y no {remembered}. Compruébalo con la entidad.",
+        "doorEcheancesRestantes": "cuotas restantes",
+        "doorDateDeFin": "fecha de fin",
+        "doorSoldeRestantDu": "saldo pendiente",
+        "submit": "Convertir",
+        "submitting": "Convirtiendo…",
+        "cancel": "Cancelar",
+        "noHorizon": "Sin horizonte el cargo sigue siendo un cargo: el presupuesto sigue siendo correcto, solo falta la cuenta atrás.",
+        "toastConverted": "{label} ya es un compromiso · fin {end}",
+        "drawerHint": "Si este cargo es un crédito que termina, Ankora puede mostrarte su cuenta atrás."
       }
     },
     "accounts": {
@@ -883,7 +931,10 @@
       "unmarkOneAria": "Deshacer el último plazo pagado para {label}",
       "installmentsCountAria": "{paid} de {total} plazos pagados para {label}",
       "toastUpdated": "Compromiso actualizado",
-      "reductionBlocked": "No se puede: {paid} plazos ya están marcados. Desmarca algunos pagos primero."
+      "reductionBlocked": "No se puede: {paid} plazos ya están marcados. Desmarca algunos pagos primero.",
+      "editConsequence": "fin: {fromEnd} → {toEnd} · queda: {fromBalance} → {toBalance}",
+      "editConsequenceLabel": "Lo que esto cambia",
+      "editNoChange": "Sin cambios en la fecha de fin ni en el saldo pendiente."
     },
     "expenses": {
       "title": "Mis gastos",
@@ -1177,7 +1228,16 @@
       "status": {
         "a_jour": "Al día",
         "deficit": "Déficit"
-      }
+      },
+      "projectionToggle": "Ver los próximos 12 meses",
+      "projectionTitle": "El fondo, mes a mes",
+      "projectionIntro": "Cada mes el fondo recibe el importe prorrateado y paga las facturas que vencen.",
+      "projectionMonth": "Mes",
+      "projectionOut": "Salida",
+      "projectionBalance": "Saldo",
+      "projectionDeficit": "En {month}, el fondo baja de cero.",
+      "projectionHolds": "El fondo aguanta durante los próximos 12 meses.",
+      "projectionNegative": "saldo negativo"
     },
     "upcomingBills": {
       "title": "Próximas facturas",
@@ -1457,6 +1517,12 @@
       "payments": {
         "toggleFailed": "No se ha podido actualizar el estado de la cuota."
       }
+    },
+    "conversion": {
+      "chargeInactive": "Esta factura ya está desactivada.",
+      "noSchedule": "Esta factura no tiene un calendario utilizable.",
+      "horizonUnknown": "Falta la fecha de fin, el número de cuotas o el saldo pendiente.",
+      "failed": "La conversión ha fallado. No se ha modificado nada."
     }
   },
   "opengraphImage": {

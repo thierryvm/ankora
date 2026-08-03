@@ -2,8 +2,22 @@ import type { Metadata } from 'next';
 import { getLocale, getTranslations } from 'next-intl/server';
 
 import { createClient } from '@/lib/supabase/server';
-import { getWorkspaceSnapshot } from '@/lib/data/workspace-snapshot';
-import { annualTotal, monthlyProvisionTotal } from '@/lib/domain/budget';
+import { commitmentRowToDomain } from '@/lib/data/commitment-row';
+import { getCommitmentsWithLedger } from '@/lib/data/commitments';
+import { getWorkspaceSnapshot, toCockpitCharges } from '@/lib/data/workspace-snapshot';
+import { todayInAnkoraTz } from '@/lib/date/tz';
+import { engagementsMensuelsLisses } from '@/lib/domain/cockpit';
+import { paymentKey, type PaymentLedger } from '@/lib/domain/cockpit/types';
+import {
+  aPayerCeMois,
+  detecterDoublonsProbables,
+  echeancesPassees,
+  effortLisse,
+  effortLisseAnnuel,
+  gesteGroupePour,
+  obligationsDuMois,
+  type NamedCommitment,
+} from '@/lib/domain/obligations';
 import { formatMonth } from '@/lib/i18n/formatters';
 import { log } from '@/lib/log';
 import type { Locale } from '@/i18n/routing';
@@ -68,6 +82,15 @@ export default async function ChargesPage({
   const viewed = parseViewedPeriod(params.period, current);
   const isCurrent = ordinal(viewed) === ordinal(current);
 
+  // Chantier 3 — the month's obligations are ONE list. Commitments are read
+  // here for the same reason they are read on the cockpit: their instalments
+  // are cash leaving the account this month, and until now the only screen
+  // showing them was a different tab. Same single read as `/app/commitments`,
+  // so the two surfaces can never disagree on what is owed.
+  const { commitments: commitmentRows, paidKeysByCommitment } = await getCommitmentsWithLedger(
+    snapshot.workspaceId,
+  );
+
   // Paid charge ids for the VIEWED period. Current month comes free with the
   // snapshot; a past month needs one extra RLS-scoped read. The toggle action
   // re-verifies workspace ownership before any write — these ids are only
@@ -94,15 +117,63 @@ export default async function ChargesPage({
   const prev = shift(viewed, -1);
   const next = shift(viewed, 1);
 
+  // --- The month's obligations, derived (never generated). ---
+  const cockpitCharges = toCockpitCharges(snapshot.charges);
+  const commitments: NamedCommitment[] = commitmentRows.map((c) => ({
+    ...commitmentRowToDomain(c),
+    label: c.label,
+  }));
+  const commitmentLedger = new Map(
+    Object.entries(paidKeysByCommitment).map(([id, keys]) => [id, new Set(keys)] as const),
+  );
+  const chargePayments: PaymentLedger = new Map(
+    paidChargeIds.map((id) => [paymentKey(id, viewed.year, viewed.month), true]),
+  );
+
+  const obligations = obligationsDuMois({
+    charges: cockpitCharges,
+    chargePayments,
+    commitments,
+    paidKeysByCommitment: commitmentLedger,
+    ref: viewed,
+  });
+
+  // « Effort lissé » is a property of the CURRENT month's obligations, not of
+  // the month being browsed: it is the standing monthly burden, and quoting a
+  // past month's version of it next to a past month's cash would invent a
+  // second meaning for the same words.
+  const engagementsMensuels = engagementsMensuelsLisses(commitments, commitmentLedger, current);
+
+  const pastDue = echeancesPassees(obligations, viewed, todayInAnkoraTz());
+  const bulkGesture = gesteGroupePour(pastDue);
+
   return (
     // Money totals stay pure-domain Decimal server-side, crossed as plain
     // `number` — Decimal never traverses the RSC boundary.
     <ChargesClient
       charges={snapshot.rawCharges}
-      monthlyProvisionTotal={monthlyProvisionTotal(snapshot.charges).toNumber()}
-      annualTotal={annualTotal(snapshot.charges).toNumber()}
       paidChargeIds={paidChargeIds}
       viewedPeriod={viewed}
+      commitmentInstalments={obligations
+        .filter((o) => o.source === 'commitment')
+        .map((o) => ({
+          id: o.id,
+          label: o.label,
+          amountDue: o.amountDue.toNumber(),
+          paymentDay: o.paymentDay,
+          isPaid: o.isPaid,
+          installmentIndex: o.installmentIndex ?? 1,
+          installmentsTotal: o.installmentsTotal ?? 1,
+        }))}
+      aPayerCeMoisTotal={aPayerCeMois(obligations).toNumber()}
+      effortLisseTotal={effortLisse(cockpitCharges, engagementsMensuels).toNumber()}
+      effortLisseAnnuelTotal={effortLisseAnnuel(cockpitCharges, engagementsMensuels).toNumber()}
+      duplicates={detecterDoublonsProbables({
+        charges: cockpitCharges,
+        commitments,
+        ref: viewed,
+      }).map((d) => ({ ...d }))}
+      bulk={{ gesture: bulkGesture, pastDueCount: pastDue.length }}
       periodNav={{
         label: monthLabel(viewed),
         prevParam: ordinal(prev) >= ordinal(PERIOD_FLOOR) ? toParam(prev) : null,

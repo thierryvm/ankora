@@ -694,8 +694,8 @@
       "transferPrincipalToEpargne": "Hauptkonto → Sparen",
       "transferEpargneToPrincipal": "Sparen → Hauptkonto",
       "transferEpargneHint": "Rücklage {provision} − Rechnungen {bills}",
-      "transferPrincipalRemaining": "Restbetrag Hauptkonto",
-      "transferPrincipalRemainingHint": "Nach Gehalt, Überweisungen und Rechnungen Hauptkonto ({bills}).",
+      "transferPrincipalRemaining": "Nach deinen Ausgaben · {month}",
+      "transferPrincipalRemainingHint": "Nach {bills} Rechnungen und {commitments} Raten.",
       "ctaCharges": "Meine Fixkosten",
       "ctaExpenses": "Meine Ausgaben",
       "ctaSimulator": "Simulieren",
@@ -770,6 +770,54 @@
         "saving": "Speichern…",
         "cancel": "Abbrechen",
         "errorGeneric": "Die Änderung konnte nicht gespeichert werden. Bitte gleich erneut versuchen."
+      },
+      "aPayerCeMoisLabel": "Diesen Monat fällig",
+      "aPayerCeMoisHint": "Was wirklich vom Konto abgeht — Rechnungen und Raten zusammen.",
+      "effortLisseLabel": "Geglätteter Aufwand",
+      "effortLisseHint": "Monatliche Kosten + geglättete Rücklagen + Verpflichtungsraten.",
+      "commitmentsGroupTitle": "Kredite & Ratenpläne",
+      "installmentPosition": "Rate {index}/{total}",
+      "commitmentRemaining": "noch {amount}",
+      "markCommitmentPaidAria": "Rate {label} als bezahlt markieren",
+      "unmarkCommitmentPaidAria": "Rate {label} als unbezahlt markieren",
+      "bulkPastDue": "Vergangene Raten als bezahlt markieren",
+      "bulkPastDueUndo": "Diese Markierung rückgängig machen",
+      "bulkPastDueCount": "{count, plural, one {# vergangene Rate} other {# vergangene Raten}}",
+      "bulkPastDueHint": "Noch einmal drücken, um es rückgängig zu machen.",
+      "bulkToastMarked": "{count, plural, one {# Rate markiert} other {# Raten markiert}} · noch einmal drücken zum Rückgängigmachen",
+      "bulkToastUnmarked": "{count, plural, one {# Markierung aufgehoben} other {# Markierungen aufgehoben}}",
+      "duplicateTitle": "Eine Verpflichtung scheint doppelt erfasst",
+      "duplicateBody": "„{charge}“ (Rechnung) und „{commitment}“ (Verpflichtung) tragen denselben Betrag von {amount}.",
+      "duplicateNote": "Ankora zählt beide getrennt und korrigiert keine Summe. Wenn es dieselbe Schuld ist, wandle die Rechnung in eine Verpflichtung um.",
+      "duplicateSignals": "Signale: {signals}.",
+      "signalMontant": "gleicher Betrag",
+      "signalJour": "gleicher Tag",
+      "signalLibelle": "ähnliche Bezeichnungen",
+      "convert": {
+        "title": "In eine Verpflichtung umwandeln",
+        "intro": "{label} · {amount} pro Rate. Nur eines fehlt: wann es endet.",
+        "doorsHint": "Eine Antwort genügt. Gibst du mehrere an, vergleicht Ankora sie.",
+        "endDateLabel": "Ungefähres Enddatum",
+        "endMonthLabel": "Endmonat",
+        "endYearLabel": "Endjahr",
+        "remainingCountLabel": "Verbleibende Raten",
+        "remainingBalanceLabel": "Restschuld (Kontoauszug)",
+        "rememberedLabel": "Restsumme aus dem Gedächtnis (optional)",
+        "rememberedHint": "Was noch zurückzuzahlen ist, nicht die Gesamtkosten des Kredits. Fließt in keine Berechnung ein — dient nur der Kontrolle.",
+        "preview": "{count} Raten zu {amount} · Ende {end} · gesamt {total}",
+        "needOneDoor": "Fülle mindestens eine der drei Angaben aus.",
+        "divergence": "Deine Angaben stimmen nicht überein. Ankora behält {kept} Raten und korrigiert nichts.",
+        "divergenceItem": "{door} → {count} Raten",
+        "rememberedDivergence": "Nach deinen {count} Raten zu {amount} wäre die Summe {derived} statt {remembered}. Prüfe es beim Kreditgeber.",
+        "doorEcheancesRestantes": "verbleibende Raten",
+        "doorDateDeFin": "Enddatum",
+        "doorSoldeRestantDu": "Restschuld",
+        "submit": "Umwandeln",
+        "submitting": "Wird umgewandelt…",
+        "cancel": "Abbrechen",
+        "noHorizon": "Ohne Horizont bleibt die Kostenposition eine Kostenposition: das Budget bleibt richtig, nur der Countdown fehlt.",
+        "toastConverted": "{label} ist jetzt eine Verpflichtung · Ende {end}",
+        "drawerHint": "Ist diese Kostenposition ein Kredit mit Ende, kann Ankora den Countdown zeigen."
       }
     },
     "accounts": {
@@ -883,7 +931,10 @@
       "unmarkOneAria": "Letzte bezahlte Rate rückgängig machen für {label}",
       "installmentsCountAria": "{paid} von {total} Raten bezahlt für {label}",
       "toastUpdated": "Verpflichtung aktualisiert",
-      "reductionBlocked": "Nicht möglich: {paid} Raten sind bereits markiert. Entferne zuerst Zahlungen."
+      "reductionBlocked": "Nicht möglich: {paid} Raten sind bereits markiert. Entferne zuerst Zahlungen.",
+      "editConsequence": "Ende: {fromEnd} → {toEnd} · Rest: {fromBalance} → {toBalance}",
+      "editConsequenceLabel": "Was sich dadurch ändert",
+      "editNoChange": "Keine Änderung an Ende oder Restschuld."
     },
     "expenses": {
       "title": "Meine Ausgaben",
@@ -1177,7 +1228,16 @@
       "status": {
         "a_jour": "Auf Kurs",
         "deficit": "Defizit"
-      }
+      },
+      "projectionToggle": "Die nächsten 12 Monate ansehen",
+      "projectionTitle": "Der Fonds, Monat für Monat",
+      "projectionIntro": "Jeden Monat nimmt der Fonds den geglätteten Betrag auf und zahlt die fälligen Rechnungen.",
+      "projectionMonth": "Monat",
+      "projectionOut": "Abfluss",
+      "projectionBalance": "Saldo",
+      "projectionDeficit": "Im {month} rutscht der Fonds unter null.",
+      "projectionHolds": "Der Fonds hält über die nächsten 12 Monate.",
+      "projectionNegative": "negativer Saldo"
     },
     "upcomingBills": {
       "title": "Anstehende Rechnungen",
@@ -1457,6 +1517,12 @@
       "payments": {
         "toggleFailed": "Status der Rate konnte nicht geändert werden."
       }
+    },
+    "conversion": {
+      "chargeInactive": "Diese Rechnung ist bereits deaktiviert.",
+      "noSchedule": "Diese Rechnung hat keinen nutzbaren Zeitplan.",
+      "horizonUnknown": "Enddatum, Ratenanzahl oder Restschuld fehlt.",
+      "failed": "Die Umwandlung ist fehlgeschlagen. Nichts wurde geändert."
     }
   },
   "opengraphImage": {
