@@ -158,7 +158,26 @@ export function reopenConsentBanner(): void {
   notify();
 }
 
-export function ConsentBanner() {
+export type ConsentBannerProps = {
+  /**
+   * La `BottomTabBar` est-elle montée pour cette requête ?
+   *
+   * Même contrat que `ScrollToTop.liftedForBottomBar`, et pour la même raison :
+   * la barre est `position: fixed`, donc la réserve `--consent-height` posée en
+   * `padding-bottom` sur `body` ne la déplace PAS — un élément hors flux ignore
+   * le padding de son conteneur. La bannière (`z-50`) se peignait donc par-dessus
+   * la barre (`z-40`) et interceptait les cinq onglets.
+   *
+   * Mesuré le 2026-08-03 à 390 × 844, utilisateur connecté, consentement non
+   * décidé : `elementFromPoint` au centre de chacun des cinq onglets renvoyait la
+   * bannière, sur WebKit **comme** sur Chromium. Après décision, 5/5 atteignables.
+   *
+   * Passé depuis `[locale]/layout.tsx`, qui calcule déjà `showBottomTabBar`.
+   */
+  liftedForBottomBar?: boolean;
+};
+
+export function ConsentBanner({ liftedForBottomBar = false }: ConsentBannerProps = {}) {
   const t = useTranslations('consent');
   const snap = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const [dismissed, setDismissed] = useState(false);
@@ -205,17 +224,44 @@ export function ConsentBanner() {
       root.style.removeProperty('--consent-height');
       return;
     }
-    const apply = () => root.style.setProperty('--consent-height', `${el.offsetHeight + 16}px`);
+    // La réserve est la distance du BAS du viewport au HAUT de la bannière —
+    // pas `offsetHeight + 16`. Cette dernière forme codait en dur le décalage
+    // `bottom-4` et devenait fausse dès que la bannière se relevait au-dessus de
+    // la BottomTabBar (`liftedForBottomBar`). Mesurer la position réelle rend la
+    // réserve juste quel que soit le décalage appliqué, aujourd'hui et après le
+    // prochain changement de classe. La bannière étant `fixed`, son `top` ne
+    // dépend pas du padding de `body` : pas de boucle avec le ResizeObserver.
+    const apply = () =>
+      root.style.setProperty(
+        '--consent-height',
+        `${Math.round(window.innerHeight - el.getBoundingClientRect().top)}px`,
+      );
     apply();
+    // La mesure dépend désormais de `window.innerHeight`, que le ResizeObserver
+    // de la bannière ne voit pas : une rotation d'écran, ou la barre d'URL
+    // mobile qui se replie, change la hauteur du viewport sans changer celle de
+    // la bannière. Sans cet écouteur la réserve resterait figée sur l'ancienne
+    // hauteur — précisément le genre de décalage silencieux que ce bloc existe
+    // pour empêcher.
+    window.addEventListener('resize', apply);
+    window.addEventListener('orientationchange', apply);
+    const detachViewport = () => {
+      window.removeEventListener('resize', apply);
+      window.removeEventListener('orientationchange', apply);
+    };
     // jsdom (Vitest) n'implémente pas ResizeObserver : la réserve est posée une
     // fois, elle ne suit simplement pas les changements de hauteur. Suffisant
     // pour les tests unitaires, et le comportement navigateur reste complet.
     if (typeof ResizeObserver === 'undefined') {
-      return () => root.style.removeProperty('--consent-height');
+      return () => {
+        detachViewport();
+        root.style.removeProperty('--consent-height');
+      };
     }
     const ro = new ResizeObserver(apply);
     ro.observe(el);
     return () => {
+      detachViewport();
       ro.disconnect();
       root.style.removeProperty('--consent-height');
     };
@@ -246,7 +292,26 @@ export function ConsentBanner() {
       role="dialog"
       aria-labelledby="consent-title"
       aria-describedby="consent-body"
-      className="border-border bg-card fixed inset-x-4 bottom-4 z-50 mx-auto max-w-3xl rounded-xl border p-5 shadow-lg md:inset-x-auto md:left-1/2 md:-translate-x-1/2"
+      data-testid="consent-banner"
+      data-lifted-for-bottom-bar={String(liftedForBottomBar)}
+      /*
+       * Décalage bas — même arithmétique que `ScrollToTop`, et pour le même
+       * motif : la barre d'onglets mesure `h-12` (3 rem) plus
+       * `env(safe-area-inset-bottom)`. On lève donc la bannière de 4 rem au-dessus
+       * de l'inset, ce qui laisse 1 rem d'air entre le bas de la bannière et le
+       * haut de la barre (mesuré : 15 px avec un inset de 34 px, 16 px sans).
+       *
+       * Le décalage se relâche à `xl:`, EN MÊME TEMPS que la barre se cache
+       * (`xl:hidden` sur `BottomTabBar`). Le relâcher plus tôt reposerait la
+       * bannière sur une barre encore affichée — c'est exactement la faute que
+       * la PR #293 a dû corriger sur les autres compensations d'espace.
+       */
+      className={[
+        'border-border bg-card fixed inset-x-4 z-50 mx-auto max-w-3xl rounded-xl border p-5 shadow-lg md:inset-x-auto md:left-1/2 md:-translate-x-1/2',
+        liftedForBottomBar
+          ? 'bottom-[calc(env(safe-area-inset-bottom)+4rem)] xl:bottom-4'
+          : 'bottom-4',
+      ].join(' ')}
     >
       <h2 id="consent-title" className="text-base font-semibold">
         {t('title')}
