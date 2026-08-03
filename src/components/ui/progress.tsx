@@ -28,8 +28,18 @@ export interface ProgressProps {
   readonly max?: number;
   readonly tone?: ProgressTone;
   readonly size?: ProgressSize;
+  /** Visible caption above the bar. Also used as the accessible name. */
   readonly label?: string;
   readonly showValue?: boolean;
+  /**
+   * Accessible name WITHOUT a visible caption — for bars that sit under a row
+   * that already names them on screen, where repeating the label would be
+   * redundant clutter but an unnamed progressbar would leave AT users guessing
+   * which row it belongs to. Wins over `label` when both are given.
+   */
+  readonly ariaLabel?: string;
+  /** Placed on the `role="progressbar"` element, where assertions look. */
+  readonly testId?: string;
 }
 
 /** viewBox height per size — must match the rendered height class below. */
@@ -60,6 +70,8 @@ export function Progress({
   size = 'md',
   label,
   showValue = false,
+  ariaLabel,
+  testId,
 }: ProgressProps): React.JSX.Element {
   const ratio = value / max;
   const pct = Math.max(0, Math.min(1, ratio));
@@ -87,7 +99,8 @@ export function Progress({
         aria-valuenow={percent}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-label={label ?? 'Progression'}
+        aria-label={ariaLabel ?? label ?? 'Progression'}
+        data-testid={testId}
       >
         <svg
           className="block h-full w-full"

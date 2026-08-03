@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
 import { toast } from '@/components/ui/toast';
 import { InstallmentStepper } from '@/components/commitments/InstallmentStepper';
 import type { Locale } from '@/i18n/routing';
@@ -665,20 +666,26 @@ export function CommitmentsClient({
                       </p>
                     </div>
 
-                    {/* Progress bar — width via the style attribute (a computed
-                        percentage, CSP-safe: attribute, not an inline <style>). */}
-                    <div
-                      className="bg-surface-muted mt-2 h-1.5 w-full overflow-hidden rounded-full"
-                      role="progressbar"
-                      aria-valuenow={progress}
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-label={t('progressAria', { label: c.label })}
-                      data-testid={`commitment-progress-${c.id}`}
-                    >
-                      <div
-                        className="bg-brand-600 h-full rounded-full"
-                        style={{ width: `${progress}%` }}
+                    {/* The shared primitive, whose fill is an SVG <rect> whose
+                        geometry is an ATTRIBUTE. The hand-rolled bar this
+                        replaces set its width through `style={{ width }}`,
+                        under a comment claiming that was CSP-safe: it is not.
+                        `style-src 'self' 'nonce-…'` drops style ATTRIBUTES
+                        (a nonce voids 'unsafe-inline', and without
+                        `style-src-attr` attributes fall back to `style-src`),
+                        so the fill kept its natural 100 % width and every plan
+                        read as complete. Explicit `tone` — the primitive's
+                        auto-tone turns warning past 85 %, which is right for a
+                        budget being consumed and wrong for a debt being
+                        repaid, where near-100 % is the good news. */}
+                    <div className="mt-2">
+                      <Progress
+                        value={progress}
+                        max={100}
+                        tone="brand"
+                        size="sm"
+                        ariaLabel={t('progressAria', { label: c.label })}
+                        testId={`commitment-progress-${c.id}`}
                       />
                     </div>
 
