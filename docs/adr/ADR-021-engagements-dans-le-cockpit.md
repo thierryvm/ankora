@@ -301,6 +301,60 @@ Gates locaux verts : `npm run typecheck`, `npm run lint`, `npm run lint:use-serv
 4. Pas de conflit avec `main` (`mergeStateStatus: CLEAN`).
 5. Rapport final livré à @thierry avec preuve de chaque critère.
 
+## Correction D3 — l'ancre est la PREMIÈRE échéance (2026-08-02)
+
+D3 (`docs/plans/epic-dettes-echeanciers-spec.md`) disait : « `start_year/month` =
+la **prochaine** échéance ». **Cette formulation est erronée et n'a jamais été
+implémentée.** Elle est remplacée par : `start_year/month/payment_day` = la
+**première** échéance du plan, même si elle est déjà payée ; `total_amount` = le
+montant total du plan ; `installments_total` = le nombre total d'échéances.
+
+**Pourquoi on tranche ainsi**, plutôt que d'aligner le code sur D3 :
+
+1. **Le code réel dit déjà « première ».** `installmentsPaid` compte les cochages
+   du grand livre **sur les périodes planifiées à partir de l'ancre** ; le bouton
+   `+` remplit la plus ancienne échéance **non payée du calendrier**. Ces deux
+   comportements n'ont de sens que si l'ancre ouvre l'historique payable. Tenir
+   D3 aurait imposé de réécrire les deux, plus le sens de `installments_total`,
+   et aurait rendu un compteur « 4/11 » inexplicable — 11 étant censé désigner ce
+   qui **reste**.
+2. **« Prochaine » est une donnée mouvante ; une ADR ne doit pas ancrer sur du
+   mouvant.** Chaque échéance cochée périme l'ancre. « Première » est un fait
+   immuable de l'engagement, ce que le principe « les échéances sont dérivées,
+   jamais stockées » exige : on ne stocke que ce qui ne bouge pas.
+3. **Le coût de l'ambiguïté a été mesuré.** Le formulaire de création était le
+   seul consommateur à suivre D3, et sans champ de saisie il ancrait sur le
+   **mois de création**. Un plan SPF réel — première échéance 15/05/2026, 11
+   mensualités, créé le 21/07/2026 — annonçait « dernière en Mai 2027 » au lieu
+   de mars 2027. L'arithmétique était juste ; c'est la donnée qui n'avait jamais
+   pu être saisie.
+
+**Conséquences.**
+
+- `Commitment.startYear/startMonth` = première échéance. La borne haute de la
+  fenêtre `[première, dernière]` de la règle 3 ci-dessus est **exportée** par
+  `endOrdinal()` et consommée par `engagements-lisses.ts`, qui en portait
+  jusqu'ici sa propre copie.
+- Le formulaire expose la date de première échéance, le jour de prélèvement
+  (optionnel) et la périodicité, et rend la fenêtre obtenue avant validation.
+- **Aucune migration, aucune correction de données automatique.** Les lignes
+  créées avant cette date portent l'ancre du mois de leur création ; seul leur
+  propriétaire sait quelle était la vraie première échéance, et un script qui
+  devinerait serait une correction silencieuse de données financières. La
+  correction se fait à la main, depuis le formulaire d'édition.
+- **`supabase/migrations/20260719000001_commitments.sql:28` dit encore l'inverse** —
+  « Anchor = the NEXT instalment (D3) ». Ce commentaire est **volontairement laissé
+  tel quel** : la migration est appliquée sur une base de production partagée, et on
+  ne retouche pas le contenu d'une migration appliquée, fût-ce un commentaire. La
+  présente ADR fait foi ; ce n'est pas une contradiction non résolue mais une trace
+  historique.
+- Le **jour** de prélèvement n'est affiché que s'il a été explicitement saisi
+  (`payment_day > 1`). La colonne est `not null default 1` et l'ancien
+  formulaire y écrivait 1 en dur : afficher ce 1 montrerait une date fausse à
+  toutes les lignes existantes. Un 1er réellement choisi s'affiche donc en
+  mois + année — le côté bénin du compromis. Distinguer les deux exigerait une
+  colonne nullable, donc une migration.
+
 ## Risques & garde-fous
 
 - **Ripple `capaciteEpargneReelle`** : évitée — on n'y touche pas, l'ajustement

@@ -1,10 +1,15 @@
 import Decimal from 'decimal.js';
 
-import { installmentAmountOf, isFinished, type Commitment } from '../commitments';
-import { CYCLE_MONTHS, type ReferencePeriod } from './types';
+import {
+  endOrdinal,
+  installmentAmountOf,
+  isFinished,
+  monthsPerCycle,
+  periodOrdinal,
+  type Commitment,
+} from '../commitments';
+import { type ReferencePeriod } from './types';
 
-/** Calendar month as a comparable ordinal (year*12 + month−1). */
-const ordinal = (year: number, month: number): number => year * 12 + (month - 1);
 const EMPTY: ReadonlySet<string> = new Set();
 
 /**
@@ -16,10 +21,13 @@ const EMPTY: ReadonlySet<string> = new Set();
  * monthly charge — it lives in the « Mes engagements » card, not the reste-à-vivre.
  *
  * The window is compared in ordinal arithmetic rather than by scanning
- * `installmentPeriods()`: the last instalment's ordinal is provably
- * `start + (installmentsTotal − 1) · step` (same derivation as `isDueInPeriod`),
- * so we avoid allocating the schedule array on every row (Sourcery #233).
- * `isFinished` (the one remaining allocation) runs only when the window matches.
+ * `installmentPeriods()`, so we avoid allocating the schedule array on every
+ * row (Sourcery #233). The upper bound is CONSUMED from `endOrdinal()`, not
+ * re-derived here: this module used to carry its own copy of
+ * `start + (installmentsTotal − 1) · step` with a private `ordinal()` helper,
+ * and nothing would have failed if the schedule's definition had changed
+ * underneath it. `isFinished` (the one remaining allocation) runs only when
+ * the window matches.
  */
 export function engagementPeseSurMois(
   c: Commitment,
@@ -27,11 +35,9 @@ export function engagementPeseSurMois(
   ref: ReferencePeriod,
 ): boolean {
   if (!c.isActive || c.installmentsTotal === 1) return false;
-  const step = CYCLE_MONTHS[c.frequency];
-  const start = ordinal(c.startYear, c.startMonth);
-  const end = start + (c.installmentsTotal - 1) * step;
-  const cur = ordinal(ref.year, ref.month);
-  if (cur < start || cur > end) return false;
+  const start = periodOrdinal(c.startYear, c.startMonth);
+  const cur = periodOrdinal(ref.year, ref.month);
+  if (cur < start || cur > endOrdinal(c)) return false;
   return !isFinished(c, paidKeys);
 }
 
@@ -54,6 +60,6 @@ export function engagementsMensuelsLisses(
   return commitments.reduce((acc, c) => {
     const paidKeys = paidKeysByCommitment.get(c.id) ?? EMPTY;
     if (!engagementPeseSurMois(c, paidKeys, ref)) return acc;
-    return acc.plus(new Decimal(installmentAmountOf(c)).dividedBy(CYCLE_MONTHS[c.frequency]));
+    return acc.plus(new Decimal(installmentAmountOf(c)).dividedBy(monthsPerCycle(c.frequency)));
   }, new Decimal(0));
 }

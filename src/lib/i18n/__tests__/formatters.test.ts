@@ -5,6 +5,7 @@ import {
   formatCurrency,
   formatDate,
   formatDateTime,
+  formatInstallmentDate,
   formatMonth,
   formatNumber,
   formatPercent,
@@ -130,5 +131,24 @@ describe('formatMonth', () => {
     expect(formatMonth(0, 'fr-BE')).toBe('—');
     expect(formatMonth(13, 'fr-BE')).toBe('—');
     expect(formatMonth(1.5, 'fr-BE')).toBe('—');
+  });
+});
+
+describe('formatInstallmentDate', () => {
+  it('shows month + year when no payment day was chosen', () => {
+    expect(formatInstallmentDate({ year: 2027, month: 3, day: null }, 'fr-BE')).toBe('Mars 2027');
+    expect(formatInstallmentDate({ year: 2027, month: 3 }, 'en')).toBe('March 2027');
+  });
+
+  it('shows the full date when a payment day was chosen', () => {
+    expect(formatInstallmentDate({ year: 2027, month: 3, day: 15 }, 'fr-BE')).toBe('15 mars 2027');
+    expect(formatInstallmentDate({ year: 2027, month: 3, day: 15 }, 'en')).toBe('March 15, 2027');
+  });
+
+  it('pads single-digit months and days so the date parses as date-only (UTC)', () => {
+    // An unpadded `2027-3-5` is not the ISO date-only form `formatDate`
+    // detects, and would be read in the runtime timezone — off by a day west
+    // of Greenwich.
+    expect(formatInstallmentDate({ year: 2027, month: 3, day: 5 }, 'fr-BE')).toBe('5 mars 2027');
   });
 });

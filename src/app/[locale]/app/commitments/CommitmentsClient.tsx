@@ -20,16 +20,21 @@ import {
 import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
 import { commitmentRowToDomain, type CommitmentRow } from '@/lib/data/commitment-row';
 import {
-  endPeriod,
+  endInstallmentDate,
+  firstInstallmentDate,
+  hasIrregularFinalInstallment,
   installmentAmountOf,
   installmentPeriods,
   installmentsPaid,
+  lastInstallmentAmount,
   periodKey,
   remainingBalance,
+  type Commitment,
+  type CommitmentFrequency,
   type CommitmentKind,
   type Period,
 } from '@/lib/domain/commitments';
-import { formatCurrency, formatMonth } from '@/lib/i18n/formatters';
+import { formatCurrency, formatInstallmentDate, formatMonth } from '@/lib/i18n/formatters';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 
 /** Row shape crossing the RSC boundary (money as plain `number`, never Decimal). */
@@ -51,6 +56,23 @@ const KIND_KEY = {
   one_off: 'kinds.oneOff',
 } as const;
 
+const FREQUENCY_KEY = {
+  monthly: 'frequencies.monthly',
+  quarterly: 'frequencies.quarterly',
+  semiannual: 'frequencies.semiannual',
+  annual: 'frequencies.annual',
+} as const;
+
+const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
+
+/**
+ * The payment day is optional in the form: an empty field stores 1, which the
+ * domain reads back as "never chosen" (`hasExplicitPaymentDay`). Keeping the
+ * two ends of that convention in one place — the form writes what the domain
+ * expects to read.
+ */
+const PAYMENT_DAY_UNSET = 1;
+
 export function CommitmentsClient({
   commitments,
   paidKeysByCommitment,
@@ -71,6 +93,13 @@ export function CommitmentsClient({
   const [totalAmount, setTotalAmount] = useState('');
   const [installmentAmount, setInstallmentAmount] = useState('');
   const [installmentsTotal, setInstallmentsTotal] = useState('12');
+  // The first instalment: entered by the user, NOT inferred from the creation
+  // month. Anchoring on "now" is what pushed the SPF plan's end date two
+  // months out — the app answered a question it had never asked.
+  const [startMonth, setStartMonth] = useState(String(currentPeriod.month));
+  const [startYear, setStartYear] = useState(String(currentPeriod.year));
+  const [paymentDay, setPaymentDay] = useState('');
+  const [frequency, setFrequency] = useState<CommitmentFrequency>('monthly');
 
   function resetForm() {
     setLabel('');
@@ -78,6 +107,10 @@ export function CommitmentsClient({
     setTotalAmount('');
     setInstallmentAmount('');
     setInstallmentsTotal('12');
+    setStartMonth(String(currentPeriod.month));
+    setStartYear(String(currentPeriod.year));
+    setPaymentDay('');
+    setFrequency('monthly');
     setEditingId(null);
   }
 
@@ -93,6 +126,12 @@ export function CommitmentsClient({
     setTotalAmount(String(c.totalAmount));
     setInstallmentAmount(c.installmentAmount === null ? '' : String(c.installmentAmount));
     setInstallmentsTotal(String(c.installmentsTotal));
+    setStartMonth(String(c.startMonth));
+    setStartYear(String(c.startYear));
+    // A stored 1 means "never chosen" — show it as empty rather than as a
+    // decision the user never made.
+    setPaymentDay(c.paymentDay > PAYMENT_DAY_UNSET ? String(c.paymentDay) : '');
+    setFrequency(c.frequency);
     setFormMode('edit');
   }
 
@@ -209,6 +248,28 @@ export function CommitmentsClient({
       return;
     }
 
+    const anchorYear = Number(startYear);
+    const anchorMonth = Number(startMonth);
+    if (
+      !Number.isInteger(anchorYear) ||
+      anchorYear < 2000 ||
+      anchorYear > 2100 ||
+      !Number.isInteger(anchorMonth) ||
+      anchorMonth < 1 ||
+      anchorMonth > 12
+    ) {
+      toast.error(translateError('errors.validation.generic'));
+      return;
+    }
+
+    // Empty stays empty: 1 is the column default AND the "never chosen"
+    // marker, so an untouched field must not masquerade as "the 1st".
+    const day = paymentDay.trim() === '' ? PAYMENT_DAY_UNSET : Number(paymentDay);
+    if (!Number.isInteger(day) || day < 1 || day > 31) {
+      toast.error(translateError('errors.validation.generic'));
+      return;
+    }
+
     // Reduction guard (edit): never set installmentsTotal below what is already
     // ticked — that would silently orphan out-of-schedule ledger rows and drop
     // the visible paid count. Block with a friendly toast before the round-trip.
@@ -223,26 +284,25 @@ export function CommitmentsClient({
       }
     }
 
-    // A one-off owes its total at once — one instalment, no per-instalment amount.
+    // A one-off owes its total at once — one instalment, no per-instalment
+    // amount, and no cadence to speak of.
     const payload = {
       label: label.trim(),
       kind,
       totalAmount: total,
       ...(isOneOff ? {} : { installmentAmount: perInstallment }),
       installmentsTotal: isOneOff ? 1 : count,
+      startYear: anchorYear,
+      startMonth: anchorMonth,
+      paymentDay: day,
+      frequency: isOneOff ? ('monthly' as const) : frequency,
     };
 
     startTransition(async () => {
       try {
         const result = editingId
           ? await updateCommitmentAction(editingId, payload)
-          : await createCommitmentAction({
-              ...payload,
-              startYear: currentPeriod.year,
-              startMonth: currentPeriod.month,
-              paymentDay: 1,
-              frequency: 'monthly',
-            });
+          : await createCommitmentAction(payload);
         if (result.ok) {
           toast.success(editingId ? t('toastUpdated') : t('toastCreated'));
           closeForm();
@@ -281,6 +341,41 @@ export function CommitmentsClient({
       }
     });
   }
+
+  /**
+   * Live consequence of what is currently typed: « mai 2026 → mars 2027 ».
+   * The schedule is derived, so the user has no other way to see what a first
+   * instalment + a count actually produce before committing to them.
+   * Null while the inputs are not yet a valid schedule (no half-computed span).
+   */
+  const draftWindow = useMemo(() => {
+    const year = Number(startYear);
+    const month = Number(startMonth);
+    const count = kind === 'one_off' ? 1 : Number(installmentsTotal);
+    if (!Number.isInteger(year) || year < 2000 || year > 2100) return null;
+    if (!Number.isInteger(month) || month < 1 || month > 12) return null;
+    if (!Number.isInteger(count) || count < 1 || count > 600) return null;
+    const day = paymentDay.trim() === '' ? PAYMENT_DAY_UNSET : Number(paymentDay);
+    if (!Number.isInteger(day) || day < 1 || day > 31) return null;
+
+    const draft: Commitment = {
+      id: 'draft',
+      kind,
+      totalAmount: 0,
+      installmentAmount: null,
+      installmentsTotal: count,
+      startYear: year,
+      startMonth: month,
+      paymentDay: day,
+      frequency: kind === 'one_off' ? 'monthly' : frequency,
+      isActive: true,
+    };
+    return {
+      first: formatInstallmentDate(firstInstallmentDate(draft), locale),
+      last: formatInstallmentDate(endInstallmentDate(draft), locale),
+      single: count === 1,
+    };
+  }, [startYear, startMonth, installmentsTotal, paymentDay, frequency, kind, locale]);
 
   const active = commitments.filter((c) => c.isActive);
   const totalRemaining = active.reduce(
@@ -386,8 +481,94 @@ export function CommitmentsClient({
                     onChange={(e) => setInstallmentsTotal(e.target.value)}
                     required
                   />
+                  <p className="text-muted-foreground text-xs">{t('installmentsTotalHint')}</p>
                 </div>
               )}
+
+              {/* First instalment — month + year as two controls rather than
+                  `input[type=month]`, which iOS Safari degrades to a free-text
+                  field (mobile-ios-auditor). */}
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="commitment-start-month">{t('startMonthLabel')}</Label>
+                <div className="flex gap-2">
+                  <select
+                    id="commitment-start-month"
+                    data-testid="commitment-start-month"
+                    aria-label={t('startMonthAria')}
+                    className="ankora-form-control-16 border-border bg-card text-foreground focus-visible:border-brand-600 h-10 w-full rounded-lg border px-3 py-2 shadow-sm transition-colors focus-visible:outline-none"
+                    value={startMonth}
+                    onChange={(e) => setStartMonth(e.target.value)}
+                  >
+                    {MONTHS.map((m) => (
+                      <option key={m} value={m}>
+                        {formatMonth(m, locale, 'long')}
+                      </option>
+                    ))}
+                  </select>
+                  <Input
+                    id="commitment-start-year"
+                    data-testid="commitment-start-year"
+                    type="number"
+                    autoComplete="off"
+                    inputMode="numeric"
+                    aria-label={t('startYearAria')}
+                    min={2000}
+                    max={2100}
+                    className="w-28 shrink-0"
+                    value={startYear}
+                    onChange={(e) => setStartYear(e.target.value)}
+                    required
+                  />
+                </div>
+                <p className="text-muted-foreground text-xs">{t('startHint')}</p>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="commitment-payment-day">{t('paymentDayLabel')}</Label>
+                <Input
+                  id="commitment-payment-day"
+                  data-testid="commitment-payment-day"
+                  type="number"
+                  autoComplete="off"
+                  inputMode="numeric"
+                  min={1}
+                  max={31}
+                  value={paymentDay}
+                  onChange={(e) => setPaymentDay(e.target.value)}
+                />
+                <p className="text-muted-foreground text-xs">{t('paymentDayHint')}</p>
+              </div>
+
+              {kind !== 'one_off' && (
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="commitment-frequency">{t('frequencyLabel')}</Label>
+                  <select
+                    id="commitment-frequency"
+                    data-testid="commitment-frequency"
+                    className="ankora-form-control-16 border-border bg-card text-foreground focus-visible:border-brand-600 h-10 w-full rounded-lg border px-3 py-2 shadow-sm transition-colors focus-visible:outline-none"
+                    value={frequency}
+                    onChange={(e) => setFrequency(e.target.value as CommitmentFrequency)}
+                  >
+                    {(Object.keys(FREQUENCY_KEY) as CommitmentFrequency[]).map((f) => (
+                      <option key={f} value={f}>
+                        {t(FREQUENCY_KEY[f])}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {draftWindow && (
+                <p
+                  className="text-muted-foreground bg-surface-muted rounded-lg px-3 py-2 text-xs md:col-span-2"
+                  data-testid="commitment-window-preview"
+                >
+                  {draftWindow.single
+                    ? t('windowPreviewSingle', { first: draftWindow.first })
+                    : t('windowPreview', { first: draftWindow.first, last: draftWindow.last })}
+                </p>
+              )}
+
               <div className="flex items-center gap-3 md:col-span-2">
                 <Button type="submit" disabled={isPending}>
                   {formMode === 'edit'
@@ -438,7 +619,8 @@ export function CommitmentsClient({
                 const paidKeys = paidKeysOf(c.id);
                 const paid = installmentsPaid(domain, paidKeys);
                 const remaining = remainingBalance(domain, paidKeys);
-                const end = endPeriod(domain);
+                const end = formatInstallmentDate(endInstallmentDate(domain), locale);
+                const irregular = hasIrregularFinalInstallment(domain);
                 // Defensive clamp: DB CHECK + Zod keep `installmentsTotal` in
                 // [1, 600] and `installmentsPaid` can never exceed the schedule,
                 // so neither NaN nor >100 is reachable — but corrupted data must
@@ -504,14 +686,23 @@ export function CommitmentsClient({
                       {c.kind === 'one_off'
                         ? t('summaryOneOff', {
                             amount: formatCurrency(installmentAmountOf(domain), locale),
-                            month: `${formatMonth(c.startMonth, locale, 'long')} ${c.startYear}`,
+                            month: formatInstallmentDate(firstInstallmentDate(domain), locale),
                           })
-                        : t('summarySchedule', {
-                            paid,
-                            total: c.installmentsTotal,
-                            amount: formatCurrency(installmentAmountOf(domain), locale),
-                            end: `${formatMonth(end.month, locale, 'long')} ${end.year}`,
-                          })}
+                        : irregular
+                          ? t('summaryScheduleIrregular', {
+                              paid,
+                              total: c.installmentsTotal,
+                              regular: c.installmentsTotal - 1,
+                              amount: formatCurrency(installmentAmountOf(domain), locale),
+                              lastAmount: formatCurrency(lastInstallmentAmount(domain), locale),
+                              end,
+                            })
+                          : t('summarySchedule', {
+                              paid,
+                              total: c.installmentsTotal,
+                              amount: formatCurrency(installmentAmountOf(domain), locale),
+                              end,
+                            })}
                     </p>
 
                     {/* Controls row: payment stepper + edit + delete, in flow
