@@ -238,6 +238,13 @@ Un ADR « Accepted » ne garantit **pas** une surface à l'écran.
    tant que le point 4 n'est pas fait.
 9. **Mettre à jour les agents QA** en une passe unique, à partir du corpus de défaillances
    mesurées (§3) plutôt qu'au fil de l'eau.
+10. **Le préflight rend NO-GO dans un worktree qui vise la stack locale.** Il ne résout
+    `.env.local` depuis le clone principal que si les variables sont **absentes**, jamais si un
+    fichier local existe et vise légitimement `localhost` — il lit alors « pointe ailleurs ».
+    Développer en local et committer deviennent exclusifs, et le contournement redevient
+    tentant. Corriger dans `scripts/preflight-accounts.mjs`, PR dédiée.
+    _Troisième cas de la même famille en deux jours, et c'est le motif du §3 : un garde-fou qui
+    plante est pire qu'un garde-fou permissif — on apprend à passer outre._
 
 _Aucune estimation de durée n'est inscrite ici : un nombre de jours est un état, il vieillit
 comme les autres._
