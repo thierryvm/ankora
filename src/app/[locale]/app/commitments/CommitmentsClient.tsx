@@ -22,6 +22,7 @@ import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
 import { commitmentRowToDomain, type CommitmentRow } from '@/lib/data/commitment-row';
 import {
   endInstallmentDate,
+  endPeriod,
   firstInstallmentDate,
   hasIrregularFinalInstallment,
   installmentAmountOf,
