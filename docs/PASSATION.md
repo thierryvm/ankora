@@ -231,6 +231,31 @@ Un ADR « Accepted » ne garantit **pas** une surface à l'écran.
    ponctualité n'est possible. Manque identifié, pas encore spécifié.
 6. **Le design system, puis les graphiques de répartition.** Dans cet ordre. Le préalable des
    catégories de dépense est levé — la taxonomie est en base.
+
+   **Le desktop n'a jamais été dérivé du mobile, il a été laissé à lui-même.** C'est le cœur du
+   chantier d'harmonisation, et les quatre défauts ci-dessous en sont le symptôme mesuré sur une
+   seule surface — le panneau de saisie de dépense. Aucun n'est bloquant, aucun ne justifie un
+   correctif isolé : les corriger un par un traiterait les symptômes et laisserait la cause.
+   Ils appartiennent au design system.
+   1. **Le panneau latéral de saisie est vide aux deux tiers en desktop.** Les champs occupent
+      le haut, l'action principale est ancrée en bas, un vaste espace mort les sépare. Le
+      composant a été conçu comme une feuille mobile, où la hauteur est contrainte ; transposé
+      en pleine hauteur d'écran, la contrainte disparaît et la mise en page ne tient plus.
+      Ce n'est pas un réglage d'espacement : c'est un composant qui n'a qu'un seul mode.
+   2. **La rangée de catégories laisse apparaître une barre de défilement native.** Elle signale
+      un contenu qui déborde sans que le débordement ait été traité — même famille que la rangée
+      de pastilles déjà relevée sur mobile et que la navigation qui se tronque au lieu de se
+      replier. Le motif se répète : un conteneur horizontal qui délègue au système ce qu'il
+      devrait décider lui-même.
+   3. **L'icône du sélecteur de date est sombre sur fond sombre**, à la limite du visible. C'est
+      un **manquement WCAG 2.2 AA sur un contrôle interactif**, pas une préférence esthétique —
+      les contrôles natifs n'héritent pas des jetons de thème, il faut le leur imposer.
+   4. **Le champ de date entre en collision avec les gestionnaires de mots de passe.** Leur icône
+      d'auto-remplissage se superpose au bouton du calendrier et **empêche d'ouvrir le
+      sélecteur** : défaut fonctionnel, pas cosmétique. La parade usuelle est un `autocomplete`
+      explicite sur le champ, **à valider par mesure** plutôt qu'à supposer — une extension tierce
+      décide seule de ce qu'elle décore.
+
 7. **Le plan de remise en ordre de la base.** Séquencé, une migration à la fois, jamais en bloc.
    Le rapport d'audit porte le plan et son ordre. **Il n'est pas versionné** : il fait partie des
    documents hors dépôt (§2) — demande-le à Thierry.
