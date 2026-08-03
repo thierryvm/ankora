@@ -162,11 +162,37 @@ Un ADR « Accepted » ne garantit **pas** une surface à l'écran.
 - Cibles tactiles ≥ 44 px, non négociable.
 - **Dériver, ne pas générer** : les échéances se calculent depuis l'ancre et la cadence, jamais
   stockées. Cf. `docs/adr/ADR-021-engagements-dans-le-cockpit.md`.
+- **`start` d'un engagement = sa PREMIÈRE échéance**, pas la date de signature ni celle du
+  déblocage des fonds. ADR-021 D3 disait l'inverse ; **corrigé**. Toute la dérivation part de
+  cette ancre, donc s'y tromper décale l'échéancier entier d'une période.
+- **Ventilation de l'épargne : par table de mouvements, jamais par colonne saisie.** Un solde
+  saisi ment dès le lendemain ; un mouvement daté reste vrai et se rejoue. Même table que
+  `transfers` (§6.3). Un mouvement porte **date, compte source, compte destination, montant, et
+  sa ventilation entre part de lissage et part d'épargne libre**. Les soldes en sont **dérivés**,
+  jamais stockés — corollaire direct de « dériver, ne pas générer ».
+- **Une dépense porte son compte source.** Le modèle actuel n'en connaît qu'un seul, implicite.
+  Un foyer répartit ses dépenses sur plusieurs comptes, et une dépense sans compte source est
+  inexploitable dès qu'on veut dériver des soldes : on sait qu'un montant est sorti, jamais d'où.
+  C'est un prérequis de la table de mouvements, pas une amélioration d'interface.
+- **Un mouvement va d'un compte à un autre, il n'est pas une simple entrée ou sortie.** Certains
+  comptes ne peuvent pas payer directement : leur argent doit d'abord transiter par un compte
+  courant avant d'être dépensé. Le modèle doit donc représenter `source → destination`, et un
+  chemin en deux étapes doit rester lisible comme **un seul geste économique** — sinon
+  l'utilisateur voit deux mouvements là où il n'a fait qu'une chose, et les totaux doublent.
 - **L'heuristique avertit, elle ne calcule jamais.**
 - Pas de tableau d'amortissement de crédit : fabriquer soixante lignes au centime depuis quatre
   nombres approximatifs contredit le principe de traçabilité.
 - Pas de `holdings`, valorisations ni rendements — **ligne rouge FSMA**.
-- **Règle de forage** : tout agrégat est tapable et expose sa composition. Principe structurant.
+- **Règle de forage — principe NON NÉGOCIABLE, pas une préférence d'interface.**
+  **Tout agrégat doit pouvoir se déplier et montrer ce qu'il contient déjà.**
+  Justification mesurée, et c'est ce qui la fait passer de confort à principe : lors d'une
+  session de test, un calcul de virement mené à la main a **déduit deux fois une provision déjà
+  retirée en amont**. Exactement le défaut que l'application corrige par ailleurs — le double
+  comptage charges ↔ engagements (§6.1) — reproduit mentalement, et pour la même raison : un
+  montant qui apparaît à deux endroits sans qu'on voie qu'il est **déjà** déduit.
+  Un agrégat qui ne se déplie pas ne cache pas seulement un détail : il cache ce qui a déjà été
+  soustrait. Le forage rend une **classe entière** d'erreurs impossible — pour l'utilisateur
+  comme pour celui qui code.
 - Taxonomie des catégories :
   `docs/adr/ADR-022-taxonomie-categories-et-categorisation-assistee.md`.
 
@@ -188,19 +214,26 @@ Un ADR « Accepted » ne garantit **pas** une surface à l'écran.
    classe entière : _à toute largeur, au moins un chemin de navigation entièrement visible, et
    aucun débordement horizontal._
    _Pourquoi ici_ : un défaut qu'on corrige cas par cas revient ; c'est la classe qu'on ferme.
-3. **Le compte Épargne décomposable.** Il mélange provisions de lissage et épargne personnelle,
-   indistinguables à l'écran. La part provisions est **dérivable** du moteur — rien à étiqueter,
-   rien à saisir. Et chaque virement proposé doit dire **pour quelles échéances**.
+3. **Le compte Épargne décomposable, fusionné avec `transfers`.** Il mélange provisions de
+   lissage et épargne personnelle, indistinguables à l'écran. **Décidé** : la ventilation se
+   fera par une **table de mouvements**, pas par une colonne saisie — un solde saisi ment dès
+   le lendemain, un mouvement daté reste vrai et se rejoue. Ce choix règle du même coup
+   « investir n'est pas dépenser » : c'est la même table, donc **un seul coût pour deux
+   besoins**. La part de provisions reste **dérivable** du moteur — rien à étiqueter à la main. Et
+   chaque virement proposé doit dire **pour quelles échéances**.
+   Toujours sans partie patrimoine — valorisations et rendements sont une ligne rouge FSMA (§5).
 4. **Brancher les modules déjà écrits.** Notifications de reversement, prévisions, accumulateur
    de projection. Chercher les call-sites avant de conclure (§3).
    _Pourquoi rentable_ : le coût est celui d'un écran, pas d'un moteur.
-5. **Le design system, puis les graphiques de répartition.** Dans cet ordre, et après que les
-   catégories de dépense soient réellement peuplées : un camembert à deux parts n'apprend rien.
-6. **Le plan de remise en ordre de la base.** Séquencé, une migration à la fois, jamais en bloc.
-   Le rapport d'audit porte le plan et son ordre ; il vit dans `docs/audits/` sous un préfixe
-   daté. S'il n'y est pas, il est resté sur une branche non fusionnée :
-   `git log --oneline --all -- docs/audits/`.
-7. **`transfers` : investir n'est pas dépenser.** Sans partie patrimoine — ligne rouge FSMA (§5).
+5. **Séparer date d'échéance et date de paiement.** Elles sont aujourd'hui **confondues** : le
+   pointage écrit la date d'échéance, pas celle du versement réel. Tant qu'elles le restent, un
+   paiement en retard est indiscernable d'un paiement à l'heure, et aucun historique de
+   ponctualité n'est possible. Manque identifié, pas encore spécifié.
+6. **Le design system, puis les graphiques de répartition.** Dans cet ordre. Le préalable des
+   catégories de dépense est levé — la taxonomie est en base.
+7. **Le plan de remise en ordre de la base.** Séquencé, une migration à la fois, jamais en bloc.
+   Le rapport d'audit porte le plan et son ordre. **Il n'est pas versionné** : il fait partie des
+   documents hors dépôt (§2) — demande-le à Thierry.
 8. **Revenu-flux.** Juste sur le fond, mais **après** : ne pas ajouter un module invisible de plus
    tant que le point 4 n'est pas fait.
 9. **Mettre à jour les agents QA** en une passe unique, à partir du corpus de défaillances
