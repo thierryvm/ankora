@@ -1014,10 +1014,20 @@ export function ChargesClient({
                     size="sm"
                     onClick={onBulkPastDue}
                     disabled={isPending}
+                    // Le libellé est une PHRASE, pas un verbe : « Marquer les
+                    // échéances passées comme payées » mesure 372 px, et la
+                    // primitive Button impose `whitespace-nowrap`. Sur un écran
+                    // de 375 px la ligne ne peut pas revenir, donc la PAGE
+                    // débordait de 38 px — attrapé par la spec d'anti-débordement.
+                    // On rend le retour à la ligne possible ici seulement, et la
+                    // hauteur suit (`h-auto`), sinon le texte replié sortirait du
+                    // bouton. `min-w-0` pour que le conteneur flex puisse le
+                    // rétrécir. Aucun autre bouton n'est touché.
+                    className="h-auto min-w-0 py-2 text-left whitespace-normal"
                     data-testid="charges-bulk-past-due"
                     data-gesture={bulk.gesture}
                   >
-                    <ListChecks className="h-4 w-4" aria-hidden />
+                    <ListChecks className="h-4 w-4 shrink-0" aria-hidden />
                     {bulk.gesture === 'pointer' ? t('bulkPastDue') : t('bulkPastDueUndo')}
                   </Button>
                   <span className="text-muted-foreground text-xs">
