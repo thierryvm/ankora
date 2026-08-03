@@ -199,7 +199,7 @@ Un ADR « Accepted » ne garantit **pas** une surface à l'écran.
    fera par une **table de mouvements**, pas par une colonne saisie — un solde saisi ment dès
    le lendemain, un mouvement daté reste vrai et se rejoue. Ce choix règle du même coup
    « investir n'est pas dépenser » : c'est la même table, donc **un seul coût pour deux
-   besoins**. La part provisions reste **dérivable** du moteur — rien à étiqueter à la main. Et
+   besoins**. La part de provisions reste **dérivable** du moteur — rien à étiqueter à la main. Et
    chaque virement proposé doit dire **pour quelles échéances**.
    Toujours sans partie patrimoine — valorisations et rendements sont une ligne rouge FSMA (§5).
 4. **Brancher les modules déjà écrits.** Notifications de reversement, prévisions, accumulateur
