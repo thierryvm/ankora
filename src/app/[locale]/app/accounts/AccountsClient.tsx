@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { Landmark, PiggyBank, Wallet } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,9 +14,7 @@ import {
   updateMonthlyIncomeAction,
   updateVieCouranteTransferAction,
 } from '@/lib/actions/accounts';
-import type { Locale } from '@/i18n/routing';
 import { ACCOUNT_KIND_I18N_KEY, type AccountKind } from '@/lib/schemas/account';
-import { formatCurrency } from '@/lib/i18n/formatters';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 
 type AccountRow = { kind: AccountKind; label: string; balance: number };
@@ -170,7 +168,6 @@ function AccountBalanceCard({ row }: { row: AccountRow }) {
   const t = useTranslations('app.accounts');
   const tBalance = useTranslations('app.accounts.balance');
   const tKind = useTranslations('app.accounts.kind');
-  const locale = useLocale() as Locale;
   const translateError = useActionErrorTranslator();
   const Icon = ACCOUNT_ICONS[row.kind];
   const [value, setValue] = useState(String(row.balance));
@@ -202,9 +199,16 @@ function AccountBalanceCard({ row }: { row: AccountRow }) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <p className="mb-3 text-2xl font-bold tabular-nums">
-          {formatCurrency(row.balance, locale)}
-        </p>
+        {/*
+          Le montant n'est rendu QU'UNE FOIS, par le champ.
+          Il y avait au-dessus un `<p>` qui reformatait `row.balance` en gros
+          chiffre. Les deux divergeaient dès la première frappe — l'un montrait
+          la valeur enregistrée, l'autre celle en cours de saisie — et un
+          lecteur d'écran annonçait donc deux soldes différents pour le même
+          compte. Un champ de formulaire relié à son label expose déjà son nom
+          accessible ET sa valeur : le second rendu n'apportait rien qu'une
+          contradiction.
+        */}
         <form onSubmit={onSubmit} className="flex flex-col gap-2">
           <Label htmlFor={`balance-${row.kind}`} className="sr-only">
             {tBalance('srLabel', { label: row.label })}
@@ -216,11 +220,29 @@ function AccountBalanceCard({ row }: { row: AccountRow }) {
             step="0.01"
             value={value}
             onChange={(e) => setValue(e.target.value)}
+            aria-describedby={`balance-notice-${row.kind}`}
           />
           <Button type="submit" size="sm" variant="outline" disabled={isPending}>
             {isPending ? t('saving') : tBalance('saveLabel')}
           </Button>
         </form>
+        {/*
+          Deux phrases, deux fonctions distinctes, et aucune n'est décorative.
+          La première dit que le nombre est SAISI, donc qu'il ne se corrige pas
+          tout seul — règle 1 du modèle source : « si un montant semble faux,
+          c'est la donnée source qu'il faut corriger ». La seconde dit à quoi il
+          SERT, ce qui est aujourd'hui « à rien » pour deux comptes sur trois :
+          `computeMonthlyTransferPlan` ne prend aucun solde en entrée, et le
+          seul consommateur d'un solde dans un calcul est `month-situation.ts`,
+          filtré sur `accountType === 'provisions'`.
+
+          Rendues hors du `<form>` : un second bouton dans ce formulaire rendrait
+          ambigu le locator de `e2e/accounts.spec.ts`, qui remonte au parent du
+          champ et y cherche `getByRole('button')`.
+        */}
+        <p id={`balance-notice-${row.kind}`} className="text-muted-foreground mt-3 text-xs">
+          {tBalance('manualNotice')} {tKind(`${ACCOUNT_KIND_I18N_KEY[row.kind]}.usage`)}
+        </p>
       </CardContent>
     </Card>
   );

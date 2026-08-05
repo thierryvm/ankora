@@ -813,8 +813,8 @@
       "metaTitle": "My accounts",
       "metaDescription": "Track the balances of your Main, Daily Spending and Savings accounts. Set your monthly income and your transfer to Daily Spending.",
       "title": "My accounts",
-      "subtitle": "Enter your real balances so Ankora can accurately calculate your smart transfer each month.",
-      "balancesHeading": "Current balances",
+      "subtitle": "Set your income and monthly transfer. The balances below are entered by hand: Ankora does not update them on its own.",
+      "balancesHeading": "Entered balances",
       "amountLabel": "Amount (€)",
       "saveButton": "Save",
       "saving": "Saving…",
@@ -834,17 +834,21 @@
         "invalidAmount": "Enter a valid amount.",
         "saveLabel": "Update",
         "srLabel": "Current balance of {label}",
-        "toastSaved": "{name} updated"
+        "toastSaved": "{name} updated",
+        "manualNotice": "Entered by hand. This amount only changes when you change it here."
       },
       "kind": {
         "principal": {
-          "description": "Receives the salary, pays fixed monthly bills."
+          "description": "Receives the salary, pays fixed monthly bills.",
+          "usage": "Not used in any calculation yet."
         },
         "vieCourante": {
-          "description": "Day-to-day budget (groceries, fuel, dining)."
+          "description": "Day-to-day budget (groceries, fuel, dining).",
+          "usage": "Not used in any calculation yet."
         },
         "epargne": {
-          "description": "Smooths quarterly and annual bills."
+          "description": "Smooths quarterly and annual bills.",
+          "usage": "Feeds the provisions gauge on the dashboard."
         }
       },
       "types": {

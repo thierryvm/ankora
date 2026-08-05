@@ -813,8 +813,8 @@
       "metaTitle": "Mes comptes",
       "metaDescription": "Suis les soldes de tes comptes Principal, Vie Courante et Épargne. Règle ton revenu mensuel et ton virement vers Vie Courante.",
       "title": "Mes comptes",
-      "subtitle": "Saisis tes soldes réels pour qu'Ankora calcule précisément ton virement intelligent chaque mois.",
-      "balancesHeading": "Soldes actuels",
+      "subtitle": "Règle ton revenu et ton virement mensuel. Les soldes plus bas sont saisis à la main : Ankora ne les met pas à jour tout seul.",
+      "balancesHeading": "Soldes saisis",
       "amountLabel": "Montant (€)",
       "saveButton": "Enregistrer",
       "saving": "Enregistrement…",
@@ -834,17 +834,21 @@
         "invalidAmount": "Entre un montant valide.",
         "saveLabel": "Mettre à jour",
         "srLabel": "Solde actuel de {label}",
-        "toastSaved": "{name} mis à jour"
+        "toastSaved": "{name} mis à jour",
+        "manualNotice": "Saisi à la main. Ce montant ne bouge que si tu le modifies ici."
       },
       "kind": {
         "principal": {
-          "description": "Reçoit le salaire, paye les charges fixes mensuelles."
+          "description": "Reçoit le salaire, paye les charges fixes mensuelles.",
+          "usage": "N'entre dans aucun calcul pour l'instant."
         },
         "vieCourante": {
-          "description": "Budget du quotidien (courses, essence, restos)."
+          "description": "Budget du quotidien (courses, essence, restos).",
+          "usage": "N'entre dans aucun calcul pour l'instant."
         },
         "epargne": {
-          "description": "Lisse les factures trimestrielles et annuelles."
+          "description": "Lisse les factures trimestrielles et annuelles.",
+          "usage": "Sert à la jauge de provisions du tableau de bord."
         }
       },
       "types": {
