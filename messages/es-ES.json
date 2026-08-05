@@ -117,7 +117,8 @@
         "legalCookies": "Cookies",
         "logout": "Cerrar sesión",
         "darkMode": "Modo oscuro",
-        "lightMode": "Modo claro"
+        "lightMode": "Modo claro",
+        "reload": "Reload the app"
       }
     }
   },
@@ -1517,5 +1518,12 @@
     "trustHosting": "🇧🇪 Bélgica · Alojado en UE",
     "trustNoBank": "Sin agregación bancaria",
     "trustFree": "0 € Fase 1"
+  },
+  "pwa": {
+    "update": {
+      "title": "A new version is available",
+      "reload": "Reload",
+      "later": "Later"
+    }
   }
 }

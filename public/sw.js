@@ -17,7 +17,11 @@
 // the current `CACHE_VERSION`, so bumping is the canonical clean slate.
 // (2026-06-02 purged locale-blind authenticated pages; 2026-05-19 the
 // /fonts/*.ttf HTML-404 poison.)
-const CACHE_VERSION = 'ankora-v4-20260725';
+// Bumped 2026-08-05 : le `skipWaiting()` inconditionnel disparaît de `install`
+// (cf. plus bas). Incrémenter la version est l'ardoise propre canonique — le
+// gestionnaire `activate` supprime tout cache dont la clé ne commence pas par
+// la version courante.
+const CACHE_VERSION = 'ankora-v5-20260805';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 
 const OFFLINE_URL = '/offline';
@@ -64,7 +68,13 @@ self.addEventListener('install', (event) => {
         await cache.addAll(PRECACHE_URLS.filter((u) => u !== OFFLINE_URL)).catch(() => undefined);
         await precacheOffline(cache).catch(() => undefined);
       })
-      .then(() => self.skipWaiting()),
+      // PAS de `self.skipWaiting()` ici, et c'est le cœur du correctif du
+      // 2026-08-05. Un worker qui s'active tout seul ne passe jamais par l'état
+      // `waiting` — donc l'application n'a rien à détecter, donc rien à annoncer
+      // à l'utilisateur. Dans une PWA `standalone`, où iOS supprime la barre
+      // d'adresse et le tirer-pour-rafraîchir, cela revenait à ne jamais pouvoir
+      // livrer une mise à jour. Le worker attend désormais qu'on la lui demande.
+      .then(() => undefined),
   );
 });
 
@@ -77,6 +87,19 @@ self.addEventListener('activate', (event) => {
       )
       .then(() => self.clients.claim()),
   );
+});
+
+/**
+ * Activation à la demande.
+ *
+ * Le seul émetteur légitime est `appliquerMiseAJour()` côté client, appelé par
+ * un clic sur « Recharger ». Le rechargement qui suit est armé du même côté :
+ * `clients.claim()` déclenche aussi `controllerchange` à la toute première
+ * installation, et recharger là ferait sauter la page d'un visiteur qui n'a
+ * rien demandé.
+ */
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 // Authenticated / credential-bearing page surfaces, matched WITH OR WITHOUT a

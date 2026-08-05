@@ -151,6 +151,29 @@ export function __getServerSnapshotForTests(): StoreSnapshot {
  * is necessary because the version-cookie removal alone cannot distinguish
  * "first visit" from "user-requested reopen" cleanly across SSR boundaries.
  */
+/**
+ * La bannière de consentement occupe-t-elle le bas de l'écran ?
+ *
+ * Exporté pour que le bandeau de mise à jour PWA s'efface devant elle. Les deux
+ * sont `fixed` en bas avec le même décalage au-dessus de la barre d'onglets :
+ * les empiler rendrait le second invisible ET injoignable sous le `z-50` du
+ * premier. C'est la faute de #302 rejouée d'un cran plus bas.
+ *
+ * La condition reprend celle de `shouldShow` : `!hasDecided || reopen`. Un
+ * simple `stored !== null` raterait le drapeau de réouverture — et « rouvrir
+ * ses préférences cookies depuis la feuille Plus » est un chemin réel, pas une
+ * hypothèse.
+ *
+ * Ne couvre pas l'état local `dismissed` du composant, qui n'est pas dans le
+ * store. L'écart est borné à l'instant entre le clic et l'écriture de la
+ * décision, et il penche du bon côté : on se croit masqué un instant de trop
+ * plutôt que de se peindre sous un dialogue.
+ */
+export function useConsentBannerPending(): boolean {
+  const snap = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  return snap.stored === null || snap.reopen;
+}
+
 export function reopenConsentBanner(): void {
   if (typeof window === 'undefined') return;
   window.localStorage.removeItem(STORAGE_KEY);
