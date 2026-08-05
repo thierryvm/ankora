@@ -306,7 +306,7 @@
       "ctaPrimary": "Ouvrir mon cockpit",
       "roadmap": {
         "title": "Tu rejoins Ankora pendant sa Phase 1 ?",
-        "body": "Ton compte garde un accès complet au cockpit core à vie, gratuitement. Une offre Pro avec features avancées (comptes illimités, exports consolidés, support prioritaire) arrivera post-v1.0 — tu auras le choix d'upgrader ou de rester sur ton plan actuel.",
+        "body": "Ton compte garde un accès complet au cockpit core à vie, gratuitement. Il n'y a pas d'offre payante, et aucune fonctionnalité n'est réservée à un plan supérieur. Cet engagement est repris dans nos conditions générales — il nous lie, il n'est pas qu'un argument.",
         "link": "Lire la roadmap →"
       }
     },
@@ -428,7 +428,12 @@
         "body": "Puedes eliminar tu cuenta en cualquier momento desde Ajustes → Privacidad. La eliminación es efectiva 14 días tras la solicitud (periodo cancelable)."
       },
       "s8": {
-        "heading": "8. Ley aplicable",
+        "heading": "8. Gratuidad del servicio",
+        "body": "Ankora es gratuito. No existe ninguna oferta de pago y ninguna funcionalidad está reservada a un plan superior. Si alguna vez se introdujera una oferta de pago, las cuentas creadas antes de su lanzamiento conservarán gratuitamente el acceso completo al núcleo del cockpit — el compromiso anunciado en la página de Tarifas, recogido aquí para que nos vincule contractualmente y no solo comercialmente.",
+        "donations": "Si alguna vez se ofrecen donaciones voluntarias, no darán derecho a ninguna contrapartida: ninguna funcionalidad, ningún acceso anticipado, ninguna prioridad de soporte. Una donación no modifica en nada la relación descrita por estas condiciones."
+      },
+      "s9": {
+        "heading": "9. Ley aplicable",
         "body": "Estas CGU están sujetas al derecho belga. Tribunal competente: Bruselas."
       },
       "draft": "Nuestras condiciones generales de uso están en proceso de redacción.",

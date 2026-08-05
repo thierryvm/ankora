@@ -306,7 +306,7 @@
       "ctaPrimary": "Open my cockpit",
       "roadmap": {
         "title": "Joining Ankora during Phase 1?",
-        "body": "Your account keeps full lifetime access to the core cockpit, free. A Pro tier with advanced features (unlimited accounts, consolidated exports, priority support) will arrive post-v1.0 — you'll choose to upgrade or stay on your current plan.",
+        "body": "Your account keeps full lifetime access to the core cockpit, free. There is no paid tier, and no feature is reserved for a higher plan. That commitment is written into our terms — it binds us, it isn't just a sales line.",
         "link": "Read the roadmap →"
       }
     },
@@ -428,7 +428,12 @@
         "body": "You can delete your account at any time from Settings → Privacy. Deletion takes effect 14 days after the request (cancellable during that period)."
       },
       "s8": {
-        "heading": "8. Governing law",
+        "heading": "8. Free of charge",
+        "body": "Ankora is free. There is no paid offering, and no feature is reserved for a higher tier. Should a paid offering ever be introduced, accounts created before its launch keep full access to the core cockpit free of charge — the commitment announced on the Pricing page, restated here so that it binds us contractually and not merely commercially.",
+        "donations": "If voluntary donations are ever offered, they will grant no counterpart: no feature, no early access, no support priority. A donation changes nothing in the relationship described by these terms."
+      },
+      "s9": {
+        "heading": "9. Governing law",
         "body": "These terms are governed by Belgian law. Competent court: Brussels."
       },
       "draft": "Our terms of service are being drafted.",

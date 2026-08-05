@@ -83,6 +83,22 @@ describe('<Pricing />', () => {
     expect(screen.getByText(/tu rejoins ankora pendant sa phase 1/i)).toBeInTheDocument();
   });
 
+  // La note roadmap annonçait « une offre Pro (comptes illimités, exports
+  // consolidés, support prioritaire) arrivera post-v1.0 ». Aucune de ces trois
+  // features n'était spécifiée, planifiée ni chiffrée — et la décision produit
+  // est l'inverse : pas d'offre payante. Annoncer un produit qui n'existe pas
+  // est la faute que le reste de cette PR corrige ailleurs.
+  //
+  // L'assertion est négative parce que le défaut n'était PAS une chaîne fausse
+  // à remplacer : c'était une promesse commerciale en trop. Un test qui
+  // exigerait la nouvelle formulation n'empêcherait pas la prochaine.
+  it("n'annonce aucune offre payante à venir", async () => {
+    await renderPricing();
+    const aside = screen.getByRole('complementary');
+    expect(aside.textContent).not.toMatch(/offre Pro|support prioritaire|upgrader/i);
+    expect(aside.textContent).toMatch(/pas d'offre payante/i);
+  });
+
   it('exposes the pricing section as a named landmark via aria-labelledby', async () => {
     await renderPricing();
     const section = screen.getByRole('heading', { level: 2 }).closest('section');
