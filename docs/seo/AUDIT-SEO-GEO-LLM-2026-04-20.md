@@ -1,6 +1,6 @@
 # Audit SEO-GEO-LLM Ankora — 2026-04-20
 
-- **Auditeur** : Cowork-Opus (Claude) pour Thierry vanmeeteren
+- **Auditeur** : Cowork-Opus (Claude) pour @thierry
 - **Date** : 2026-04-20
 - **Cible** : `ankora.be` (branche `main`)
 - **Scope** : 3 couches — SEO classique (Google/Bing) + GEO
@@ -20,7 +20,7 @@ faible côté LLM discoverability (D+).
 
 **1 bug critique P0** identifié hors scope audit mais bloquant à publier :
 le nom auteur dans `package.json` et `src/lib/site.ts` est **faux**
-(`Thierry Vanmansart` au lieu de `Thierry vanmeeteren`). C'est injecté
+(`Thierry Vanmansart` au lieu de `@thierry`). C'est injecté
 dans tous les Open Graph + JsonLd `Organization` → diffusé sur tous les
 scrapers sociaux et indexeurs actuellement.
 
@@ -55,7 +55,7 @@ Twitter card, JsonLd Organization). Tout bot social (LinkedIn, Twitter,
 Facebook, Discord, Slack, Google) qui scrape ankora.be reçoit un nom
 auteur **inventé**.
 
-**Fix à faire** : remplacer par `Thierry vanmeeteren` (lowercase v,
+**Fix à faire** : remplacer par `@thierry` (lowercase v,
 convention flamande — aligné ADR / README / LICENSE / NOTICE).
 
 Je te prépare le fix en PR courte (≤ 2 fichiers) — ou CC Ankora peut
@@ -268,7 +268,7 @@ en une phrase — risque de citation incorrecte ou vague.
 
 ## Top 5 quick wins (< 2 h chacun)
 
-1. **[P0] Fix `Vanmansart` → `vanmeeteren`** dans `package.json` +
+1. **[P0] Corriger le nom d'auteur erré** dans `package.json` +
    `src/lib/site.ts`. 2 fichiers, 2 lignes. Diffusé dans tous les Open
    Graph + JsonLd depuis le premier déploiement. _Effet : fiabilité
    brand, compliance identité._
@@ -346,7 +346,7 @@ le skill `design:ux-copy` pour 3 variantes de one-liner alignées brand.
 
 **Avant publication élargie** (bloquant) :
 
-1. **PR fix-identity** (5 min) — `Vanmansart` → `vanmeeteren`. Je peux
+1. **PR fix-identity** (5 min) — corriger le nom d'auteur erré. Je peux
    la faire moi-même ou la coller dans PR-SEC-1.
 
 **Quick wins (2 PR courtes, 1 semaine)** :

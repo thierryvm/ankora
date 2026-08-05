@@ -2,9 +2,9 @@
 
 - **Statut** : Accepted
 - **Date** : 2026-07-29
-- **Accepté le** : 2026-07-29 par Thierry vanmeeteren — décisions Q1, Q2 et Q3 de [`docs/specs/2026-07-29-decisions-ankora.md`](../specs/2026-07-29-decisions-ankora.md)
+- **Accepté le** : 2026-07-29 par @thierry — décisions Q1, Q2 et Q3 de [`docs/specs/2026-07-29-decisions-ankora.md`](../specs/2026-07-29-decisions-ankora.md)
 - **Proposé par** : @cowork (arbitrage produit) + @cc-ankora (relevé factuel du code et des clés i18n)
-- **Deciders** : Thierry vanmeeteren, @cowork, @cc-ankora
+- **Deciders** : @thierry, @cowork, @cc-ankora
 - **Tags** : `produit`, `vocabulaire`, `i18n`, `domain`, `cockpit`
 - **Portée** : Chantier 1 « nettoyage + vocabulaire » (C2, C3)
 - **Amende** : [ADR-009](ADR-009-capacite-epargne-reelle.md) (la capacité d'épargne cesse d'être un chiffre d'interface)

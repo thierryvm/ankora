@@ -2,8 +2,8 @@
 
 - **Statut** : Accepted
 - **Date** : 2026-04-20
-- **Accepté le** : 2026-04-20 par Thierry vanmeeteren
-- **Deciders** : Thierry vanmeeteren (Product Owner), Cowork-Opus (Architecture)
+- **Accepté le** : 2026-04-20 par @thierry
+- **Deciders** : @thierry (Product Owner), Cowork-Opus (Architecture)
 - **Tags** : `architecture`, `observability`, `security`, `gdpr`, `ops`
 - **Portée** : toute la couche serveur Ankora (Server Components, Server
   Actions, Route Handlers, middleware, jobs).

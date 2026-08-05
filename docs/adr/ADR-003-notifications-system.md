@@ -2,8 +2,8 @@
 
 - **Statut** : Accepted
 - **Date** : 2026-04-20
-- **Accepté le** : 2026-04-20 par Thierry vanmeeteren
-- **Deciders** : Thierry vanmeeteren (Product Owner), Cowork-Opus (Architecture)
+- **Accepté le** : 2026-04-20 par @thierry
+- **Deciders** : @thierry (Product Owner), Cowork-Opus (Architecture)
 - **Tags** : `architecture`, `product`, `security`, `ux`, `gdpr`, `notifications`
 - **Portée** : Phase 1 (MVP) = in-app ; Phase 2 = + email ; Phase 3 = + Web Push
 - **En lien avec** :

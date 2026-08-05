@@ -17,7 +17,7 @@ export const SITE = {
   ],
   themeColor: '#0F766E',
   background: '#F8FAFC',
-  authors: [{ name: 'Thierry vanmeeteren' }],
+  authors: [{ name: 'thierryvm' }],
   twitter: '@ankora_app',
   /**
    * Public contact address. Single source of truth: it also appears in the CGU

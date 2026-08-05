@@ -2,9 +2,9 @@
 
 - **Statut** : Accepted
 - **Date** : 2026-07-29
-- **Accepté le** : 2026-07-29 par Thierry vanmeeteren — arbitrage rendu sur la question 1 de [`docs/prs/PR-chantier1-report.md`](../prs/PR-chantier1-report.md) §7
+- **Accepté le** : 2026-07-29 par @thierry — arbitrage rendu sur la question 1 de [`docs/prs/PR-chantier1-report.md`](../prs/PR-chantier1-report.md) §7
 - **Proposé par** : @cc-ankora (mesure des ratios) — alternative déjà calculée et documentée en [ADR-035](ADR-035-vocabulaire-des-quatre-chiffres.md) §« Conséquences négatives »
-- **Deciders** : Thierry vanmeeteren, @cc-ankora
+- **Deciders** : @thierry, @cc-ankora
 - **Tags** : `design-system`, `a11y`, `tokens`
 - **Portée** : Chantier 2
 - **Amende** : [ADR-035](ADR-035-vocabulaire-des-quatre-chiffres.md) (valeur du seul token `--color-warning`, mode clair)

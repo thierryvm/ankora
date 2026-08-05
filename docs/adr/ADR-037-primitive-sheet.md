@@ -2,9 +2,9 @@
 
 - **Statut** : Accepted
 - **Date** : 2026-07-29
-- **Accepté le** : 2026-07-29 — décision Q7/Q8 et §3.5 de [`docs/specs/2026-07-29-decisions-ankora.md`](../specs/2026-07-29-decisions-ankora.md), approuvées par Thierry vanmeeteren
+- **Accepté le** : 2026-07-29 — décision Q7/Q8 et §3.5 de [`docs/specs/2026-07-29-decisions-ankora.md`](../specs/2026-07-29-decisions-ankora.md), approuvées par @thierry
 - **Proposé par** : @cc-ankora
-- **Deciders** : Thierry vanmeeteren, @cc-ankora
+- **Deciders** : @thierry, @cc-ankora
 - **Tags** : `architecture`, `ui`, `a11y`, `ios`
 - **Portée** : Chantier 2 (naissance) · Chantier 4 (généralisation aux 5 panneaux restants)
 - **Contrat récolté** : [`docs/specs/sheet-primitive-contract.md`](../specs/sheet-primitive-contract.md)

@@ -3,10 +3,10 @@
 - **Statut** : Superseded by [ADR-034](ADR-034-suppression-atoms-et-design-playground.md)
 - **Date** : 2026-05-18
 - **Superseded le** : 2026-07-29 — `atoms/` et `/design-playground` supprimés (décision Q6 de [`docs/specs/2026-07-29-decisions-ankora.md`](../specs/2026-07-29-decisions-ankora.md)). Cet ADR n'est **pas** réécrit : il documente la frontière qui a effectivement gouverné le code du 2026-05-18 au 2026-07-29.
-- **Accepté le** : 2026-05-18 par Thierry vanmeeteren (via délégation @cowork)
+- **Accepté le** : 2026-05-18 par @thierry (via délégation @cowork)
 - **Proposé par** : @cowork (orchestration) + @cc-ankora (diagnostic factuel)
-- **À accepter par** : Thierry vanmeeteren (Product Owner)
-- **Deciders** : Thierry vanmeeteren, @cowork, @cc-ankora
+- **À accepter par** : @thierry (Product Owner)
+- **Deciders** : @thierry, @cowork, @cc-ankora
 - **Tags** : `architecture`, `design-system`, `components`, `frontier`
 - **Portée** : Phase 1 (MVP) — débloque PR-D6/D7 (Beta cockpit v3 — 6 sections restantes)
 - **Tracking Linear** : [THI-189](https://linear.app/thierryvm/issue/THI-189) (High priority)

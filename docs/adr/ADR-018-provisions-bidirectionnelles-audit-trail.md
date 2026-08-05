@@ -1,9 +1,9 @@
 # ADR-018 — Provisions bidirectionnelles : audit trail OUT/IN entre comptes courants et compte de lissage
 
-- **Statut** : Proposed
+- **Statut** : Superseded par [ADR-038](ADR-038-journal-des-mouvements.md) le 2026-08-05
 - **Date** : 2026-05-09
 - **Auteur** : @cowork (Cowork desktop, Opus)
-- **Deciders** : Thierry vanmeeteren (Product Owner), @cowork (Architecture), @cc-ankora (Implémentation)
+- **Deciders** : @thierry (Product Owner), @cowork (Architecture), @cc-ankora (Implémentation)
 - **Tags** : `architecture`, `domain-model`, `ux`, `audit`, `provisions`, `bidirectionnel`
 - **Portée** : V1.0 publique (PR-D5 tracking paiements multi-sources + onglet Mouvements Compte Épargne)
 - **En lien avec** :
@@ -12,6 +12,16 @@
   - [ADR-012](./ADR-012-assistant-virements.md) — assistant virements bucket-to-bucket
   - [ADR-016](./ADR-016-tracking-paiements-multi-sources.md) — tracking paiements (Proposed)
   - [ADR-017](./ADR-017-plans-apurement.md) — plans d'apurement (Proposed) ; les échéances d'apurement consomment des provisions
+
+> **⚠️ Superseded le 2026-08-05 par [ADR-038](ADR-038-journal-des-mouvements.md).**
+> Resté `Proposed` trois mois sans être implémenté — et il dépendait de quatre tables
+> (`account_transfers`, `recurring_templates`, `transactions`, `installment_plans`) dont
+> aucune n'a jamais existé. ADR-038 couvre le même territoire à partir du schéma réel.
+>
+> **Une décision de ce document survit et est reprise telle quelle** : un virement entrant
+> depuis l'épargne **n'est pas un revenu**. Un virement interne déplace de l'argent, il n'en
+> crée pas. Le reste est à lire comme l'état de la réflexion de mai 2026, pas comme la
+> décision en vigueur.
 
 ---
 
