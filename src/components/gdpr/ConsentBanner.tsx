@@ -169,6 +169,36 @@ export function __getServerSnapshotForTests(): StoreSnapshot {
  * décision, et il penche du bon côté : on se croit masqué un instant de trop
  * plutôt que de se peindre sous un dialogue.
  */
+/**
+ * L'état du consentement analytics — à TROIS valeurs, et non deux.
+ *
+ * `null` (décision effacée, bannière rouverte) et `false` (refus enregistré)
+ * commandent des comportements différents en aval : le premier démonte les
+ * traceurs, le second démonte ET recharge. Les confondre était le défaut de la
+ * première version de ce gate.
+ *
+ * Rend `null` côté serveur — `getServerSnapshot()` renvoie une décision nulle —
+ * donc aucun traceur ne peut être monté pendant le rendu serveur.
+ */
+export function useAnalyticsConsent(): boolean | null {
+  const snap = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  return snap.stored === null ? null : snap.stored.analytics;
+}
+
+/**
+ * Réveille les abonnés au store après une écriture faite ailleurs que par la
+ * bannière.
+ *
+ * L'événement `storage` ne se déclenche PAS dans l'onglet qui écrit, et la
+ * bannière vit dans le layout racine : son `useEffect(notify, [])` ne rejoue
+ * jamais sur une navigation client. Sans cet appel, une décision prise dans
+ * `/app/settings` resterait invisible du reste de l'application jusqu'au
+ * prochain chargement de document.
+ */
+export function notifyConsentChanged(): void {
+  notify();
+}
+
 export function useConsentBannerPending(): boolean {
   const snap = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   return snap.stored === null || snap.reopen;
@@ -300,12 +330,29 @@ export function ConsentBanner({ liftedForBottomBar = false }: ConsentBannerProps
       decidedAt: new Date().toISOString(),
     });
     setDismissed(true);
-    notify();
-    startTransition(() => {
-      void recordCookieConsentAction({
+    // `notify()` est DÉPLACÉ après l'action serveur, et n'y va que sur succès.
+    //
+    // Il réveille le gate des traceurs (`ConsentGatedAnalytics`), qui recharge
+    // le document sur un refus enregistré. Un rechargement lancé ici, avant que
+    // le POST parte, l'avorterait : le stockage local dirait « refusé » pendant
+    // que la base dirait encore « accordé », sans trace de l'art. 7(3) — et le
+    // retour sur l'écran réhydrate depuis le local, donc l'écart serait
+    // invisible.
+    //
+    // La condition porte sur `ok` SEUL. `recordCookieConsentAction` rend
+    // `{ ok: true, data: { persisted: false } }` pour un visiteur non
+    // authentifié : c'est le cas normal sur le site public, et le gate DOIT y
+    // réagir. Y ajouter `&& res.data.persisted` le désactiverait pour tout
+    // visiteur anonyme.
+    //
+    // La bannière, elle, disparaît toujours immédiatement : `setDismissed(true)`
+    // reste synchrone.
+    startTransition(async () => {
+      const res = await recordCookieConsentAction({
         analytics: analyticsValue,
         marketing: marketingValue,
-      });
+      }).catch(() => null);
+      if (res?.ok) notify();
     });
   };
 

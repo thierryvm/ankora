@@ -6,7 +6,12 @@ import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/toast';
-import { reopenConsentBanner, CONSENT_VERSION } from '@/components/gdpr/ConsentBanner';
+import {
+  reopenConsentBanner,
+  notifyConsentChanged,
+  CONSENT_VERSION,
+} from '@/components/gdpr/ConsentBanner';
+import { reloadPage } from '@/lib/browser/reload';
 import { recordCookieConsentAction } from '@/lib/actions/consent';
 import type { CookieConsentSnapshot } from '@/lib/actions/consent-types';
 
@@ -92,9 +97,24 @@ export function CookiesPreferencesSection({ initialServerSnapshot }: Props) {
       const res = await recordCookieConsentAction({
         analytics: nextAnalytics,
         marketing: nextMarketing,
-      });
-      if (res.ok) toast.success(t('toastSaved'));
-      else toast.error(t('toastError'));
+      }).catch(() => null);
+      if (!res?.ok) {
+        // Pas de reveil : le serveur n'a rien enregistre, et le toast doit avoir
+        // le temps de peindre. Reveiller ici ferait recharger le gate des
+        // traceurs sur une decision que la base ignore.
+        toast.error(t('toastError'));
+        return;
+      }
+      toast.success(t('toastSaved'));
+      // Le reveil vient APRES la resolution, et seulement sur succes. Le gate
+      // recharge le document sur un refus enregistre ; un rechargement lance
+      // pendant que la requete est en vol l'avorterait.
+      //
+      // La condition porte sur `ok` SEUL. `recordCookieConsentAction` rend
+      // `{ ok: true, data: { persisted: false } }` pour un visiteur non
+      // authentifie : y ajouter `&& res.data.persisted` desactiverait le gate
+      // pour tout visiteur anonyme.
+      notifyConsentChanged();
     });
   };
 
@@ -103,10 +123,32 @@ export function CookiesPreferencesSection({ initialServerSnapshot }: Props) {
     setAnalytics(false);
     setMarketing(false);
     setHasDecided(false);
-    reopenConsentBanner();
     startTransition(async () => {
-      await recordCookieConsentAction({ analytics: false, marketing: false });
-      toast.success(t('toastReset'));
+      const res = await recordCookieConsentAction({ analytics: false, marketing: false }).catch(
+        () => null,
+      );
+      if (!res?.ok) {
+        // Rien n'a ete revoque cote serveur : ni reouverture de la banniere, ni
+        // rechargement. L'utilisateur voit l'erreur et son etat local est deja
+        // efface — l'ecart local/base est une dette pre-existante, tracee.
+        toast.error(t('toastError'));
+        return;
+      }
+      reopenConsentBanner();
+      // Ce bouton revoque REELLEMENT, mais il efface la decision locale : le
+      // gate des traceurs n'y voit qu'un `null`, indiscernable d'une banniere
+      // rouverte depuis le pied de page. Il ne peut donc pas recharger, et le
+      // traceur deja charge continuerait d'emettre pour toute la duree du
+      // document. Le rechargement appartient a l'appelant qui SAIT qu'il a
+      // revoque.
+      //
+      // Le drapeau de reouverture survit au rechargement (seul `persist()` le
+      // consomme), donc la banniere se reaffiche bien apres.
+      //
+      // `toast.success(t('toastReset'))` a ete retire : il n'aurait jamais le
+      // temps de peindre. La banniere qui reapparait est une meilleure preuve
+      // que le texte qu'elle remplace, et la cle i18n part avec lui.
+      reloadPage();
     });
   };
 

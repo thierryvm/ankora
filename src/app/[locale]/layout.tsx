@@ -4,13 +4,12 @@ import { cookies } from 'next/headers';
 
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getMessages, setRequestLocale, getTranslations } from 'next-intl/server';
-import { Analytics } from '@vercel/analytics/next';
-import { SpeedInsights } from '@vercel/speed-insights/next';
 
 import { SITE } from '@/lib/site';
 import { routing, type Locale } from '@/i18n/routing';
 import { isIndexableLocale, indexableLanguageAlternates } from '@/lib/seo/indexable-locales';
 import { ConsentBanner } from '@/components/gdpr/ConsentBanner';
+import { ConsentGatedAnalytics } from '@/components/gdpr/ConsentGatedAnalytics';
 import { Toaster } from '@/components/ui/toast';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister';
@@ -219,8 +218,9 @@ export default async function LocaleLayout({
               est `fixed`, aucune réserve en `padding-bottom` ne la déplace. */}
           <UpdateBanner liftedForBottomBar={showBottomTabBar} />
           <JsonLd data={organizationJsonLd} />
-          <Analytics />
-          <SpeedInsights />
+          {/* Montage INCONDITIONNEL : le gate decide a l'interieur. Le rendre
+              conditionnel reinitialiserait sa `ref` de memoire de chargement. */}
+          <ConsentGatedAnalytics />
         </NextIntlClientProvider>
       </body>
     </html>
