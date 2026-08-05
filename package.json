@@ -34,6 +34,7 @@
     "e2e:install": "playwright install --with-deps chromium",
     "e2e:install:webkit": "playwright install webkit",
     "lhci": "lhci autorun",
+    "notice": "node scripts/generate-notice.mjs",
     "icons": "tsx scripts/generate-pwa-icons.ts",
     "import:coda": "tsx scripts/import-coda-charges.ts",
     "security:audit": "tsx scripts/security-audit.ts",
