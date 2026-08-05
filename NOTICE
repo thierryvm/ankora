@@ -3,223 +3,116 @@
 **Ankora™** incorporates the following third-party software components.
 This file lists all open-source and third-party dependencies used in this project.
 
-## Production Dependencies
+<!-- NOTICE:BEGIN GENERATED -->
 
-### Framework & Core
-- **Next.js** (v16.2.4) — MIT License
-  - Framework for React-based web applications
-  - https://nextjs.org
+> Cette section est **générée** depuis `package-lock.json` par `npm run notice`.
+> Ne pas l'éditer à la main : la prochaine génération écraserait la correction.
+> Tout ce qui est hors des deux marqueurs est écrit à la main et préservé.
 
-- **React** (v19.2.4) — MIT License
-  - JavaScript library for building user interfaces
-  - https://react.dev
+## Dépendances de production (directes)
 
-- **React DOM** (v19.2.4) — MIT License
-  - Entry point to the DOM for React
-  - https://react.dev
+| Paquet | Version | Licence |
+| --- | --- | --- |
+| `@hookform/resolvers` | 5.2.2 | MIT |
+| `@radix-ui/react-dialog` | 1.1.15 | MIT |
+| `@radix-ui/react-label` | 2.1.8 | MIT |
+| `@radix-ui/react-select` | 2.2.6 | MIT |
+| `@radix-ui/react-slot` | 1.2.3 | MIT |
+| `@radix-ui/react-switch` | 1.2.6 | MIT |
+| `@supabase/ssr` | 0.10.2 | MIT |
+| `@supabase/supabase-js` | 2.103.3 | MIT |
+| `@upstash/ratelimit` | 2.0.8 | MIT |
+| `@upstash/redis` | 1.37.0 | MIT |
+| `@vercel/analytics` | 2.0.1 | MIT |
+| `@vercel/speed-insights` | 2.0.0 | Apache-2.0 |
+| `class-variance-authority` | 0.7.1 | Apache-2.0 |
+| `clsx` | 2.1.1 | MIT |
+| `date-fns` | 4.1.0 | MIT |
+| `decimal.js` | 10.6.0 | MIT |
+| `lucide-react` | 1.8.0 | ISC |
+| `nanoid` | 5.1.9 | MIT |
+| `next` | 16.2.11 | MIT |
+| `next-intl` | 4.11.0 | MIT |
+| `pino` | 10.3.1 | MIT |
+| `react` | 19.2.4 | MIT |
+| `react-dom` | 19.2.4 | MIT |
+| `react-hook-form` | 7.72.1 | MIT |
+| `server-only` | 0.0.1 | MIT |
+| `sonner` | 2.0.7 | MIT |
+| `tailwind-merge` | 3.5.0 | MIT |
+| `zod` | 4.3.6 | MIT |
 
-### Internationalization
-- **next-intl** (v4.9.1) — MIT License
-  - Type-safe internationalization (i18n) for Next.js
-  - https://next-intl-docs.vercel.app
+## Licences de l'arbre de production complet
 
-### UI Components & Styling
-- **@radix-ui/react-dialog** (v1.1.15) — MIT License
-  - Accessible dialog/modal component
-  - https://www.radix-ui.com
+Arbre complet : **195** paquets, transitives comprises. Ankora est un service hébergé — aucune copie du logiciel n'est remise aux personnes qui l'utilisent, donc l'obligation de redistribution des licences permissives n'est pas déclenchée. Le décompte par licence suffit ; les attributions nominatives sont listées séparément ci-dessous.
 
-- **@radix-ui/react-label** (v2.1.8) — MIT License
-  - Accessible label component
-  - https://www.radix-ui.com
+| Licence | Paquets |
+| --- | --- |
+| MIT | 140 |
+| Apache-2.0 | 22 |
+| Apache-2.0 AND MIT | 11 |
+| LGPL-3.0-or-later | 10 |
+| ISC | 4 |
+| Apache-2.0 AND LGPL-3.0-or-later | 3 |
+| BSD-3-Clause | 2 |
+| 0BSD | 1 |
+| Apache-2.0 AND LGPL-3.0-or-later AND MIT | 1 |
 
-- **@radix-ui/react-select** (v2.2.6) — MIT License
-  - Accessible select component
-  - https://www.radix-ui.com
+## Attributions nominatives
 
-- **@radix-ui/react-slot** (v1.2.4) — MIT License
-  - Slot composition component
-  - https://www.radix-ui.com
+Ces licences exigent que le paquet soit nommé, et non seulement son texte de licence reproduit.
 
-- **@radix-ui/react-switch** (v1.2.6) — MIT License
-  - Accessible switch/toggle component
-  - https://www.radix-ui.com
+| Paquet | Version | Licence |
+| --- | --- | --- |
+| `caniuse-lite` | 1.0.30001806 | CC-BY-4.0 |
 
-- **Tailwind CSS** (v4) — MIT License
-  - Utility-first CSS framework
-  - https://tailwindcss.com
+## Conformité
 
-- **tailwind-merge** (v3.5.0) — MIT License
-  - Merge Tailwind CSS classes
-  - https://github.com/dcastil/tailwind-merge
+Vérifié à chaque génération sur l'arbre de production **réellement atteignable**, et non sur les drapeaux du lockfile.
 
-- **class-variance-authority** (v0.7.1) — MIT License
-  - CSS class composition library
-  - https://cva.style
+**Licences à déclencheur réseau** (AGPL, SSPL) : aucune. Ce sont les seules qui s'appliqueraient pleinement à un service hébergé ; le script échoue plutôt que d'écrire cette phrase si ce n'est pas vrai.
 
-- **clsx** (v2.1.1) — MIT License
-  - Utility for constructing className strings
-  - https://github.com/lukeed/clsx
+**Licences à déclencheur de distribution** (GPL, LGPL, MPL, EPL, CDDL, EUPL) : présentes, et nommées ici plutôt que tues.
 
-- **lucide-react** (v1.8.0) — ISC License
-  - Icon library for React
-  - https://lucide.dev
+Elles se déclenchent quand une COPIE du logiciel est remise à quelqu'un. Ankora est un service hébergé : personne ne reçoit de binaire, le déclencheur n'est donc pas franchi à ce jour. Ce constat cesserait de valoir si Ankora était un jour distribué — application native, export, installation sur site.
 
-### Form Handling
-- **React Hook Form** (v7.72.1) — MIT License
-  - Performant, flexible form validation library
-  - https://react-hook-form.com
+| Licence | Paquets |
+| --- | --- |
+| Apache-2.0 AND LGPL-3.0-or-later | 3 — @img/sharp-win32-arm64, @img/sharp-win32-ia32, @img/sharp-win32-x64 |
+| Apache-2.0 AND LGPL-3.0-or-later AND MIT | 1 — @img/sharp-wasm32 |
+| LGPL-3.0-or-later | 10 — @img/sharp-libvips-darwin-arm64, @img/sharp-libvips-darwin-x64, @img/sharp-libvips-linux-arm, @img/sharp-libvips-linux-arm64, @img/sharp-libvips-linux-ppc64, @img/sharp-libvips-linux-riscv64, … |
 
-- **@hookform/resolvers** (v5.2.2) — MIT License
-  - Validation resolvers for React Hook Form
-  - https://github.com/react-hook-form/resolvers
+## Outils de développement (directs)
 
-### Database & Authentication
-- **@supabase/supabase-js** (v2.103.3) — MIT License
-  - Supabase JavaScript client library
-  - https://supabase.com
+| Paquet | Version | Licence |
+| --- | --- | --- |
+| `@axe-core/playwright` | 4.11.2 | MPL-2.0 |
+| `@lhci/cli` | 0.15.1 | Apache-2.0 |
+| `@playwright/test` | 1.59.1 | Apache-2.0 |
+| `@tailwindcss/postcss` | 4.2.2 | MIT |
+| `@testing-library/jest-dom` | 6.9.1 | MIT |
+| `@testing-library/react` | 16.3.2 | MIT |
+| `@testing-library/user-event` | 14.6.1 | MIT |
+| `@types/node` | 24.12.2 | MIT |
+| `@types/react` | 19.2.14 | MIT |
+| `@types/react-dom` | 19.2.3 | MIT |
+| `@vitest/coverage-v8` | 4.1.4 | MIT |
+| `eslint` | 9.39.4 | MIT |
+| `eslint-config-next` | 16.2.6 | MIT |
+| `fast-check` | 4.7.0 | MIT |
+| `husky` | 9.1.7 | MIT |
+| `jsdom` | 29.0.2 | MIT |
+| `lint-staged` | 16.4.0 | MIT |
+| `pino-pretty` | 13.1.3 | MIT |
+| `prettier` | 3.8.3 | MIT |
+| `prettier-plugin-tailwindcss` | 0.7.2 | MIT |
+| `sharp` | 0.35.3 | Apache-2.0 |
+| `tailwindcss` | 4.2.2 | MIT |
+| `tsx` | 4.21.0 | MIT |
+| `typescript` | 5.9.3 | Apache-2.0 |
+| `vitest` | 4.1.4 | MIT |
 
-- **@supabase/ssr** (v0.10.2) — MIT License
-  - Server-side rendering utilities for Supabase
-  - https://supabase.com
-
-### Rate Limiting & Caching
-- **@upstash/ratelimit** (v2.0.8) — MIT License
-  - Serverless rate limiting library
-  - https://upstash.com
-
-- **@upstash/redis** (v1.37.0) — MIT License
-  - Redis client for Upstash
-  - https://upstash.com
-
-### Analytics & Monitoring
-- **@vercel/analytics** (v2.0.1) — Proprietary (Included License)
-  - Web Analytics from Vercel
-  - https://vercel.com/analytics
-
-- **@vercel/speed-insights** (v2.0.0) — Proprietary (Included License)
-  - Performance insights from Vercel
-  - https://vercel.com/speed-insights
-
-### Utilities
-- **Decimal.js** (v10.6.0) — MIT License
-  - Arbitrary-precision decimal arithmetic
-  - https://mikemcl.github.io/decimal.js
-
-- **date-fns** (v4.1.0) — MIT License
-  - Modern date utility library
-  - https://date-fns.org
-
-- **nanoid** (v5.1.9) — MIT License
-  - Tiny, secure, URL-friendly unique string ID generator
-  - https://github.com/ai/nanoid
-
-- **Sonner** (v2.0.7) — MIT License
-  - Toast notification library for React
-  - https://sonner.emilkowal.ski
-
-- **Zod** (v4.3.6) — MIT License
-  - TypeScript-first schema validation library
-  - https://zod.dev
-
-## Development Dependencies
-
-### Build & Bundling
-- **TypeScript** (v5) — Apache 2.0 License
-  - Superset of JavaScript with static typing
-  - https://www.typescriptlang.org
-
-- **tsx** (v4.21.0) — MIT License
-  - TypeScript execution for Node.js
-  - https://tsx.is
-
-- **@tailwindcss/postcss** (v4) — MIT License
-  - PostCSS plugin for Tailwind CSS
-  - https://tailwindcss.com
-
-### Testing
-- **Vitest** (v4.1.4) — MIT License
-  - Unit test framework for JavaScript/TypeScript
-  - https://vitest.dev
-
-- **@vitest/coverage-v8** (v4.1.4) — MIT License
-  - V8 coverage provider for Vitest
-  - https://vitest.dev
-
-- **@testing-library/react** (v16.3.2) — MIT License
-  - React component testing utilities
-  - https://testing-library.com
-
-- **@testing-library/jest-dom** (v6.9.1) — MIT License
-  - DOM matchers for testing
-  - https://testing-library.com
-
-- **@testing-library/user-event** (v14.6.1) — MIT License
-  - User interaction simulation for tests
-  - https://testing-library.com/user-event
-
-- **JSDOM** (v29.0.2) — MIT License
-  - JavaScript implementation of web standards
-  - https://github.com/jsdom/jsdom
-
-- **@playwright/test** (v1.59.1) — Apache 2.0 License
-  - End-to-end testing framework
-  - https://playwright.dev
-
-### Code Quality
-- **ESLint** (v9) — MIT License
-  - JavaScript linter for code quality
-  - https://eslint.org
-
-- **eslint-config-next** (v16.2.4) — MIT License
-  - ESLint configuration for Next.js
-  - https://nextjs.org
-
-- **Prettier** (v3.8.3) — MIT License
-  - Code formatter
-  - https://prettier.io
-
-- **prettier-plugin-tailwindcss** (v0.7.2) — MIT License
-  - Tailwind CSS class sorting for Prettier
-  - https://github.com/tailwindlabs/prettier-plugin-tailwindcss
-
-- **Husky** (v9.1.7) — MIT License
-  - Git hooks manager
-  - https://typicode.github.io/husky
-
-- **lint-staged** (v16.4.0) — MIT License
-  - Run linters on staged files
-  - https://github.com/okonet/lint-staged
-
-### Performance
-- **Lighthouse CI** (v0.15.1) — Apache 2.0 License
-  - Continuous integration for Lighthouse audits
-  - https://github.com/GoogleChrome/lighthouse-ci
-
-- **Sharp** (v0.34.5) — Apache 2.0 License
-  - High-performance image processing
-  - https://sharp.pixelplumbing.com
-
-### Type Definitions
-- **@types/node** (v22.19.17) — MIT License
-  - TypeScript definitions for Node.js
-  - https://github.com/DefinitelyTyped/DefinitelyTyped
-
-- **@types/react** (v19) — MIT License
-  - TypeScript definitions for React
-  - https://github.com/DefinitelyTyped/DefinitelyTyped
-
-- **@types/react-dom** (v19) — MIT License
-  - TypeScript definitions for React DOM
-  - https://github.com/DefinitelyTyped/DefinitelyTyped
-
-## License Compliance
-
-All dependencies are compatible with the Ankora™ proprietary license. This project
-does not use any GPL, AGPL, or other copyleft licenses that would impose
-restrictions on proprietary use.
-
-Exceptions: Some dev-only dependencies use Apache 2.0 and ISC licenses, which
-are permissive and do not affect the distribution of the production application.
+<!-- NOTICE:END GENERATED -->
 
 ## Third-Party Services
 
@@ -251,5 +144,6 @@ Email: thierryvm@gmail.com
 
 ---
 
-**Last Updated**: 19 avril 2026
+L'inventaire ci-dessus est daté par l'historique git de ce fichier, jamais par une
+ligne écrite à la main : une date saisie se périme en silence, un commit non.
 **Ankora™ — Personal Finance Cockpit**
