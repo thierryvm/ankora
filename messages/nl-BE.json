@@ -165,18 +165,17 @@
     "mktnav": {
       "links": {
         "product": "Produit",
-        "simulator": "Simulateur",
-        "pricing": "Tarifs"
+        "simulator": "Simulateur"
       },
       "ctaLogin": "Se connecter",
-      "ctaSignup": "Essayer gratuitement"
+      "ctaSignup": "Mijn account aanmaken"
     },
     "hero": {
       "badge": "Nouveau · Simulateur what-if",
       "h1Lead": "Ton ancrage",
       "h1Highlight": "financier.",
       "description": "Ankora sépare tes provisions affectées de ta réserve libre, projette six mois devant, et te laisse simuler l'impact de chaque décision — en clair, sans jargon.",
-      "ctaPrimary": "Ouvrir mon cockpit",
+      "ctaPrimary": "Mijn account aanmaken",
       "ctaSecondary": "Voir le simulateur",
       "trust": {
         "encrypted": "Données chiffrées, hébergées dans l'Union européenne",
@@ -290,31 +289,11 @@
       },
       "caveat": "Démo basée sur des hypothèses moyennes. Ankora ne fournit pas de conseil en placement. Aucun import bancaire — tu saisis tes charges manuellement."
     },
-    "pricing": {
-      "eyebrow": "Transparent dès le départ",
-      "h2": "Gratuit pendant la Phase 1.",
-      "phaseBadge": "Phase 1 · construction",
-      "price": "0 €",
-      "period": "pour l'instant, et sans date limite",
-      "body": "On construit d'abord le cockpit. Pas de carte demandée, pas de limite de temps, pas de fonctionnalité bridée. Export RGPD à tout moment.",
-      "features": {
-        "cockpit": "Cockpit complet, provisions et réserve libre",
-        "simulator": "Simulateur what-if illimité",
-        "manualEntry": "Saisie manuelle · tes données restent dans l'Union européenne",
-        "export": "Export RGPD en un clic"
-      },
-      "ctaPrimary": "Ouvrir mon cockpit",
-      "roadmap": {
-        "title": "Tu rejoins Ankora pendant sa Phase 1 ?",
-        "body": "Ton compte garde un accès complet au cockpit core à vie, gratuitement. Il n'y a pas d'offre payante, et aucune fonctionnalité n'est réservée à un plan supérieur. Cet engagement est repris dans nos conditions générales — il nous lie, il n'est pas qu'un argument.",
-        "link": "Lire la roadmap →"
-      }
-    },
     "footerCta": {
       "h2Lead": "Commence par ce qui est",
       "h2Highlight": "déjà à toi.",
       "description": "Gratuit pendant la Phase 1, pas de carte, export RGPD à tout moment. On fait simple parce que c'est déjà assez compliqué comme ça.",
-      "ctaPrimary": "Ouvrir mon cockpit"
+      "ctaPrimary": "Mijn account aanmaken"
     },
     "footer": {
       "links": {
@@ -327,6 +306,10 @@
     },
     "faqHeading": "Veelgestelde vragen",
     "faq": {
+      "price": {
+        "q": "Wat kost het?",
+        "a": "Niets. Ankora is gratis, er is geen betaald aanbod en geen enkele functie is voorbehouden aan een hoger plan. Die toezegging staat in de gebruiksvoorwaarden, niet alleen hier."
+      },
       "advice": {
         "q": "Is Ankora een tool voor financieel advies?",
         "a": "Nee. Ankora is een tool voor budgetorganisatie en financiële educatie. Het levert geen beleggingsaanbevelingen of gepersonaliseerd financieel advies."

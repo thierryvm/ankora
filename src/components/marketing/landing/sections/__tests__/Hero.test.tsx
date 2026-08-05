@@ -58,7 +58,7 @@ describe('<Hero />', () => {
 
   it('renders the two CTAs pointing at /signup and #simulator', async () => {
     await renderHero();
-    expect(screen.getByRole('link', { name: /ouvrir mon cockpit/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /créer mon compte/i })).toHaveAttribute(
       'href',
       '/signup',
     );

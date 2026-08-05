@@ -165,18 +165,17 @@
     "mktnav": {
       "links": {
         "product": "Product",
-        "simulator": "Simulator",
-        "pricing": "Pricing"
+        "simulator": "Simulator"
       },
       "ctaLogin": "Log in",
-      "ctaSignup": "Try for free"
+      "ctaSignup": "Create my account"
     },
     "hero": {
       "badge": "New · What-if simulator",
       "h1Lead": "Your financial",
       "h1Highlight": "anchor.",
       "description": "Ankora separates your earmarked provisions from your free reserve, projects six months ahead, and lets you simulate the impact of every decision — clearly, without jargon.",
-      "ctaPrimary": "Open my cockpit",
+      "ctaPrimary": "Create my account",
       "ctaSecondary": "See the simulator",
       "trust": {
         "encrypted": "Data encrypted, hosted in the European Union",
@@ -290,31 +289,11 @@
       },
       "caveat": "Demo based on average assumptions. Ankora does not provide investment advice. No bank import — you enter your expenses manually."
     },
-    "pricing": {
-      "eyebrow": "Transparent from the start",
-      "h2": "Free during Phase 1.",
-      "phaseBadge": "Phase 1 · building",
-      "price": "€0",
-      "period": "for now, with no end date",
-      "body": "We're building the cockpit first. No card asked, no time limit, no feature gating. GDPR export anytime.",
-      "features": {
-        "cockpit": "Full cockpit, provisions and free reserve",
-        "simulator": "Unlimited what-if simulator",
-        "manualEntry": "Manual entry · your data stays in the European Union",
-        "export": "GDPR export in one click"
-      },
-      "ctaPrimary": "Open my cockpit",
-      "roadmap": {
-        "title": "Joining Ankora during Phase 1?",
-        "body": "Your account keeps full lifetime access to the core cockpit, free. There is no paid tier, and no feature is reserved for a higher plan. That commitment is written into our terms — it binds us, it isn't just a sales line.",
-        "link": "Read the roadmap →"
-      }
-    },
     "footerCta": {
       "h2Lead": "Start with what's",
       "h2Highlight": "already yours.",
       "description": "Free during Phase 1, no card, GDPR export anytime. We keep it simple because it's already complicated enough.",
-      "ctaPrimary": "Open my cockpit"
+      "ctaPrimary": "Create my account"
     },
     "footer": {
       "links": {
@@ -327,6 +306,10 @@
     },
     "faqHeading": "Frequently asked questions",
     "faq": {
+      "price": {
+        "q": "What does it cost?",
+        "a": "Nothing. Ankora is free, there is no paid tier, and no feature is reserved for a higher plan. That commitment is written into the terms, not just stated here."
+      },
       "advice": {
         "q": "Is Ankora a financial advice tool?",
         "a": "No. Ankora is a budgeting and financial education tool. It does not provide investment recommendations or personalised financial advice."

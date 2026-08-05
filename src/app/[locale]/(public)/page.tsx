@@ -10,7 +10,6 @@ import { FooterCTA } from '@/components/marketing/landing/sections/FooterCTA';
 import { Hero } from '@/components/marketing/landing/sections/Hero';
 import { MktFooter } from '@/components/marketing/landing/sections/MktFooter';
 import { MktNav } from '@/components/marketing/landing/sections/MktNav';
-import { Pricing } from '@/components/marketing/landing/sections/Pricing';
 import { Principles } from '@/components/marketing/landing/sections/Principles';
 import { WhatIfDemo } from '@/components/marketing/landing/sections/WhatIfDemo';
 
@@ -84,7 +83,6 @@ export default async function HomePage({ params }: LocaleParams) {
         <Principles />
         <Feature />
         <WhatIfDemo />
-        <Pricing />
         <FAQ />
         <FooterCTA />
       </main>

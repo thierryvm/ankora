@@ -9,9 +9,9 @@ test.describe('Marketing — smoke', () => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-    // CTA labels updated by PR-3c-2 MktNav: "Créer un compte" → "Essayer
-    // gratuitement"; "Se connecter" stayed identical.
-    await expect(page.getByRole('link', { name: /essayer gratuitement/i }).first()).toBeVisible();
+    // Tout lien vers /signup dit « Creer mon compte » (PR #307 — collision de
+    // nom accessible avec le CTA authentifie « Mon cockpit »).
+    await expect(page.getByRole('link', { name: /créer mon compte/i }).first()).toBeVisible();
     await expect(page.getByRole('link', { name: /se connecter/i }).first()).toBeVisible();
   });
 

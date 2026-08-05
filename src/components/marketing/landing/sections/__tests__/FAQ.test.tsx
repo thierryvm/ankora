@@ -32,8 +32,11 @@ async function renderFAQ() {
 }
 
 describe('<FAQ />', () => {
-  it('exports FAQ_KEYS as the canonical 3-question list (advice/storage/sharing)', () => {
-    expect(FAQ_KEYS).toEqual(['advice', 'storage', 'sharing']);
+  // `price` a remplace la section Tarifs (2026-08-05). Il est EN TETE parce que
+  // c'est la question qu'on se pose en premier, et parce que l'information ne
+  // doit pas disparaitre avec la section.
+  it('exports FAQ_KEYS with the price question first', () => {
+    expect(FAQ_KEYS).toEqual(['price', 'advice', 'storage', 'sharing']);
   });
 
   it('renders the heading and 3 question/answer pairs in a <dl>', async () => {

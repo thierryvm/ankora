@@ -38,7 +38,6 @@ export async function MktNav() {
   const links = [
     { key: 'product', href: '#principles' },
     { key: 'simulator', href: '#simulator' },
-    { key: 'pricing', href: '#pricing' },
   ] as const;
 
   return (

@@ -21,7 +21,11 @@ import { getTranslations } from 'next-intl/server';
  * deep links (e.g. `/#faq`) and the FAQPage schema both keep working.
  */
 
-export const FAQ_KEYS = ['advice', 'storage', 'sharing'] as const;
+// `price` a remplace la section Tarifs (2026-08-05) : l'information reste,
+// la posture d'offre commerciale disparait. Une carte avec un prix, une liste
+// de features et un bouton EST une offre, meme a 0 EUR ; une reponse de FAQ
+// est une information.
+export const FAQ_KEYS = ['price', 'advice', 'storage', 'sharing'] as const;
 
 export async function FAQ() {
   const t = await getTranslations('landing');

@@ -80,11 +80,23 @@ describe('<MktNav />', () => {
     expect(screen.getByTestId('ankora-logo')).toBeInTheDocument();
   });
 
-  it('renders the 3 active marketing nav links pointing at section anchors', async () => {
+  it('renders the marketing nav links pointing at section anchors', async () => {
     await renderMktNav();
     expect(screen.getByRole('link', { name: 'Produit' })).toHaveAttribute('href', '#principles');
     expect(screen.getByRole('link', { name: 'Simulateur' })).toHaveAttribute('href', '#simulator');
-    expect(screen.getByRole('link', { name: 'Tarifs' })).toHaveAttribute('href', '#pricing');
+  });
+
+  // LA justification, une seule fois — les autres sites d'assertion pointent
+  // ici via « PR #307 ». Une carte avec un prix, une liste de features et un
+  // bouton EST une offre commerciale, meme a 0 EUR : c'est elle qui faisait
+  // d'Ankora un produit sur le marche, avec les obligations d'identification
+  // de l'editeur qui vont avec. L'assertion est negative pour que l'ancre ne
+  // revienne pas seule pointer dans le vide — un lien vers une section absente
+  // est un lien mort, et ce depot vient d'en corriger deux.
+  it('advertises no pricing section, and no anchor pointing at one', async () => {
+    const { container } = await renderMktNav();
+    expect(screen.queryByRole('link', { name: /tarifs|pricing/i })).not.toBeInTheDocument();
+    expect(container.querySelector('a[href="#pricing"]')).toBeNull();
   });
 
   it('PR-UX-1: does NOT render Sécurité / Journal in the main nav (benchmark Monarch/YNAB/Copilot)', async () => {
@@ -101,10 +113,16 @@ describe('<MktNav />', () => {
   it('renders the Login + Signup CTAs for anonymous visitors', async () => {
     await renderMktNav();
     expect(screen.getByRole('link', { name: 'Se connecter' })).toHaveAttribute('href', '/login');
-    expect(screen.getByRole('link', { name: /essayer gratuitement/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /créer mon compte/i })).toHaveAttribute(
       'href',
       '/signup',
     );
+    // « Mon cockpit » est le CTA de l'AUTHENTIFIE, vers /app. Il ne doit pas
+    // apparaitre pour un visiteur anonyme — et c'est cette assertion qui a
+    // attrape une collision reelle : le libelle d'inscription avait ete mis a
+    // « Ouvrir mon cockpit », dont le nom accessible contient « mon cockpit ».
+    // Deux liens de destinations differentes portaient le meme nom pour un
+    // lecteur d'ecran. Le libelle d'inscription dit maintenant ce qu'il fait.
     expect(screen.queryByRole('link', { name: /mon cockpit/i })).not.toBeInTheDocument();
   });
 
@@ -113,7 +131,7 @@ describe('<MktNav />', () => {
     await renderMktNav();
     expect(screen.getByRole('link', { name: /mon cockpit/i })).toHaveAttribute('href', '/app');
     expect(screen.queryByRole('link', { name: 'Se connecter' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /essayer gratuitement/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /créer mon compte/i })).not.toBeInTheDocument();
   });
 
   it('mounts the existing HeaderNav drawer for mobile parity', async () => {
