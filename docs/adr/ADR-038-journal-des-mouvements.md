@@ -1,12 +1,13 @@
 # ADR-038 — Le journal des mouvements
 
-- **Statut** : Proposed
+- **Statut** : Accepted
 - **Date** : 2026-08-05 (révision 2 après revue `plan-reviewer` — v1 rejetée)
+- **Accepté le** : 2026-08-05 par @thierry, sur la révision 2 — **y compris D0**, qui migre la clé primaire d'`accounts` sur des données de production
 - **Proposé par** : @cc-ankora (relevé factuel du schéma et du domaine, confrontation au modèle Coda de @thierry)
 - **Deciders** : @thierry, @cc-ankora
 - **Tags** : `domain`, `schema`, `produit`, `cockpit`, `fondation`
 - **Amende** : [ADR-002](ADR-002-bucket-model.md) (convention de clé étrangère composite sur `accounts`), [ADR-012](ADR-012-assistant-virements.md) (l'assistant de virements cesse d'être un conseil sans mémoire), [ADR-035](ADR-035-vocabulaire-des-quatre-chiffres.md) (un cinquième nom, nommé)
-- **Rend caducs** : [ADR-016](ADR-016-tracking-paiements-multi-sources.md) et [ADR-018](ADR-018-provisions-bidirectionnelles-audit-trail.md), tous deux `Proposed` et jamais implémentés — à passer `Superseded` en même temps que l'acceptation de celui-ci
+- **Rend caducs** : [ADR-016](ADR-016-tracking-paiements-multi-sources.md) et [ADR-018](ADR-018-provisions-bidirectionnelles-audit-trail.md), tous deux `Proposed` et jamais implémentés — passés `Superseded` le 2026-08-05, en même temps que l'acceptation de celui-ci
 
 > **Révision 2.** La v1 a été rejetée par `plan-reviewer` sur trois points de fond : D1
 > reposait sur une prémisse de schéma fausse, l'invariant central de D5 était inécrivable,

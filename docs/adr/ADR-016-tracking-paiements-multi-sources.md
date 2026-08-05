@@ -1,6 +1,6 @@
 # ADR-016 — Tracking paiements multi-sources (Option 2+3 hybride)
 
-- **Statut** : Proposed
+- **Statut** : Superseded par [ADR-038](ADR-038-journal-des-mouvements.md) le 2026-08-05
 - **Date** : 2026-05-08
 - **Proposé par** : Cowork-Opus (Architecture)
 - **Validé partiellement** : 2026-05-08 par @thierry (challenges A/B/C explicites validés en chat) + délégation D-H à @cowork
@@ -8,6 +8,13 @@
 - **Tags** : `architecture`, `domain`, `ux`, `differenciation`, `onboarding`, `belgium`
 - **Portée** : Phase 2 (MVP user N°1) et au-delà
 - **Lié à** : ADR-001 (no-PSD2), ADR-002 (bucket-model), ADR-009 (capacité d'épargne), ADR-011 (santé provisions), ADR-012 (assistant virements), future PR-D5 (onboarding + édition mouvements)
+
+> **⚠️ Superseded le 2026-08-05 par [ADR-038](ADR-038-journal-des-mouvements.md).**
+> Resté `Proposed` trois mois sans être implémenté. ADR-038 reprend le même besoin — un
+> journal de flux daté — et tranche **contre** sa convention de signe : pas de `amount`
+> signé, mais un couple source / destination, parce que deux conventions de signe dans une
+> même base finissent toujours par se croiser. Ce qui suit reste lisible comme état de la
+> réflexion de mai 2026 ; **ce n'est plus la décision en vigueur.**
 
 ---
 
