@@ -13,13 +13,16 @@ import { reopenConsentBanner } from '@/components/gdpr/ConsentBanner';
  * action mutates client-side state (localStorage flag) rather than
  * navigating. Styled to blend in with the surrounding footer links.
  */
-export function CookiePreferencesLink() {
+export function CookiePreferencesLink({ className }: { className?: string } = {}) {
   const t = useTranslations('footer');
   return (
     <button
       type="button"
       onClick={() => reopenConsentBanner()}
-      className="text-muted-foreground focus-visible:ring-brand-600 cursor-pointer rounded text-left text-sm hover:underline focus-visible:ring-2 focus-visible:outline-none"
+      className={
+        className ??
+        'text-muted-foreground focus-visible:ring-brand-600 cursor-pointer rounded text-left text-sm hover:underline focus-visible:ring-2 focus-visible:outline-none'
+      }
     >
       {t('cookiePreferences')}
     </button>

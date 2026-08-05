@@ -19,4 +19,12 @@ export const SITE = {
   background: '#F8FAFC',
   authors: [{ name: 'Thierry vanmeeteren' }],
   twitter: '@ankora_app',
+  /**
+   * Public contact address. Single source of truth: it also appears in the CGU
+   * and in the privacy notice, and three copies of an address drift into three
+   * addresses. Deliberately NOT an env var — it must be identical in every
+   * environment, and a legal contact that differs between preview and
+   * production is a legal contact nobody can rely on.
+   */
+  contactEmail: 'thierryvm@gmail.com',
 } as const;
