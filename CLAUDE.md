@@ -115,6 +115,56 @@ supabase/
 7. **Messages UI en français**, commits/code/comments en anglais.
 8. **Tests domain ≥ 90% lignes + fonctions, ≥ 85% branches**.
 9. **'use server' exports** : un fichier avec `'use server';` ne peut exporter QUE des fonctions `async` (Server Actions). Infrastructure code (logger factory, clients, helpers) n'a jamais le directive `'use server'`. Vérifié par `npm run lint:use-server` en CI.
+10. **Aucun montant agrégé sans sa décomposition accessible** (verrouillé le 5 août 2026). Cf. §ci-dessous.
+11. **Toute action qui écrit d'un clic se défait d'un clic** (verrouillé le 5 août 2026). Cf. §ci-dessous.
+
+## Un chiffre qu'on ne peut pas ouvrir est une injonction, pas une information
+
+**Verrouillé le 5 août 2026, sur constat de @thierry.** Le cockpit affiche « 59 € à verser
+sur l'épargne ». Rien ne dit d'où vient ce nombre.
+
+Il est pourtant entièrement décomposable, et le code le sait au moment même où il le
+calcule : `monthlyProvisionTotal()` additionne, pour chaque charge lissée, `montant ÷
+périodicité`. L'assurance auto y met 23,33 €, le précompte 18,00 €, la taxe déchets
+4,50 €. **Chaque euro des 59 a un nom.** L'interface les jette pour n'afficher que la
+somme.
+
+Ce n'est pas un manque de données, c'est un refus d'expliquer. Et la conséquence est
+qu'on ne présente pas une information mais un ordre : verse 59 €. On obéit, ou on ignore.
+Ni l'un ni l'autre n'est de la gestion.
+
+Le constat vient de la personne qui a écrit la formule. **Si l'auteur du calcul doit se
+demander à quoi le total correspond, personne d'autre n'a une chance.**
+
+**La règle.** Tout montant issu d'une somme s'ouvre sur ce qui le compose — chaque ligne,
+avec sa part et son échéance. Sans exception, et **dans les deux sens** : ce qu'on verse
+comme ce qu'on reprend. Une notification qui demande de reverser 340 € dit _pourquoi_ :
+« l'assurance auto (280 €) et la taxe (60 €) tombent ce mois ». Elle a tout ce qu'il faut
+pour le dire.
+
+Corollaire de conception : un composant qui reçoit un total sans recevoir ses composantes
+est mal découpé. La décomposition ne se recalcule pas côté affichage — elle descend avec
+le chiffre, sinon elle finira par diverger de lui.
+
+## Une action à un clic qui ne se défait pas est un piège à un clic
+
+**Verrouillé le 5 août 2026.** Cocher « échéance payée » est un bon geste : c'est le seul
+qui prouve qu'on a regardé. Mais pour une dette, ce clic **fait avancer un compteur** —
+échéance 4 → 5, restant dû recalculé, date de fin repoussée. Un clic de trop, ou sur la
+mauvaise ligne, et la projection de désendettement ment ensuite pendant des mois, sans
+rien signaler.
+
+La différence avec une facture est nette : recocher une facture est sans conséquence,
+décocher une échéance de dette doit défaire une arithmétique.
+
+**La règle.** Toute action qui écrit en un clic expose son annulation au même endroit et
+au même coût. On corrige, on ne supprime pas : l'annulation laisse une trace datée plutôt
+que d'effacer la ligne. Et l'affichage porte la date de l'action (« coché le 3 août »),
+jamais un simple état : **une date se vérifie, une coche se croit.**
+
+Origine : le modèle Coda de @thierry, où toute cellule se re-corrige à la main, et dont le
+mode d'emploi pose « rien ne se supprime : on décoche, on modifie, ou on ajoute un
+retrait ». C'est aussi ce qui rend un historique auditable.
 
 ## Ce dépôt est PUBLIC (ajouté le 2 août 2026)
 
