@@ -1,7 +1,11 @@
 import { getTranslations } from 'next-intl/server';
 
 import { AnkoraLogo } from '@/components/brand/AnkoraLogo';
+import { CookiePreferencesLink } from '@/components/layout/CookiePreferencesLink';
 import { Link } from '@/i18n/navigation';
+
+const LINK_CLASS =
+  'text-muted-foreground hover:text-foreground focus-visible:ring-brand-600 cursor-pointer rounded text-xs transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none';
 
 /**
  * MktFooter — minimal footer for the public landing.
@@ -18,10 +22,21 @@ import { Link } from '@/i18n/navigation';
  * locales, legal blurbs). This one is the marketing-landing minimal
  * variant per cc-design.
  *
- * Functional links target the existing legal/* routes so the footer
- * stays useful (not just visual) — `terms` → `/legal/cgu`,
- * `privacy` → `/legal/privacy`, etc. Security currently points to
- * `#security` placeholder (issue #79); contact at the dedicated route.
+ * Every entry goes where its label says it goes. Two did not, and both are
+ * fixed here rather than tolerated:
+ *
+ * - `contact` pointed at `/` — a link labelled "Contact" that returned the
+ *   visitor to the page they were already on. It is now a `mailto:` to the
+ *   same address the CGU already publish, which is also the contact means
+ *   an information-society provider owes its visitors.
+ * - `security` rendered as a greyed, `aria-disabled` word pointing at `#`,
+ *   waiting for a page that issue #79 still tracks. A dead entry helps
+ *   nobody and advertises the gap; it comes back when the page exists.
+ *
+ * `cookies` and the preferences button are ADDED: the landing is the most
+ * visited page of the site and was the only one with no way to review or
+ * withdraw a cookie decision (RGPD art. 7(3) — withdrawing must be as easy
+ * as consenting, and "as easy" cannot mean "navigate elsewhere first").
  */
 export async function MktFooter() {
   const t = await getTranslations('landing.footer');
@@ -29,9 +44,8 @@ export async function MktFooter() {
   const links = [
     { key: 'terms', href: '/legal/cgu' },
     { key: 'privacy', href: '/legal/privacy' },
-    // `security` page not built yet — issue #79 tracks creation.
-    { key: 'security', href: '#', disabled: true as const },
-    { key: 'contact', href: '/' },
+    { key: 'cookies', href: '/legal/cookies' },
+    { key: 'contact', href: 'mailto:thierryvm@gmail.com', external: true as const },
   ] as const;
 
   return (
@@ -43,24 +57,19 @@ export async function MktFooter() {
         </div>
         <nav aria-label={t('copyright')} className="flex flex-wrap items-center gap-5">
           {links.map((link) =>
-            'disabled' in link && link.disabled ? (
-              <span
-                key={link.key}
-                aria-disabled="true"
-                className="text-muted cursor-not-allowed text-xs"
-              >
+            'external' in link && link.external ? (
+              // Plain <a>: `mailto:` is not a route, so the localised Link
+              // would try to prefix it with the locale segment.
+              <a key={link.key} href={link.href} className={LINK_CLASS}>
                 {t(`links.${link.key}`)}
-              </span>
+              </a>
             ) : (
-              <Link
-                key={link.key}
-                href={link.href}
-                className="text-muted-foreground hover:text-foreground focus-visible:ring-brand-600 rounded text-xs transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-              >
+              <Link key={link.key} href={link.href} className={LINK_CLASS}>
                 {t(`links.${link.key}`)}
               </Link>
             ),
           )}
+          <CookiePreferencesLink className={LINK_CLASS} />
         </nav>
       </div>
     </footer>

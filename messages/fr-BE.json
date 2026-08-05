@@ -320,7 +320,7 @@
       "links": {
         "terms": "Conditions",
         "privacy": "Confidentialité",
-        "security": "Sécurité",
+        "cookies": "Cookies",
         "contact": "Contact"
       },
       "copyright": "Ankora · éditeur ancré à Bruxelles · 2026"
@@ -561,7 +561,7 @@
     "copyright": "© {year} — Tous droits réservés",
     "cgu": "CGU",
     "privacy": "Confidentialité",
-    "cookies": "Gérer les cookies",
+    "cookies": "Politique cookies",
     "faq": "FAQ",
     "copyrightNotice": "© {year} Ankora™. Tous droits réservés.",
     "cookiePreferences": "Modifier mes préférences cookies"

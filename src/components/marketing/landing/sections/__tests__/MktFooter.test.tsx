@@ -39,6 +39,20 @@ vi.mock('@/components/brand/AnkoraLogo', () => ({
   ),
 }));
 
+// The cookie-preferences button is a client component reading the `footer`
+// namespace through the client hook. Resolve it from the same fr-BE file the
+// server mock uses, so the assertion below sees the real label rather than a
+// stub — the point of the test is that this control is REACHABLE from the
+// landing, and a stub would prove nothing about that.
+vi.mock('next-intl', () => ({
+  useTranslations: (namespace: string) => {
+    const ns = (messages as Record<string, unknown>)[namespace] as Record<string, string>;
+    return (key: string) => ns[key] ?? key;
+  },
+}));
+
+vi.mock('@/components/gdpr/ConsentBanner', () => ({ reopenConsentBanner: vi.fn() }));
+
 import { MktFooter } from '../MktFooter';
 
 async function renderMktFooter() {
@@ -52,23 +66,47 @@ describe('<MktFooter />', () => {
     expect(screen.getByText(/éditeur ancré à Bruxelles/i)).toBeInTheDocument();
   });
 
-  it('renders the 3 functional legal links pointing at the existing routes', async () => {
+  it('points every legal link at the route its label names', async () => {
     await renderMktFooter();
     expect(screen.getByRole('link', { name: 'Conditions' })).toHaveAttribute('href', '/legal/cgu');
     expect(screen.getByRole('link', { name: 'Confidentialité' })).toHaveAttribute(
       'href',
       '/legal/privacy',
     );
-    expect(screen.getByRole('link', { name: 'Contact' })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: 'Cookies' })).toHaveAttribute('href', '/legal/cookies');
   });
 
-  it('renders Sécurité as disabled (page not built yet, issue #79)', async () => {
+  // Ce test exigeait `href="/"` pour un lien intitulé « Contact » — il
+  // épinglait donc le défaut au lieu de l'interdire. L'assertion porte
+  // maintenant sur ce qui rend le lien honnête : il doit mener AILLEURS que
+  // sur la page courante, et vers un moyen de contact réel.
+  it('renders Contact as a real contact means, never as a link back to the page itself', async () => {
     await renderMktFooter();
-    expect(screen.queryByRole('link', { name: 'Sécurité' })).not.toBeInTheDocument();
-    const security = screen.getByText('Sécurité');
-    expect(security.tagName).toBe('SPAN');
-    expect(security).toHaveAttribute('aria-disabled', 'true');
-    expect(security.className).toContain('cursor-not-allowed');
+    const contact = screen.getByRole('link', { name: 'Contact' });
+    const href = contact.getAttribute('href');
+    expect(href).not.toBe('/');
+    expect(href).toMatch(/^mailto:.+@.+\..+/);
+  });
+
+  // Une entrée grisée « Sécurité » pointant sur `#` annonçait une page que
+  // l'issue #79 n'a jamais livrée. Elle est retirée : l'assertion négative
+  // interdit son retour tant que la page n'existe pas — y compris sous forme
+  // de placeholder, qui était précisément le problème.
+  it('advertises no page that does not exist', async () => {
+    const { container } = await renderMktFooter();
+    expect(screen.queryByText('Sécurité')).not.toBeInTheDocument();
+    expect(container.querySelector('[aria-disabled="true"]')).toBeNull();
+    expect(container.querySelector('a[href="#"]')).toBeNull();
+  });
+
+  // RGPD art. 7(3) : retirer son consentement doit être aussi simple que le
+  // donner. La landing est la page où il se donne — c'était la seule du site
+  // où il ne pouvait pas se reprendre.
+  it('exposes the cookie-preferences control on the landing itself', async () => {
+    await renderMktFooter();
+    expect(
+      screen.getByRole('button', { name: /modifier mes préférences cookies/i }),
+    ).toBeInTheDocument();
   });
 
   it('renders inside a <footer> landmark with a top border', async () => {
