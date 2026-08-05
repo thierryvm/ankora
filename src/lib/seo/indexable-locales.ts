@@ -20,6 +20,22 @@ import { LOCALES_VISIBLE, routing, type Locale } from '@/i18n/routing';
  * de sa traduction la rend indexable et l'annonce en `hreflang` du même geste ;
  * il n'y a plus de second endroit à ne pas oublier.
  */
+/**
+ * Pourquoi une constante ici plutôt que `LOCALES_VISIBLE` importée des deux
+ * côtés — la question est légitime, elles ont la même valeur.
+ *
+ * Parce que ce sont deux décisions différentes qui coïncident aujourd'hui.
+ * `LOCALES_VISIBLE` répond à « quelles langues l'interface propose-t-elle ? » :
+ * c'est un choix produit, il pilote le sélecteur de langue et la ligne de
+ * confiance de la landing. `INDEXABLE_LOCALES` répond à « quelles pages
+ * laisse-t-on indexer ? » : c'est un choix SEO.
+ *
+ * Le jour où une traduction est livrée mais pas encore relue pour le
+ * référencement — ou l'inverse — les deux se séparent. Et surtout : tant que la
+ * décision SEO a **un seul domicile**, la corriger se fait à un endroit. C'est
+ * la propriété qui manquait, et son absence coûtait déjà une contradiction
+ * entre le sitemap et le layout.
+ */
 export const INDEXABLE_LOCALES = LOCALES_VISIBLE;
 
 /** `true` si cette locale a une traduction validée, donc si on l'indexe. */
