@@ -1,6 +1,11 @@
 import Decimal from 'decimal.js';
 
-import { installmentAmountOf, isDueInPeriod, periodKey } from '@/lib/domain/commitments';
+import {
+  installmentAmountAt,
+  installmentIndexAt,
+  isDueInPeriod,
+  periodKey,
+} from '@/lib/domain/commitments';
 import {
   paymentKey,
   type CockpitCharge,
@@ -66,26 +71,16 @@ export function obligationsDuMois(input: ObligationsDuMoisInput): readonly Month
       id: c.id,
       source: 'commitment' as const,
       label: c.label,
-      amountDue: new Decimal(installmentAmountOf(c)),
+      amountDue: new Decimal(installmentAmountAt(c, installmentIndexAt(c, ref))),
       paymentDay: c.paymentDay,
       isPaid: (input.paidKeysByCommitment.get(c.id) ?? EMPTY).has(periodKey(ref.year, ref.month)),
-      installmentIndex: installmentIndexOf(c, ref),
+      installmentIndex: installmentIndexAt(c, ref) + 1,
       installmentsTotal: c.installmentsTotal,
     }));
 
   return [...fromCharges, ...fromCommitments].sort(
     (a, b) => a.paymentDay - b.paymentDay || a.label.localeCompare(b.label),
   );
-}
-
-/**
- * Which instalment of the schedule falls in `ref`, 1-based. Same ordinal
- * arithmetic as `isDueInPeriod` — callers must have checked that first.
- */
-function installmentIndexOf(c: NamedCommitment, ref: ReferencePeriod): number {
-  const step = { monthly: 1, quarterly: 3, semiannual: 6, annual: 12 }[c.frequency];
-  const offset = (ref.year - c.startYear) * 12 + (ref.month - c.startMonth);
-  return offset / step + 1;
 }
 
 /**

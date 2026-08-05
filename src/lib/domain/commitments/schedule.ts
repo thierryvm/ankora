@@ -198,6 +198,34 @@ export function installmentAmountAt(c: Commitment, index: number): number {
 }
 
 /**
+ * 0-based index of the instalment whose CYCLE contains `ref` — the companion
+ * `installmentAmountAt` needs, so callers stop assuming every instalment is
+ * worth the regular one.
+ *
+ * ## Precondition, and why there is no clamp
+ *
+ * `ref` is expected inside the plan's window; callers have checked it with
+ * `isDueInPeriod` or `engagementPeseSurMois`. Out of it, this returns an
+ * out-of-range index, and `installmentAmountAt` then falls into its regular
+ * branch (any index ≠ `total − 1` does, negatives included).
+ *
+ * A clamp to `[0, total − 1]` would look safer and be worse: it would make an
+ * out-of-window month report the FINAL instalment's amount, contradicting
+ * `installmentAmountAt`, which reports the regular one. Two disagreeing answers
+ * to the same out-of-domain question is precisely the drift this pairing
+ * exists to remove — and the clamp is unreachable under either guard, so no
+ * test could ever exercise it.
+ *
+ * Takes `Period` rather than the cockpit's `ReferencePeriod`: the two are
+ * structurally identical, and `commitments/` must not grow a dependency on
+ * `cockpit/` — the arrow between those packages points the other way.
+ */
+export function installmentIndexAt(c: Commitment, ref: Period): number {
+  const delta = periodOrdinal(ref.year, ref.month) - periodOrdinal(c.startYear, c.startMonth);
+  return Math.floor(delta / monthsPerCycle(c.frequency));
+}
+
+/**
  * Whether the final instalment differs from the regular one — the predicate
  * the UI needs to choose between « 11 échéances de 220 € » (a lie on the SPF
  * plan) and « 10 × 220 € + 207,93 € ».

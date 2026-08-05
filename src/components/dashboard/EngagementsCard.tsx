@@ -9,7 +9,8 @@ import {
   firstInstallmentDate,
   installmentsPaid,
   isDueInPeriod,
-  installmentAmountOf,
+  installmentAmountAt,
+  installmentIndexAt,
   periodKey,
   remainingBalance,
 } from '@/lib/domain/commitments';
@@ -64,7 +65,11 @@ export async function EngagementsCard({
 
   const totalRemaining = rows.reduce((sum, r) => sum + r.remaining, 0);
   const dueThisMonth = rows.filter((r) => r.dueThisMonth && !r.tickedThisMonth);
-  const dueAmount = dueThisMonth.reduce((sum, r) => sum + installmentAmountOf(r.domain), 0);
+  // Le mois de la DERNIERE echeance vaut un solde, pas la mensualite pleine.
+  const dueAmount = dueThisMonth.reduce(
+    (sum, r) => sum + installmentAmountAt(r.domain, installmentIndexAt(r.domain, currentPeriod)),
+    0,
+  );
 
   return (
     <Card data-testid="engagements-card">

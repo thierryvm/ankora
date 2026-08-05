@@ -15,6 +15,7 @@ export {
   endInstallmentDate,
   installmentAmountOf,
   installmentAmountAt,
+  installmentIndexAt,
   lastInstallmentAmount,
   hasIrregularFinalInstallment,
   installmentsPaid,
