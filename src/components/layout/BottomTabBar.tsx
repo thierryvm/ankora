@@ -227,14 +227,23 @@ export function BottomTabBar({ isAdmin = false }: BottomTabBarProps) {
                     /*
                      * `h-8.25 w-11.5` = 33 × 46 px, la taille exacte que
                      * spécifie la décision Q7 — l'échelle Tailwind vaut 4 px
-                     * par unité. Les valeurs arbitraires `h-[33px] w-[46px]`
-                     * rendaient les mêmes pixels, mais hors de l'échelle : elles
-                     * échappaient au thème et faisaient rougir l'extension
-                     * Tailwind à chaque ouverture du fichier.
+                     * par unité. Les formes à valeur arbitraire rendaient les
+                     * mêmes pixels, mais hors de l'échelle : elles échappaient
+                     * au thème.
                      *
-                     * `rounded-[11px]` reste arbitraire, faute d'équivalent
-                     * canonique (l'échelle de rayon ne descend pas à cette
-                     * granularité), et `shadow-[…]` porte une variable CSS.
+                     * Ce commentaire les DÉCRIT sans les épeler, délibérément.
+                     * Tailwind v4 scanne les sources comme du texte : une classe
+                     * écrite ici, même en commentaire, est vue par l'extracteur —
+                     * c'est ce qui a mis toutes les pages en HTTP 500 le 29
+                     * juillet, quand une JSDoc citait un utilitaire avec des
+                     * points de suspension littéraux. Mesuré ici : les formes
+                     * arbitraires n'atteignaient PAS la feuille de style, mais
+                     * elles faisaient rougir l'extension à chaque ouverture du
+                     * fichier, et la règle vaut pour le cas où ça passerait.
+                     *
+                     * Le rayon reste en valeur arbitraire faute d'équivalent
+                     * canonique (l'échelle ne descend pas à cette granularité),
+                     * et l'ombre porte une variable CSS.
                      */
                     className="bg-brand-700 text-primary-foreground shadow-brand-700/35 flex h-8.25 w-11.5 items-center justify-center rounded-[11px] shadow-[0_2px_8px_var(--tw-shadow-color)]"
                   >

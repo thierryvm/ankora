@@ -86,44 +86,6 @@ Ankora n'est **pas** un service de conseil en placement (contrainte FSMA Belgiqu
 Tout texte produit pour l'app doit éviter les formulations suggérant du conseil en investissement
 ("vous devriez placer", "nous recommandons d'investir", etc.).
 
-## Stack
-
-- Next.js 16.2+ (App Router, Server Components, Server Actions, typed routes)
-- React 19.2+
-- TypeScript strict (`strict` + `noUncheckedIndexedAccess` + `noImplicitOverride`)
-- Tailwind CSS 4 (`@theme inline` — tokens dans `globals.css`)
-- Supabase (Postgres + RLS + Auth + Storage, région EU-west)
-- Upstash Redis (rate limiting)
-- Zod v4 (validation iso client/server)
-- Vitest 4 + Playwright + Lighthouse CI
-- Husky + lint-staged
-
-## Architecture
-
-```
-src/
-  app/                 # App Router (layouts, pages, route handlers)
-    (marketing)/       # landing, pricing, faq, legal
-    (auth)/            # login, signup, callback
-    app/               # dashboard privé — protégé par middleware
-  components/
-    brand/             # logo, favicon SVG
-    ui/                # shadcn/ui primitives
-    features/          # components métier par feature
-  lib/
-    domain/            # services financiers purs (Decimal.js, 0 dépendance DB)
-    schemas/           # schémas Zod (1 fichier par agrégat)
-    supabase/          # clients (browser, server, admin, middleware)
-    security/          # rate-limit, audit-log
-    gdpr/              # consent, export, deletion
-    env.ts             # parse + valide les variables d'env via Zod
-    site.ts            # source de vérité métadonnées SEO
-supabase/
-  migrations/          # schéma + RLS + triggers
-.claude/
-  agents/              # 19 fichiers (compte vérifié le 2026-08-05) — QA (security, rls, financial, ui, lighthouse, seo-geo, gdpr, test-runner, test-quality, dashboard-ux, admin-dashboard, i18n, mobile-ios, llm-security, mobile-liquid-glass, prod-bug-investigator, silent-failure)
-```
-
 ## Règles de code
 
 1. **Domaine pur** : `src/lib/domain/` n'importe JAMAIS depuis `@supabase` ou Next.js — que du TS pur + `decimal.js`.
@@ -320,130 +282,36 @@ les plus sensibles de l'app.
 Deux jobs, donc **deux planchers distincts** — un chiffre global agrégé serait
 ininterprétable au premier conflit, donc ignoré :
 
-| Job                              | Plancher au 2 août 2026                                      |
-| -------------------------------- | ------------------------------------------------------------ |
-| `Playwright E2E`                 | **228 passed** (224 au 31/07 — **enfin mesuré**, cf. infra)  |
-| `Playwright E2E (authenticated)` | **40 passed** (39 avant, +1 `navigation-usable-first-visit`) |
+| Job                              | Plancher, OBSERVÉ |
+| -------------------------------- | ----------------- |
+| `Playwright E2E`                 | **228 passed**    |
+| `Playwright E2E (authenticated)` | **40 passed**     |
 
-> **Plancher public : 228, OBSERVÉ le 2026-08-02.** Il était attendu à 224 +4
-> depuis le 29 juillet et n'avait jamais été relevé — la note ci-dessous
-> réclamait « la valeur mesurée à la première CI verte ». C'est fait : run
-> `30752902825`, `228 passed, 195 skipped`. Le solde calculé (−2 ADR-034,
-> +6 consentement) tombait juste, mais il ne valait rien tant qu'il n'était pas
-> vu ; il l'est maintenant, et le chiffre remplace l'estimation.
->
-> **Authentifié : 39 → 40, mesuré le 2026-08-03.** `e2e/navigation-usable-first-visit.spec.ts`,
-> un seul cas, exécuté par `chromium-desktop` uniquement (même raison que
-> `navigation-reachable` : la spec n'est pas sous `mobile-ios/`). Mesuré en local
-> **dans les deux sens** sur la même machine et la même stack : la liste complète
-> des specs authentifiées rend **`38 passed`** sans elle et **`39 passed`** avec.
-> Delta local +1, delta CI attendu +1. Les valeurs absolues diffèrent de la CI
-> (39/40) parce que l'environnement local n'est pas la parité CI — **c'est le
-> delta qui se compare**. Dans le job public elle ajoute 3 sautés et 0 passé
-> (vérifié sans clé `service_role` : `3 skipped`), donc le plancher public ne
-> bouge pas.
->
-> **Authentifié : 38 → 39**, `e2e/navigation-reachable.spec.ts` (PR #293), un
-> seul cas, exécuté par `chromium-desktop` uniquement — la spec n'est pas sous
-> `mobile-ios/`, donc le projet `iPhone 14` ne la découvre pas. Dans le job
-> public elle ajoute 3 sautés et 0 passé, donc le plancher public ne bouge pas
-> de son fait.
->
-> Mesuré aussi en local avant le push, dans les deux sens : `origin/main` rend
-> `37 passed` sur cette machine et la branche `38`. Le delta local (+1) et le
-> delta CI (+1) concordent ; les valeurs absolues diffèrent parce que
-> l'environnement local n'est pas la parité CI. **C'est le delta qui se compare,
-> jamais le nombre absolu d'une machine à l'autre.**
+**Ces nombres sont mesurés, jamais déduits.** Un relèvement se mesure en local
+**avant le premier push**, dans les deux sens (avec et sans la spec) : c'est le
+**delta** qui se compare d'une machine à l'autre, jamais la valeur absolue.
 
-> **⚠️ Plancher public à re-mesurer (chantier 1, 29 juillet 2026).** ADR-034 a
-> supprimé `/design-playground` et sa spec `e2e/design-playground.spec.ts`
-> (1 cas × 2 projets non-webkit → **−2 attendus**). Le chiffre **n'est pas
-> corrigé ici** : la doctrine exige un nombre **observé**, et il ne l'a pas été.
-> Les e2e n'ont pas pu tourner sur la machine du chantier — Docker absent, donc
-> pas de `supabase start`, et le projet Supabase lié est la **production** :
-> les specs authentifiées ne sautent qu'en l'absence de clé `service_role`, donc
-> les lancer aurait écrit de vraies lignes en prod. **À la première CI verte
-> après ce chantier : relever la ligne `N passed` du job public et inscrire la
-> valeur mesurée ici.** Le job authentifié n'est pas affecté par ADR-034.
->
-> **Toujours pas mesuré au 31 juillet 2026** — Docker est installé depuis, mais le
-> plancher public exige un second build (les `NEXT_PUBLIC_*` sont inlinées à la
-> compilation, et le job public tourne sur un Supabase factice) plus les six
-> projets. Reporté délibérément par @thierry : coût élevé, valeur documentaire.
-> Le chiffre reste **attendu à −2, jamais observé** — donc pas inscrit.
->
-> **Second delta en attente, même jour : +6.** `e2e/consent-first-visit.spec.ts`
-> ajoute 2 cas, exécutés par `chromium-desktop`, `mobile-safari` et
-> `mobile-chrome` (elle n'est pas sous `mobile-ios/`, donc pas par les trois
-> projets iPhone). Vérifié en local sur ces trois projets : **`6 passed`**. Le
-> solde attendu du plancher public est donc **−2 +6 = +4**, à confirmer par
-> mesure — un delta calculé n'est pas un plancher observé.
-
-> **Job authentifié : 31 → 38, mesuré le 31 juillet 2026.** Première exécution
-> réelle de ce job depuis sa création : Docker n'existait pas sur la machine, et
-> le projet Supabase lié était la production. Relevé en parité CI (stack locale,
-> CLI Supabase épinglée 2.84.2, `retries: 2`, `--workers=1`, `chromium-desktop` +
-> `iPhone 14`) : **`38 passed, 5 skipped`**, aucun échec, aucun flaky.
->
-> Le +7 ne vient d'aucune spec nouvelle : la quarantaine était appliquée au
-> **fichier** alors que les échecs sont par **cas**. `dashboard-cockpit-bloc2`
-> (2 cas verts sur 6) et `dashboard-simulator-drawer` (5 sur 6) retenaient sept
-> cas qui passaient. Ils sortent de la liste ; leurs 5 cas réellement cassés
-> portent un `test.skip(true, raison)` à leur propre niveau.
->
-> Les 4 entrées restantes ont été **vues rouges**, pas supposées. Les deux
-> étiquetées « READY TO VERIFY » au chantier 1 ne le sont pas : elles échouent sur
-> des **montants** (`accounts:75` attend `500,00`, `dashboard-expenses:64` attend
-> `5,00 €`), ce qu'une relecture de libellés ne pouvait pas voir.
-
-Le relèvement du 27 juillet est mesuré, pas déduit : `gdpr-deletion-queue.spec.ts`
-n'apparaît que dans **un** des deux projets du job authentifié (`iPhone 14` filtre sur
-`**/mobile-ios/**`), d'où +6 et non +12. Dans le job public elle ajoute **18 sautés et
-0 passé** — 6 cas × 3 projets — donc le plancher public ne bouge pas.
-
-Le chiffre est passé de 30 à 31 en cours de PR : `test-quality-auditor` a montré que les
-trois corrections UI n'avaient aucun test, et le sixième cas les couvre. Un plancher qui
-monte parce qu'un trou a été trouvé est le seul mouvement sain de ce tableau.
-
-**Un plancher qui DESCEND parce qu'un cas ne prouvait rien est le second.** Le 27 juillet,
-`cron-gdpr-auth` a été annoncée à +12 puis ramenée à **+9** : `silent-failure-auditor` a
-mesuré que `CRON_SECRET` n'est défini dans aucun bloc `env` de `ci.yml`, donc que ces cas
-sortent par la première branche de la route et n'atteignent jamais la comparaison de
-secret. Un quatrième cas affirmait que les deux refus sont indiscernables — en CI ils sont
-littéralement la même branche, l'assertion ne pouvait pas échouer. Retiré plutôt que laissé
-à ressembler à un garde-fou. **Un plancher bâti sur des cas vacuoles est pire qu'un
-plancher plus bas.**
-
-Chaque relèvement est **mesuré en local avant le premier push**, jamais estimé.
-Une spec authentifiée ajoutée sous `e2e/` est aussi découverte par le job public :
-elle doit y **sauter** (`test.skip(!admin, …)`) et non échouer, sinon c'est le
-plancher public qui bouge.
-
-Le second job porte en plus une **liste de quarantaine** dans
-`e2e/authenticated-specs.json` : 6 specs découvertes et comptées mais pas
-exécutées, chacune avec sa raison, imprimées à chaque run. Cette liste ne doit
-que **rétrécir**. Y ajouter une entrée est un aveu qui se justifie par écrit dans
-le rapport de PR, jamais un raccourci pour faire passer une CI.
-
-Mesure — relever la ligne `N passed` / `N skipped` du reporter de **chaque** job :
+Mesure — relever la ligne de chaque job :
 
 ```bash
 gh run view <run-id> --log | grep -E "^\s+[0-9]+ (passed|failed|flaky|skipped)"
 ```
 
-> **`flaky` fait partie de l'alternance depuis le 31 juillet 2026, et ce n'est pas
-> cosmétique.** Playwright compte à part un cas qui échoue puis passe au retry : il
-> sort de `N passed` et gagne sa propre ligne `N flaky`. La commande précédente ne
-> filtrait que `passed|skipped` — un cas devenu instable faisait donc **baisser le
-> plancher sans qu'aucune ligne n'explique pourquoi**, sur un job pourtant vert.
-> Mesuré : `dashboard-account-rename.spec.ts:9` s'est comportée exactement ainsi en
-> local (`1 flaky, 1 passed` après échec puis succès au retry #1). Un plancher qui
-> baisse sans cause visible se fait arrondir ; c'est la faute que toute cette
-> section existe pour empêcher. `failed` est ajouté pour la même raison : un zéro
-> absent est une information.
->
-> **Un cas `flaky` ne compte pas comme vert.** Il compte comme un cas qui a besoin
-> d'être regardé — pas comme un cas qui prouve quelque chose.
+`flaky` et `failed` font partie de l'alternance délibérément. Playwright compte
+à part un cas qui échoue puis passe au retry : il **sort** de `N passed` et gagne
+sa propre ligne. Sans eux, un cas devenu instable ferait baisser le plancher sans
+qu'aucune ligne n'explique pourquoi, sur un job pourtant vert. **Un cas `flaky`
+ne compte pas comme vert** — il compte comme un cas à regarder.
+
+Une spec authentifiée ajoutée sous `e2e/` est aussi découverte par le job public :
+elle doit y **sauter** (`test.skip(!admin, …)`) et non échouer, sinon c'est le
+plancher public qui bouge.
+
+Le second job porte en plus une **liste de quarantaine** dans
+`e2e/authenticated-specs.json` : des specs découvertes et comptées mais pas
+exécutées, chacune avec sa raison, imprimées à chaque run. Cette liste ne doit
+que **rétrécir**. Y ajouter une entrée est un aveu qui se justifie par écrit dans
+le rapport de PR, jamais un raccourci pour faire passer une CI.
 
 Une PR qui fait **baisser** l'un de ces nombres est refusée, sauf justification
 écrite dans le rapport de PR. Supprimer une spec obsolète est légitime ; le faire
@@ -452,9 +320,13 @@ est committée et toute divergence avec la découverte fait échouer le job, par
 qu'une suite qui rétrécit en silence est pire qu'une suite absente — elle inspire
 confiance.
 
-**Règle de refus**: ne JAMAIS déclarer une tâche terminée sans avoir
-explicitement vérifié les 5 critères ci-dessus. Un push sans vérif Sourcery
-= tâche incomplète, point.
+**Deux mouvements sains de ce tableau, et ils vont dans les deux sens** : un
+plancher qui MONTE parce qu'un trou a été trouvé, et un plancher qui DESCEND
+parce qu'un cas ne prouvait rien (assertion qui ne peut pas échouer, branche
+jamais atteinte en CI). Un plancher bâti sur des cas vacuoles est pire qu'un
+plancher plus bas.
+
+Journal complet des relevés : [`docs/reference/planchers-e2e-historique.md`](docs/reference/planchers-e2e-historique.md).
 
 ## Cleanup branches locales
 
@@ -719,43 +591,15 @@ Cet ordre est **verrouillé**. Si une PR émerge hors-plan (ex: hotfix sécurit�
 
 ## Workflow agents (`.claude/agents/`)
 
-> **Source de vérité** : `.claude/agents/<name>.md` est canonique. Cette liste et la table `docs/ROADMAP.md` sont des résumés. En cas de conflit, le fichier agent prévaut. Pour ajouter/modifier un agent : éditer d'abord le fichier agent, puis répercuter ici + ROADMAP.
+> **Source de vérité : `.claude/agents/<name>.md`.** Le champ `description` de
+> chaque agent dit **quand** l'invoquer, et c'est ce que la session lit au
+> démarrage — la liste qui vivait ici en était une recopie, qui se périmait à
+> chaque ajout. Elle est supprimée plutôt que maintenue en double.
 
-- **security-auditor** : avant merge de toute PR touchant auth / middleware / RLS / headers
-- **rls-flow-tester** : après toute migration ou changement RLS. Vérifie **les deux sens** — qu'un tiers ne passe pas, et que le chemin privilégié (service_role, `SECURITY DEFINER`) n'est pas refusé en silence par `FORCE RLS` ou un grant manquant. Rapporte des **nombres de lignes**, pas « aucune erreur »
-- **silent-failure-auditor** : dès qu'un mécanisme est censé protéger, enregistrer, prouver ou nettoyer — journal d'audit, écriture privilégiée, cron/tâche de fond, gate CI, purge de rétention, file d'attente, alerte. Question unique : « si ça s'arrêtait cette nuit, qu'est-ce qui serait différent demain matin ? ». Classe les constats par **durée d'invisibilité**, pas par gravité. Modèle : Opus.
-- **financial-formula-validator** : après tout changement dans `src/lib/domain/`
-- **ui-auditor** : après toute modification UI (audit générique mobile-first WCAG 2.2 AA, viewport Chromium)
-- **mobile-ios-auditor** : après modification layout / nav / forms / dashboard mobile / theme toggle / drawer — audit Safari iOS WebKit spécifique (safe-area, ITP, `100vh`, auto-zoom inputs, focus rings emerald). Complémentaire de `ui-auditor`. Procédure manuelle : `docs/runbooks/dev-on-iphone.md`.
-- **dashboard-ux-auditor** : après modification du dashboard utilisateur (`src/app/[locale]/app/**`)
-- **admin-dashboard-auditor** : après modification de l'admin panel (`src/app/[locale]/admin/**`)
-- **i18n-auditor** : après édition `messages/*.json`, `src/i18n/`, ou Server Components avec `getTranslations`/`useTranslations`
-- **lighthouse-auditor** : avant release candidate
-- **seo-geo-auditor** : après ajout/renommage de pages publiques
-- **gdpr-compliance-auditor** : dès qu'on touche à PII, cookies, export, deletion
-- **test-runner** : après toute modification de code
-- **llm-security-auditor** : audit sécurité IA avancé OWASP LLM Top 10 + vecteurs 2026 (RAG poisoning, indirect injection, agent hijacking, supply chain LLM, model extraction, sycophancy abuse, multi-turn drift, encoding bypass). Lancer avant release majeure touchant l'IA, après modification architecturale (system prompt, providers, agents, RAG, tools, MCP). Complémentaire de `security-auditor` (couche app classique). Modèle : Opus.
-- **prod-bug-investigator** : dès qu'un bug est constaté en prod/sur l'app tournante et que la cause est INCONNUE (locale qui saute, session perdue, données périmées, cache empoisonné, « marche en local pas en prod », intermittent). Reproduit avant de théoriser, étiquette chaque affirmation par son niveau de preuve, explique l'intermittence, liste ce qui est écarté. Diagnostique — n'implémente pas. Modèle : Opus.
-- **test-quality-auditor** : à l'ajout/modif de tests et avant merge d'une PR touchant domaine/Server Actions/UI critique. Répond à « ces tests auraient-ils attrapé le bug ? » : specs `test.skip` inconditionnelles, `.only` oublié, assertions vacuoles, fix sans test de non-régression, branches critiques non couvertes. Modèle : Sonnet.
-- **mobile-liquid-glass-auditor** : après toute modif de glass/backdrop-filter/translucidité/surfaces élevées (nav, cartes, sheets, header, bottom-tab). Vérifie le contraste WCAG AA dans l'état glass ET le fallback opaque, `prefers-reduced-transparency`/`reduced-motion`, anti-stacking + perf backdrop-filter, CSP-safe, quirks WebKit. Complémentaire de `mobile-ios-auditor` + `ui-auditor`. Modèle : Sonnet.
-
-## Commandes
-
-```bash
-npm run dev              # dev server (Turbopack)
-npm run build            # prod build
-npm run start            # prod server
-npm run lint             # ESLint
-npm run lint:use-server  # lint 'use server' exports (async-only enforcement)
-npm run typecheck        # tsc --noEmit
-npm run test             # Vitest
-npm run test:coverage    # Vitest + coverage
-npm run e2e              # Playwright
-npm run lhci             # Lighthouse CI
-npm run icons            # regénère PNG PWA depuis SVG
-npm run security:audit   # npm audit
-npm run supabase:types   # regénère src/lib/supabase/types.ts
-```
+Pour ajouter ou modifier un agent : éditer son fichier, puis répercuter dans
+`docs/ROADMAP.md`. Tout agent DOIT déclarer un `model:` en frontmatter — jamais
+de défaut silencieux, jamais un identifiant de version figé (`opus`, pas
+`claude-opus-4-8`). La matrice de choix vit dans le `CLAUDE.md` global.
 
 ## Variables d'environnement
 
