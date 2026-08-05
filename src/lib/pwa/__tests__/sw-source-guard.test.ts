@@ -34,10 +34,17 @@ describe('public/sw.js — garde source du mécanisme de mise à jour', () => {
     // Un appel dans `install` supprimerait l'état `waiting` : plus rien à
     // détecter, plus rien à annoncer, et la PWA installée redeviendrait
     // impossible à mettre à jour sur iPhone.
-    const install = CODE.slice(
-      CODE.indexOf("addEventListener('install'"),
-      CODE.indexOf("addEventListener('activate'"),
-    );
+    const debut = CODE.indexOf("addEventListener('install'");
+    const fin = CODE.indexOf("addEventListener('activate'");
+    // Sans ces deux assertions, un marqueur renomme rendrait `-1` et le `slice`
+    // verifierait silencieusement la mauvaise portion du fichier : le garde
+    // passerait au vert en ne gardant plus rien. Un garde-fou qui echoue OUVERT
+    // est pire que pas de garde-fou.
+    expect(debut, "le gestionnaire 'install' est introuvable").toBeGreaterThanOrEqual(0);
+    expect(fin, "le gestionnaire 'activate' est introuvable").toBeGreaterThanOrEqual(0);
+    expect(fin).toBeGreaterThan(debut);
+
+    const install = CODE.slice(debut, fin);
     expect(install).not.toContain('skipWaiting');
   });
 

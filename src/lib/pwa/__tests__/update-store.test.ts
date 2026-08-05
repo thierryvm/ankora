@@ -92,6 +92,24 @@ describe('store de mise à jour PWA', () => {
     expect(reloadPage).toHaveBeenCalledTimes(1);
   });
 
+  it('deux clics sur « Recharger » ne rechargent qu’une fois', () => {
+    // Le drapeau `dejaRecharge` est ce qui rend ce contrat vrai, et il est
+    // facile a perdre au refactor : `location.reload()` est asynchrone, donc
+    // le document survit assez longtemps pour recevoir un second clic.
+    signalerMiseAJour(registration(null));
+    appliquerMiseAJour();
+    appliquerMiseAJour();
+    expect(reloadPage).toHaveBeenCalledTimes(1);
+  });
+
+  it('se desabonner detache reellement le callback', () => {
+    const cb = vi.fn();
+    const desabonner = subscribe(cb);
+    desabonner();
+    signalerMiseAJour(registration(null));
+    expect(cb).not.toHaveBeenCalled();
+  });
+
   it('« Plus tard » masque, et un second signalement ne le ré-arme pas', () => {
     signalerMiseAJour(registration(null));
     reporterMiseAJour();
