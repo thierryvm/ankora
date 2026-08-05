@@ -250,10 +250,10 @@ les plus sensibles de l'app.
 Deux jobs, donc **deux planchers distincts** — un chiffre global agrégé serait
 ininterprétable au premier conflit, donc ignoré :
 
-| Job                              | Plancher au 2 août 2026                                     |
-| -------------------------------- | ----------------------------------------------------------- |
-| `Playwright E2E`                 | **228 passed** (224 au 31/07 — **enfin mesuré**, cf. infra) |
-| `Playwright E2E (authenticated)` | **39 passed** (38 avant, +1 `navigation-reachable`)         |
+| Job                              | Plancher au 2 août 2026                                      |
+| -------------------------------- | ------------------------------------------------------------ |
+| `Playwright E2E`                 | **228 passed** (224 au 31/07 — **enfin mesuré**, cf. infra)  |
+| `Playwright E2E (authenticated)` | **40 passed** (39 avant, +1 `navigation-usable-first-visit`) |
 
 > **Plancher public : 228, OBSERVÉ le 2026-08-02.** Il était attendu à 224 +4
 > depuis le 29 juillet et n'avait jamais été relevé — la note ci-dessous
@@ -261,6 +261,17 @@ ininterprétable au premier conflit, donc ignoré :
 > `30752902825`, `228 passed, 195 skipped`. Le solde calculé (−2 ADR-034,
 > +6 consentement) tombait juste, mais il ne valait rien tant qu'il n'était pas
 > vu ; il l'est maintenant, et le chiffre remplace l'estimation.
+>
+> **Authentifié : 39 → 40, mesuré le 2026-08-03.** `e2e/navigation-usable-first-visit.spec.ts`,
+> un seul cas, exécuté par `chromium-desktop` uniquement (même raison que
+> `navigation-reachable` : la spec n'est pas sous `mobile-ios/`). Mesuré en local
+> **dans les deux sens** sur la même machine et la même stack : la liste complète
+> des specs authentifiées rend **`38 passed`** sans elle et **`39 passed`** avec.
+> Delta local +1, delta CI attendu +1. Les valeurs absolues diffèrent de la CI
+> (39/40) parce que l'environnement local n'est pas la parité CI — **c'est le
+> delta qui se compare**. Dans le job public elle ajoute 3 sautés et 0 passé
+> (vérifié sans clé `service_role` : `3 skipped`), donc le plancher public ne
+> bouge pas.
 >
 > **Authentifié : 38 → 39**, `e2e/navigation-reachable.spec.ts` (PR #293), un
 > seul cas, exécuté par `chromium-desktop` uniquement — la spec n'est pas sous

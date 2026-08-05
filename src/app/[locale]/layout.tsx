@@ -201,7 +201,12 @@ export default async function LocaleLayout({
         </a>
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
-          <ConsentBanner />
+          {/* `liftedForBottomBar` : la bannière est `fixed z-50`, la barre
+              d'onglets `fixed z-40`. La réserve `--consent-height` posée en
+              `padding-bottom` sur `body` ne protège que le contenu DANS le flux ;
+              elle n'a jamais déplacé la barre, que la bannière recouvrait donc
+              intégralement. Même valeur, même raison que pour la `ScrollToTop`. */}
+          <ConsentBanner liftedForBottomBar={showBottomTabBar} />
           <Toaster />
           {showBottomTabBar && <BottomTabBar isAdmin={showAdminEntry} />}
           <ServiceWorkerRegister />
