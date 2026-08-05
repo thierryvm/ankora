@@ -60,6 +60,9 @@ vi.mock('@/components/gdpr/ConsentBanner', () => ({
   reopenConsentBanner: vi.fn(),
 }));
 
+const reloadPage = vi.hoisted(() => vi.fn());
+vi.mock('@/lib/browser/reload', () => ({ reloadPage }));
+
 /**
  * The ⊕ mounts the real entry sheet, which reaches for server actions on open.
  * Stubbed to a marker: this suite is about the BAR — that the ⊕ sits in the
@@ -459,6 +462,44 @@ describe('<MoreSheet /> — Cookie Preferences (Hotfix Option A v3 / GDPR art. 7
     render(<BottomTabBar />);
     await user.click(screen.getByTestId('bottom-tab-more'));
     expect(screen.getByTestId('more-sheet-cookie-preferences')).toBeInTheDocument();
+  });
+});
+
+describe('<MoreSheet /> — « Recharger l’application » (PWA standalone)', () => {
+  /**
+   * Le geste que `display: standalone` supprime.
+   *
+   * iOS retire la barre d'adresse ET le tirer-pour-rafraîchir d'une PWA
+   * installée : sans cette entrée, il n'existe aucun moyen de recharger, donc
+   * aucune mise à jour ne peut arriver. Rapporté par @thierry le 2026-08-05.
+   */
+  it('recharge le document au clic', async () => {
+    reloadPage.mockClear();
+    const user = userEvent.setup();
+    render(<BottomTabBar />);
+    await user.click(screen.getByTestId('bottom-tab-more'));
+    await user.click(screen.getByTestId('more-sheet-reload'));
+    expect(reloadPage).toHaveBeenCalledTimes(1);
+  });
+
+  it('marche AVEC `navigator.serviceWorker` absent — c’est tout son intérêt', async () => {
+    // Falsification de l'indépendance : sans ce cas, un futur relecteur
+    // supprimera cette entrée comme « doublon du bandeau de mise à jour », et
+    // le seul chemin qui marche encore quand la détection est morte
+    // disparaîtra avec elle.
+    const original = Object.getOwnPropertyDescriptor(navigator, 'serviceWorker');
+    Object.defineProperty(navigator, 'serviceWorker', { value: undefined, configurable: true });
+    try {
+      reloadPage.mockClear();
+      const user = userEvent.setup();
+      render(<BottomTabBar />);
+      await user.click(screen.getByTestId('bottom-tab-more'));
+      await user.click(screen.getByTestId('more-sheet-reload'));
+      expect(reloadPage).toHaveBeenCalledTimes(1);
+    } finally {
+      if (original) Object.defineProperty(navigator, 'serviceWorker', original);
+      else Reflect.deleteProperty(navigator, 'serviceWorker');
+    }
   });
 });
 

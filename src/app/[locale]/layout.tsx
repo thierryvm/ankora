@@ -14,6 +14,7 @@ import { ConsentBanner } from '@/components/gdpr/ConsentBanner';
 import { Toaster } from '@/components/ui/toast';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister';
+import { UpdateBanner } from '@/components/pwa/UpdateBanner';
 import { ThemeBootScript } from '@/components/theme/ThemeBootScript';
 import { BottomTabBar } from '@/components/layout/BottomTabBar';
 import { shouldMountBottomTabBar } from '@/lib/layout/bottom-tab-bar-state';
@@ -214,6 +215,9 @@ export default async function LocaleLayout({
           <Toaster />
           {showBottomTabBar && <BottomTabBar isAdmin={showAdminEntry} />}
           <ServiceWorkerRegister />
+          {/* Même décalage que la bannière de consentement : la barre d'onglets
+              est `fixed`, aucune réserve en `padding-bottom` ne la déplace. */}
+          <UpdateBanner liftedForBottomBar={showBottomTabBar} />
           <JsonLd data={organizationJsonLd} />
           <Analytics />
           <SpeedInsights />

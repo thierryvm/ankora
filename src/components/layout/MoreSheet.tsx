@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
-import { Moon, Sun, X, LogOut } from 'lucide-react';
+import { Moon, RefreshCw, Sun, X, LogOut } from 'lucide-react';
 
 import { Link } from '@/i18n/navigation';
 
@@ -12,6 +12,7 @@ import { useIsClient } from '@/lib/hooks/useIsClient';
 import { logoutAction } from '@/lib/actions/auth';
 import { LocaleSwitcher } from './LocaleSwitcher';
 import { CookiePreferencesLink } from './CookiePreferencesLink';
+import { reloadPage } from '@/lib/browser/reload';
 
 /**
  * PR-BETA-6 — "More" sheet for the mobile Bottom Tab Bar (THI-277).
@@ -375,6 +376,29 @@ export function MoreSheet({ isOpen, onClose, isAdmin = false }: MoreSheetProps) 
             >
               <CookiePreferencesLink />
             </div>
+            {/*
+             * « Recharger l'application » — le geste que le mode `standalone`
+             * supprime.
+             *
+             * iOS retire la barre d'adresse ET le tirer-pour-rafraîchir d'une
+             * PWA installée : il ne reste aucun moyen de recharger, donc aucune
+             * mise à jour ne peut arriver. Rapporté par @thierry le 2026-08-05.
+             *
+             * N'appelle PAS le service worker et n'a besoin d'aucune détection :
+             * c'est délibérément un doublon du bandeau de mise à jour, et c'est
+             * le seul chemin qui marche encore quand la détection est morte.
+             * Un test le monte avec `navigator.serviceWorker` absent, pour que
+             * cette indépendance soit prouvée et non promise.
+             */}
+            <button
+              type="button"
+              onClick={() => reloadPage()}
+              data-testid="more-sheet-reload"
+              className="bg-surface-muted text-foreground hover:bg-surface-muted/80 focus-visible:ring-brand-600 flex w-full items-center justify-between rounded-md px-3 py-3 text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
+            >
+              <span>{tLinks('reload')}</span>
+              <RefreshCw className="h-4 w-4" aria-hidden="true" />
+            </button>
           </section>
         </div>
       </div>

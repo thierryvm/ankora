@@ -117,7 +117,8 @@
         "legalCookies": "Cookies",
         "logout": "Abmelden",
         "darkMode": "Dunkler Modus",
-        "lightMode": "Heller Modus"
+        "lightMode": "Heller Modus",
+        "reload": "Reload the app"
       }
     }
   },
@@ -1519,5 +1520,12 @@
     "trustHosting": "🇧🇪 Belgien · EU-gehostet",
     "trustNoBank": "Keine Bankaggregation",
     "trustFree": "0 € Phase 1"
+  },
+  "pwa": {
+    "update": {
+      "title": "A new version is available",
+      "reload": "Reload",
+      "later": "Later"
+    }
   }
 }
