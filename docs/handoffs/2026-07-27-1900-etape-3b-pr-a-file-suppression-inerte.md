@@ -170,7 +170,7 @@ production n° 3 du 27 juillet.
   `authenticated`** — les policies RLS les invoquent dans ce rôle ; ce serait casser toute
   lecture applicative. `anon` seul, et **en nommant `public`** dans le revoke (voir §Annexes).
 - **Ne PAS se servir du MCP Supabase pour vérifier la production** : il est branché sur le
-  **premier** compte et ne voit que `goldteam`. Il rendrait un résultat faux avec l'air
+  **premier** compte et ne voit qu'un projet du compte professionnel. Il rendrait un résultat faux avec l'air
   d'être vrai.
 - **Ne PAS compter `Sourcery review — skipping` comme un vert.**
 - **Ne PAS lancer un agent QA doté de Bash sur le répertoire depuis lequel on commite**

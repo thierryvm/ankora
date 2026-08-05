@@ -132,14 +132,14 @@ session N+1, doctrine projet.
 - **NE PAS croire que `log.error` est une détection** : ni drain de logs, ni alerte, ni
   Sentry. Personne n'est abonné.
 - **NE PAS se servir du MCP Supabase pour vérifier la production** : il est branché sur le
-  **premier** compte et ne voit que `goldteam`.
+  **premier** compte et ne voit qu'un projet du compte professionnel.
 - **NE PAS supposer qu'un test local prouve un privilège de l'hébergé** : `postgres` porte
   `rolbypassrls = t` en local.
 - **NE PAS lancer un agent QA doté de Bash** sur le répertoire depuis lequel on commite sans
   appliquer les 3 règles de `CLAUDE.md` (chemins explicites, `git diff --cached --stat`
   avant chaque commit, mutations hors de l'arbre).
-- **NE PAS exécuter un prompt tagué `@cc-goldteam`** — autre projet, autre compte
-  (`ovb-willemot`). Un tel prompt est arrivé dans cette session le 27 juillet et n'a pas
+- **NE PAS exécuter un prompt tagué pour l'autre projet** — autre projet, autre compte
+  (second compte). Un tel prompt est arrivé dans cette session le 27 juillet et n'a pas
   été exécuté.
 
 ---

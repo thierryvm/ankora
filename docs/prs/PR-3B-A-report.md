@@ -453,7 +453,7 @@ sur `public`, identiques de part et d'autre — mais ce n'est pas une preuve. La
 prod est fournie ci-dessous comme **lecture n° 4**, en lecture seule.
 
 Le MCP Supabase **ne pouvait pas** servir à cette vérification : interrogé, il ne voit que
-`goldteam` — le **premier** compte. L'utiliser aurait interrogé la mauvaise base et rendu
+un projet du compte professionnel — le **premier** compte. L'utiliser aurait interrogé la mauvaise base et rendu
 un résultat faux avec l'air d'être vrai.
 
 ## 9ter. `test-quality-auditor` — le trou qu'il a trouvé, et qui est fermé

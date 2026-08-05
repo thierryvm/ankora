@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Garde-fou anti-mauvais-compte — Ankora (projet PERSONNEL, compte thierryvm).
 //
-// @thierry mène en parallèle un projet PRO sur le compte `ovb` (GitHub
-// ovb-willemot, Vercel, Supabase). Les deux comptes GitHub sont connectés au
+// @thierry mène en parallèle un projet PROFESSIONNEL sur un second compte
+// (GitHub, Vercel, Supabase). Les deux comptes GitHub sont connectés au
 // keyring EN MÊME TEMPS : `gh auth status` en liste deux, un seul actif. Une
 // bascule silencieuse enverrait du code perso sur l'infra pro, ou l'inverse.
 //
