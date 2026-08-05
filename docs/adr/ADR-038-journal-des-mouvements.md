@@ -316,6 +316,19 @@ revue humaine raisonnable.
 
 - **Rôles de comptes découplés** du nombre de comptes physiques. D0 le rend possible ; la
   refonte de la page comptes se décide seule.
+- **Découvert, autorisé ou non** — même ADR que ci-dessus, parce qu'il touche la même table
+  et change ce que le cockpit dit d'un compte. Relevé le 2026-08-05 : le statut du cockpit
+  se calcule **entièrement sur des flux** (`resteDisponible`, `ilTeReste`) et ne lit **le
+  solde d'aucun compte**. Quelqu'un à −400 € sur son principal, avec des rentrées correctes
+  et des provisions à jour, obtient donc un cockpit **vert** — et une jauge de provisions
+  « à jour », alors que mettre de l'argent de côté à découvert revient à emprunter cher pour
+  placer peu. Il manque un `overdraft_limit` par compte (défaut 0) pour distinguer les trois
+  états réels : positif, négatif dans la limite autorisée, négatif au-delà — le seul des
+  trois qui déclenche des frais d'incident. **À traiter après le journal, pas avant** : tant
+  que `accounts.balance` est saisi à la main, un solde négatif est une affirmation de
+  l'utilisateur ; après D6, c'est un fait dérivé, et un garde-fou bâti sur un solde saisi se
+  déclencherait sur des fautes de frappe. Limite FSMA : afficher les deux faits côte à côte
+  est de la description ; suggérer de puiser dans l'épargne serait du conseil.
 - **Provisions libres** — voiture, chaudière, dentiste : montant _et_ date incertains. Ni
   charge, ni dépense, ni engagement. Probablement à généraliser en une obligation unique
   portant deux niveaux de précision (montant connu ou estimé × date connue ou estimée)
