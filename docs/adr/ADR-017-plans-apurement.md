@@ -4,7 +4,7 @@
 - **Date** : 2026-05-09
 - **Proposé par** : Cowork-Opus (Architecture)
 - **Validation** : 2026-05-09 par @thierry (chat session, validation implicite via go Bloc B Plans d'apurement Surface 1 + audit visuel pixel-perfect)
-- **Deciders** : Thierry vanmeeteren (Product Owner — délégation), Cowork-Opus (Architecture)
+- **Deciders** : @thierry (Product Owner — délégation), Cowork-Opus (Architecture)
 - **Tags** : `architecture`, `domain`, `ux`, `differenciation`, `belgium`
 - **Portée** : Phase 2 (MVP user N°1) et au-delà
 - **Lié à** : ADR-002 (bucket-model), ADR-009 amendé (capacité d'épargne nuancée), ADR-011 (santé provisions), ADR-012 (assistant virements), ADR-016 (tracking paiements multi-sources), future PR-D5 (onboarding + édition mouvements + plans d'apurement backend)

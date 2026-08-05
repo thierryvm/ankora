@@ -321,9 +321,10 @@ docs(readme): update roadmap
 
 ## Licence
 
-**Propriétaire.** © 2026 Thierry Vanmeeteren. Tous droits réservés.
+**Propriétaire.** © 2026 thierryvm. Tous droits réservés.
 
-- **Ankora™** est une marque déposée de Thierry Vanmeeteren
+- **Ankora™** est une marque de thierryvm — revendiquée, non enregistrée (le `™` le dit ;
+  « déposée » aurait signifié un enregistrement BOIP/EUIPO qui n'existe pas)
 - Le code source est fourni à titre consultatif (transparence, audit de sécurité)
 - Toute utilisation, copie, modification ou distribution requiert une autorisation écrite
 

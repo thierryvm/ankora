@@ -3,7 +3,7 @@
 - **Statut** : Proposed
 - **Date** : 2026-05-09
 - **Auteur** : @cowork (Cowork desktop, Opus)
-- **Deciders** : Thierry vanmeeteren (Product Owner), @cowork (Architecture), @cc-ankora (Implémentation)
+- **Deciders** : @thierry (Product Owner), @cowork (Architecture), @cc-ankora (Implémentation)
 - **Tags** : `architecture`, `domain-model`, `ux`, `audit`, `provisions`, `bidirectionnel`
 - **Portée** : V1.0 publique (PR-D5 tracking paiements multi-sources + onglet Mouvements Compte Épargne)
 - **En lien avec** :

@@ -3,7 +3,7 @@
 - **Statut** : Accepted
 - **Date** : 2026-05-10
 - **Auteur** : @cowork (brief PR-SEC-ADMIN), @cc-ankora (implémentation)
-- **Deciders** : Thierry vanmeeteren (Product Owner), @cowork (Architecture), @cc-ankora (Implémentation)
+- **Deciders** : @thierry (Product Owner), @cowork (Architecture), @cc-ankora (Implémentation)
 - **Tags** : `security`, `admin`, `rbac`, `audit`, `rate-limit`, `headers`
 - **Portée** : V1.0 publique (PR-SEC-ADMIN, post-PR #159 admin topbar)
 - **En lien avec** :

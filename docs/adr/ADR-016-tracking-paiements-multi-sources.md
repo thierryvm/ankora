@@ -4,7 +4,7 @@
 - **Date** : 2026-05-08
 - **Proposé par** : Cowork-Opus (Architecture)
 - **Validé partiellement** : 2026-05-08 par @thierry (challenges A/B/C explicites validés en chat) + délégation D-H à @cowork
-- **Deciders** : Thierry vanmeeteren (Product Owner — délégation), Cowork-Opus (Architecture)
+- **Deciders** : @thierry (Product Owner — délégation), Cowork-Opus (Architecture)
 - **Tags** : `architecture`, `domain`, `ux`, `differenciation`, `onboarding`, `belgium`
 - **Portée** : Phase 2 (MVP user N°1) et au-delà
 - **Lié à** : ADR-001 (no-PSD2), ADR-002 (bucket-model), ADR-009 (capacité d'épargne), ADR-011 (santé provisions), ADR-012 (assistant virements), future PR-D5 (onboarding + édition mouvements)

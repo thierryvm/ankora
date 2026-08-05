@@ -2,9 +2,9 @@
 
 - **Statut** : Accepted
 - **Date** : 2026-07-29
-- **Accepté le** : 2026-07-29 par Thierry vanmeeteren — décision Q6 de [`docs/specs/2026-07-29-decisions-ankora.md`](../specs/2026-07-29-decisions-ankora.md), approuvée explicitement avant ouverture du chantier
+- **Accepté le** : 2026-07-29 par @thierry — décision Q6 de [`docs/specs/2026-07-29-decisions-ankora.md`](../specs/2026-07-29-decisions-ankora.md), approuvée explicitement avant ouverture du chantier
 - **Proposé par** : @cowork (arbitrage produit `DECISIONS-ANKORA.md`) + @cc-ankora (relevé factuel des call-sites)
-- **Deciders** : Thierry vanmeeteren, @cowork, @cc-ankora
+- **Deciders** : @thierry, @cowork, @cc-ankora
 - **Tags** : `architecture`, `design-system`, `components`, `dead-code`
 - **Portée** : Chantier 1 « nettoyage + vocabulaire » (C1)
 - **Supersède** : [ADR-020](ADR-020-atoms-vs-ui-canonical-frontier.md) (Accepted, 2026-05-18)

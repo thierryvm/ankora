@@ -2,8 +2,8 @@
 
 - **Statut** : Accepted
 - **Date** : 2026-04-25
-- **Accepté le** : 2026-04-25 par Thierry vanmeeteren (via délégation @cowork)
-- **Deciders** : Thierry vanmeeteren (Product Owner), @cowork (orchestration), @cc-ankora (exécution)
+- **Accepté le** : 2026-04-25 par @thierry (via délégation @cowork)
+- **Deciders** : @thierry (Product Owner), @cowork (orchestration), @cc-ankora (exécution)
 - **Tags** : `architecture`, `process`, `design-system`, `roadmap`
 - **Portée** : ROADMAP Phase 1 (MVP). N'affecte ni le produit ni la sécurité ; modifie uniquement l'**ordre d'exécution** des PRs techniques.
 

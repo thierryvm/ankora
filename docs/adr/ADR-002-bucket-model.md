@@ -2,8 +2,8 @@
 
 - **Statut** : Accepted
 - **Date** : 2026-04-20
-- **Accepté le** : 2026-04-20 par Thierry vanmeeteren
-- **Deciders** : Thierry vanmeeteren (Product Owner), Cowork-Opus (Architecture)
+- **Accepté le** : 2026-04-20 par @thierry
+- **Deciders** : @thierry (Product Owner), Cowork-Opus (Architecture)
 - **Tags** : `architecture`, `product`, `domain-model`, `ux`
 - **Portée** : Phase 1 (MVP), Phase 2 (pots partagés, simulateur bidirectionnel)
 - **En lien avec** : [ADR-001](./ADR-001-no-psd2.md) — les comptes sont logiques, pas reliés à une banque réelle.

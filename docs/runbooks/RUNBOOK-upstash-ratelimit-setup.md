@@ -126,7 +126,8 @@ Deux boutons utiles à droite du bloc :
 
 **3.3.1** Ouvrir `https://vercel.com/<org>/ankora/settings/environment-variables`
 
-(Pour Ankora : l'org est `thierry-vanmeeterens-projects`.)
+(Pour Ankora : l'org Vercel est celle du compte personnel `thierryvm` ; son slug
+contient le nom de famille, il n'est donc pas recopié ici.)
 
 **3.3.2** Cliquer **Add Environment Variable** (bouton noir en haut à droite).
 

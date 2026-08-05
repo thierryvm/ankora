@@ -4,7 +4,7 @@
 - **Date** : 2026-05-03
 - **Accepté le** : 2026-05-03 par délégation explicite de @thierry à @cowork (chat session, "tu as la responsabilité des choix techniques")
 - **Proposé par** : Cowork-Opus (Architecture)
-- **Deciders** : Thierry vanmeeteren (Product Owner — délégation), Cowork-Opus (Architecture)
+- **Deciders** : @thierry (Product Owner — délégation), Cowork-Opus (Architecture)
 - **Tags** : `architecture`, `ux`, `performance`, `next-js`
 - **Portée** : Phase 2 (MVP user N°1) et au-delà
 - **Lié à** : ADR-009 (capacité d'épargne), spec `dashboard-cockpit-vraie-vision-2026-05-03.md`, PR-C2a (déjà mergée), PR-D5
