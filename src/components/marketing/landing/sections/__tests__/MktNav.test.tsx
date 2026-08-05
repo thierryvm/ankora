@@ -86,11 +86,13 @@ describe('<MktNav />', () => {
     expect(screen.getByRole('link', { name: 'Simulateur' })).toHaveAttribute('href', '#simulator');
   });
 
-  // La section Tarifs est supprimee (2026-08-05) : une carte avec un prix, une
-  // liste de features et un bouton EST une offre commerciale, meme a 0 EUR.
-  // L'assertion est negative pour que l'ancre ne puisse pas revenir seule et
-  // pointer dans le vide — un lien de navigation vers une section absente est
-  // un lien mort, et ce depot vient d'en corriger deux.
+  // LA justification, une seule fois — les autres sites d'assertion pointent
+  // ici via « PR #307 ». Une carte avec un prix, une liste de features et un
+  // bouton EST une offre commerciale, meme a 0 EUR : c'est elle qui faisait
+  // d'Ankora un produit sur le marche, avec les obligations d'identification
+  // de l'editeur qui vont avec. L'assertion est negative pour que l'ancre ne
+  // revienne pas seule pointer dans le vide — un lien vers une section absente
+  // est un lien mort, et ce depot vient d'en corriger deux.
   it('advertises no pricing section, and no anchor pointing at one', async () => {
     const { container } = await renderMktNav();
     expect(screen.queryByRole('link', { name: /tarifs|pricing/i })).not.toBeInTheDocument();

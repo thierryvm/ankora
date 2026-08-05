@@ -28,10 +28,8 @@ test.describe('Landing — cc-design sections smoke', () => {
     await expect(page.locator('section#principles')).toBeVisible();
     await expect(page.locator('section#feature')).toBeVisible();
     await expect(page.locator('section#faq')).toBeVisible();
-    // La section Tarifs est supprimee (2026-08-05) : une carte avec un prix,
-    // une liste de features et un bouton EST une offre commerciale, meme a
-    // 0 EUR. L'assertion negative garde le cas dans la suite — le plancher ne
-    // bouge pas — et interdit son retour silencieux.
+    // Section Tarifs supprimee (PR #307). L'assertion negative garde le cas
+    // dans la suite — le plancher ne bouge pas — et interdit un retour muet.
     await expect(page.locator('section#pricing')).toHaveCount(0);
 
     // FooterCTA + MktFooter

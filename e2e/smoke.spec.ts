@@ -9,11 +9,8 @@ test.describe('Marketing — smoke', () => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-    // CTA harmonises le 2026-08-05 : tout lien vers /signup dit « Creer mon
-    // compte ». « Essayer gratuitement » suggerait un essai — le mot retire
-    // ailleurs le meme jour — et « Ouvrir mon cockpit » entrait en collision
-    // avec « Mon cockpit », le CTA authentifie vers /app : deux destinations,
-    // un seul nom accessible.
+    // Tout lien vers /signup dit « Creer mon compte » (PR #307 — collision de
+    // nom accessible avec le CTA authentifie « Mon cockpit »).
     await expect(page.getByRole('link', { name: /créer mon compte/i }).first()).toBeVisible();
     await expect(page.getByRole('link', { name: /se connecter/i }).first()).toBeVisible();
   });
