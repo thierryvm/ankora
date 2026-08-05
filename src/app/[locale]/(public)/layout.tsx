@@ -1,17 +1,19 @@
-import { ScrollToTop } from '@/components/layout/ScrollToTop';
-import { shouldMountBottomTabBar } from '@/lib/layout/bottom-tab-bar-state';
+import { ScrollToTopSlot } from '@/components/layout/bottom-tab-bar-visibility';
 
-export default async function PublicLayout({ children }: { children: React.ReactNode }) {
-  // PR-BETA-6 hotfix #4 (THI-277, 2026-05-25, @thierry iPhone smoke): the
-  // ScrollToTop FAB was hidden behind the persistent BottomTabBar on iPhone
-  // Safari for authenticated visitors on `/faq`, `/legal/*`, `/glossaire`.
-  // Lift the FAB above the bar when the bar will mount; otherwise keep the
-  // original safe-area-only offset.
-  const liftedForBottomBar = await shouldMountBottomTabBar();
+export default function PublicLayout({ children }: { children: React.ReactNode }) {
+  // PR-BETA-6 hotfix #4 (THI-277, 2026-05-25, @thierry iPhone smoke) : le bouton
+  // « haut de page » se cachait derrière la barre d'onglets sur iPhone Safari,
+  // pour un visiteur authentifié sur `/faq`, `/legal/*`, `/glossaire`.
+  //
+  // Ce layout de GROUPE n'est pas re-rendu sur `/` → `/faq` par clic — `/` vit
+  // dans le même groupe. Son ancienne décision serveur était donc figée
+  // exactement comme celle de la racine, et le bouton se serait retrouvé sous
+  // une barre montée : le hotfix #4 rejoué. L'emplacement lit maintenant le
+  // contexte, réévalué à chaque navigation.
   return (
     <>
       {children}
-      <ScrollToTop liftedForBottomBar={liftedForBottomBar} />
+      <ScrollToTopSlot />
     </>
   );
 }
