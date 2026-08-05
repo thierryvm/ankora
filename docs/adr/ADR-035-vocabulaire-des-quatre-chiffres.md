@@ -131,10 +131,16 @@ restait un cinquième mot non arbitré, et il désignait **deux nombres différe
 
 ### Le constat, mesuré
 
-| Où                                     | Fonction                                                               | Filtre                                                             |
-| -------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| Ligne du hero                          | `provisionsMensuellesLissees` (`cockpit/effort-financier-lisse.ts:22`) | `isActive && frequency !== 'monthly'` — **aucun filtre de compte** |
-| Carte de virement (`app/page.tsx:352`) | `monthlyProvisionTotal` sur `transfer.ts:81`                           | `isActive && paidFrom === 'epargne'` — **toutes fréquences**       |
+| Où                                    | Fonction                                                            | Filtre                                                             |
+| ------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Ligne du hero (`SituationDuMoisHero`) | `provisionsMensuellesLissees` — `cockpit/effort-financier-lisse.ts` | `isActive && frequency !== 'monthly'` — **aucun filtre de compte** |
+| Carte de virement (`app/page.tsx`)    | `monthlyProvisionTotal` — `domain/transfer.ts`                      | `isActive && paidFrom === 'epargne'` — **toutes fréquences**       |
+
+> Les fonctions sont désignées **par leur nom, jamais par un numéro de ligne** : un ADR se
+> lit des années après le commit qui l'a motivé, et un numéro de ligne se périme au premier
+> refactor. Celui-ci s'est d'ailleurs périmé le jour même de la rédaction — la version
+> initiale citait `effort-financier-lisse.ts:22`, que le commit de décomposition avait déjà
+> décalé. Remarque de Sourcery sur la PR #309, acceptée.
 
 Deux périmètres, un seul mot. Conséquence directe : une charge **mensuelle payée depuis
 l'épargne** compte dans la carte et pas dans la ligne du hero ; une charge **trimestrielle
@@ -145,11 +151,22 @@ payée depuis le principal** fait l'inverse. C'est la maladie que cet ADR a soig
 
 En regardant ce que les nombres **font** plutôt que ce qu'ils s'appellent, il y en a trois :
 
-| Ce que c'est                                   | Nature             | Nom affiché                                                | Où                |
-| ---------------------------------------------- | ------------------ | ---------------------------------------------------------- | ----------------- |
-| La part mensuelle d'une facture non mensuelle  | **flux théorique** | **Lissage**                                                | ligne du hero     |
-| Ce qui bouge réellement vers l'épargne ce mois | **instruction**    | **À virer vers l'épargne** / **À reprendre sur l'épargne** | carte de virement |
-| Ce qui dort déjà sur l'épargne, réservé        | **stock**          | **Provisions**                                             | jauge de santé    |
+| Ce que c'est                                   | Nature             | Nom affiché                                                | Où                                    |
+| ---------------------------------------------- | ------------------ | ---------------------------------------------------------- | ------------------------------------- |
+| La part mensuelle d'une facture non mensuelle  | **flux théorique** | **Lissage**                                                | ligne du hero (`SituationDuMoisHero`) |
+| Ce qui bouge réellement vers l'épargne ce mois | **instruction**    | **À virer vers l'épargne** / **À reprendre sur l'épargne** | carte de virement                     |
+| Ce qui dort déjà sur l'épargne, réservé        | **stock**          | **Provisions**                                             | `ProvisionHealthGaugeCard`            |
+
+**Les deux libellés de la carte ne coexistent jamais** : la carte lit `epargneTransferNet`
+(`MonthlyTransferPlan`), un nombre **signé**, et affiche sa valeur absolue. Positif, le mois
+demande d'alimenter l'épargne — « À virer vers l'épargne ». Négatif, les échéances du mois
+dépassent ce qui a été mis de côté et il faut puiser — « À reprendre sur l'épargne ». Un
+seul chiffre, un seul geste, et l'étiquette suit son signe. C'est le sens que @thierry décrit lui-même : « si j'ai un souci sur le mois, je
+récupère un montant pour finir le mois ».
+
+La **jauge de santé** est le composant `ProvisionHealthGaugeCard` : elle compare le solde
+réellement mis de côté à ce que les échéances à venir réclament (`domain/provision.ts`).
+C'est le seul des trois nombres qui décrit un **état à un instant**, et non un mouvement.
 
 Le mot « provisions » reste là où il désigne un **stock** — le sens que lui donne l'usage
 courant, et celui du mode d'emploi budgétaire de @thierry (« provision de lissage » pour la
