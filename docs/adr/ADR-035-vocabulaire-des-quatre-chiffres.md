@@ -3,6 +3,7 @@
 - **Statut** : Accepted
 - **Date** : 2026-07-29
 - **Accepté le** : 2026-07-29 par @thierry — décisions Q1, Q2 et Q3 de [`docs/specs/2026-07-29-decisions-ankora.md`](../specs/2026-07-29-decisions-ankora.md)
+- **Amendé le** : 2026-08-05 par @thierry — « provisions » désignait deux nombres de périmètres différents. Cf. §Amendement en fin de document : **Lissage** (flux) · **À virer vers l'épargne** (mouvement) · **Provisions** (stock)
 - **Proposé par** : @cowork (arbitrage produit) + @cc-ankora (relevé factuel du code et des clés i18n)
 - **Deciders** : @thierry, @cowork, @cc-ankora
 - **Tags** : `produit`, `vocabulaire`, `i18n`, `domain`, `cockpit`
@@ -122,6 +123,77 @@ Corollaire UX : les catégories de charge (Loyer, Assurance, Crédit…) doivent
   **Alternative calculée, si @thierry veut préserver la décision de 2026-04-25** : `#9a3412` → **AA 7,31** sur blanc (mieux que les 5,22 prescrits), ratio 1,44 vs laiton, 28° d'écart de teinte. Il reste franchement ambré-orangé, sans virer au rouge (qui collisionnerait avec `danger`).
 
   **Valeur appliquée : `#a35a06`**, celle de `DECISIONS-ANKORA.md`, parce que le document fait foi et que l'accessibilité était le problème à résoudre. Le conflit est porté ici et dans le rapport de chantier pour arbitrage. À noter enfin : `ADR-005`, provenance revendiquée par le commentaire du test, ne contient **aucun** de ces hexadécimaux (grep → 0) — la décision de 2026-04-25 n'est adossée à aucun ADR.
+
+## Amendement du 2026-08-05 — un flux, un mouvement, un stock
+
+**Accepté par @thierry le 2026-08-05.** Cet ADR a nommé les quatre chiffres du hero. Il en
+restait un cinquième mot non arbitré, et il désignait **deux nombres différents** : « provisions ».
+
+### Le constat, mesuré
+
+| Où                                    | Fonction                                                            | Filtre                                                             |
+| ------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Ligne du hero (`SituationDuMoisHero`) | `provisionsMensuellesLissees` — `cockpit/effort-financier-lisse.ts` | `isActive && frequency !== 'monthly'` — **aucun filtre de compte** |
+| Carte de virement (`app/page.tsx`)    | `monthlyProvisionTotal` — `domain/transfer.ts`                      | `isActive && paidFrom === 'epargne'` — **toutes fréquences**       |
+
+> Les fonctions sont désignées **par leur nom, jamais par un numéro de ligne** : un ADR se
+> lit des années après le commit qui l'a motivé, et un numéro de ligne se périme au premier
+> refactor. Celui-ci s'est d'ailleurs périmé le jour même de la rédaction — la version
+> initiale citait `effort-financier-lisse.ts:22`, que le commit de décomposition avait déjà
+> décalé. Remarque de Sourcery sur la PR #309, acceptée.
+
+Deux périmètres, un seul mot. Conséquence directe : une charge **mensuelle payée depuis
+l'épargne** compte dans la carte et pas dans la ligne du hero ; une charge **trimestrielle
+payée depuis le principal** fait l'inverse. C'est la maladie que cet ADR a soignée pour
+« reste à vivre », une couche plus bas — et personne ne l'avait vue.
+
+### La décision
+
+En regardant ce que les nombres **font** plutôt que ce qu'ils s'appellent, il y en a trois :
+
+| Ce que c'est                                   | Nature             | Nom affiché                                                | Où                                    |
+| ---------------------------------------------- | ------------------ | ---------------------------------------------------------- | ------------------------------------- |
+| La part mensuelle d'une facture non mensuelle  | **flux théorique** | **Lissage**                                                | ligne du hero (`SituationDuMoisHero`) |
+| Ce qui bouge réellement vers l'épargne ce mois | **instruction**    | **À virer vers l'épargne** / **À reprendre sur l'épargne** | carte de virement                     |
+| Ce qui dort déjà sur l'épargne, réservé        | **stock**          | **Provisions**                                             | `ProvisionHealthGaugeCard`            |
+
+**Les deux libellés de la carte ne coexistent jamais** : la carte lit `epargneTransferNet`
+(`MonthlyTransferPlan`), un nombre **signé**, et affiche sa valeur absolue. Positif, le mois
+demande d'alimenter l'épargne — « À virer vers l'épargne ». Négatif, les échéances du mois
+dépassent ce qui a été mis de côté et il faut puiser — « À reprendre sur l'épargne ». Un
+seul chiffre, un seul geste, et l'étiquette suit son signe. C'est le sens que @thierry décrit lui-même : « si j'ai un souci sur le mois, je
+récupère un montant pour finir le mois ».
+
+La **jauge de santé** est le composant `ProvisionHealthGaugeCard` : elle compare le solde
+réellement mis de côté à ce que les échéances à venir réclament (`domain/provision.ts`).
+C'est le seul des trois nombres qui décrit un **état à un instant**, et non un mouvement.
+
+Le mot « provisions » reste là où il désigne un **stock** — le sens que lui donne l'usage
+courant, et celui du mode d'emploi budgétaire de @thierry (« provision de lissage » pour la
+part mensuelle, « provision disponible » pour ce qui dort sur l'épargne). Le vocabulaire de
+l'application s'aligne sur celui de son utilisateur, jamais l'inverse.
+
+**« Lissage » seul serait sec — il ne l'est que tant que la ligne ne s'ouvre pas.** La
+décomposition (règle 10 de `CLAUDE.md`) rend l'étiquette courte tenable : on ouvre et on lit
+« assurance habitation — 300 € tous les 3 mois ». Les deux chantiers se tiennent ; livrer le
+renommage sans la décomposition rendrait l'interface plus obscure, pas moins.
+
+### Ce que cet amendement ne répare PAS
+
+**L'écart de périmètre reste entier.** Renommer ne rapproche pas les deux filtres. Mais une
+fois les deux nombres nommés différemment, l'écart devient **visible et défendable** au lieu
+d'être une contradiction silencieuse — et il pourra être arbitré pour ce qu'il est : une
+question de modèle (« une charge mensuelle peut-elle être payée depuis l'épargne ? »), pas
+une question de mots.
+
+À traiter avec l'ADR des rôles de comptes, qui possède déjà `paidFrom`.
+
+### Contrainte inchangée
+
+Les quatre chiffres du §1 gardent leurs noms. « Lissage » n'en est pas un cinquième : il
+nomme un **poste soustractif** de la formule nº 2, au même titre que « Charges fixes » et
+« Engagements », qui portaient déjà leur propre étiquette. La liste des mots bannis n'est
+pas modifiée.
 
 ## Refs
 
