@@ -9,6 +9,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 
 import { SITE } from '@/lib/site';
 import { routing, type Locale } from '@/i18n/routing';
+import { isIndexableLocale, indexableLanguageAlternates } from '@/lib/seo/indexable-locales';
 import { ConsentBanner } from '@/components/gdpr/ConsentBanner';
 import { Toaster } from '@/components/ui/toast';
 import { JsonLd } from '@/components/seo/JsonLd';
@@ -44,9 +45,9 @@ export async function generateMetadata({ params }: LocaleParams): Promise<Metada
   const tagline = t('tagline');
   const description = t('description');
 
-  const languageAlternates = Object.fromEntries(
-    routing.locales.map((l) => [l, l === routing.defaultLocale ? '/' : `/${l}`]),
-  );
+  // Source unique partagee avec `sitemap.ts` — cf. `@/lib/seo/indexable-locales`.
+  const isIndexable = isIndexableLocale(locale);
+  const languageAlternates = indexableLanguageAlternates();
 
   return {
     metadataBase: new URL(SITE.url),
@@ -86,9 +87,12 @@ export async function generateMetadata({ params }: LocaleParams): Promise<Metada
       // back to opengraph-image.tsx otherwise.
     },
     robots: {
-      index: true,
+      // `follow` reste vrai même quand `index` est faux : on ne veut pas
+      // indexer une page française servie sous une URL néerlandaise, mais les
+      // liens qu'elle porte mènent vers des pages légitimes.
+      index: isIndexable,
       follow: true,
-      googleBot: { index: true, follow: true, 'max-image-preview': 'large' },
+      googleBot: { index: isIndexable, follow: true, 'max-image-preview': 'large' },
     },
     icons: {
       icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],

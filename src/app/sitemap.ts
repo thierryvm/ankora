@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { SITE } from '@/lib/site';
-import { LOCALES_VISIBLE, routing } from '@/i18n/routing';
+import { routing } from '@/i18n/routing';
+import { INDEXABLE_LOCALES as SEO_INDEXABLE_LOCALES } from '@/lib/seo/indexable-locales';
 import { GLOSSARY_LOCALES, getGlossaryTerms, GLOSSARY_LOCALE_PREFIXES } from '@/lib/glossary';
 
 /**
@@ -23,7 +24,7 @@ const PUBLIC_ROUTES = ['', '/faq'] as const;
  * already scopes itself this way through `GLOSSARY_LOCALES`; this aligns the
  * rest. Add a locale back here once its translation is reviewed.
  */
-const INDEXABLE_LOCALES = LOCALES_VISIBLE;
+const INDEXABLE_LOCALES = SEO_INDEXABLE_LOCALES;
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
