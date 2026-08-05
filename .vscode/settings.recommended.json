@@ -1,0 +1,49 @@
+{
+  // Réglages VSCode recommandés pour ce dépôt.
+  //
+  // `.gitignore` ignore tout `.vscode/` SAUF ce fichier et `extensions.json`
+  // (lignes 58-60) : il est donc versionné à dessein. Pour l'appliquer, le
+  // copier en `.vscode/settings.json`, qui reste personnel et non versionné.
+
+  // ── Pourquoi exclure node_modules ────────────────────────────────────────
+  //
+  // Deux dépendances publient leur tsconfig de DÉVELOPPEMENT :
+  //
+  //   node_modules/@vercel/analytics/tsconfig.json
+  //   node_modules/@vercel/speed-insights/tsconfig.json
+  //
+  // Toutes deux font `"extends": "../../tsconfig.json"`, ce qui résout vers
+  // `node_modules/tsconfig.json` — un fichier qui n'existe pas, parce qu'il
+  // n'était pas censé être publié. VSCode charge ces fichiers comme des projets
+  // TypeScript et rapporte deux erreurs permanentes dans l'onglet Problèmes.
+  //
+  // Ce n'est PAS un défaut de ce dépôt et ça n'affecte aucune porte de qualité :
+  // `tsconfig.json` exclut déjà `node_modules` (ligne 40), et `npm run typecheck`
+  // est vert. C'est l'indexation de l'éditeur qui va chercher ce que la
+  // compilation ignore.
+  //
+  // Contrepartie assumée : `node_modules` disparaît de l'explorateur et de la
+  // recherche. C'est le comportement souhaitable par défaut ; pour l'inspecter
+  // ponctuellement, passer par le terminal ou retirer la ligne.
+  "files.exclude": {
+    "**/node_modules": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/coverage": true,
+    "**/playwright-report": true,
+    "**/test-results": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/.next/**": true
+  },
+
+  // Le formatage du dépôt passe par Prettier + lint-staged au commit ;
+  // l'aligner dans l'éditeur évite les diffs de mise en forme parasites.
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true
+}
