@@ -34,7 +34,7 @@ Admin panel obligatoire : santé technique, santé produit, acquisition, recomma
 
 Tout dashboard minimaliste = refus de merge.
 
-### Agents QA (17 au total)
+### Agents QA (19 fichiers dans `.claude/agents/` au 2026-08-05)
 
 Existants : `security-auditor`, `rls-flow-tester`, `financial-formula-validator`, `ui-auditor`, `lighthouse-auditor`, `seo-geo-auditor`, `gdpr-compliance-auditor`, `test-runner`, `i18n-auditor`.
 
@@ -52,8 +52,28 @@ Refonte UX (ajouté 24 juil. 2026) : `mobile-liquid-glass-auditor` — garant du
 
 ### Choix techniques lockés
 
-- **Auth MFA** : TOTP via Supabase Auth natif (optionnel user, UI dans `/app/settings/security`)
-- **Cookie consent** : Klaro! (open source, TCF v2.2, 0 €)
+- **Auth MFA** : TOTP via Supabase Auth natif (optionnel user, bouton « Activer la 2FA » sur
+  `/app/settings`). **Corrigé le 2026-08-05** : ce fichier annonçait `/app/settings/security`,
+  qui répond 404 — mesuré au parcours complet. Le dossier `settings/` ne contient que `page.tsx`
+  et `deletion-status/`.
+- **Cookie consent** : **bannière maison** (`src/components/gdpr/ConsentBanner.tsx`) avec deux
+  scopes indépendants, version de politique et date de décision persistées côté serveur dans
+  `user_consents`, retrait par trois chemins (art. 7(3)).
+  **Corrigé le 2026-08-05** : ce fichier annonçait Klaro! (TCF v2.2). Klaro n'a **jamais été
+  installé** — zéro dépendance, zéro fichier ; la ligne datait d'un arbitrage pré-implémentation
+  annulé en PR-LEGAL-1 le 6 mai 2026. La mention « TCF v2.2 » n'a donc jamais été vérifiée
+  contre quoi que ce soit.
+
+  **À quoi sert réellement un CMP comme Klaro, et pourquoi il redeviendra pertinent** : son
+  intérêt n'est pas la bannière — c'est le **blocage des scripts tiers avant chargement**
+  (`type="text/plain"` converti en script exécutable seulement après consentement). Une bannière
+  sans ce mécanisme est décorative : le traceur a déjà tiré sa requête pendant qu'on lit le
+  texte. C'est **exactement ce qui se passait ici** — mesuré en production le 2026-08-05, deux
+  scripts de mesure chargés avant toute décision, cf.
+  [`docs/audits/2026-08-05-parcours-nouvel-utilisateur.md`](docs/audits/2026-08-05-parcours-nouvel-utilisateur.md).
+  Le gate maison règle le cas des deux traceurs Vercel ; le jour où un tiers **hors de notre
+  contrôle de rendu** arrive (pixel marketing, iframe YouTube, widget), il faudra réévaluer.
+
 - **Langues v1.0** : FR + EN seulement. NL/DE/ES annoncées dans `/roadmap` publique, livrées post-launch
 - **Admin auth** : `requireAdmin()` basé sur `user_id` Thierry initialement
 
@@ -101,7 +121,7 @@ src/
 supabase/
   migrations/          # schéma + RLS + triggers
 .claude/
-  agents/              # 17 QA agents (security, rls, financial, ui, lighthouse, seo-geo, gdpr, test-runner, test-quality, dashboard-ux, admin-dashboard, i18n, mobile-ios, llm-security, mobile-liquid-glass, prod-bug-investigator, silent-failure)
+  agents/              # 19 fichiers (compte vérifié le 2026-08-05) — QA (security, rls, financial, ui, lighthouse, seo-geo, gdpr, test-runner, test-quality, dashboard-ux, admin-dashboard, i18n, mobile-ios, llm-security, mobile-liquid-glass, prod-bug-investigator, silent-failure)
 ```
 
 ## Règles de code
