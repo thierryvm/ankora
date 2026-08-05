@@ -1046,7 +1046,6 @@
         "resetHint": "This clears your decision and re-prompts the banner on the next page load.",
         "noDecisionHint": "You haven't made a choice on this device yet. The banner will show on your next visit.",
         "toastSaved": "Cookie preferences saved.",
-        "toastReset": "Choice reset. The banner will reappear.",
         "toastError": "Could not save your choice. Try again."
       }
     },

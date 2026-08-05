@@ -1046,7 +1046,6 @@
         "resetHint": "Dit verwijdert je beslissing en toont het banner opnieuw bij de volgende laadbeurt.",
         "noDecisionHint": "Je hebt op dit apparaat nog geen keuze gemaakt. Het banner verschijnt bij je volgende bezoek.",
         "toastSaved": "Cookievoorkeuren opgeslagen.",
-        "toastReset": "Keuze opnieuw ingesteld. Het banner verschijnt opnieuw.",
         "toastError": "Kon je keuze niet opslaan. Probeer opnieuw."
       }
     },

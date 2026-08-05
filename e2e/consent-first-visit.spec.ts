@@ -102,6 +102,28 @@ test.describe('Consentement — première visite, sans état pré-rempli', () =>
         'p#consent-body',
       );
 
+      /*
+       * Aucun traceur ne doit s'être chargé — la décision de consentement n'a
+       * pas été prise, et la politique cookies publiée promet « Analytics
+       * désactivés par défaut ».
+       *
+       * L'ancrage compte autant que l'assertion. Il est placé APRÈS le poll
+       * ci-dessus, et pas après un simple `toBeVisible()` de la bannière :
+       * `getServerSnapshot()` rend une décision nulle, donc la bannière est
+       * déjà dans le HTML rendu côté serveur et visible AVANT hydratation.
+       * Mesurer là passerait pour la mauvaise raison, y compris sur un code
+       * défaillant. Le poll, lui, dépend de `--consent-height`, que seul
+       * l'effet de la bannière écrit : il ne peut pas réussir sans hydratation.
+       */
+      const traceurs = await page.evaluate(() => ({
+        va: typeof (window as unknown as { va?: unknown }).va,
+        si: typeof (window as unknown as { si?: unknown }).si,
+      }));
+      expect(traceurs, `${vp.nom} — un traceur s'est chargé sans consentement`).toEqual({
+        va: 'undefined',
+        si: 'undefined',
+      });
+
       // La preuve par l'usage : le parcours réel doit aboutir.
       await page.getByLabel('Email').fill('personne@ankora.test');
       await page.getByLabel('Mot de passe').fill('MauvaisMotDePasse!1');

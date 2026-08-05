@@ -1046,7 +1046,6 @@
         "resetHint": "Le bouton supprime ta décision et te repropose le bandeau au prochain chargement.",
         "noDecisionHint": "Tu n'as pas encore choisi sur cet appareil. Le bandeau s'affichera à ta prochaine visite.",
         "toastSaved": "Préférences cookies enregistrées.",
-        "toastReset": "Choix réinitialisé. Le bandeau réapparaîtra.",
         "toastError": "Impossible d'enregistrer ton choix. Réessaie."
       }
     },

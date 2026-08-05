@@ -11,10 +11,16 @@ vi.mock('@/lib/actions/consent', () => ({
   recordCookieConsentAction: (...args: unknown[]) => recordCookieConsentMock(...args),
 }));
 
+const notifyMock = vi.hoisted(() => vi.fn());
+const reloadMock = vi.hoisted(() => vi.fn());
+
 vi.mock('@/components/gdpr/ConsentBanner', () => ({
   reopenConsentBanner: () => reopenMock(),
+  notifyConsentChanged: () => notifyMock(),
   CONSENT_VERSION: '1.0.0',
 }));
+
+vi.mock('@/lib/browser/reload', () => ({ reloadPage: () => reloadMock() }));
 
 vi.mock('@/components/ui/toast', () => ({
   toast: {
@@ -40,6 +46,8 @@ describe('<CookiesPreferencesSection />', () => {
     window.localStorage.clear();
     recordCookieConsentMock.mockClear();
     reopenMock.mockClear();
+    notifyMock.mockClear();
+    reloadMock.mockClear();
   });
 
   it('renders the title, description and the three categories', () => {
@@ -108,6 +116,51 @@ describe('<CookiesPreferencesSection />', () => {
       expect(reopenMock).toHaveBeenCalledTimes(1);
       expect(recordCookieConsentMock).toHaveBeenCalledWith({ analytics: false, marketing: false });
     });
+    // Ce bouton revoque REELLEMENT cote serveur, mais il efface la decision
+    // locale : le gate des traceurs n'y voit qu'un `null`, indiscernable d'une
+    // banniere rouverte depuis le pied de page. Sans ce rechargement, le
+    // traceur deja charge continuerait d'emettre pour toute la duree du
+    // document — le retrait le plus explicite de l'interface serait le seul
+    // sans effet.
+    await waitFor(() => {
+      expect(reloadMock).toHaveBeenCalledTimes(1);
+    });
+    // Et il vient APRES l'action serveur : un rechargement lance avant
+    // l'avorterait.
+    const ordreAction = recordCookieConsentMock.mock.invocationCallOrder[0];
+    const ordreReload = reloadMock.mock.invocationCallOrder[0];
+    expect(ordreAction).toBeDefined();
+    expect(ordreReload).toBeDefined();
+    expect(ordreAction as number).toBeLessThan(ordreReload as number);
+  });
+
+  it('reset : une action serveur en echec ne rouvre rien et ne recharge pas', async () => {
+    // Falsification du cas precedent : sans elle, une implementation qui
+    // recharge quoi qu'il arrive passerait les deux.
+    recordCookieConsentMock.mockResolvedValueOnce({ ok: false, error: 'boom' });
+    render(wrapped(null));
+    fireEvent.click(
+      screen.getByRole('button', { name: messages.app.settings.cookies.resetButton }),
+    );
+    await waitFor(() => {
+      expect(recordCookieConsentMock).toHaveBeenCalled();
+    });
+    expect(reopenMock).not.toHaveBeenCalled();
+    expect(reloadMock).not.toHaveBeenCalled();
+  });
+
+  it('bascule : une action serveur qui REJETTE ne reveille pas le gate', async () => {
+    // Troisieme branche promise par la regle « on ne reveille que sur ok » :
+    // un `.catch(() => null)` reecrit en `.catch(e => { throw e })` ne ferait
+    // rougir personne sans ce cas.
+    recordCookieConsentMock.mockRejectedValueOnce(new Error('reseau'));
+    render(wrapped(null));
+    fireEvent.click(screen.getByLabelText(messages.app.settings.cookies.analyticsLabel));
+    await waitFor(() => {
+      expect(recordCookieConsentMock).toHaveBeenCalled();
+    });
+    expect(notifyMock).not.toHaveBeenCalled();
+    expect(reloadMock).not.toHaveBeenCalled();
   });
 
   it('hydrates from a fresher localStorage decision over a stale server snapshot', () => {
