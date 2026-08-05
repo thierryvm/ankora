@@ -70,8 +70,16 @@ describe('<Hero />', () => {
 
   it('renders the 3 trust signals (encrypted / no sale / languages)', async () => {
     await renderHero();
-    expect(screen.getByText(/Données chiffrées en Belgique/i)).toBeInTheDocument();
+    expect(screen.getByText(/hébergées dans l'Union européenne/i)).toBeInTheDocument();
     expect(screen.getByText(/Aucune vente de données/i)).toBeInTheDocument();
+    // Ce test exigeait « Données chiffrées en Belgique » — une allégation FAUSSE :
+    // la politique de confidentialité nomme elle-même Supabase (Francfort ou Paris),
+    // Vercel (Dublin) et Upstash (UE). Aucune donnée n'est hébergée en Belgique.
+    // La suite verte protégeait donc le mensonge au lieu de le contredire.
+    // L'assertion négative ci-dessous est le vrai garde-fou : elle échoue si
+    // quelqu'un réintroduit la formule, ce qu'un simple échange de chaîne ne
+    // ferait pas.
+    expect(screen.queryByText(/en Belgique/i)).not.toBeInTheDocument();
     // THI-266 / PR-BETA-2: v1.0 doctrine restricts the public-facing locale
     // list to FR + EN (cf. CLAUDE.md "Cap v1.0 publique — Langues v1.0"
     // + NORTH_STAR.md). NL/DE/ES stay reachable as deep-link URLs but are

@@ -179,7 +179,7 @@
       "ctaPrimary": "Ouvrir mon cockpit",
       "ctaSecondary": "Voir le simulateur",
       "trust": {
-        "encrypted": "Données chiffrées en Belgique",
+        "encrypted": "Données chiffrées, hébergées dans l'Union européenne",
         "noSale": "Aucune vente de données",
         "languages": "FR · EN"
       },
@@ -300,7 +300,7 @@
       "features": {
         "cockpit": "Cockpit complet, provisions et réserve libre",
         "simulator": "Simulateur what-if illimité",
-        "manualEntry": "Saisie manuelle · tes données restent en Belgique",
+        "manualEntry": "Saisie manuelle · tes données restent dans l'Union européenne",
         "export": "Export RGPD en un clic"
       },
       "ctaPrimary": "Ouvrir mon cockpit",
@@ -313,7 +313,7 @@
     "footerCta": {
       "h2Lead": "Commence par ce qui est",
       "h2Highlight": "déjà à toi.",
-      "description": "30 jours d'essai, pas de carte, export RGPD à tout moment. On fait simple parce que c'est déjà assez compliqué comme ça.",
+      "description": "Gratuit pendant la Phase 1, pas de carte, export RGPD à tout moment. On fait simple parce que c'est déjà assez compliqué comme ça.",
       "ctaPrimary": "Ouvrir mon cockpit"
     },
     "footer": {

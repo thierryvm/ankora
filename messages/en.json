@@ -179,7 +179,7 @@
       "ctaPrimary": "Open my cockpit",
       "ctaSecondary": "See the simulator",
       "trust": {
-        "encrypted": "Data encrypted in Belgium",
+        "encrypted": "Data encrypted, hosted in the European Union",
         "noSale": "No data selling",
         "languages": "FR · EN"
       },
@@ -300,7 +300,7 @@
       "features": {
         "cockpit": "Full cockpit, provisions and free reserve",
         "simulator": "Unlimited what-if simulator",
-        "manualEntry": "Manual entry · your data stays in Belgium",
+        "manualEntry": "Manual entry · your data stays in the European Union",
         "export": "GDPR export in one click"
       },
       "ctaPrimary": "Open my cockpit",
@@ -313,7 +313,7 @@
     "footerCta": {
       "h2Lead": "Start with what's",
       "h2Highlight": "already yours.",
-      "description": "30-day trial, no card, GDPR export anytime. We keep it simple because it's already complicated enough.",
+      "description": "Free during Phase 1, no card, GDPR export anytime. We keep it simple because it's already complicated enough.",
       "ctaPrimary": "Open my cockpit"
     },
     "footer": {
