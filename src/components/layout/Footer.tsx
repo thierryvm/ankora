@@ -52,16 +52,28 @@ export async function Footer() {
           data-testid="footer-nav"
           className={footerNavClass}
         >
-          <Link href="/legal/cgu" className="text-muted-foreground hover:underline">
+          <Link
+            href="/legal/cgu"
+            className="text-muted-foreground inline-flex min-h-11 items-center hover:underline"
+          >
             {t('cgu')}
           </Link>
-          <Link href="/legal/privacy" className="text-muted-foreground hover:underline">
+          <Link
+            href="/legal/privacy"
+            className="text-muted-foreground inline-flex min-h-11 items-center hover:underline"
+          >
             {t('privacy')}
           </Link>
-          <Link href="/legal/cookies" className="text-muted-foreground hover:underline">
+          <Link
+            href="/legal/cookies"
+            className="text-muted-foreground inline-flex min-h-11 items-center hover:underline"
+          >
             {t('cookies')}
           </Link>
-          <Link href="/faq" className="text-muted-foreground hover:underline">
+          <Link
+            href="/faq"
+            className="text-muted-foreground inline-flex min-h-11 items-center hover:underline"
+          >
             {t('faq')}
           </Link>
           <CookiePreferencesLink />
