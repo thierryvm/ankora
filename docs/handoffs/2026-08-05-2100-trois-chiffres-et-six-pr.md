@@ -10,7 +10,7 @@
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **#310** | Décomposition des trois postes du hero (règle 10). Les 59 € s'ouvrent et nomment chaque facture avec son échéance                                                                                             |
 | **#311** | La PWA installée peut recevoir une mise à jour : `registration.update()` au retour de visibilité, `skipWaiting()` inconditionnel retiré, bandeau, entrée manuelle dans « Plus », **garde source sur `sw.js`** |
-| **#312** | Le consentement gouverne les traceurs. **Vérifié en production** : `window.va` et `window.si` `undefined`, zéro script hors `_next`                                                                           |
+| **#312** | Le consentement gouverne les traceurs. **Vérifié en production** : `window.va` et `window.si` sont `undefined`, zéro script hors `_next`                                                                      |
 | **#313** | Audit du parcours complet + corrections `CLAUDE.md` (Klaro jamais installé, `/app/settings/security` en 404, compte d'agents)                                                                                 |
 
 **Branche poussée, non mergée** : `fix/details-signales-par-thierry` — erreurs VSCode (tsconfig cassé publié par `@vercel/analytics`, classes Tailwind non canoniques) et liens de pied de page remontés à 44 px.

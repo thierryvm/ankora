@@ -196,6 +196,11 @@ describe('<BottomTabBar /> — the ⊕ at the centre', () => {
     // pixels mais echappaient au theme.
     expect(painted?.className).toContain('w-11.5');
     expect(painted?.className).toContain('h-8.25');
+    // Assertions negatives : sans elles, le test resterait vert si quelqu'un
+    // ajoutait les anciennes utilities A COTE des nouvelles. On interdit la
+    // valeur arbitraire, pas seulement l'absence de la valeur d'echelle.
+    expect(painted?.className).not.toContain('w-[46px]');
+    expect(painted?.className).not.toContain('h-[33px]');
     expect(painted?.className).toContain('rounded-[11px]');
     // A Material FAB overflows above the bar. Nothing here may translate it out.
     expect(painted?.className).not.toMatch(/-translate-y|absolute|rounded-full/);
