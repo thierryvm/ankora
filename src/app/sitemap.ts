@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { SITE } from '@/lib/site';
-import { LOCALES_VISIBLE, routing } from '@/i18n/routing';
+import { routing } from '@/i18n/routing';
+import { INDEXABLE_LOCALES } from '@/lib/seo/indexable-locales';
 import { GLOSSARY_LOCALES, getGlossaryTerms, GLOSSARY_LOCALE_PREFIXES } from '@/lib/glossary';
 
 /**
@@ -13,17 +14,8 @@ import { GLOSSARY_LOCALES, getGlossaryTerms, GLOSSARY_LOCALE_PREFIXES } from '@/
  */
 const PUBLIC_ROUTES = ['', '/faq'] as const;
 
-/**
- * Locales the sitemap advertises.
- *
- * `LOCALES_VISIBLE` (FR + EN), not `routing.locales`. `nl-BE`, `de-DE` and
- * `es-ES` resolve — deep links and QA bookmarks keep working — but their
- * `landing.*` copy is still French verbatim, so submitting them asks Google to
- * index untranslated pages under a Dutch/German/Spanish URL. The glossary
- * already scopes itself this way through `GLOSSARY_LOCALES`; this aligns the
- * rest. Add a locale back here once its translation is reviewed.
- */
-const INDEXABLE_LOCALES = LOCALES_VISIBLE;
+// Les locales que le sitemap soumet — cf. `@/lib/seo/indexable-locales`, qui
+// porte la liste et la raison, et que `[locale]/layout.tsx` lit aussi.
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
