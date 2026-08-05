@@ -179,7 +179,7 @@
       "ctaPrimary": "Ouvrir mon cockpit",
       "ctaSecondary": "Voir le simulateur",
       "trust": {
-        "encrypted": "Données chiffrées en Belgique",
+        "encrypted": "Données chiffrées, hébergées dans l'Union européenne",
         "noSale": "Aucune vente de données",
         "languages": "FR · EN"
       },
@@ -300,20 +300,20 @@
       "features": {
         "cockpit": "Cockpit complet, provisions et réserve libre",
         "simulator": "Simulateur what-if illimité",
-        "manualEntry": "Saisie manuelle · tes données restent en Belgique",
+        "manualEntry": "Saisie manuelle · tes données restent dans l'Union européenne",
         "export": "Export RGPD en un clic"
       },
       "ctaPrimary": "Ouvrir mon cockpit",
       "roadmap": {
         "title": "Tu rejoins Ankora pendant sa Phase 1 ?",
-        "body": "Ton compte garde un accès complet au cockpit core à vie, gratuitement. Une offre Pro avec features avancées (comptes illimités, exports consolidés, support prioritaire) arrivera post-v1.0 — tu auras le choix d'upgrader ou de rester sur ton plan actuel.",
+        "body": "Ton compte garde un accès complet au cockpit core à vie, gratuitement. Il n'y a pas d'offre payante, et aucune fonctionnalité n'est réservée à un plan supérieur. Cet engagement est repris dans nos conditions générales — il nous lie, il n'est pas qu'un argument.",
         "link": "Lire la roadmap →"
       }
     },
     "footerCta": {
       "h2Lead": "Commence par ce qui est",
       "h2Highlight": "déjà à toi.",
-      "description": "30 jours d'essai, pas de carte, export RGPD à tout moment. On fait simple parce que c'est déjà assez compliqué comme ça.",
+      "description": "Gratuit pendant la Phase 1, pas de carte, export RGPD à tout moment. On fait simple parce que c'est déjà assez compliqué comme ça.",
       "ctaPrimary": "Ouvrir mon cockpit"
     },
     "footer": {
@@ -428,7 +428,12 @@
         "body": "Je kunt je account op elk moment verwijderen via Instellingen → Privacy. De verwijdering wordt 14 dagen na de aanvraag effectief (annuleerbare periode)."
       },
       "s8": {
-        "heading": "8. Toepasselijk recht",
+        "heading": "8. Gratis dienst",
+        "body": "Ankora is gratis. Er bestaat geen betaald aanbod en geen enkele functie is voorbehouden aan een hoger plan. Mocht er ooit een betaald aanbod worden ingevoerd, dan behouden accounts die vóór de lancering ervan zijn aangemaakt gratis volledige toegang tot de kern van het cockpit — de toezegging die op de Tarieven-pagina staat, hier herhaald zodat ze ons contractueel bindt en niet alleen commercieel.",
+        "donations": "Als er ooit vrijwillige giften worden aangeboden, geven die recht op geen enkele tegenprestatie: geen functie, geen vervroegde toegang, geen voorrang bij ondersteuning. Een gift verandert niets aan de relatie die in deze voorwaarden wordt beschreven."
+      },
+      "s9": {
+        "heading": "9. Toepasselijk recht",
         "body": "Deze voorwaarden zijn onderworpen aan het Belgische recht. Bevoegde rechtbank: Brussel."
       },
       "draft": "Onze algemene gebruiksvoorwaarden worden momenteel opgesteld.",

@@ -49,9 +49,17 @@ describe('<FooterCTA />', () => {
     expect(em?.textContent).toBe('déjà à toi.');
   });
 
-  it('renders the description with the FSMA-safe trial caveat', async () => {
+  // Renommé : ce test s'appelait « FSMA-safe trial caveat » et exigeait
+  // « 30 jours d'essai ». Deux erreurs en une. La FSMA encadre le conseil en
+  // placement, pas la durée d'un essai — le nom donnait à une formule
+  // commerciale l'apparence d'un garde-fou réglementaire. Et la formule
+  // contredisait QUATRE affirmations de la section Tarifs, qui promettent
+  // « sans date limite », « pas de limite de temps » et « à vie ».
+  it('annonce la gratuité de la Phase 1, sans promettre un essai limité', async () => {
     await renderFooterCTA();
-    expect(screen.getByText(/30 jours d'essai/i)).toBeInTheDocument();
+    expect(screen.getByText(/Gratuit pendant la Phase 1/i)).toBeInTheDocument();
+    // Garde-fou contre le retour de la contradiction, pas seulement contre son absence.
+    expect(screen.queryByText(/30 jours/i)).not.toBeInTheDocument();
   });
 
   it('renders the primary CTA pointing at /signup', async () => {

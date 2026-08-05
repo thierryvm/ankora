@@ -179,7 +179,7 @@
       "ctaPrimary": "Ouvrir mon cockpit",
       "ctaSecondary": "Voir le simulateur",
       "trust": {
-        "encrypted": "Données chiffrées en Belgique",
+        "encrypted": "Données chiffrées, hébergées dans l'Union européenne",
         "noSale": "Aucune vente de données",
         "languages": "FR · EN"
       },
@@ -300,20 +300,20 @@
       "features": {
         "cockpit": "Cockpit complet, provisions et réserve libre",
         "simulator": "Simulateur what-if illimité",
-        "manualEntry": "Saisie manuelle · tes données restent en Belgique",
+        "manualEntry": "Saisie manuelle · tes données restent dans l'Union européenne",
         "export": "Export RGPD en un clic"
       },
       "ctaPrimary": "Ouvrir mon cockpit",
       "roadmap": {
         "title": "Tu rejoins Ankora pendant sa Phase 1 ?",
-        "body": "Ton compte garde un accès complet au cockpit core à vie, gratuitement. Une offre Pro avec features avancées (comptes illimités, exports consolidés, support prioritaire) arrivera post-v1.0 — tu auras le choix d'upgrader ou de rester sur ton plan actuel.",
+        "body": "Ton compte garde un accès complet au cockpit core à vie, gratuitement. Il n'y a pas d'offre payante, et aucune fonctionnalité n'est réservée à un plan supérieur. Cet engagement est repris dans nos conditions générales — il nous lie, il n'est pas qu'un argument.",
         "link": "Lire la roadmap →"
       }
     },
     "footerCta": {
       "h2Lead": "Commence par ce qui est",
       "h2Highlight": "déjà à toi.",
-      "description": "30 jours d'essai, pas de carte, export RGPD à tout moment. On fait simple parce que c'est déjà assez compliqué comme ça.",
+      "description": "Gratuit pendant la Phase 1, pas de carte, export RGPD à tout moment. On fait simple parce que c'est déjà assez compliqué comme ça.",
       "ctaPrimary": "Ouvrir mon cockpit"
     },
     "footer": {
@@ -428,7 +428,12 @@
         "body": "Du kannst dein Konto jederzeit unter Einstellungen → Datenschutz löschen. Die Löschung wird 14 Tage nach dem Antrag wirksam (widerrufbare Frist)."
       },
       "s8": {
-        "heading": "8. Anwendbares Recht",
+        "heading": "8. Kostenlosigkeit des Dienstes",
+        "body": "Ankora ist kostenlos. Es gibt kein kostenpflichtiges Angebot, und keine Funktion ist einem höheren Tarif vorbehalten. Sollte jemals ein kostenpflichtiges Angebot eingeführt werden, behalten Konten, die vor dessen Start erstellt wurden, den vollständigen Zugang zum Kern-Cockpit kostenlos — die auf der Preisseite angekündigte Zusage, hier wiederholt, damit sie uns vertraglich und nicht nur werblich bindet.",
+        "donations": "Sollten jemals freiwillige Spenden angeboten werden, begründen sie keinerlei Gegenleistung: keine Funktion, keinen vorzeitigen Zugang, keinen Supportvorrang. Eine Spende ändert nichts an dem in diesen Bedingungen beschriebenen Verhältnis."
+      },
+      "s9": {
+        "heading": "9. Anwendbares Recht",
         "body": "Diese AGB unterliegen belgischem Recht. Zuständiges Gericht: Brüssel."
       },
       "draft": "Unsere Allgemeinen Nutzungsbedingungen werden derzeit erstellt.",

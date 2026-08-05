@@ -6,8 +6,11 @@ import { Footer } from '@/components/layout/Footer';
 import { Prose, ProseMeta } from '@/components/layout/Prose';
 import { buildCanonicalUrl } from '@/lib/glossary';
 
-const LAST_UPDATED = '16 avril 2026';
-const VERSION = '1.0.0';
+// Bumped with §8 « Gratuité du service ». A CGU whose text changes while its
+// version line stays put is a version line that lies — and this file is the
+// only place that number lives, so nothing else moves it.
+const LAST_UPDATED = '5 août 2026';
+const VERSION = '1.1.0';
 
 export async function generateMetadata({
   params,
@@ -80,6 +83,10 @@ export default async function CguPage() {
 
           <h2>{t('s8.heading')}</h2>
           <p>{t('s8.body')}</p>
+          <p>{t('s8.donations')}</p>
+
+          <h2>{t('s9.heading')}</h2>
+          <p>{t('s9.body')}</p>
         </Prose>
       </main>
       <Footer />
