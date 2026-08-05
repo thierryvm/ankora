@@ -55,7 +55,6 @@ vi.mock('@/lib/actions/consent', () => ({
   recordCookieConsentAction: vi.fn().mockResolvedValue({ ok: true, data: { persisted: false } }),
   getCookieConsentAction: vi.fn().mockResolvedValue({ ok: true, data: { snapshot: null } }),
   resetCookieConsentAction: vi.fn().mockResolvedValue({ ok: true, data: { persisted: false } }),
-  COOKIE_CONSENT_VERSION: '1.0.0',
 }));
 
 // PR-BETA-6 hotfix #4 — Footer hides its `<nav>` on mobile when the

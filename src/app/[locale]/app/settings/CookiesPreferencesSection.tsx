@@ -6,14 +6,10 @@ import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/toast';
-import {
-  reopenConsentBanner,
-  notifyConsentChanged,
-  CONSENT_VERSION,
-} from '@/components/gdpr/ConsentBanner';
+import { reopenConsentBanner, notifyConsentChanged } from '@/components/gdpr/ConsentBanner';
 import { reloadPage } from '@/lib/browser/reload';
 import { recordCookieConsentAction } from '@/lib/actions/consent';
-import type { CookieConsentSnapshot } from '@/lib/actions/consent-types';
+import { COOKIE_CONSENT_VERSION, type CookieConsentSnapshot } from '@/lib/actions/consent-types';
 
 const STORAGE_KEY = 'ankora.consent.v1';
 
@@ -30,7 +26,7 @@ function readLocal(): LocalConsent | null {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as LocalConsent;
-    if (parsed.version !== CONSENT_VERSION) return null;
+    if (parsed.version !== COOKIE_CONSENT_VERSION) return null;
     return parsed;
   } catch {
     return null;
@@ -85,7 +81,7 @@ export function CookiesPreferencesSection({ initialServerSnapshot }: Props) {
 
   const save = (nextAnalytics: boolean, nextMarketing: boolean) => {
     writeLocal({
-      version: CONSENT_VERSION,
+      version: COOKIE_CONSENT_VERSION,
       analytics: nextAnalytics,
       marketing: nextMarketing,
       decidedAt: new Date().toISOString(),

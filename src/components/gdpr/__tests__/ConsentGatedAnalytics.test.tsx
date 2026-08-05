@@ -34,15 +34,15 @@ vi.mock('@/i18n/navigation', () => ({
 
 import { ConsentGatedAnalytics } from '../ConsentGatedAnalytics';
 import {
-  CONSENT_VERSION,
   notifyConsentChanged,
   reopenConsentBanner,
   __resetConsentCacheForTests,
 } from '../ConsentBanner';
+import { COOKIE_CONSENT_VERSION } from '@/lib/actions/consent-types';
 
 const STORAGE_KEY = 'ankora.consent.v1';
 
-const decider = (analytics: boolean, marketing = false, version = CONSENT_VERSION) => {
+const decider = (analytics: boolean, marketing = false, version = COOKIE_CONSENT_VERSION) => {
   window.localStorage.setItem(
     STORAGE_KEY,
     JSON.stringify({ version, analytics, marketing, decidedAt: new Date().toISOString() }),
