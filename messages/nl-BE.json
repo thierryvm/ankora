@@ -813,8 +813,8 @@
       "metaTitle": "Mijn rekeningen",
       "metaDescription": "Volg de saldi van je Hoofdrekening, Dagelijks Leven en Spaarrekening. Stel je maandelijks nettoloon en je overschrijving naar Dagelijks Leven in.",
       "title": "Mijn rekeningen",
-      "subtitle": "Geef je reële saldi in zodat Ankora elke maand je slimme overschrijving precies kan berekenen.",
-      "balancesHeading": "Huidige saldi",
+      "subtitle": "Set your income and monthly transfer. The balances below are entered by hand: Ankora does not update them on its own.",
+      "balancesHeading": "Entered balances",
       "amountLabel": "Bedrag (€)",
       "saveButton": "Opslaan",
       "saving": "Opslaan…",
@@ -834,17 +834,21 @@
         "invalidAmount": "Geef een geldig bedrag in.",
         "saveLabel": "Bijwerken",
         "srLabel": "Huidig saldo van {label}",
-        "toastSaved": "{name} bijgewerkt"
+        "toastSaved": "{name} bijgewerkt",
+        "manualNotice": "Entered by hand. This amount only changes when you change it here."
       },
       "kind": {
         "principal": {
-          "description": "Ontvangt het loon, betaalt de maandelijkse vaste kosten."
+          "description": "Ontvangt het loon, betaalt de maandelijkse vaste kosten.",
+          "usage": "Not used in any calculation yet."
         },
         "vieCourante": {
-          "description": "Dagelijks budget (boodschappen, benzine, uit eten)."
+          "description": "Dagelijks budget (boodschappen, benzine, uit eten).",
+          "usage": "Not used in any calculation yet."
         },
         "epargne": {
-          "description": "Spreidt de driemaandelijkse en jaarlijkse facturen."
+          "description": "Spreidt de driemaandelijkse en jaarlijkse facturen.",
+          "usage": "Feeds the provisions gauge on the dashboard."
         }
       },
       "types": {

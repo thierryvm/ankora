@@ -813,8 +813,8 @@
       "metaTitle": "Mis cuentas",
       "metaDescription": "Sigue los saldos de tus cuentas Principal, Día a Día y Ahorro. Ajusta tu ingreso mensual y tu transferencia a Día a Día.",
       "title": "Mis cuentas",
-      "subtitle": "Introduce tus saldos reales para que Ankora calcule con precisión tu transferencia inteligente cada mes.",
-      "balancesHeading": "Saldos actuales",
+      "subtitle": "Set your income and monthly transfer. The balances below are entered by hand: Ankora does not update them on its own.",
+      "balancesHeading": "Entered balances",
       "amountLabel": "Importe (€)",
       "saveButton": "Guardar",
       "saving": "Guardando…",
@@ -834,17 +834,21 @@
         "invalidAmount": "Introduce un importe válido.",
         "saveLabel": "Actualizar",
         "srLabel": "Saldo actual de {label}",
-        "toastSaved": "{name} actualizado"
+        "toastSaved": "{name} actualizado",
+        "manualNotice": "Entered by hand. This amount only changes when you change it here."
       },
       "kind": {
         "principal": {
-          "description": "Recibe el salario, paga los gastos fijos mensuales."
+          "description": "Recibe el salario, paga los gastos fijos mensuales.",
+          "usage": "Not used in any calculation yet."
         },
         "vieCourante": {
-          "description": "Presupuesto del día a día (compra, gasolina, restaurantes)."
+          "description": "Presupuesto del día a día (compra, gasolina, restaurantes).",
+          "usage": "Not used in any calculation yet."
         },
         "epargne": {
-          "description": "Distribuye las facturas trimestrales y anuales."
+          "description": "Distribuye las facturas trimestrales y anuales.",
+          "usage": "Feeds the provisions gauge on the dashboard."
         }
       },
       "types": {

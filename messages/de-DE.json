@@ -813,8 +813,8 @@
       "metaTitle": "Meine Konten",
       "metaDescription": "Verfolge die Salden deiner Konten Hauptkonto, Alltag und Sparen. Stelle dein monatliches Einkommen und deine Überweisung auf Alltag ein.",
       "title": "Meine Konten",
-      "subtitle": "Gib deine echten Salden ein, damit Ankora deine intelligente Überweisung jeden Monat präzise berechnen kann.",
-      "balancesHeading": "Aktuelle Salden",
+      "subtitle": "Set your income and monthly transfer. The balances below are entered by hand: Ankora does not update them on its own.",
+      "balancesHeading": "Entered balances",
       "amountLabel": "Betrag (€)",
       "saveButton": "Speichern",
       "saving": "Speichern…",
@@ -834,17 +834,21 @@
         "invalidAmount": "Gib einen gültigen Betrag ein.",
         "saveLabel": "Aktualisieren",
         "srLabel": "Aktueller Saldo von {label}",
-        "toastSaved": "{name} aktualisiert"
+        "toastSaved": "{name} aktualisiert",
+        "manualNotice": "Entered by hand. This amount only changes when you change it here."
       },
       "kind": {
         "principal": {
-          "description": "Erhält das Gehalt, zahlt die monatlichen Fixkosten."
+          "description": "Erhält das Gehalt, zahlt die monatlichen Fixkosten.",
+          "usage": "Not used in any calculation yet."
         },
         "vieCourante": {
-          "description": "Budget des Alltags (Einkäufe, Benzin, Restaurants)."
+          "description": "Budget des Alltags (Einkäufe, Benzin, Restaurants).",
+          "usage": "Not used in any calculation yet."
         },
         "epargne": {
-          "description": "Verteilt die vierteljährlichen und jährlichen Rechnungen."
+          "description": "Verteilt die vierteljährlichen und jährlichen Rechnungen.",
+          "usage": "Feeds the provisions gauge on the dashboard."
         }
       },
       "types": {
