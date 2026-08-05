@@ -78,14 +78,20 @@ export function detecterDoublonsProbables(
   input: DetecterDoublonsInput,
 ): readonly DoublonProbable[] {
   const { ref } = input;
-  const dueCharges = input.charges.filter(
-    (c) => c.isActive && c.paymentMonths.includes(ref.month),
-  );
+  const dueCharges = input.charges.filter((c) => c.isActive && c.paymentMonths.includes(ref.month));
   const dueCommitments = input.commitments.filter((c) => isDueInPeriod(c, ref));
 
   const out: DoublonProbable[] = [];
   for (const charge of dueCharges) {
     for (const commitment of dueCommitments) {
+      // `installmentAmountOf` — le montant RÉGULIER — et volontairement pas
+      // `installmentAmountAt`, contrairement aux quatre autres sites corrigés
+      // le 5 août 2026. Ici on apparie une charge récurrente à un engagement
+      // pour détecter un double comptage : c'est la mensualité qui a été
+      // saisie des deux côtés, pas le solde de la dernière échéance. Passer au
+      // montant du mois ferait disparaître la détection exactement au mois
+      // final — c'est-à-dire au moment où l'utilisateur a le plus de chances
+      // de payer deux fois.
       const installment = installmentAmountOf(commitment);
       if (!charge.amount.equals(installment)) continue;
 

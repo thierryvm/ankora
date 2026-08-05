@@ -2,7 +2,8 @@ import Decimal from 'decimal.js';
 
 import {
   endOrdinal,
-  installmentAmountOf,
+  installmentAmountAt,
+  installmentIndexAt,
   isFinished,
   monthsPerCycle,
   periodOrdinal,
@@ -53,6 +54,20 @@ export function engagementPeseSurMois(
  * The finite window truncates the last cycle for non-monthly frequencies, so
  * this is NOT euro-conserving over the commitment's life — but the hero shows a
  * single month, and the per-month figure is the honest monthly effort.
+ *
+ * ## The final instalment is smoothed too — deliberately, with its cost
+ *
+ * Since 2026-08-05 the LAST instalment contributes its own residue, not the
+ * regular amount. On a quarterly plan of 4 × 600 € for a 2 200 € total, the
+ * final instalment is 400 €: the month it lands drops from 200 €/month to
+ * 133,33 €/month, and the plan's whole-life contribution becomes
+ * 9 × 200 + 133,33 = 1 933,33 € against 2 200 € engaged.
+ *
+ * The alternative — leaving the residue unsmoothed — would contradict the
+ * paragraph above, which already accepts non-conservation in exchange for an
+ * honest per-month figure. These numbers are written down so the next reader
+ * does not "re-correct" it in the other direction. Real data currently holds a
+ * single MONTHLY commitment, so this path is unexercised in production.
  */
 export function engagementsMensuelsLisses(
   commitments: readonly Commitment[],
@@ -62,7 +77,12 @@ export function engagementsMensuelsLisses(
   return commitments.reduce((acc, c) => {
     const paidKeys = paidKeysByCommitment.get(c.id) ?? EMPTY;
     if (!engagementPeseSurMois(c, paidKeys, ref)) return acc;
-    return acc.plus(new Decimal(installmentAmountOf(c)).dividedBy(monthsPerCycle(c.frequency)));
+    // `installmentAmountAt` et non `installmentAmountOf` : la DERNIERE
+    // echeance est un solde, plus petit que les autres. Sans cela, le mois
+    // final soustrait la mensualite pleine et le cockpit se trompe de
+    // l'ecart, sans le moindre signal.
+    const echeance = installmentAmountAt(c, installmentIndexAt(c, ref));
+    return acc.plus(new Decimal(echeance).dividedBy(monthsPerCycle(c.frequency)));
   }, new Decimal(0));
 }
 
@@ -90,7 +110,7 @@ export function engagementsDuMois(
     const paidKeys = paidKeysByCommitment.get(c.id) ?? EMPTY;
     if (!engagementPeseSurMois(c, paidKeys, ref)) continue;
     const cycleMois = monthsPerCycle(c.frequency);
-    const echeance = new Decimal(installmentAmountOf(c));
+    const echeance = new Decimal(installmentAmountAt(c, installmentIndexAt(c, ref)));
     parts.push({
       id: c.id,
       libelle: c.label,
