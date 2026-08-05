@@ -5,8 +5,22 @@ import { CookiePreferencesLink } from '@/components/layout/CookiePreferencesLink
 import { Link } from '@/i18n/navigation';
 import { SITE } from '@/lib/site';
 
+/**
+ * `inline-flex min-h-11 items-center` : ces liens mesuraient 16 px de haut,
+ * sous les 24 x 24 px qu'exige WCAG 2.2 AA (2.5.8 Target Size Minimum).
+ *
+ * L'exception « inline » du critere ne s'applique PAS ici : elle couvre un lien
+ * pris dans une phrase, dont la hauteur est contrainte par l'interligne du texte
+ * autour. Ceux-ci sont des liens autonomes dans un `<nav>`, donc rien ne les
+ * contraint — c'etait bien un echec.
+ *
+ * 44 px et non 24 : c'est le minimum que ce depot s'impose partout ailleurs
+ * (`min-h-11` sur la barre d'onglets, les disclosures, les boutons de banniere).
+ * Deux standards de cible tactile selon l'ecran, c'est une incoherence de plus a
+ * ne pas installer.
+ */
 const LINK_CLASS =
-  'text-muted-foreground hover:text-foreground focus-visible:ring-brand-600 cursor-pointer rounded text-xs transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none';
+  'text-muted-foreground hover:text-foreground focus-visible:ring-brand-600 inline-flex min-h-11 cursor-pointer items-center rounded text-xs transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none';
 
 /**
  * MktFooter — minimal footer for the public landing.

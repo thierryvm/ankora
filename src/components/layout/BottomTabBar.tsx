@@ -224,7 +224,19 @@ export function BottomTabBar({ isAdmin = false }: BottomTabBarProps) {
                 >
                   <span
                     aria-hidden="true"
-                    className="bg-brand-700 text-primary-foreground shadow-brand-700/35 flex h-[33px] w-[46px] items-center justify-center rounded-[11px] shadow-[0_2px_8px_var(--tw-shadow-color)]"
+                    /*
+                     * `h-8.25 w-11.5` = 33 × 46 px, la taille exacte que
+                     * spécifie la décision Q7 — l'échelle Tailwind vaut 4 px
+                     * par unité. Les valeurs arbitraires `h-[33px] w-[46px]`
+                     * rendaient les mêmes pixels, mais hors de l'échelle : elles
+                     * échappaient au thème et faisaient rougir l'extension
+                     * Tailwind à chaque ouverture du fichier.
+                     *
+                     * `rounded-[11px]` reste arbitraire, faute d'équivalent
+                     * canonique (l'échelle de rayon ne descend pas à cette
+                     * granularité), et `shadow-[…]` porte une variable CSS.
+                     */
+                    className="bg-brand-700 text-primary-foreground shadow-brand-700/35 flex h-8.25 w-11.5 items-center justify-center rounded-[11px] shadow-[0_2px_8px_var(--tw-shadow-color)]"
                   >
                     <Plus className="h-5 w-5" strokeWidth={1.5} />
                   </span>
