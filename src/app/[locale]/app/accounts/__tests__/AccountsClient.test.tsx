@@ -137,5 +137,13 @@ describe('AccountsClient — un solde, un seul rendu', () => {
     const formulaire = champ.closest('form');
     expect(formulaire).not.toBeNull();
     expect(formulaire?.querySelectorAll('button')).toHaveLength(1);
+
+    // La contrainte dite explicitement, et pas seulement deduite du compte de
+    // boutons : c'est le PARAGRAPHE qui doit rester hors du formulaire. Un
+    // futur remaniement pourrait l'y remettre sans ajouter de bouton, et le
+    // compte ci-dessus ne verrait rien.
+    const mention = document.getElementById('balance-notice-principal');
+    expect(mention).not.toBeNull();
+    expect(formulaire?.contains(mention)).toBe(false);
   });
 });
