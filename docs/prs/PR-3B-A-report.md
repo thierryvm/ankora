@@ -452,8 +452,8 @@ sur les 16). Les grants viennent des migrations et des privilèges par défaut d
 sur `public`, identiques de part et d'autre — mais ce n'est pas une preuve. La requête
 prod est fournie ci-dessous comme **lecture n° 4**, en lecture seule.
 
-Le MCP Supabase **ne pouvait pas** servir à cette vérification : interrogé, il ne voit que
-un projet du compte professionnel — le **premier** compte. L'utiliser aurait interrogé la mauvaise base et rendu
+Le MCP Supabase **ne pouvait pas** servir à cette vérification : interrogé, il est branché
+sur le **compte professionnel**, pas sur celui d'Ankora. L'utiliser aurait interrogé la mauvaise base et rendu
 un résultat faux avec l'air d'être vrai.
 
 ## 9ter. `test-quality-auditor` — le trou qu'il a trouvé, et qui est fermé

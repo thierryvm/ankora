@@ -1,13 +1,13 @@
 #!/usr/bin/env sh
 # Dernier filet avant que du code quitte la machine.
 #
-# @thierry mène un projet PROFESSIONNEL sur un second compte en parallèle de
+# @thierry mène un projet PROFESSIONNEL sur un autre compte en parallèle de
 # celui-ci, et les deux comptes GitHub sont connectés au keyring EN MÊME TEMPS. `git push`
 # s'authentifie via `gh auth git-credential`, donc il pousse sous le compte `gh`
 # ACTIF — une bascule silencieuse enverrait du code personnel sur
 # l'infrastructure professionnelle, et rien dans la chaîne d'outils ne
 # protesterait avant un 403 des heures plus tard. Démontré : basculer le compte
-# fait renvoyer l'autre compte à `git credential fill`.
+# fait renvoyer l'identité professionnelle à `git credential fill`.
 #
 # Vérifie aussi Supabase et Vercel, parce qu'un push déclenche un déploiement.
 #

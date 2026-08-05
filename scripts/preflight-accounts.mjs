@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Garde-fou anti-mauvais-compte — Ankora (projet PERSONNEL, compte thierryvm).
 //
-// @thierry mène en parallèle un projet PROFESSIONNEL sur un second compte
+// @thierry mène en parallèle un projet PROFESSIONNEL sur un autre compte
 // (GitHub, Vercel, Supabase). Les deux comptes GitHub sont connectés au
 // keyring EN MÊME TEMPS : `gh auth status` en liste deux, un seul actif. Une
 // bascule silencieuse enverrait du code perso sur l'infra pro, ou l'inverse.
@@ -37,8 +37,7 @@ const EXPECTED = {
   vercelProjectFingerprint: '428b5ceefd5e',
 };
 
-// `scripts/` est à la racine du repo (pas de monorepo ici, contrairement au
-// projet pro où le script vit dans `apps/web/scripts/`).
+// `scripts/` est à la racine du repo (pas de monorepo ici).
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 // Mode `--local` : uniquement les vérifications sans réseau. Utilisé par le

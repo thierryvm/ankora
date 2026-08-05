@@ -570,11 +570,11 @@ Cf. `docs/design/trio-agents.md` (convention complète), `docs/design/claude-des
 
 ### Phase 0bis — Preflight comptes (avant toute opération sortante)
 
-@thierry mène un **projet professionnel sur un second compte** (GitHub, Vercel, Supabase)
+@thierry mène un **projet professionnel sur un autre compte** (GitHub, Vercel, Supabase)
 en parallèle d'Ankora, qui est **personnel** et utilise **toujours `thierryvm`** sur les
 trois plateformes.
 
-> Ce dépôt étant public, ni le compte professionnel ni les projets du client ne sont
+> Ce dépôt étant public, ni le compte professionnel ni ses projets ne sont
 > nommés ici. Le garde-fou n'en a pas besoin : il vérifie que le compte actif **est**
 > `thierryvm`, il n'a aucune liste noire à tenir. Nommer l'autre partie n'ajouterait
 > aucune protection et cartographierait une relation commerciale — cf. la règle
@@ -584,10 +584,10 @@ Les deux comptes GitHub sont connectés au keyring **en même temps**. `git push
 s'authentifie via `gh auth git-credential`, donc il pousse sous le compte `gh` **actif** :
 une bascule silencieuse enverrait du code personnel sur l'infrastructure professionnelle,
 et rien ne protesterait avant un 403 des heures plus tard. Démontré le 2026-07-26 —
-basculer le compte fait renvoyer l'autre identité à `git credential fill`.
+basculer le compte fait renvoyer l'identité professionnelle à `git credential fill`.
 
 **La bascule arrive EN COURS de session**, pas seulement au démarrage : la configuration
-`gh` est globale à la machine, donc ouvrir l'autre projet dans une seconde fenêtre la fait
+`gh` est globale à la machine, donc ouvrir le projet professionnel dans une autre fenêtre la fait
 basculer pour toutes. Mesuré deux fois — les 26 juillet et 5 août 2026. **Un GO obtenu il y
 a dix minutes ne vaut rien maintenant.**
 
