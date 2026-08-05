@@ -129,7 +129,7 @@ premier tour, avec des motifs justes.
 
 ## 5. Ce qui reste, par ordre de valeur
 
-1. **La barre d'onglets** — plan validé au second tour, **prêt à coder**. Périmètre
+1. **La barre d'onglets** — plan **✅ APPROVED au troisième tour**, prêt à coder. Périmètre
    atomique : les **quatre** lectures d'une seule décision (montage, deux décalages de
    bannière, bouton haut de page) passent côté client ; `Header` et `Footer` restent
    serveur — les toucher est la régression. Plus un ternaire d'une ligne sur
@@ -143,6 +143,38 @@ premier tour, avec des motifs justes.
 
    À mesurer avant/après : le poids du bundle de la landing. Aujourd'hui le chunk de la
    barre n'y est pas référencé ; une décision client le rendrait joignable.
+
+   **Le prop est conservé.** `ScrollToTop`, `UpdateBanner` et `ConsentBanner` reçoivent déjà
+   `liftedForBottomBar` en prop, et trois fichiers de test assertent sur ce contrat
+   (`ScrollToTop.test.tsx:22-42`, `UpdateBanner.test.tsx:75-77`, les tests de
+   `ConsentBanner`). Le prop était déjà la bonne frontière — **seule la moitié qui
+   l'alimente était fausse.** Un composant client mince lit `usePathname()` et le passe. Les
+   trois fichiers restent verts, et c'est ce qui prouve que le périmètre a été tenu.
+
+   **Quatre verrous à écrire, chacun né d'un incident réel :**
+   - **Frontière `'use client'`** : `bottom-tab-bar.routes.ts:1-17` documente qu'un Server
+     Component important une valeur non-composant depuis un module `'use client'` fait
+     planter le rendu de **toutes** les pages (PR #182). Le fournisseur importe **depuis**
+     la liste d'exclusion ; aucun module serveur n'importe depuis lui.
+   - **`usePathname` vient de `@/i18n/navigation`**, jamais de `next/navigation` — le second
+     rendrait `/en/app` et casserait l'exclusion sur toutes les locales non par défaut.
+   - **Gaté = non rendu, jamais `hidden`** : `e2e/mobile-ios/bottom-tab-bar.spec.ts:312-325`
+     assert `toHaveCount(0)` pour l'anonyme. Une barre masquée en CSS rendrait ces cas verts
+     tout en expédiant la nav aux visiteurs anonymes.
+   - **`e2e/mobile-ios/bottom-tab-bar.spec.ts:301-310` devient porteur** : c'est la seule
+     preuve automatisée que la transition d'authentification remet la racine à jour.
+     **Interdiction d'y ajouter un `goto`/`reload` pour la stabiliser** — ce geste
+     supprimerait la preuve sans faire baisser aucun chiffre.
+
+   Et un piège pour plus tard : ajouter `staleTimes.dynamic > 0` dans `next.config.ts`
+   figerait `Header` et `Footer` à leur tour, et ressusciterait la contradiction.
+
+   **Pourquoi ce correctif n'a pas été écrit dans la nuit du 5 au 6 août** : il touche le
+   layout racine en production, il fait une quinzaine de fichiers, et il exige deux mesures
+   de plancher e2e **en local, dans les deux sens, avant le premier push**. Entamer une
+   modification structurelle en fin de session longue est précisément le geste que la
+   doctrine de ce dépôt existe pour empêcher. Le plan est approuvé et autoportant : la
+   prochaine session exécute sans rejouer la revue.
 
 2. **Carte de virement ADR-035** — plan **approuvé** avec 6 corrections, prêt à coder.
    L'amendement du 5 août a déjà décidé les libellés (« À virer vers l'épargne » / « À
