@@ -9,7 +9,7 @@ import {
   type Commitment,
 } from '../commitments';
 import { type NamedCommitment } from '../obligations/types';
-import { type Poste, type PostePart } from './effort-financier-lisse';
+import { sommeDesParts, type Poste, type PostePart } from './effort-financier-lisse';
 import { type ReferencePeriod } from './types';
 
 const EMPTY: ReadonlySet<string> = new Set();
@@ -98,8 +98,8 @@ export function engagementsDuMois(
       origine: cycleMois === 1 ? null : { montantFacture: echeance, cycleMois },
     });
   }
-  return {
-    total: parts.reduce((acc, p) => acc.plus(p.montantMensuel), new Decimal(0)),
-    parts,
-  };
+  // `sommeDesParts` du module voisin, et non un `reduce` local : la sommation
+  // d'un `Poste` vit à un seul endroit, sinon les trois producteurs peuvent
+  // diverger sur l'ordre des opérations `Decimal`.
+  return { total: sommeDesParts(parts), parts };
 }

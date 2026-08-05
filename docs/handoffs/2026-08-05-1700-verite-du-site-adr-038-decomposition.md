@@ -65,10 +65,22 @@ Verdict `plan-reviewer` : 🟡 APPROVED WITH CHANGES (v1 et v2 précédentes �
 - dans l'app installée, **aucune affordance de rechargement** : pas de barre d'adresse
 - `CACHE_VERSION` est une constante éditée à la main
 
-Hypothèse à valider : le bouton `+` absent et l'impossibilité de rafraîchir sont la **même
-cause** — du JavaScript d'un déploiement antérieur. Le `skipWaiting()` inconditionnel
-permet en plus à un nouveau SW de prendre la main **sans rechargement de page**, donc un
-état mixte ancien JS / nouveaux assets.
+Hypothèse posée ici : le bouton `+` absent et l'impossibilité de rafraîchir ont la **même
+cause** — du JavaScript d'un déploiement antérieur.
+
+> **Vérifiée depuis, et deux fois corrigée.** Une seconde hypothèse a d'abord remplacé
+> celle-ci — la visibilité de la barre serait figée dans un layout partagé — puis a été
+> **réfutée par la mesure** : reproduction en navigateur réel (Supabase local, utilisateur
+> semé), 10 surfaces × 5 largeurs de 390 à 1600 px, aucun état où la barre manque, y compris
+> en arrivant sur `/app` par navigation client après connexion. L'hypothèse d'origine tient
+> donc : **il n'y a qu'un défaut, l'app ne sait pas se mettre à jour**, et le `+` manquant en
+> était le symptôme.
+>
+> En revanche l'argument de l'« état mixte » que portait ce paragraphe ne tient pas : ce
+> worker ne met en cache ni HTML ni RSC (allowlist d'actifs au nom haché), donc un actif non
+> caché retombe sur le réseau. La raison de retirer le `skipWaiting()` inconditionnel est
+> autre, et elle suffit : **sans état `waiting`, il n'y a rien à détecter, donc rien à
+> annoncer à l'utilisateur.**
 
 Correctif attendu : détection de nouvelle version + affordance « recharger » visible,
 `update()` au retour de visibilité, et arbitrage sur le `skipWaiting()` aveugle.

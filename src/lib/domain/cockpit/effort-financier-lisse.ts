@@ -43,7 +43,16 @@ export type Poste = Readonly<{
   parts: readonly PostePart[];
 }>;
 
-function sommeDesParts(parts: readonly PostePart[]): Decimal {
+/**
+ * La somme d'un poste, en un seul endroit.
+ *
+ * Exportée pour que `engagementsDuMois` (module voisin) l'utilise plutôt que de
+ * refaire son propre `reduce` : trois producteurs de `Poste` qui somment chacun
+ * de leur côté, ce sont trois endroits où l'ordre des opérations `Decimal` peut
+ * diverger — et c'est précisément la maladie que la forme `{ total, parts }`
+ * existe pour soigner. Remarque de Sourcery sur la PR #310, acceptée.
+ */
+export function sommeDesParts(parts: readonly PostePart[]): Decimal {
   return parts.reduce((acc, p) => acc.plus(p.montantMensuel), new Decimal(0));
 }
 

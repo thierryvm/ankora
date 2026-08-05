@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import Decimal from 'decimal.js';
 
 import {
@@ -15,8 +15,19 @@ import {
 import type { CockpitCharge } from '@/lib/domain/cockpit/types';
 import type { NamedCommitment } from '@/lib/domain/obligations/types';
 
+/**
+ * Identifiants déterministes plutôt que `Math.random()` : un échec doit pouvoir
+ * se relire dans un journal, et un identifiant qui change à chaque exécution
+ * rend deux runs incomparables. Le compteur est remis à zéro entre les cas.
+ * (Remarque de Sourcery sur la PR #310, acceptée.)
+ */
+let compteur = 0;
+beforeEach(() => {
+  compteur = 0;
+});
+
 const charge = (over: Partial<CockpitCharge>): CockpitCharge => ({
-  id: over.id ?? 'c-' + Math.random().toString(36).slice(2),
+  id: over.id ?? `c-${++compteur}`,
   label: 'Test',
   amount: new Decimal(0),
   frequency: 'monthly',
@@ -28,7 +39,7 @@ const charge = (over: Partial<CockpitCharge>): CockpitCharge => ({
 
 const engagement = (over: Partial<NamedCommitment>): NamedCommitment =>
   ({
-    id: over.id ?? 'e-' + Math.random().toString(36).slice(2),
+    id: over.id ?? `e-${++compteur}`,
     label: 'Engagement',
     isActive: true,
     frequency: 'monthly',
