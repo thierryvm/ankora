@@ -29,6 +29,11 @@ vi.mock('@/components/ui/toast', () => ({
 }));
 
 import { CookiesPreferencesSection } from '../CookiesPreferencesSection';
+// Importee, jamais recopiee : ce fichier figeait le litteral '1.0.0', si bien
+// qu'une copie privee de la constante dans le composant serait restee
+// invisible tant que les deux valeurs coincidaient. Meme faute que celle que
+// consent-version-source.test.tsx documente pour la banniere.
+import { COOKIE_CONSENT_VERSION } from '@/lib/actions/consent-types';
 
 const STORAGE_KEY = 'ankora.consent.v1';
 
@@ -62,7 +67,7 @@ describe('<CookiesPreferencesSection />', () => {
       wrapped({
         analytics: true,
         marketing: false,
-        version: '1.0.0',
+        version: COOKIE_CONSENT_VERSION,
         decidedAt: '2026-01-01T00:00:00.000Z',
       }),
     );
@@ -93,7 +98,7 @@ describe('<CookiesPreferencesSection />', () => {
     window.localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({
-        version: '1.0.0',
+        version: COOKIE_CONSENT_VERSION,
         analytics: true,
         marketing: true,
         decidedAt: '2026-01-01T00:00:00.000Z',
@@ -103,7 +108,7 @@ describe('<CookiesPreferencesSection />', () => {
       wrapped({
         analytics: true,
         marketing: true,
-        version: '1.0.0',
+        version: COOKIE_CONSENT_VERSION,
         decidedAt: '2026-01-01T00:00:00.000Z',
       }),
     );
@@ -167,7 +172,7 @@ describe('<CookiesPreferencesSection />', () => {
     window.localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({
-        version: '1.0.0',
+        version: COOKIE_CONSENT_VERSION,
         analytics: false,
         marketing: true,
         decidedAt: fresh,
@@ -177,7 +182,7 @@ describe('<CookiesPreferencesSection />', () => {
       wrapped({
         analytics: true,
         marketing: false,
-        version: '1.0.0',
+        version: COOKIE_CONSENT_VERSION,
         decidedAt: '2026-01-01T00:00:00.000Z',
       }),
     );
