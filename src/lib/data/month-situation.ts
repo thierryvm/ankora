@@ -2,10 +2,13 @@ import { ANKORA_TIMEZONE } from '@/lib/date/tz';
 import { money } from '@/lib/domain/types';
 import {
   calculerSituationDuMois,
+  chargesFixesDuMois,
   depensesDuMois,
-  engagementsMensuelsLisses,
+  engagementsDuMois,
+  lissageDuMois,
   paymentKey,
   type PaymentLedger,
+  type Poste,
   type SituationDuMois,
 } from '@/lib/domain/cockpit';
 import { commitmentRowToDomain } from '@/lib/data/commitment-row';
@@ -65,8 +68,30 @@ export type MonthSituationInputs = {
   >['paidKeysByCommitment'];
 };
 
+/**
+ * De quoi chacun des trois postes soustractifs du hero est fait — règle 10 de
+ * `CLAUDE.md` : « aucun montant agrégé sans sa décomposition accessible ».
+ *
+ * Les parts descendent AVEC le chiffre, elles ne se recalculent pas à
+ * l'affichage. C'est le corollaire de conception de la règle : un composant qui
+ * reçoit un total sans ses composantes est mal découpé, et deux calculs de la
+ * même somme finissent toujours par diverger.
+ *
+ * Chaque `Poste` porte son propre total, dérivé de ses parts. Le hero continue
+ * de lire `situation.chargesFixes` / `.provisionsLissees` / `.engagementsMensuels`
+ * pour les montants affichés : ce sont les mêmes valeurs, au centime, produites
+ * par le même parcours de liste.
+ */
+export type MonthDecomposition = {
+  chargesFixes: Poste;
+  /** « Lissage » depuis l'amendement d'ADR-035 — la part mensuelle des factures non mensuelles. */
+  lissage: Poste;
+  engagements: Poste;
+};
+
 export type MonthSituationBundle = MonthSituation & {
-  engagementsMensuels: ReturnType<typeof engagementsMensuelsLisses>;
+  engagementsMensuels: Poste['total'];
+  decomposition: MonthDecomposition;
   paymentsLedger: PaymentLedger;
   cockpitCharges: readonly CockpitCharge[];
   soldeEpargneActuel: ReturnType<typeof money>;
@@ -97,11 +122,16 @@ export function computeMonthSituation(input: MonthSituationInputs): MonthSituati
   const commitmentLedger = new Map(
     Object.entries(input.paidKeysByCommitment).map(([id, keys]) => [id, new Set(keys)] as const),
   );
-  const engagementsMensuels = engagementsMensuelsLisses(
-    input.commitments.map(commitmentRowToDomain),
+  // `engagementsDuMois` plutôt que `engagementsMensuelsLisses` : même filtre,
+  // même total, mais il rend aussi les parts. Le libellé est repris de la ligne
+  // (`c.label`) et non du domaine — `commitmentRowToDomain` ne le transporte
+  // pas, et une décomposition sans nom n'explique rien.
+  const engagements = engagementsDuMois(
+    input.commitments.map((c) => ({ ...commitmentRowToDomain(c), label: c.label })),
     commitmentLedger,
     snapshot.currentPeriod,
   );
+  const engagementsMensuels = engagements.total;
 
   // `currentPeriod` is derived from `new Date()` in this same TZ by the
   // snapshot, so it is always the current calendar month. The guard is
@@ -149,6 +179,11 @@ export function computeMonthSituation(input: MonthSituationInputs): MonthSituati
     joursDuMois,
     todayIso,
     engagementsMensuels,
+    decomposition: {
+      chargesFixes: chargesFixesDuMois(cockpitCharges),
+      lissage: lissageDuMois(cockpitCharges),
+      engagements,
+    },
     paymentsLedger,
     cockpitCharges,
     soldeEpargneActuel,

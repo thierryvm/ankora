@@ -8,6 +8,8 @@ import {
   periodOrdinal,
   type Commitment,
 } from '../commitments';
+import { type NamedCommitment } from '../obligations/types';
+import { sommeDesParts, type Poste, type PostePart } from './effort-financier-lisse';
 import { type ReferencePeriod } from './types';
 
 const EMPTY: ReadonlySet<string> = new Set();
@@ -62,4 +64,42 @@ export function engagementsMensuelsLisses(
     if (!engagementPeseSurMois(c, paidKeys, ref)) return acc;
     return acc.plus(new Decimal(installmentAmountOf(c)).dividedBy(monthsPerCycle(c.frequency)));
   }, new Decimal(0));
+}
+
+/**
+ * Le même chiffre, avec ses parts — règle 10 de `CLAUDE.md`.
+ *
+ * La signature à trois arguments n'est pas une commodité : c'est la condition
+ * pour que la somme des parts égale le total. Une variante qui ne recevrait que
+ * la liste sommerait les engagements terminés, inactifs et les paiements
+ * uniques, et rendrait un total SUPÉRIEUR à `engagementsMensuelsLisses` — le
+ * filtre `engagementPeseSurMois` a besoin des échéances payées et du mois de
+ * référence, pas seulement des engagements.
+ *
+ * `origine` explique la division quand la cadence n'est pas mensuelle : un plan
+ * à 600 € par trimestre pèse 200 € par mois, et l'interface doit pouvoir le dire.
+ * `null` pour une mensualité, qui ne subit aucune division.
+ */
+export function engagementsDuMois(
+  commitments: readonly NamedCommitment[],
+  paidKeysByCommitment: ReadonlyMap<string, ReadonlySet<string>>,
+  ref: ReferencePeriod,
+): Poste {
+  const parts: PostePart[] = [];
+  for (const c of commitments) {
+    const paidKeys = paidKeysByCommitment.get(c.id) ?? EMPTY;
+    if (!engagementPeseSurMois(c, paidKeys, ref)) continue;
+    const cycleMois = monthsPerCycle(c.frequency);
+    const echeance = new Decimal(installmentAmountOf(c));
+    parts.push({
+      id: c.id,
+      libelle: c.label,
+      montantMensuel: echeance.dividedBy(cycleMois),
+      origine: cycleMois === 1 ? null : { montantFacture: echeance, cycleMois },
+    });
+  }
+  // `sommeDesParts` du module voisin, et non un `reduce` local : la sommation
+  // d'un `Poste` vit à un seul endroit, sinon les trois producteurs peuvent
+  // diverger sur l'ordre des opérations `Decimal`.
+  return { total: sommeDesParts(parts), parts };
 }

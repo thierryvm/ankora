@@ -1183,13 +1183,15 @@
       "flow": {
         "revenus": "Income",
         "chargesFixes": "Fixed charges",
-        "provisions": "Smoothed provisions",
+        "lissage": "Smoothing",
         "engagements": "Commitments",
         "resteDisponible": "Monthly budget",
         "depense": "Spent this month",
         "ilTeReste": "You have left",
         "epargneEstimee": "Estimated savings",
-        "parJour": "≈ {amount}/day"
+        "parJour": "≈ {amount}/day",
+        "detailToggle": "Breakdown: {poste}",
+        "detailOrigine": "{montant} {cycleMois, plural, =3 {every 3 months} =6 {every 6 months} =12 {once a year} other {every # months}}"
       },
       "barAria": "How your income splits: {charges} of charges, {provisions} of provisions, {depense} spent, {reste} left.",
       "barAriaEngagements": "Including {engagements} of commitments.",
