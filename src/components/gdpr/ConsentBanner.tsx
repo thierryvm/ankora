@@ -5,10 +5,14 @@ import { useTranslations } from 'next-intl';
 
 import { Link } from '@/i18n/navigation';
 import { recordCookieConsentAction } from '@/lib/actions/consent';
+// La version vient du module qui la PERSISTE. Ce composant en portait une copie
+// locale : deux constantes pour un seul numéro, dont aucune ne surveillait
+// l'autre. Cf. le commentaire de `COOKIE_CONSENT_VERSION` pour les deux dérives
+// muettes que cela rendait possibles.
+import { COOKIE_CONSENT_VERSION } from '@/lib/actions/consent-types';
 
 const STORAGE_KEY = 'ankora.consent.v1';
 const REOPEN_FLAG_KEY = 'ankora.consent.reopen';
-export const CONSENT_VERSION = '1.0.0';
 
 type ConsentState = {
   version: string;
@@ -23,7 +27,7 @@ function readStored(): ConsentState | null {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as ConsentState;
-    if (parsed.version !== CONSENT_VERSION) return null;
+    if (parsed.version !== COOKIE_CONSENT_VERSION) return null;
     return parsed;
   } catch {
     return null;
@@ -324,7 +328,7 @@ export function ConsentBanner({ liftedForBottomBar = false }: ConsentBannerProps
 
   const accept = (analyticsValue: boolean, marketingValue: boolean) => {
     persist({
-      version: CONSENT_VERSION,
+      version: COOKIE_CONSENT_VERSION,
       analytics: analyticsValue,
       marketing: marketingValue,
       decidedAt: new Date().toISOString(),

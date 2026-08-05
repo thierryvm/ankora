@@ -28,10 +28,12 @@ vi.mock('@/i18n/navigation', () => ({
 import {
   ConsentBanner,
   reopenConsentBanner,
-  CONSENT_VERSION,
   __resetConsentCacheForTests,
   __getServerSnapshotForTests,
 } from '../ConsentBanner';
+// Importée depuis le module SERVEUR, delibérément : ces assertions échouent si
+// la bannière se remet à porter sa propre copie du numéro de version.
+import { COOKIE_CONSENT_VERSION } from '@/lib/actions/consent-types';
 
 const STORAGE_KEY = 'ankora.consent.v1';
 const REOPEN_KEY = 'ankora.consent.reopen';
@@ -71,7 +73,7 @@ describe('<ConsentBanner /> — extended (PR-LEGAL-1)', () => {
     await waitFor(() => {
       const stored = readStored();
       expect(stored).toMatchObject({
-        version: CONSENT_VERSION,
+        version: COOKIE_CONSENT_VERSION,
         analytics: true,
         marketing: true,
       });
@@ -122,7 +124,7 @@ describe('<ConsentBanner /> — extended (PR-LEGAL-1)', () => {
     window.localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({
-        version: CONSENT_VERSION,
+        version: COOKIE_CONSENT_VERSION,
         analytics: true,
         marketing: false,
         decidedAt: new Date().toISOString(),
@@ -138,7 +140,7 @@ describe('<ConsentBanner /> — extended (PR-LEGAL-1)', () => {
     window.localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({
-        version: CONSENT_VERSION,
+        version: COOKIE_CONSENT_VERSION,
         analytics: true,
         marketing: false,
         decidedAt: new Date().toISOString(),
@@ -153,7 +155,7 @@ describe('<ConsentBanner /> — extended (PR-LEGAL-1)', () => {
     window.localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({
-        version: CONSENT_VERSION,
+        version: COOKIE_CONSENT_VERSION,
         analytics: true,
         marketing: false,
         decidedAt: '2026-01-01T00:00:00.000Z',
@@ -188,7 +190,7 @@ describe('<ConsentBanner /> — extended (PR-LEGAL-1)', () => {
     window.localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({
-        version: CONSENT_VERSION,
+        version: COOKIE_CONSENT_VERSION,
         analytics: true,
         marketing: true,
         decidedAt: new Date().toISOString(),

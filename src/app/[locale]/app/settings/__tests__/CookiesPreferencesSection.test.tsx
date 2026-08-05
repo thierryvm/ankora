@@ -17,7 +17,6 @@ const reloadMock = vi.hoisted(() => vi.fn());
 vi.mock('@/components/gdpr/ConsentBanner', () => ({
   reopenConsentBanner: () => reopenMock(),
   notifyConsentChanged: () => notifyMock(),
-  CONSENT_VERSION: '1.0.0',
 }));
 
 vi.mock('@/lib/browser/reload', () => ({ reloadPage: () => reloadMock() }));
