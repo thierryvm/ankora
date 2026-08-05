@@ -58,7 +58,7 @@ Ankora se positionne comme un **outil d'éducation budgétaire et d'organisation
 | **Lissage annuel**       | Toute charge trimestrielle, semestrielle ou annuelle est ventilée en provision mensuelle. Plus jamais de facture surprise. |
 | **Assistant virements**  | Calcule automatiquement combien virer vers l'épargne ce mois-ci (`provisions − factures dues`).                            |
 | **Santé des provisions** | Compare la cible théorique à ton solde réel et propose un plan de rattrapage lissé sur 3 mois en cas de déficit.           |
-| **Simulateur what-if**   | Estime l'impact d'une résiliation, d'une renégociation ou d'une augmentation sur ta capacité d'épargne mensuelle.          |
+| **Simulateur what-if**   | Estime l'impact d'une résiliation, d'une renégociation ou d'une augmentation sur ton budget du mois.                       |
 | **PWA installable**      | Fonctionne hors-ligne partiellement, installable sur iOS / Android / desktop.                                              |
 | **Multi-workspace**      | Gère tes comptes perso + couple + maison séparément, chacun avec ses propres membres et rôles.                             |
 | **Export RGPD**          | Export JSON complet de tes données en un clic (art. 20 RGPD).                                                              |

@@ -60,9 +60,21 @@ Ce tableau est la **source de vérité**. Aucune clé i18n ne doit introduire un
 Jalon vérifiable :
 
 ```bash
-grep -ric "reste à vivre\|reste disponible\|vie courante\|disponible aujourd'hui\|capacité d'épargne" messages/
+grep -ric "reste à vivre\|reste disponible\|budget vie courante\|disponible aujourd'hui\|capacité d'épargne" messages/
 # → 0
 ```
+
+> **Correction du jalon, 5 août 2026.** Il cherchait `vie courante` seul, et rendait donc
+> **6 sur `fr-BE.json`** — un rouge permanent qu'aucun travail ne pouvait éteindre. Les six
+> occurrences sont le **nom d'un compte** (« Virement mensuel vers Vie Courante »,
+> « Principal → Vie Courante »), pas le terme d'enveloppe banni : « Vie Courante » est l'un
+> des trois comptes du modèle source, il reçoit un virement réel tous les mois, et son nom
+> doit rester lisible dans l'interface qui pilote ce virement.
+>
+> Le terme banni était `budget vie courante`, et c'est lui que le jalon cherche désormais.
+> **Un jalon qui ne peut pas atteindre son seuil se fait ignorer, puis arrondir** — ce qui
+> coûte plus cher que de ne pas en avoir. Mesuré après correction : `0` sur les cinq
+> locales.
 
 ### 2. `resteDisponible` reste le nom de code, et n'est PAS renommé
 
