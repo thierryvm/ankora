@@ -135,7 +135,29 @@ export const config = {
      * `<Link prefetch>` because next-intl could not rewrite `/` → `/fr-BE`.
      * The middleware now runs on prefetches too; each prefetch gets its own
      * per-request nonce that is never shared with another user.
+     *
+     * `txt` est dans la CLASSE d'extensions, et non dans la liste nommée — c'est
+     * le seul changement qui ferme la famille de pannes ci-dessus au lieu d'en
+     * réparer un exemplaire de plus.
+     *
+     * `llms.txt` y figurait nommément. Ses deux voisins, non : mesuré en
+     * production le 2026-08-05, `/ai.txt` et `/llms-full.txt` répondaient **404**
+     * alors que les deux fichiers existent dans `public/` — et qu'un script du
+     * dépôt, `scripts/build-llms-full.mjs`, régénère le second. Troisième
+     * occurrence de la même faute après les polices et `sw.js`. Une liste nommée
+     * ne protège que ce dont on s'est souvenu.
+     *
+     * `robots.txt` et `sitemap.xml` RESTENT nommés bien que redondants avec la
+     * classe : ce sont des routes générées (`src/app/robots.ts`,
+     * `src/app/sitemap.ts`), pas des fichiers de `public/`. Le garde-fou de
+     * `src/__tests__/proxy-matcher.test.ts` énumère le disque, il ne peut donc
+     * jamais les couvrir — leur entrée nommée est leur seule garantie.
+     *
+     * Aucune route ne peut se terminer par `.txt` : les seules routes en forme de
+     * fichier sont `robots.ts`, `sitemap.ts` et `manifest.ts`, le seul segment
+     * dynamique est `glossaire/[slug]` avec `dynamicParams = false` et un jeu de
+     * slugs fermé, et `src/i18n/routing.ts` ne déclare aucun `pathnames`.
      */
-    '/((?!api|auth/callback|monitoring|_next/static|_next/image|_vercel|favicon.ico|icon.svg|apple-icon.svg|manifest.webmanifest|sw\\.js|robots.txt|sitemap.xml|llms\\.txt|.*\\.(?:png|jpg|jpeg|gif|svg|webp|avif|ico|ttf|woff|woff2|otf|eot)).*)',
+    '/((?!api|auth/callback|monitoring|_next/static|_next/image|_vercel|favicon.ico|icon.svg|apple-icon.svg|manifest.webmanifest|sw\\.js|robots.txt|sitemap.xml|.*\\.(?:txt|png|jpg|jpeg|gif|svg|webp|avif|ico|ttf|woff|woff2|otf|eot)).*)',
   ],
 };
