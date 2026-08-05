@@ -250,13 +250,6 @@ export function HeaderNav({
                 {tMkt('simulator')}
               </Link>
               <Link
-                href="/#pricing"
-                onClick={handleDrawerClose}
-                className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-              >
-                {tMkt('pricing')}
-              </Link>
-              <Link
                 href="/faq"
                 onClick={handleDrawerClose}
                 className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-brand-600 block rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"

@@ -131,13 +131,16 @@ describe('<HeaderNav /> hideMobileTrigger — PR-BETA-6 hotfix #3 duplicate-nav 
 });
 
 describe('<HeaderNav /> mobile drawer — PR-UX-1 marketing parity with desktop MktNav', () => {
-  it('exposes Product / Simulator / Pricing anchored at the canonical landing ids', async () => {
+  it('exposes Product / Simulator anchored at the canonical landing ids', async () => {
     render(<HeaderNav variant="marketing" isAuthenticated={false} />);
     await openDrawer();
 
     expect(screen.getByRole('link', { name: 'Produit' })).toHaveAttribute('href', '/#principles');
     expect(screen.getByRole('link', { name: 'Simulateur' })).toHaveAttribute('href', '/#simulator');
-    expect(screen.getByRole('link', { name: 'Tarifs' })).toHaveAttribute('href', '/#pricing');
+    // La section Tarifs est supprimee (2026-08-05). Le drawer mobile la listait
+    // aussi : une entree de menu vers une ancre absente est un lien mort, et le
+    // desktop et le mobile doivent dire la meme chose.
+    expect(screen.queryByRole('link', { name: 'Tarifs' })).not.toBeInTheDocument();
   });
 
   it('keeps FAQ as the only cross-page entry inside the marketing drawer', async () => {

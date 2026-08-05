@@ -4,7 +4,7 @@ import { test, expect } from '@playwright/test';
  * E2E smoke for the cc-design landing assembly (PR-3c-2).
  *
  * Scope:
- * - 8 sections render on `/` (MktNav, Hero, Principles, Feature, Pricing,
+ * - 7 sections render on `/` (MktNav, Hero, Principles, Feature,
  *   FAQ, FooterCTA, MktFooter).
  * - FAQPage JSON-LD schema is emitted, parsable, and valid against
  *   schema.org structure.
@@ -24,11 +24,15 @@ test.describe('Landing — cc-design sections smoke', () => {
     // Hero h1 (the only h1 on the page)
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 
-    // Principles, Feature, Pricing, FAQ — distinct landmarks via id+aria-labelledby
+    // Principles, Feature, FAQ — distinct landmarks via id+aria-labelledby
     await expect(page.locator('section#principles')).toBeVisible();
     await expect(page.locator('section#feature')).toBeVisible();
-    await expect(page.locator('section#pricing')).toBeVisible();
     await expect(page.locator('section#faq')).toBeVisible();
+    // La section Tarifs est supprimee (2026-08-05) : une carte avec un prix,
+    // une liste de features et un bouton EST une offre commerciale, meme a
+    // 0 EUR. L'assertion negative garde le cas dans la suite — le plancher ne
+    // bouge pas — et interdit son retour silencieux.
+    await expect(page.locator('section#pricing')).toHaveCount(0);
 
     // FooterCTA + MktFooter
     await expect(
@@ -37,7 +41,7 @@ test.describe('Landing — cc-design sections smoke', () => {
     await expect(page.getByRole('contentinfo')).toBeVisible();
   });
 
-  test('emits a valid FAQPage JSON-LD schema with 3 questions', async ({ page }) => {
+  test('emits a valid FAQPage JSON-LD schema with 4 questions', async ({ page }) => {
     await page.goto('/');
 
     // `<script>` tags are never "visible" to Playwright's locator API on
@@ -59,7 +63,9 @@ test.describe('Landing — cc-design sections smoke', () => {
 
     expect(parsed['@context']).toBe('https://schema.org');
     expect(parsed['@type']).toBe('FAQPage');
-    expect(parsed.mainEntity).toHaveLength(3);
+    // 4 depuis le 2026-08-05 : la question sur le prix a remplace la section
+    // Tarifs. L information reste indexable, la posture d offre commerciale non.
+    expect(parsed.mainEntity).toHaveLength(4);
 
     for (const q of parsed.mainEntity) {
       expect(q['@type']).toBe('Question');

@@ -9,9 +9,12 @@ test.describe('Marketing — smoke', () => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-    // CTA labels updated by PR-3c-2 MktNav: "Créer un compte" → "Essayer
-    // gratuitement"; "Se connecter" stayed identical.
-    await expect(page.getByRole('link', { name: /essayer gratuitement/i }).first()).toBeVisible();
+    // CTA harmonises le 2026-08-05 : tout lien vers /signup dit « Creer mon
+    // compte ». « Essayer gratuitement » suggerait un essai — le mot retire
+    // ailleurs le meme jour — et « Ouvrir mon cockpit » entrait en collision
+    // avec « Mon cockpit », le CTA authentifie vers /app : deux destinations,
+    // un seul nom accessible.
+    await expect(page.getByRole('link', { name: /créer mon compte/i }).first()).toBeVisible();
     await expect(page.getByRole('link', { name: /se connecter/i }).first()).toBeVisible();
   });
 

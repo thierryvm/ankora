@@ -64,7 +64,7 @@ describe('<FooterCTA />', () => {
 
   it('renders the primary CTA pointing at /signup', async () => {
     await renderFooterCTA();
-    expect(screen.getByRole('link', { name: /ouvrir mon cockpit/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /créer mon compte/i })).toHaveAttribute(
       'href',
       '/signup',
     );
