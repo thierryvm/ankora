@@ -45,6 +45,26 @@ navigation de document cachée.
 `src/app/[locale]/layout.tsx`, un layout **partagé**. Next ne re-rend pas un layout
 partagé lors d'une navigation client. La valeur est gelée pour la vie du document.
 
+### Le défaut est PIRE que « la barre manque »
+
+Corrigé après revue du plan : **tous les consommateurs ne sont pas figés.** Ceux qui vivent
+dans le layout partagé le sont ; ceux qui sont rendus par les pages ou par
+`src/app/[locale]/app/layout.tsx` sont bien recalculés, parce que `src/proxy.ts:92` pose
+`x-pathname` aussi sur les requêtes RSC.
+
+| Consommateur                                    | Rendu par          | Sur `/` → `/app` par clic       |
+| ----------------------------------------------- | ------------------ | ------------------------------- |
+| montage de la barre, deux décalages de bannière | layout **partagé** | figé à « pas de barre »         |
+| bouton « haut de page » du groupe public        | layout de groupe   | figé                            |
+| `Header.tsx:89` — suppression du burger         | pages / segment    | **recalculé → burger supprimé** |
+| `Footer.tsx:22` — masquage de la nav du pied    | pages / segment    | **recalculé → nav masquée**     |
+
+Les deux derniers sont _corrects_ : ils concluent « la barre est là, je m'efface ». Sauf
+qu'elle n'est pas là. Résultat : **zéro surface de navigation sur `/app` en mobile.**
+
+Conséquence pour le correctif : faire passer `Header` et `Footer` par le même mécanisme
+client les **régresserait**. Ils restent serveur. Seuls les quatre premiers bougent.
+
 Le manifeste porte `start_url: "/"`, une route exclue. L'application installée démarre donc
 toujours sans barre, le seul chemin vers le cockpit est un `<Link>`, et en `standalone` iOS
 n'offre aucun geste qui charge un nouveau document. **Permanent, pas intermittent.**
@@ -109,10 +129,21 @@ premier tour, avec des motifs justes.
 
 ## 5. Ce qui reste, par ordre de valeur
 
-1. **La barre d'onglets** — plan en revue. Six consommateurs figés de la même façon
-   (montage, deux décalages de bannière, burger du header, nav du pied, bouton haut de
-   page), plus la réserve d'espace à conditionner, plus une spec e2e qui atteint `/app`
-   **par clic** et ne fait aucun `goto` ensuite.
+1. **La barre d'onglets** — plan validé au second tour, **prêt à coder**. Périmètre
+   atomique : les **quatre** lectures d'une seule décision (montage, deux décalages de
+   bannière, bouton haut de page) passent côté client ; `Header` et `Footer` restent
+   serveur — les toucher est la régression. Plus un ternaire d'une ligne sur
+   `Footer.tsx:43` (réserve inconditionnelle même pour un visiteur anonyme). Hors
+   périmètre : `app/layout.tsx:28`, dont la réserve devient juste dès que le montage l'est.
+
+   Trois pièges nommés pour la spec e2e : `chromium-desktop` fait 1280 px, exactement la
+   largeur où `xl:hidden` fait disparaître la barre ; assertion sur la géométrie et non sur
+   le compte (`display:none` compte 1) ; et sous 640 px le seul chemin vers le cockpit est
+   le tiroir, pas le bouton. Plancher authentifié **40 → 41**, public **228 inchangé**.
+
+   À mesurer avant/après : le poids du bundle de la landing. Aujourd'hui le chunk de la
+   barre n'y est pas référencé ; une décision client le rendrait joignable.
+
 2. **Carte de virement ADR-035** — plan **approuvé** avec 6 corrections, prêt à coder.
    L'amendement du 5 août a déjà décidé les libellés (« À virer vers l'épargne » / « À
    reprendre sur l'épargne ») ; ils ne sont pas livrés. Renommage et décomposition partent
