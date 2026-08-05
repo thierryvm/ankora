@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import messages from '../../../../../../messages/fr-BE.json';
 
@@ -51,7 +52,8 @@ vi.mock('next-intl', () => ({
   },
 }));
 
-vi.mock('@/components/gdpr/ConsentBanner', () => ({ reopenConsentBanner: vi.fn() }));
+const { reopenConsentBanner } = vi.hoisted(() => ({ reopenConsentBanner: vi.fn() }));
+vi.mock('@/components/gdpr/ConsentBanner', () => ({ reopenConsentBanner }));
 
 import { MktFooter } from '../MktFooter';
 
@@ -102,11 +104,18 @@ describe('<MktFooter />', () => {
   // RGPD art. 7(3) : retirer son consentement doit être aussi simple que le
   // donner. La landing est la page où il se donne — c'était la seule du site
   // où il ne pouvait pas se reprendre.
-  it('exposes the cookie-preferences control on the landing itself', async () => {
+  //
+  // Sourcery (PR #305) : la version initiale n'assertait que la PRÉSENCE du
+  // bouton. Un bouton présent mais débranché aurait passé — et c'est
+  // exactement le défaut que la PR corrige ailleurs (un contrôle qui a l'air
+  // de faire quelque chose et ne le fait pas). L'assertion porte donc sur le
+  // câblage.
+  it('wires the cookie-preferences control to the consent banner', async () => {
+    reopenConsentBanner.mockClear();
     await renderMktFooter();
-    expect(
-      screen.getByRole('button', { name: /modifier mes préférences cookies/i }),
-    ).toBeInTheDocument();
+    const button = screen.getByRole('button', { name: /modifier mes préférences cookies/i });
+    await userEvent.click(button);
+    expect(reopenConsentBanner).toHaveBeenCalledTimes(1);
   });
 
   it('renders inside a <footer> landmark with a top border', async () => {

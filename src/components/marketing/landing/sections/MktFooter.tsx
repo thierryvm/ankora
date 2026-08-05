@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { AnkoraLogo } from '@/components/brand/AnkoraLogo';
 import { CookiePreferencesLink } from '@/components/layout/CookiePreferencesLink';
 import { Link } from '@/i18n/navigation';
+import { SITE } from '@/lib/site';
 
 const LINK_CLASS =
   'text-muted-foreground hover:text-foreground focus-visible:ring-brand-600 cursor-pointer rounded text-xs transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none';
@@ -45,7 +46,7 @@ export async function MktFooter() {
     { key: 'terms', href: '/legal/cgu' },
     { key: 'privacy', href: '/legal/privacy' },
     { key: 'cookies', href: '/legal/cookies' },
-    { key: 'contact', href: 'mailto:thierryvm@gmail.com', external: true as const },
+    { key: 'contact', href: `mailto:${SITE.contactEmail}`, external: true as const },
   ] as const;
 
   return (
