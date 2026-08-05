@@ -6,7 +6,7 @@ import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AccountCard } from '@/components/features/AccountCard';
-import { SituationDuMoisHero } from '@/components/dashboard/SituationDuMoisHero';
+import { SituationDuMoisHero, type PartAffichee } from '@/components/dashboard/SituationDuMoisHero';
 import { ProvisionHealthGaugeCard } from '@/components/dashboard/ProvisionHealthGaugeCard';
 import { ProchainesFacturesCard } from '@/components/dashboard/ProchainesFacturesCard';
 import { EngagementsCard } from '@/components/dashboard/EngagementsCard';
@@ -14,6 +14,7 @@ import { SimulatorDrawer } from '@/components/dashboard/SimulatorDrawer';
 import { Expenses, Transfer, money } from '@/lib/domain';
 import { unpaidChargesForPeriod } from '@/lib/domain/charges';
 import * as Obligations from '@/lib/domain/obligations';
+import type { Poste } from '@/lib/domain/cockpit';
 import type { NamedCommitment } from '@/lib/domain/obligations';
 import { loadMonthSituation } from '@/lib/data/month-situation';
 import { commitmentRowToDomain, hasLiveCommitments } from '@/lib/data/commitment-row';
@@ -29,6 +30,33 @@ import { formatCurrency, formatDate, formatMonth } from '@/lib/i18n/formatters';
  *   3. daily_card (daily-spending pot)
  */
 const ACCOUNT_TYPE_ORDER: readonly AccountType[] = ['income_bills', 'provisions', 'daily_card'];
+
+/**
+ * La frontière RSC, franchie une fois et explicitement.
+ *
+ * Un `Decimal` ne traverse jamais vers un composant : il est sérialisé en objet
+ * nu côté client et toute méthode appelée dessus lève. La conversion se fait
+ * donc ICI, au passage, et jamais dans le composant — qui n'aurait alors plus
+ * de raison de recevoir des nombres plutôt que des objets.
+ *
+ * `toNumber()` perd la précision arbitraire de `Decimal`. C'est sans effet :
+ * ces valeurs ne servent qu'à être formatées en euros, et le total affiché vient
+ * du même `Poste`, calculé en `Decimal` de bout en bout. On n'additionne jamais
+ * ces `number` entre eux.
+ */
+function partsAffichees(poste: Poste): PartAffichee[] {
+  return poste.parts.map((part) => ({
+    id: part.id,
+    libelle: part.libelle,
+    montantMensuel: part.montantMensuel.toNumber(),
+    origine: part.origine
+      ? {
+          montantFacture: part.origine.montantFacture.toNumber(),
+          cycleMois: part.origine.cycleMois,
+        }
+      : null,
+  }));
+}
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('app.dashboard');
@@ -47,6 +75,7 @@ export default async function DashboardPage() {
     paidKeysByCommitment,
     situation,
     engagementsMensuels,
+    decomposition,
     paymentsLedger,
     cockpitCharges,
     soldeEpargneActuel,
@@ -136,6 +165,9 @@ export default async function DashboardPage() {
           chargesFixes={situation.chargesFixes.toNumber()}
           provisionsLissees={situation.provisionsLissees.toNumber()}
           engagementsMensuels={situation.engagementsMensuels.toNumber()}
+          chargesFixesParts={partsAffichees(decomposition.chargesFixes)}
+          lissageParts={partsAffichees(decomposition.lissage)}
+          engagementsParts={partsAffichees(decomposition.engagements)}
           resteDisponible={situation.resteDisponible.toNumber()}
           depensesDuMois={situation.depensesDuMois.toNumber()}
           ilTeReste={situation.ilTeReste.toNumber()}

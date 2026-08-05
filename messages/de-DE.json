@@ -1183,13 +1183,15 @@
       "flow": {
         "revenus": "Einkommen",
         "chargesFixes": "Fixkosten",
-        "provisions": "Verteilte Rücklagen",
+        "lissage": "Smoothing",
         "engagements": "Verpflichtungen",
         "resteDisponible": "Monatsbudget",
         "depense": "Diesen Monat ausgegeben",
         "ilTeReste": "Dir bleibt",
         "epargneEstimee": "Geschätzte Ersparnis",
-        "parJour": "≈ {amount}/Tag"
+        "parJour": "≈ {amount}/Tag",
+        "detailToggle": "Breakdown: {poste}",
+        "detailOrigine": "{montant} {cycleMois, plural, =3 {every 3 months} =6 {every 6 months} =12 {once a year} other {every # months}}"
       },
       "barAria": "Aufteilung deiner Einnahmen: {charges} Fixkosten, {provisions} Rücklagen, {depense} ausgegeben, {reste} übrig.",
       "barAriaEngagements": "Davon {engagements} an Verpflichtungen.",

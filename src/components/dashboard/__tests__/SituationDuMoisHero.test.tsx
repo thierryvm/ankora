@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
 import messages from '../../../../messages/fr-BE.json';
-import { SituationDuMoisHero } from '../SituationDuMoisHero';
+import { SituationDuMoisHero, type SituationDuMoisHeroProps } from '../SituationDuMoisHero';
 
 vi.mock('next-intl/server', () => ({
   getTranslations: async (namespace: string) => {
@@ -44,17 +44,31 @@ vi.mock('@/i18n/navigation', () => ({
   ),
 }));
 
-const BASE = {
+/**
+ * Décomposition par défaut : une part par poste, dont la somme vaut le total du
+ * poste. Les cas qui testent la décomposition elle-même la remplacent ; les
+ * autres ont juste besoin qu'elle soit cohérente, parce qu'un poste dont les
+ * parts ne somment pas au total est précisément ce que la règle 10 interdit.
+ */
+const BASE: Omit<SituationDuMoisHeroProps, 'statut'> = {
   revenus: 2500,
   chargesFixes: 1500,
   provisionsLissees: 338,
   engagementsMensuels: 0,
+  chargesFixesParts: [{ id: 'loyer', libelle: 'Loyer', montantMensuel: 1500, origine: null }],
+  lissageParts: [
+    {
+      id: 'assurance',
+      libelle: 'Assurance habitation',
+      montantMensuel: 338,
+      origine: { montantFacture: 1014, cycleMois: 3 },
+    },
+  ],
+  engagementsParts: [],
   resteDisponible: 662,
   depensesDuMois: 200,
   ilTeReste: 462,
   epargneEstimee: 318,
-  budgetVieCourante: 500,
-  capacite: 162,
   deficitEpargne: 0,
   rattrapageMensuel: 0,
   provisionsAJour: true,
@@ -67,8 +81,13 @@ const BASE = {
   locale: 'fr-BE' as const,
 };
 
-const renderHero = async (over: Partial<typeof BASE> & { statut: string }) =>
-  render(await SituationDuMoisHero({ ...BASE, ...over } as never));
+// Plus de `as never` : il désactivait toute vérification de type sur les props
+// du composant, ce qui a laissé passer trois props requises manquantes et deux
+// props mortes. Le harnais est désormais typé, donc un oubli est une erreur de
+// compilation et non huit `TypeError` à l'exécution.
+const renderHero = async (
+  over: Partial<SituationDuMoisHeroProps> & Pick<SituationDuMoisHeroProps, 'statut'>,
+) => render(await SituationDuMoisHero({ ...BASE, ...over }));
 
 describe('<SituationDuMoisHero />', () => {
   it('vert: shows hero label + reassuring status, AllocationBar + Adjust trigger, no plan link', async () => {
@@ -90,10 +109,13 @@ describe('<SituationDuMoisHero />', () => {
     expect(screen.getByTestId('situation-nudge-link')).toBeInTheDocument();
   });
 
-  it('orange (provisions déficit, capacité ≥ 0): shows the provisions nudge', async () => {
+  // `capacite: 200` traînait ici : ADR-035 a supprimé la capacité d'épargne des
+  // props du composant, et le harnais typé en `as never` laissait passer une
+  // prop que rien ne lisait. Le cas n'en dépendait pas — la branche du nudge se
+  // décide sur `ilTeReste >= 0`, que `BASE` fournit déjà (462 €).
+  it('orange (déficit de provisions, « Il te reste » positif) : affiche le nudge provisions', async () => {
     await renderHero({
       statut: 'orange',
-      capacite: 200,
       provisionsAJour: false,
       deficitEpargne: 300,
       rattrapageMensuel: 100,
@@ -153,5 +175,94 @@ describe('<SituationDuMoisHero />', () => {
     expect(screen.queryByTestId('allocation-bar')).toBeNull();
     expect(container.textContent ?? '').not.toContain('−');
     expect(container.textContent ?? '').not.toMatch(/-\d/);
+  });
+});
+
+/**
+ * Règle 10 de `CLAUDE.md` — « aucun montant agrégé sans sa décomposition
+ * accessible ».
+ *
+ * Le constat d'origine, de @thierry : « les 59 € de provisions à verser, rien
+ * n'explique pourquoi ce montant, à quelle facture cela correspond ». Ces cas
+ * verrouillent que la ligne s'ouvre et qu'elle dit d'où le nombre vient.
+ */
+describe('<SituationDuMoisHero /> — décomposition des postes', () => {
+  it('la ligne de lissage s’ouvre et nomme chaque facture avec son échéance', async () => {
+    await renderHero({
+      statut: 'vert',
+      provisionsLissees: 59,
+      lissageParts: [
+        {
+          id: 'auto',
+          libelle: 'Assurance auto',
+          montantMensuel: 23.33,
+          origine: { montantFacture: 70, cycleMois: 3 },
+        },
+        {
+          id: 'precompte',
+          libelle: 'Précompte immobilier',
+          montantMensuel: 18,
+          origine: { montantFacture: 216, cycleMois: 12 },
+        },
+        {
+          id: 'dechets',
+          libelle: 'Taxe déchets',
+          montantMensuel: 17.67,
+          origine: { montantFacture: 106, cycleMois: 6 },
+        },
+      ],
+    });
+
+    const panneau = screen.getByTestId('flow-detail-lissage');
+    // Le libellé de chaque poste — c'est la réponse à « à quoi ça correspond ».
+    expect(panneau.textContent).toContain('Assurance auto');
+    expect(panneau.textContent).toContain('Précompte immobilier');
+    expect(panneau.textContent).toContain('Taxe déchets');
+    // Et son échéance, sans laquelle la part reste un nombre sans histoire.
+    const texte = (panneau.textContent ?? '').replace(/[\s ]/g, ' ');
+    expect(texte).toContain('tous les 3 mois');
+    expect(texte).toContain('une fois par an');
+    expect(texte).toContain('tous les 6 mois');
+  });
+
+  it('une charge mensuelle n’affiche aucune échéance — 150 €/mois n’a rien à expliquer', async () => {
+    await renderHero({
+      statut: 'vert',
+      chargesFixes: 150,
+      chargesFixesParts: [{ id: 'loyer', libelle: 'Loyer', montantMensuel: 150, origine: null }],
+    });
+    const panneau = screen.getByTestId('flow-detail-charges');
+    expect(panneau.textContent).toContain('Loyer');
+    expect(panneau.textContent).not.toContain('tous les');
+    expect(panneau.textContent).not.toContain('une fois par an');
+  });
+
+  it('un poste sans parts n’expose aucune disclosure — pas de promesse vide', async () => {
+    await renderHero({ statut: 'vert', chargesFixes: 0, chargesFixesParts: [] });
+    expect(screen.queryByTestId('flow-detail-charges')).toBeNull();
+    // La ligne reste affichée : c'est la disclosure qui disparaît, pas le poste.
+    expect(screen.getByText(messages.dashboard.situation.flow.chargesFixes)).toBeInTheDocument();
+  });
+
+  it('le résumé porte un nom accessible et une cible tactile de 44 px', async () => {
+    await renderHero({ statut: 'vert' });
+    const resume = screen.getByTestId('flow-detail-lissage').querySelector('summary');
+    expect(resume).not.toBeNull();
+    // « Détail : Lissage » — sans quoi le lecteur d'écran n'annonce qu'un montant.
+    expect(resume?.textContent).toContain(messages.dashboard.situation.flow.lissage);
+    // `min-h-11` = 44 px, le minimum tactile Apple HIG. jsdom ne calcule pas de
+    // mise en page, donc on vérifie la classe qui la produit ; la mesure réelle
+    // au DOM est faite au navigateur avant livraison.
+    expect(resume?.className).toContain('min-h-11');
+  });
+
+  it('les engagements se décomposent aussi — la règle vaut pour les trois postes', async () => {
+    await renderHero({
+      statut: 'vert',
+      engagementsMensuels: 220,
+      resteDisponible: 442,
+      engagementsParts: [{ id: 'pret', libelle: 'Prêt auto', montantMensuel: 220, origine: null }],
+    });
+    expect(screen.getByTestId('flow-detail-engagements').textContent).toContain('Prêt auto');
   });
 });

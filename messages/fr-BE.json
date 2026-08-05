@@ -1183,13 +1183,15 @@
       "flow": {
         "revenus": "Revenus",
         "chargesFixes": "Charges fixes",
-        "provisions": "Provisions lissées",
+        "lissage": "Lissage",
         "engagements": "Engagements",
         "resteDisponible": "Budget du mois",
         "depense": "Dépensé ce mois",
         "ilTeReste": "Il te reste",
         "epargneEstimee": "Épargne estimée",
-        "parJour": "≈ {amount}/jour"
+        "parJour": "≈ {amount}/jour",
+        "detailToggle": "Détail : {poste}",
+        "detailOrigine": "{montant} {cycleMois, plural, =3 {tous les 3 mois} =6 {tous les 6 mois} =12 {une fois par an} other {tous les # mois}}"
       },
       "barAria": "Répartition de tes revenus : {charges} de charges, {provisions} de provisions, {depense} dépensés, {reste} restants.",
       "barAriaEngagements": "Dont {engagements} d'engagements.",

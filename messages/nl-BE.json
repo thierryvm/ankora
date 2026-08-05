@@ -1183,13 +1183,15 @@
       "flow": {
         "revenus": "Inkomen",
         "chargesFixes": "Vaste kosten",
-        "provisions": "Gespreide voorzieningen",
+        "lissage": "Smoothing",
         "engagements": "Verbintenissen",
         "resteDisponible": "Maandbudget",
         "depense": "Deze maand uitgegeven",
         "ilTeReste": "Je houdt over",
         "epargneEstimee": "Geschat spaarbedrag",
-        "parJour": "≈ {amount}/dag"
+        "parJour": "≈ {amount}/dag",
+        "detailToggle": "Breakdown: {poste}",
+        "detailOrigine": "{montant} {cycleMois, plural, =3 {every 3 months} =6 {every 6 months} =12 {once a year} other {every # months}}"
       },
       "barAria": "Verdeling van je inkomen: {charges} vaste kosten, {provisions} voorzieningen, {depense} uitgegeven, {reste} over.",
       "barAriaEngagements": "Waarvan {engagements} aan verbintenissen.",

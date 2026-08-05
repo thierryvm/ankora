@@ -24,7 +24,20 @@ const LEAF_KEYS = [
   'incomplet.cta',
   'flow.revenus',
   'flow.chargesFixes',
-  'flow.provisions',
+  // L'amendement d'ADR-035 du 2026-08-05 remplace `flow.provisions` par
+  // `flow.lissage` : le mot « provisions » désignait deux nombres de périmètres
+  // différents (la part mensuelle des factures non mensuelles ici, ce qui dort
+  // sur l'épargne ailleurs). Remplacement, jamais ajout — garder l'ancienne clé
+  // en ferait le synonyme orphelin que ce glossaire existe pour supprimer.
+  'flow.lissage',
+  // Jamais listée depuis son introduction par ADR-021 : la ligne « Engagements »
+  // du hero pouvait donc disparaître d'une locale sans qu'aucun test ne bouge.
+  'flow.engagements',
+  // Les deux clés de la décomposition (règle 10 de CLAUDE.md). `detailOrigine`
+  // porte un pluriel ICU sur `cycleMois` — une locale qui perdrait ses branches
+  // rendrait la part sans son échéance, donc sans son explication.
+  'flow.detailToggle',
+  'flow.detailOrigine',
   'flow.resteDisponible',
   'flow.depense',
   'flow.ilTeReste',

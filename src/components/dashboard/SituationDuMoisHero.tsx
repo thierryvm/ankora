@@ -1,4 +1,11 @@
-import { AlertCircle, AlertTriangle, ArrowRight, CheckCircle2, Wallet } from 'lucide-react';
+import {
+  AlertCircle,
+  AlertTriangle,
+  ArrowRight,
+  CheckCircle2,
+  ChevronDown,
+  Wallet,
+} from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
 import { Button } from '@/components/ui/button';
@@ -12,6 +19,60 @@ import { AllocationBar, type AllocationSegment } from './AllocationBar';
 import { HeroAmount } from './HeroAmount';
 import { PaceBar } from './PaceBar';
 
+/**
+ * Une ligne de la décomposition d'un poste — règle 10 de `CLAUDE.md`.
+ *
+ * Miroir sérialisable de `PostePart` du domaine : les `Decimal` sont convertis
+ * en `number` par la page, parce qu'un `Decimal` ne traverse jamais la frontière
+ * RSC. La conversion est faite une fois, au passage de la frontière, jamais
+ * recalculée ici — la décomposition descend AVEC le chiffre.
+ */
+export type PartAffichee = {
+  id: string;
+  libelle: string;
+  montantMensuel: number;
+  /**
+   * Ce qui explique la division, quand il y en a une : « 300 € tous les 3 mois ».
+   * `null` pour une charge mensuelle — 150 € par mois n'a rien à expliquer, et
+   * cette absence est une information, pas un oubli.
+   */
+  origine: { montantFacture: number; cycleMois: number } | null;
+};
+
+/**
+ * Ce que `FlowRow` reçoit pour pouvoir s'ouvrir : des chaînes déjà traduites et
+ * déjà formatées.
+ *
+ * `FlowRow` est une fonction de présentation sans accès aux traductions ni à la
+ * locale. Lui passer des nombres l'obligerait à formater, donc à devenir
+ * asynchrone ou à recevoir un formateur — pour un gain nul. Le hero, qui a déjà
+ * `t` et `fmt`, fait le travail une fois.
+ */
+type FlowRowDetail = {
+  testId: string;
+  /** Nom accessible du `<summary>` — « Détail : Lissage ». */
+  toggleLabel: string;
+  parts: readonly {
+    id: string;
+    libelle: string;
+    montantLabel: string;
+    /** « 300 € tous les 3 mois ». `null` quand la part ne subit aucune division. */
+    origineLabel: string | null;
+  }[];
+};
+
+/**
+ * Exporté pour que les tests puissent typer leur harnais.
+ *
+ * Le harnais construisait ses props avec `as never`, ce qui désactive TOUTE
+ * vérification : trois props requises ont été ajoutées ici sans qu'une seule
+ * ligne de `tsc` bouge, et huit cas ont explosé à l'exécution sur un
+ * `undefined.length`. Deux props mortes (`budgetVieCourante`, `capacite`,
+ * supprimées du composant par ADR-035) y traînaient encore pour la même raison.
+ * Un type exporté coûte une ligne et rend l'oubli impossible.
+ */
+export type SituationDuMoisHeroProps = Props;
+
 type Props = {
   statut: SituationStatut;
   revenus: number;
@@ -19,6 +80,14 @@ type Props = {
   provisionsLissees: number;
   /** Mensualités lissées des engagements actifs (ADR-021). 0 = masqué. */
   engagementsMensuels: number;
+  /**
+   * De quoi chacun des trois postes soustractifs est fait. Requis, jamais
+   * optionnel : un poste affiché sans ses parts est exactement le défaut que la
+   * règle 10 interdit, et un champ optionnel laisse ce défaut compiler.
+   */
+  chargesFixesParts: readonly PartAffichee[];
+  lissageParts: readonly PartAffichee[];
+  engagementsParts: readonly PartAffichee[];
   /** « Budget du mois » (ADR-035) — l'ancre, plus le chiffre-héros. */
   resteDisponible: number;
   /** « Dépensé ce mois » (ADR-035). */
@@ -96,6 +165,38 @@ export async function SituationDuMoisHero(props: Props) {
   }
 
   const accent = STATUT_ACCENT[props.statut];
+
+  /**
+   * Règle 10 de `CLAUDE.md` — « un chiffre qu'on ne peut pas ouvrir est une
+   * injonction, pas une information ».
+   *
+   * Rend `undefined` sur une liste vide : un poste à 0 € n'a rien à montrer, et
+   * une disclosure vide est pire qu'aucune — elle promet une explication qu'elle
+   * n'a pas. Les trois lignes concernées valent alors 0 et restent affichées,
+   * simplement non ouvrables.
+   */
+  const detail = (
+    parts: readonly PartAffichee[],
+    testId: string,
+    posteLabel: string,
+  ): FlowRowDetail | undefined =>
+    parts.length === 0
+      ? undefined
+      : {
+          testId,
+          toggleLabel: t('flow.detailToggle', { poste: posteLabel }),
+          parts: parts.map((part) => ({
+            id: part.id,
+            libelle: part.libelle,
+            montantLabel: fmt(part.montantMensuel),
+            origineLabel: part.origine
+              ? t('flow.detailOrigine', {
+                  montant: fmt(part.origine.montantFacture),
+                  cycleMois: part.origine.cycleMois,
+                })
+              : null,
+          })),
+        };
 
   // --- Status line (title + optional nudge). ---
   const statusTitle =
@@ -339,12 +440,14 @@ export async function SituationDuMoisHero(props: Props) {
             value={`− ${fmt(props.chargesFixes)}`}
             muted
             dotClass="bg-info"
+            detail={detail(props.chargesFixesParts, 'flow-detail-charges', t('flow.chargesFixes'))}
           />
           <FlowRow
-            label={t('flow.provisions')}
+            label={t('flow.lissage')}
             value={`− ${fmt(props.provisionsLissees)}`}
             muted
             dotClass="bg-brand-500"
+            detail={detail(props.lissageParts, 'flow-detail-lissage', t('flow.lissage'))}
           />
           {props.engagementsMensuels > 0 && (
             <FlowRow
@@ -352,6 +455,11 @@ export async function SituationDuMoisHero(props: Props) {
               value={`− ${fmt(props.engagementsMensuels)}`}
               muted
               dotClass="bg-muted-foreground"
+              detail={detail(
+                props.engagementsParts,
+                'flow-detail-engagements',
+                t('flow.engagements'),
+              )}
             />
           )}
           <div className="border-border mt-1 border-t pt-2">
@@ -393,6 +501,7 @@ function FlowRow({
   muted = false,
   strong = false,
   dotClass,
+  detail,
 }: {
   label: string;
   value: string;
@@ -400,17 +509,79 @@ function FlowRow({
   strong?: boolean;
   /** Tailwind bg-* class matching this row's AllocationBar segment colour. */
   dotClass?: string;
+  /**
+   * De quoi ce total est fait. Absent = ce montant n'est pas une somme (les
+   * revenus, ou un solde comme « Il te reste »), donc il n'y a rien à ouvrir.
+   */
+  detail?: FlowRowDetail;
 }) {
+  const amountClass = `tabular-nums ${strong ? 'font-bold' : 'font-medium'} text-foreground`;
+
   return (
-    <div className="flex items-center justify-between gap-3">
+    <div className="flex items-start justify-between gap-3">
       <dt
         className={`flex items-center gap-2 ${muted ? 'text-muted-foreground' : 'text-foreground'}`}
       >
-        {dotClass && <span aria-hidden className={`h-2 w-2 shrink-0 rounded-full ${dotClass}`} />}
+        {dotClass && (
+          <span aria-hidden className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${dotClass}`} />
+        )}
         {label}
       </dt>
-      <dd className={`tabular-nums ${strong ? 'font-bold' : 'font-medium'} text-foreground`}>
-        {value}
+      {/*
+        Le panneau vit DANS le `<dd>`, et pas en frère du couple `dt`/`dd` :
+        un `<div>` enfant d'un `<dl>` ne peut contenir que des `dt` et des `dd`.
+        Le `flex-1` lui rend la largeur dont il a besoin pour être lisible à
+        390 px — sans quoi il se serrerait sous le montant.
+      */}
+      <dd className={detail ? 'min-w-0 flex-1' : amountClass}>
+        {detail ? (
+          <details className="group" data-testid={detail.testId}>
+            {/*
+              `min-h-11` : 44 px, le minimum tactile. Le montant reste aligné à
+              droite comme sur les lignes non ouvrables, donc la colonne des
+              chiffres ne se casse pas. Mêmes classes que le panneau de
+              projection des provisions, pour que deux disclosures de la même
+              app ne se ressemblent pas « à peu près ».
+            */}
+            <summary className="focus-visible:ring-brand-600 flex min-h-11 cursor-pointer list-none items-center justify-end gap-1.5 rounded focus-visible:ring-2 focus-visible:outline-none">
+              <span className={amountClass}>{value}</span>
+              <ChevronDown
+                aria-hidden
+                className="text-muted-foreground h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-180"
+              />
+              <span className="sr-only">{detail.toggleLabel}</span>
+            </summary>
+
+            {/*
+              Deux lignes par part, et non deux colonnes.
+
+              La version en colonnes tronquait les libellés à 390 px : « Assura… »,
+              « Précomp… », « Taxe … » — mesuré au navigateur. Une décomposition
+              qui coupe le nom qu'elle existe pour révéler ne sert à rien, et le
+              constat de @thierry portait précisément sur « à quelle facture cela
+              correspond ». Le libellé prend donc toute la largeur ; le montant
+              reste aligné à droite pour rester comparable d'une ligne à l'autre,
+              et l'échéance passe dessous.
+            */}
+            <ul className="mt-1 mb-2 flex flex-col gap-2">
+              {detail.parts.map((part) => (
+                <li key={part.id} className="text-xs">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-foreground min-w-0">{part.libelle}</span>
+                    <span className="text-foreground shrink-0 tabular-nums">
+                      {part.montantLabel}
+                    </span>
+                  </div>
+                  {part.origineLabel && (
+                    <p className="text-muted-foreground mt-0.5">{part.origineLabel}</p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </details>
+        ) : (
+          value
+        )}
       </dd>
     </div>
   );
