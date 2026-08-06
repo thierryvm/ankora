@@ -74,10 +74,19 @@ test.describe("barre d'onglets — atteinte de /app par navigation client", () =
         () => performance.getEntriesByType('navigation').length,
       );
 
-      // Le seul chemin vers le cockpit depuis la vitrine : le CTA du header.
+      // À cette largeur, le header de la vitrine se replie sur un bouton
+      // « Menu » : le CTA « Mon cockpit » du header ne s'affiche qu'au-delà.
+      // Le seul chemin vers le cockpit est donc le tiroir — et c'est
+      // précisément le parcours du défaut, celui d'un téléphone.
+      //
+      // Mesuré, pas déduit : une première version cliquait le CTA du header et
+      // ne le trouvait jamais. La capture de Playwright ne montrait, dans la
+      // bannière, que le logo et le bouton « Menu ».
+      await page.getByRole('button', { name: /^menu$/i }).click();
+
       // C'est un `<Link>`, donc une navigation CLIENT — celle que le layout
-      // partagé ne re-rend pas.
-      await page.getByRole('link', { name: /^mon cockpit$/i }).click();
+      // partagé ne re-rend pas, et donc celle qui figeait la décision.
+      await page.getByTestId('drawer-cockpit-link').click();
       await page.waitForURL(/\/app\b/, { timeout: 15_000 });
 
       const barre = page.getByTestId('bottom-tab-bar');

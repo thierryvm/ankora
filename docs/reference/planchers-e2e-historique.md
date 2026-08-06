@@ -19,10 +19,31 @@ les plus sensibles de l'app.
 Deux jobs, donc **deux planchers distincts** — un chiffre global agrégé serait
 ininterprétable au premier conflit, donc ignoré :
 
-| Job                              | Plancher au 2 août 2026                                      |
-| -------------------------------- | ------------------------------------------------------------ |
-| `Playwright E2E`                 | **228 passed** (224 au 31/07 — **enfin mesuré**, cf. infra)  |
-| `Playwright E2E (authenticated)` | **40 passed** (39 avant, +1 `navigation-usable-first-visit`) |
+| Job                              | Plancher au 6 août 2026                                         |
+| -------------------------------- | --------------------------------------------------------------- |
+| `Playwright E2E`                 | **228 passed** (224 au 31/07 — **enfin mesuré**, cf. infra)     |
+| `Playwright E2E (authenticated)` | **41 passed** (40 avant, +1 `bottom-tab-bar-client-navigation`) |
+
+> **Authentifié : 40 → 41, mesuré le 2026-08-06.**
+> `e2e/bottom-tab-bar-client-navigation.spec.ts` atteint le cockpit PAR UN CLIC,
+> depuis un document chargé sur `/`, et vérifie qu'aucun document n'a été
+> rechargé entre-temps. **+1 seul cas, pas +2** : les projets iPhone sont
+> restreints à `e2e/mobile-ios/`, cette spec ne tourne donc que sur
+> `chromium-desktop` — mesuré en lançant les deux projets, Playwright annonce
+> « Running 1 test ».
+>
+> **Plancher public inchangé à 228** : la spec y est découverte et y **saute**
+> (`test.skip(!admin, …)` au niveau `describe`), vérifié en local — `1 skipped`,
+> zéro passé.
+>
+> Le delta a été mesuré **dans les deux sens sur la même machine** : sur le code
+> d'avant le correctif, la spec échoue sur `getByTestId('bottom-tab-bar')` —
+> `element(s) not found` — et non sur une étape antérieure. Elle n'est donc pas
+> vacuole.
+>
+> **Cette mesure a exigé de réparer le harnais local d'abord**, et deux écarts
+> avec la CI l'empêchaient de rien prouver : cf. le §« Faire tourner le job
+> authentifié en local » de `docs/runbooks/`.
 
 > **Plancher public : 228, OBSERVÉ le 2026-08-02.** Il était attendu à 224 +4
 > depuis le 29 juillet et n'avait jamais été relevé — la note ci-dessous
