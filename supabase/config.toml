@@ -122,3 +122,17 @@ token_refresh = 10000
 token_verifications = 10000
 # Applies to the forgot-password spec. Default is 2 per hour.
 email_sent = 1000
+
+# Second-factor enrolment, for the LOCAL stack only — production is configured
+# in the Supabase dashboard, where TOTP is already on.
+#
+# Off by default in the CLI, and that default made the whole 2FA surface
+# untestable here: `mfa.enroll` answers "MFA enroll is disabled for TOTP", so a
+# spec covering enrolment or the sign-in challenge could never run, and the gap
+# would read as "no coverage" rather than "coverage impossible".
+[auth.mfa]
+max_enrolled_factors = 10
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true

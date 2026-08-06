@@ -433,7 +433,24 @@ describe('BOTTOM_TAB_BAR_EXCLUDED_ROUTES + isExcludedRoute (Hotfix Option A v3, 
     expect(BOTTOM_TAB_BAR_EXCLUDED_ROUTES).toContain('/');
     expect(BOTTOM_TAB_BAR_EXCLUDED_ROUTES).toContain('/login');
     expect(BOTTOM_TAB_BAR_EXCLUDED_ROUTES).toContain('/signup');
-    expect(BOTTOM_TAB_BAR_EXCLUDED_ROUTES).toHaveLength(8);
+    expect(BOTTOM_TAB_BAR_EXCLUDED_ROUTES).toHaveLength(9);
+  });
+
+  /**
+   * The sign-in second-factor challenge, and it needs its OWN entry because the
+   * match is exact — `/login` does not cover its children.
+   *
+   * On that screen the visitor is authenticated (at aal1), so without this the
+   * bar mounts and announces five destinations that all bounce straight back.
+   * It is `fixed` and the `(auth)` layout reserves no room for it, so with the
+   * cookie banner already dismissed it sits over the « Se déconnecter » button —
+   * the only way off the screen for someone who cannot produce a code.
+   */
+  it('exclut l écran de défi 2FA, qui n est pas couvert par /login', () => {
+    expect(isExcludedRoute('/login/2fa')).toBe(true);
+    expect(isExcludedRoute('/login')).toBe(true);
+    // Contrôle : la correspondance reste exacte et n'avale pas tout `/login/*`.
+    expect(isExcludedRoute('/login/autre-chose')).toBe(false);
   });
 });
 

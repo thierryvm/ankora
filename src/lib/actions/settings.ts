@@ -191,6 +191,14 @@ export async function verifyMfaAction(input: unknown): Promise<ActionResult> {
   const { supabase, user } = await requireSessionUser();
   const { ip, userAgent } = await contextFromHeaders();
 
+  // Same bucket as the sign-in challenge, and for the same reason: this also
+  // checks a 6-digit code. Leaving one of the two unthrottled would have read
+  // as an oversight the day someone compared them — and the only reason it was
+  // survivable was that GoTrue keeps a limiter of its own, i.e. an assumption
+  // about a component this repository does not version.
+  const rl = await rateLimit('mfa', `user:${user.id}`);
+  if (!rl.success) return { ok: false, errorCode: 'errors.session.rateLimited' };
+
   const parsed = mfaVerifySchema.safeParse(input);
   if (!parsed.success) {
     return {

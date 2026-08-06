@@ -48,14 +48,32 @@ export async function verifierDefiMfaAction(input: unknown): Promise<ActionResul
   // fumbling their code must not lock the others out. Fails CLOSED in
   // production — an Upstash outage blocks the challenge rather than skipping it.
   const rl = await rateLimit('mfa', `user:${user.id}`);
-  if (!rl.success) return { ok: false, errorCode: 'errors.session.rateLimited' };
+  if (!rl.success) {
+    // Recorded, and that matters more here than anywhere else: the whole point
+    // of `AUTH_MFA_CHALLENGE_FAILED` is to make a burst of refusals visible, and
+    // a burst is exactly what trips this limit. Returning silently would blind
+    // the trail from the eleventh attempt on — the ones that prove someone is
+    // working through the code space rather than mistyping.
+    await logAuditEvent(AuditEvent.AUTH_RATE_LIMITED, {
+      userId: user.id,
+      ipAddress: ip,
+      userAgent,
+    });
+    return { ok: false, errorCode: 'errors.session.rateLimited' };
+  }
 
   const parsed = codeSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, errorCode: 'errors.auth.mfaCodeInvalid' };
   }
 
-  const facteur = (user.factors ?? []).find((f) => f.status === 'verified');
+  // Narrowed to TOTP, unlike the cleanup in `settings.ts` which deliberately
+  // spans every type. Here the screen asks for a 6-digit code from an
+  // authenticator app: picking a `phone` factor would make `mfa.challenge` send
+  // an SMS nobody asked for, against a form that cannot accept its answer.
+  const facteur = (user.factors ?? []).find(
+    (f) => f.status === 'verified' && f.factor_type === 'totp',
+  );
   if (!facteur) {
     // Reached only if the factor vanished between the page render and the
     // submit. Nothing to verify, and nothing to blame the visitor for.
