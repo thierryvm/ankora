@@ -619,6 +619,15 @@
       "metaTitle": "Controleer je e-mail",
       "body": "We stuurden je net een bevestigingslink. Klik erop om je account te activeren.",
       "backToLogin": "Terug naar inloggen"
+    },
+    "mfaChallenge": {
+      "metaTitle": "Verificatie in twee stappen",
+      "title": "Verificatie in twee stappen",
+      "subtitle": "Voer de 6-cijferige code uit je authenticator-app in om het aanmelden te voltooien.",
+      "codeLabel": "6-cijferige code",
+      "submit": "Verifiëren",
+      "verifying": "Verifiëren…",
+      "signOut": "Afmelden"
     }
   },
   "onboarding": {
@@ -1321,7 +1330,8 @@
       "mfaEnrollFailed": "Kan de inschrijving niet starten.",
       "mfaChallengeFailed": "MFA-challenge niet mogelijk.",
       "mfaCodeInvalid": "Code niet correct. Probeer opnieuw.",
-      "mfaDisableFailed": "Kan de 2FA niet uitschakelen."
+      "mfaDisableFailed": "Kan de 2FA niet uitschakelen.",
+      "mfaRequired": "Verificatie in twee stappen vereist. Meld je opnieuw aan om verder te gaan."
     },
     "db": {
       "workspaceNotFound": "Geen bewerkbare workspace.",

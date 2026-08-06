@@ -27,6 +27,13 @@
 export const BOTTOM_TAB_BAR_EXCLUDED_ROUTES = [
   '/',
   '/login',
+  // Its own entry, because the match is EXACT and `/login` does not cover its
+  // children. On the challenge screen the visitor IS authenticated — at aal1 —
+  // so the bar would mount and announce five destinations that all bounce
+  // straight back here. Worse, it is `fixed` and the `(auth)` layout reserves no
+  // room for it: with the cookie banner already dismissed, nothing separates it
+  // from the « Se déconnecter » button, the one control that must never fail.
+  '/login/2fa',
   '/signup',
   '/forgot-password',
   '/reset-password',

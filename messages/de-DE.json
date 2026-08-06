@@ -619,6 +619,15 @@
       "metaTitle": "Prüfe deine E-Mail",
       "body": "Wir haben dir soeben einen Bestätigungslink gesendet. Klicke darauf, um dein Konto zu aktivieren.",
       "backToLogin": "Zurück zur Anmeldung"
+    },
+    "mfaChallenge": {
+      "metaTitle": "Bestätigung in zwei Schritten",
+      "title": "Bestätigung in zwei Schritten",
+      "subtitle": "Gib den 6-stelligen Code aus deiner Authenticator-App ein, um die Anmeldung abzuschließen.",
+      "codeLabel": "6-stelliger Code",
+      "submit": "Prüfen",
+      "verifying": "Prüfen…",
+      "signOut": "Abmelden"
     }
   },
   "onboarding": {
@@ -1321,7 +1330,8 @@
       "mfaEnrollFailed": "Aktivierung nicht möglich.",
       "mfaChallengeFailed": "MFA-Challenge nicht möglich.",
       "mfaCodeInvalid": "Code falsch. Versuche es erneut.",
-      "mfaDisableFailed": "2FA konnte nicht deaktiviert werden."
+      "mfaDisableFailed": "2FA konnte nicht deaktiviert werden.",
+      "mfaRequired": "Bestätigung in zwei Schritten erforderlich. Melde dich erneut an, um fortzufahren."
     },
     "db": {
       "workspaceNotFound": "Kein bearbeitbarer Workspace.",

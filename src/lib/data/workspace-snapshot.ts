@@ -1,5 +1,6 @@
 import { getLocale } from 'next-intl/server';
 
+import { elevationDue } from '@/lib/auth/require-elevated';
 import { ANKORA_TIMEZONE } from '@/lib/date/tz';
 
 import { redirect } from '@/i18n/navigation';
@@ -146,6 +147,16 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return redirect({ href: '/login', locale: await getLocale() });
+
+  // This snapshot carries the whole financial picture, and it is reached by
+  // `getExpenseEntryContextAction` — a Server Action, so a POST endpoint that
+  // never renders a page and never meets the guard in `requireUser()`. Without
+  // this line, a session that skipped its second factor could still read the
+  // month's figures. It REDIRECTS rather than returning an error because this
+  // function's failure contract is a redirect (see the `!user` line above).
+  if (await elevationDue(supabase, user)) {
+    return redirect({ href: '/login/2fa', locale: await getLocale() });
+  }
 
   const { data: profile, error: profileError } = await supabase
     .from('users')

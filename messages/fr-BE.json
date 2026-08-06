@@ -619,6 +619,15 @@
       "metaTitle": "Vérifie ton email",
       "body": "On vient de t'envoyer un lien de confirmation. Clique dessus pour activer ton compte.",
       "backToLogin": "Retour à la connexion"
+    },
+    "mfaChallenge": {
+      "metaTitle": "Vérification en deux étapes",
+      "title": "Vérification en deux étapes",
+      "subtitle": "Saisis le code à 6 chiffres de ton application d’authentification pour terminer la connexion.",
+      "codeLabel": "Code à 6 chiffres",
+      "submit": "Vérifier",
+      "verifying": "Vérification…",
+      "signOut": "Se déconnecter"
     }
   },
   "onboarding": {
@@ -1321,7 +1330,8 @@
       "mfaEnrollFailed": "Impossible de démarrer l'enrôlement.",
       "mfaChallengeFailed": "Challenge MFA impossible.",
       "mfaCodeInvalid": "Code incorrect. Réessaie.",
-      "mfaDisableFailed": "Impossible de désactiver la 2FA."
+      "mfaDisableFailed": "Impossible de désactiver la 2FA.",
+      "mfaRequired": "Vérification en deux étapes requise. Reconnecte-toi pour continuer."
     },
     "db": {
       "workspaceNotFound": "Aucun workspace éditable.",

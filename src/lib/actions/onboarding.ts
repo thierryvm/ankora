@@ -6,6 +6,7 @@ import { getLocale } from 'next-intl/server';
 
 import { redirect } from '@/i18n/navigation';
 
+import { MFA_REQUISE, elevationDue } from '@/lib/auth/require-elevated';
 import { createClient } from '@/lib/supabase/server';
 import { chargeFrequencySchema } from '@/lib/schemas/charge';
 import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
@@ -53,6 +54,12 @@ export async function completeOnboardingAction(input: unknown): Promise<ActionRe
 
   if (!user) {
     return { ok: false, errorCode: 'errors.session.expired' };
+  }
+
+  // Second layer — see `charges.ts`. Reachable in practice: someone who enabled
+  // 2FA and has not finished onboarding lands here at aal1.
+  if (await elevationDue(supabase, user)) {
+    return { ok: false, errorCode: MFA_REQUISE };
   }
 
   const rl = await rateLimit('mutation', `user:${user.id}`);
