@@ -9,6 +9,7 @@ import {
 } from '@/lib/auth/auth-error';
 import { assertReadable, describeReadFailure } from '@/lib/data/read-failure';
 import { createClient } from '@/lib/supabase/server';
+import { elevationDue } from '@/lib/auth/require-elevated';
 import { log } from '@/lib/log';
 
 /**
@@ -144,9 +145,14 @@ export async function getOptionalUser(): Promise<User | null> {
  * came to change unreachable.
  */
 export async function redirectIfSignedIn(): Promise<void> {
-  if (await getOptionalUser()) {
-    redirect({ href: '/app', locale: await getLocale() });
-  }
+  const user = await getOptionalUser();
+  if (!user) return;
+
+  // Straight to the challenge when the second factor is still owed. Sending
+  // them to `/app` would work — `requireUser()` bounces them here anyway — but
+  // it costs a wasted RSC render and an extra 307 on every visit to `/login`.
+  const destination = (await elevationDue(await createClient(), user)) ? '/login/2fa' : '/app';
+  redirect({ href: destination, locale: await getLocale() });
 }
 
 /**
@@ -170,6 +176,20 @@ export async function requireUser(): Promise<User> {
   const lookup = await lookupSession();
 
   if (lookup.status === 'authenticated') {
+    // Second factor still owed? Send them to the challenge rather than the page.
+    //
+    // This is one of TWO layers, and it is the weaker one: it protects what is
+    // DISPLAYED. A Server Action is a POST endpoint reachable without ever
+    // rendering the page that calls it, so the actions carry their own refusal
+    // (`elevationDue` + `MFA_REQUISE`). Guarding only here would have left every
+    // read and write open to a session that never presented its factor.
+    //
+    // Reached only in the `authenticated` branch — i.e. after the auth server
+    // has just answered — so an unreadable level here is a client-held token,
+    // not an outage. See `elevationManquante` for why that fails closed.
+    if (await elevationDue(await createClient(), lookup.user)) {
+      return redirect({ href: '/login/2fa', locale: await getLocale() });
+    }
     return lookup.user;
   }
 

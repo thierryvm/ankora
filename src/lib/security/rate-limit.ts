@@ -3,7 +3,7 @@ import { Redis } from '@upstash/redis';
 import { env } from '@/lib/env';
 import { log } from '@/lib/log';
 
-type LimiterKind = 'auth' | 'api' | 'mutation' | 'export' | 'admin';
+type LimiterKind = 'auth' | 'api' | 'mutation' | 'export' | 'admin' | 'mfa';
 
 type RateLimitReason = 'rate_limit_unavailable' | 'rate_limited';
 
@@ -44,6 +44,31 @@ const limiters: Record<LimiterKind, Ratelimit> | null = redisConfigured
           limiter: Ratelimit.slidingWindow(5, '15 m'),
           analytics: true,
           prefix: 'rl:auth',
+        }),
+        /**
+         * Second-factor challenge at sign-in. Deliberately NOT `auth`.
+         *
+         * `auth` allows 5 per 15 min and is keyed BY IP everywhere it is used.
+         * Both are wrong here: a typo plus a clock drift eats an allowance that
+         * small, and several people behind one address — a household — would
+         * share it, so one person fumbling their code would lock the others out.
+         * This one is keyed by user id, which the challenge always has: the
+         * visitor is authenticated at aal1 by the time it runs.
+         *
+         * 10 per 15 min against a 6-digit space is ~960 guesses a day, i.e.
+         * under a tenth of a percent of 10^6 after a full day of hammering —
+         * within NIST SP 800-63B's throttling guidance, and roomy enough for two
+         * typos and a clock step.
+         *
+         * Fails CLOSED in production like every bucket here (see the catch
+         * below): an Upstash outage blocks the challenge rather than waving it
+         * through.
+         */
+        mfa: new Ratelimit({
+          redis,
+          limiter: Ratelimit.slidingWindow(10, '15 m'),
+          analytics: true,
+          prefix: 'rl:mfa',
         }),
         api: new Ratelimit({
           redis,

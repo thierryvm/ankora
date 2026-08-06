@@ -20,6 +20,7 @@ import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
 import { rateLimit } from '@/lib/security/rate-limit';
 import type { ActionResult } from '@/lib/actions/types';
 import type { GesteGroupeResult } from '@/lib/actions/obligations.types';
+import { MFA_REQUISE, elevationDue } from '@/lib/auth/require-elevated';
 
 /** Same contract as `charges.ts` / `commitments.ts`. */
 async function authorizedWorkspace(): Promise<
@@ -30,6 +31,12 @@ async function authorizedWorkspace(): Promise<
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, errorCode: 'errors.session.expired' };
+
+  // Second layer, and the one that protects the DATA. A Server Action is a POST
+  // endpoint reachable without ever rendering the page that calls it, so the
+  // page guard in `requireUser()` would leave every read and write open to a
+  // session that never presented its second factor.
+  if (await elevationDue(supabase, user)) return { ok: false, errorCode: MFA_REQUISE };
 
   const { data: membership } = await supabase
     .from('workspace_members')

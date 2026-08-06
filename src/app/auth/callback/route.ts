@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { NextResponse, type NextRequest } from 'next/server';
 
+import { elevationDue } from '@/lib/auth/require-elevated';
 import { describeReadFailure } from '@/lib/data/read-failure';
 import { createClient } from '@/lib/supabase/server';
 import { log } from '@/lib/log';
@@ -111,6 +112,26 @@ export async function GET(request: NextRequest) {
     log.error('auth/callback: users.onboarded_at unreadable, deferring to target', {
       ...describeReadFailure(profileError),
     });
+  }
+
+  // Second factor still owed? Straight to the challenge, not via `/app`.
+  //
+  // Bouncing would work — the destination's own guard sends them there anyway —
+  // but it costs a wasted RSC render and an extra 307 on every Google sign-in.
+  // Wrapped: this route sits outside the proxy matcher and has no error
+  // boundary above it, so an unexpected throw here is a bare 500 mid-OAuth with
+  // no way back. On failure we fall through to the pre-existing destination,
+  // whose own guard still enforces the challenge.
+  let owesSecondFactor = false;
+  try {
+    owesSecondFactor = await elevationDue(supabase, user);
+  } catch (thrown) {
+    log.error('auth/callback: elevation check failed, deferring to target', {
+      ...describeReadFailure(thrown),
+    });
+  }
+  if (owesSecondFactor) {
+    return NextResponse.redirect(new URL(localiseTarget(locale, '/login/2fa'), request.url));
   }
 
   const target = readFailed || profile?.onboarded_at ? next : '/onboarding';

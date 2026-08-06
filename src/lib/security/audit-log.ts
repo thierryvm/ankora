@@ -27,6 +27,18 @@ export const AuditEvent = {
    * and the only way to learn later how often the abandonment happens.
    */
   AUTH_MFA_ENROLLMENT_DISCARDED: 'auth.mfa_enrollment_discarded',
+  /**
+   * The sign-in second-factor challenge, both outcomes.
+   *
+   * Distinct from `AUTH_MFA_ENABLED` on purpose. That one means "a factor was
+   * activated" and belongs to enrolment; reusing it here would write "MFA
+   * activé" on EVERY sign-in and make the trail unreadable exactly where it
+   * matters most. And the failed case has to exist on its own: a burst of
+   * refusals on one account is the signal that someone holds the password and
+   * is working on the code — invisible if only successes were recorded.
+   */
+  AUTH_MFA_CHALLENGE_PASSED: 'auth.mfa_challenge_passed',
+  AUTH_MFA_CHALLENGE_FAILED: 'auth.mfa_challenge_failed',
   AUTH_RATE_LIMITED: 'auth.rate_limited',
 
   // Workspace

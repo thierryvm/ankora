@@ -13,6 +13,7 @@ import {
 } from '@/lib/schemas/settings';
 import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
 import { rateLimit } from '@/lib/security/rate-limit';
+import { elevationDue } from '@/lib/auth/require-elevated';
 import { exportUserData } from '@/lib/gdpr/export';
 import { requestDeletion, cancelDeletion, type CancelDeletionResult } from '@/lib/gdpr/deletion';
 import { log } from '@/lib/log';
@@ -31,6 +32,19 @@ async function requireSessionUser() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error('Session expired.');
+
+  // Second layer — see `charges.ts`. Throws rather than returning a code
+  // because that is this helper's existing failure contract; changing it would
+  // mean touching all seven call sites for no gain. Through the UI this is
+  // unreachable anyway: the page guard sends an aal1 visitor to the challenge
+  // before `/app/settings` ever renders. It bites on a direct POST, which is
+  // exactly what it is for.
+  //
+  // No deadlock on enrolment: the predicate only refuses when a VERIFIED factor
+  // already exists, so `enrollMfaAction` and `verifyMfaAction` stay reachable
+  // for anyone activating 2FA for the first time.
+  if (await elevationDue(supabase, user)) throw new Error('Second factor required.');
+
   return { supabase, user };
 }
 

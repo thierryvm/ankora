@@ -619,6 +619,15 @@
       "metaTitle": "Check your email",
       "body": "We've just sent you a confirmation link. Click it to activate your account.",
       "backToLogin": "Back to login"
+    },
+    "mfaChallenge": {
+      "metaTitle": "Two-step verification",
+      "title": "Two-step verification",
+      "subtitle": "Enter the 6-digit code from your authenticator app to finish signing in.",
+      "codeLabel": "6-digit code",
+      "submit": "Verify",
+      "verifying": "Verifying…",
+      "signOut": "Sign out"
     }
   },
   "onboarding": {
@@ -1321,7 +1330,8 @@
       "mfaEnrollFailed": "Unable to start enrolment.",
       "mfaChallengeFailed": "MFA challenge failed.",
       "mfaCodeInvalid": "Incorrect code. Try again.",
-      "mfaDisableFailed": "Unable to disable 2FA."
+      "mfaDisableFailed": "Unable to disable 2FA.",
+      "mfaRequired": "Two-step verification required. Sign in again to continue."
     },
     "db": {
       "workspaceNotFound": "No editable workspace.",

@@ -10,6 +10,7 @@ import {
 import { monthlyIncomeSchema, vieCouranteTransferSchema } from '@/lib/schemas/workspace';
 import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
 import { rateLimit } from '@/lib/security/rate-limit';
+import { MFA_REQUISE, elevationDue } from '@/lib/auth/require-elevated';
 import type { ActionResult } from '@/lib/actions/types';
 
 async function resolveSessionWorkspace() {
@@ -18,6 +19,12 @@ async function resolveSessionWorkspace() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { ok: false as const, errorCode: 'errors.session.expired' };
+
+  // Second layer, and the one that protects the DATA — see `charges.ts` for the
+  // full reasoning. Account balances and display names are written from here.
+  if (await elevationDue(supabase, user)) {
+    return { ok: false as const, errorCode: MFA_REQUISE };
+  }
 
   const { data: membership } = await supabase
     .from('workspace_members')
