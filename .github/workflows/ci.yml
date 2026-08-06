@@ -89,6 +89,17 @@ jobs:
       image: mcr.microsoft.com/playwright:v1.59.1-noble
     timeout-minutes: 30
     needs: quality
+    # Les six secrets `E2E_*` ci-dessous N'EXISTENT PAS dans ce dépôt, et c'est
+    # voulu : ce job tourne délibérément contre un Supabase factice, les specs
+    # authentifiées s'y excluent elles-mêmes par `test.skip(!admin, …)`, et la
+    # valeur après `||` est le chemin nominal. L'extension GitHub Actions de
+    # VS Code signale ces références comme « Context access might be invalid » —
+    # elle a raison sur le fait et tort sur la conséquence.
+    #
+    # Le job authentifié plus bas ne lit AUCUN de ces secrets : il lance
+    # `supabase start` et récupère les clés locales réelles depuis
+    # `supabase status`. Ne pas « corriger » ces lignes en créant les secrets :
+    # cela ferait tourner le job public contre une vraie base.
     env:
       NEXT_PUBLIC_APP_URL: http://localhost:3000
       NEXT_PUBLIC_APP_ENV: development
