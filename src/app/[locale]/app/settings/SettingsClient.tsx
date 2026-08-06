@@ -3,6 +3,8 @@
 import { useState, useTransition } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 
+import { useRouter } from '@/i18n/navigation';
+
 import type { Locale } from '@/i18n/routing';
 import { formatDate, normalizeEmail } from '@/lib/i18n/formatters';
 
@@ -141,8 +143,17 @@ function ProfileCard({ email, displayName }: { email: string; displayName: strin
 
 function MfaCard({ factors }: { factors: Factor[] }) {
   const t = useTranslations('app.settings.mfa');
+  const router = useRouter();
   const translateError = useActionErrorTranslator();
   const verified = factors.filter((f) => f.status === 'verified');
+  /**
+   * An enrolment started earlier and never confirmed. Its secret may well be
+   * sitting in the visitor's authenticator app already — scanning the QR is
+   * what put it there, and that step is the one that usually succeeds. So the
+   * screen offers to FINISH it (no new QR needed: `challenge` + `verify` only
+   * ever needed the factor id) before offering to throw it away.
+   */
+  const pendingFactor = factors.find((f) => f.status === 'unverified') ?? null;
   const [enrollment, setEnrollment] = useState<{
     factorId: string;
     qr: string;
@@ -150,6 +161,11 @@ function MfaCard({ factors }: { factors: Factor[] }) {
   } | null>(null);
   const [code, setCode] = useState('');
   const [pending, startTransition] = useTransition();
+
+  // A fresh enrolment wins over a stale one: `factors` is a server prop, so
+  // right after `enrollMfaAction` it still describes the factor that call just
+  // discarded.
+  const factorIdToConfirm = enrollment?.factorId ?? pendingFactor?.id ?? null;
 
   const startEnroll = () => {
     startTransition(async () => {
@@ -161,15 +177,28 @@ function MfaCard({ factors }: { factors: Factor[] }) {
 
   const confirm = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!enrollment) return;
+    if (!factorIdToConfirm) return;
     startTransition(async () => {
-      const res = await verifyMfaAction({ factorId: enrollment.factorId, code });
+      const res = await verifyMfaAction({ factorId: factorIdToConfirm, code });
       if (res.ok) {
         toast.success(t('toastEnabled'));
         setEnrollment(null);
         setCode('');
       } else toast.error(translateError(res.errorCode));
     });
+  };
+
+  /**
+   * Abandoning does NOT discard the factor server-side — an abandonment by
+   * closing the tab or losing the network could never be caught here anyway,
+   * so cleaning up on this one path would give false confidence. It refreshes
+   * instead, which makes the now-pending enrolment appear as what it is: the
+   * screen tells the truth immediately rather than looking untouched.
+   */
+  const abandon = () => {
+    setEnrollment(null);
+    setCode('');
+    router.refresh();
   };
 
   const remove = (factorId: string) => {
@@ -187,7 +216,7 @@ function MfaCard({ factors }: { factors: Factor[] }) {
         <CardDescription>{t('description')}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        {verified.length === 0 && !enrollment && (
+        {verified.length === 0 && !factorIdToConfirm && (
           <div>
             <p className="text-muted-foreground text-sm">{t('emptyState')}</p>
             <Button type="button" onClick={startEnroll} disabled={pending} className="mt-3">
@@ -196,23 +225,38 @@ function MfaCard({ factors }: { factors: Factor[] }) {
           </div>
         )}
 
-        {enrollment && (
+        {verified.length === 0 && factorIdToConfirm && (
           <form onSubmit={confirm} className="flex flex-col gap-3">
-            <p className="text-sm">{t('scanInstruction')}</p>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={enrollment.qr}
-              alt={t('qrAlt')}
-              width={192}
-              height={192}
-              className="border-border h-48 w-48 rounded-md border bg-white p-2"
-            />
-            <details className="text-muted-foreground text-xs">
-              <summary className="cursor-pointer">{t('manualEntry')}</summary>
-              <code className="bg-brand-100 text-brand-900 mt-2 block rounded px-2 py-1 font-mono">
-                {enrollment.secret}
-              </code>
-            </details>
+            {enrollment ? (
+              <>
+                <p className="text-sm">{t('scanInstruction')}</p>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={enrollment.qr}
+                  alt={t('qrAlt')}
+                  width={192}
+                  height={192}
+                  className="border-border h-48 w-48 rounded-md border bg-white p-2"
+                />
+                <details className="text-muted-foreground text-xs">
+                  <summary className="cursor-pointer">{t('manualEntry')}</summary>
+                  <code className="bg-brand-100 text-brand-900 mt-2 block rounded px-2 py-1 font-mono">
+                    {enrollment.secret}
+                  </code>
+                </details>
+              </>
+            ) : (
+              /*
+                Resuming an earlier attempt. No QR: the secret was handed out
+                once, at creation, and the server cannot produce it again.
+                Whoever scanned it still holds it — so ask for the code first,
+                and offer to start over for whoever no longer does.
+              */
+              <div className="border-border rounded-md border border-dashed p-3">
+                <p className="text-sm font-medium">{t('pendingTitle')}</p>
+                <p className="text-muted-foreground mt-1 text-sm">{t('pendingBody')}</p>
+              </div>
+            )}
             <div className="flex flex-col gap-2">
               <Label htmlFor="mfaCode">{t('codeLabel')}</Label>
               <Input
@@ -225,18 +269,25 @@ function MfaCard({ factors }: { factors: Factor[] }) {
                 required
               />
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button type="submit" disabled={pending || code.length !== 6}>
                 {pending ? t('verifying') : t('verifyButton')}
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setEnrollment(null)}
-                disabled={pending}
-              >
-                {t('cancel')}
-              </Button>
+              {enrollment ? (
+                <Button type="button" variant="outline" onClick={abandon} disabled={pending}>
+                  {t('cancel')}
+                </Button>
+              ) : (
+                /*
+                  Starting over discards the pending factor and issues a new QR
+                  — the same cleanup that unblocks enrolment, but asked for
+                  rather than silent. It is the exit for anyone who no longer
+                  has the earlier secret.
+                */
+                <Button type="button" variant="outline" onClick={startEnroll} disabled={pending}>
+                  {pending ? t('enrolling') : t('restartButton')}
+                </Button>
+              )}
             </div>
           </form>
         )}
