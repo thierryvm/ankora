@@ -37,11 +37,19 @@ export default async function SettingsPage() {
     getCookieConsentAction(),
   ]);
 
-  const factors: Factor[] = (factorsRes.data?.totp ?? []).map((f) => ({
-    id: f.id,
-    friendlyName: f.friendly_name ?? null,
-    status: f.status,
-  }));
+  // `.all`, NOT `.totp`. The SDK only puts VERIFIED factors in the typed
+  // buckets (`GoTrueClient._listFactors`), so reading `.totp` made an
+  // unverified factor — an enrolment started and never confirmed — invisible
+  // to this screen. Invisible, it could not be resumed OR removed, while it
+  // still blocked every new enrolment with a name conflict. A state the
+  // interface cannot see is a state the user cannot leave.
+  const factors: Factor[] = (factorsRes.data?.all ?? [])
+    .filter((f) => f.factor_type === 'totp')
+    .map((f) => ({
+      id: f.id,
+      friendlyName: f.friendly_name ?? null,
+      status: f.status,
+    }));
 
   const deletion: Deletion = deletionRes.data
     ? { scheduledFor: deletionRes.data.scheduled_for, status: deletionRes.data.status }

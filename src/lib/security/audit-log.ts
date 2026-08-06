@@ -17,6 +17,16 @@ export const AuditEvent = {
   AUTH_PASSWORD_RESET: 'auth.password_reset',
   AUTH_MFA_ENABLED: 'auth.mfa_enabled',
   AUTH_MFA_DISABLED: 'auth.mfa_disabled',
+  /**
+   * An abandoned enrolment attempt was discarded to unblock a new one.
+   *
+   * Distinct from `AUTH_MFA_DISABLED` on purpose: nothing was disabled. An
+   * unverified factor never authenticated anyone, so recording it as a
+   * disablement would make the trail claim a protection was removed that had
+   * never been in place. Its own name is the only way the trail stays true —
+   * and the only way to learn later how often the abandonment happens.
+   */
+  AUTH_MFA_ENROLLMENT_DISCARDED: 'auth.mfa_enrollment_discarded',
   AUTH_RATE_LIMITED: 'auth.rate_limited',
 
   // Workspace
