@@ -5,15 +5,30 @@ import { routing } from '@/i18n/routing';
 import { isExcludedRoute, stripLocalePrefix } from '@/components/layout/bottom-tab-bar.routes';
 
 /**
- * Single source of truth for "is the persistent BottomTabBar going to
- * mount for this request?" — used by every Server Component that needs
- * to mirror the bar's visibility to avoid duplicate-nav anti-patterns
- * (Apple HIG / Material 3 mobile-first 2026):
+ * « La barre d'onglets va-t-elle être montée pour CETTE requête ? », pour les
+ * Server Components qui doivent refléter sa visibilité sans dupliquer la
+ * navigation (Apple HIG / Material 3 mobile-first 2026).
  *
- *   - `src/app/[locale]/layout.tsx`        → mount the bar itself
- *   - `src/components/layout/Header.tsx`   → suppress the marketing burger
- *   - `src/components/layout/Footer.tsx`   → hide redundant link nav on mobile
- *   - `src/app/[locale]/(public)/layout.tsx` → lift the ScrollToTop FAB
+ * **Deux appelants, et seulement deux** :
+ *
+ *   - `src/components/layout/Header.tsx`   → supprime le burger marketing
+ *   - `src/components/layout/Footer.tsx`   → masque la nav redondante en mobile
+ *
+ * Ce commentaire en annonçait **quatre** jusqu'au 6 août 2026. Les deux autres —
+ * le montage de la barre et le bouton « haut de page » — vivaient dans des
+ * layouts que Next ne re-rend PAS en navigation client : leur valeur y était
+ * gelée pour la vie du document, et la barre ne pouvait jamais apparaître dans
+ * la PWA installée. Ils lisent désormais
+ * `@/components/layout/bottom-tab-bar-visibility`, réévalué à chaque navigation.
+ *
+ * **Les deux appelants restants sont corrects, et il faut qu'ils le restent.**
+ * Ils sont rendus par les pages et par `src/app/[locale]/app/layout.tsx`, que
+ * Next re-rend bien — et `src/proxy.ts` pose `x-pathname` aussi sur les requêtes
+ * RSC. Les faire passer au contexte client les **régresserait** : leur moitié
+ * « authentifié » deviendrait figée alors qu'elle ne l'est pas aujourd'hui.
+ *
+ * Cette liste s'était périmée en silence une fois. Si un troisième appelant
+ * apparaît, vérifier d'abord **où il est rendu** avant de le brancher ici.
  *
  * Returns `true` when both gates pass:
  *   1. An authenticated visitor (`getOptionalUser()` returns a user).

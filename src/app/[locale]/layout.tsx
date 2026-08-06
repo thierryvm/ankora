@@ -8,15 +8,18 @@ import { getMessages, setRequestLocale, getTranslations } from 'next-intl/server
 import { SITE } from '@/lib/site';
 import { routing, type Locale } from '@/i18n/routing';
 import { isIndexableLocale, indexableLanguageAlternates } from '@/lib/seo/indexable-locales';
-import { ConsentBanner } from '@/components/gdpr/ConsentBanner';
 import { ConsentGatedAnalytics } from '@/components/gdpr/ConsentGatedAnalytics';
 import { Toaster } from '@/components/ui/toast';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister';
-import { UpdateBanner } from '@/components/pwa/UpdateBanner';
 import { ThemeBootScript } from '@/components/theme/ThemeBootScript';
-import { BottomTabBar } from '@/components/layout/BottomTabBar';
-import { shouldMountBottomTabBar } from '@/lib/layout/bottom-tab-bar-state';
+import {
+  BottomTabBarVisibilityProvider,
+  BottomTabBarSlot,
+  ConsentBannerSlot,
+  UpdateBannerSlot,
+} from '@/components/layout/bottom-tab-bar-visibility';
+import { getOptionalUser } from '@/lib/auth/require-user';
 import { isAdmin } from '@/lib/auth/is-admin';
 
 import '../globals.css';
@@ -152,18 +155,23 @@ export default async function LocaleLayout({
   const themeCookie = cookieStore.get('theme')?.value;
   const dataTheme = themeCookie === 'dark' ? 'dark' : undefined;
 
-  // PR-BETA-6 Hotfix Option A v3 (THI-277, 2026-05-25) — persistent
-  // BottomTabBar mount. Centralised in `shouldMountBottomTabBar()`
-  // (wrapped in React `cache()`) so this mount decision and the four
-  // satellite consumers (Header burger suppression, Footer nav hiding,
-  // ScrollToTop FAB lift, this mount) all collapse onto a single
-  // server-side computation per request.
-  const showBottomTabBar = await shouldMountBottomTabBar();
-  // `isAdmin()` re-runs the Supabase `getUser()` round-trip inside the
-  // helper. Cheap (already cached server-side per-request by Supabase)
-  // and lets the helper stay self-contained — no need to pipe the user
-  // object into a new isAdminFor(user) variant just for this mount site.
-  const showAdminEntry = showBottomTabBar && (await isAdmin());
+  // Ce layout est PARTAGÉ : Next ne le re-rend pas lors d'une navigation
+  // client. Toute valeur dépendant du chemin y serait donc gelée pour la vie du
+  // document — c'est ce qui empêchait la barre d'onglets d'apparaître dans la
+  // PWA installée, où l'on démarre toujours sur `/` (une route exclue) et où
+  // aucun geste ne recharge un document. Mesuré le 2026-08-05 ; le détail est
+  // dans `bottom-tab-bar-visibility.tsx`.
+  //
+  // Seule la moitié SERVEUR reste ici : « le visiteur est-il authentifié ? »,
+  // qui ne change qu'à la connexion ou à la déconnexion — deux transitions qui
+  // passent par un `redirect()` de niveau document, donc re-rendent la racine.
+  // La moitié qui dépend du chemin est réévaluée côté client à chaque
+  // navigation.
+  const isAuthenticated = (await getOptionalUser()) !== null;
+  // `isAdmin()` reste adossé à la moitié serveur, jamais à la moitié route :
+  // l'adosser au chemin ferait payer une résolution de privilège à chaque rendu
+  // anonyme de la landing.
+  const showAdminEntry = isAuthenticated && (await isAdmin());
 
   return (
     <html
@@ -204,23 +212,32 @@ export default async function LocaleLayout({
           {t('a11y.skipToMain')}
         </a>
         <NextIntlClientProvider locale={locale} messages={messages}>
-          {children}
-          {/* `liftedForBottomBar` : la bannière est `fixed z-50`, la barre
-              d'onglets `fixed z-40`. La réserve `--consent-height` posée en
-              `padding-bottom` sur `body` ne protège que le contenu DANS le flux ;
-              elle n'a jamais déplacé la barre, que la bannière recouvrait donc
-              intégralement. Même valeur, même raison que pour la `ScrollToTop`. */}
-          <ConsentBanner liftedForBottomBar={showBottomTabBar} />
-          <Toaster />
-          {showBottomTabBar && <BottomTabBar isAdmin={showAdminEntry} />}
-          <ServiceWorkerRegister />
-          {/* Même décalage que la bannière de consentement : la barre d'onglets
-              est `fixed`, aucune réserve en `padding-bottom` ne la déplace. */}
-          <UpdateBanner liftedForBottomBar={showBottomTabBar} />
-          <JsonLd data={organizationJsonLd} />
-          {/* Montage INCONDITIONNEL : le gate decide a l'interieur. Le rendre
-              conditionnel reinitialiserait sa `ref` de memoire de chargement. */}
-          <ConsentGatedAnalytics />
+          {/* L'ORDRE DES FRÈRES CI-DESSOUS EST SIGNIFIANT et ne doit pas bouger.
+              `navigation-usable-first-visit.spec.ts` mesure par `elementFromPoint`,
+              donc par ordre de peinture : deux surfaces `fixed` au même `z-index`
+              seraient départagées par le DOM, en silence. C'est pour ça que
+              chaque consommateur a son propre emplacement, à sa place d'origine,
+              plutôt qu'un parent commun qui déplacerait `Toaster` et
+              `ServiceWorkerRegister` par rapport à eux. */}
+          <BottomTabBarVisibilityProvider isAuthenticated={isAuthenticated}>
+            {children}
+            {/* `liftedForBottomBar` : la bannière est `fixed z-50`, la barre
+                d'onglets `fixed z-40`. La réserve `--consent-height` posée en
+                `padding-bottom` sur `body` ne protège que le contenu DANS le flux ;
+                elle n'a jamais déplacé la barre, que la bannière recouvrait donc
+                intégralement. Même valeur, même raison que pour la `ScrollToTop`. */}
+            <ConsentBannerSlot />
+            <Toaster />
+            <BottomTabBarSlot isAdmin={showAdminEntry} />
+            <ServiceWorkerRegister />
+            {/* Même décalage que la bannière de consentement : la barre d'onglets
+                est `fixed`, aucune réserve en `padding-bottom` ne la déplace. */}
+            <UpdateBannerSlot />
+            <JsonLd data={organizationJsonLd} />
+            {/* Montage INCONDITIONNEL : le gate decide a l'interieur. Le rendre
+                conditionnel reinitialiserait sa `ref` de memoire de chargement. */}
+            <ConsentGatedAnalytics />
+          </BottomTabBarVisibilityProvider>
         </NextIntlClientProvider>
       </body>
     </html>

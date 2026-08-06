@@ -72,15 +72,61 @@ npm run e2e
 
 ### Parcours authentifiés, contre la stack locale
 
+**Deux écarts avec la CI empêchent ce job de tourner, et aucun des deux ne se
+signale par un message clair.** Mesurés le 6 août 2026, après un premier montage
+maison qui rendait **31 échecs et 10 réussites** là où la CI en passe 40.
+
+**1. Épingler la CLI Supabase sur la version de la CI.** `npx supabase` prend la
+dernière version publiée ; la CI épingle `2.84.2` (`supabase/setup-cli@v1` dans
+`ci.yml`). Entre les deux, les **droits par défaut du schéma `public` ont
+changé** : sous une CLI récente, `service_role` reçoit `Dxtm` — ni `SELECT`, ni
+`INSERT`, ni `UPDATE`. Le semis échoue alors sur `permission denied for table
+users`, et **tout parcours authentifié tombe**.
+
 ```bash
-npm run preflight
-supabase start                      # applique les 15 migrations sur une base vide
-supabase status -o json             # relève ANON_KEY / SERVICE_ROLE_KEY
+npx --yes supabase@2.84.2 start     # applique les migrations sur une base vide
+npx --yes supabase@2.84.2 status -o json   # relève ANON_KEY / SERVICE_ROLE_KEY
+
+# Contrôle en une ligne — doit rendre « t|t » :
+docker exec supabase_db_ankora psql -U postgres -d postgres -tAc \
+  "select has_table_privilege('service_role','public.users','SELECT'),
+          has_table_privilege('service_role','public.users','UPDATE')"
 ```
+
+> **Ce que cet écart révèle, et qui reste ouvert** : les migrations ne posent
+> aucun `GRANT` — elles s'appuient sur les droits par défaut de la plateforme.
+> La CI n'est verte que parce qu'elle épingle une version ancienne. Le jour où
+> cet épinglage bouge, le job meurt ; et un projet Supabase créé aujourd'hui ne
+> fonctionnerait pas. Mesuré : la production **a** ces droits, une base neuve
+> **ne les a pas**. Correctif durable = une migration qui accorde explicitement,
+> à traiter en session dédiée (touche `supabase/migrations/`, donc revue).
+
+**2. Le limiteur de débit doit être joignable, sinon il refuse tout.**
+`npm run start` tourne en `NODE_ENV=production`, et en production `rateLimit()`
+échoue **fermé** : sans Upstash atteignable, la connexion renvoie « Service
+temporairement indisponible » et **rien** ne passe. L'écran ne dit pas
+« rate limit » — d'où l'heure perdue à soupçonner l'application.
+
+Plutôt qu'un vrai compte Upstash, monter le même conteneur que la CI — zéro
+identifiant, zéro euro, hors ligne :
+
+```bash
+docker network create ankora-e2e
+docker run -d --name ankora-e2e-redis --network ankora-e2e redis:7-alpine
+docker run -d --name ankora-e2e-srh --network ankora-e2e -p 8079:80 \
+  -e SRH_MODE=env -e SRH_TOKEN=ci-local-not-a-secret \
+  -e SRH_CONNECTION_STRING=redis://ankora-e2e-redis:6379 \
+  hiett/serverless-redis-http@sha256:5b0bb9239fce53abf87b2018a7a0deb9ec7bd900c5360738fe5fbeeb426f9150
+```
+
+Puis exporter `UPSTASH_REDIS_REST_URL=http://localhost:8079` et
+`UPSTASH_REDIS_REST_TOKEN=ci-local-not-a-secret`.
+
+À l'arrêt : `docker rm -f ankora-e2e-srh ankora-e2e-redis`.
 
 Puis, avec l'environnement pointé sur la stack locale
 (`NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54421`, les deux clés,
-`E2E_SUPABASE_READY=1`, un endpoint compatible Upstash sur `:8079`) :
+`E2E_SUPABASE_READY=1`, et les deux variables Upstash ci-dessus) :
 
 ```bash
 npm run build && npm run start

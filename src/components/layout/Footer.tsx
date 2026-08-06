@@ -40,7 +40,19 @@ export async function Footer() {
        * dropped the clearance at 768–1023 while the bar was still on screen,
        * hiding the GDPR art. 7(3) cookie link behind it.
        */}
-      <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-4 pt-10 pb-[calc(env(safe-area-inset-bottom)+3.5rem)] md:flex-row md:items-center md:px-6 xl:pb-10">
+      {/* La réserve de 3,5 rem était INCONDITIONNELLE sous `xl`, y compris pour
+          un visiteur anonyme sur `/faq`, `/legal/*` ou `/glossaire`, où aucune
+          barre n'est jamais montée. C'est cette bande blanche sous le pied de
+          page qui a fait croire à @thierry que la barre était « cachée sous une
+          couche » : l'espace était là, la barre non. Un espace réservé qui ne
+          dépend pas de ce qu'il réserve ne prouve rien — il induit en erreur. */}
+      <div
+        className={
+          bottomTabBarMounted
+            ? 'mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-4 pt-10 pb-[calc(env(safe-area-inset-bottom)+3.5rem)] md:flex-row md:items-center md:px-6 xl:pb-10'
+            : 'mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-4 pt-10 pb-[calc(env(safe-area-inset-bottom)+2.5rem)] md:flex-row md:items-center md:px-6 xl:pb-10'
+        }
+      >
         <div className="flex items-center gap-2">
           <BrandHomeLink ariaLabel={tCommon('homeAria')} logoClassName="h-7 w-auto" />
           <span className="text-muted-foreground text-sm">
