@@ -56,13 +56,18 @@ test.describe('Dashboard — typed account cards + inline rename (PR-D2)', () =>
       // Waiting for the response rather than widening a timeout: a longer
       // timeout only makes the window rarer, and a rare failure is the kind
       // that gets re-run instead of read.
-      const enregistrement = page.waitForResponse(
-        (r) => r.request().method() === 'POST' && r.request().isNavigationRequest() === false,
-        { timeout: 15_000 },
-      );
+      //
+      // The predicate matches on the `next-action` header, not merely on
+      // "a POST". Next sends that header — carrying the action id — on Server
+      // Action calls and on nothing else, so an unrelated POST from this page
+      // can no longer satisfy the wait and let the reload through early. That
+      // would have reintroduced the exact race this closes, silently.
+      // (Sourcery, PR #327.)
       await input.fill('Belfius');
-      await input.press('Enter');
-      await enregistrement;
+      await Promise.all([
+        page.waitForResponse((r) => 'next-action' in r.request().headers(), { timeout: 15_000 }),
+        input.press('Enter'),
+      ]);
 
       // Optimistic update + revalidatePath: the title is back as a button with the new value.
       await expect(
