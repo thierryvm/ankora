@@ -44,8 +44,25 @@ test.describe('Dashboard — typed account cards + inline rename (PR-D2)', () =>
       await expect(input).toHaveValue('Compte Principal');
 
       // Replace the value and submit with Enter.
+      //
+      // The Server Action's response is awaited BEFORE the reload below, and
+      // that ordering is the whole point. The title flips to « Belfius »
+      // OPTIMISTICALLY — before anything is written — so asserting on it and
+      // reloading straight after races the write: the reload re-reads the
+      // database, which may still hold the old name. That race is what made
+      // this spec flaky in CI (run 31060040852, failed then passed on retry),
+      // and it failed on the POST-RELOAD assertion, never on the optimistic one.
+      //
+      // Waiting for the response rather than widening a timeout: a longer
+      // timeout only makes the window rarer, and a rare failure is the kind
+      // that gets re-run instead of read.
+      const enregistrement = page.waitForResponse(
+        (r) => r.request().method() === 'POST' && r.request().isNavigationRequest() === false,
+        { timeout: 15_000 },
+      );
       await input.fill('Belfius');
       await input.press('Enter');
+      await enregistrement;
 
       // Optimistic update + revalidatePath: the title is back as a button with the new value.
       await expect(
