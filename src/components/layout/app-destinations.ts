@@ -27,13 +27,20 @@
 /**
  * Stable identifiers for UI destinations — NOT route folder names.
  *
- * `bills` maps to `/app/charges` and `simulate` to `/app/simulator`. The
- * mismatch is deliberate and load-bearing: these ids are baked into
- * `data-testid="bottom-tab-bills"` / `bottom-tab-simulate` and asserted in
+ * `bills` maps to `/app/charges`. The mismatch is deliberate and load-bearing:
+ * these ids are baked into `data-testid="bottom-tab-bills"` and asserted in
  * `__tests__/BottomTabBar.test.tsx` and `e2e/mobile-ios/bottom-tab-bar.spec.ts`.
  * Renaming them to match the folders would break both suites for no gain — and
  * the e2e ones are `seededUser`-gated, so CI would stay green while the specs
  * silently skip. Do not "harmonise" these.
+ *
+ * `simulate` a été retiré le 8 août 2026 avec la route `/app/simulator`. Le
+ * simulateur reste, sous la seule forme qui lui convient : le tiroir du cockpit.
+ * Ce n'est pas un lieu où l'on va, c'est une question qu'on pose à une
+ * situation — cf. `docs/superpowers/specs/2026-08-08-refonte-app-architecture-cible.md`
+ * §2.1. Un `Record<AppDestinationId, …>` exhaustif ailleurs dans le code fait
+ * échouer le typecheck si l'entrée y survit : c'est voulu, et c'est ce qui a
+ * rendu ce retrait sûr.
  */
 export type AppDestinationId =
   | 'cockpit'
@@ -41,7 +48,6 @@ export type AppDestinationId =
   | 'bills'
   | 'commitments'
   | 'expenses'
-  | 'simulate'
   | 'settings';
 
 export type AppDestination = {
@@ -73,12 +79,10 @@ export const APP_DESTINATIONS: readonly AppDestination[] = [
   { id: 'cockpit', href: '/app', match: 'exact', mobilePlacement: 'tab' },
   { id: 'bills', href: '/app/charges', match: 'startsWith', mobilePlacement: 'tab' },
   { id: 'expenses', href: '/app/expenses', match: 'startsWith', mobilePlacement: 'tab' },
-  // Moved from 'tab' to 'sheet' on 2026-07-29 to free the third slot for the ⊕
-  // action (décision Q7). The simulator is a monthly decision tool, not a daily
-  // consultation — of the four tabs it was the one whose visit frequency least
-  // justified a permanent slot, and it keeps a first-class entry in the More
-  // sheet plus its in-page drawer on the cockpit.
-  { id: 'simulate', href: '/app/simulator', match: 'startsWith', mobilePlacement: 'sheet' },
+  // `simulate` vivait ici. Passé de 'tab' à 'sheet' le 2026-07-29 pour libérer
+  // le troisième emplacement au profit du ⊕ (décision Q7), puis retiré tout à
+  // fait le 2026-08-08 avec sa route : de « pas assez visité pour un onglet » à
+  // « pas une destination du tout ». Le tiroir du cockpit reste son seul accès.
   { id: 'commitments', href: '/app/commitments', match: 'startsWith', mobilePlacement: 'sheet' },
   { id: 'accounts', href: '/app/accounts', match: 'startsWith', mobilePlacement: 'sheet' },
   { id: 'settings', href: '/app/settings', match: 'startsWith', mobilePlacement: 'sheet' },

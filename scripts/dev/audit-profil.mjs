@@ -43,7 +43,9 @@ const shots = [
   ['03-charges', '/app/charges'],
   ['04-depenses', '/app/expenses'],
   ['05-engagements', '/app/commitments'],
-  ['06-simulateur', '/app/simulator'],
+  // `06-simulateur` retiré le 2026-08-08 avec la route `/app/simulator` : le
+  // simulateur ne vit plus que dans le tiroir du cockpit. Le conserver aurait
+  // produit une capture du cockpit étiquetée « simulateur ».
   ['07-comptes', '/app/accounts'],
   ['08-parametres', '/app/settings'],
 ];

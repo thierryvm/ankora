@@ -6,14 +6,16 @@ const admin = adminClientOrNull();
 /**
  * THI-195 — What-if simulator drawer.
  *
- * The simulator is now reachable in-page from the dashboard "Simuler" CTA
- * (drawer), while the standalone /app/simulator route is preserved.
+ * Le simulateur s'ouvre en place depuis le cockpit (tiroir). La route autonome
+ * `/app/simulator` a été SUPPRIMÉE le 8 août 2026 : ce n'est pas un lieu où l'on
+ * va, c'est une question qu'on pose à une situation.
+ * Cf. `docs/superpowers/specs/2026-08-08-refonte-app-architecture-cible.md` §2.1.
  *
- * Verifies end-to-end:
- *   - the CTA opens the drawer (no navigation), with the calculator mounted
- *   - ESC / backdrop / X all close it
- *   - focus returns to the trigger after closing (WCAG 2.4.3)
- *   - /app/simulator still renders its full header (hideHeader default = false)
+ * Vérifie de bout en bout :
+ *   - le CTA ouvre le tiroir (sans navigation), calculateur monté
+ *   - ÉCHAP / arrière-plan / X le referment
+ *   - le focus revient au déclencheur après fermeture (WCAG 2.4.3)
+ *   - `/app/simulator` REDIRIGE vers le cockpit, au lieu de rendre une page
  */
 test.describe('THI-195 — simulator drawer', () => {
   test.skip(!admin, 'Needs real Supabase (NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY).');
@@ -189,15 +191,33 @@ test.describe('THI-195 — simulator drawer', () => {
     }
   });
 
-  test('the /app/simulator route fallback still renders its full header', async ({ page }) => {
+  /**
+   * Ce cas vérifiait que `/app/simulator` rendait son en-tête complet. La route
+   * ayant été supprimée, il aurait pu être effacé — c'était le plan initial, et
+   * `plan-reviewer` l'a refusé pour une bonne raison : **on introduit une
+   * redirection permanente, un mécanisme parfaitement muet s'il casse, et on
+   * supprimerait le seul cas qui visite cette URL.**
+   *
+   * Réécrit plutôt que supprimé : même fichier, même projet, plancher du job
+   * authentifié maintenu à 41, et la redirection cesse d'être muette.
+   */
+  test('/app/simulator redirects to the cockpit instead of rendering a page', async ({ page }) => {
     if (!admin) return;
     const user = await seedOnboardedUser(admin);
     try {
       await login(page, user.email, user.password);
-      await page.goto('/app/simulator');
-      // hideHeader defaults to false on the standalone route → the page <h1>
-      // is present (the drawer suppresses it; the route must not regress).
-      await expect(page.getByRole('heading', { level: 1, name: 'Simulateur' })).toBeVisible();
+      const reponse = await page.goto('/app/simulator');
+
+      // L'URL finale est le cockpit — pas une 404, pas la page d'origine.
+      await expect(page).toHaveURL(/\/app$/);
+      expect(reponse?.status(), 'la page finale doit répondre 200').toBe(200);
+
+      // Et c'est bien le cockpit qui rend, pas une coquille vide.
+      await expect(page.getByTestId('simulator-drawer-trigger')).toBeVisible();
+
+      // Le titre de l'ancienne page ne doit plus exister nulle part : s'il
+      // reparaissait, c'est que la route aurait été recréée en douce.
+      await expect(page.getByRole('heading', { level: 1, name: 'Simulateur' })).toHaveCount(0);
     } finally {
       await deleteSeededUser(admin, user.userId);
     }

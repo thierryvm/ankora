@@ -22,7 +22,13 @@ await page.getByLabel('Mot de passe').fill('TestProfil!2026');
 await page.getByRole('button', { name: /^se connecter$/i }).click();
 await page.waitForURL(/\/app\b/, { timeout: 20000 });
 
-await page.goto(`${BASE}/app/simulator`, { waitUntil: 'networkidle' });
+// La route `/app/simulator` a été supprimée le 2026-08-08 : le simulateur ne
+// s'atteint plus que par le tiroir du cockpit. Y aller par `goto` rendrait une
+// redirection vers `/app` et la sonde chercherait ses contrôles sur un écran qui
+// ne les porte pas — un faux positif de défaut, pas un résultat vide.
+await page.goto(`${BASE}/app`, { waitUntil: 'networkidle' });
+await page.getByTestId('simulator-drawer-trigger').click();
+await page.getByTestId('simulator-drawer').waitFor({ state: 'visible', timeout: 10000 });
 await page.waitForTimeout(600);
 // Deux pièges rencontrés, tous deux du côté de la sonde et non de l'app :
 //  1. le scénario doit être choisi d'abord — le sélecteur n'existe pas avant ;

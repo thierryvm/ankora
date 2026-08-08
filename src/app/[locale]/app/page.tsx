@@ -482,8 +482,9 @@ export default async function DashboardPage() {
         <Button asChild variant="outline" size="lg">
           <Link href="/app/expenses">{t('ctaExpenses')}</Link>
         </Button>
-        {/* THI-195: opens the what-if simulator in a drawer in-page.
-            The /app/simulator route is preserved as a fallback. */}
+        {/* THI-195 : ouvre le simulateur en place, dans un tiroir.
+            La route `/app/simulator` a été supprimée le 2026-08-08 — le tiroir
+            est désormais le seul accès, et l'ancienne URL redirige ici. */}
         {/* Pass income as a raw number — a Decimal can't cross the RSC
             boundary into the client drawer (it loses its prototype). */}
         <SimulatorDrawer

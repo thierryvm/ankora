@@ -38,6 +38,30 @@ const nextConfig: NextConfig = {
    */
   async redirects() {
     return [
+      /**
+       * `/app/simulator` a été supprimée le 8 août 2026 : le simulateur n'est
+       * pas un lieu où l'on va, c'est une question qu'on pose à une situation.
+       * Il ne subsiste que sous la forme du tiroir du cockpit.
+       * Cf. `docs/superpowers/specs/2026-08-08-refonte-app-architecture-cible.md` §2.1.
+       *
+       * Une redirection plutôt qu'un 404 : l'URL a pu être mise en favori, et
+       * elle a vécu plusieurs mois. Elle mène au cockpit **sans ouvrir le
+       * tiroir** — ouvrir une fenêtre modale en réponse à une demande de page
+       * surprendrait, et câbler un paramètre d'URL vers un tiroir mérite d'être
+       * fait une fois, délibérément, pour toutes les feuilles à la fois.
+       *
+       * Les redirections de config s'appliquent AVANT le proxy, donc avant
+       * next-intl. La variante non préfixée couvre le français (defaultLocale
+       * servi à la racine) ; la seconde couvre les quatre locales préfixées.
+       * Aucune boucle possible : la cible ne rematche aucune des deux sources.
+       */
+      { source: '/app/simulator', destination: '/app', permanent: true },
+      {
+        source: '/:locale(en|nl-BE|de-DE|es-ES)/app/simulator',
+        destination: '/:locale/app',
+        permanent: true,
+      },
+
       { source: '/fr', destination: '/', permanent: true },
       { source: '/nl', destination: '/nl-BE', permanent: true },
       { source: '/de', destination: '/de-DE', permanent: true },
