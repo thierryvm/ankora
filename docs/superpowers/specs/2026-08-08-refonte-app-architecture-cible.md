@@ -39,8 +39,8 @@ cockpit ; la consultation ne traverse pas un formulaire.
 | Aujourd'hui        | Demain                       | Motif                                             |
 | ------------------ | ---------------------------- | ------------------------------------------------- |
 | `/app`             | **`/app`** — le cockpit      | C'est le produit                                  |
-| `/app/charges`     | **`/app/engagements`**       | Renommée et élargie                               |
-| `/app/commitments` | ↳ fusionnée dedans           | Même nature : de l'argent déjà engagé             |
+| `/app/charges`     | **`/app/charges`** — élargie | Garde son URL (cf. §5.1)                          |
+| `/app/commitments` | ↳ fusionnée dedans, redirige | Même nature : de l'argent déjà engagé             |
 | `/app/expenses`    | **`/app/expenses`**          | Geste quotidien distinct, à préserver             |
 | `/app/settings`    | **`/app/settings`**          | Compte, RGPD, sécurité — hors chemin financier    |
 | `/app/accounts`    | **supprimée**                | Ses cinq valeurs s'affichent déjà dans le cockpit |
@@ -259,6 +259,11 @@ donnée pour une cible peu habituée.
 Et les noms de groupes disent la **vraie** différence — celle de l'arithmétique — sans employer
 un seul mot de jargon. C'est aussi ce qui rend visible la seule information qui compte sur une
 dette : sa fin.
+
+**Et l'URL suit la même logique : `/app/charges` ne bouge pas.** Inventer `/app/engagements`
+coûterait une redirection de plus, casserait les favoris, et introduirait un quatrième mot dans
+un vocabulaire qui en compte déjà trois de trop. C'est `/app/commitments` qui redirige vers
+elle, une seule fois, définitivement.
 
 > **Conséquence** : ce nommage doit être confronté à celui que retiendra la session Fable 5 sur
 > la page d'accueil. Deux surfaces d'un même produit ne peuvent pas nommer différemment la même
