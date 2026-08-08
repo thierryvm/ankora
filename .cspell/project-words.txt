@@ -53,7 +53,8 @@ PostgREST
 Qonto
 Solidaris
 sourcery
-Supabase
+# en minuscules : couvre « Supabase » et le nom de dossier `supabase/`
+supabase
 Tailwind
 thierryvm
 Tink
@@ -201,6 +202,7 @@ uploadé
 vérif
 viewports
 worktree
+worktrees
 wrappé
 Zettels
 Zod

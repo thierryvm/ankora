@@ -54,7 +54,33 @@
     "Email"
   ],
 
+  // Le correcteur ne relit QUE de la prose : Markdown, et les deux locales
+  // livrées. Tout le reste est ignoré par défaut, et la liste se lit comme une
+  // AUTORISATION, pas comme une liste noire — une liste noire oublie toujours
+  // le prochain type de fichier.
+  //
+  // Sans ce cadrage il relit le code : mesuré le 2026-08-08, 1253 signalements
+  // sur 233 fichiers de `src/`, et 13 sur le seul `.gitignore` (« vercel »,
+  // « supabase », « worktrees » — des chemins, pas des mots). Un outil qui crie
+  // sur du code n'est plus lu le jour où il signale une vraie faute.
+  //
+  // Conséquence voulue : l'éditeur voit exactement ce que voit `npm run spell`.
   "ignorePaths": [
+    // Le code, les scripts et les fichiers de configuration. Un identifiant, un
+    // chemin ou un motif n'ont pas d'orthographe.
+    "**/*.{ts,tsx,js,jsx,mjs,cjs,css,yml,yaml,sql,sh,txt,toml,svg}",
+    "src/**",
+    "e2e/**",
+    "scripts/**",
+    "supabase/**",
+    ".github/**",
+    ".husky/**",
+    ".gitignore",
+    ".gitattributes",
+    ".editorconfig",
+    ".npmrc",
+    ".prettierignore",
+
     "node_modules/**",
     ".next/**",
     "coverage/**",
@@ -91,7 +117,8 @@
   ],
 
   // Le vocabulaire du projet vit dans un fichier à part plutôt qu'ici : une
-  // liste d'un mot par ligne se relit, se commente et se diffe. Le correctif
+  // liste d'un mot par ligne se relit, se commente, et se compare d'une version
+  // à l'autre sans effort. Le correctif
   // rapide « Add to workspace dictionary » de l'extension y ajoute directement.
   "dictionaryDefinitions": [
     {
