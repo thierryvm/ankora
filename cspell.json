@@ -30,7 +30,13 @@
   // `npm run spell`. Attention, « aucune dépendance transitive » est une
   // propriété de la version 2.3.2 épinglée au lockfile, pas de la plage
   // `^2.3.2` — c'est `npm ci` qui la maintient vraie.
-  "import": ["@cspell/dict-fr-fr/cspell-ext.json"],
+  //
+  // Chemin RELATIF et non nom de paquet (`@cspell/dict-fr-fr/cspell-ext.json`).
+  // Mesuré le 2026-08-08 : la ligne de commande résout le nom de paquet, mais
+  // l'extension VS Code non — « Configuration Loader Error: Failed to resolve
+  // configuration file ». Le correcteur retombait alors sans dictionnaire
+  // français, c'est-à-dire dans le défaut même que ce fichier corrige.
+  "import": ["./node_modules/@cspell/dict-fr-fr/cspell-ext.json"],
 
   // Le contenu vérifié est la PROSE. Un identifiant, un chemin, une commande ou
   // un extrait de code n'ont pas d'orthographe — les inclure produit un bruit
