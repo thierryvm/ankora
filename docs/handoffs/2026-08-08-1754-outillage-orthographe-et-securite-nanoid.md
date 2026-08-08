@@ -41,7 +41,7 @@ $ git status --short
 
 ## 2. PR en vol
 
-**Aucune.** Les deux PR de la session sont mergées.
+**Aucune à la clôture.** Quatre PR ouvertes et mergées dans la session : #330 et #331 (détaillées ci-dessous), #332 (handoff + .markdownlint.json) et #333 (périmètre élargi à `docs/`, clôt #329).
 
 ### PR #331 — `security(deps): la faille haute de nanoid fermée sur la surface de production`
 
@@ -110,20 +110,28 @@ tous terminés.
 
 - **Dictionnaire de projet bâti par mesure, pas par capitulation.** 3088 signalements initiaux,
   904 mots uniques ; seuls les 180 vus au moins trois fois ont été examinés, puis relus un par
-  un. **Quatre vraies fautes que leur fréquence aurait consacrées restent volontairement
-  soulignées** : `tryptique` (→ triptyque, 7 fichiers, jusque dans un nom de fichier),
-  `regénère` (→ régénère, 4 fichiers), `ELEVÉE`, `carrié`.
+  un. **Quatre vraies fautes que leur fréquence aurait consacrées ont été écartées du
+  dictionnaire** : `tryptique`, `regénère`, `ELEVÉE`, `carrié`. Elles sont restées soulignées
+  jusqu'à #333, qui les a corrigées dans les documents — sauf `carrié`, finalement admis après
+  relecture du contexte (cf. plus bas).
 
 - **Correctif de sécurité en PR dédiée depuis `main`**, jamais mêlé à #330, conformément à
   la doctrine. `npm audit fix` sans `--force` — uniquement des montées de patch
   (`nanoid` 5.1.9 → 5.1.16 et 3.3.16 → 3.3.18 ; `js-yaml` 3.15.0 → 3.15.1 et 4.3.0 → 4.3.1).
 
-- **Pas de fichier `.markdownlint.json` dans le dépôt.** Aucune CI n'exécute markdownlint, le
-  réglage au niveau éditeur couvre déjà le besoin sur tous les projets ; y ajouter un fichier
-  aurait demandé une branche et une PR pour un gain nul.
+- **`.markdownlint.json` AJOUTÉ au dépôt — décision inversée en fin de session.** Elle reposait
+  d'abord sur l'idée qu'un réglage d'éditeur suffisait. Faux : ce réglage était posé dans un
+  fichier que les fenêtres DevContext ne lisent pas (cf. annexe). Le fichier de configuration est
+  le seul mécanisme vérifié. Effet mesuré : 11 674 → 125 avertissements, les 125 restants étant
+  tous de vrais défauts d'affichage.
 
-- **MD031 sorti de la branche #330** (`git checkout main -- CLAUDE.md`) : unité de travail
-  distincte de la configuration orthographe. Le correctif reste à refaire.
+- **MD031 sorti de #330 puis corrigé dans #333.** La sortie était juste (unité distincte) ; le
+  correctif a simplement mis deux PR à revenir.
+
+- **Périmètre du correcteur élargi à `docs/`, `prompts/` et `.claude/` (#333)** : 232 fichiers,
+  0 signalement. 744 mots triés, 722 admis, 20 vraies fautes corrigées dans les documents, et
+  **2 corrections annulées** après relecture du contexte — une citation verbatim et un coinage de
+  @thierry dans son propre handoff. Corriger une faute sans lire autour d'elle, c'est réécrire.
 
 ---
 
@@ -131,14 +139,14 @@ tous terminés.
 
 Aucune question ouverte. Toutes les décisions de la session ont été tranchées en séance.
 
-Deux éléments à sa main, non urgents :
+Les deux éléments qui restaient ont été traités dans la même session : l'élargissement du
+périmètre ([#329](https://github.com/thierryvm/ankora/issues/329), clos par #333) et le correctif
+MD031 de `CLAUDE.md`.
 
-- **[#329](https://github.com/thierryvm/ankora/issues/329)** — élargir le périmètre du correcteur
-  à `docs/` (665 signalements) et `prompts/` (281), puis rendre le job CI bloquant. **Dans cet
-  ordre** : poser un garde-fou rouge, c'est apprendre à tout le monde à le contourner.
-- **MD031 dans `CLAUDE.md`** — un bloc de code collé à une liste numérotée, qui ne s'affiche pas
-  correctement. Correctif connu (deux lignes vides), à porter dans la prochaine PR qui touche du
-  Markdown.
+Reste ouvert, non urgent : **rendre le job de vérification orthographique bloquant en CI**. Aucun
+workflow ne l'exécute encore. L'ordre compte — la porte est verte aujourd'hui sur 232 fichiers,
+donc le poser est désormais sans risque, mais c'est un arbitrage de friction qui appartient à
+@thierry.
 
 ---
 
@@ -150,7 +158,7 @@ Deux éléments à sa main, non urgents :
   `Security audit`, `Playwright E2E`, `Playwright E2E (authenticated)`), plus
   `required_conversation_resolution: true`. `Sourcery review` n'est **pas** obligatoire.
 - `npm run lint:use-server` : ✅
-- `npm run spell` : ✅ 8 fichiers, 0 signalement (nouvelle porte)
+- `npm run spell` : ✅ 232 fichiers, 0 signalement (nouvelle porte, élargie en fin de session)
 - Sub-agents : `test-runner` ✅ et `plan-reviewer` ✅ invoqués — mais voir §8, l'ordre était faux.
 - Préflight comptes : **GO** avant chaque opération sortante, sans exception. `ctx` : GO.
 
@@ -213,13 +221,29 @@ l'état DevContext **ne survit pas d'un appel d'outil au suivant** (chaque comma
 préfixe `work perso -NoCd;`), et l'outil Bash n'a aucun accès au module — `gh` y partirait sur le
 compte global de la machine.
 
-### Réglages hors dépôt modifiés
+### Réglages hors dépôt — et une erreur de ma part, corrigée en fin de session
 
-Des réglages ont été posés au niveau de l'éditeur de @thierry, donc **hors du dépôt** et actifs
-sur tous ses projets : configuration du correcteur orthographique (dictionnaire français +
-vocabulaire personnel + exclusion du code) et configuration `markdownlint` (11 674 → 125
-avertissements sur Ankora, en gardant les règles qui signalent un rendu réellement cassé). Ces
-fichiers ne sont pas versionnés ; leur perte n'affecte pas le dépôt, qui est autonome.
+**DevContext lance VS Code avec une installation isolée par contexte** :
+`--user-data-dir F:\CTX\<contexte>\vscode` et `--extensions-dir F:\CTX\<contexte>\vscode-ext`.
+Mesuré sur les processus en cours le 2026-08-08. Conséquences, toutes vérifiées :
+
+- Le fichier `%APPDATA%\Code\User\settings.json` **n'est pas lu** par ces fenêtres. Tout ce que
+  j'y ai posé pendant la session était **inerte**, en silence. Retiré depuis, et remplacé par une
+  note qui explique pourquoi ne rien y mettre.
+- Les réglages qui comptent vivent dans `F:\CTX\<contexte>\vscode\User\settings.json`. C'est là
+  que `cSpell.import` et `markdownlint.config` ont finalement été posés.
+- Le correcteur, son dictionnaire français et `davidanson.vscode-markdownlint` étaient **déjà
+  installés** dans le contexte perso à 12:45, avant toute intervention. Mon installation de 13:45
+  est allée dans `~/.vscode/extensions`, un dossier que ces fenêtres n'utilisent pas : elle n'a
+  servi à rien. Le diagnostic initial « aucun correcteur n'est installé » venait d'une recherche
+  dans le mauvais dossier.
+- Les contextes clients sont **totalement isolés** : rien de ce qui a été fait ici ne les a
+  touchés, et ce n'est pas une opinion — leurs extensions et leurs réglages vivent ailleurs.
+
+**Ce qui a réellement réglé le problème est donc le dépôt lui-même** : `cspell.json` +
+devDependency + `.markdownlint.json`, tous autonomes et vérifiables en ligne de commande. La
+décision de rendre le dépôt indépendant des réglages d'éditeur est la seule qui ait survécu à
+cette découverte — les autres étaient sans effet.
 
 ### Mesures de référence
 
