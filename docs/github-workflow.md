@@ -48,7 +48,7 @@ Via GitHub UI → Settings → Branches → Add rule for `main` :
 - ✅ Dismiss stale pull request approvals when new commits are pushed
 - ✅ Require review from Code Owners
 - ✅ Require status checks to pass before merging
-  - Selectionner `lint`, `typecheck`, `test`, `e2e`, `lighthouse`, `audit`
+  - Sélectionner `lint`, `typecheck`, `test`, `e2e`, `lighthouse`, `audit`
 - ✅ Require conversation resolution before merging
 - ✅ Require signed commits (optionnel mais recommandé)
 - ✅ Require linear history

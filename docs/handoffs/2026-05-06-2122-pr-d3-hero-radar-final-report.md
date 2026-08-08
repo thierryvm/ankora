@@ -163,7 +163,7 @@ Security audit                 pending 0
 - [ ] Vérifier la PR #121 → CI lint/typecheck/test/build verts
 - [ ] Smoke test sur Vercel preview ([https://ankora-...vercel.app/app](https://github.com/thierryvm/ankora/pull/121) — login compte test → Bloc 2 visible)
 - [ ] Approuver + squash merge avec **bypass admin** sur Playwright iPhone SE (BUG-iOS-011 connu/accepté)
-- [ ] (optionnel) Décider visuel definitif post-mockups CD#3 → PR-D3-bis ou validation directe
+- [ ] (optionnel) Décider visuel définitif post-mockups CD#3 → PR-D3-bis ou validation directe
 
 ## Pour @thierry (validation post-merge empirique)
 

@@ -83,7 +83,7 @@ Toutes les branches remote restantes hors `main` ont leur PR soit mergée soit c
 "prebuild": "node scripts/build-llms-full.mjs"
 ```
 
-À chaque `npm run build`, le script regénère le fichier avec la date du jour. Le diff initial `2026-05-03 → 2026-05-04` venait d'un build local précédent. Mon propre `npm run build` baseline a re-bumpé à `2026-05-06`. Le diff actuel sera écrasé au prochain build CI.
+À chaque `npm run build`, le script régénère le fichier avec la date du jour. Le diff initial `2026-05-03 → 2026-05-04` venait d'un build local précédent. Mon propre `npm run build` baseline a re-bumpé à `2026-05-06`. Le diff actuel sera écrasé au prochain build CI.
 
 **Décision** : **laisser tel quel, pas de commit, pas de restore.** Le build CI sur la prochaine PR régénère et commit automatiquement (ou ne commit pas — à vérifier dans l'étape `prebuild` du workflow CI). **Pas un blocker.**
 

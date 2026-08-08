@@ -340,7 +340,7 @@ Discriminer via une colonne `template_type` enum ('recurring' | 'installment').
 
 ## Risques
 
-- **Risque 1 — Cohérence amount plan ↔ somme transactions** : si un user édite manuellement le montant d'une échéance, l'invariant `Σ amounts = total_amount` casse. Mitigation : édition d'une échéance individuelle DÉSACTIVÉE côté UI (édition se fait au niveau du plan parent qui regénère les transactions).
+- **Risque 1 — Cohérence amount plan ↔ somme transactions** : si un user édite manuellement le montant d'une échéance, l'invariant `Σ amounts = total_amount` casse. Mitigation : édition d'une échéance individuelle DÉSACTIVÉE côté UI (édition se fait au niveau du plan parent qui régénère les transactions).
 - **Risque 2 — Pause `paused_until` non implémentée V1** : champ DB existe mais pas d'UI. Risque qu'un développeur futur l'expose sans prendre en compte la complexité du décalage des échéances. Mitigation : commentaire SQL explicite + ADR-017 sous-règle "pause = V1.1".
 - **Risque 3 — Direction `in` (restitutions) sous-utilisée** : peut-être un cas rare, risque de complexité inutile. Mitigation : garder le champ direction en DB mais ne pas le mettre en avant dans l'UI V1 (defaults sur `out`). Si feedback user, on le sortira en V1.1.
 - **Risque 4 — Limite `installments_count` 60 mois** : un crédit immobilier peut aller jusqu'à 360 mois (30 ans). Mitigation : V1 limite 60 mois (5 ans) — couvre 95% des cas (apurements fiscaux, plans accordés). V1.1 si feedback : étendre à 360 (mais générer 360 transactions est lourd, alternative = stocker juste le plan sans transactions et calculer à la volée).

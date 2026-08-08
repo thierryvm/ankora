@@ -136,7 +136,7 @@ Le matcher actuel ([`src/proxy.ts:136`](../../src/proxy.ts)) est déjà très pr
 
 | Gate                      | Résultat                                                                                                                                                                |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run lint`            | ✅ 0 erreurs, 6 warnings (toutes pré-existantes, non introduites par cette PR — `_path`, `_locale` unused, console statements legitimes)                                |
+| `npm run lint`            | ✅ 0 erreurs, 6 warnings (toutes pré-existantes, non introduites par cette PR — `_path`, `_locale` unused, console statements légitimes)                                |
 | `npm run lint:use-server` | ✅ Pass (`setLocaleAction` reste async-only)                                                                                                                            |
 | `npm run typecheck`       | ✅ Pass (0 erreur tsc strict)                                                                                                                                           |
 | `npm run test` (Vitest)   | ✅ **1197/1197** tests OK (99 fichiers). +3 nouveaux specs no-refresh contract, +1 update Hero drift.                                                                   |
@@ -196,7 +196,7 @@ Si **n'importe lequel** de ces points échoue, NE PAS merger — re-challenge @c
 
 @cowork : après merge + smoke test @thierry, mesurer le switch locale en prod via Chrome DevTools Performance trace (mobile iPhone simulation + throttling 4G slow). **Critère GO/NO-GO** pour PR-BETA-2bis :
 
-- **NO-GO** : si propagation < 1 s mesurée P95 et drawer reste ouvert → close THI-266 + TICKET 4 + TICKET 7, passer à PR-BETA-3 (THI-267 Capacité tryptique).
+- **NO-GO** : si propagation < 1 s mesurée P95 et drawer reste ouvert → close THI-266 + TICKET 4 + TICKET 7, passer à PR-BETA-3 (THI-267 Capacité triptyque).
 - **GO** : si propagation > 1 s OU cold render LCP > 2.5 s → ouvrir PR-BETA-2bis sur le scope §3.3 (court-circuit `request.ts` Supabase).
 
 Mesure suggérée : 5 essais répétés sur 3 device profiles (iPhone 14, Pixel 7, MacBook Air M1) après cookie clear, avec capture du waterfall réseau.
@@ -207,7 +207,7 @@ Mesure suggérée : 5 essais répétés sur 3 device profiles (iPhone 14, Pixel 
 
 Quand PR-BETA-2 mergée + CI verte + Sourcery silent + smoke iPhone @thierry OK → handoff @cowork pour **PR-BETA-6 (THI-277 Bottom Tab Bar mobile + sheet "Plus")**, #3 / 5 du sprint Beta (ordre actualisé 24/05 post-incidents). J-17 avant Beta 10 juin (cible).
 
-Note ordre original (PR-BETA-3 Capacité tryptique → PR-BETA-4 Dashboard 3 couches → PR-BETA-5+7 Landing) maintenu après PR-BETA-6.
+Note ordre original (PR-BETA-3 Capacité triptyque → PR-BETA-4 Dashboard 3 couches → PR-BETA-5+7 Landing) maintenu après PR-BETA-6.
 
 ---
 

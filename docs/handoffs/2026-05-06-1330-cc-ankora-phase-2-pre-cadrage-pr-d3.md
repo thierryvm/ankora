@@ -253,7 +253,7 @@ Sync ROADMAP.md dans une mini-PR `chore/roadmap-sync-2026-05-06` avec les 4 fixe
 1. **`.claude/settings.local.json` désormais NON-IGNORÉ** (commit @cowork 81f671e a supprimé ce pattern). Risque : commit accidentel du model pinning local + autres settings sensibles user. **Suggestion** : ré-ajouter dans `.gitignore` si non-intentionnel. Si intentionnel : migrer le pinning Opus 4.7 vers `.claude/settings.json` (committed, partagé entre agents) plutôt que `.local.json`.
 2. **`prompts/` désormais NON-IGNORÉ** (idem, supprimé du gitignore). Ce dossier est listé dans CLAUDE.md projet ligne `prompts/PR-{X}-…md`. Devrait peut-être être committed pour traçabilité ? À arbitrer @cowork.
 3. **`docs/ROADMAP.md` flag fantôme** : `git status` initial montrait `M docs/ROADMAP.md` sans diff content (drift d'index). Résolu par `git update-index --really-refresh`. Pas une vraie modif.
-4. **`public/llms-full.txt`** : artefact `prebuild` regénéré à chaque build local. Reflète la date du jour. À chaque session @cc-ankora qui exécute `npm run build`, ce fichier sera M dans le WT. Sans impact (CI build le regénère).
+4. **`public/llms-full.txt`** : artefact `prebuild` régénéré à chaque build local. Reflète la date du jour. À chaque session @cc-ankora qui exécute `npm run build`, ce fichier sera M dans le WT. Sans impact (CI build le régénère).
 
 ---
 
@@ -340,7 +340,7 @@ git diff --stat (post-mission) :
  public/llms-full.txt | 2 +-
 ```
 
-→ Aucune modif `src/`. Seul artefact `prebuild` regénéré (cf. §side-notes).
+→ Aucune modif `src/`. Seul artefact `prebuild` régénéré (cf. §side-notes).
 
 ---
 

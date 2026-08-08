@@ -1,7 +1,7 @@
-# PR-BETA-3 — Capacité d'Épargne Réelle tryptique (ADR-009 amendement)
+# PR-BETA-3 — Capacité d'Épargne Réelle triptyque (ADR-009 amendement)
 
-**Linear** : THI-267 — PR-BETA-3 Capacité tryptique ADR-009 amendement 09/05
-**Branch** : `feat/pr-beta-3-capacite-tryptique-adr-009`
+**Linear** : THI-267 — PR-BETA-3 Capacité triptyque ADR-009 amendement 09/05
+**Branch** : `feat/pr-beta-3-capacite-triptyque-adr-009`
 **Date** : 2026-05-26
 **Pilote** : @cc-ankora (Claude Opus 4.7)
 **Demandeur** : @thierry via @cowork prompt — ADR-009 amendement 2026-05-09 non implémenté en prod après reset stratégique 24/05.
@@ -126,7 +126,7 @@ Hypothèse @cowork "migration non appliquée" éliminée : `supabase migration l
 - Action throws → toast error + drawer stays open + pas de `router.refresh`
 - `{ ok: false, errorCode }` → toast message traduit (pas raw errorCode)
 
-`e2e/dashboard-capacite-tryptique.spec.ts` — toast success assert + Toaster mount assert.
+`e2e/dashboard-capacite-triptyque.spec.ts` — toast success assert + Toaster mount assert.
 
 ### Quality gates hotfix ✅
 
@@ -158,7 +158,7 @@ Hypothèse @cowork "migration non appliquée" éliminée : `supabase migration l
 
 ## Pourquoi cette PR
 
-ADR-009 amendement 2026-05-09 (validé @thierry, statut canonique) impose le passage du KPI "Capacité d'Épargne Réelle" d'un **waterfall opaque** (Revenus / Effort / Plafond → big number) à un **tryptique pédagogique 3 concepts** :
+ADR-009 amendement 2026-05-09 (validé @thierry, statut canonique) impose le passage du KPI "Capacité d'Épargne Réelle" d'un **waterfall opaque** (Revenus / Effort / Plafond → big number) à un **triptyque pédagogique 3 concepts** :
 
 1. **Reste disponible** = Revenus − Effort financier lissé (avant la vie courante)
 2. **Reste à vivre** = budget vie courante saisi par l'user (ajustable mois par mois — R-10)
@@ -207,7 +207,7 @@ Nouveau `AuditEvent.WORKSPACE_RESTE_A_VIVRE_UPDATED = 'workspace.reste_a_vivre_u
 
 ### 4. Refactor `CapaciteEpargneCard`
 
-`src/components/dashboard/CapaciteEpargneCard.tsx` — refonte tryptique :
+`src/components/dashboard/CapaciteEpargneCard.tsx` — refonte triptyque :
 
 ```
 ┌─────────────────────────────────────────────────┐
@@ -279,7 +279,7 @@ Test parity exhaustif (assert présence + placeholders attendus) intégré au te
 ### E2E Playwright
 
 - `dashboard-cockpit-bloc2.spec.ts` mis à jour (waterfall → sub-stats, `rose` → `text-danger`)
-- `dashboard-capacite-tryptique.spec.ts` (nouveau) — 3 tests : fixture @thierry (3 sub-stats avec bonnes valeurs), drawer open + override persisté, mobile viewport 375×667 stack vertical
+- `dashboard-capacite-triptyque.spec.ts` (nouveau) — 3 tests : fixture @thierry (3 sub-stats avec bonnes valeurs), drawer open + override persisté, mobile viewport 375×667 stack vertical
 
 Les E2E sont gated par `adminClientOrNull()` (skip si pas de Supabase remote configuré — pattern repo standard).
 
@@ -302,7 +302,7 @@ npm run build           ✅ Production build OK
 | Sujet                             | Décision                                                                                               | Justification                                                                                                                                                                                                                                          |
 | --------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Signature `logAuditEvent`         | Vraie API repo `(event: AuditEventType, ctx, metadata?)` — pas la signature obsolète du prompt @cowork | Le pattern dans `settings.ts` et 16 autres call-sites le confirme. Le prompt @cowork avait une signature périmée                                                                                                                                       |
-| Suppression du waterfall          | Retiré (pas conservé en expandable)                                                                    | Redondant : `Reste disponible = Revenus − Effort` est déjà le sub-stat #1 + la card `EffortFinancierCard` voisine montre le détail effort. Garder les deux noyait l'utilisateur. ADR-009 amendement file le tryptique en remplacement, pas en addition |
+| Suppression du waterfall          | Retiré (pas conservé en expandable)                                                                    | Redondant : `Reste disponible = Revenus − Effort` est déjà le sub-stat #1 + la card `EffortFinancierCard` voisine montre le détail effort. Garder les deux noyait l'utilisateur. ADR-009 amendement file le triptyque en remplacement, pas en addition |
 | Drawer dédié vs `EditDrawer` atom | Dédié (`AjusterResteAVivreDrawer.tsx`)                                                                 | L'atom `EditDrawer` ne modèle pas le helper text adaptatif par ratio — c'est un Field renderer générique. Forker l'atom serait pollution. Un seul cas d'usage justifie un composant dédié                                                              |
 | Reset state du draft              | Synchrone dans `openDrawer()`, pas dans `useEffect`                                                    | React 19 + `react-hooks/set-state-in-effect` lint rule bloque l'effet. Le reset au moment du clic trigger est équivalent et idiomatique                                                                                                                |
 | `resteAVivre` source              | `workspace_settings.reste_a_vivre_default` + overrides JSONB                                           | Le prompt @cowork le demande explicitement, séparé de `workspaces.vie_courante_monthly_transfer`. Concept distinct (budget vie courante ≠ montant transféré). Pour Thierry les deux valent 500€ donc UX identique pour lui                             |
@@ -372,16 +372,16 @@ Si le diff ne montre que le retrait des commentaires "PR-BETA-3 patched manually
 - `src/lib/actions/__tests__/reste-a-vivre.test.ts`
 - `src/components/dashboard/AjusterResteAVivreDrawer.tsx`
 - `src/components/dashboard/__tests__/AjusterResteAVivreDrawer.test.tsx`
-- `e2e/dashboard-capacite-tryptique.spec.ts`
+- `e2e/dashboard-capacite-triptyque.spec.ts`
 
 ### Modifiés (10)
 
 - `src/lib/domain/cockpit/capacite-epargne-reelle.ts` — exposition `resteDisponible` + renaming
-- `src/lib/domain/cockpit/__tests__/capacite-epargne-reelle.test.ts` — +6 tests tryptique
+- `src/lib/domain/cockpit/__tests__/capacite-epargne-reelle.test.ts` — +6 tests triptyque
 - `src/lib/data/workspace-snapshot.ts` — SELECT + résolution `resteAVivre`
 - `src/lib/security/audit-log.ts` — `WORKSPACE_RESTE_A_VIVRE_UPDATED` + `period_yyyymm` safe key
 - `src/lib/supabase/types.ts` — patch manuel `workspace_settings` row/insert/update
-- `src/components/dashboard/CapaciteEpargneCard.tsx` — refonte complète tryptique
+- `src/components/dashboard/CapaciteEpargneCard.tsx` — refonte complète triptyque
 - `src/components/dashboard/__tests__/CapaciteEpargneCard.test.tsx` — réécriture tests
 - `src/app/[locale]/app/page.tsx` — call-site `CapaciteEpargneCard` (props renommées)
 - `e2e/dashboard-cockpit-bloc2.spec.ts` — mise à jour waterfall → sub-stats, rose → danger

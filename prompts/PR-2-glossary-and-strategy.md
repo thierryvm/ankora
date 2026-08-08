@@ -350,7 +350,7 @@ Pour chaque locale, identifier un reviewer natif et :
 
 1. Partager le fichier `messages/{locale}.json` + captures d'écran du site.
 2. Lui demander de relever : erreurs grammaticales, faux amis, tournures maladroites, terminologie métier.
-3. Mergeer les corrections dans un commit `fix(i18n): native review {locale}`.
+3. Merger les corrections dans un commit `fix(i18n): native review {locale}`.
 
 ### 8.3 Outillage recommandé
 

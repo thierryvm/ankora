@@ -40,7 +40,7 @@ Read the relevant files BEFORE writing the spec. Do NOT infer from generic archi
 
 Cite file paths with line numbers in your spec. Example: "Bug source: `src/components/dashboard/AjusterResteAVivreDrawer.tsx:49` — `initialResteAVivre.toFixed(2)` produces '500.00' for integer values."
 
-Reference: `Athenaeum/10_Projects/ankora/conventions/2026-05-25-code-verify-before-prescribe.md` (cross-project asymetry incident).
+Reference: `Athenaeum/10_Projects/ankora/conventions/2026-05-25-code-verify-before-prescribe.md` (cross-project asymmetry incident).
 
 ### 3. Phase 0 checklist
 

@@ -133,7 +133,7 @@ export function capaciteEpargneReelle(input: {
 
 - ❌ **Complexité conceptuelle pour novices** : un user habitué à Monarch/YNAB peut être surpris de voir "Capacité d'Épargne -250 €" alors que son compte courant affiche +800 € (parce que la facture annuelle de 1200 € arrive dans 4 mois). Mitigation : tooltip explicatif sur la card + onboarding pédagogique + lien vers `/glossaire/capacite-epargne-reelle`.
 - ❌ **Sensibilité aux inputs incorrects** : si l'utilisateur oublie de saisir une charge périodique, le KPI surestime sa capacité. Mitigation : nudge onboarding "Tu as déclaré X charges. Es-tu sûr de ne pas en avoir oublié ?" (PR-D6).
-- ❌ **Édge case revenus = 0** : KPI massivement négatif. Couverte côté UX par un état "Configure ton revenu pour calibrer ton cockpit" si `revenus = 0`.
+- ❌ **Edge case revenus = 0** : KPI massivement négatif. Couverte côté UX par un état "Configure ton revenu pour calibrer ton cockpit" si `revenus = 0`.
 - ❌ **Précision décimale critique** : `montant.dividedBy(12)` peut donner des décimales infinies (4.4166666...). On utilise Decimal.js avec arrondi à 2 décimales pour l'affichage, mais on garde la précision interne pour les calculs cumulés.
 
 ---

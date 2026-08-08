@@ -324,7 +324,7 @@ Resend / Postmark pour rappel mensuel.
    - `importFromCsv(file, source)` avec sanitization OWASP + parser dispatch
 4. **Cron Edge Function** `tick_recurring_templates` :
    - Schedule `0 6 * * *` (06:00 UTC quotidien)
-   - Genère instances `pending` à J-7
+   - Génère instances `pending` à J-7
    - Bascule `pending → presumed_paid` à J+3 (sauf Strict mode)
 5. **UI** :
    - Onboarding step 2 « Charges récurrentes » (catalogue belge + import CSV)

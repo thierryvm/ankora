@@ -5,7 +5,7 @@
 **Branche** : `feat/thi-192-prochaines-factures`
 **Base** : `origin/main` `aeaa22f` (post PR #172 LocaleSwitcher FR+EN)
 **Référence amont** : [`docs/audits/2026-05-17-thi-192-prochaines-factures-diagnostic.md`](2026-05-17-thi-192-prochaines-factures-diagnostic.md)
-**Linear** : THI-192 — réouvert en `In Progress` ce 19/05 par @thierry (était batch-fermé Done par erreur le 18/05 19:03 UTC, capturé par doctrine "git log before scope")
+**Linear** : THI-192 — rouvert en `In Progress` ce 19/05 par @thierry (était batch-fermé Done par erreur le 18/05 19:03 UTC, capturé par doctrine "git log before scope")
 
 ---
 
@@ -28,7 +28,7 @@ Lu via Linear MCP (`mcp__linear-server__get_issue`) :
 
 ```
 Title  : Ankora PR-D6/D7 — Prochaines factures J-7/14/30 (dashboard cockpit v3 #5)
-Status : In Progress (réouvert 19/05 par @thierry)
+Status : In Progress (rouvert 19/05 par @thierry)
 Labels : Mobile, UX, Feature
 Priority : 3 (Medium) — Essentielle Beta jalon 10/06/2026
 ```
