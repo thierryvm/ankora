@@ -197,18 +197,35 @@ Contrainte : **SVG écrit à la main, aucune bibliothèque de graphiques** (budg
 d'accueil n'a **aucun garde de session** : un utilisateur connecté qui demande `/` y reste,
 sur la page marketing.
 
-**PROPOSÉ**, et c'est le premier chantier parce qu'il est petit et qu'il porte sur 100 % des
-ouvertures :
+**CORRECTION du 8 août 2026, sur vérification.** Une première rédaction de cette section
+proposait un tableau `shortcuts` dans le manifeste « appui long sur l'icône, iOS et Android ».
+**C'est faux pour iOS** : Safari ne supporte pas les raccourcis de manifeste, ni le menu
+contextuel d'une web app installée, et cela reste vrai en 2026. @thierry étant sur iPhone, ce
+raccourci ne lui aurait rien apporté — l'affirmation avait été écrite sans être vérifiée.
 
-- un garde de session sur `/` qui envoie un connecté vers `/app` ;
-- un tableau `shortcuts` dans le manifeste, dont la première entrée mène directement à la
-  saisie de dépense (appui long sur l'icône, iOS et Android).
+**PROPOSÉ**, dans l'ordre décroissant de valeur réelle :
 
-**Attention mesurée** : la landing est la page au budget Lighthouse le plus serré, et le
-commentaire de `redirectIfSignedIn()` explique que le garde n'y a pas été posé pour éviter un
-aller-retour réseau supplémentaire. Le chantier doit donc **mesurer l'effet sur le score**,
-pas le supposer. Si le coût est réel, le garde se pose au niveau du `proxy` plutôt que dans
-la page.
+1. **`start_url: '/app'`** — la seule mesure qui marche sur **iOS et Android**, et la plus
+   simple. L'icône installée mène au cockpit, plus à la vitrine. Elle supprime à elle seule le
+   geste superflu sur les deux intentions quotidiennes.
+   Un visiteur non connecté est alors renvoyé vers `/login` par les gardes existants, ce qui
+   est le comportement attendu d'une application installée.
+2. **Un garde de session sur `/`** — pour qui arrive par le web plutôt que par l'icône.
+3. **Un tableau `shortcuts`** — **bonus Android uniquement**, à documenter comme tel. Il exige
+   par ailleurs qu'une URL puisse ouvrir la feuille de saisie, ce qui n'existe pas aujourd'hui
+   (cf. ci-dessous).
+
+**MESURÉ — et ça dissout l'objection qui bloquait le point 2.** Le commentaire de
+`redirectIfSignedIn()` explique que le garde n'a pas été posé sur la landing pour éviter un
+aller-retour réseau sur la page au budget Lighthouse le plus serré. Or `MktNav` **appelle déjà**
+`getOptionalUser()` (`MktNav.tsx:36`), et `src/lib/supabase/server.ts` ne mémoïse rien : il n'y
+a aucun `cache()`. Mémoïser la lecture par requête rend donc le garde **gratuit** — il réutilise
+l'appel que la landing paie déjà.
+
+**MESURÉ — la feuille de saisie n'a aucune URL.** Elle est pilotée par un `useState` dans
+`BottomTabBar.tsx` (`isAddExpenseOpen`, ligne 147). Lui donner une URL est un préalable au
+point 3, et la forme retenue doit rester un paramètre de recherche sur `/app` — surtout pas une
+route dédiée, qui ferait de la capture une destination et contredirait le §2.
 
 ---
 
