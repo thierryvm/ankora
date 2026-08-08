@@ -40,7 +40,6 @@ const HEADER_NAV_LABELS: Record<
   | 'nav.charges'
   | 'nav.commitments'
   | 'nav.expenses'
-  | 'nav.simulator'
   | 'nav.settings'
 > = {
   cockpit: 'nav.dashboard',
@@ -48,7 +47,6 @@ const HEADER_NAV_LABELS: Record<
   bills: 'nav.charges',
   commitments: 'nav.commitments',
   expenses: 'nav.expenses',
-  simulate: 'nav.simulator',
   settings: 'nav.settings',
 };
 

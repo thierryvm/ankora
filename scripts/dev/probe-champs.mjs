@@ -41,9 +41,13 @@ console.log(
   ),
 );
 
-await page.goto(`${BASE}/app/simulator`, { waitUntil: 'networkidle' });
+// Route `/app/simulator` supprimée le 2026-08-08 — le calculateur ne s'atteint
+// plus que par le tiroir du cockpit.
+await page.goto(`${BASE}/app`, { waitUntil: 'networkidle' });
+await page.getByTestId('simulator-drawer-trigger').click();
+await page.getByTestId('simulator-drawer').waitFor({ state: 'visible', timeout: 10000 });
 await page.waitForTimeout(600);
-console.log('\n===== /app/simulator — options de charge =====');
+console.log('\n===== tiroir simulateur — options de charge =====');
 console.log(
   JSON.stringify(
     await page.evaluate(() => {

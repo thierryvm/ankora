@@ -12,7 +12,10 @@ const ECRANS = [
   ['10-charges', '/app/charges'],
   ['11-depenses', '/app/expenses'],
   ['12-engagements', '/app/commitments'],
-  ['13-simulateur', '/app/simulator'],
+  // `13-simulateur` retiré le 2026-08-08 : la route `/app/simulator` a été
+  // supprimée, le simulateur n'existe plus que dans le tiroir du cockpit. Le
+  // laisser aurait capturé le cockpit sous le nom « simulateur » — un artefact
+  // faux, plus trompeur qu'une capture manquante.
   ['14-comptes', '/app/accounts'],
   ['15-parametres', '/app/settings'],
 ];

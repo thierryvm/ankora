@@ -4,7 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import { SimulatorClient, type RawCharge } from '@/app/[locale]/app/simulator/SimulatorClient';
+import { SimulatorClient, type RawCharge } from '@/components/simulator/SimulatorClient';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -23,9 +23,16 @@ type Props = {
 /**
  * THI-195 — What-if simulator drawer (3rd essential Beta cockpit section).
  *
- * Surfaces the existing `SimulatorClient` calculator in-page from the
- * dashboard, without navigating away. The standalone `/app/simulator`
- * route is preserved as a fallback (SEO + direct link).
+ * Surfaces the `SimulatorClient` calculator in-page from the dashboard,
+ * without navigating away.
+ *
+ * **C'est désormais le SEUL accès au simulateur.** La route autonome
+ * `/app/simulator` — décrite ici comme un repli conservé pour le SEO et le lien
+ * direct — a été supprimée le 8 août 2026 : le simulateur n'est pas un lieu où
+ * l'on va, c'est une question qu'on pose à une situation. L'ancienne URL
+ * redirige vers le cockpit (`next.config.ts`), et le calculateur ne rend plus
+ * aucun titre de premier niveau : ce tiroir porte le sien.
+ * Cf. `docs/superpowers/specs/2026-08-08-refonte-app-architecture-cible.md` §2.1.
  *
  * Home-grown drawer pattern (no `vaul` dependency — budget 0 €), mirroring
  * the proven idiom of `AjusterResteAVivreDrawer` / `ChargeEditDrawer`:
@@ -197,7 +204,6 @@ export function SimulatorDrawer({ charges, revenus, engagementsMensuels }: Props
                 result card is never hidden behind it on a full-screen PWA. */}
             <div className="flex-1 overflow-y-auto px-5 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
               <SimulatorClient
-                hideHeader
                 charges={charges}
                 revenus={revenus}
                 engagementsMensuels={engagementsMensuels}

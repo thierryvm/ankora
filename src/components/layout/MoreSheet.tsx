@@ -86,12 +86,11 @@ export type MoreSheetProps = {
  */
 const SHEET_LABELS: Record<
   AppDestinationId,
-  'accounts' | 'settings' | 'commitments' | 'simulate' | 'cockpit' | 'bills' | 'expenses'
+  'accounts' | 'settings' | 'commitments' | 'cockpit' | 'bills' | 'expenses'
 > = {
   accounts: 'accounts',
   settings: 'settings',
   commitments: 'commitments',
-  simulate: 'simulate',
   cockpit: 'cockpit',
   bills: 'bills',
   expenses: 'expenses',

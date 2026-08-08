@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 
-import messages from '../../../../../../messages/fr-BE.json';
+import messages from '../../../../messages/fr-BE.json';
 import { money } from '@/lib/domain';
 import { formatCurrency } from '@/lib/i18n/formatters';
 import { SimulatorProjection } from '../SimulatorProjection';

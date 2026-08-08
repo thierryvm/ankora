@@ -150,9 +150,14 @@ the auditable surface is `messages/` **plus** `.claude/agents/`, `.claude/skills
 ### What-if Simulator v2 (Track B, locked 2026-05-30)
 
 The simulator is a **decision tool**, not a planning toy. The drawer
-(`src/components/dashboard/SimulatorDrawer.tsx`) wraps the shared
-`SimulatorClient` (`src/app/[locale]/app/simulator/SimulatorClient.tsx`) — both
-surfaces must stay coherent.
+(`src/components/dashboard/SimulatorDrawer.tsx`) wraps
+`SimulatorClient` (`src/components/simulator/SimulatorClient.tsx`).
+
+> **Updated 2026-08-08.** The standalone `/app/simulator` route was removed and
+> the client moved out of the route folder: the drawer is now the **only**
+> surface. There is no longer a second surface to stay coherent with — audit the
+> drawer alone, and treat any reappearance of a `<h1>` inside the calculator as a
+> defect (the drawer owns the heading).
 
 > ⚠️ **Corrected 2026-07-29.** The two checks below required the labels
 > « Réserve libre » and « Reste disponible » — both **banned by ADR-035**, which
