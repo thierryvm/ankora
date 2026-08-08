@@ -1,0 +1,31 @@
+{
+  "//": "Configuration markdownlint du depot. Le moteur decouvre ce fichier en remontant l arborescence depuis le document edite. C est le SEUL mecanisme verifie : le reglage `markdownlint.config` de VS Code est reste sans effet, aucune extension installee ne le declarant (mesure le 2026-08-08).",
+
+  "//ligne-de-partage": "On GARDE ce qui casse le rendu pour de vrai, on fait taire ce qui releve du gout. Releve du 2026-08-08 : 11 674 avertissements sur le depot, dont 10 954 pour la seule longueur de ligne. Un linter qui crie autant n est plus lu, donc il ne protege plus rien. Avec ce fichier : 125, tous de vrais defauts d affichage.",
+
+  "//garde": "Rendu casse pour de vrai. MD031 a detecte un bloc de code colle a une liste numerotee dans CLAUDE.md, qui ne s affichait pas.",
+  "MD031": true,
+  "MD032": true,
+  "MD022": true,
+  "MD018": true,
+  "MD037": true,
+  "MD038": true,
+
+  "//taire": "Style delibere de ce depot, pas des erreurs.",
+  "//MD013": "Longueur de ligne : la prose de doctrine est longue par choix.",
+  "MD013": false,
+  "//MD040": "Langage des blocs de code : la doc colle des sorties brutes de commandes, qui n en ont pas.",
+  "MD040": false,
+  "//MD036": "Gras comme sous-titre : usage assume dans tout CLAUDE.md.",
+  "MD036": false,
+  "//MD024": "Titres repetes : normal dans un journal, un rapport ou un handoff.",
+  "MD024": false,
+  "//MD041": "Pas de titre H1 en premiere ligne : les fichiers d index n en ont pas.",
+  "MD041": false,
+  "//MD034": "URLs nues : lisibles telles quelles, et NOTICE est genere.",
+  "MD034": false,
+  "MD060": false,
+  "MD029": false,
+  "MD033": false,
+  "MD026": false
+}
