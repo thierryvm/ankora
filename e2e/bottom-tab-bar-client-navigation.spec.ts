@@ -13,10 +13,16 @@ const admin = adminClientOrNull();
  * que Next ne re-rend pas en navigation client. La décision restait donc figée
  * sur la valeur du premier chargement, pour toute la vie du document.
  *
- * Le manifeste porte `start_url: '/'`, une route EXCLUE. L'application installée
- * démarrait donc toujours sans barre ; le seul chemin vers le cockpit est un
- * `<Link>` ; et en `standalone`, iOS n'offre aucun geste qui charge un nouveau
- * document. **La barre ne pouvait structurellement jamais apparaître.**
+ * Le manifeste portait alors `start_url: '/'`, une route EXCLUE. L'application
+ * installée démarrait donc toujours sans barre ; le seul chemin vers le cockpit
+ * est un `<Link>` ; et en `standalone`, iOS n'offre aucun geste qui charge un
+ * nouveau document. **La barre ne pouvait structurellement jamais apparaître.**
+ *
+ * `start_url` vaut `/app` depuis le 8 août 2026. Cette spec garde tout son sens :
+ * elle prouve que la barre apparaît en navigation CLIENT depuis une page
+ * publique, ce que le nouveau point de départ ne couvre pas. Y substituer un
+ * `goto('/app')` sous prétexte que la PWA y démarre désormais supprimerait la
+ * preuve sans faire baisser aucun chiffre.
  *
  * Aucune spec ne pouvait le voir : `navigation-reachable.spec.ts` fait
  * `page.goto()` avant de mesurer, et un `goto` charge un document — ce qui
