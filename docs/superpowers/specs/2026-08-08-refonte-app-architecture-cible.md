@@ -212,16 +212,106 @@ la page.
 
 ---
 
-## 5. Ce que ce document ne tranche pas
+## 5. Les trois questions ouvertes, tranchées
 
-- **OUVERT** — le nom de la destination fusionnée. « Engagements » est le terme du domaine,
-  mais c'est du jargon pour la cible visée. À arbitrer avec @thierry, et à confronter au
-  vocabulaire que Fable 5 retiendra sur la page d'accueil : les deux doivent parler pareil.
-- **OUVERT** — la fusion des notions `charges` et `commitments` dans le schéma. ADR à
-  ouvrir, alimenté par la refonte, décidé plus tard et dans une session dédiée.
-- **OUVERT** — le sort des trois soldes saisis à la main. Ils remontent dans le cockpit, mais
-  leur forme (une carte, trois lignes, un seul champ ?) dépend du langage visuel.
-- **HORS PÉRIMÈTRE** — le langage visuel lui-même. Il vient de la session Fable 5.
+@thierry a délégué ces arbitrages le 8 août 2026 : « je n'ai pas vraiment de réponses, je te
+laisse challenger et décider ». Voici les décisions et ce qui les fonde.
+
+### 5.1 Le nom de la destination fusionnée
+
+**MESURÉ — le vocabulaire actuel est déjà incohérent**, et c'est lui qui tranche :
+
+| Surface                  | Mot employé                                          |
+| ------------------------ | ---------------------------------------------------- |
+| Onglet de `/app/charges` | **« Factures »**                                     |
+| Titre de la même page    | **« Mes charges »**                                  |
+| Page `/app/commitments`  | « Crédits, échéanciers et **factures ponctuelles** » |
+| Page `/app/expenses`     | « Les **sorties** hors charges récurrentes »         |
+
+Trois mots pour deux notions, et « factures » désigne déjà **les deux côtés** de la frontière
+qu'on veut supprimer. Deux candidats tombent d'eux-mêmes :
+
+- **« Sorties »** est éliminé : le produit l'a déjà réservé aux dépenses. Le reprendre ici
+  créerait la collision qu'on cherche à défaire.
+- **« À payer »** est éliminé : la destination montre aussi ce qui est **déjà payé** ce
+  mois-ci, avec sa date. L'étiquette mentirait sur la moitié de son contenu.
+
+**MESURÉ** : les boutons de la barre d'onglets font 78 × 48 px, et les libellés actuels
+tiennent en 7 à 8 caractères (`Cockpit`, `Factures`, `Dépenses`). **NON MESURÉ** : qu'un
+libellé de 11 caractères comme « Engagements » y tienne sans se couper. C'est un risque, pas
+un fait — mais c'est une raison de plus de préférer un mot déjà éprouvé à cet endroit.
+
+**DÉCIDÉ.**
+
+| Élément          | Valeur                                                                                |
+| ---------------- | ------------------------------------------------------------------------------------- |
+| Libellé d'onglet | **« Factures »** — inchangé, donc zéro réapprentissage                                |
+| Titre de la page | **« Mes factures et crédits »**                                                       |
+| Sous-titre       | Ce qui partira de ton compte, régulier ou à échéances — avec la date de chaque sortie |
+| Groupe 1         | **« Sans date de fin »**                                                              |
+| Groupe 2         | **« Avec une date de fin »** — avec l'échéance en cours et le restant dû              |
+
+Le raisonnement tient en une phrase : **l'étiquette reste simple, le titre enseigne.**
+« Factures » est le mot que les gens emploient, y compris de travers pour un crédit ; le titre
+de page rétablit la précision au premier contact, ce qui est exactement la règle qu'on s'est
+donnée pour une cible peu habituée.
+
+Et les noms de groupes disent la **vraie** différence — celle de l'arithmétique — sans employer
+un seul mot de jargon. C'est aussi ce qui rend visible la seule information qui compte sur une
+dette : sa fin.
+
+> **Conséquence** : ce nommage doit être confronté à celui que retiendra la session Fable 5 sur
+> la page d'accueil. Deux surfaces d'un même produit ne peuvent pas nommer différemment la même
+> chose.
+
+### 5.2 Les trois soldes saisis à la main
+
+**MESURÉ.** `public.accounts` porte déjà `updated_at timestamptz not null default now()`, avec
+un trigger `accounts_touch` qui le met à jour à chaque écriture
+(`20260417000004_three_accounts_model.sql`). **La date existe déjà : aucune migration.**
+
+**DÉCIDÉ.** Les trois soldes rejoignent la section « Mes comptes » du cockpit — là où ils
+s'affichent déjà — et s'éditent sur place. Chaque ligne porte **la date de sa dernière
+saisie** : « saisi le 3 août ».
+
+Le motif n'est pas esthétique. La page actuelle le dit elle-même : « les soldes sont saisis à
+la main : Ankora ne les met pas à jour tout seul ». Un nombre que l'application ne peut pas
+vérifier, affiché sans date, est un nombre auquel on croit sans raison. La règle du projet le
+dit déjà pour les échéances de dette :
+
+> l'affichage porte la date de l'action, jamais un simple état : **une date se vérifie, une
+> coche se croit.**
+
+Elle s'applique ici mot pour mot. Un solde de trois mois se signale alors tout seul.
+
+La **forme** (une carte de trois lignes, ou trois lignes dans une carte) dépend du langage
+visuel et reste ouverte — mais elle ne bloque rien : la décision porte sur _quoi_ afficher.
+
+### 5.3 L'ADR de fusion des notions dans le schéma
+
+**DÉCIDÉ : il reste ouvert — mais avec un déclencheur écrit**, parce qu'un ADR sans
+déclencheur n'est pas une décision différée, c'est une décision oubliée.
+
+**Le déclencheur.** Après la livraison du chantier 5, @thierry utilise l'écran fusionné
+pendant **un mois complet** — assez pour qu'y tombent au moins une charge récurrente et une
+échéance de crédit. Une seule question tranche ensuite :
+
+> Les deux groupes t'ont-ils **aidé à trouver** quelque chose, ou as-tu dû **réfléchir au
+> groupe** avant de chercher ?
+
+- « Ils m'ont aidé » → la séparation du modèle est justifiée. **L'ADR se ferme en “aucun
+  changement”**, et on cesse d'y penser.
+- « J'ai dû réfléchir » → les notions fusionnent, dans une session dédiée, avec migration et
+  revue — jamais dans une PR d'interface.
+
+C'est le seul protocole qui produit une décision fondée : aujourd'hui, la question ne peut être
+tranchée que par intuition, et une migration décidée par intuition est le plus mauvais achat
+possible pour ce projet.
+
+### 5.4 Ce qui reste hors périmètre
+
+- **HORS PÉRIMÈTRE** — le langage visuel. Il vient de la session Fable 5 et descend ensuite
+  dans l'application.
 
 ---
 
