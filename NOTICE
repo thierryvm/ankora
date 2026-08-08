@@ -30,7 +30,7 @@ This file lists all open-source and third-party dependencies used in this projec
 | `date-fns` | 4.1.0 | MIT |
 | `decimal.js` | 10.6.0 | MIT |
 | `lucide-react` | 1.8.0 | ISC |
-| `nanoid` | 5.1.9 | MIT |
+| `nanoid` | 5.1.16 | MIT |
 | `next` | 16.2.11 | MIT |
 | `next-intl` | 4.11.0 | MIT |
 | `pino` | 10.3.1 | MIT |
