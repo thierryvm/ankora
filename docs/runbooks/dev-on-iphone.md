@@ -175,7 +175,7 @@ Les bugs détectés sont à reporter via `mobile-ios-auditor` ou en note PR.
 
 - [ ] Refresh la page (swipe down depuis le top de Safari) → toujours
       authentifié
-- [ ] Fermer Safari → réouvrir → session toujours active (cookies
+- [ ] Fermer Safari → rouvrir → session toujours active (cookies
       httpOnly OK)
 
 ---

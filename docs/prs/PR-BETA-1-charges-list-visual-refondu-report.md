@@ -5,7 +5,7 @@
 > **Auteur** : @cc-ankora (Claude Opus 4.7, pinné).
 > **PR** : [#179](https://github.com/thierryvm/ankora/pull/179) sur branche `feat/beta-1-charges-list-visual`.
 > **Linear** : [THI-265](https://linear.app/thierryvm/issue/THI-265/) → à passer "Done" après merge.
-> **Sprint Beta** : 1/5 (suite : THI-266 i18n Phase B, THI-267 Capacité tryptique, THI-268 Dashboard 3 couches, THI-269 Auth-CTA + landing).
+> **Sprint Beta** : 1/5 (suite : THI-266 i18n Phase B, THI-267 Capacité triptyque, THI-268 Dashboard 3 couches, THI-269 Auth-CTA + landing).
 
 ---
 

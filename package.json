@@ -17,7 +17,7 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "lint:use-server": "node scripts/lint-use-server.mjs",
-    "spell": "cspell \"*.md\" \"messages/*.json\" --no-progress",
+    "spell": "cspell \"*.md\" \"docs/**/*.md\" \"prompts/**/*.md\" \".claude/**/*.md\" \"messages/*.json\" --no-progress",
     "preflight": "node --env-file-if-exists=.env.local scripts/preflight-accounts.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

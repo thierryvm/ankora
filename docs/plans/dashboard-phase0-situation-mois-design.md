@@ -19,7 +19,7 @@ TypeScript strict · `decimal.js` (domaine pur) · Next.js 16 Server Components 
 
 ## 1. Vocabulaire (verrouillé — vocab produit existant adopté)
 
-Décision 2026-06-02 après ground-truth de `CapaciteEpargneCard` (qui est **déjà** un tryptique avec ce vocabulaire + un drawer d'édition). On **n'invente rien** et on **ne renomme rien** : on réutilise les mots établis pour préserver la cohérence produit (carte Capacité + simulateur disent déjà ces mots).
+Décision 2026-06-02 après ground-truth de `CapaciteEpargneCard` (qui est **déjà** un triptyque avec ce vocabulaire + un drawer d'édition). On **n'invente rien** et on **ne renomme rien** : on réutilise les mots établis pour préserver la cohérence produit (carte Capacité + simulateur disent déjà ces mots).
 
 | Concept domaine   | Calcul                                        | **Label UI canonique**                               |
 | ----------------- | --------------------------------------------- | ---------------------------------------------------- |

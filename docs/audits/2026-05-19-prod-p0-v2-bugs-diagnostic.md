@@ -216,7 +216,7 @@ Le `mounted` state évite l'hydration mismatch (Portal ne peut pas rendre côté
 
 ## Ordre d'exécution recommandé
 
-1. **Bug #2bis (SW fonts)** — 2 lignes sw.js, plus simple. Débloquage immédiat pour visiteurs avec cache poisoned.
+1. **Bug #2bis (SW fonts)** — 2 lignes sw.js, plus simple. Déblocage immédiat pour visiteurs avec cache poisoned.
 2. **Bug #1bis (CSP inline style)** — migration vers utility CSS, 3 fichiers touchés (Hero.tsx, WhatIfDemoClient.tsx, globals.css), aucun changement CSP.
 3. **Bug #4 (drawer Portal)** — refactor HeaderNav.tsx pour utiliser createPortal, scope contained dans 1 fichier.
 

@@ -232,7 +232,7 @@
 - **[P1 mobile] Header sticky sans `safe-area-inset-top`** ([`Header.tsx:23`](../../src/components/layout/Header.tsx#L23), [`MktNav.tsx:44`](../../src/components/marketing/landing/sections/MktNav.tsx#L44))
   - PWA standalone iPhone notch chevauche.
   - **Fix** : `[padding-top:env(safe-area-inset-top)]`. **Effort XS par header.**
-- **[P1 a11y] Skip-link AuthLayout** — vérifier que `#main` du parent cible bien `<main id="main">` AuthLayout. **Effort XS verif.**
+- **[P1 a11y] Skip-link AuthLayout** — vérifier que `#main` du parent cible bien `<main id="main">` AuthLayout. **Effort XS vérif.**
 - **[P2 mobile] `(auth)/layout.tsx min-h-screen`** ([`(auth)/layout.tsx:6`](<../../src/app/[locale]/(auth)/layout.tsx#L6>)) — fix `min-h-dvh`.
 - **[P2 mobile] error.tsx + global-error.tsx `min-h-screen`** — non-critique.
 - **[P2 a11y] Skip-link `focus:bg-primary` token non-déclaré** ([`layout.tsx:162`](../../src/app/[locale]/layout.tsx#L162)) — utiliser `focus:bg-brand-700`. **Effort XS.**

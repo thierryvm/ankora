@@ -582,7 +582,7 @@ Aucun changement à `src/lib/domain/`. Tu consommes les services existants :
 - `calculerSanteProvisions()` (ADR-011) → SignauxCard
 - `calculerCapaciteEpargne()` (ADR-009) → SignauxCard
 - `calculerVirementRecommande()` (ADR-012) → AssistantVirements
-- `getCharges()` + `getChargePayments()` → ActiviteRecente
+- `getCharges()` + `getChargePayments()` → `ActiviteRecente`
 - `getAccountBalances()` → CompteEpargne
 
 Si une fonction domain manque, **stop et signale-le dans le rapport final** — ne pas l'implémenter dans cette PR.
@@ -591,7 +591,7 @@ Si une fonction domain manque, **stop et signale-le dans le rapport final** — 
 
 - Page `app/[locale]/app/page.tsx` : **Server Component** par défaut. Fetch via Server Actions ou directement Supabase server client.
 - HeroWaterfall, CompteEpargne, SignauxCard, AnneeChart : **Client Components** (animations, interactions).
-- ActiviteRecente, ObjectifsEpargne : **Server Components** (rendu pur).
+- `ActiviteRecente`, ObjectifsEpargne : **Server Components** (rendu pur).
 - Tap → drawer : Client Component avec `useState` ouverture.
 - Pattern : Server Component compose les Client Components avec données pré-fetched en props.
 

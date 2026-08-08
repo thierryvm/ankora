@@ -341,10 +341,12 @@ Procédure cleanup canonique :
 2. `git branch -d <branche>` — tente d'abord la version safe (catch les
    vrais merges sans squash, et les branches déjà rebased/fast-forwardées)
 3. Si refus → cross-check via :
+
    ```bash
    gh pr list --state merged --limit 100 --json headRefName \
      --jq '.[] | .headRefName' | grep <branche>
    ```
+
 4. Si une PR mergée correspond exactement → `git branch -D <branche>` safe
 5. Si aucune PR mergée trouvée → STOP, investiguer avec @cowork
 

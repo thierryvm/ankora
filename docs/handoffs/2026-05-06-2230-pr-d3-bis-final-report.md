@@ -113,7 +113,7 @@ Suppression imports : `PiggyBank`, `Receipt`, `Shield`, `Provision`, `Budget`. S
 | `EffortFinancierCard.test.tsx` (existants) | 5   | inchangés, tous passent                                                                                                       |
 | `dashboard-cockpit-bloc2.spec.ts` (étendu) | +2  | DOM order accounts BEFORE plan, legacy KPI labels gone (`toHaveCount(0)`)                                                     |
 
-**Mock `getTranslations`** : upgrade pour walker les nested keys (e.g. `breakdown.revenus` → `messages.dashboard.capacite.breakdown.revenus`). Évite faux negatifs sur les sub-namespaces.
+**Mock `getTranslations`** : upgrade pour walker les nested keys (e.g. `breakdown.revenus` → `messages.dashboard.capacite.breakdown.revenus`). Évite faux négatifs sur les sub-namespaces.
 
 ---
 

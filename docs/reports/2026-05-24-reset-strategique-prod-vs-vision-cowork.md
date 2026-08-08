@@ -30,27 +30,27 @@ Ce rapport ne minimise rien. Il sépare ce qui est **vraiment livrable en 17 jou
 
 6 sections sur 8 cockpit v3 mergées :
 
-| # | Section | Composant | Statut |
-|---|---|---|---|
-| 1 | Header (nom workspace + mois) | inline | ✅ |
-| 2 | Bloc 2 hero radar | `EffortFinancierCard` + `CapaciteEpargneCard` | ✅ |
-| 3 | Santé Provisions Gauge | `ProvisionHealthGaugeCard` | ✅ THI-190 |
-| 4 | Prochaines Factures J-7/14/30 | `ProchainesFacturesCard` | ✅ THI-192 |
-| 5 | Bloc 1 — 3 cards comptes typés | `AccountCard` | ✅ |
-| 6 | Plan transferts mensuels (3 cards) | inline | ✅ |
-| 7 | Dépenses du mois récap (5 dernières) | inline | ✅ |
-| 8 | CTAs Charges / Expenses / Simulator | inline | ✅ |
+| #   | Section                              | Composant                                     | Statut     |
+| --- | ------------------------------------ | --------------------------------------------- | ---------- |
+| 1   | Header (nom workspace + mois)        | inline                                        | ✅         |
+| 2   | Bloc 2 hero radar                    | `EffortFinancierCard` + `CapaciteEpargneCard` | ✅         |
+| 3   | Santé Provisions Gauge               | `ProvisionHealthGaugeCard`                    | ✅ THI-190 |
+| 4   | Prochaines Factures J-7/14/30        | `ProchainesFacturesCard`                      | ✅ THI-192 |
+| 5   | Bloc 1 — 3 cards comptes typés       | `AccountCard`                                 | ✅         |
+| 6   | Plan transferts mensuels (3 cards)   | inline                                        | ✅         |
+| 7   | Dépenses du mois récap (5 dernières) | inline                                        | ✅         |
+| 8   | CTAs Charges / Expenses / Simulator  | inline                                        | ✅         |
 
 ### 1.2 Ce qui est ABSENT en prod (screenshots Thierry = mockup cible, pas réalité)
 
-| Section cible (vue dans les screenshots) | Composant nécessaire | État repo |
-|---|---|---|
-| **Compte épargne · trois lectures** (différenciateur n°1 NORTH_STAR) | `CompteEpargneTroisLecturesCard` | ❌ **AUCUN composant existant** |
-| **Goals épargne / Matelas de sécurité** (avec ETA + progress) | `GoalsEpargneCard` | ❌ AUCUN |
-| **Activité récente** (10 derniers mouvements) | `ActiviteRecenteCard` | ❌ AUCUN |
-| **Ton année** (narratif lié au mois) | `TonAnneeNarrative` | ❌ AUCUN |
-| **Cashflow projection 6 mois** (graphique solde projeté avec marqueurs Taxe/Vacances/Précompte) | `CashflowProjectionChart` | ❌ AUCUN |
-| **Tryptique UX Capacité d'épargne** (Reste disponible 662 € / Reste à vivre 500 € / Capacité 162 €) — ADR-009 amendé 09/05 | dans `CapaciteEpargneCard` | ⚠️ **AMENDEMENT NON IMPLÉMENTÉ** — code actuel = ADR-009 ORIGINAL (waterfall 3 rows simple) |
+| Section cible (vue dans les screenshots)                                                                                   | Composant nécessaire             | État repo                                                                                   |
+| -------------------------------------------------------------------------------------------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------- |
+| **Compte épargne · trois lectures** (différenciateur n°1 NORTH_STAR)                                                       | `CompteEpargneTroisLecturesCard` | ❌ **AUCUN composant existant**                                                             |
+| **Goals épargne / Matelas de sécurité** (avec ETA + progress)                                                              | `GoalsEpargneCard`               | ❌ AUCUN                                                                                    |
+| **Activité récente** (10 derniers mouvements)                                                                              | `ActiviteRecenteCard`            | ❌ AUCUN                                                                                    |
+| **Ton année** (narratif lié au mois)                                                                                       | `TonAnneeNarrative`              | ❌ AUCUN                                                                                    |
+| **Cashflow projection 6 mois** (graphique solde projeté avec marqueurs Taxe/Vacances/Précompte)                            | `CashflowProjectionChart`        | ❌ AUCUN                                                                                    |
+| **Triptyque UX Capacité d'épargne** (Reste disponible 662 € / Reste à vivre 500 € / Capacité 162 €) — ADR-009 amendé 09/05 | dans `CapaciteEpargneCard`       | ⚠️ **AMENDEMENT NON IMPLÉMENTÉ** — code actuel = ADR-009 ORIGINAL (waterfall 3 rows simple) |
 
 **Constat** : les screenshots 3, 4, 5 que tu m'as envoyés montrent la **vision cible Claude Design v3**, pas la prod. Le gap entre les deux est massif et probablement source de ton sentiment "ce que je vois ne reflète plus mon ambition".
 
@@ -67,6 +67,7 @@ Ce rapport ne minimise rien. Il sépare ce qui est **vraiment livrable en 17 jou
 ### 1.4 Bug LocaleSwitcher (TICKET 4 + 7 — Phase B non livrée)
 
 `src/components/layout/LocaleSwitcher.tsx` (74 lignes) :
+
 - ✅ Phase A livrée (PR #177) : `Loader2` spinner pendant `pending` + `aria-busy` + `role="status"` sr-only
 - ❌ Phase B non livrée : drawer mobile ferme automatiquement au switch + délai > 500ms perçu + nouvelle langue ne se propage pas immédiatement au refresh
 - **Cause racine architecturale** (audit perf THI-243 RC #2 + #4) :
@@ -83,14 +84,14 @@ Ce rapport ne minimise rien. Il sépare ce qui est **vraiment livrable en 17 jou
 
 ### 1.6 Codebase health — comptage
 
-| Catégorie | Fichiers `.tsx` |
-|---|---|
-| `components/atoms/` | 22 |
-| `components/ui/` (shadcn) | 24 |
-| `components/dashboard/` | 8 |
-| `components/marketing/landing/` | 20 |
-| `components/features/` | 3 |
-| **Total** | 100 |
+| Catégorie                       | Fichiers `.tsx` |
+| ------------------------------- | --------------- |
+| `components/atoms/`             | 22              |
+| `components/ui/` (shadcn)       | 24              |
+| `components/dashboard/`         | 8               |
+| `components/marketing/landing/` | 20              |
+| `components/features/`          | 3               |
+| **Total**                       | 100             |
 
 Le ratio atoms (22) ↔ ui (24) est suspect — c'est précisément le sujet d'**ADR-020 — Atoms vs UI canonical frontier** déjà cadré mais visiblement pas appliqué partout. Risque de doublon (Button atoms vs Button shadcn, Card atoms vs Card shadcn) → audit à faire pour confirmer dette technique.
 
@@ -112,7 +113,7 @@ Caractéristiques verrouillées dans le mockup :
 - **Easing Apple** : `--ease-out: cubic-bezier(0.16, 1, 0.3, 1)` (jamais `linear` ni `ease`)
 - **`color-scheme: light dark`** + `[data-theme="dark"]` + `@media (prefers-color-scheme: dark)` pour `auto`
 
-Ce mockup est **la source de vérité visuelle**. Le `globals.css` actuel d'Ankora s'en inspire mais ne couvre pas 100 % des tokens (notamment les iOS-* couleurs).
+Ce mockup est **la source de vérité visuelle**. Le `globals.css` actuel d'Ankora s'en inspire mais ne couvre pas 100 % des tokens (notamment les iOS-\* couleurs).
 
 ---
 
@@ -122,11 +123,11 @@ Ce mockup est **la source de vérité visuelle**. Le `globals.css` actuel d'Anko
 
 Trois candidats évalués :
 
-| Solution | Licence | Avantages | Inconvénients |
-|---|---|---|---|
-| **Recharts** | MIT, gratuit | Déjà installé dans Ankora probablement, React-native | Vieillissant, styling Tailwind difficile, animations basiques |
-| **Tremor** | Apache 2.0, gratuit | **Tailwind-native** (parfait pour Ankora), composants prêts (`AreaChart`, `BarChart`, `LineChart`), API React simple, dashboard-oriented | Stack alignée avec shadcn/ui, ~20 KB par composant |
-| **Visx (Airbnb)** | MIT, gratuit | Ultra-customisable, performant | Courbe d'apprentissage forte, plus de boilerplate, surdimensionné pour le besoin |
+| Solution          | Licence             | Avantages                                                                                                                                | Inconvénients                                                                    |
+| ----------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| **Recharts**      | MIT, gratuit        | Déjà installé dans Ankora probablement, React-native                                                                                     | Vieillissant, styling Tailwind difficile, animations basiques                    |
+| **Tremor**        | Apache 2.0, gratuit | **Tailwind-native** (parfait pour Ankora), composants prêts (`AreaChart`, `BarChart`, `LineChart`), API React simple, dashboard-oriented | Stack alignée avec shadcn/ui, ~20 KB par composant                               |
+| **Visx (Airbnb)** | MIT, gratuit        | Ultra-customisable, performant                                                                                                           | Courbe d'apprentissage forte, plus de boilerplate, surdimensionné pour le besoin |
 
 **Recommandation Cowork : Tremor** pour la `CashflowProjectionChart` (graphique 6 mois solde projeté avec marqueurs Taxe/Vacances/Précompte). Tailwind-native = aucun friction avec le design system Ankora, et l'API ressemble à shadcn/ui (clean, composable).
 
@@ -164,18 +165,19 @@ Pas Beta-blocker mais **post-Beta sprint dédié** si on veut une codebase saine
 
 **Objectif** : rendre Ankora **utilisable + calme + visuellement honnête** pour la Beta. Pas de feature majeure nouvelle. Polish + fixes bloquants.
 
-| # | PR | Scope | Estimate | Priorité |
-|---|---|---|---|---|
-| 1 | **PR-FIX-CHARGES-LIST-VISUAL** | Refactor visuel `ChargesClient` → grid Tailwind avec colonnes fixes (date / label / chip / amount), version mobile en cards empilées, alignement vertical baseline | ~2-3h | P0 |
-| 2 | **PR-FIX-I18N-PERF** (Phase B déjà cadrée) | Extraire `cookies()` du `[locale]/layout.tsx` + optimiser middleware next-intl + drawer stay-open + unfixme 3 E2E tests | ~3-4h | P0 |
-| 3 | **PR-FIX-LANDING-DRIFT** | Trust indicators "FR · NL · EN" → "FR · EN" (cohérence doctrine v1.0) + aperçu cockpit landing affiche Capacité d'épargne réelle au lieu de "Net restant" (vendre le différenciateur n°1) | ~1h | P1 |
-| 4 | **PR-FIX-CAPACITE-AMENDEMENT-009** | Implémenter le tryptique UX (Reste disponible / Reste à vivre / Capacité épargne) dans `CapaciteEpargneCard` selon ADR-009 amendement 09/05 — sub-stats 3 mini-cards horizontales sur desktop, stack mobile + bouton "Ajuster ce mois" R-10 | ~3-4h | P1 |
-| 5 | **PR-FIX-DASHBOARD-HIERARCHIE** | Réorganiser `page.tsx` en 3 zones visuelles distinctes (Zone A radar rassurance / Zone B pilotage actif / Zone C détails consultables) — pas de nouveau composant, juste réordonner les `<section>` + spacing/typo polarisée. Cf. audit 23/05 §4 | ~2-3h | P1 |
-| 6 | **PR-FIX-AUTH-CTA** (TICKET 6, déjà cadrée) | "Mon cockpit" CTA marketing → détection auth-aware (Option A pré-décidée) | ~1h | P1 |
+| #   | PR                                          | Scope                                                                                                                                                                                                                                            | Estimate | Priorité |
+| --- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | -------- |
+| 1   | **PR-FIX-CHARGES-LIST-VISUAL**              | Refactor visuel `ChargesClient` → grid Tailwind avec colonnes fixes (date / label / chip / amount), version mobile en cards empilées, alignement vertical baseline                                                                               | ~2-3h    | P0       |
+| 2   | **PR-FIX-I18N-PERF** (Phase B déjà cadrée)  | Extraire `cookies()` du `[locale]/layout.tsx` + optimiser middleware next-intl + drawer stay-open + unfixme 3 E2E tests                                                                                                                          | ~3-4h    | P0       |
+| 3   | **PR-FIX-LANDING-DRIFT**                    | Trust indicators "FR · NL · EN" → "FR · EN" (cohérence doctrine v1.0) + aperçu cockpit landing affiche Capacité d'épargne réelle au lieu de "Net restant" (vendre le différenciateur n°1)                                                        | ~1h      | P1       |
+| 4   | **PR-FIX-CAPACITE-AMENDEMENT-009**          | Implémenter le triptyque UX (Reste disponible / Reste à vivre / Capacité épargne) dans `CapaciteEpargneCard` selon ADR-009 amendement 09/05 — sub-stats 3 mini-cards horizontales sur desktop, stack mobile + bouton "Ajuster ce mois" R-10      | ~3-4h    | P1       |
+| 5   | **PR-FIX-DASHBOARD-HIERARCHIE**             | Réorganiser `page.tsx` en 3 zones visuelles distinctes (Zone A radar rassurance / Zone B pilotage actif / Zone C détails consultables) — pas de nouveau composant, juste réordonner les `<section>` + spacing/typo polarisée. Cf. audit 23/05 §4 | ~2-3h    | P1       |
+| 6   | **PR-FIX-AUTH-CTA** (TICKET 6, déjà cadrée) | "Mon cockpit" CTA marketing → détection auth-aware (Option A pré-décidée)                                                                                                                                                                        | ~1h      | P1       |
 
 **Total estimé Beta** : ~12-16h de dev CC Ankora sur 17 jours = très confortable. Marge pour qualité.
 
 **Hors scope Beta** (différer) :
+
 - Compte épargne 3 lectures (nouveau composant, ADR à valider)
 - Goals / Matelas (nouveau composant, ADR à valider)
 - Activité récente (nouveau composant)
@@ -187,13 +189,13 @@ Pas Beta-blocker mais **post-Beta sprint dédié** si on veut une codebase saine
 
 **Objectif** : livrer les **composants manquants** qui font la différenciation Ankora. Cible Monarch level.
 
-| # | PR | Scope | Estimate |
-|---|---|---|---|
-| 7 | **PR-FEAT-COMPTE-EPARGNE-3-LECTURES** | Nouveau composant `CompteEpargneTroisLecturesCard` — différenciateur n°1 NORTH_STAR. Affiche Total / Provisions affectées / Réserve libre + barre bicolore. ADR à valider d'abord | ~6-8h |
-| 8 | **PR-FEAT-GOALS-MATELAS** | Nouveau composant `GoalsEpargneCard` — Matelas de sécurité avec progress + ETA 3-11 mois + bouton "+50 € maintenant" + "Modifier la cible" | ~4-6h |
-| 9 | **PR-FEAT-ACTIVITE-RECENTE** | Nouveau composant `ActiviteRecenteCard` — 10 derniers mouvements avec date + label + chip statut + montant. Lien "Tout voir →" vers page dédiée | ~3-4h |
-| 10 | **PR-FEAT-CASHFLOW-PROJECTION-6M** | Installer Tremor + nouveau composant `CashflowProjectionChart` — graphique 6 mois solde projeté avec marqueurs Taxe/Vacances/Précompte | ~6-8h |
-| 11 | **PR-FEAT-TON-ANNEE-NARRATIVE** | Nouveau composant `TonAnneeNarrative` — bloc texte narratif lié au mois (ex: "Le 662 € de ce mois, c'est ton reste disponible…") | ~2-3h |
+| #   | PR                                    | Scope                                                                                                                                                                             | Estimate |
+| --- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 7   | **PR-FEAT-COMPTE-EPARGNE-3-LECTURES** | Nouveau composant `CompteEpargneTroisLecturesCard` — différenciateur n°1 NORTH_STAR. Affiche Total / Provisions affectées / Réserve libre + barre bicolore. ADR à valider d'abord | ~6-8h    |
+| 8   | **PR-FEAT-GOALS-MATELAS**             | Nouveau composant `GoalsEpargneCard` — Matelas de sécurité avec progress + ETA 3-11 mois + bouton "+50 € maintenant" + "Modifier la cible"                                        | ~4-6h    |
+| 9   | **`PR-FEAT-ACTIVITE-RECENTE`**        | Nouveau composant `ActiviteRecenteCard` — 10 derniers mouvements avec date + label + chip statut + montant. Lien "Tout voir →" vers page dédiée                                   | ~3-4h    |
+| 10  | **PR-FEAT-CASHFLOW-PROJECTION-6M**    | Installer Tremor + nouveau composant `CashflowProjectionChart` — graphique 6 mois solde projeté avec marqueurs Taxe/Vacances/Précompte                                            | ~6-8h    |
+| 11  | **PR-FEAT-TON-ANNEE-NARRATIVE**       | Nouveau composant `TonAnneeNarrative` — bloc texte narratif lié au mois (ex: "Le 662 € de ce mois, c'est ton reste disponible…")                                                  | ~2-3h    |
 
 **Total v1.0** : ~21-29h dev. Sur 20 jours (post-Beta) = très réalisable.
 
@@ -228,16 +230,16 @@ Idem — chaque PR du Niveau 1 sera cadrée dans un prompt CC Ankora distinct, *
 
 ## 6. Linear — tickets à créer ou réorganiser
 
-| Action Linear | Détail |
-|---|---|
-| Créer **THI-XXX PR-FIX-CHARGES-LIST-VISUAL** P0 | Linker à screenshot 1 @thierry 24/05 |
-| Créer **THI-XXX PR-FIX-LANDING-DRIFT** P1 | "FR · NL · EN" → "FR · EN" + landing KPIs cockpit |
-| Créer **THI-XXX PR-FIX-CAPACITE-AMENDEMENT-009** P1 | Implémenter ADR-009 amendement 09/05 |
-| Créer **THI-XXX PR-FIX-DASHBOARD-HIERARCHIE** P1 | Référencer audit 23/05 §4 |
-| THI-244 + THI-252 + THI-255 | Garder "In Progress" jusqu'à PR-FIX-I18N-PERF mergée |
-| TICKET 6 "Mon cockpit" auth-aware | Créer si pas encore fait |
-| Créer **THI-XXX umbrella v1.0 cockpit complete** | Parent ticket pour PR Niveau 2 (Compte épargne / Goals / Activité / Cashflow) |
-| Créer **THI-XXX umbrella v1.1 polish premium** | Parent ticket pour PR Niveau 3 (Apple Liquid Glass, ADR-020, etc.) |
+| Action Linear                                       | Détail                                                                        |
+| --------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Créer **THI-XXX PR-FIX-CHARGES-LIST-VISUAL** P0     | Linker à screenshot 1 @thierry 24/05                                          |
+| Créer **THI-XXX PR-FIX-LANDING-DRIFT** P1           | "FR · NL · EN" → "FR · EN" + landing KPIs cockpit                             |
+| Créer **THI-XXX PR-FIX-CAPACITE-AMENDEMENT-009** P1 | Implémenter ADR-009 amendement 09/05                                          |
+| Créer **THI-XXX PR-FIX-DASHBOARD-HIERARCHIE** P1    | Référencer audit 23/05 §4                                                     |
+| THI-244 + THI-252 + THI-255                         | Garder "In Progress" jusqu'à PR-FIX-I18N-PERF mergée                          |
+| TICKET 6 "Mon cockpit" auth-aware                   | Créer si pas encore fait                                                      |
+| Créer **THI-XXX umbrella v1.0 cockpit complete**    | Parent ticket pour PR Niveau 2 (Compte épargne / Goals / Activité / Cashflow) |
+| Créer **THI-XXX umbrella v1.1 polish premium**      | Parent ticket pour PR Niveau 3 (Apple Liquid Glass, ADR-020, etc.)            |
 
 ---
 
@@ -308,7 +310,7 @@ Les composants manquants (Compte épargne 3 lectures, Goals, Activité, Cashflow
 
 1. La liste `/app/charges` qui ne ressemble pas à un fichier Excel mal aligné
 2. Un LocaleSwitcher qui ne casse pas
-3. Le tryptique Capacité (ADR-009 amendement) implémenté
+3. Le triptyque Capacité (ADR-009 amendement) implémenté
 4. Une hiérarchie cognitive 3 zones sur le dashboard
 5. Un CTA "Mon cockpit" qui route correctement
 6. La landing qui vend le bon différenciateur
