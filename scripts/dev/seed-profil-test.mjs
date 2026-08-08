@@ -61,8 +61,16 @@ const { data: member } = await db
   .single();
 const ws = member.workspace_id;
 
-// Revenus = 2637 € (la valeur du tableau de bord rapporté par @thierry).
-await db.from('workspaces').update({ monthly_income: 2637 }).eq('id', ws);
+// Revenus = valeur d'exemple, DÉLIBÉRÉMENT fictive et ronde.
+//
+// Ce fichier portait auparavant le revenu mensuel réel de @thierry, annoté
+// comme tel. Ce dépôt est public : un revenu exact rattaché à une personne
+// nommée est une donnée financière nominative, et la règle du dépôt public la
+// vise explicitement. Un chiffre rond signale de lui-même qu'il est inventé.
+//
+// Aucun total de contrôle n'en dépend : les attendus en tête de fichier
+// (chargesFixes, provisions, engagements) se déduisent des charges seules.
+await db.from('workspaces').update({ monthly_income: 2500 }).eq('id', ws);
 
 const rows = [];
 let sort = 0;
@@ -128,7 +136,9 @@ if (coErr) throw coErr;
 
 // Quelques dépenses du mois pour que « Dépensé ce mois » ne soit pas vide.
 const now = new Date();
-const d = (day) => new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), day)).toISOString();
+// `expenses.occurred_on` est une DATE, pas un horodatage — on lui donne une date.
+const d = (day) =>
+  new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), day)).toISOString().slice(0, 10);
 const { data: cat } = await db
   .from('categories')
   .select('id')
@@ -141,7 +151,7 @@ const { error: exErr } = await db.from('expenses').insert([
     created_by: userId,
     label: 'Courses Delhaize',
     amount: 62.4,
-    spent_at: d(3),
+    occurred_on: d(3),
     category_id: cat?.id ?? null,
   },
   {
@@ -149,7 +159,7 @@ const { error: exErr } = await db.from('expenses').insert([
     created_by: userId,
     label: 'Essence',
     amount: 70,
-    spent_at: d(9),
+    occurred_on: d(9),
     category_id: cat?.id ?? null,
   },
   {
@@ -157,11 +167,17 @@ const { error: exErr } = await db.from('expenses').insert([
     created_by: userId,
     label: 'Restaurant',
     amount: 38.5,
-    spent_at: d(14),
+    occurred_on: d(14),
     category_id: cat?.id ?? null,
   },
 ]);
-if (exErr) console.error('dépenses:', exErr.message);
+// `throw`, pas `console.error` — comme les insertions de charges et
+// d'engagements plus haut. Un simple log laissait le script imprimer son
+// résumé de succès et rendre un profil SANS dépenses : le cockpit semé
+// affichait « Dépensé ce mois » vide, et rien ne disait pourquoi. C'est
+// exactement ce qui s'est produit le 8 août 2026, quand la colonne s'appelait
+// encore `spent_at` ici alors qu'elle avait été renommée `occurred_on`.
+if (exErr) throw new Error(`seed dépenses: ${exErr.message}`);
 
 console.log(
   JSON.stringify(
