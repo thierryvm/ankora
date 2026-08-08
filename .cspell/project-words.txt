@@ -1316,3 +1316,14 @@ yolt
 ziel
 zonder
 zurück
+#
+# Ajouts du 8 août 2026 — ADR-039 + plan PR-LAND (prose de la session landing) :
+# vocabulaire du remap de variables CSS, « overscroll » (comportement iOS),
+# et RELEVE cité comme fragment du nom de constante RELEVE_DEMO.
+overscroll
+RELEVE
+remappe
+remappées
+remappés
+restylage
+restylée
