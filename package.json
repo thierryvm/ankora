@@ -17,6 +17,7 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "lint:use-server": "node scripts/lint-use-server.mjs",
+    "spell": "cspell \"*.md\" \"messages/*.json\" --no-progress",
     "preflight": "node --env-file-if-exists=.env.local scripts/preflight-accounts.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -87,6 +88,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.2",
+    "@cspell/dict-fr-fr": "^2.3.2",
     "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4",
@@ -97,6 +99,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitest/coverage-v8": "^4.1.4",
+    "cspell": "^10.0.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "fast-check": "^4.7.0",

@@ -1,0 +1,98 @@
+{
+  "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json",
+  "version": "0.2",
+
+  // Ce dépôt mélange délibérément deux langues : la prose (documentation,
+  // messages d'interface, commentaires de doctrine) est en français, le code et
+  // les identifiants sont en anglais. Déclarer les deux évite de signaler l'une
+  // en croyant lire l'autre.
+  //
+  // Prérequis éditeur : `streetsidesoftware.code-spell-checker` SEUL, et il est
+  // recommandé par `.vscode/extensions.json`. N'installe PAS l'extension
+  // « French - Code Spell Checker » en croyant qu'elle apporte le français ici :
+  // ce dépôt ne compte pas dessus, et pour cause — voir juste en dessous.
+  "language": "fr,en",
+
+  // Le dictionnaire français vient d'une devDependency, PAS d'une extension.
+  // Deux raisons, toutes deux mesurées le 2026-08-08 :
+  //
+  //  1. L'extension française enregistre son dictionnaire par un appel au
+  //     moteur au démarrage de la fenêtre, et cet appel échoue en silence — le
+  //     panneau « Spell Checker File Information » ne listait aucun
+  //     dictionnaire français, ni actif ni disponible, extensions pourtant
+  //     installées et inscrites au manifeste de VS Code.
+  //  2. Quand un dépôt a son `cspell.json`, il PREND LA MAIN sur les réglages
+  //     utilisateur au lieu de s'y ajouter : un dictionnaire déclaré côté
+  //     éditeur n'atteint pas les fichiers du dépôt.
+  //
+  // Ce fichier est donc autonome : après `npm install`, il donne le même
+  // résultat sans aucun réglage d'éditeur personnel. Se vérifie par
+  // `npm run spell`. Attention, « aucune dépendance transitive » est une
+  // propriété de la version 2.3.2 épinglée au lockfile, pas de la plage
+  // `^2.3.2` — c'est `npm ci` qui la maintient vraie.
+  "import": ["@cspell/dict-fr-fr/cspell-ext.json"],
+
+  // Le contenu vérifié est la PROSE. Un identifiant, un chemin, une commande ou
+  // un extrait de code n'ont pas d'orthographe — les inclure produit un bruit
+  // qui fait abandonner l'outil en une journée.
+  "ignoreRegExpList": [
+    "/`[^`\\n]*`/g",
+    "/^ {0,3}```[\\s\\S]*?^ {0,3}```/gm",
+    "/^ {0,3}~~~[\\s\\S]*?^ {0,3}~~~/gm",
+    "/\\]\\([^)]*\\)/g",
+    // Tags d'agents — `@cowork`, `@cc-ankora`, `@thierry`. Ce sont des
+    // identifiants de destinataire, pas des mots ; et la liste s'allonge à
+    // chaque nouvel agent, ce qu'un dictionnaire suivrait toujours en retard.
+    "/@[a-zA-Z][\\w-]*/g",
+    "Urls",
+    "Email"
+  ],
+
+  "ignorePaths": [
+    "node_modules/**",
+    ".next/**",
+    "coverage/**",
+    "playwright-report/**",
+    "test-results/**",
+    "package-lock.json",
+    "*.lock",
+    "supabase/.temp/**",
+    "public/**",
+    // Les trois locales post-launch seulement. `fr-BE.json` et `en.json` sont
+    // délibérément VÉRIFIÉS : c'est le texte que les utilisateurs lisent, donc
+    // le seul endroit où une faute se voit en production — l'exclure serait
+    // exactement à l'envers. Les trois autres sont en dette de traduction
+    // (cf. mémoire projet i18n) et produiraient du bruit néerlandais, allemand
+    // et espagnol sous `language: "fr,en"`.
+    "messages/nl-BE.json",
+    "messages/de-DE.json",
+    "messages/es-ES.json"
+  ],
+
+  // Dans un fichier de traduction, seule la VALEUR est lue par un utilisateur.
+  // Deux choses n'en sont pas et sortent du périmètre :
+  //   - la CLÉ — `echeances.depense.estimee` n'a pas plus d'orthographe qu'un
+  //     nom de variable, et la signaler noierait les vraies fautes des libellés
+  //     sous du bruit de nommage ;
+  //   - le PARAMÈTRE ICU entre accolades — `{depense}` dans « {depense}
+  //     dépensés » est le nom de la variable, pas le mot affiché. Vérifié le
+  //     2026-08-08 : le libellé, lui, porte bien son accent.
+  "languageSettings": [
+    {
+      "languageId": "json,jsonc",
+      "ignoreRegExpList": ["/\"(?:[^\"\\\\]|\\\\.)*\"\\s*:/g", "/\\{[^}]*\\}/g"]
+    }
+  ],
+
+  // Le vocabulaire du projet vit dans un fichier à part plutôt qu'ici : une
+  // liste d'un mot par ligne se relit, se commente et se diffe. Le correctif
+  // rapide « Add to workspace dictionary » de l'extension y ajoute directement.
+  "dictionaryDefinitions": [
+    {
+      "name": "ankora",
+      "path": "./.cspell/project-words.txt",
+      "addWords": true
+    }
+  ],
+  "dictionaries": ["ankora"]
+}
