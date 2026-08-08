@@ -49,10 +49,17 @@ const BottomTabBar = dynamic(() =>
  * | document sur `/`, puis clic vers `/app`          | **0**              |
  * | rechargement ordinaire sur `/app`                | **1**              |
  *
- * Le manifeste porte `start_url: '/'`, une route exclue. L'application installée
- * démarrait donc toujours sans barre, le seul chemin vers le cockpit est un
- * `<Link>`, et en `standalone` iOS n'offre aucun geste qui charge un nouveau
- * document. **La barre ne pouvait structurellement jamais apparaître.**
+ * Le manifeste portait alors `start_url: '/'`, une route exclue. L'application
+ * installée démarrait donc toujours sans barre, le seul chemin vers le cockpit
+ * est un `<Link>`, et en `standalone` iOS n'offre aucun geste qui charge un
+ * nouveau document. **La barre ne pouvait structurellement jamais apparaître.**
+ *
+ * `start_url` vaut `'/app'` depuis le 8 août 2026, pour une raison sans rapport
+ * (supprimer un geste à chaque ouverture). Cela **ne remplace pas** ce module :
+ * la visibilité est décidée à chaque navigation client, quel que soit le point
+ * d'entrée. Un `start_url` qui masquerait le défaut plutôt que de le corriger
+ * serait le pire des deux mondes — le bug reviendrait au premier lien depuis une
+ * page publique.
  *
  * ## La scission
  *
