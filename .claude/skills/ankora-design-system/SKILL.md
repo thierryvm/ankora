@@ -19,7 +19,15 @@ This is **non-negotiable** — it's a regulatory choice, part of the FSMA-compli
 ## 1. Load the tokens, always
 
 - Import `colors_and_type.css` at the top of every new HTML/CSS file. **Do not redefine colors, radii, shadows, or type scale.** Every component reads from the tokens declared there.
-- Dark mode is the default. Light mode is supported via `[data-theme="dark"]` being present or absent on `<html>`. Never hard-code a hex value for a neutral.
+- **Neither theme is "the default" — the OS decides.** With no stored preference, `ThemeBootScript.tsx` reads `prefers-color-scheme` and sets or removes `data-theme="dark"` on `<html>`. In the stylesheet the LIGHT set is the base (declared in `@theme`) and dark is the override block; that asymmetry is why the paper scope below is light-only. Never hard-code a hex value for a neutral. _(Corrected 8 Aug 2026 — this line previously said dark was the default, which sends the reader looking for a dark base that does not exist.)_
+
+### Scope patterns — four, and they are not peers
+
+`globals.css` defines variables in four places: `@theme` (light base + scales), `[data-theme='dark']` (theme override), `[data-accent='admin']` (teal → brass pigment swap), and `.mkt-paper` with its `body:has(…)` companion (marketing surface, light theme only — ADR-039).
+
+- The paper scope remaps six semantic variables to paper/ink pigments so components keep ONE vocabulary on both surfaces. Never write a paper pigment directly; write the semantic token and let the surface decide.
+- **There is deliberately no `.app-surface` counterpart.** `:root` IS the product identity; the paper class is a departure from it, not a sibling. Do not add a symmetric scope to "balance" them.
+- Ratios are computed, never copied: `src/app/__tests__/contrast-ratios.test.ts` recalculates every pair from the stylesheet and fails under 4.5:1.
 - **In the Ankora Next.js context** (PR-3a integration, 2026-04-25): tokens live in `src/app/globals.css` via `@import 'tailwindcss'` + `@theme {}` block. The `colors_and_type.css` and `ui_kits/_shared/shell.css` references in this SKILL refer to the original ZIP source — adapt paths when generating Ankora Next.js code.
 
 ### Browser support baseline
@@ -161,7 +169,7 @@ Source : [`docs/ankora-product-quality-bar-v1.md`](../../../docs/ankora-product-
 
 > ⚠️ **Source de vérité production**, pas les mockups d'archive. Les anciens dossiers `ui_kits/user_dashboard/`, `ui_kits/admin_dashboard/`, `ui_kits/landing_page/`, `ui_kits/onboarding/` vivent désormais dans `ankora-mockups/` (HORS repo, archive @cc-design). Le code ci-dessous est ce qui rend en production sur `ankora.be`.
 
-- **Landing marketing** — `src/components/marketing/landing/sections/*` (Hero, Principles, Feature, WhatIfDemo, Pricing, FAQ, FooterCTA, MktNav, MktFooter). Composé dans `src/app/[locale]/(public)/page.tsx`.
+- **Landing marketing** — `src/components/marketing/landing/sections/*` (Hero, Principles, Feature, WhatIfDemo, WhatIfDemoClient, FAQ, FooterCTA, MktNav, MktFooter). Composé dans `src/app/[locale]/(public)/page.tsx`. _(« Pricing » retiré de cette liste le 8 août 2026 : le composant a été supprimé en #307 — la liste périmée renvoyait le lecteur sur une section inexistante, et §0 rappelle qu'aucune surface tarifaire ne doit exister en Phase 1.)_
 - **Dashboard user (cockpit)** — `src/app/[locale]/app/page.tsx` orchestre les surfaces, qui rendent via `src/components/dashboard/*` (SituationDuMoisHero + HeroAmount + PaceBar + AllocationBar, ProvisionHealthGaugeCard, ProchainesFacturesCard) + `src/components/features/AccountCard.tsx` (compte épargne · trois lectures). Hero « Situation du mois » : chiffre-héros **« Il te reste »** en temps réel + ancre « Budget du mois » + barre de rythme, puis la cascade (ADR-035). Santé Provisions (THI-190), Prochaines factures (THI-192), Assistant Virements (ADR-012).
 - **Saisie de dépense** — `src/components/expenses/AddExpenseSheet.tsx`, ouvert par le ⊕ central de `BottomTabBar`. **2 taps depuis n'importe quel écran** ; toute modification qui ajoute un champ obligatoire casse ce contrat. Les figures du mois sont assemblées une seule fois par `lib/data/month-situation.ts` — ne pas recopier l'assemblage, les deux surfaces se contrediraient.
 - **Admin panel** — `src/app/[locale]/admin/page.tsx` (RBAC `requireAdmin()` côté serveur). Bloc E sections : Santé technique, Santé produit, Acquisition, Recommandations rule-based. ⚠️ Vertical slice complet en branche **`feat/pr-b2-mock-vertical-slice`** (paused volontaire post-Beta).

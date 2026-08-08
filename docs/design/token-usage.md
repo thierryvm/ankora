@@ -33,15 +33,31 @@ Chaque token a un **rôle sémantique unique**. Le nom indique le rôle, pas la 
 
 **`--color-muted` est un token de TEXTE décoratif**, pas de surface.
 
-Valeurs actuelles (cohérentes avec ZIP cc-design source) :
+> **Chiffres recalculés le 8 août 2026 (PR L1).** La règle ci-dessous est juste ;
+> sa justification mesurait la mauvaise paire. Les valeurs annoncées ici
+> comparaient `--color-muted` à `--color-foreground`, c'est-à-dire **du texte à
+> du texte** — une paire sans signification WCAG, et dont les chiffres ne se
+> reproduisaient pas (3.36 annoncé → **3.75** mesuré ; 3.6 → **2.08**).
+>
+> Ce qui échoue réellement, c'est `text-foreground` **posé sur** `bg-muted` :
+> **3.75:1**, sous AA. C'est exactement l'anti-pattern montré plus bas, donc
+> l'interdiction tient — pour cette raison-là.
+>
+> Corollaire mesuré, et il contredit le mot « sub-AA » appliqué au token
+> lui-même : `--color-muted` en TEXTE passe AA sur toutes les surfaces réelles
+> (4.76 sur carte claire, 4.55 sur fond ardoise, 4.52 sur papier, 6.76 sur carte
+> sombre). Son contraste est faible **par rapport au texte principal**, ce qui
+> est le but ; il n'est pas illisible.
 
-- Light : `#64748b` (slate-500) → contraste avec `--color-foreground` = 3.36:1 → **sub-AA, intentionnel pour texte non-essentiel**
-- Dark : `#94a3b8` (slate-400) → contraste avec `--color-foreground` = 3.6:1 → idem
+Valeurs actuelles, mesurées :
+
+- Light : `#64748b` (slate-500) → en texte sur carte blanche = **4.76:1** (AA), volontairement en retrait de `--color-foreground`
+- Dark : `#94a3b8` (slate-400) → en texte sur carte sombre = **6.76:1** (AA), même intention
 
 **Pour les surfaces**, utiliser `--color-surface-muted` :
 
-- Light : `#f1f5f9` → contraste avec `--color-foreground` = 15.79:1 → **AAA confortable**
-- Dark : `#0f172a` → contraste avec `--color-foreground` = AAA
+- Light : `#f1f5f9` → contraste avec `--color-foreground` = **16.30:1** → **AAA confortable**
+- Dark : `#0f172a` → contraste avec `--color-foreground` = **14.48:1** → AAA
 
 ### Anti-pattern à reconnaître
 
@@ -102,37 +118,121 @@ Légende :
 | `--color-danger`  | ✅ Texte erreur, destructive actions | ⚠️ Surface danger                   | ✅ Bordure danger  |                                                                                         |
 | `--color-info`    | ✅ Texte info                        | ⚠️ Surface info                     | ✅ Bordure info    |                                                                                         |
 
+### Tokens BRUTS de portée — les pigments papier (ADR-039)
+
+Six valeurs qui n'ont **aucun usage direct** : elles existent uniquement pour
+être pointées par le remap `.mkt-paper`. Un composant écrit toujours dans le
+vocabulaire sémantique (`text-foreground`, `bg-background`) et hérite du pigment
+selon la surface où il est rendu.
+
+| Token                 | `text-*`  | `bg-*`    | `border-*` | Rôle                                    |
+| --------------------- | --------- | --------- | ---------- | --------------------------------------- |
+| `--color-paper`       | ❌ jamais | ❌ jamais | ❌ jamais  | cible de `--color-background` en portée |
+| `--color-paper-line`  | ❌ jamais | ❌ jamais | ❌ jamais  | cible de `--color-border`               |
+| `--color-paper-soft`  | ❌ jamais | ❌ jamais | ❌ jamais  | cible de `--color-surface-soft`         |
+| `--color-paper-muted` | ❌ jamais | ❌ jamais | ❌ jamais  | cible de `--color-surface-muted`        |
+| `--color-ink`         | ❌ jamais | ❌ jamais | ❌ jamais  | cible de `--color-foreground`           |
+| `--color-ink-soft`    | ❌ jamais | ❌ jamais | ❌ jamais  | cible de `--color-muted-foreground`     |
+
+Ces ❌ ne reposent pas sur la discipline du prochain auteur : les six sont
+déclarés dans un `:root` nu, **pas** dans `@theme`, donc aucune clé de thème
+n'existe et Tailwind ne génère aucun utilitaire pour ces noms. Il n'y a pas de
+classe à ne pas écrire — il n'y a pas de classe. Cf. ADR-039 §Amendement.
+
+### Le quatrième motif de portée
+
+`globals.css` connaît désormais quatre façons de définir un jeu de variables :
+
+| Portée                                   | Ce qu'elle est                                         |
+| ---------------------------------------- | ------------------------------------------------------ |
+| `@theme`                                 | le jeu de base (clair) + les échelles de design system |
+| `[data-theme='dark']`                    | l'override de thème                                    |
+| `[data-accent='admin']`                  | l'échange de pigment teal → laiton                     |
+| `.mkt-paper` (+ compagnon `body:has(…)`) | la surface marketing, en thème clair seulement         |
+
+**Il n'existe volontairement PAS de `.app-surface` symétrique.** `:root` **est**
+l'identité du produit ; `.mkt-paper` en est un écart, pas un pair. Une portée qui
+ne remappe rien deviendrait « l'endroit où l'on met les surcharges de l'app »,
+ce qui est le travail de `:root` — et tout wrapper coûte un risque de mise en
+page (cf. la note au-dessus de `body > main` dans `globals.css`). Décidé en
+relecture cockpit d'ADR-039, le 8 août 2026.
+
 ---
 
 ## 4. Tests de contraste WCAG AA documentés
 
-Les paires les plus utilisées, vérifiées au moment de la rédaction de ce doc :
+**Colonne « Gardé »** : ✅ = la paire est recalculée à chaque `npm run test` par
+[`src/app/__tests__/contrast-ratios.test.ts`](../../src/app/__tests__/contrast-ratios.test.ts),
+qui échoue sous 4.5:1. ⬜ = valeur documentaire, exacte au moment de la mesure
+mais qu'aucune porte ne surveille — un futur changement de token ne la fera pas
+rougir.
 
-### Light mode
+Cette colonne existe parce que ce tableau a dérivé : quatre de ses six lignes
+claires annonçaient des ratios qui ne se reproduisaient pas (recalculés le
+8 août 2026, PR L1). Ajouter des lignes à la main sans dire lesquelles sont
+tenues par une porte, c'était recréer le même défaut.
 
-| Avant-plan                        | Arrière-plan                   | Ratio   | Verdict                                   |
-| --------------------------------- | ------------------------------ | ------- | ----------------------------------------- |
-| `text-foreground` (#0f172a)       | `bg-background` (#ffffff)      | 18.59:1 | ✅ AAA                                    |
-| `text-foreground` (#0f172a)       | `bg-card` (#ffffff ou variant) | ≥ 15:1  | ✅ AAA                                    |
-| `text-foreground` (#0f172a)       | `bg-surface-muted` (#f1f5f9)   | 15.79:1 | ✅ AAA                                    |
-| `text-foreground` (#0f172a)       | `bg-muted` (#64748b)           | 3.36:1  | ❌ FAIL (< 4.5)                           |
-| `text-muted-foreground` (#475569) | `bg-card`                      | ≥ 7:1   | ✅ AAA                                    |
-| `text-muted` (#64748b)            | `bg-card`                      | 4.61:1  | ⚠️ Limite AA (texte décoratif uniquement) |
+### Light mode — fonds ardoise (surfaces produit)
+
+| Avant-plan                        | Arrière-plan                    | Ratio       | Gardé | Verdict                                 |
+| --------------------------------- | ------------------------------- | ----------- | ----- | --------------------------------------- |
+| `text-foreground` (#0f172a)       | `bg-background` (#f8fafc)       | **17.06:1** | ⬜    | ✅ AAA                                  |
+| `text-foreground` (#0f172a)       | `bg-card` (#ffffff)             | **17.85:1** | ⬜    | ✅ AAA                                  |
+| `text-foreground` (#0f172a)       | `bg-surface-muted` (#f1f5f9)    | **16.30:1** | ⬜    | ✅ AAA                                  |
+| `text-foreground` (#0f172a)       | `bg-muted` (#64748b) — interdit | **3.75:1**  | ⬜    | ❌ FAIL (< 4.5) — cf. §2                |
+| `text-muted-foreground` (#475569) | `bg-card`                       | **7.58:1**  | ⬜    | ✅ AAA                                  |
+| `text-muted` (#64748b)            | `bg-card`                       | **4.76:1**  | ⬜    | ⚠️ AA juste (texte décoratif seulement) |
+| `text-danger` (#dc2626)           | `bg-background` (#f8fafc)       | **4.62:1**  | ✅    | ⚠️ AA à 0.12 près                       |
+| `text-success` (#047857)          | `bg-background`                 | **5.24:1**  | ✅    | ✅ AA                                   |
+| `text-warning` (#9a3412)          | `bg-background`                 | **6.98:1**  | ✅    | ✅ AA                                   |
+| `text-info` (#0369a1)             | `bg-background`                 | **5.67:1**  | ✅    | ✅ AA                                   |
+
+### Light mode — portée papier `.mkt-paper` (landing, ADR-039)
+
+| Avant-plan                          | Arrière-plan                   | Ratio       | Gardé | Verdict          |
+| ----------------------------------- | ------------------------------ | ----------- | ----- | ---------------- |
+| `text-foreground` → encre (#171d26) | `bg-background` → papier       | **16.08:1** | ✅    | ✅ AAA           |
+| `text-muted-foreground` → (#3d4a5c) | papier                         | **8.55:1**  | ✅    | ✅ AAA           |
+| `text-brand-text-strong` (#115e59)  | papier                         | **7.20:1**  | ✅    | ✅ AAA           |
+| `text-accent-text` (#8b6914)        | papier                         | **4.83:1**  | ✅    | ✅ AA            |
+| blanc (#ffffff) — le CTA            | `bg-brand-700` (#0f766e)       | **5.47:1**  | ✅    | ✅ AA            |
+| encre                               | `bg-surface-soft` → (#fbfaf7)  | **16.22:1** | ✅    | ✅ AAA           |
+| encre                               | `bg-surface-muted` → (#f3f1ea) | **14.98:1** | ✅    | ✅ AAA           |
+| (#3d4a5c)                           | (#f3f1ea)                      | **7.97:1**  | ✅    | ✅ AAA           |
+| `text-danger` (#dc2626)             | papier                         | **4.59:1**  | ✅    | ⚠️ **AA à 0.09** |
+| `text-success` (#047857)            | papier                         | **5.21:1**  | ✅    | ✅ AA            |
+| `text-warning` (#9a3412)            | papier                         | **6.94:1**  | ✅    | ✅ AA            |
+| `text-info` (#0369a1)               | papier                         | **5.64:1**  | ✅    | ✅ AA            |
+| `text-muted` (#64748b) — décoratif  | papier                         | **4.52:1**  | ⬜    | ⚠️ AA à 0.02     |
+
+> **La ligne à surveiller est `text-danger` sur papier : 4.59, soit 0.09 de
+> marge.** Tout assombrissement futur de `--color-paper` la fait passer sous AA.
+> La porte le dira — c'est précisément pourquoi elle est gardée.
 
 ### Dark mode
 
-| Avant-plan                        | Arrière-plan           | Ratio  | Verdict                                |
-| --------------------------------- | ---------------------- | ------ | -------------------------------------- |
-| `text-foreground` (#e2e8f0)       | `bg-background` (navy) | ≥ 14:1 | ✅ AAA                                 |
-| `text-muted-foreground` (#cbd5e1) | `bg-card`              | 9.3:1  | ✅ AAA                                 |
-| `text-muted` (#94a3b8)            | `bg-card`              | 3.6:1  | ⚠️ Sub-AA (texte décoratif uniquement) |
+| Avant-plan                        | Arrière-plan           | Ratio  | Gardé | Verdict                                |
+| --------------------------------- | ---------------------- | ------ | ----- | -------------------------------------- |
+| `text-foreground` (#e2e8f0)       | `bg-background` (navy) | ≥ 14:1 | ⬜    | ✅ AAA                                 |
+| `text-muted-foreground` (#cbd5e1) | `bg-card`              | 9.3:1  | ⬜    | ✅ AAA                                 |
+| `text-muted` (#94a3b8)            | `bg-card`              | 3.6:1  | ⬜    | ⚠️ Sub-AA (texte décoratif uniquement) |
+
+> **Ce tableau sombre a été sondé le 8 août 2026 et deux de ses trois lignes ne
+> se reproduisent pas** : `text-muted-foreground` sur carte sombre mesure
+> **11.68** (annoncé 9.3) et `text-muted` mesure **6.76** (annoncé 3.6 « Sub-AA »).
+> Les valeurs annoncées sont **pessimistes**, donc aucun risque d'accessibilité
+> vivant. Non corrigées ici : la PR L1 ne touche à aucune valeur sombre, et
+> réécrire un tableau qu'elle n'exerce pas serait un changement non vérifié.
+> **Propriétaire : session cockpit, à traiter avec la refonte du §2.**
 
 **Source cc-design** (commentaire `colors_and_type.css` ligne 216-222) :
 
 > `color: var(--color-muted-foreground); /* #cbd5e1 on navy — 9.3:1 AAA (was #94a3b8 · 3.6:1 FAIL) */`
 > `.t-muted = timestamps, helper text, disabled (#94a3b8, 3.6:1 — below AA;`
 
-→ cc-design a documenté explicitement que `--color-muted` est volontairement sub-AA pour usage décoratif uniquement.
+→ cc-design a documenté `--color-muted` comme réservé au décoratif. La mesure du
+8 août montre que le chiffre cité (3.6) ne correspond pas aux tokens actuels ; la
+**consigne** reste bonne, cf. §2.
 
 ---
 
@@ -157,6 +257,8 @@ Avant de pousser une PR qui touche l'UI :
 - [ ] Tests axe-core (PR T1+ helper) passent sur les routes touchées
 - [ ] Tous les éléments interactifs ont un contraste ≥ 4.5:1 (texte normal) ou ≥ 3:1 (texte large 18pt+ ou 14pt bold)
 - [ ] Pas de hardcoded hex hors SVG justifié (utiliser tokens uniquement)
+- [ ] Aucun usage direct des six pigments papier (`--color-paper*`, `--color-ink*`) : ils ne se lisent qu'à travers le remap `.mkt-paper` (cf. §3)
+- [ ] Si un ratio est ajouté au §4 : il est **calculé**, et sa colonne « Gardé » dit la vérité — une valeur écrite à la main sans porte se marque ⬜
 
 Si tu détectes un cas non couvert par ce doc → STOP escalade @cowork pour décision + ajout au registre §5.
 

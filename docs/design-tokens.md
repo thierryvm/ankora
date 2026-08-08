@@ -1,8 +1,34 @@
 # Design Tokens — Ankora Landing v2
 
-**Source of truth:** `src/app/globals.css` (`@theme` block)  
+> # ⛔ DOCUMENT SUPPLANTÉ — 8 août 2026
+>
+> **Ne rien copier d'ici.** Ce document est une extraction du mockup
+> `design-mockup-landing.html` datée du **19 avril 2026** — donc antérieure au
+> verrouillage du pigment laiton (24 avril), à ADR-035 et à ADR-036. **Tout son
+> corpus est pré-laiton**, pas seulement les lignes qui le disent.
+>
+> Il porte au moins quatre affirmations aujourd'hui fausses, dont une
+> dangereuse : il prescrit `--color-warning → #d97706`, **la valeur exacte
+> qu'ADR-036 existe pour interdire** (elle échouait AA à 3.19:1 sur blanc). Il
+> annonce aussi une palette d'accent « Amber » là où le produit tient le laiton
+> nautique `#8b6914`, `--color-success → #059669` au lieu de `#047857`, et un
+> mécanisme de thème par `prefers-color-scheme` alors que le thème se pose par
+> `[data-theme='dark']` sur `<html>`.
+>
+> **Deux successeurs, parce qu'il mélangeait deux autorités :**
+>
+> | Vous cherchez…                                                 | Allez voir                                                                  |
+> | -------------------------------------------------------------- | --------------------------------------------------------------------------- |
+> | une **valeur** de token                                        | `src/app/globals.css` — seule source, et la seule que les tests recalculent |
+> | l'**usage autorisé** d'un token, les ratios, les anti-patterns | [`docs/design/token-usage.md`](./design/token-usage.md)                     |
+>
+> Il est conservé, non corrigé : le corriger ligne à ligne maintiendrait en vie
+> un quatrième siège d'autorité sur les tokens, et ce n'est pas un manque
+> d'information qui a fait dériver ce fichier — c'est le fait qu'il en existait
+> un de trop.
+
 **Extracted from:** `design-mockup-landing.html` (landing v2 mockup)  
-**Date:** 19 avril 2026
+**Date:** 19 avril 2026 — **périmé, cf. bandeau ci-dessus**
 
 ---
 
@@ -185,12 +211,26 @@ Dark mode surfaces use `rgba(...)` for tinted backgrounds (e.g., `rgba(20, 184, 
 
 ## Maintenance
 
-When updating tokens:
+> ⛔ **Procédure abrogée le 8 août 2026. Ne pas la suivre.**
+>
+> C'est elle, et non les valeurs périmées plus haut, qui faisait le danger de ce
+> document : une valeur fausse est inerte tant que personne ne la copie, mais une
+> instruction impérative en quatre étapes se suit jusqu'au bout — et son étape 2
+> demandait d'écrire ici, ce qui perpétuait le fichier à chaque changement de
+> token. Un bandeau en tête n'aurait pas désarmé une consigne située 185 lignes
+> plus bas.
+>
+> **La procédure à jour** vit dans
+> [`docs/design/token-usage.md`](./design/token-usage.md) §6 et §8.1. En résumé :
+> on édite `src/app/globals.css`, on ajoute la paire de contraste au test qui la
+> **recalcule** (`src/app/__tests__/contrast-ratios.test.ts`), et on met à jour
+> le tableau du §4 en disant si la ligne est gardée par une porte ou non.
+> Rien n'est plus à écrire ici.
 
-1. Update `src/app/globals.css` (`@theme` block)
-2. Add/update entry in this file (`docs/design-tokens.md`)
-3. Test in both light and dark modes (`prefers-color-scheme: dark` in DevTools)
-4. Commit: `chore(design): update design tokens [reason]`
+~~1. Update `src/app/globals.css` (`@theme` block)~~
+~~2. Add/update entry in this file (`docs/design-tokens.md`)~~
+~~3. Test in both light and dark modes (`prefers-color-scheme: dark` in DevTools)~~
+~~4. Commit: `chore(design): update design tokens [reason]`~~
 
 ---
 

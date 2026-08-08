@@ -271,6 +271,93 @@
   --color-brand-text-strong: var(--color-accent-text-strong);
 }
 
+/* ---------- Marketing paper scope — raw values (ADR-039) ----------
+   The six raw pigments of the "relevé corrigé" landing direction. They exist
+   for ONE purpose: to be pointed at by the remap below. Nothing reads them
+   directly, and nothing should.
+
+   Why a bare `:root` and not `@theme` — amendment to ADR-039 §Décision, point 1.
+   A `--color-*` key in `@theme` makes Tailwind generate a whole family of
+   utilities for it (background, text, border, ring, divide, outline, caret,
+   gradient stops, fill, stroke). That would put a SECOND colour vocabulary in
+   reach of every component — which is precisely the alternative ADR-039
+   §Alternatives écartées rejects ("divergence garantie"). Declared here, no
+   theme key exists, so no utility can be generated: the wrong path is closed by
+   construction rather than by a lint rule someone can silence. It also means a
+   markdown table documenting these names cannot be picked up by the Tailwind
+   source scanner and quietly create the very class it forbids.
+
+   Cost, stated so this amendment is not one-sided: the six are emitted on every
+   page and in both themes, `/app` included (~200 inert bytes). Accepted.
+
+   Light-only by construction: there is no dark counterpart, and
+   `contrast-ratios.test.ts` asserts each of the six is declared exactly once
+   AND that no paper token appears in the dark block. Neither assertion can be
+   removed on its own — together they encode "raw, light-only, single source".
+   Ratios: ink/paper 16.08, ink-soft/paper 8.55 — computed by that test, never
+   copied. */
+:root {
+  --color-paper: #faf9f6;
+  --color-paper-line: #e7e4dc;
+  --color-paper-soft: #fbfaf7;
+  --color-paper-muted: #f3f1ea;
+  --color-ink: #171d26;
+  --color-ink-soft: #3d4a5c;
+}
+
+/* ---------- Marketing paper scope — the remap (ADR-039) ----------
+   Fourth scope pattern in this file, after `@theme`, `[data-theme='dark']` and
+   `[data-accent='admin']`. Same grammar as the admin flip: a block of variable
+   remaps, outside any `@layer`, so components keep using one vocabulary
+   (`text-foreground`, `bg-background`) on both surfaces.
+
+   THE ASYMMETRY IS DELIBERATE — there is no `.app-surface` counterpart, and
+   adding one would be a mistake. `:root` IS the product's identity; this class
+   is a DEPARTURE from it, not a peer. A scope that remaps nothing would drift
+   into "the place where app overrides go", which is `:root`'s job — and every
+   wrapper costs a layout risk (see the `body > main` note further down for what
+   that costs in practice). Decided in the cockpit review of ADR-039, 8 Aug 2026.
+   Do not harmonise these.
+
+   WHY THE COMPANION EXISTS. `body { background: var(--color-background) }` is
+   resolved on `body` itself, so a wrapper remapping the variable for its
+   descendants leaves the viewport, the iOS overscroll area and `min-height`
+   slate under cream. The companion redeclares THE SAME variables one level up,
+   which also feeds the five `fixed` slots that live outside any page wrapper
+   (consent banner, toaster, bottom tab bar, update banner, scroll-to-top) —
+   they are children of `body`, so the consent card reads as paper over a paper
+   hero instead of fighting it. The duplication is intentional; a test compares
+   the two property sets so neither can be edited alone.
+
+   BROWSER FLOOR. `:has()` needs Firefox 121+ (Dec 2023); the project baseline
+   allows 113+. On 113-120 the companion simply does not match: page content
+   still paints paper (this class carries its own background), while `body` and
+   the five slots stay on the complete slate set — internally consistent, so no
+   pair should drop below AA. REASONED, NOT MEASURED. What CI actually covers:
+   the three Playwright projects are Chromium desktop, mobile Safari and mobile
+   Chrome, all of which support `:has()` — companion path 3/3, fallback path
+   0/3.
+
+   No dark remap, on purpose: the landing keeps the existing navy. A second
+   "paper by night" palette was never asked for. */
+html:not([data-theme='dark']) .mkt-paper {
+  --color-background: var(--color-paper);
+  --color-border: var(--color-paper-line);
+  --color-foreground: var(--color-ink);
+  --color-muted-foreground: var(--color-ink-soft);
+  --color-surface-soft: var(--color-paper-soft);
+  --color-surface-muted: var(--color-paper-muted);
+}
+
+html:not([data-theme='dark']) body:has(.mkt-paper) {
+  --color-background: var(--color-paper);
+  --color-border: var(--color-paper-line);
+  --color-foreground: var(--color-ink);
+  --color-muted-foreground: var(--color-ink-soft);
+  --color-surface-soft: var(--color-paper-soft);
+  --color-surface-muted: var(--color-paper-muted);
+}
+
 /* ---------- Atmospheric body (dark mode only) ----------
    Subtle radial gradient to give depth to the navy background. */
 .ankora-atmosphere {
@@ -490,6 +577,24 @@ body {
   padding-bottom: var(--consent-height, 0px);
 }
 
+/* This rule has TWO consumers, and they disagree on purpose. Naming them here
+   because the danger is not either one — it is the unification someone will
+   attempt on seeing two flex mechanisms for the same job.
+
+   1. The app (`/app/**`) DEPENDS on it. `[locale]/layout.tsx` renders providers
+      and five `fixed` siblings but no DOM element around `{children}`, and
+      `app/layout.tsx` returns a fragment — so `<main>` really is a direct child
+      of `<body>`. Combined with `body { display:flex; min-height:100svh }`
+      above, this line is what keeps the footer at the bottom of a short app
+      page. Verified in the cockpit review of ADR-039, 8 Aug 2026.
+
+   2. The landing BYPASSES it, from PR L2 onward. Wrapping nav + main + footer
+      in the paper scope makes `<main>` a grandchild, so this selector stops
+      matching there. The fix is to make the wrapper the flex link instead
+      (`body > .mkt-paper` gets `flex: 1 1 auto` and becomes a column, its own
+      `main` takes the growth) — declared in the PR that introduces the wrapper,
+      NOT here. This rule stays untouched: every other page is unwrapped and
+      still needs it. */
 body > main {
   flex: 1 1 auto;
 }

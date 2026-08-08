@@ -28,27 +28,36 @@ Chaque ADR est immuable une fois `Accepted`. Pour le faire évoluer :
 
 ## Index
 
-| #   | Titre                                                                                                                  | Statut                       | Date       |
-| --- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ---------- |
-| 001 | [No-PSD2 : agrégation via import manuel](./ADR-001-no-psd2.md)                                                         | Accepted                     | 2026-04-20 |
-| 002 | [Modèle bucket (comptes + enveloppes)](./ADR-002-bucket-model.md)                                                      | Accepted                     | 2026-04-20 |
-| 003 | [Système de notifications (in-app first)](./ADR-003-notifications-system.md)                                           | Accepted                     | 2026-04-20 |
-| 004 | [Logger structuré (Pino + wrapper Edge)](./ADR-004-structured-logging.md)                                              | Accepted                     | 2026-04-20 |
-| 005 | [PR-3a anticipée comme prérequis architectural](./ADR-005-pr3a-anticipated-design-system.md)                           | Accepted                     | 2026-04-25 |
-| 006 | [Testing strategy v1.0](./ADR-006-testing-strategy-v1.md)                                                              | Accepted                     | 2026-04-26 |
-| 007 | [Payment tracking consolidation](./ADR-007-payment-tracking-consolidation.md)                                          | Superseded by ADR-011 + 012  | 2026-05-03 |
-| 008 | [Naming comptes user-defined (display_name + account_type)](./ADR-008-account-naming-and-typing.md)                    | Accepted                     | 2026-05-03 |
-| 009 | [Capacité d'épargne réelle — KPI hero + formule (amendé 2026-05-09 : 3 concepts UX)](./ADR-009-capacite-epargne-reelle.md) | Accepted                     | 2026-05-03 |
-| 010 | [Live decrement quotidien](./ADR-010-live-decrement-quotidien.md)                                                      | Accepted                     | 2026-05-03 |
-| 011 | [Détection déficit + plan rattrapage 3 mois](./ADR-011-detection-deficit-plan-rattrapage.md)                           | Accepted                     | 2026-05-03 |
-| 012 | [Assistant virements (calcul intelligent provisions ↔ factures du mois)](./ADR-012-assistant-virements.md)             | Accepted                     | 2026-05-03 |
-| 016 | [Tracking paiements multi-sources (présomption J+3 + import CSV 5 sources)](./ADR-016-tracking-paiements-multi-sources.md) | Proposed                     | 2026-05-08 |
-| 017 | [Plans d'apurement (table installment_plans + génération auto N transactions)](./ADR-017-plans-apurement.md)           | Proposed                     | 2026-05-09 |
-| 018 | [Provisions bidirectionnelles : audit trail OUT/IN](./ADR-018-provisions-bidirectionnelles-audit-trail.md)             | Proposed                     | 2026-05-09 |
+| #   | Titre                                                                                                                      | Statut                      | Date       |
+| --- | -------------------------------------------------------------------------------------------------------------------------- | --------------------------- | ---------- |
+| 001 | [No-PSD2 : agrégation via import manuel](./ADR-001-no-psd2.md)                                                             | Accepted                    | 2026-04-20 |
+| 002 | [Modèle bucket (comptes + enveloppes)](./ADR-002-bucket-model.md)                                                          | Accepted                    | 2026-04-20 |
+| 003 | [Système de notifications (in-app first)](./ADR-003-notifications-system.md)                                               | Accepted                    | 2026-04-20 |
+| 004 | [Logger structuré (Pino + wrapper Edge)](./ADR-004-structured-logging.md)                                                  | Accepted                    | 2026-04-20 |
+| 005 | [PR-3a anticipée comme prérequis architectural](./ADR-005-pr3a-anticipated-design-system.md)                               | Accepted                    | 2026-04-25 |
+| 006 | [Testing strategy v1.0](./ADR-006-testing-strategy-v1.md)                                                                  | Accepted                    | 2026-04-26 |
+| 007 | [Payment tracking consolidation](./ADR-007-payment-tracking-consolidation.md)                                              | Superseded by ADR-011 + 012 | 2026-05-03 |
+| 008 | [Naming comptes user-defined (display_name + account_type)](./ADR-008-account-naming-and-typing.md)                        | Accepted                    | 2026-05-03 |
+| 009 | [Capacité d'épargne réelle — KPI hero + formule (amendé 2026-05-09 : 3 concepts UX)](./ADR-009-capacite-epargne-reelle.md) | Accepted                    | 2026-05-03 |
+| 010 | [Live decrement quotidien](./ADR-010-live-decrement-quotidien.md)                                                          | Accepted                    | 2026-05-03 |
+| 011 | [Détection déficit + plan rattrapage 3 mois](./ADR-011-detection-deficit-plan-rattrapage.md)                               | Accepted                    | 2026-05-03 |
+| 012 | [Assistant virements (calcul intelligent provisions ↔ factures du mois)](./ADR-012-assistant-virements.md)                 | Accepted                    | 2026-05-03 |
+| 016 | [Tracking paiements multi-sources (présomption J+3 + import CSV 5 sources)](./ADR-016-tracking-paiements-multi-sources.md) | Proposed                    | 2026-05-08 |
+| 017 | [Plans d'apurement (table installment_plans + génération auto N transactions)](./ADR-017-plans-apurement.md)               | Proposed                    | 2026-05-09 |
+| 018 | [Provisions bidirectionnelles : audit trail OUT/IN](./ADR-018-provisions-bidirectionnelles-audit-trail.md)                 | Superseded by ADR-038       | 2026-05-09 |
+| 039 | [Portée des tokens « papier » de la landing (`.mkt-paper`)](./ADR-039-portee-tokens-marketing-papier.md)                   | Proposed                    | 2026-08-08 |
 
 > **Note numérotation** : ADR-013/014/015 jamais rédigés (réservés en buffer lors de la consolidation ADR-007 → 011/012, finalement non utilisés). La numérotation reprend à 016 pour les ADRs de la session 2026-05-08.
 
-> **Pour les ADRs `Proposed`** (016, 017, 018) : à valider en `Accepted` post-PR-D5 (implémentation effective des tables `installment_plans` + `provision_transfers` + tracking paiements multi-sources).
+> **Pour les ADRs `Proposed`** (016, 017) : à valider en `Accepted` post-PR-D5 (implémentation effective des tables `installment_plans` + `provision_transfers` + tracking paiements multi-sources). **ADR-039** attend le GO @thierry, son implémentation (PR L1) et sa relecture cockpit étant faites.
+
+> ⚠️ **Cet index est incomplet — mesuré le 8 août 2026.** `docs/adr/` contient
+> 27 fichiers ; ce tableau en listait 15, et affichait 018 en `Proposed` alors
+> que le fichier le déclare `Superseded` depuis le 5 août. La PR L1 corrige ces
+> deux points et ajoute sa propre ligne (039). **Elle ne rattrape pas les onze
+> restants** (019-024, 034-038) : ce serait un chantier de relecture à part
+> entière, et l'ajouter à une PR de tokens le rendrait invérifiable. À traiter
+> dans une PR dédiée.
 
 ## Conventions de nommage
 

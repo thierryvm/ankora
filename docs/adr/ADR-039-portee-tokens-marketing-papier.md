@@ -1,6 +1,12 @@
 # ADR-039 — Portée des tokens « papier » de la landing (`.mkt-paper`)
 
-- **Statut** : Proposed — en attente de relecture par la session cockpit (@cc-ankora / Opus) AVANT toute implémentation
+- **Statut** : **Proposed** — relecture cockpit **rendue le 2026-08-08** (verdict ✅ APPROUVÉ, cf. §Relecture cockpit) et **implémentée en PR L1**. Le passage à `Accepted` attend le GO explicite de @thierry.
+  > Pourquoi le statut ne bascule pas dans la PR qui implémente : `README.md` de ce
+  > dossier pose qu'un ADR est **immuable une fois `Accepted`**. C'est une porte à
+  > sens unique, et un merge de PR technique ne vaut pas ratification — @thierry
+  > mergerait pour le code, pas pour le statut. Faire porter à ce geste une
+  > décision qu'il n'a pas prise serait fabriquer un consentement. La bascule est
+  > un commit d'une ligne, le jour où il le dit.
 - **Date** : 2026-08-08
 - **Proposé par** : @cc-fable (session landing, worktree dédié) — suite au choix de direction visuelle « Le relevé corrigé » par @thierry le 8 août 2026
 - **Deciders** : @thierry (direction visuelle actée) ; mécanisme de portée soumis à relecture croisée
@@ -104,6 +110,103 @@ La relecture cockpit porte sur **deux** questions, pas une :
    parcours n'en dépend autrement.
 
 C'est l'objet du cooldown : l'implémentation n'ouvre pas avant cette relecture.
+
+## Relecture cockpit — 2026-08-08, ✅ APPROUVÉ (2 conditions, 3 ajouts)
+
+Rendue par la session cockpit (@cc-ankora / Opus), postée sur la PR #334.
+Consignée ici parce qu'un commentaire de PR mergée n'est lu par personne.
+
+**Q1 — Symétrie : NON, pas de `.app-surface`.** `:root` **est** l'identité du
+produit ; `.mkt-paper` en est un **écart**, pas un pair. Rendre les deux
+explicites suggérerait qu'ils sont de même rang. Et une portée qui ne remappe
+rien deviendrait « l'endroit où l'on met les surcharges de l'app », ce qui est le
+travail de `:root` — en payant au passage le risque de mise en page que le
+§Conséquences documente lui-même.
+
+**Q2 — `body > main` : le cockpit en dépend, la parade est juste.** Mesuré :
+`[locale]/layout.tsx` ne rend **aucun élément DOM** autour de `{children}`
+(uniquement des providers et les cinq slots `fixed` en frères) et
+`app/layout.tsx` retourne un fragment. Donc `<main>` **est** enfant direct de
+`<body>` côté cockpit, et `body { display:flex; min-height:100svh }` +
+`body > main { flex:1 1 auto }` est **ce qui tient le pied de page en bas** sur
+une page d'app courte. La parade n'édite pas la règle → **impact nul sur le
+cockpit**. Approuvée telle quelle.
+
+**Condition 1** — l'asymétrie est nommée dans `globals.css`, à côté du bloc de
+portée. _(Faite en L1.)_
+
+**Condition 2** — un commentaire au-dessus de `body > main` nomme ses **deux**
+consommateurs : l'app qui en dépend, la landing qui la contournera. Le danger
+n'est pas le changement, c'est l'unification que quelqu'un tentera en voyant deux
+mécanismes de flex. _(Faite en L1 ; la règle elle-même n'est pas modifiée.)_
+
+**Ajout 1 — les deux chiffres ne sont pas le même calcul.** Le choix d'une phrase
+descriptive (« Encore vraiment à toi ») plutôt qu'un nom de métrique évite la
+collision au lieu de la gérer — c'est plus juste que ce que la relecture
+demandait. Mais il faut l'écrire, sinon quelqu'un « alignera » les deux et
+cassera l'un : la landing montre `solde relevé en banque − engagements datés`
+(objet pédagogique), le cockpit montre `revenus − charges − provisions −
+engagements` (un mois réel). **Ils s'accordent sur la thèse, pas sur la formule.**
+C'est volontaire.
+
+**Ajout 2 — `blockAfter()` est un helper partagé**, son durcissement exige la
+preuve **dans les deux sens** : que les blocs historiques matchent toujours les
+mêmes cibles après le strip. _(Fait en L1 : un témoin par bloc, plus une
+falsification mesurée montrant que l'ancienne implémentation perd le bloc sombre
+dès qu'une règle est insérée avant lui.)_
+
+**Ajout 3 — Firefox 113-120 : rendre l'angle mort visible là où on le
+rencontre**, c'est-à-dire en commentaire dans `globals.css`, pas seulement dans
+un ADR que le prochain lecteur n'ouvrira pas. _(Fait en L1, avec la formulation
+plus actionnable : les trois projets Playwright — Chromium desktop, mobile
+Safari, mobile Chrome — supportent tous `:has()`, donc **chemin compagnon 3/3,
+chemin de repli 0/3**.)_
+
+## Amendement du 2026-08-08 (PR L1) — les six bruts vont dans `:root`, pas `@theme`
+
+Le §Décision point 1 prescrivait `@theme`. **L'implémentation les déclare dans un
+`:root` nu.** Le motif, et il rend l'ADR plus fidèle à lui-même :
+
+Une clé `--color-*` dans `@theme` fait générer par Tailwind toute une famille
+d'utilitaires (fond, texte, bordure, anneau, séparateur, contour, curseur,
+étapes de dégradé, remplissage, tracé). Autrement dit, elle **met à portée de
+chaque composant un second vocabulaire de couleurs** — précisément l'alternative
+que le §Alternatives écartées rejette (« divergence garantie »). Déclarés hors
+`@theme`, aucune clé de thème n'existe : le mauvais chemin est fermé **par
+construction**, pas par une règle de revue qu'on peut contourner.
+
+Effet de bord favorable, **raisonné et non mesuré** : documenter ces noms dans un
+tableau Markdown ne peut plus créer la classe qu'il interdit — le scanner de
+sources de Tailwind lit aussi les fichiers de doc.
+
+**Une hypothèse écartée, parce qu'elle a été mesurée et qu'elle est fausse.** La
+relecture du plan avançait un second motif : Tailwind v4 n'émettrait que les
+variables `@theme` réellement utilisées, donc les six auraient risqué d'être
+élaguées — rendant `var(--color-paper)` invalide et la landing sans fond. **Ce
+n'est pas le comportement de ce projet.** Mesuré sur le CSS compilé après
+`npm run build` (fichier unique `.next/static/chunks/*.css`, 107 684 octets) :
+`--color-success-300` et `--color-accent-100` sont déclarés dans `@theme`,
+consommés par **aucun** utilitaire, et **présents** dans la sortie. Instrument
+validé par un témoin positif (`--color-brand-500`, lui consommé).
+
+L'amendement ne repose donc **que** sur le motif vérifiable ci-dessus. C'est écrit
+ici pour que personne ne rouvre le sujet en croyant qu'un risque d'élagage
+justifiait quoi que ce soit.
+
+**Ce que la même mesure confirme, côté positif** : les six pigments arrivent dans
+le CSS compilé, **une déclaration chacun** ; les deux blocs de portée y sont ;
+et **aucun utilitaire de couleur** n'est généré pour ces noms.
+
+**Ce que ça coûte**, pour que l'amendement ne dise pas que les bénéfices : les
+six sont émis sur toutes les pages et dans les deux thèmes, `/app` compris
+(~200 octets inertes). Accepté.
+
+Conséquence sur les tests : les six ne se lisent pas par bloc (`globals.css` a
+déjà un autre `:root`) mais par regex fichier-entier, avec l'assertion **déclaré
+exactement une fois** — plus forte, puisqu'elle épingle l'unicité et pas
+seulement l'adresse. Elle s'**enclenche** avec l'assertion « aucun token papier
+dans le bloc sombre » : sans cette dernière, un déplacement (et non une
+duplication) vers le bloc sombre resterait vert.
 
 ## Décisions de vocabulaire liées (ADR-035)
 
