@@ -1,0 +1,15 @@
+{
+  // `.gitignore` ignore tout `.vscode/` SAUF ce fichier et
+  // `settings.recommended.json` : il est donc versionné à dessein.
+  "recommendations": [
+    // Correcteur orthographique. Il lit `cspell.json` à la racine, qui apporte
+    // lui-même le dictionnaire français via une devDependency — n'installe donc
+    // PAS « French - Code Spell Checker » en croyant compléter celui-ci : ce
+    // dépôt ne s'appuie pas dessus, et la raison est écrite dans `cspell.json`.
+    "streetsidesoftware.code-spell-checker",
+
+    // Le formatage du dépôt passe par Prettier + lint-staged au commit ;
+    // l'aligner dans l'éditeur évite les diffs de mise en forme parasites.
+    "esbenp.prettier-vscode"
+  ]
+}

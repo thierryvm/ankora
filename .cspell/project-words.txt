@@ -1,0 +1,255 @@
+# Dictionnaire de projet — Ankora
+#
+# Un mot entre ici parce qu'il a été MESURÉ dans la prose du dépôt, jamais par
+# anticipation. Relevé initial : `cspell "**/*.md"` avec le dictionnaire fr-fr,
+# 3088 signalements sur 195 fichiers, 904 mots uniques.
+#
+# Seuls les 180 mots vus au moins trois fois ont été examinés : un mot isolé est
+# plus souvent une coquille qu'un terme métier. Et le seuil ne suffit PAS — la
+# revue à la main a écarté quatre fautes que leur fréquence aurait consacrées :
+#
+#   tryptique  → triptyque   (7 fichiers, jusque dans un nom de fichier)
+#   regénère   → régénère    (4 fichiers)
+#   ELEVÉE     → ÉLEVÉE
+#   carrié     → ?           (1 occurrence, sens peu clair)
+#
+# Elles restent volontairement soulignées. Ajouter un mot ici, c'est déclarer
+# qu'il est juste — pas qu'on est fatigué de le voir.
+#
+# Cette liste est DÉLIBÉRÉMENT autonome : elle ne suppose aucun dictionnaire
+# personnel côté éditeur, qui vit hors du dépôt et qu'un clone n'a pas. Le
+# recouvrement éventuel entre les deux est sans effet — un mot valide deux fois
+# reste valide une fois.
+
+# ── Marques, produits, sources citées ───────────────────────────────────────
+Airtable
+Anker
+Authy
+BOIP
+EUIPO
+# en minuscules : couvre aussi « Ankora » et « ANKORA », et le domaine ankora.be
+ankora
+Athenaeum
+Belfius
+Brevo
+bunq
+Buxfer
+Coda
+Cowork
+Dashlane
+DevContext
+Divi
+Econono
+Fraunces
+Goodbudget
+GSAP
+Klaro
+Lighthouse
+Linxo
+Monarch
+Playwright
+Postgres
+PostgREST
+Qonto
+Solidaris
+sourcery
+# en minuscules : couvre « Supabase » et le nom de dossier `supabase/`
+supabase
+Tailwind
+thierryvm
+Tink
+Turbopack
+Upstash
+Vercel
+Vitest
+WebKit
+YNAB
+
+# ── Sigles et vocabulaire de domaine ────────────────────────────────────────
+AISP
+BSOD
+BYOK
+CPAS
+CSSOM
+FOUC
+FSMA
+GEO
+llms
+opengraph
+OWASP
+PITR
+PKCE
+RGPD
+rgba
+SIEM
+SPOF
+TAEG
+testid
+testids
+TOTP
+
+# ── Jargon du projet et anglicismes conjugués ───────────────────────────────
+affordances
+anonymization
+atteignabilité
+backdrop
+backfillé
+behaviour
+blocklist
+borderless
+brandée
+bumpé
+bundlés
+bypasser
+canonicalise
+capacite
+challengé
+cockpit
+colocalisés
+committait
+committé
+committée
+Cooldown
+cspell
+customisable
+cybersec
+déduplique
+délibérément
+designé
+différenciants
+dispo
+drilldown
+Epargne
+épic
+fintech
+FLAGGÉ
+flaggées
+flagué
+forwardées
+frontmatter
+glassmorphism
+hardcodé
+hardcodée
+hotfixes
+# Libellés d'interface (messages/fr-BE.json, messages/en.json) et CHANGELOG :
+# orthographe britannique et vocabulaire RGPD, tous deux volontaires. Vérifié en
+# contexte le 2026-08-08 — « sanitised », « pseudonymises » sont de l'anglais
+# correct, pas des accents oubliés.
+addit
+instalments
+lockés
+pseudonymisé
+pseudonymised
+pseudonymises
+pseudonymisés
+recolorisation
+sanitised
+unenroll
+unfixmes
+loggé
+loggées
+mergé
+mergée
+mergées
+mergés
+mockées
+nextjs
+notif
+notifs
+nullable
+persistée
+persistées
+pinné
+préflight
+prerender
+Prio
+proactivement
+pseudonymisation
+Rassurance
+rebalance
+Recalcul
+recocher
+reco
+recos
+réessai
+refactoriser
+reverté
+scopée
+scrubé
+seedé
+seedées
+seedés
+shippé
+shippent
+shippés
+signups
+skippe
+skippé
+skippent
+skippés
+sparkline
+specd
+Supersède
+supersédera
+tappable
+telco
+télécom
+topbar
+TRACKÉ
+trackée
+unfixme
+uploadé
+vérif
+viewports
+worktree
+worktrees
+wrappé
+Zettels
+Zod
+
+# ── Locales NL / DE / ES citées dans la doc i18n ────────────────────────────
+ahorro
+ancla
+Anual
+Ausgabe
+Ausgaben
+Cerrar
+circulación
+cuenta
+Einstellungen
+Eliminar
+fijo
+financieel
+financiera
+finanzieller
+Fixkosten
+gasto
+Gastos
+Hierarchie
+impuesto
+Instellingen
+kost
+Kostenlos
+lasten
+Löschen
+Meine
+mensual
+Mijn
+nicht
+niet
+overschrijving
+rekeningen
+Rücklagen
+Seguro
+sesión
+Simulador
+spreiden
+spreiding
+Steuer
+transferencia
+Überweisung
+uitgave
+Uitgaven
+Umschlag
+verwijderen
+Vorjahr
