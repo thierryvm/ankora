@@ -373,6 +373,32 @@ html:not([data-theme='dark']) body:has(.mkt-paper) {
   --color-surface-muted: var(--color-paper-muted);
 }
 
+/* ---------- Marketing paper scope — layout link (PR L2) ----------
+   Wrapping nav + main + footer in the scope makes `<main>` a GRANDCHILD of
+   `<body>`, so the shared `body > main` rule further down (see its
+   two-consumers note) stops matching on the landing. The wrapper takes over
+   as the flex link, and its own `main` resumes the growth — the shared rule
+   itself is never edited, every unwrapped page still depends on it.
+
+   Both selectors start with `body`, not with the scope class, ON PURPOSE:
+   `contrast-ratios.test.ts` proves that no rule STARTS with the `.mkt-paper`
+   marker (that anchor refusal is what keeps its block-reader honest), so a
+   bare `.mkt-paper > main` rule here would break that falsification. Same
+   match set on the landing — the wrapper is always a direct child of body.
+
+   Layout only, no pigment: these rules declare no custom properties, which is
+   why they carry no light-theme guard (the guard test only judges rules that
+   remap variables — deliberate, documented there). */
+body > .mkt-paper {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+body > .mkt-paper > main {
+  flex: 1 1 auto;
+}
+
 /* ---------- Atmospheric body (dark mode only) ----------
    Subtle radial gradient to give depth to the navy background. */
 .ankora-atmosphere {
@@ -690,16 +716,9 @@ body > main {
    style verbatim so the visual remains identical while staying CSP-compliant.
    Added 2026-05-19 (PR P0-V2) — see docs/audits/2026-05-19-prod-p0-v2-bugs-diagnostic.md. */
 @layer utilities {
-  /* Hero radial glow — replaces inline gradient in Hero.tsx.
-     Pulls from --color-brand-400 via color-mix so it stays in sync with the
-     design system across light + dark + admin accent flips. */
-  .bg-brand-radial {
-    background: radial-gradient(
-      50% 60% at 50% 20%,
-      color-mix(in oklab, var(--color-brand-400) 15%, transparent),
-      transparent 70%
-    );
-  }
+  /* The `.bg-brand-radial` hero glow that used to live here left with the
+     hero that consumed it (PR L2, « relevé corrigé » direction — paper is
+     flat and calm by design, no atmospheric gradient). */
 
   /* Custom accent color for native form controls (range slider thumb/track).
      Replaces inline `style={{ accentColor: 'var(--color-brand-400)' }}` in
