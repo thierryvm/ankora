@@ -9,7 +9,6 @@ import {
   Plus,
   Receipt,
   Settings,
-  Sparkles,
   Wallet,
   type LucideIcon,
 } from 'lucide-react';
@@ -99,22 +98,21 @@ const TAB_ICONS: Record<AppDestinationId, LucideIcon> = {
   cockpit: LayoutDashboard,
   bills: Receipt,
   expenses: Wallet,
-  simulate: Sparkles,
   commitments: HandCoins,
   accounts: Landmark,
   settings: Settings,
 };
 
-type BottomTabLabelKey = 'cockpit' | 'bills' | 'expenses' | 'simulate';
+type BottomTabLabelKey = 'cockpit' | 'bills' | 'expenses';
 
 const TAB_LABELS: Record<AppDestinationId, BottomTabLabelKey | null> = {
   cockpit: 'cockpit',
   bills: 'bills',
   expenses: 'expenses',
-  // Sheet-only destinations have no bottom-tab label. `simulate` joined them on
-  // 2026-07-29 when the ⊕ took the third slot; its key is kept because the
-  // MoreSheet reads a different namespace and this Record must stay exhaustive.
-  simulate: 'simulate',
+  // Les destinations qui ne vivent que dans la feuille « Plus » n'ont pas
+  // d'étiquette d'onglet. `simulate` y a figuré du 2026-07-29 au 2026-08-08,
+  // date à laquelle sa route a disparu : le simulateur n'est plus une
+  // destination, seulement le tiroir du cockpit.
   commitments: null,
   accounts: null,
   settings: null,

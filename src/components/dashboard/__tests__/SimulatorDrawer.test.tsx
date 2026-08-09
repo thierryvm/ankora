@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 
 import messages from '../../../../messages/fr-BE.json';
 import { SimulatorDrawer } from '../SimulatorDrawer';
-import type { RawCharge } from '@/app/[locale]/app/simulator/SimulatorClient';
+import type { RawCharge } from '@/components/simulator/SimulatorClient';
 
 // SimulatorClient pulls in the locale-aware `Link` (income-hint CTA). next-intl's
 // real `createNavigation` imports `next/navigation`, unresolvable under jsdom —
@@ -82,13 +82,24 @@ describe('<SimulatorDrawer /> — open state', () => {
     expect(heading.tagName).toBe('H2');
   });
 
-  it('hides the SimulatorClient page header (hideHeader): subtitle is not rendered', async () => {
+  /**
+   * `SimulatorClient` portait une prop `hideHeader` : la route autonome
+   * `/app/simulator` affichait un `<h1>` + sous-titre, le tiroir les masquait.
+   * La route ayant disparu le 8 août 2026, le seul appelant passait toujours
+   * `hideHeader` — la prop et son `<header>` sont retirés.
+   *
+   * Le cas reste, et reste falsifiable : il prouve qu'un seul titre de premier
+   * niveau existe dans le tiroir. Quelqu'un qui réintroduirait un `<h1>` dans le
+   * calculateur produirait deux titres concurrents pour un lecteur d'écran, et
+   * ce test le dirait.
+   */
+  it('the calculator contributes no heading of its own — the drawer owns the title', async () => {
     renderWithIntl(<SimulatorDrawer charges={charges} revenus={revenus} engagementsMensuels={0} />);
     fireEvent.click(screen.getByTestId('simulator-drawer-trigger'));
-    await screen.findByTestId('simulator-drawer');
-    // The standalone page renders a <p> subtitle; inside the drawer the
-    // header is suppressed so it must be absent.
+    const tiroir = await screen.findByTestId('simulator-drawer');
     expect(screen.queryByText(sim.subtitle)).toBeNull();
+    expect(within(tiroir).queryByRole('heading', { level: 1 })).toBeNull();
+    expect(within(tiroir).getAllByRole('heading', { level: 2 })).toHaveLength(1);
   });
 
   it('mounts the calculator with a guided empty default (Q3: no charge auto-selected)', async () => {

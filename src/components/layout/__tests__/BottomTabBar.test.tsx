@@ -94,7 +94,9 @@ beforeEach(() => {
 describe('<BottomTabBar /> — 5 slots, Apple HIG hard cap', () => {
   it('renders the 3 destination tabs + the ⊕ + the More trigger', () => {
     // Composition changed on 2026-07-29 (décision Q7): `simulate` moved to the
-    // More sheet to free the centre slot for the ⊕. Still five slots.
+    // More sheet to free the centre slot for the ⊕. On 2026-08-08 it left the
+    // navigation altogether — the simulator is a cockpit drawer, not a place
+    // you go. Still five slots; the absence below is what keeps it out.
     render(<BottomTabBar />);
     expect(screen.getByTestId('bottom-tab-cockpit')).toBeInTheDocument();
     expect(screen.getByTestId('bottom-tab-bills')).toBeInTheDocument();
@@ -239,14 +241,23 @@ describe('<BottomTabBar /> — active tab detection', () => {
     expect(screen.getByTestId('bottom-tab-bills')).not.toHaveAttribute('aria-current');
   });
 
-  it('lights up nothing at /app/simulator — that tab moved to the More sheet', () => {
-    currentPathname = '/app/simulator';
+  /**
+   * Ce cas visait `/app/simulator` jusqu'au 8 août 2026. La route ayant été
+   * supprimée, il testait un chemin où plus personne n'atterrit : il ne pouvait
+   * plus échouer, et un test qui ne peut plus échouer est pire que pas de test —
+   * il inspire confiance sans rien prouver.
+   *
+   * Réécrit sur `/app/settings`, une destination RÉELLE de la feuille « Plus »
+   * qui n'a délibérément pas d'onglet. L'invariant est le même et redevient
+   * falsifiable : sur un chemin qu'aucun onglet ne dessert, la barre n'allume
+   * rien et sert de retour au cockpit, exactement comme sur `/admin` ou `/faq`.
+   */
+  it('lights up nothing at /app/settings — a sheet destination has no tab', () => {
+    currentPathname = '/app/settings';
     render(<BottomTabBar />);
-    // `simulate` left the bar for the More sheet when the ⊕ took the third slot
-    // (décision Q7), so no tab lights up here — the bar acts as a "return to
-    // cockpit" surface, exactly as it does on /admin and /faq.
-    expect(screen.queryByTestId('bottom-tab-simulate')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('bottom-tab-settings')).not.toBeInTheDocument();
     expect(screen.getByTestId('bottom-tab-cockpit')).not.toHaveAttribute('aria-current');
+    expect(screen.getByTestId('bottom-tab-bills')).not.toHaveAttribute('aria-current');
     expect(screen.getByTestId('bottom-tab-expenses')).not.toHaveAttribute('aria-current');
   });
 });

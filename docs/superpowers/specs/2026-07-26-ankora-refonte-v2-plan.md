@@ -1,5 +1,23 @@
 # PLAN DE REFONTE ANKORA — v2 (final)
 
+> ## ⚠️ SUPERSEDED — 8 août 2026
+>
+> Ce document est **remplacé** par
+> [`2026-08-08-refonte-app-architecture-cible.md`](./2026-08-08-refonte-app-architecture-cible.md),
+> qui s'appuie sur des parcours **mesurés au navigateur** plutôt que sur une
+> lecture de code ([l'inventaire](../../audits/2026-08-08-inventaire-parcours-refonte.md)).
+>
+> Il reste consultable pour son analyse, mais **deux prescriptions y sont
+> périmées** et induiraient en erreur :
+>
+> - `/app/simulator` devait rediriger vers **`/app?simulate=1`** (§4.2, §7). La
+>   cible retenue est **`/app`** nu : ouvrir une fenêtre modale en réponse à une
+>   demande de page surprend, et câbler un paramètre d'URL vers un tiroir mérite
+>   d'être fait une seule fois, délibérément, pour toutes les feuilles.
+> - Les dimensions mobiles y sont raisonnées sur **390 × 844**. L'écran utile
+>   d'un iPhone 14 fait **664 px** une fois la barre de Safari posée — mesuré.
+>   Tout budget de hauteur calculé sur 844 se donne 27 % d'espace inexistant.
+
 **26 juillet 2026.** Version corrigée après trois critiques adversariales. Toutes les affirmations factuelles ci-dessous ont été revérifiées sur le repo à l'instant (chemins et numéros de ligne cités). Ce document est autoportant : il suffit pour exécuter l'étape 1 sans connaître le projet.
 
 **Ce qui a le plus changé par rapport à la v1** : le programme passe de 4 migrations sur le chemin critique à **une seule**, la première PR livre de la valeur visible au lieu du 6ᵉ lot, et le filet e2e passe de « chantier parallèle non planifié » à l'étape 2 bloquante. Détail complet en §9.
@@ -168,7 +186,7 @@ Le second projet cloud reste utile pour les smoke tests de preview, **pas pour l
 
 La v1 restructurait toute la navigation à l'étape 7 **sans ADR**, en violation directe de la doctrine qu'elle invoquait pour justifier son propre bloc ADR. Corrigé : la structure cible (§4), la règle de gouvernance, le sort de `/app/simulator` et la liste des 5 entrées sont actés en ADR, **avec trace de validation @thierry**, avant toute ligne de code.
 
-### D10 — Amendement NORTH_STAR → **ADR-031** — _signature @thierry requise_
+### D10 — Amendement `NORTH_STAR` → **ADR-031** — _signature @thierry requise_
 
 `CLAUDE.md` grave « Tout dashboard minimaliste = refus de merge » et liste 8 sections obligatoires, écrites le 23 avril contre une cible « niveau Monarch ». Le retour terrain de juillet — « tout est mélangé, confus » — est une donnée **plus récente et plus fiable** qu'une spec.
 

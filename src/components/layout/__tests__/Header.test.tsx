@@ -156,29 +156,36 @@ describe('<Header />', () => {
     expect(screen.getByRole('link', { name: 'Mon cockpit' })).toBeInTheDocument();
   });
 
-  it('app variant shows the in-app navigation (dashboard, accounts, charges, expenses, simulator, settings)', async () => {
+  it('app variant shows the in-app navigation (dashboard, accounts, charges, expenses, settings)', async () => {
     await renderHeader({ variant: 'app', isAuthenticated: true });
     expect(screen.getByRole('link', { name: 'Tableau de bord' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Comptes' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Charges' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Dépenses' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Simulateur' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Paramètres' })).toBeInTheDocument();
+  });
+
+  /**
+   * Le simulateur a quitté la navigation le 8 août 2026 avec sa route : il n'est
+   * plus une destination, seulement le tiroir du cockpit. Ce cas remplace deux
+   * assertions qui vérifiaient sa présence — il vérifie son ABSENCE, ce qui est
+   * la seule chose qui puisse encore échouer si quelqu'un le remet au registre
+   * sans recréer la route.
+   */
+  it('app variant no longer offers a Simulateur link — it is a drawer, not a destination', async () => {
+    await renderHeader({ variant: 'app', isAuthenticated: true });
+    expect(screen.queryByRole('link', { name: 'Simulateur' })).not.toBeInTheDocument();
   });
 
   it('app variant links point to the correct routes', async () => {
     await renderHeader({ variant: 'app', isAuthenticated: true });
     expect(screen.getByRole('link', { name: 'Dépenses' })).toHaveAttribute('href', '/app/expenses');
-    expect(screen.getByRole('link', { name: 'Simulateur' })).toHaveAttribute(
-      'href',
-      '/app/simulator',
-    );
+    expect(screen.getByRole('link', { name: 'Charges' })).toHaveAttribute('href', '/app/charges');
   });
 
-  it('marketing variant does not show the app-only links (Dépenses / Simulateur)', async () => {
+  it('marketing variant does not show the app-only links (Dépenses)', async () => {
     await renderHeader({ variant: 'marketing', isAuthenticated: false });
     expect(screen.queryByRole('link', { name: 'Dépenses' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Simulateur' })).not.toBeInTheDocument();
   });
 
   it('home link always points to / regardless of auth state (issue #95)', async () => {

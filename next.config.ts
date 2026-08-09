@@ -38,6 +38,42 @@ const nextConfig: NextConfig = {
    */
   async redirects() {
     return [
+      /**
+       * `/app/simulator` a été supprimée le 8 août 2026 : le simulateur n'est
+       * pas un lieu où l'on va, c'est une question qu'on pose à une situation.
+       * Il ne subsiste que sous la forme du tiroir du cockpit.
+       * Cf. `docs/superpowers/specs/2026-08-08-refonte-app-architecture-cible.md` §2.1.
+       *
+       * Une redirection plutôt qu'un 404 : l'URL a pu être mise en favori, et
+       * elle a vécu plusieurs mois. Elle mène au cockpit **sans ouvrir le
+       * tiroir** — ouvrir une fenêtre modale en réponse à une demande de page
+       * surprendrait, et câbler un paramètre d'URL vers un tiroir mérite d'être
+       * fait une fois, délibérément, pour toutes les feuilles à la fois.
+       *
+       * Les redirections de config s'appliquent AVANT le proxy, donc avant
+       * next-intl. La variante non préfixée couvre le français (defaultLocale
+       * servi à la racine) ; la seconde couvre les quatre locales préfixées.
+       * Aucune boucle possible : la cible ne rematche aucune des deux sources.
+       *
+       * TEMPORAIRE (307), volontairement — c'est la seule ligne de ce tableau à
+       * ne pas être permanente. Un 308 est mis en cache par le navigateur SANS
+       * expiration : il ne redemande plus jamais l'URL au serveur. Or le
+       * paragraphe ci-dessus annonce lui-même que le câblage URL → tiroir sera
+       * repris « une fois, délibérément, pour toutes les feuilles ». Si cette
+       * passe décide un jour que cette URL doit ouvrir le tiroir, tout
+       * navigateur ayant vu un 308 resterait collé sur `/app` — et le symptôme,
+       * « ça ne marche que sur une machine neuve », est parmi les plus coûteux à
+       * diagnostiquer. La prudence ne coûte rien ici : l'URL est derrière
+       * l'authentification et en `noindex`, aucun enjeu de référencement ne
+       * justifie la permanence. Passer en 308 quand la décision sera arrêtée.
+       */
+      { source: '/app/simulator', destination: '/app', permanent: false },
+      {
+        source: '/:locale(en|nl-BE|de-DE|es-ES)/app/simulator',
+        destination: '/:locale/app',
+        permanent: false,
+      },
+
       { source: '/fr', destination: '/', permanent: true },
       { source: '/nl', destination: '/nl-BE', permanent: true },
       { source: '/de', destination: '/de-DE', permanent: true },

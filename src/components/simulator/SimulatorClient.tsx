@@ -41,17 +41,42 @@ const FREQUENCIES: readonly Frequency[] = ['monthly', 'quarterly', 'semiannual',
 const MODES: readonly Mode[] = ['cancel', 'negotiate', 'add'];
 
 /**
- * @param hideHeader  Suppress the page `<header>` (h1 + subtitle) when the
- *   simulator is rendered inside the dashboard drawer (THI-195). The drawer
- *   supplies its own `<h2>` header, so rendering the `<h1>` here would create
- *   a duplicate top-level heading. Defaults to `false` so the standalone
- *   `/app/simulator` route keeps its full header untouched.
+ * Le calculateur, rendu UNIQUEMENT dans le tiroir du cockpit.
+ *
+ * Il portait une prop `hideHeader` qui supprimait un `<header>` (h1 +
+ * sous-titre) : la route autonome `/app/simulator` affichait ce titre, le
+ * tiroir le masquait pour ne pas produire deux titres de premier niveau.
+ *
+ * La route a été supprimée le 8 août 2026 — un simulateur n'est pas un lieu où
+ * l'on va, c'est une question qu'on pose à une situation. Le seul appelant
+ * restant passait toujours `hideHeader`, donc la branche `!hideHeader` n'était
+ * plus exercée par rien. Elle est retirée avec la prop plutôt que conservée
+ * « au cas où » : une branche que rien n'atteint est une branche que rien ne
+ * teste. Le tiroir fournit son propre `<h2>`.
+ *
+ * Clés i18n devenues orphelines — inventaire vérifié par grep, corrigé le
+ * 2026-08-09 après relecture. Une première rédaction annonçait
+ * `app.simulator.title` parmi elles : c'est FAUX, et dangereusement, puisque la
+ * note ci-dessous invite explicitement à un nettoyage ultérieur. Cette clé est
+ * le titre du tiroir (`SimulatorDrawer`, garanti par son propre test). La
+ * supprimer casserait le tiroir dans les cinq locales.
+ *
+ * Réellement orphelines : `app.simulator.subtitle`, `common.nav.simulator`
+ * (retirée de `HEADER_NAV_LABELS`), `layout.bottomTab.simulate` (de
+ * `TAB_LABELS`) et `layout.moreSheet.links.simulate` (de `SHEET_LABELS`).
+ * `landing.mktnav.links.simulator` reste utilisée — c'est l'ancre `#simulator`
+ * de la page d'accueil, sans rapport avec cette route.
+ *
+ * Leur retrait est délibérément différé : `messages/` appartient à la session de
+ * refonte de la page d'accueil jusqu'à la fin de ses PR, et une course à cinq
+ * fichiers de traduction coûterait plus que quatre clés inertes. Aucun test de
+ * parité ni de clé non consommée n'existe dans le dépôt : rien d'automatique ne
+ * rattrapera un nettoyage mal ciblé, seule cette liste fait foi.
  */
 export function SimulatorClient({
   charges,
   revenus,
   engagementsMensuels = 0,
-  hideHeader = false,
 }: {
   charges: RawCharge[];
   /**
@@ -69,9 +94,10 @@ export function SimulatorClient({
    * drifting by this amount whenever a debt is running. Defaults to 0.
    */
   engagementsMensuels?: number;
-  hideHeader?: boolean;
 }) {
-  const t = useTranslations('app.simulator');
+  // Le namespace racine `app.simulator` n'est plus consommé ICI — son `title`
+  // sert désormais le `<h2>` du tiroir, et seul `subtitle` est devenu inerte.
+  // Les namespaces enfants ci-dessous restent tous utilisés.
   const locale = useLocale() as Locale;
   const fmtMoney = (value: Parameters<typeof formatCurrency>[0]) => formatCurrency(value, locale);
   const tScenario = useTranslations('app.simulator.scenario');
@@ -192,13 +218,6 @@ export function SimulatorClient({
 
   return (
     <div className="flex flex-col gap-6">
-      {!hideHeader && (
-        <header>
-          <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{t('title')}</h1>
-          <p className="text-muted-foreground mt-1">{t('subtitle')}</p>
-        </header>
-      )}
-
       <Card>
         <CardHeader>
           <CardTitle>{tScenario('title')}</CardTitle>
