@@ -151,10 +151,10 @@ motif ; c'est écrit dans l'ADR pour que le sujet ne se rouvre pas.
 
 ### `docs/design-tokens.md` — supplanté, pas corrigé
 
-Ce document se déclare « Source of truth » et prescrit `--color-warning →
-#d97706` : **la valeur exacte qu'ADR-036 existe pour interdire** (3.19:1 sur
-blanc). Il annonce aussi une palette d'accent « Amber » là où le produit tient le
-laiton, et un mécanisme de thème par `prefers-color-scheme`. Daté du 19 avril
+Ce document se déclare « Source of truth » et prescrit pour `--color-warning` la
+valeur `#d97706` : **exactement celle qu'ADR-036 existe pour interdire** (3.19:1
+sur blanc). Il annonce aussi une palette d'accent « Amber » là où le produit tient
+le laiton, et un mécanisme de thème par `prefers-color-scheme`. Daté du 19 avril
 2026 — antérieur au verrouillage laiton du 24, à ADR-035 et à ADR-036. **Tout son
 corpus est pré-laiton.**
 
@@ -262,6 +262,75 @@ sonde qui regarde au mauvais endroit ne rend pas un résultat vide, elle rend un
 faux résultat.)_
 
 ---
+
+## 7bis. Relecture de code indépendante — Sourcery étant hors quota
+
+Sourcery n'a relu aucune PR de cette série (quota hebdomadaire épuisé). Une
+relecture indépendante a donc été menée à sa place, et **elle a trouvé un défaut
+que ma propre falsification avait manqué.**
+
+### Le défaut : les paires ne passaient pas par le remap
+
+Le `describe` s'appelait « the pairs the remap creates » et le SKILL promettait
+que le test « recalcule chaque paire ». En réalité les paires étaient **codées en
+dur à partir des pigments bruts** — `fileToken('color-ink')` sur
+`fileToken('color-paper')` — sans jamais consulter `remapPairs()`. Le test ne
+savait pas quelle variable sémantique pointait sur quel pigment.
+
+Conséquence, vérifiée par mutation : repointer `--color-foreground` sur
+`--color-paper-line` dans **les deux** blocs laissait la suite **entièrement
+verte**, avec le corps de texte de la landing à **1.21:1**.
+
+Mes quatre mutations initiales ne pouvaient pas le voir : elles portaient sur les
+**valeurs** et sur la **symétrie des deux blocs**, jamais sur la **justesse d'une
+cible**. C'est la limite d'une falsification écrite par l'auteur du test.
+
+**Correctif** : `underPaper(semantic)` résout chaque token à travers le remap —
+pigment si remappé, valeur `@theme` sinon — et les paires sont exprimées en
+termes **sémantiques** (`--color-foreground` sur `--color-background`). Un
+mauvais ciblage déplace donc un ratio, et un ratio déplacé échoue. Ajouter un
+token au remap fait suivre le test automatiquement.
+
+### Un second défaut : le fond que la classe ne peignait pas
+
+Le commentaire affirmait que sur Firefox 113-120 « le contenu de page rend papier
+(cette classe peint son propre fond) ». **La portée ne déclarait que six
+variables, aucun `background`** — le repli aurait rendu une landing intégralement
+ardoise. ADR-039 supposait pourtant cette ligne : c'est l'implémentation qui a
+manqué la marche, pas le commentaire qui mentait. `background:
+var(--color-background)` ajouté à la portée, qui devient auto-suffisante — L2 n'a
+plus à penser à poser un utilitaire de fond.
+
+### Les autres corrections
+
+| Constat                                                                                                                                                                                               | Correction                                                                                                                                                                               |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| « déclaré exactement une fois » n'épingle pas la **portée** : déplacer un pigment vers un bloc conditionnel gardait le compte à 1                                                                     | troisième garde interlockée — chaque pigment est déclaré dans le `:root` **inconditionnel**, localisé par son contenu                                                                    |
+| le garde anti-remap-non-gardé ne voyait qu'une seule écriture de la faute (`.foo, .mkt-paper {`, `body .mkt-paper {`, `@media { .mkt-paper {` passaient)                                              | juge le **prédicat** : toute règle mentionnant la classe **et déclarant des variables** doit porter le garde clair. Ne rougira donc pas sur la règle de mise en page que L2 doit ajouter |
+| `blockAfter()` prenait « la `{` suivante » sans vérifier qu'elle appartient à la règle du marqueur — une at-rule déclarative (`@layer …;`) aurait rendu un bloc étranger, en silence                  | mine désamorcée en une ligne : un `;` avant la `{` disqualifie l'occurrence                                                                                                              |
+| fusionner les deux blocs en liste de sélecteurs — le réflexe DRY devant deux blocs identiques — ferait **jeter la règle entière** sur Firefox 113-120 (une liste de sélecteurs n'est pas _forgiving_) | interdiction écrite dans le CSS, avec le mécanisme nommé                                                                                                                                 |
+| `SKILL.md` promettait « every pair », alors que 10 des 23 lignes du §4 sont ⬜                                                                                                                        | reformulé — c'est cette formulation qui a fait dériver le §4                                                                                                                             |
+| `remapPairs` comparé en ordre, `declaredProps` trié : réordonner un bloc faisait rougir l'un et pas l'autre                                                                                           | les deux triés                                                                                                                                                                           |
+| la paire CTA figurait sous « pairs the remap creates » alors qu'aucun de ses tokens n'est remappé                                                                                                     | sortie dans son propre cas, avec le motif écrit                                                                                                                                          |
+| `tokenIn` / `fileToken` / `declarationCount` n'écrivaient pas le même motif de déclaration                                                                                                            | alignés                                                                                                                                                                                  |
+
+### Falsification, seconde passe
+
+| Mutation                                                   | Observé                             |
+| ---------------------------------------------------------- | ----------------------------------- |
+| `--color-foreground` repointé sur `--color-paper-line`     | **3 échecs** (0 avant le correctif) |
+| `surface-soft` et `surface-muted` intervertis              | **1 échec**                         |
+| `--color-ink` déplacé du `:root` vers un bloc conditionnel | **1 échec**                         |
+| remap non gardé écrit en liste de sélecteurs               | **1 échec**                         |
+
+La deuxième mérite un mot : elle passait encore **après** le correctif principal,
+parce que les deux teintes papier sont voisines et qu'aucun contraste ne bouge.
+Un test de contraste ne peut pas voir une inversion d'élévation. Plutôt qu'une
+assertion qui recopierait la table de remap, l'**intention** est encodée : une
+surface « soft » est plus claire qu'une surface « muted » — règle qui vaut aussi
+dans le jeu ardoise, et que l'inversion casse.
+
+Suite passée de **53 à 60 cas**.
 
 ## 8. DoD
 

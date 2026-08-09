@@ -64,7 +64,15 @@ function blockAfter(marker: string): string {
     const prev = before[before.length - 1];
     if (prev === undefined || prev === '}' || prev === ';') {
       const open = css.indexOf('{', start);
-      if (open === -1) break;
+      // Starting a rule is not the same as having a BODY. A declarative at-rule
+      // ends at its `;` — `@layer theme, base, …;` is the live example — and
+      // taking "the next `{`" there hands back some other rule's body without a
+      // word. That is the very failure this helper was hardened to kill, so the
+      // anchor has to prove the brace belongs to the marker's own rule.
+      if (open === -1 || css.slice(start, open).includes(';')) {
+        from = start + 1;
+        continue;
+      }
       let depth = 0;
       for (let i = open; i < css.length; i++) {
         if (css[i] === '{') depth++;
@@ -121,7 +129,9 @@ function declarationCount(name: string): number {
 }
 
 function tokenIn(block: string, name: string): string {
-  const m = block.match(new RegExp(`--${name}:\\s*(#[0-9a-fA-F]{6})\\b`));
+  // `\s*` before the colon, like `declarationCount` and `fileToken`: three
+  // readers of the same declarations must agree on what one looks like.
+  const m = block.match(new RegExp(`--${name}\\s*:\\s*(#[0-9a-fA-F]{6})\\b`));
   if (!m?.[1]) throw new Error(`Token --${name} not found (or not a 6-digit hex)`);
   return m[1].toLowerCase();
 }
@@ -131,14 +141,56 @@ function tokenIn(block: string, name: string): string {
  *
  * The six paper pigments (ADR-039) live in a bare `:root`, and `globals.css`
  * already has a second `:root` (`color-scheme`), so a block marker would be
- * ambiguous. Reading file-wide is also a STRONGER guarantee once paired with
- * the "declared exactly once" assertion below: it pins the token's uniqueness,
- * not merely its address.
+ * ambiguous.
+ *
+ * Reading file-wide is stronger than a block read on UNIQUENESS and strictly
+ * weaker on SCOPE — and scope is what makes a pigment available. That gap is
+ * closed by a separate assertion (`PIGMENT_ROOT`), not by this function. Do not
+ * read the pair as one guarantee.
  */
 function fileToken(name: string): string {
-  const m = css.match(new RegExp(`--${name}:\\s*(#[0-9a-fA-F]{6})\\b`));
+  const m = css.match(new RegExp(`--${name}\\s*:\\s*(#[0-9a-fA-F]{6})\\b`));
   if (!m?.[1]) throw new Error(`Token --${name} not found in globals.css (or not a 6-digit hex)`);
   return m[1].toLowerCase();
+}
+
+/**
+ * The bare `:root` that carries the paper pigments, located by its CONTENT.
+ *
+ * `declarationCount` pins uniqueness but says nothing about scope — and scope is
+ * what makes a pigment available at all. Move `--color-ink` into any
+ * conditional block (`[data-accent='admin']`, a media query, anything) and the
+ * count stays at one while `var(--color-ink)` becomes undefined on the landing.
+ * Located by content rather than by a marker because `globals.css` has a second
+ * `:root`, for `color-scheme`.
+ */
+const PIGMENT_ROOT = [...css.matchAll(/(?:^|[};])\s*:root\s*\{([^{}]*)\}/g)]
+  .map((m) => m[1])
+  .find((body): body is string => body !== undefined && body.includes('--color-paper:'));
+
+/** Every rule whose selector mentions `.mkt-paper`, with its declarations. */
+function paperRules(): Array<{ selector: string; body: string }> {
+  return [...css.matchAll(/([^{}]*\.mkt-paper[^{}]*)\{([^{}]*)\}/g)].flatMap((m) => {
+    const [, selector, body] = m;
+    return selector === undefined || body === undefined
+      ? []
+      : [{ selector: selector.trim(), body }];
+  });
+}
+
+const PAPER_REMAP = new Map(remapPairs(PAPER_SCOPE_BLOCK));
+
+/**
+ * The value a semantic token takes UNDER the paper scope.
+ *
+ * Remapped tokens resolve through the scope to their pigment; everything else
+ * keeps its `@theme` value. That is what a component actually renders on the
+ * landing — so a ratio computed from it measures the page, not a pair of hexes
+ * picked by hand. Add a token to the remap and this follows automatically.
+ */
+function underPaper(semantic: string): string {
+  const target = PAPER_REMAP.get(semantic);
+  return target ? fileToken(target.slice(2)) : tokenIn(THEME_BLOCK, semantic.slice(2));
 }
 
 /** WCAG 2.1 relative luminance. */
@@ -328,22 +380,39 @@ describe('globals.css — WCAG AA contrast of the paper scope (ADR-039)', () => 
     });
 
     it.each(PAPER_TOKENS)("--%s is absent from the [data-theme='dark'] block", (token) => {
-      // These two assertions INTERLOCK — neither may be deleted alone.
+      // These three assertions INTERLOCK — none may be deleted alone.
       // "Exactly once" alone would stay green if someone MOVED a declaration
       // into the dark block: still one declaration, but the token would become
       // dark-only and undefined in light, which is backwards. This one closes
       // that. Conversely this one alone would tolerate a duplicate in a third
-      // place.
+      // place. And neither says WHERE the surviving declaration lives — the
+      // next one does.
       expect(DARK_BLOCK).not.toMatch(new RegExp(`--${token}\\s*:`));
+    });
+
+    it.each(PAPER_TOKENS)('--%s is declared in the unconditional :root', (token) => {
+      // Uniqueness is not availability. A pigment declared exactly once, in a
+      // block that only matches sometimes, is undefined the rest of the time —
+      // and `var()` on an undefined custom property makes the whole declaration
+      // invalid at computed-value time, silently.
+      expect(
+        PIGMENT_ROOT,
+        'the bare :root carrying the paper pigments was not found',
+      ).toBeDefined();
+      expect(PIGMENT_ROOT).toMatch(new RegExp(`--${token}\\s*:`));
     });
   });
 
   describe('the scope and its body companion are one mechanism, written twice', () => {
-    it('declares the same properties in both blocks', () => {
+    it('declares the same custom properties in both blocks', () => {
       // The duplication is deliberate: the companion is what makes
       // `body { background }` and the five `fixed` slots follow the remap, and
       // it also has to survive on its own where `:has()` is unsupported. What
       // must never happen is one being edited without the other.
+      //
+      // Custom properties only — the scope also paints `background`, which the
+      // companion deliberately does not repeat (`body` already paints from
+      // `--color-background` on its own).
       const scope = declaredProps(PAPER_SCOPE_BLOCK).sort();
       const companion = declaredProps(PAPER_BODY_BLOCK).sort();
       expect(companion, `${PAPER_SCOPE_MARKER} and ${PAPER_BODY_MARKER} drifted apart`).toEqual(
@@ -352,7 +421,14 @@ describe('globals.css — WCAG AA contrast of the paper scope (ADR-039)', () => 
     });
 
     it('points both blocks at the same targets', () => {
-      expect(remapPairs(PAPER_BODY_BLOCK)).toEqual(remapPairs(PAPER_SCOPE_BLOCK));
+      // Sorted on both sides, like the assertion above: reordering the six
+      // declarations inside one block is a cosmetic edit and must not fail one
+      // test while the other passes.
+      const sorted = (b: string) =>
+        remapPairs(b)
+          .map(([k, v]) => `${k}=${v}`)
+          .sort();
+      expect(sorted(PAPER_BODY_BLOCK)).toEqual(sorted(PAPER_SCOPE_BLOCK));
     });
 
     it('remaps only variables that are actually declared', () => {
@@ -368,38 +444,89 @@ describe('globals.css — WCAG AA contrast of the paper scope (ADR-039)', () => 
       expect(missing, `remap targets with no declaration: ${missing.join(', ')}`).toEqual([]);
     });
 
-    it('never applies the remap without the light-theme guard', () => {
-      // A bare `.mkt-paper { … }` rule would repaint the dark theme too, which
-      // ADR-039 explicitly refuses ("no paper by night").
-      expect(css).not.toMatch(/(^|[};])\s*\.mkt-paper\s*\{/);
+    it('never remaps a variable without the light-theme guard', () => {
+      // Judges the PREDICATE, not one way of writing the mistake. An earlier
+      // version pattern-matched `.mkt-paper` immediately preceded by `}` and
+      // followed by `{`, which let through every other unguarded form —
+      // `.foo, .mkt-paper {`, `body .mkt-paper {`, `.mkt-paper.is-wide {`,
+      // or the class nested inside an `@media`. All would repaint the dark
+      // theme, which ADR-039 refuses ("no paper by night").
+      //
+      // It also only looks at rules that DECLARE variables. A layout-only rule
+      // is legitimate and unguarded on purpose: PR L2 gives the wrapper its
+      // flex behaviour, which has nothing to do with pigment.
+      const unguarded = paperRules()
+        .filter(({ body }) => /--[\w-]+\s*:/.test(body))
+        .filter(({ selector }) => !selector.includes(":not([data-theme='dark'])"))
+        .map(({ selector }) => selector);
+      expect(unguarded, `paper remaps missing the light guard: ${unguarded.join(' | ')}`).toEqual(
+        [],
+      );
     });
   });
 
+  /**
+   * The pairs the remap ACTUALLY creates.
+   *
+   * Every value below is resolved THROUGH `remapPairs()`, never read straight
+   * off a raw pigment. That distinction is the whole point: an earlier version
+   * hard-coded `fileToken('color-ink')` on `fileToken('color-paper')`, so it
+   * measured two pigments that happened to be legible together while knowing
+   * nothing about which semantic token pointed at which. Repointing
+   * `--color-foreground` at `--color-paper-line` would have left the entire
+   * suite green with landing body text at 1.21:1.
+   *
+   * `underPaper()` answers the only question that matters — what value does
+   * this semantic token take on the landing — so a wrong target now moves a
+   * ratio, and a moved ratio fails.
+   */
   describe('the pairs the remap creates', () => {
-    const ink = () => fileToken('color-ink');
-    const inkSoft = () => fileToken('color-ink-soft');
-    const paper = () => fileToken('color-paper');
-
     it.each([
-      ['ink on paper', ink, paper],
-      ['ink-soft on paper', inkSoft, paper],
-      ['brand-text-strong on paper', () => tokenIn(THEME_BLOCK, 'color-brand-text-strong'), paper],
-      ['accent-text on paper', () => tokenIn(THEME_BLOCK, 'color-accent-text'), paper],
-      [
-        'card white on brand-700 (the CTA)',
-        () => tokenIn(THEME_BLOCK, 'color-card'),
-        () => tokenIn(THEME_BLOCK, 'color-brand-700'),
-      ],
-      ['ink on paper-soft', ink, () => fileToken('color-paper-soft')],
-      ['ink on paper-muted', ink, () => fileToken('color-paper-muted')],
-      ['ink-soft on paper-muted', inkSoft, () => fileToken('color-paper-muted')],
+      ['body text on the page', '--color-foreground', '--color-background'],
+      ['secondary text on the page', '--color-muted-foreground', '--color-background'],
+      ['strong brand text on the page', '--color-brand-text-strong', '--color-background'],
+      ['accent text on the page', '--color-accent-text', '--color-background'],
+      ['body text on a soft surface', '--color-foreground', '--color-surface-soft'],
+      ['body text on a muted surface', '--color-foreground', '--color-surface-muted'],
+      ['secondary text on a muted surface', '--color-muted-foreground', '--color-surface-muted'],
     ] as const)('%s passes AA 4.5:1', (_label, fg, bg) => {
-      const [f, b] = [fg(), bg()];
+      const [f, b] = [underPaper(fg), underPaper(bg)];
       const ratio = contrastRatio(f, b);
       expect(
         ratio,
-        `${f} on ${b} → ${ratio.toFixed(2)}:1, below AA ${AA_NORMAL_TEXT}:1`,
+        `${fg} (${f}) on ${bg} (${b}) → ${ratio.toFixed(2)}:1, below AA ${AA_NORMAL_TEXT}:1`,
       ).toBeGreaterThanOrEqual(AA_NORMAL_TEXT);
+    });
+
+    it('keeps the two elevated surfaces in their intended order', () => {
+      // A contrast test cannot see this on its own, and that is the point.
+      // Swapping which pigment `--color-surface-soft` and `--color-surface-muted`
+      // point at inverts the elevation of every panel on the landing while every
+      // ratio stays comfortably AA — the two paper tints are neighbours.
+      //
+      // Asserting the ORDER rather than the mapping keeps this from being a
+      // mirror of the CSS: "soft is the subtler lift, muted sits further back"
+      // is a design rule that holds in the slate set too, and it is what an
+      // accidental swap actually breaks.
+      const lum = (hex: string) => luminance(hex);
+      expect(
+        lum(underPaper('--color-surface-soft')),
+        'surface-soft must stay lighter than surface-muted',
+      ).toBeGreaterThan(lum(underPaper('--color-surface-muted')));
+      expect(lum(tokenIn(THEME_BLOCK, 'color-surface-soft'))).toBeGreaterThan(
+        lum(tokenIn(THEME_BLOCK, 'color-surface-muted')),
+      );
+    });
+
+    it('the primary CTA stays legible — unchanged by the remap, asserted anyway', () => {
+      // Neither token is remapped, so this pair is identical on both surfaces.
+      // It sits here because the landing is where the CTA lives and where a
+      // future brand tweak would be noticed last.
+      const ratio = contrastRatio(
+        tokenIn(THEME_BLOCK, 'color-card'),
+        tokenIn(THEME_BLOCK, 'color-brand-700'),
+      );
+      expect(ratio).toBeGreaterThanOrEqual(AA_NORMAL_TEXT);
     });
   });
 
@@ -418,7 +545,7 @@ describe('globals.css — WCAG AA contrast of the paper scope (ADR-039)', () => 
    */
   describe.each([
     ['slate (default surfaces)', () => tokenIn(THEME_BLOCK, 'color-background')],
-    ['paper (landing)', () => fileToken('color-paper')],
+    ['paper (landing)', () => underPaper('--color-background')],
   ])('status tokens on the %s page background', (_label, background) => {
     it.each(STATUS_TOKENS)('--%s passes AA 4.5:1', (token) => {
       const value = tokenIn(THEME_BLOCK, token);

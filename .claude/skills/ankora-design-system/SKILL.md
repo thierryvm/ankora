@@ -27,7 +27,7 @@ This is **non-negotiable** — it's a regulatory choice, part of the FSMA-compli
 
 - The paper scope remaps six semantic variables to paper/ink pigments so components keep ONE vocabulary on both surfaces. Never write a paper pigment directly; write the semantic token and let the surface decide.
 - **There is deliberately no `.app-surface` counterpart.** `:root` IS the product identity; the paper class is a departure from it, not a sibling. Do not add a symmetric scope to "balance" them.
-- Ratios are computed, never copied: `src/app/__tests__/contrast-ratios.test.ts` recalculates every pair from the stylesheet and fails under 4.5:1.
+- Ratios are computed, never copied — but only the pairs marked ✅ in [`docs/design/token-usage.md`](../../../docs/design/token-usage.md) §4 are guarded. `src/app/__tests__/contrast-ratios.test.ts` recalculates those from the stylesheet and fails under 4.5:1; the ⬜ rows are documentation and nothing watches them. Saying "every pair" is what let that table drift in the first place.
 - **In the Ankora Next.js context** (PR-3a integration, 2026-04-25): tokens live in `src/app/globals.css` via `@import 'tailwindcss'` + `@theme {}` block. The `colors_and_type.css` and `ui_kits/_shared/shell.css` references in this SKILL refer to the original ZIP source — adapt paths when generating Ankora Next.js code.
 
 ### Browser support baseline

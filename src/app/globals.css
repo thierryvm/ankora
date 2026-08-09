@@ -329,14 +329,23 @@
    hero instead of fighting it. The duplication is intentional; a test compares
    the two property sets so neither can be edited alone.
 
+   NEVER MERGE THE TWO BLOCKS INTO A SELECTOR LIST. Their six remaps are
+   identical, so collapsing them reads as an obvious cleanup — and it would be a
+   serious regression. A CSS selector list is NOT forgiving: on a browser that
+   cannot parse `:has()`, one unsupported selector invalidates the WHOLE rule,
+   taking the `.mkt-paper` branch down with it. Written apart, the fallback
+   survives. A test compares the two property sets, but it compares custom
+   properties only — the `background` below is deliberately not duplicated onto
+   `body`, which paints from `--color-background` on its own.
+
    BROWSER FLOOR. `:has()` needs Firefox 121+ (Dec 2023); the project baseline
-   allows 113+. On 113-120 the companion simply does not match: page content
-   still paints paper (this class carries its own background), while `body` and
-   the five slots stay on the complete slate set — internally consistent, so no
-   pair should drop below AA. REASONED, NOT MEASURED. What CI actually covers:
-   the three Playwright projects are Chromium desktop, mobile Safari and mobile
-   Chrome, all of which support `:has()` — companion path 3/3, fallback path
-   0/3.
+   allows 113+. On 113-120 the companion does not match, so `body` and the five
+   `fixed` slots stay on the complete slate set while this class still paints
+   paper for the page content — which is why it declares `background` and not
+   only variables. Internally consistent either way, so no pair should drop
+   below AA. REASONED, NOT MEASURED. What CI actually covers: the three
+   Playwright projects are Chromium desktop, mobile Safari and mobile Chrome,
+   all of which support `:has()` — companion path 3/3, fallback path 0/3.
 
    No dark remap, on purpose: the landing keeps the existing navy. A second
    "paper by night" palette was never asked for. */
@@ -347,6 +356,12 @@ html:not([data-theme='dark']) .mkt-paper {
   --color-muted-foreground: var(--color-ink-soft);
   --color-surface-soft: var(--color-paper-soft);
   --color-surface-muted: var(--color-paper-muted);
+
+  /* Paints what it remaps, so the scope is self-sufficient: without this the
+     Firefox 113-120 fallback described above would render an entirely slate
+     landing, and L2 would have to remember to add a background utility to the
+     wrapper. ADR-039 already assumed this line existed. */
+  background: var(--color-background);
 }
 
 html:not([data-theme='dark']) body:has(.mkt-paper) {

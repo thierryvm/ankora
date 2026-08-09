@@ -1,6 +1,6 @@
 # Design Tokens — Ankora Landing v2
 
-> # ⛔ DOCUMENT SUPPLANTÉ — 8 août 2026
+> ## ⛔ DOCUMENT SUPPLANTÉ — 8 août 2026
 >
 > **Ne rien copier d'ici.** Ce document est une extraction du mockup
 > `design-mockup-landing.html` datée du **19 avril 2026** — donc antérieure au
@@ -227,10 +227,10 @@ Dark mode surfaces use `rgba(...)` for tinted backgrounds (e.g., `rgba(20, 184, 
 > le tableau du §4 en disant si la ligne est gardée par une porte ou non.
 > Rien n'est plus à écrire ici.
 
-~~1. Update `src/app/globals.css` (`@theme` block)~~
-~~2. Add/update entry in this file (`docs/design-tokens.md`)~~
-~~3. Test in both light and dark modes (`prefers-color-scheme: dark` in DevTools)~~
-~~4. Commit: `chore(design): update design tokens [reason]`~~
+~~Ancienne procédure, abrogée : mettre à jour le bloc `@theme` de
+`src/app/globals.css`, puis ajouter une entrée dans ce fichier, puis tester dans
+les deux thèmes via `prefers-color-scheme: dark` en DevTools, puis committer sous
+`chore(design): update design tokens [reason]`.~~
 
 ---
 
