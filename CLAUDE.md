@@ -284,7 +284,7 @@ ininterprétable au premier conflit, donc ignoré :
 
 | Job                              | Plancher, OBSERVÉ |
 | -------------------------------- | ----------------- |
-| `Playwright E2E`                 | **228 passed**    |
+| `Playwright E2E`                 | **231 passed**    |
 | `Playwright E2E (authenticated)` | **41 passed**     |
 
 **Ces nombres sont mesurés, jamais déduits.** Un relèvement se mesure en local

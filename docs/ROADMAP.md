@@ -60,8 +60,15 @@ et [`docs/adr/ADR-039-portee-tokens-marketing-papier.md`](./adr/ADR-039-portee-t
 | L2  | Hero « relevé corrigé » + wrapper + parade flex + fixme iOS levé | ✅ #339     |
 | L3  | Sections au ton « relevé » + 5ᵉ FAQ + migration waterfall + SEO  | 📋 suivante |
 
+**L'ordre est contraint, pas constaté** — ces trois lignes ne sont pas
+interchangeables. L1 pose la portée `.mkt-paper` et les six pigments ; L2 **et**
+L3 la consomment, donc aucune des deux ne rend quoi que ce soit sans elle. L3
+reprend en plus le hero introduit par L2 pour y migrer la waterfall. Attaquer L3
+seule ne donnerait ni le papier ni la surface sur laquelle se poser.
+
 Plancher e2e public relevé par L2 : **228 → 231** (levée BUG-iOS-HERO-OVERFLOW,
-mesurée par projet). Rapports : [`docs/prs/PR-L1-report.md`](./prs/PR-L1-report.md),
+mesurée par projet, cf. [`docs/reference/planchers-e2e-historique.md`](./reference/planchers-e2e-historique.md)).
+Rapports : [`docs/prs/PR-L1-report.md`](./prs/PR-L1-report.md),
 [`docs/prs/PR-L2-report.md`](./prs/PR-L2-report.md).
 
 ### Vision produit
