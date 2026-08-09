@@ -181,11 +181,25 @@ export default async function LocaleLayout({
       // PR-QA-1c-1 (4 mai 2026): defensive horizontal overflow guard at the
       // document root. Captured by PR-QA-1b on iPhone SE (375px viewport):
       // body.scrollWidth=330 vs clientWidth=320 — a 10px overflow that
-      // turned the landing into a horizontally-pannable surface. We use
-      // `overflow-x-clip` (rather than `overflow-x-clip`) because
-      // Playwright WebKit returns `getComputedStyle().overflowX === "visible"`
-      // for `clip` despite the rule being applied (apparent emulation
-      // quirk), and `hidden` is universally supported.
+      // turned the landing into a horizontally-pannable surface.
+      //
+      // The guard is declared TWICE on purpose: here as a Tailwind utility,
+      // and again as a naked rule in globals.css. The naked rule exists
+      // because this class was observed missing from the production bundle
+      // (Tailwind 4 scans className strings; a server-component string can be
+      // missed), and it is the one that actually wins — it sits outside any
+      // `@layer`, so it outranks every utility.
+      //
+      // `clip`, never `hidden`, and the difference is load-bearing:
+      // `overflow-x: hidden` promotes the other axis to `auto` (CSS Overflow
+      // 3), turning <html> and <body> into scroll containers and severing the
+      // `position: sticky` chain for every header on the site. That is what
+      // happened between 4 May and 10 August 2026. Rationale, measurements
+      // and browser-support floor: see the `html` block in globals.css.
+      //
+      // The comment previously here justified `hidden` by a Playwright WebKit
+      // getComputedStyle quirk. That quirk does not reproduce — re-measured
+      // 2026-08-09 on WebKit at 390px and 320px.
       className="overflow-x-clip"
       {...(dataTheme ? { 'data-theme': dataTheme } : {})}
     >

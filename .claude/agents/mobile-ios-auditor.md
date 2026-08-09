@@ -42,8 +42,16 @@ relevant.
 
 ## Section 1 — Layout & Horizontal Overflow (5)
 
-1. `<body>` has `overflow-x: hidden` (or `overflow-x-clip`) — confirmed in
-   `globals.css` or root layout class.
+1. `<body>` and `<html>` have `overflow-x: clip` — confirmed in `globals.css`
+   (the naked rule wins) AND in the root layout class. **`hidden` is a defect
+   here, not an acceptable variant**: when one axis is neither `visible` nor
+   `clip`, CSS Overflow 3 promotes the other axis to `auto`, so `hidden` turns
+   both elements into scroll containers and severs the `position: sticky`
+   chain for every descendant — their scrollport becomes `<body>`, which does
+   not itself scroll. Ankora shipped `hidden` from 4 May to 10 August 2026 and
+   all three sticky headers were inert the whole time, on every page, without
+   a single gate turning red. If you find `hidden`, report it as a broken
+   sticky chain, not as a style preference.
 2. No element has effective width > `100vw` on a 393px viewport (check fixed
    widths in `px`, `rem`, `vw`, and grid columns that don't collapse).
 3. No `min-width` on cards, grids, tables that forces horizontal scroll on
