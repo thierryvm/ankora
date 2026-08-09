@@ -83,8 +83,10 @@ describe('la visibilité de la barre suit la route, sans remontage', () => {
 
   it("LE CAS DU DÉFAUT : de `/` vers `/app` sans remonter l'arbre, la barre apparaît", async () => {
     const { rerender } = render(arbre(true));
-    // Point de départ de la PWA installée : `start_url` vaut `/`, une route
-    // exclue. Aucune barre, et c'est correct.
+    // Une route exclue — `/` en est une. C'était le point de départ de la PWA
+    // installée jusqu'au 8 août 2026 (`start_url` vaut `/app` depuis) ; le cas
+    // reste celui de tout arrivant par une page publique. Aucune barre, et
+    // c'est correct.
     expect(barre()).not.toBeInTheDocument();
 
     // Ce que fait un clic sur « Mon cockpit » : le chemin change, l'arbre non.
