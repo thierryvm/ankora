@@ -19,10 +19,29 @@ les plus sensibles de l'app.
 Deux jobs, donc **deux planchers distincts** — un chiffre global agrégé serait
 ininterprétable au premier conflit, donc ignoré :
 
-| Job                              | Plancher au 6 août 2026                                         |
+| Job                              | Plancher au 9 août 2026                                         |
 | -------------------------------- | --------------------------------------------------------------- |
-| `Playwright E2E`                 | **228 passed** (224 au 31/07 — **enfin mesuré**, cf. infra)     |
+| `Playwright E2E`                 | **231 passed** (228 au 06/08, 224 au 31/07 — cf. infra)         |
 | `Playwright E2E (authenticated)` | **41 passed** (40 avant, +1 `bottom-tab-bar-client-navigation`) |
+
+> **Public : 228 → 231, mesuré le 2026-08-09**, à la PR L2 du programme landing
+> (#339, squash `c378978`). Relevé dans le log du run `31335138067`, SHA
+> `14c1325` : job public `231 passed / 198 skipped`, **0 failed, 0 flaky** ; job
+> authentifié `41 passed / 5 skipped`, **inchangé**.
+>
+> **Le +3 est un cas par projet iPhone, pas trois specs nouvelles.** L2 lève le
+> `fixme` BUG-iOS-HERO-OVERFLOW, qui neutralisait le même cas sur les trois
+> presets iPhone. C'est le mouvement sain décrit dans la règle : un plancher qui
+> MONTE parce qu'un trou a été bouché — ici un défaut de débordement horizontal
+> que la suite constatait sans jamais le faire rougir.
+>
+> **Relevé après coup, et c'est la faute à ne pas rejouer.** Le chiffre a été
+> mesuré avant le merge, mais ni `CLAUDE.md` ni ce journal ne l'ont reçu : ils
+> ont annoncé **228** pendant que la CI en exécutait 231. Un plancher écrit trop
+> bas ne rougit jamais — il laisse passer une suppression de trois cas sans que
+> rien ne bouge. C'est exactement la classe de défaut que ce garde-fou existe
+> pour attraper, et il a failli être aveugle à son propre relèvement. La
+> consignation du plancher fait partie de la PR qui le déplace, pas du suivi.
 
 > **Authentifié : 40 → 41, mesuré le 2026-08-06.**
 > `e2e/bottom-tab-bar-client-navigation.spec.ts` atteint le cockpit PAR UN CLIC,
