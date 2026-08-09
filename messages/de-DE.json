@@ -172,33 +172,32 @@
       "ctaSignup": "Konto erstellen"
     },
     "hero": {
-      "badge": "Nouveau · Simulateur what-if",
-      "h1Lead": "Ton ancrage",
-      "h1Highlight": "financier.",
-      "description": "Ankora sépare tes provisions affectées de ta réserve libre, projette six mois devant, et te laisse simuler l'impact de chaque décision — en clair, sans jargon.",
-      "ctaPrimary": "Konto erstellen",
-      "ctaSecondary": "Voir le simulateur",
-      "trust": {
-        "encrypted": "Données chiffrées, hébergées dans l'Union européenne",
-        "noSale": "Aucune vente de données",
-        "languages": "FR · EN"
-      },
-      "mockup": {
-        "eyebrow": "Aperçu cockpit",
-        "browserUrl": "Ankora · cockpit",
-        "kpis": {
-          "netRemaining": {
-            "label": "Net restant",
-            "sub": "avril · après provisions"
-          },
-          "provisions": {
-            "label": "Provisions",
-            "sub": "67 % des 2 480 € planifiés"
-          },
-          "reserve": {
-            "label": "Réserve",
-            "sub": "+120 € vs. mars"
-          }
+      "releve": {
+        "kicker": "Le relevé, corrigé",
+        "h1Bank": "Ta banque te montre ce qui s'est passé.",
+        "h1AnkoraLead": "Ankora te montre ce qui est",
+        "h1AnkoraEmphasis": "déjà engagé.",
+        "subtitle": "« Déjà engagé », c'est l'argent encore sur ton compte, mais déjà promis : l'assurance qui tombe le 15, la taxe de novembre. Ankora les compte d'avance.",
+        "card": {
+          "title": "Le solde que tu lis à ta banque",
+          "titleNote": "recopié par toi — Ankora ne se connecte à aucune banque",
+          "balanceAmount": "1 240,00 €",
+          "insuranceLabel": "Assurance auto · prélevée le 15",
+          "insuranceAmount": "− 280,00 €",
+          "taxLabel": "Taxe de circulation · novembre",
+          "taxAmount": "− 162,00 €",
+          "payoffLabel": "Encore vraiment à toi",
+          "payoffNote": "une fois l'assurance et la taxe comptées",
+          "payoffAmount": "798,00 €",
+          "foot": "Exemple illustratif — dans Ankora, ce sont tes chiffres, saisis par toi.",
+          "ariaLabel": "Relevé illustratif : 1 240,00 € sur le compte, moins 280,00 € d'assurance auto prélevée le 15, moins 162,00 € de taxe de circulation en novembre — 798,00 € encore vraiment à toi."
+        },
+        "ctaPrimary": "Créer mon compte",
+        "ctaSecondary": "Voir le simulateur",
+        "trust": {
+          "encrypted": "Données chiffrées, hébergées dans l'Union européenne",
+          "noSale": "Aucune vente de données",
+          "languages": "FR · EN"
         }
       },
       "waterfall": {

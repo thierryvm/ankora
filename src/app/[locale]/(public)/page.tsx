@@ -76,18 +76,27 @@ export default async function HomePage({ params }: LocaleParams) {
         dangerouslySetInnerHTML={{ __html: faqLdHtml }}
       />
 
-      <MktNav />
+      {/* Marketing paper scope (ADR-039). The wrapper lives HERE, in the page,
+          because the page re-renders on every client navigation — a layout
+          would freeze the surface decision (root layouts are not re-rendered).
+          It must stay a DIRECT child of <body>: globals.css gives
+          `body > .mkt-paper` the flex-link role that `body > main` plays on
+          every unwrapped page (footer at the bottom of short pages). The scope
+          paints its own paper background — no background utility here. */}
+      <div className="mkt-paper">
+        <MktNav />
 
-      <main id="main" tabIndex={-1}>
-        <Hero />
-        <Principles />
-        <Feature />
-        <WhatIfDemo />
-        <FAQ />
-        <FooterCTA />
-      </main>
+        <main id="main" tabIndex={-1}>
+          <Hero />
+          <Principles />
+          <Feature />
+          <WhatIfDemo />
+          <FAQ />
+          <FooterCTA />
+        </main>
 
-      <MktFooter />
+        <MktFooter />
+      </div>
     </>
   );
 }

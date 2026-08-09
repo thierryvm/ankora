@@ -172,33 +172,32 @@
       "ctaSignup": "Create my account"
     },
     "hero": {
-      "badge": "New · What-if simulator",
-      "h1Lead": "Your financial",
-      "h1Highlight": "anchor.",
-      "description": "Ankora separates your earmarked provisions from your free reserve, projects six months ahead, and lets you simulate the impact of every decision — clearly, without jargon.",
-      "ctaPrimary": "Create my account",
-      "ctaSecondary": "See the simulator",
-      "trust": {
-        "encrypted": "Data encrypted, hosted in the European Union",
-        "noSale": "No data selling",
-        "languages": "FR · EN"
-      },
-      "mockup": {
-        "eyebrow": "Cockpit preview",
-        "browserUrl": "Ankora · cockpit",
-        "kpis": {
-          "netRemaining": {
-            "label": "Net remaining",
-            "sub": "April · after provisions"
-          },
-          "provisions": {
-            "label": "Provisions",
-            "sub": "67% of €2,480 planned"
-          },
-          "reserve": {
-            "label": "Reserve",
-            "sub": "+€120 vs. March"
-          }
+      "releve": {
+        "kicker": "The statement, corrected",
+        "h1Bank": "Your bank shows you what already happened.",
+        "h1AnkoraLead": "Ankora shows you what is",
+        "h1AnkoraEmphasis": "already committed.",
+        "subtitle": "“Already committed” is money still on your account but already promised: the insurance due on the 15th, the road tax coming in November. Ankora counts it ahead of time.",
+        "card": {
+          "title": "The balance you read at your bank",
+          "titleNote": "typed in by you — Ankora never connects to any bank",
+          "balanceAmount": "1,240.00 €",
+          "insuranceLabel": "Car insurance · debited on the 15th",
+          "insuranceAmount": "− 280.00 €",
+          "taxLabel": "Road tax · November",
+          "taxAmount": "− 162.00 €",
+          "payoffLabel": "Still truly yours",
+          "payoffNote": "once the insurance and the tax are counted",
+          "payoffAmount": "798.00 €",
+          "foot": "Illustrative example — in Ankora these are your figures, entered by you.",
+          "ariaLabel": "Illustrative statement: 1,240.00 € on the account, minus 280.00 € car insurance debited on the 15th, minus 162.00 € road tax in November — 798.00 € still truly yours."
+        },
+        "ctaPrimary": "Create my account",
+        "ctaSecondary": "See the simulator",
+        "trust": {
+          "encrypted": "Data encrypted, hosted in the European Union",
+          "noSale": "No data selling",
+          "languages": "FR · EN"
         }
       },
       "waterfall": {

@@ -74,18 +74,12 @@ test.describe('Landing — iPhone Safari WebKit (PR-QA-1b)', () => {
   });
 
   test('hero section: no element overflows the viewport horizontally', async ({ page }) => {
-    // FIXME(@cc-ankora 2026-05-17): BUG-iOS-HERO-OVERFLOW — pre-existing on
-    // main (6c510e2) before PR-D5. WIP commit 1a3ea88 didn't touch Hero.tsx,
-    // Feature.tsx, or any landing main-content; only MktNav got a
-    // `pt-[env(safe-area-inset-top)]` (vertical-only). One or more elements
-    // under <main> have `rect.right > clientWidth + 1` on iPhone 14 viewport.
-    // Out of scope PR-D5 (mobile-iOS mechanical + PWA + a11y baseline) —
-    // tracked in Linear (THI-XXX P2 polish). Re-investigate alongside Hero
-    // mockup grid responsive fallback in PR-D6/D7 dashboard refonte.
-    test.fixme(
-      true,
-      'BUG-iOS-HERO-OVERFLOW: pre-existing on main, out of scope PR-D5 — tracked in Linear.',
-    );
+    // BUG-iOS-HERO-OVERFLOW fixme LIFTED in PR L2 (2026-08-09): the hero was
+    // rewritten for the « relevé corrigé » direction — single-column statement
+    // card at mobile widths, no browser-mockup grid, no decorative glow with
+    // negative insets (the old overflow suspect). The rewritten hero is
+    // designed without horizontal overflow, so this spec goes back to proving
+    // it on every iPhone project instead of documenting a known defect.
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
