@@ -130,9 +130,12 @@ triangulés et **aucun n'est de ce diff** :
 Planchers observés au moment du plan : **228** (public) / **41** (authentifié).
 Attendu d'après le delta mesuré : public ≥ 231, authentifié inchangé (aucune
 spec authentifiée, fixture, ni quarantaine touchée — `authenticated-specs.json`
-intact). **Ces deux nombres seront relevés sur les jobs CI de cette PR**
-(`gh run view <id> --log | grep -E "passed|skipped"`) et consignés ici avant
-toute déclaration de DONE — mesurés, jamais déduits.
+intact). **Les deux nombres réels sont relevés sur les jobs CI du dernier
+commit de la PR** (`gh run view <id> --log`) et consignés, avec l'identifiant
+du run, dans le **commentaire DoD de la PR** avant toute déclaration de DONE —
+un rapport committé ne peut pas contenir les chiffres de la CI qui le suit,
+c'est le commentaire qui porte la lecture finale ; le journal canonique
+`docs/reference/planchers-e2e-historique.md` la reprendra au prochain passage.
 
 > **Non fait, et pourquoi** : le job authentifié n'a pas été exécuté
 > localement. L'outil local (`npm run e2e:auth`) cible la **production** réelle
@@ -160,9 +163,20 @@ dégager la barre de statut.
 ## DoD — état
 
 1. CI verte : ⏳ à relever après push (`gh pr checks <N> --watch`).
-2. Sourcery : cap hebdomadaire de diff atteint depuis le 8 août — s'il n'a pas
-   tourné, « silencieux » ≠ « rien trouvé » et ce sera dit tel quel ; s'il a
-   tourné, chaque remarque traitée ou écartée **dans le fil**.
+2. Sourcery : **a tourné** (le cap hebdo du 8 août est retombé). Traitement :
+   - _Inline (constants.test.ts)_ — fondé sur un point : `digits()` avale le
+     signe, un bundle dont « − 280,00 € » deviendrait « 280,00 € » passait.
+     **Appliqué**, mais pas sa version : elle mettait le solde (positif) dans
+     les montants négatifs et inventait une clé `trulyYoursAmount`. Ajout réel :
+     assertion U+2212 en tête des deux déductions, instanciée sur les 5 bundles.
+     Le NBSP fr-BE était déjà épinglé explicitement par `Hero.test.tsx`
+     (textContent brut) — dit dans le fil.
+   - _Générales (×2 : « extraire des fixtures », « découpler des bundles »)_ —
+     **écartées avec motif, en commentaire de PR** : dans ce dépôt, épingler la
+     copie exacte est un choix (c'est un test de copie littérale qui a attrapé
+     l'allégation fausse « en Belgique »), et le couplage tests ↔ bundles est le
+     but du contrat (vocabulaire verrouillé par ADR-035/039 — un test
+     structure-seule laisserait une dérive passer).
 3. Fils résolus : ⏳.
 4. `mergeStateStatus` : ⏳.
 5. Ce rapport : mesures locales complètes ci-dessus ; planchers CI et état

@@ -54,6 +54,17 @@ describe('RELEVE_DEMO — the hero statement arithmetic', () => {
     ])('%s displays the constant', (_key, displayed, expected) => {
       expect(digits(displayed)).toBe(euroDigits(expected));
     });
+
+    it('shows the two deductions with a leading U+2212 minus — digits() cannot see signs', () => {
+      // `digits()` strips the sign, so the block above would accept a bundle
+      // whose « − 280,00 € » silently became « 280,00 € » — a statement that
+      // no longer subtracts anything (Sourcery, PR #339). The balance and the
+      // payoff are positive by design and stay out of this list. The exact
+      // fr-BE typography (NBSP placement, ordering) is pinned separately by
+      // Hero.test.tsx on the rendered component.
+      expect(card.insuranceAmount.startsWith('−')).toBe(true);
+      expect(card.taxAmount.startsWith('−')).toBe(true);
+    });
   });
 });
 
