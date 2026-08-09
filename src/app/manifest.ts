@@ -8,6 +8,27 @@ export default function manifest(): MetadataRoute.Manifest {
     description: SITE.description,
     lang: SITE.defaultLocale,
     /**
+     * L'identité de l'application installée, épinglée AVANT de bouger `start_url`.
+     *
+     * Sans `id`, l'identité d'une PWA **est** son `start_url`. Changer l'un
+     * changeait donc l'autre — et un navigateur qui ne reconnaît plus
+     * l'application n'applique pas la mise à jour du manifeste à l'installation
+     * existante : il y voit une autre application. Le correctif ci-dessous
+     * n'aurait alors atteint personne d'installé.
+     *
+     * `'/'` est exactement la valeur que les navigateurs avaient calculée
+     * jusqu'ici, donc l'identité historique est préservée telle quelle. Ne pas
+     * la faire suivre `start_url` : ce serait rouvrir le même piège au prochain
+     * changement.
+     *
+     * Ajouté le 9 août 2026, après relecture. Sur iOS, un raccourci déjà posé
+     * peut malgré tout conserver l'ancienne configuration — si l'icône continue
+     * d'ouvrir la page d'accueil après déploiement, la supprimer et la
+     * re-ajouter est le geste qui tranche. Non mesuré ici : le comportement
+     * exact d'iOS sur ce point n'a pas pu être vérifié depuis cette machine.
+     */
+    id: '/',
+    /**
      * L'icône installée mène au cockpit, pas à la vitrine.
      *
      * Elle valait `'/'`, la page marketing. Mesuré le 8 août 2026 : la page
@@ -16,9 +37,12 @@ export default function manifest(): MetadataRoute.Manifest {
      * et il fallait un geste de plus pour atteindre le cockpit — à chaque
      * ouverture, sur les deux intentions quotidiennes.
      *
-     * C'est la seule correction qui porte sur iPhone : Safari ne supporte ni les
-     * raccourcis de manifeste (`shortcuts`) ni le menu contextuel d'une web app
-     * installée. Un raccourci n'aurait rien changé pour l'utilisateur principal.
+     * Des deux corrections envisagées, c'est la seule qui puisse porter sur
+     * iPhone : Safari ne supporte ni les raccourcis de manifeste (`shortcuts`)
+     * ni le menu contextuel d'une web app installée. Un raccourci n'aurait rien
+     * changé pour l'utilisateur principal. Voir toutefois la réserve sur `id`
+     * ci-dessus : « peut porter » n'est pas « portera d'office sur un raccourci
+     * déjà posé ».
      *
      * Sans danger pour un visiteur non connecté : `requireUser()` le renvoie
      * vers `/login`, ce qui est le comportement attendu d'une application
