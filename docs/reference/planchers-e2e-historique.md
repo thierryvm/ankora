@@ -19,10 +19,34 @@ les plus sensibles de l'app.
 Deux jobs, donc **deux planchers distincts** — un chiffre global agrégé serait
 ininterprétable au premier conflit, donc ignoré :
 
-| Job                              | Plancher au 9 août 2026                                         |
+| Job                              | Plancher au 10 août 2026                                        |
 | -------------------------------- | --------------------------------------------------------------- |
-| `Playwright E2E`                 | **231 passed** (228 au 06/08, 224 au 31/07 — cf. infra)         |
+| `Playwright E2E`                 | **241 passed** (231 au 09/08, 228 au 06/08 — cf. infra)         |
 | `Playwright E2E (authenticated)` | **41 passed** (40 avant, +1 `bottom-tab-bar-client-navigation`) |
+
+> **Public : 231 → 241, mesuré le 2026-08-10**, au correctif de l'en-tête collant.
+> Trois mouvements, tous dans le même sens et tous mesurés :
+>
+> - **+6** — `e2e/mobile-ios/sticky-header.spec.ts`, nouvelle : 2 cas (`/` et
+>   `/faq`) × 3 projets iPhone.
+> - **+3** — `test.fixme(true)` levé sur « body has overflow-x », endormi depuis
+>   le 4 mai au motif que WebKit renverrait toujours `visible`. Re-mesuré : il
+>   renvoie `hidden` puis `clip`, les deux valeurs que ce motif disait
+>   impossibles.
+> - **+1** — `test.fixme` levé sur la branche iPhone SE du premier cas, endormi
+>   depuis le 9 mai (BUG-iOS-011).
+>
+> **Mesuré dans les deux sens, même machine, même serveur** : `landing.spec.ts`
+> seule sur les 3 projets iPhone rend `11 passed / 10 skipped` avant, et
+> `21 passed / 6 skipped` avec la nouvelle spec et les deux `fixme` levés. Le
+> delta `+10 passed / −4 skipped` se décompose sans reste (6 + 3 + 1), et les 4
+> sautés en moins sont exactement les 4 cas réveillés.
+>
+> **Ce que ce relèvement dit sur le plancher précédent** : les 231 comptaient
+> quatre cas qui ne prouvaient rien, et le site expédiait pendant ce temps trois
+> en-têtes `sticky` inertes sur toutes ses pages. Aucune porte n'a rougi en trois
+> mois — c'est @thierry qui l'a vu sur un iPhone réel. Un plancher mesure ce
+> qu'on exécute, jamais ce qu'on couvre.
 
 > **Public : 228 → 231, mesuré le 2026-08-09**, à la PR L2 du programme landing
 > (#339, squash `c378978`). Relevé dans le log du run `31335138067`, SHA

@@ -29,17 +29,15 @@ test.describe('Landing — iPhone Safari WebKit (PR-QA-1b)', () => {
     //   the leftover scrollWidth is invisible and untouchable to the user.
     //   We assert the user-facing experience (cannot scroll horizontally)
     //   instead of the leaky scrollWidth proxy.
-    // FIXME(@cc-ankora 2026-05-09): iPhone SE 320px viewport — `overflow-x-clip`
-    // Tailwind utility on html/body no longer prevents horizontal scroll
-    // (scrollX moves from 0 to 18 after scrollBy{left:100}). Discovered in
-    // PR #147 CI run 25606356945. Pre-existing on main (not caused by atoms PR).
-    // Hypotheses (BUG-iOS-011): Tailwind purge regression, flex container
-    // conflict, or recent landing layout change. Investigation planned in
-    // PR-D4 stabilization Sub-task C (mobile-iOS triage). Re-enable then.
-    test.fixme(
-      testInfo.project.name === 'iPhone SE',
-      'iPhone SE overflow-x-clip regression — see Sub-task C (BUG-iOS-011)',
-    );
+    // BUG-iOS-011 fixme LIFTED (2026-08-10). It slept since 9 May on the claim
+    // that the guard let the page scroll sideways on iPhone SE (scrollX moving
+    // 0 → 18 after `scrollBy({left:100})`). Re-measured on WebKit at 320px
+    // against the current build: scrollX does not move — neither with the guard
+    // as `hidden` nor as `clip` — and an element deliberately 200px too wide
+    // does not make it move either, because both values forbid horizontal
+    // scrolling outright. The assertion below is the one that was asleep, and
+    // it is the ROBUST probe of the three used in this file: it measures what
+    // the user can actually do, not a `scrollWidth` proxy.
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
@@ -242,20 +240,21 @@ test.describe('Landing — iPhone Safari WebKit (PR-QA-1b)', () => {
   test('body has overflow-x: hidden or clip (defensive against accidental wide elements)', async ({
     page,
   }) => {
-    // PR-QA-1c-1 (4 mai 2026): BUG-iOS-006 fix DEPLOYED via Tailwind utility
-    // `overflow-x-clip` on html and body in layout.tsx. The CSS bundle does
-    // include the rule (verified via curl on the served stylesheet) and the
-    // companion test `no horizontal overflow on the entire landing page`
-    // (which measures `body.scrollWidth - clientWidth`) PASSES on iPhone SE
-    // with `clip` applied — proving the fix works in practice. HOWEVER,
-    // Playwright WebKit consistently returns
-    // `getComputedStyle(body).overflowX === "visible"` regardless of the
-    // rule applied (clip OR hidden), even on production builds — apparent
-    // emulation quirk we cannot fix from this test layer.
-    test.fixme(
-      true,
-      'BUG-iOS-006: assertion blocked by Playwright WebKit getComputedStyle quirk — fix is deployed (cf. layout.tsx + scrollWidth test green). Either drop this test or re-assert via a different signal (e.g. body.scrollWidth ≤ viewport).',
-    );
+    // BUG-iOS-006 fixme LIFTED (2026-08-10). It slept since 4 May on this
+    // claim: "Playwright WebKit consistently returns
+    // getComputedStyle(body).overflowX === 'visible' regardless of the rule
+    // applied (clip OR hidden), even on production builds".
+    //
+    // That claim does not reproduce. Re-measured on WebKit, iPhone 14 and
+    // iPhone SE: the property reads back `hidden` when the rule says hidden,
+    // and `clip` when it says clip — the two values it held impossible to
+    // obtain. The quirk was never the obstacle it was taken for.
+    //
+    // This is not a detail of test hygiene. That same belief is what made
+    // globals.css pick `hidden` over `clip` on 4 May, and `hidden` promotes
+    // `overflow-y` to `auto`, which severed every `position: sticky` header on
+    // the site for three months. A sleeping test and a wrong CSS choice came
+    // from one unverified sentence.
     await page.goto('/');
     const overflowX = await page.evaluate(() => {
       return window.getComputedStyle(document.body).overflowX;
