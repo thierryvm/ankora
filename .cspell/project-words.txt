@@ -553,6 +553,7 @@ Gezond
 Gezondheid
 Girokonto
 gitignoré
+gitignorés
 Glätten
 Glättung
 gmail

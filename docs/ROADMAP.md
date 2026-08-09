@@ -45,6 +45,25 @@ depuis avril, et trois affirmations publiques étaient inexactes.
 revenues. La troisième est un NO-GO : toute la conception repose sur un chemin PostgREST
 `service_role` jamais re-vérifié en production depuis #273.
 
+## Programme parallèle — refonte landing « Le relevé corrigé »
+
+Chantier **parallèle** à la refonte v2 (surfaces disjointes : marketing public
+uniquement), mené en worktree dédié sur exception de modèle @thierry du 8 août 2026. **Sources de vérité** :
+[`prompts/PR-LAND-refonte-releve-corrige.md`](../prompts/PR-LAND-refonte-releve-corrige.md)
+et [`docs/adr/ADR-039-portee-tokens-marketing-papier.md`](./adr/ADR-039-portee-tokens-marketing-papier.md)
+(approuvé par la relecture cockpit).
+
+| PR  | Objet                                                            | État        |
+| --- | ---------------------------------------------------------------- | ----------- |
+| —   | ADR-039 + plan d'exécution validé `plan-reviewer`                | ✅ #334     |
+| L1  | Tokens papier + portée `.mkt-paper` + durcissement `blockAfter`  | ✅ #338     |
+| L2  | Hero « relevé corrigé » + wrapper + parade flex + fixme iOS levé | ✅ #339     |
+| L3  | Sections au ton « relevé » + 5ᵉ FAQ + migration waterfall + SEO  | 📋 suivante |
+
+Plancher e2e public relevé par L2 : **228 → 231** (levée BUG-iOS-HERO-OVERFLOW,
+mesurée par projet). Rapports : [`docs/prs/PR-L1-report.md`](./prs/PR-L1-report.md),
+[`docs/prs/PR-L2-report.md`](./prs/PR-L2-report.md).
+
 ### Vision produit
 
 Inchangée et hors de ce fichier : [`docs/NORTH_STAR.md`](./NORTH_STAR.md) (vision,
