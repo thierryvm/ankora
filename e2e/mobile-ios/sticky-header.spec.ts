@@ -31,7 +31,17 @@
 
 import { test, expect } from './fixtures/mobile-test';
 
-/** Distance scrolled before measuring. Well past the header's own height. */
+/**
+ * Distance scrolled before measuring — a fixed value on purpose, not derived
+ * from document height.
+ *
+ * Deriving it would make the test adapt silently to a page that shrank, and a
+ * page too short to scroll cannot prove anything about a sticky header. The
+ * fixed value plus the `scrollY > 200` guard below means such a page makes this
+ * spec FAIL, loudly, saying the measurement would prove nothing — which is the
+ * outcome we want. 900px is well past every header height on this site, and far
+ * below the shortest page it runs against.
+ */
 const DEFILEMENT = 900;
 
 /**
@@ -57,8 +67,23 @@ test.describe('En-tête collant — le menu reste en haut au défilement', () =>
       expect(avant, `aucun <header> mesurable sur ${chemin}`).not.toBeNull();
 
       await page.evaluate((y) => window.scrollTo({ top: y, behavior: 'instant' }), DEFILEMENT);
-      // Laisser le moteur appliquer le défilement avant de mesurer.
-      await page.waitForTimeout(250);
+
+      // Attendre la CONDITION, pas une durée (retour Sourcery, 2026-08-10) : un
+      // `waitForTimeout` fixe rend le résultat dépendant de la vitesse de la
+      // machine. On attend que `scrollY` se stabilise sur deux trames
+      // consécutives — la position finale peut être inférieure à la cible si la
+      // page est plus courte, et c'est le garde-fou ci-dessous qui tranche.
+      await page.waitForFunction(
+        () =>
+          new Promise((resolve) => {
+            requestAnimationFrame(() => {
+              const a = window.scrollY;
+              requestAnimationFrame(() => resolve(window.scrollY === a));
+            });
+          }),
+        undefined,
+        { timeout: 5_000 },
+      );
 
       const defile = await page.evaluate(() => Math.round(window.scrollY));
       // Garde-fou d'instrument : si la page n'a pas défilé, le test ne prouve
