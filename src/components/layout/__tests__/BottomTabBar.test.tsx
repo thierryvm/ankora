@@ -94,7 +94,9 @@ beforeEach(() => {
 describe('<BottomTabBar /> — 5 slots, Apple HIG hard cap', () => {
   it('renders the 3 destination tabs + the ⊕ + the More trigger', () => {
     // Composition changed on 2026-07-29 (décision Q7): `simulate` moved to the
-    // More sheet to free the centre slot for the ⊕. Still five slots.
+    // More sheet to free the centre slot for the ⊕. On 2026-08-08 it left the
+    // navigation altogether — the simulator is a cockpit drawer, not a place
+    // you go. Still five slots; the absence below is what keeps it out.
     render(<BottomTabBar />);
     expect(screen.getByTestId('bottom-tab-cockpit')).toBeInTheDocument();
     expect(screen.getByTestId('bottom-tab-bills')).toBeInTheDocument();

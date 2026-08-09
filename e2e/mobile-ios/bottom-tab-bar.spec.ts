@@ -43,9 +43,11 @@ test.describe('BottomTabBar — iPhone Safari WebKit (PR-BETA-6 / THI-277)', () 
     await expect(page.getByTestId('bottom-tab-add-expense')).toBeVisible();
     await expect(page.getByTestId('bottom-tab-more')).toBeVisible();
 
-    // L'onglet « simuler » a été retiré, pas déplacé : le simulateur reste
-    // atteignable par la feuille « Plus ». Vérifier son ABSENCE est ce qui
-    // empêche de le réintroduire par accident dans la barre.
+    // L'onglet « simuler » a d'abord été déplacé vers la feuille « Plus », puis
+    // retiré de la navigation entièrement (8 août 2026) : le simulateur n'est
+    // plus une destination, seulement un tiroir ouvert depuis le cockpit.
+    // Vérifier son ABSENCE ici est ce qui empêche de le réintroduire par
+    // accident dans la barre.
     await expect(page.getByTestId('bottom-tab-simulate')).toHaveCount(0);
 
     // L'ordre compte : le ⊕ est au centre (3ᵉ créneau sur 5), pas en bout de

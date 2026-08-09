@@ -49,10 +49,13 @@ function realRouteSegments(): string[] {
 /**
  * The route folder a destination points at.
  *
- * Compares the SEGMENT, never the id: `bills` lives at `charges` and `simulate`
- * at `simulator` (see the note on `AppDestinationId`). Matching on `id` would
- * fail on exactly those two and push someone to rename them, breaking the
- * `data-testid`s the e2e suite asserts on.
+ * Compares the SEGMENT, never the id: `bills` lives at `charges` (see the note
+ * on `AppDestinationId`). Matching on `id` would fail on it and push someone to
+ * rename it, breaking the `data-testid`s the e2e suite asserts on.
+ *
+ * There used to be a second such case, `simulate` at `simulator`. The route was
+ * removed on 2026-08-08 — the rule survives it, because one divergence is
+ * already enough to make id-matching wrong.
  */
 const segmentOf = (destination: AppDestination) => destination.href.replace('/app/', '');
 
@@ -106,7 +109,8 @@ describe('app destinations — shape invariants', () => {
    * Five slots, Apple HIG hard cap. The composition changed on 2026-07-29
    * (décision Q7): three destinations + the ⊕ action + the « Plus » button,
    * where it used to be four destinations + « Plus ». `simulate` moved to the
-   * More sheet to free the slot.
+   * More sheet to free the slot — and left the navigation entirely on
+   * 2026-08-08, when its route was removed in favour of the cockpit drawer.
    */
   it('keeps the bottom bar at three destinations — ⊕ and "Plus" take the other two slots', () => {
     expect(MOBILE_TAB_DESTINATIONS).toHaveLength(3);

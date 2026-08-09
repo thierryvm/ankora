@@ -186,7 +186,7 @@ Le second projet cloud reste utile pour les smoke tests de preview, **pas pour l
 
 La v1 restructurait toute la navigation à l'étape 7 **sans ADR**, en violation directe de la doctrine qu'elle invoquait pour justifier son propre bloc ADR. Corrigé : la structure cible (§4), la règle de gouvernance, le sort de `/app/simulator` et la liste des 5 entrées sont actés en ADR, **avec trace de validation @thierry**, avant toute ligne de code.
 
-### D10 — Amendement NORTH*STAR → **ADR-031** — \_signature @thierry requise*
+### D10 — Amendement `NORTH_STAR` → **ADR-031** — _signature @thierry requise_
 
 `CLAUDE.md` grave « Tout dashboard minimaliste = refus de merge » et liste 8 sections obligatoires, écrites le 23 avril contre une cible « niveau Monarch ». Le retour terrain de juillet — « tout est mélangé, confus » — est une donnée **plus récente et plus fiable** qu'une spec.
 

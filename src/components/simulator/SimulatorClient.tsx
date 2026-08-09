@@ -54,10 +54,24 @@ const MODES: readonly Mode[] = ['cancel', 'negotiate', 'add'];
  * « au cas où » : une branche que rien n'atteint est une branche que rien ne
  * teste. Le tiroir fournit son propre `<h2>`.
  *
- * Les clés i18n `app.simulator.title` / `.subtitle` deviennent orphelines. Leur
- * retrait est délibérément différé : `messages/` appartient à la session de
+ * Clés i18n devenues orphelines — inventaire vérifié par grep, corrigé le
+ * 2026-08-09 après relecture. Une première rédaction annonçait
+ * `app.simulator.title` parmi elles : c'est FAUX, et dangereusement, puisque la
+ * note ci-dessous invite explicitement à un nettoyage ultérieur. Cette clé est
+ * le titre du tiroir (`SimulatorDrawer`, garanti par son propre test). La
+ * supprimer casserait le tiroir dans les cinq locales.
+ *
+ * Réellement orphelines : `app.simulator.subtitle`, `common.nav.simulator`
+ * (retirée de `HEADER_NAV_LABELS`), `layout.bottomTab.simulate` (de
+ * `TAB_LABELS`) et `layout.moreSheet.links.simulate` (de `SHEET_LABELS`).
+ * `landing.mktnav.links.simulator` reste utilisée — c'est l'ancre `#simulator`
+ * de la page d'accueil, sans rapport avec cette route.
+ *
+ * Leur retrait est délibérément différé : `messages/` appartient à la session de
  * refonte de la page d'accueil jusqu'à la fin de ses PR, et une course à cinq
- * fichiers de traduction coûterait plus qu'une clé inerte.
+ * fichiers de traduction coûterait plus que quatre clés inertes. Aucun test de
+ * parité ni de clé non consommée n'existe dans le dépôt : rien d'automatique ne
+ * rattrapera un nettoyage mal ciblé, seule cette liste fait foi.
  */
 export function SimulatorClient({
   charges,
@@ -81,9 +95,9 @@ export function SimulatorClient({
    */
   engagementsMensuels?: number;
 }) {
-  // Le namespace racine `app.simulator` n'est plus consommé ici : ses deux
-  // seules clés (`title`, `subtitle`) servaient le `<header>` de la route
-  // supprimée. Les namespaces enfants ci-dessous restent tous utilisés.
+  // Le namespace racine `app.simulator` n'est plus consommé ICI — son `title`
+  // sert désormais le `<h2>` du tiroir, et seul `subtitle` est devenu inerte.
+  // Les namespaces enfants ci-dessous restent tous utilisés.
   const locale = useLocale() as Locale;
   const fmtMoney = (value: Parameters<typeof formatCurrency>[0]) => formatCurrency(value, locale);
   const tScenario = useTranslations('app.simulator.scenario');
