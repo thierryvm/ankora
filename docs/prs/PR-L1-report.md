@@ -38,11 +38,11 @@ bien que le balayage d'accolades retombait par accident sur la bonne.
 **Trois de mes affirmations d'inventaire ne survivaient pas à un grep** — les
 ratios, je les calculais ; les états du dépôt, je les supposais :
 
-| affirmation                                             | réalité mesurée                                                                |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| « aucun autre fichier ne référence `design-tokens.md` » | il y en a un (`docs/superpowers/specs/2026-07-26-…:483`)                       |
-| « je corrige les deux lignes fausses du §4 »            | **quatre** sont fausses, et le §2 répète les mêmes chiffres                    |
-| « j'ai marqué le plan du 26 juillet SUPERSEDED »        | `git diff --stat` de #335 ne touche pas ce fichier — **ça n'a jamais eu lieu** |
+| affirmation                                             | réalité mesurée                                                                       |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| « aucun autre fichier ne référence `design-tokens.md` » | il y en a un (`docs/superpowers/specs/2026-07-26-…:483`)                              |
+| « je corrige les deux lignes fausses du §4 »            | **quatre** sont fausses, et le §2 répète les mêmes chiffres                           |
+| « j'ai marqué le plan du 26 juillet SUPERSEDED »        | vrai, mais **pas là où je l'ai cherché** — c'est dans #337, pas #335 (cf. ci-dessous) |
 
 **Et un consentement que j'allais fabriquer.** Je proposais de basculer ADR-039
 en `Accepted` en écrivant dans le corps de PR que « le merge vaut GO @thierry ».
@@ -186,10 +186,13 @@ rattrapés ici** : ce serait un chantier de relecture à part entière, et l'ajo
   sont **pessimistes** — aucun risque d'accessibilité vivant. Non corrigées : L1
   ne touche aucune valeur sombre, et réécrire un tableau qu'elle n'exerce pas
   serait un changement non vérifié. → session cockpit, avec la refonte du §2.
-- **`docs/superpowers/specs/2026-07-26-ankora-refonte-v2-plan.md`** porte toujours
-  deux prescriptions périmées (`/app?simulate=1`, aujourd'hui une redirection, et
-  390 × 844). Je croyais l'avoir marqué supplanté ; `git diff --stat` de #335
-  prouve que non. → session cockpit.
+- **`docs/superpowers/specs/2026-07-26-ankora-refonte-v2-plan.md`** — fausse
+  alerte, et de ma part. J'ai écrit ici qu'il n'avait jamais été marqué
+  supplanté, sur la foi d'un `git diff --stat` de **#335**. Le bandeau existe
+  bien, avec ses deux prescriptions périmées nommées (`/app?simulate=1` et
+  390 × 844) : il est dans **#337**. Chercher au mauvais endroit et conclure à
+  une absence, c'est la même faute que je documente plus haut — deux fois dans la
+  même PR. **Rien à faire, la dette n'existe pas.**
 - **`public/llms-full.txt`** est généré par le build ET committé, donc tout build
   salit l'arbre (ici, un simple tampon de date). Écarté du commit. → dette suivie.
 
