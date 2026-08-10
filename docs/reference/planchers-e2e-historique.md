@@ -8,7 +8,7 @@
 > qui distingue un plancher d'une estimation, et c'est pour ça qu'on ne jette
 > pas ces lignes.
 
-### Le nombre de cas e2e exécutés ne descend jamais
+## Le nombre de cas e2e exécutés ne descend jamais
 
 **Critère permanent, ajouté le 26 juillet 2026.** Une CI verte ne vaut que ce
 qu'elle exécute. Le 26 juillet, le job `Playwright E2E` affichait **214 passed /
