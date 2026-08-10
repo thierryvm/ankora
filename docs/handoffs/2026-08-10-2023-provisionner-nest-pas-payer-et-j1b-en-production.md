@@ -58,7 +58,7 @@ Le backfill de J1 a posé `paid_from_account_type` égal au compte de **provisio
 toute facture provisionnée par un compte qui ne règle pas directement, cette valeur désigne
 donc le mauvais compte sous F1.
 
-**Rien ne la lit aujourd'hui ; J4 la lirait.** J2 doit ré-attribuer ces lignes. C'est écrit
+**Rien ne la lit aujourd'hui ; J4 la lirait.** J2 doit réattribuer ces lignes. C'est écrit
 dans l'ADR, dans le ROADMAP et dans les commentaires de colonne en base — trois endroits,
 parce que celui qui lira « compte qui a payé » le croira.
 
@@ -127,7 +127,7 @@ le programme en cours. Les dix restants (019-024, 034-037) attendent toujours le
 
 1. **J2** (ADR-038 D1 — la table de mouvements), **périmètre élargi par ADR-041** : deux
    colonnes sur `accounts` + contrainte, renommage `paid_from` → `provisioned_from`,
-   ré-attribution des lignes historiques, écriture à deux mouvements. Point de coupe si c'est
+   réattribution des lignes historiques, écriture à deux mouvements. Point de coupe si c'est
    trop gros : schéma + réglage d'un côté, écriture à deux mouvements de l'autre — dans cet
    ordre, jamais l'inverse.
    **`plan-reviewer` est obligatoire** avant d'écrire la moindre ligne (migrations + Server

@@ -180,7 +180,7 @@ gagne un réglage, alors qu'elle n'en porte aucun aujourd'hui.
 **Une dette créée par J1, nommée ici plutôt que découverte en J4.** Le backfill de J1 a posé
 `paid_from_account_type` égal au compte de **provisionnement**. Pour toute facture provisionnée
 par un compte qui ne règle pas directement, cette valeur désigne donc, sous F1, le mauvais
-compte. **Rien ne la lit aujourd'hui.** J2 doit ré-attribuer ces lignes en s'appuyant sur F2 —
+compte. **Rien ne la lit aujourd'hui.** J2 doit réattribuer ces lignes en s'appuyant sur F2 —
 c'est du travail identifié, borné, et il est écrit ici pour qu'il ne se paie pas au prix d'un
 cockpit qui passe à l'orange sans raison.
 
@@ -190,12 +190,12 @@ reste exécutable telle quelle, avant ou après cette décision.
 ## Découpage d'exécution
 
 **Aucune PR dédiée.** F2 (colonnes, contrainte, défauts), le renommage `paid_from` →
-`provisioned_from`, la ré-attribution des lignes historiques et l'écriture à deux mouvements
+`provisioned_from`, la réattribution des lignes historiques et l'écriture à deux mouvements
 (F3) entrent dans **J2**, dont c'est exactement le territoire — la table de mouvements est
 l'endroit où ces deux legs deviennent représentables.
 
 Conséquence sur le plan J2 : il grossit. S'il devait dépasser ce qu'une revue humaine tient
-d'une traite, le point de coupe est F2 seul (schéma + réglage + ré-attribution) d'un côté,
+d'une traite, le point de coupe est F2 seul (schéma + réglage + réattribution) d'un côté,
 l'écriture à deux mouvements de l'autre — dans cet ordre, jamais l'inverse.
 
 ## Vérification
@@ -208,7 +208,7 @@ Cet ADR est une décision, pas un plan. Son exécution devra prouver, au minimum
 3. Que cocher une facture provisionnée par un compte non réglant écrit **deux** mouvements, et
    que décocher les retire **tous les deux**.
 4. Que cocher une facture provisionnée par un compte réglant écrit **un seul** mouvement.
-5. Qu'après ré-attribution, **aucune** ligne de paiement ne désigne un compte dont
+5. Qu'après réattribution, **aucune** ligne de paiement ne désigne un compte dont
    `settles_directly` est faux.
 6. Qu'un virement interne laisse le patrimoine total inchangé — il déplace de l'argent, il n'en
    crée pas (ADR-038 D6).
