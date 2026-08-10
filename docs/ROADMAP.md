@@ -79,7 +79,7 @@ dashboard et le positionnement FSMA sont rappelés dans [`CLAUDE.md`](../CLAUDE.
 
 ---
 
-## Programme décidé, pas encore commencé — le journal des mouvements
+## Programme en cours — le journal des mouvements
 
 **Sources de vérité** : [`docs/adr/ADR-038-journal-des-mouvements.md`](./adr/ADR-038-journal-des-mouvements.md)
 (accepté le 5 août 2026 par @thierry) **et son amendement**
@@ -96,7 +96,8 @@ décision qu'on ne peut pas trouver n'existe pas.
 | PR  | Objet                                                                            | État                              |
 | --- | -------------------------------------------------------------------------------- | --------------------------------- |
 | —   | ADR-040 — inversion de l'ordre, corrections de schéma, D10/D11/D12               | ✅ accepté le 2026-08-10          |
-| J1  | D3 — attribution figée sur les deux tables de paiement + `commitments.paid_from` | ⏳ **suivante**                   |
+| J1  | D3 — attribution figée sur les deux tables de paiement + `commitments.paid_from` | ✅ livré le 2026-08-10 (#363)     |
+| J1b | La migration `contract` — `set not null` sur les deux colonnes                   | ⏳ **suivante**, cf. ci-dessous   |
 | J2  | D1 — table de mouvements, RLS, export art. 20 (+ 4 tables absentes)              | 📋                                |
 | J3  | D2 — rentrées datées, suppression de `monthly_income`, sémantique d'`incomplet`  | 📋                                |
 | J4  | D6 — dérivation des soldes, suppression de `savings_balance`, ancienneté         | 📋                                |
@@ -108,6 +109,34 @@ programme, parce que D0 sert le découplage des rôles de comptes — qu'ADR-038
 hors périmètre — et qu'aucun des cinq autres lots n'en dépend. Le motif n'est pas le risque
 de la migration : mesuré, il est négligeable (une quinzaine de lignes, zéro clé étrangère
 entrante). Le motif est que la valeur visible passe de la 5ᵉ PR à la 1ʳᵉ.
+
+### J1b — ce qui reste à faire, et la condition d'entrée
+
+J1 est livré en motif **expand / contract**, et seule la moitié `expand` est en production :
+les deux colonnes `paid_from_account_type` sont **nullables**. La seconde migration
+(`set not null`) n'existe volontairement dans aucun arbre — tant qu'elle y serait,
+`supabase db push` l'appliquerait avec la première, avant que le code sache remplir la
+colonne, et cocher une facture échouerait en production.
+
+**La condition d'entrée est une mesure, pas un délai.** Avant d'écrire la migration
+`contract`, vérifier que le code déployé écrit bien la colonne :
+
+```sql
+select count(*) filter (where paid_from_account_type is null) as a_reprendre,
+       count(*)                                               as total
+  from public.charge_payments;
+```
+
+Tant qu'un pointage récent laisse `NULL`, le code n'est pas en place et `contract` casserait
+la production. La migration `contract` re-remplit d'abord les lignes de la fenêtre, **puis**
+pose le `NOT NULL`. Son retour arrière est `alter column drop not null` — **jamais**
+`drop column`.
+
+**Deux dettes ouvertes par J1, à traiter avant J4** (leur ordre est dans les tickets) :
+[#361](https://github.com/thierryvm/ankora/issues/361) — dépointer supprime physiquement la
+ligne, ce qui videra l'historique dont D6 dépend ; et
+[#362](https://github.com/thierryvm/ankora/issues/362) — « payé depuis » n'est exposé par
+aucun écran, alors qu'à partir de D6 une attribution fausse produit deux soldes faux.
 
 ---
 
