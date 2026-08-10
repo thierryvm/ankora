@@ -93,17 +93,17 @@ quoi et quand**. `grep ADR-038 docs/ROADMAP.md` ne rendait rien. Résultat mesur
 session entière du 10 août a re-dérivé une décision déjà prise cinq jours plus tôt. Une
 décision qu'on ne peut pas trouver n'existe pas.
 
-| PR  | Objet                                                                              | État                                        |
-| --- | ---------------------------------------------------------------------------------- | ------------------------------------------- |
-| —   | ADR-040 — inversion de l'ordre, corrections de schéma, D10/D11/D12                 | ✅ accepté le 2026-08-10                    |
-| —   | ADR-041 — provisionner n'est pas payer : la capacité de régler devient une donnée  | 🟡 proposé le 2026-08-10, s'exécute dans J2 |
-| J1  | D3 — attribution figée sur les deux tables de paiement + `commitments.paid_from`   | ✅ livré le 2026-08-10 (#363)               |
-| J1b | La migration `contract` — `set not null` sur les deux colonnes                     | ⏳ **suivante**, cf. ci-dessous             |
-| J2  | D1 — table de mouvements, RLS, export art. 20 (+ 4 tables absentes), **+ ADR-041** | 📋 périmètre élargi, cf. ci-dessous         |
-| J3  | D2 — rentrées datées, suppression de `monthly_income`, sémantique d'`incomplet`    | 📋                                          |
-| J4  | D6 — dérivation des soldes, suppression de `savings_balance`, ancienneté           | 📋                                          |
-| J5  | D4 + D8 — ventilation contrôlée et arbitrage mensuel                               | 📋                                          |
-| J6  | D0 — clé de substitution `accounts.id` + backfill                                  | 📋 **en dernier**, cf. ADR-040 E1           |
+| PR  | Objet                                                                              | État                                |
+| --- | ---------------------------------------------------------------------------------- | ----------------------------------- |
+| —   | ADR-040 — inversion de l'ordre, corrections de schéma, D10/D11/D12                 | ✅ accepté le 2026-08-10            |
+| —   | ADR-041 — provisionner n'est pas payer : la capacité de régler devient une donnée  | ✅ accepté le 2026-08-10 (#367)     |
+| J1  | D3 — attribution figée sur les deux tables de paiement + `commitments.paid_from`   | ✅ livré le 2026-08-10 (#363)       |
+| J1b | La migration `contract` — `set not null` sur les deux colonnes                     | ⏳ **en cours**, cf. ci-dessous     |
+| J2  | D1 — table de mouvements, RLS, export art. 20 (+ 4 tables absentes), **+ ADR-041** | 📋 périmètre élargi, cf. ci-dessous |
+| J3  | D2 — rentrées datées, suppression de `monthly_income`, sémantique d'`incomplet`    | 📋                                  |
+| J4  | D6 — dérivation des soldes, suppression de `savings_balance`, ancienneté           | 📋                                  |
+| J5  | D4 + D8 — ventilation contrôlée et arbitrage mensuel                               | 📋                                  |
+| J6  | D0 — clé de substitution `accounts.id` + backfill                                  | 📋 **en dernier**, cf. ADR-040 E1   |
 
 **L'ordre a changé le 10 août** : ADR-038 plaçait D0 en tête. ADR-040 le renvoie en fin de
 programme, parce que D0 sert le découplage des rôles de comptes — qu'ADR-038 met lui-même
@@ -111,27 +111,37 @@ hors périmètre — et qu'aucun des cinq autres lots n'en dépend. Le motif n'e
 de la migration : mesuré, il est négligeable (une quinzaine de lignes, zéro clé étrangère
 entrante). Le motif est que la valeur visible passe de la 5ᵉ PR à la 1ʳᵉ.
 
-### J1b — ce qui reste à faire, et la condition d'entrée
+### J1b — la migration `contract`
 
-J1 est livré en motif **expand / contract**, et seule la moitié `expand` est en production :
-les deux colonnes `paid_from_account_type` sont **nullables**. La seconde migration
-(`set not null`) n'existe volontairement dans aucun arbre — tant qu'elle y serait,
-`supabase db push` l'appliquerait avec la première, avant que le code sache remplir la
-colonne, et cocher une facture échouerait en production.
+J1 a été livré en motif **expand / contract**, et seule la moitié `expand` est partie en
+production le 10 août : les deux colonnes `paid_from_account_type` y sont encore
+**nullables**. La seconde migration n'existait volontairement dans aucun arbre — tant
+qu'elle y serait, `supabase db push` l'aurait appliquée avec la première, avant que le code
+sache remplir la colonne, et cocher une facture aurait rendu `23502` en production.
 
-**La condition d'entrée est une mesure, pas un délai.** Avant d'écrire la migration
-`contract`, vérifier que le code déployé écrit bien la colonne :
+**La condition d'entrée était une mesure, pas un délai**, et elle est **satisfaite** : un
+pointage du 10 août à 16 h 41, postérieur au déploiement de 16 h 16, porte une valeur ; zéro
+ligne nulle sur l'ensemble de la table. La requête reste ici parce qu'elle doit être rejouée
+**juste avant** la poussée, jamais une fois pour toutes :
 
 ```sql
 select count(*) filter (where paid_from_account_type is null) as a_reprendre,
-       count(*)                                               as total
+       count(*)                                               as total,
+       max(paid_at)                                           as dernier_pointage
   from public.charge_payments;
 ```
 
-Tant qu'un pointage récent laisse `NULL`, le code n'est pas en place et `contract` casserait
-la production. La migration `contract` re-remplit d'abord les lignes de la fenêtre, **puis**
-pose le `NOT NULL`. Son retour arrière est `alter column drop not null` — **jamais**
-`drop column`.
+`20260810000002_d3_attribution_paiements_contract.sql` reprend d'abord les lignes écrites
+pendant la fenêtre, **refuse** s'il en reste une seule qu'il ne sait pas remplir, et pose
+seulement ensuite le `NOT NULL`. Son retour arrière est `alter column drop not null` —
+**jamais** `drop column`.
+
+**Le gain réel n'est pas le `NOT NULL`, c'est ce qu'il débloque.** Les clés étrangères
+composites posées par J1 sont en `MATCH SIMPLE` : une ligne dont une colonne est nulle
+n'était **pas vérifiée du tout**. Plus aucune ligne n'étant nulle, la clé étrangère cesse
+d'être une promesse pour devenir une contrainte. Et côté TypeScript, l'`Insert` généré rend
+la colonne **obligatoire** : un site d'insertion qui l'oublierait ne compile plus — mesuré
+en la retirant, pas supposé.
 
 **Deux dettes ouvertes par J1, à traiter avant J4** (leur ordre est dans les tickets) :
 [#361](https://github.com/thierryvm/ankora/issues/361) — dépointer supprime physiquement la
