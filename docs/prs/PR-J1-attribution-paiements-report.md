@@ -31,17 +31,37 @@ qui manquent**. Mesuré le 2026-08-10 avec `supabase migration list --linked` :
 | `20260729000002_expense_categories_taxonomy` | ✅    | ✅                    |
 | `20260810000001_d3_attribution_paiements`    | ✅    | — (celle de cette PR) |
 
-Celle du 29 juillet **partira donc en même temps**, et il n'y a pas de moyen de l'éviter
-avec cette commande. Elle est bénigne — elle ne fait que **relâcher** une contrainte
-(`drop not null`, `drop default`) sur `workspace_settings.reste_a_vivre_default`, une
-colonne qu'aucun code ne lit plus depuis ADR-035 — et elle est en retard de 12 jours. Mais
-la dire fait partie du GO : personne ne devrait découvrir après coup qu'une poussée en a
-emporté deux.
+Elle est bénigne — elle ne fait que **relâcher** une contrainte (`drop not null`,
+`drop default`) sur `workspace_settings.reste_a_vivre_default`, une colonne qu'aucun code ne
+lit plus depuis ADR-035 — et elle était en retard de 12 jours. Mais la dire faisait partie du
+GO : personne ne devrait découvrir après coup qu'une poussée en a emporté deux.
 
-Corollaire : `src/lib/data/workspace-snapshot.ts:213` affirme aujourd'hui « la migration de
-dépréciation est écrite mais pas appliquée ». Cette phrase devient fausse à la poussée. Elle
-n'est pas corrigée ici parce qu'elle est vraie tant que le GO n'est pas donné ; à corriger
-dans la PR de suivi, en même temps que la migration `contract`.
+> **CORRECTION, mesurée au moment de pousser.** Une version antérieure de ce rapport
+> affirmait qu'« il n'y a pas de moyen de l'éviter avec cette commande ». **C'est faux, et
+> l'outil est meilleur que ce que je lui prêtais** : `20260729000001` est datée AVANT la
+> dernière migration appliquée en production, donc `supabase db push` **refuse tout et
+> n'applique rien**, en réclamant un `--include-all` explicite. Le garde-fou contre
+> l'insertion hors ordre existe ; l'emporter est un acte délibéré, pas un effet de bord.
+> La poussée a donc été faite avec `--include-all`, en connaissance de cause.
+
+Corollaire : `src/lib/data/workspace-snapshot.ts:213` affirme « la migration de dépréciation
+est écrite mais pas appliquée ». **Cette phrase est devenue fausse à la poussée** ; elle est
+corrigée dans cette PR, puisque c'est cette PR qui la rend fausse.
+
+### Ce qui a effectivement été appliqué en production
+
+Poussé le 2026-08-10 après GO explicite de @thierry, préflight vert re-lancé juste avant.
+`supabase migration list --linked` aligne désormais les deux côtés jusqu'à `20260810000001`.
+
+**Aucun des trois garde-fous ne s'est déclenché** — et l'un d'eux répond à une question que
+l'audit RLS avait laissée ouverte : le bloc qui vérifie que la réparation des comptes a
+réellement écrit est passé, donc `seed_default_accounts` (`security definer`) écrit bien sous
+`force row level security` sur l'instance hébergée. C'était une inférence ; c'est maintenant
+une mesure.
+
+**Le schéma de production a été vérifié après coup** : la génération `--linked` des types ne
+diffère du fichier committé sur **aucune** des trois colonnes ni des deux relations ajoutées
+ici. L'édition manuelle de `src/lib/supabase/types.ts` (cf. §Types générés) était exacte.
 
 ### Et ce que cette PR ne contient PAS, délibérément
 

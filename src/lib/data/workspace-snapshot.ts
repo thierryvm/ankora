@@ -210,8 +210,10 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
       .select(
         // ADR-035 removed the daily-living envelope, so `reste_a_vivre_default`
         // and `reste_a_vivre_overrides` are no longer read. The columns still
-        // exist in production — the deprecation migration is written but not
-        // applied — they are simply nobody's source of truth any more.
+        // exist — `20260729000001` only DEPRECATED them (dropped the NOT NULL
+        // and the 500.00 default, applied to production on 2026-08-10); removing
+        // them belongs to a dedicated later PR. They are simply nobody's source
+        // of truth any more.
         'savings_balance, months_tracked',
       )
       .eq('workspace_id', workspaceId)
