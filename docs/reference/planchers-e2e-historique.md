@@ -19,10 +19,39 @@ les plus sensibles de l'app.
 Deux jobs, donc **deux planchers distincts** — un chiffre global agrégé serait
 ininterprétable au premier conflit, donc ignoré :
 
-| Job                              | Plancher au 10 août 2026                                        |
-| -------------------------------- | --------------------------------------------------------------- |
-| `Playwright E2E`                 | **241 passed** (231 au 09/08, 228 au 06/08 — cf. infra)         |
-| `Playwright E2E (authenticated)` | **41 passed** (40 avant, +1 `bottom-tab-bar-client-navigation`) |
+| Job                              | Plancher au 10 août 2026                                |
+| -------------------------------- | ------------------------------------------------------- |
+| `Playwright E2E`                 | **241 passed** (231 au 09/08, 228 au 06/08 — cf. infra) |
+| `Playwright E2E (authenticated)` | **45 passed** (41 avant, +4 `attribution-paiements`)    |
+
+> **Authentifié : 41 → 45, mesuré le 2026-08-10**, à la livraison J1 (ADR-038 D3).
+> `e2e/attribution-paiements.spec.ts` ajoute 4 cas, exécutés par
+> `chromium-desktop` seul — la spec n'est pas sous `mobile-ios/`, donc le projet
+> `iPhone 14` ne la découvre pas.
+>
+> **Mesuré dans les deux sens, même machine, même serveur, même build** : la
+> sélection authentifiée complète rend **`41 passed / 5 skipped`** sans la spec
+> et **`45 passed / 5 skipped`** avec. Delta **+4**, sans reste. Le plancher local
+> tombe ici sur la valeur CI, ce qui n'est pas garanti et ne se suppose pas d'un
+> relevé à l'autre : **c'est le delta qui se compare.**
+>
+> **Plancher public inchangé à 241** : la spec y est découverte par les trois
+> projets non-iPhone et y **saute** — vérifié sans clé `service_role`,
+> `12 skipped`, zéro passé, zéro échec.
+>
+> Trois des quatre cas vérifient des garanties de **base de données** (trigger de
+> gel, clé étrangère composite, non-propagation d'un `UPDATE`) qu'aucun Vitest ne
+> peut rendre : les tests d'action travaillent sur un faux client. Le quatrième
+> passe par l'interface et couvre le geste groupé de `src/lib/actions/obligations.ts`,
+> **qui n'a aucun test Vitest** — ni le fichier, ni ses deux insertions par lot.
+>
+> **Ce que cette mesure a coûté en réparation de harnais** : `.env.local` porte
+> une URL Upstash **factice**, et en build de production `rateLimit()` échoue
+> FERMÉ — la toute première connexion renvoie « Service temporairement
+> indisponible », ce qui se lit comme un bug applicatif. La CI ne rencontre pas
+> ça parce qu'elle monte `serverless-redis-http` devant un Redis nu. Reproduire
+> ces deux conteneurs en local est la condition pour qu'un cas authentifié qui
+> se connecte prouve quoi que ce soit.
 
 > **Public : 231 → 241, mesuré le 2026-08-10**, au correctif de l'en-tête collant.
 > Trois mouvements, tous dans le même sens et tous mesurés :

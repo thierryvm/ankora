@@ -9,6 +9,7 @@
   ],
   "specs": [
     "e2e/accounts.spec.ts",
+    "e2e/attribution-paiements.spec.ts",
     "e2e/bottom-tab-bar-client-navigation.spec.ts",
     "e2e/audit-log.spec.ts",
     "e2e/auth.spec.ts",

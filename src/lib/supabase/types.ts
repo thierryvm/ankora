@@ -158,6 +158,7 @@ export type Database = {
           note: string | null;
           paid_amount: number;
           paid_at: string;
+          paid_from_account_type: string | null;
           period_month: number;
           period_year: number;
           workspace_id: string;
@@ -171,6 +172,7 @@ export type Database = {
           note?: string | null;
           paid_amount: number;
           paid_at?: string;
+          paid_from_account_type?: string | null;
           period_month: number;
           period_year: number;
           workspace_id: string;
@@ -184,6 +186,7 @@ export type Database = {
           note?: string | null;
           paid_amount?: number;
           paid_at?: string;
+          paid_from_account_type?: string | null;
           period_month?: number;
           period_year?: number;
           workspace_id?: string;
@@ -202,6 +205,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: 'users';
             referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'charge_payments_paid_from_account_fkey';
+            columns: ['workspace_id', 'paid_from_account_type'];
+            isOneToOne: false;
+            referencedRelation: 'accounts';
+            referencedColumns: ['workspace_id', 'account_type'];
           },
           {
             foreignKeyName: 'charge_payments_workspace_id_fkey';
@@ -303,6 +313,7 @@ export type Database = {
           note: string | null;
           paid_amount: number;
           paid_at: string;
+          paid_from_account_type: string | null;
           period_month: number;
           period_year: number;
           workspace_id: string;
@@ -315,6 +326,7 @@ export type Database = {
           note?: string | null;
           paid_amount: number;
           paid_at?: string;
+          paid_from_account_type?: string | null;
           period_month: number;
           period_year: number;
           workspace_id: string;
@@ -327,6 +339,7 @@ export type Database = {
           note?: string | null;
           paid_amount?: number;
           paid_at?: string;
+          paid_from_account_type?: string | null;
           period_month?: number;
           period_year?: number;
           workspace_id?: string;
@@ -345,6 +358,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: 'users';
             referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'commitment_payments_paid_from_account_fkey';
+            columns: ['workspace_id', 'paid_from_account_type'];
+            isOneToOne: false;
+            referencedRelation: 'accounts';
+            referencedColumns: ['workspace_id', 'account_type'];
           },
           {
             foreignKeyName: 'commitment_payments_workspace_id_fkey';
@@ -368,6 +388,7 @@ export type Database = {
           kind: string;
           label: string;
           notes: string | null;
+          paid_from: string;
           payment_day: number;
           start_month: number;
           start_year: number;
@@ -387,6 +408,7 @@ export type Database = {
           kind: string;
           label: string;
           notes?: string | null;
+          paid_from?: string;
           payment_day?: number;
           start_month: number;
           start_year: number;
@@ -406,6 +428,7 @@ export type Database = {
           kind?: string;
           label?: string;
           notes?: string | null;
+          paid_from?: string;
           payment_day?: number;
           start_month?: number;
           start_year?: number;

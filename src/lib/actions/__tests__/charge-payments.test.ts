@@ -282,7 +282,12 @@ describe('togglePaymentAction — toggle ON (insert)', () => {
       table: 'charges',
       op: 'select',
       result: {
-        data: { id: VALID_INPUT.chargeId, amount: '800', workspace_id: 'ws-1' },
+        data: {
+          id: VALID_INPUT.chargeId,
+          amount: '800',
+          workspace_id: 'ws-1',
+          paid_from: 'principal',
+        },
         error: null,
       },
     });
@@ -305,6 +310,9 @@ describe('togglePaymentAction — toggle ON (insert)', () => {
       period_year: 2026,
       period_month: 5,
       paid_amount: 800,
+      // ADR-038 D3 — stamped from the parent charge, in the vocabulary of
+      // `accounts.account_type`, never in that of `charges.paid_from`.
+      paid_from_account_type: 'income_bills',
       created_by: 'user-1',
     });
     expect(auditSpy).toHaveBeenCalledTimes(1);
@@ -323,7 +331,14 @@ describe('togglePaymentAction — toggle ON (insert)', () => {
       table: 'charges',
       op: 'select',
       result: {
-        data: { id: VALID_INPUT.chargeId, amount: '800', workspace_id: 'ws-1' },
+        data: {
+          id: VALID_INPUT.chargeId,
+          amount: '800',
+          workspace_id: 'ws-1',
+          // The OTHER value, deliberately: with `principal` everywhere, a
+          // hard-coded `income_bills` would pass every case in this file.
+          paid_from: 'epargne',
+        },
         error: null,
       },
     });
@@ -340,7 +355,10 @@ describe('togglePaymentAction — toggle ON (insert)', () => {
 
     const r = await togglePaymentAction({ ...VALID_INPUT, paidAmount: 795.5 });
     expect(r).toEqual({ ok: true, data: { paid: true, paidAmount: 795.5 } });
-    expect(supa.lastInsertPayload()).toMatchObject({ paid_amount: 795.5 });
+    expect(supa.lastInsertPayload()).toMatchObject({
+      paid_amount: 795.5,
+      paid_from_account_type: 'provisions',
+    });
   });
 
   it('returns errors.charges.payments.toggleFailed on insert error', async () => {
@@ -349,7 +367,12 @@ describe('togglePaymentAction — toggle ON (insert)', () => {
       table: 'charges',
       op: 'select',
       result: {
-        data: { id: VALID_INPUT.chargeId, amount: '800', workspace_id: 'ws-1' },
+        data: {
+          id: VALID_INPUT.chargeId,
+          amount: '800',
+          workspace_id: 'ws-1',
+          paid_from: 'principal',
+        },
         error: null,
       },
     });

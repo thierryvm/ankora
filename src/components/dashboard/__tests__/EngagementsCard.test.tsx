@@ -44,6 +44,7 @@ const carLoan: CommitmentRow = {
   frequency: 'monthly',
   notes: null,
   isActive: true,
+  paidFrom: 'principal',
 };
 
 async function renderCard(input: {

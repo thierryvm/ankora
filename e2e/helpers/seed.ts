@@ -119,6 +119,27 @@ export async function seedOnboardedUser(
   return { email, password, userId, workspaceId };
 }
 
+/**
+ * Supprime l'utilisateur éphémère — et **échoue si la suppression échoue**.
+ *
+ * Le `await` nu qui tenait ici avalait l'erreur, et ce n'était pas un détail de
+ * propreté : cet appel est le SEUL endroit du dépôt qui exécute la chaîne
+ * complète `auth.users → users → workspaces → {accounts, charge_payments,
+ * commitment_payments}`. Depuis J1 (ADR-038 D3) cette chaîne traverse une clé
+ * étrangère composite de plus. Si la cascade cassait, GoTrue rendrait une
+ * erreur, le helper l'aurait avalée, la spec serait passée au vert — et un
+ * utilisateur de test aurait fui à chaque exécution.
+ *
+ * Autrement dit : un mécanisme qui ne peut pas échouer ne prouve rien. Relevé
+ * par `rls-flow-tester` le 2026-08-10.
+ *
+ * « User not found » est toléré : le nettoyage tourne en `finally`, donc il peut
+ * courir après un test qui a déjà supprimé le compte. Toute autre erreur est
+ * une information, pas un désagrément.
+ */
 export async function deleteSeededUser(admin: AdminClient, userId: string): Promise<void> {
-  await admin.auth.admin.deleteUser(userId);
+  const { error } = await admin.auth.admin.deleteUser(userId);
+  if (error && !/not\s*found/i.test(error.message)) {
+    throw new Error(`deleteSeededUser: ${error.message}`);
+  }
 }
