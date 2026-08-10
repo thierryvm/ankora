@@ -1,9 +1,10 @@
 # ADR-041 — Provisionner n'est pas payer
 
-- **Statut** : Proposed
+- **Statut** : Accepted
 - **Date** : 2026-08-10
+- **Accepté le** : 2026-08-10 par @thierry, sur délégation explicite — _« je t'ai dit que tu as carte blanche donc merge »_, en réponse au récapitulatif de F1 à F5 et au point de friction signalé (F3). L'arbitrage de fond est donc **délégué**, pas silencieux : il porte sur les cinq décisions telles qu'elles sont écrites ici.
 - **Proposé par** : @cc-ankora, sur question de @thierry — recherche réglementaire et bancaire datée du 2026-08-10
-- **Deciders** : @thierry, @cc-ankora
+- **Deciders** : @thierry (délégation), @cc-ankora
 - **Tags** : `domain`, `schema`, `produit`, `fondation`, `belgium`
 - **Amende** : [ADR-038](ADR-038-journal-des-mouvements.md) (D1, D3, D6) et [ADR-008](ADR-008-account-naming-and-typing.md)
 - **Tranche** : [#366](https://github.com/thierryvm/ankora/issues/366)
