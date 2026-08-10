@@ -72,6 +72,26 @@ const ws = member.workspace_id;
 // (chargesFixes, provisions, engagements) se déduisent des charges seules.
 await db.from('workspaces').update({ monthly_income: 2500 }).eq('id', ws);
 
+// `payment_months` est la SEULE colonne que l'interface lit pour décider si une charge
+// tombe ce mois-ci (`ChargesClient.tsx:226,463` — `paymentMonths.includes(mois)`), et
+// `due_month` n'est qu'une référence héritée. Ce script ne la renseignait pas : la valeur
+// par défaut de la colonne est `{1,…,12}`, si bien que la taxe annuelle de mars était due
+// TOUS LES MOIS dans le profil semé. Le cockpit affichait alors cinq fausses factures en
+// retard et gonflait le « reste à payer » de 573 € — un défaut du harnais, pas du produit,
+// mais qui faussait toute mesure prise sur ce profil. Mesuré le 10 août 2026.
+//
+// On reproduit ici le calcul que fait le formulaire (`paymentMonthsFromFrequency`) plutôt
+// que de l'importer : ce script tourne hors du bundle applicatif.
+const moisDePaiement = (frequency, dueMonth) => {
+  const roule = (m) => ((m - 1) % 12) + 1;
+  if (frequency === 'monthly') return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+  if (frequency === 'quarterly')
+    return [0, 3, 6, 9].map((d) => roule(dueMonth + d)).sort((a, b) => a - b);
+  if (frequency === 'semiannual')
+    return [0, 6].map((d) => roule(dueMonth + d)).sort((a, b) => a - b);
+  return [dueMonth];
+};
+
 const rows = [];
 let sort = 0;
 for (const [label, amount, day] of MENSUELLES) {
@@ -82,6 +102,7 @@ for (const [label, amount, day] of MENSUELLES) {
     amount,
     frequency: 'monthly',
     due_month: 1,
+    payment_months: moisDePaiement('monthly', 1),
     payment_day: day,
     paid_from: 'principal',
     sort_order: sort++,
@@ -95,6 +116,7 @@ for (const [label, amount, m] of TRIMESTRIELLE) {
     amount,
     frequency: 'quarterly',
     due_month: m,
+    payment_months: moisDePaiement('quarterly', m),
     payment_day: 1,
     paid_from: 'epargne',
     sort_order: sort++,
@@ -108,6 +130,7 @@ for (const [label, amount, m] of ANNUELLES) {
     amount,
     frequency: 'annual',
     due_month: m,
+    payment_months: moisDePaiement('annual', m),
     payment_day: 1,
     paid_from: 'epargne',
     sort_order: sort++,
