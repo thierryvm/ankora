@@ -158,7 +158,7 @@ export type Database = {
           note: string | null;
           paid_amount: number;
           paid_at: string;
-          paid_from_account_type: string | null;
+          paid_from_account_type: string;
           period_month: number;
           period_year: number;
           workspace_id: string;
@@ -172,7 +172,7 @@ export type Database = {
           note?: string | null;
           paid_amount: number;
           paid_at?: string;
-          paid_from_account_type?: string | null;
+          paid_from_account_type: string;
           period_month: number;
           period_year: number;
           workspace_id: string;
@@ -186,7 +186,7 @@ export type Database = {
           note?: string | null;
           paid_amount?: number;
           paid_at?: string;
-          paid_from_account_type?: string | null;
+          paid_from_account_type?: string;
           period_month?: number;
           period_year?: number;
           workspace_id?: string;
@@ -313,7 +313,7 @@ export type Database = {
           note: string | null;
           paid_amount: number;
           paid_at: string;
-          paid_from_account_type: string | null;
+          paid_from_account_type: string;
           period_month: number;
           period_year: number;
           workspace_id: string;
@@ -326,7 +326,7 @@ export type Database = {
           note?: string | null;
           paid_amount: number;
           paid_at?: string;
-          paid_from_account_type?: string | null;
+          paid_from_account_type: string;
           period_month: number;
           period_year: number;
           workspace_id: string;
@@ -339,7 +339,7 @@ export type Database = {
           note?: string | null;
           paid_amount?: number;
           paid_at?: string;
-          paid_from_account_type?: string | null;
+          paid_from_account_type?: string;
           period_month?: number;
           period_year?: number;
           workspace_id?: string;
