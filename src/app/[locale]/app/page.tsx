@@ -107,14 +107,23 @@ export default async function DashboardPage() {
   // « Budget du mois » deducts — two "remainings" on one screen, two
   // perimeters, and no label saying so. Both now belong to the CASH view, and
   // the block is named « Après tes sorties de <mois> » to say which one it is.
+  // Built ONCE and kept whole: the cockpit needs both halves. The filtered
+  // total below feeds the transfer plan; the full list feeds the bills card,
+  // which used to sum charges on its own and so could never see an instalment
+  // (#349). One list, so the two figures cannot drift.
+  const obligationsDuMoisToutes = Obligations.obligationsDuMois({
+    charges: cockpitCharges,
+    chargePayments: paymentsLedger,
+    commitments: namedCommitments,
+    paidKeysByCommitment: commitmentLedger,
+    ref: snapshot.currentPeriod,
+  });
+  // `aPayerCeMois` (GROSS — ticked instalments included), never
+  // `resteAPayerCeMois` (net): the transfer plan provisions the month's whole
+  // commitment load, not the part still unticked. Swapping them would silently
+  // change what « Budget du mois » means.
   const commitmentsDueThisMonth = Obligations.aPayerCeMois(
-    Obligations.obligationsDuMois({
-      charges: cockpitCharges,
-      chargePayments: paymentsLedger,
-      commitments: namedCommitments,
-      paidKeysByCommitment: commitmentLedger,
-      ref: snapshot.currentPeriod,
-    }).filter((o) => o.source === 'commitment'),
+    obligationsDuMoisToutes.filter((o) => o.source === 'commitment'),
   );
   const plan = Transfer.computeMonthlyTransferPlan({
     charges: snapshot.charges,
@@ -246,6 +255,7 @@ export default async function DashboardPage() {
         <ProchainesFacturesCard
           charges={snapshot.charges}
           payments={paymentsLedger}
+          obligations={obligationsDuMoisToutes}
           todayIso={todayIso}
           locale={locale}
           forgotten={{
