@@ -45,7 +45,10 @@ Chaque ADR est immuable une fois `Accepted`. Pour le faire évoluer :
 | 016 | [Tracking paiements multi-sources (présomption J+3 + import CSV 5 sources)](./ADR-016-tracking-paiements-multi-sources.md) | Proposed                    | 2026-05-08 |
 | 017 | [Plans d'apurement (table installment_plans + génération auto N transactions)](./ADR-017-plans-apurement.md)               | Proposed                    | 2026-05-09 |
 | 018 | [Provisions bidirectionnelles : audit trail OUT/IN](./ADR-018-provisions-bidirectionnelles-audit-trail.md)                 | Superseded by ADR-038       | 2026-05-09 |
+| 038 | [Le journal des mouvements](./ADR-038-journal-des-mouvements.md)                                                           | Accepted (amendé 040, 041)  | 2026-08-05 |
 | 039 | [Portée des tokens « papier » de la landing (`.mkt-paper`)](./ADR-039-portee-tokens-marketing-papier.md)                   | Proposed                    | 2026-08-08 |
+| 040 | [Ordre d'exécution du journal (D0 en dernier)](./ADR-040-ordre-execution-du-journal.md)                                    | Accepted                    | 2026-08-10 |
+| 041 | [Provisionner n'est pas payer](./ADR-041-provisionner-nest-pas-payer.md)                                                   | Proposed                    | 2026-08-10 |
 
 > **Note numérotation** : ADR-013/014/015 jamais rédigés (réservés en buffer lors de la consolidation ADR-007 → 011/012, finalement non utilisés). La numérotation reprend à 016 pour les ADRs de la session 2026-05-08.
 
@@ -58,6 +61,11 @@ Chaque ADR est immuable une fois `Accepted`. Pour le faire évoluer :
 > restants** (019-024, 034-038) : ce serait un chantier de relecture à part
 > entière, et l'ajouter à une PR de tokens le rendrait invérifiable. À traiter
 > dans une PR dédiée.
+>
+> **Rattrapage partiel le 10 août 2026** : 038, 040 et 041 sont ajoutés parce
+> qu'ils forment le programme **en cours** — un ADR qu'on ne trouve pas est un
+> ADR qu'on re-dérive, et c'est arrivé le 10 août sur ADR-038 précisément. Les
+> dix restants (019-024, 034-037) attendent toujours leur PR dédiée.
 
 ## Conventions de nommage
 

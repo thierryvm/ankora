@@ -93,16 +93,17 @@ quoi et quand**. `grep ADR-038 docs/ROADMAP.md` ne rendait rien. Résultat mesur
 session entière du 10 août a re-dérivé une décision déjà prise cinq jours plus tôt. Une
 décision qu'on ne peut pas trouver n'existe pas.
 
-| PR  | Objet                                                                            | État                              |
-| --- | -------------------------------------------------------------------------------- | --------------------------------- |
-| —   | ADR-040 — inversion de l'ordre, corrections de schéma, D10/D11/D12               | ✅ accepté le 2026-08-10          |
-| J1  | D3 — attribution figée sur les deux tables de paiement + `commitments.paid_from` | ✅ livré le 2026-08-10 (#363)     |
-| J1b | La migration `contract` — `set not null` sur les deux colonnes                   | ⏳ **suivante**, cf. ci-dessous   |
-| J2  | D1 — table de mouvements, RLS, export art. 20 (+ 4 tables absentes)              | 📋                                |
-| J3  | D2 — rentrées datées, suppression de `monthly_income`, sémantique d'`incomplet`  | 📋                                |
-| J4  | D6 — dérivation des soldes, suppression de `savings_balance`, ancienneté         | 📋                                |
-| J5  | D4 + D8 — ventilation contrôlée et arbitrage mensuel                             | 📋                                |
-| J6  | D0 — clé de substitution `accounts.id` + backfill                                | 📋 **en dernier**, cf. ADR-040 E1 |
+| PR  | Objet                                                                              | État                                        |
+| --- | ---------------------------------------------------------------------------------- | ------------------------------------------- |
+| —   | ADR-040 — inversion de l'ordre, corrections de schéma, D10/D11/D12                 | ✅ accepté le 2026-08-10                    |
+| —   | ADR-041 — provisionner n'est pas payer : la capacité de régler devient une donnée  | 🟡 proposé le 2026-08-10, s'exécute dans J2 |
+| J1  | D3 — attribution figée sur les deux tables de paiement + `commitments.paid_from`   | ✅ livré le 2026-08-10 (#363)               |
+| J1b | La migration `contract` — `set not null` sur les deux colonnes                     | ⏳ **suivante**, cf. ci-dessous             |
+| J2  | D1 — table de mouvements, RLS, export art. 20 (+ 4 tables absentes), **+ ADR-041** | 📋 périmètre élargi, cf. ci-dessous         |
+| J3  | D2 — rentrées datées, suppression de `monthly_income`, sémantique d'`incomplet`    | 📋                                          |
+| J4  | D6 — dérivation des soldes, suppression de `savings_balance`, ancienneté           | 📋                                          |
+| J5  | D4 + D8 — ventilation contrôlée et arbitrage mensuel                               | 📋                                          |
+| J6  | D0 — clé de substitution `accounts.id` + backfill                                  | 📋 **en dernier**, cf. ADR-040 E1           |
 
 **L'ordre a changé le 10 août** : ADR-038 plaçait D0 en tête. ADR-040 le renvoie en fin de
 programme, parce que D0 sert le découplage des rôles de comptes — qu'ADR-038 met lui-même
@@ -137,6 +138,30 @@ pose le `NOT NULL`. Son retour arrière est `alter column drop not null` — **j
 ligne, ce qui videra l'historique dont D6 dépend ; et
 [#362](https://github.com/thierryvm/ankora/issues/362) — « payé depuis » n'est exposé par
 aucun écran, alors qu'à partir de D6 une attribution fausse produit deux soldes faux.
+
+La troisième, [#366](https://github.com/thierryvm/ankora/issues/366), est **tranchée** par
+[ADR-041](./adr/ADR-041-provisionner-nest-pas-payer.md) et s'exécute en J2.
+
+### J2 — pourquoi son périmètre a grossi le 10 août
+
+ADR-038 D1 posait déjà `from_account_id` / `to_account_id` : le journal sait représenter un
+virement interne. Ce qu'aucun ADR ne disait, c'est **quels comptes ont le droit de payer**.
+
+Vérifié le 2026-08-10 (sources datées dans ADR-041) : un compte d'épargne fiscalement
+avantagé n'est **pas** un compte de paiement, et c'est vrai en Belgique par arrêté royal, en
+France pour le Livret A et le LDDS, en Allemagne par le mécanisme du `Referenzkonto`. Mais
+ce n'est **pas universel** — les sous-comptes N26 et bunq domicilient et portent une carte,
+et N26 le propose en Belgique. La capacité de régler ne se déduit donc ni du rôle du compte,
+ni de la banque : **elle se déclare**.
+
+Ce qu'ADR-041 ajoute à J2 : deux colonnes sur `accounts` (`settles_directly` + compte de
+règlement) avec leur contrainte, le renommage `paid_from` → `provisioned_from`, l'écriture à
+deux mouvements quand l'enveloppe ne règle pas directement, et la **ré-attribution des lignes
+de paiement écrites par J1** — dont le backfill a posé le compte de provisionnement là où le
+compte payeur est attendu. Rien ne lit encore cette colonne ; J4 la lirait.
+
+Si J2 dépasse ce qu'une revue humaine tient d'une traite, le point de coupe est le schéma et
+le réglage d'un côté, l'écriture à deux mouvements de l'autre — dans cet ordre.
 
 ---
 
