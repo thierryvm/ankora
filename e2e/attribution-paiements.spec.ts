@@ -25,7 +25,7 @@ const admin = adminClientOrNull();
  *
  * Ce que ces cas NE prouvent PAS, et il ne faut pas le leur faire dire :
  * l'attribution n'est pas immuable. Dépointer supprime physiquement la ligne
- * (issue #361), donc décocher puis recocher ré-attribue librement. Le trigger
+ * (issue #361), donc décocher puis recocher réattribue librement. Le trigger
  * protège contre un `update` oublié dans une future Server Action, rien de plus.
  */
 test.describe('ADR-038 D3 — le compte qui paie se fige sur le paiement', () => {

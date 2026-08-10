@@ -166,7 +166,7 @@ ni de la banque : **elle se déclare**.
 
 Ce qu'ADR-041 ajoute à J2 : deux colonnes sur `accounts` (`settles_directly` + compte de
 règlement) avec leur contrainte, le renommage `paid_from` → `provisioned_from`, l'écriture à
-deux mouvements quand l'enveloppe ne règle pas directement, et la **ré-attribution des lignes
+deux mouvements quand l'enveloppe ne règle pas directement, et la **réattribution des lignes
 de paiement écrites par J1** — dont le backfill a posé le compte de provisionnement là où le
 compte payeur est attendu. Rien ne lit encore cette colonne ; J4 la lirait.
 
