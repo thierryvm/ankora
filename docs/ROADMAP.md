@@ -95,8 +95,8 @@ décision qu'on ne peut pas trouver n'existe pas.
 
 | PR  | Objet                                                                            | État                              |
 | --- | -------------------------------------------------------------------------------- | --------------------------------- |
-| —   | ADR-040 — inversion de l'ordre, corrections de schéma, D10/D11/D12               | 🔄 Proposed                       |
-| J1  | D3 — attribution figée sur les deux tables de paiement + `commitments.paid_from` | 📋 après acceptation d'ADR-040    |
+| —   | ADR-040 — inversion de l'ordre, corrections de schéma, D10/D11/D12               | ✅ accepté le 2026-08-10          |
+| J1  | D3 — attribution figée sur les deux tables de paiement + `commitments.paid_from` | ⏳ **suivante**                   |
 | J2  | D1 — table de mouvements, RLS, export art. 20 (+ 4 tables absentes)              | 📋                                |
 | J3  | D2 — rentrées datées, suppression de `monthly_income`, sémantique d'`incomplet`  | 📋                                |
 | J4  | D6 — dérivation des soldes, suppression de `savings_balance`, ancienneté         | 📋                                |

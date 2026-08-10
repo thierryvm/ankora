@@ -1,7 +1,8 @@
 # ADR-040 — Le journal d'abord, la fondation ensuite
 
-- **Statut** : Proposed
+- **Statut** : Accepted
 - **Date** : 2026-08-10
+- **Accepté le** : 2026-08-10 par @thierry — **y compris E1**, qui renvoie D0 en fin de programme et diffère donc la clé de substitution d'`accounts` après cinq autres livraisons
 - **Proposé par** : @cc-ankora, sur mesures en base et en code du 2026-08-10, revu par `plan-reviewer` (🟡 APPROVED WITH CHANGES — les 7 corrections exigées sont intégrées)
 - **Deciders** : @thierry, @cc-ankora
 - **Tags** : `domain`, `schema`, `execution`, `cockpit`
