@@ -5,6 +5,8 @@ import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { currentPeriodDueDate, nextUnpaidDueDate } from '@/lib/domain/charges';
+import { resteAPayerCeMois } from '@/lib/domain/obligations';
+import type { MonthObligation } from '@/lib/domain/obligations';
 import type { Charge } from '@/lib/domain/types';
 import type { Locale } from '@/i18n/routing';
 import { formatCurrency, formatDate } from '@/lib/i18n/formatters';
@@ -13,6 +15,21 @@ import { paymentKey, type PaymentLedger } from '@/lib/domain/cockpit';
 type Props = {
   charges: readonly Charge[];
   payments: PaymentLedger;
+  /**
+   * EVERY obligation falling due this month, both families, as built by
+   * `obligationsDuMois()` upstream — the money side of this card.
+   *
+   * `charges` still drives the ROWS (a row needs the `Charge` for its due date
+   * and its watched flag); `obligations` drives the TOTAL. They are not
+   * redundant: `thisMonthRows` additionally drops charges whose
+   * `currentPeriodDueDate` is null, so the headline can legitimately exceed the
+   * sum of the visible rows — already true today because of the 5-row cap.
+   *
+   * Both are anchored on the same Europe/Brussels clock: this card derives its
+   * period from `todayIso`, the list is built on `snapshot.currentPeriod`, and
+   * `src/lib/data/month-situation.ts` already guards that pair against drift.
+   */
+  obligations: readonly MonthObligation[];
   /** "Today" in ISO `YYYY-MM-DD` (Europe/Brussels, computed upstream). */
   todayIso: string;
   locale: Locale;
@@ -47,9 +64,37 @@ type Row = Readonly<{
  *  1. « Ce mois-ci » — the month's UNPAID bills (anchored via
  *     `currentPeriodDueDate`, so a passed-but-unpaid bill shows as overdue
  *     instead of rolling forward), sorted by date, capped at 5 rows (his
- *     explicit ask), headed by the live "reste à payer" amount — the SAME
- *     definition as the charges-page banner (cross-page coherence). All
- *     paid → success state.
+ *     explicit ask), headed by the live "reste à payer" amount. All paid →
+ *     success state.
+ *
+ * ## What "reste à payer" counts, and why the comment used to lie (#349)
+ *
+ * It counts EVERY obligation still unticked this month — bills AND commitment
+ * instalments — because that is what @thierry means by the words: "ce qu'il
+ * reste à payer en termes de factures, crédits, engagements". Measured
+ * 2026-08-10: the card showed 969,21 € while 1 369,21 € was still to leave the
+ * account, a 29 % under-statement on the screen where the month is decided.
+ *
+ * The lines above USED TO claim "the SAME definition as the charges-page
+ * banner (cross-page coherence)" while summing bills only. That claim is why
+ * the drift survived: a property asserted in a comment, verified by nothing.
+ *
+ * The definition is now shared, the implementations are NOT. This card calls
+ * `resteAPayerCeMois()` on a server-built list; `ChargesClient` recomputes the
+ * same concept client-side over `number`s and its optimistic paid sets, because
+ * it must update the instant a checkbox is hit. Two implementations of one
+ * definition — held together by
+ * `src/components/dashboard/__tests__/ProchainesFacturesCard.test.tsx`
+ * (« #349, le total couvre les deux familles »), not by this sentence.
+ *
+ * The rows stay bills-only on purpose (@thierry, 2026-08-10): the 400 € of
+ * instalments are already itemised by `EngagementsCard`, mounted just above on
+ * the same screen. Listing them here too would render the same lines twice.
+ * The « dont … » line under the total links there, so the figure opens onto its
+ * parts (règle 10) without duplicating them.
+ *
+ * `Decimal` crosses no RSC boundary here — this is a Server Component, and
+ * `MonthObligation.amountDue` is formatted before render.
  *  2. « À surveiller » — ONLY the bills he flagged (`is_watched`) that are
  *     not already listed above, each with its real next unpaid occurrence.
  *     Replaces the rejected automatic "Mois prochain" bucket.
@@ -62,6 +107,7 @@ type Row = Readonly<{
 export async function ProchainesFacturesCard({
   charges,
   payments,
+  obligations,
   todayIso,
   locale,
   forgotten,
@@ -91,13 +137,21 @@ export async function ProchainesFacturesCard({
     })
     .sort((a, b) => (a.dueDateIso < b.dueDateIso ? -1 : a.dueDateIso > b.dueDateIso ? 1 : 0));
 
-  const dueThisMonthCount = charges.filter(
-    (c) => c.isActive && c.paymentMonths.includes(period.month),
-  ).length;
-  const remainingThisMonth = thisMonthRows.reduce(
-    (acc, row) => acc.plus(row.charge.amount),
-    new Decimal(0),
+  // ONE list, ONE total (`du-mois.ts` §"never two independently computed
+  // totals"). Summing `thisMonthRows` here is what produced #349: it could only
+  // ever see bills.
+  const remainingThisMonth = resteAPayerCeMois(obligations);
+  const remainingCommitments = resteAPayerCeMois(
+    obligations.filter((o) => o.source === 'commitment'),
   );
+  /**
+   * Gates the whole "this month" block. It reads `obligations`, NOT
+   * `thisMonthRows` — the rows are bills-only, so a month whose bills are all
+   * ticked while an instalment is not would have rendered « Tout est payé ce
+   * mois » with 400 € about to leave. Today the card under-states; that version
+   * would have asserted. Caught by `plan-reviewer` before any code was written.
+   */
+  const hasUnpaidThisMonth = obligations.some((o) => !o.isPaid);
   const visibleThisMonth = thisMonthRows.slice(0, 5);
 
   // Section 2 — flagged bills not already shown above, with their real next
@@ -119,8 +173,10 @@ export async function ProchainesFacturesCard({
     .sort((a, b) => (a.dueDateIso < b.dueDateIso ? -1 : a.dueDateIso > b.dueDateIso ? 1 : 0));
 
   const hasAnyWatched = charges.some((c) => c.isActive && c.isWatched === true);
-  const hasAnyDue = dueThisMonthCount > 0;
-  const isEmpty = charges.filter((c) => c.isActive).length === 0;
+  // An account with no active charge but a commitment instalment due used to
+  // short-circuit to « Aucune charge active pour le moment » while the money
+  // left anyway. The card is empty only when NOTHING is due, either family.
+  const isEmpty = charges.filter((c) => c.isActive).length === 0 && obligations.length === 0;
 
   return (
     <Card data-testid="prochaines-factures-card">
@@ -184,27 +240,48 @@ export async function ProchainesFacturesCard({
               <header className="mb-1 flex items-baseline justify-between gap-3">
                 <h3 className="text-foreground flex items-baseline gap-2 text-sm font-semibold">
                   {t('thisMonth')}
-                  {hasAnyDue && (
+                  {/* Counted on the ROWS, never on `obligations`: the key says
+                      « facture » and the rows are bills, so the chip can never
+                      contradict its own wording — « 0 factures » next to a
+                      commitment-only month would. */}
+                  {thisMonthRows.length > 0 && (
                     <span className="text-muted-foreground text-xs font-medium">
                       {t('itemCount', { count: thisMonthRows.length })}
                     </span>
                   )}
                 </h3>
-                {thisMonthRows.length > 0 && (
-                  <p className="shrink-0 text-right">
-                    <span className="text-muted-foreground mr-1.5 text-xs">
-                      {t('remainingLabel')}
-                    </span>
-                    <span
-                      className="text-foreground text-sm font-bold tabular-nums"
-                      data-testid="prochaines-factures-remaining"
-                    >
-                      {formatCurrency(remainingThisMonth, locale)}
-                    </span>
-                  </p>
+                {hasUnpaidThisMonth && (
+                  <div className="shrink-0 text-right">
+                    <p>
+                      <span className="text-muted-foreground mr-1.5 text-xs">
+                        {t('remainingLabel')}
+                      </span>
+                      <span
+                        className="text-foreground text-sm font-bold tabular-nums"
+                        data-testid="prochaines-factures-remaining"
+                      >
+                        {formatCurrency(remainingThisMonth, locale)}
+                      </span>
+                    </p>
+                    {/* Règle 10 — the total opens onto its parts. The bills are
+                        listed below; the instalments are itemised by
+                        `EngagementsCard` on this same screen, so this line
+                        points there instead of repeating them. */}
+                    {remainingCommitments.gt(0) && (
+                      <Link
+                        href="/app/commitments"
+                        className="text-muted-foreground hover:text-brand-text focus-visible:ring-brand-600 inline-block rounded text-xs underline underline-offset-2 focus-visible:ring-2 focus-visible:outline-none"
+                        data-testid="prochaines-factures-remaining-commitments"
+                      >
+                        {t('remainingCommitments', {
+                          amount: formatCurrency(remainingCommitments, locale),
+                        })}
+                      </Link>
+                    )}
+                  </div>
                 )}
               </header>
-              {thisMonthRows.length === 0 ? (
+              {!hasUnpaidThisMonth ? (
                 <p
                   className="text-brand-text flex items-center gap-1.5 py-2 text-sm font-medium"
                   data-testid="prochaines-factures-all-paid"
@@ -215,7 +292,12 @@ export async function ProchainesFacturesCard({
               ) : (
                 <>
                   <p className="text-muted-foreground mb-2 text-xs">{t('thisMonthHint')}</p>
-                  <BillList rows={visibleThisMonth} locale={locale} t={t} />
+                  {/* A month can have something left to pay and no bill row —
+                      every bill ticked, an instalment not. The total above
+                      still says so; the list simply has nothing to show. */}
+                  {thisMonthRows.length > 0 && (
+                    <BillList rows={visibleThisMonth} locale={locale} t={t} />
+                  )}
                 </>
               )}
             </section>

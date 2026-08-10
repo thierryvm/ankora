@@ -17,6 +17,8 @@ import { render, screen, within } from '@testing-library/react';
 import messages from '../../../../messages/fr-BE.json';
 import { money, type Charge } from '@/lib/domain/types';
 import { paymentKey, type PaymentLedger } from '@/lib/domain/cockpit';
+import { obligationsDuMois } from '@/lib/domain/obligations';
+import type { NamedCommitment } from '@/lib/domain/obligations';
 
 vi.mock('@/i18n/navigation', () => ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -73,22 +75,131 @@ function makeCharge(over: Partial<Charge> = {}): Charge {
   };
 }
 
+/** Reference period matching TODAY — the one `page.tsx` passes as `snapshot.currentPeriod`. */
+const PERIOD = { year: 2026, month: 7 } as const;
+
+function makeCommitment(over: Partial<NamedCommitment> = {}): NamedCommitment {
+  return {
+    id: over.id ?? `k-${Math.random().toString(36).slice(2)}`,
+    label: 'Prêt travaux',
+    kind: 'debt',
+    totalAmount: 2400,
+    installmentAmount: 200,
+    installmentsTotal: 12,
+    startYear: 2026,
+    startMonth: 1,
+    paymentDay: 5,
+    frequency: 'monthly',
+    isActive: true,
+    ...over,
+  };
+}
+
 async function renderCard(input: {
   charges: Charge[];
   payments?: PaymentLedger;
+  commitments?: NamedCommitment[];
+  /** Commitment id → set of `periodKey(year, month)` already ticked. */
+  paidKeysByCommitment?: Map<string, Set<string>>;
   todayIso?: string;
   forgotten?: { labels: readonly string[]; monthLabel: string; periodParam: string };
 }) {
+  const payments = input.payments ?? NO_PAYMENTS;
+  // Built with the REAL domain function, exactly as `page.tsx` does — so a
+  // change to `obligationsDuMois` reaches these tests instead of being mocked
+  // away. Passing a hand-rolled list here would test the fixture, not the card.
+  const obligations = obligationsDuMois({
+    charges: input.charges,
+    chargePayments: payments,
+    commitments: input.commitments ?? [],
+    paidKeysByCommitment: input.paidKeysByCommitment ?? new Map(),
+    ref: PERIOD,
+  });
   return render(
     await ProchainesFacturesCard({
       charges: input.charges,
-      payments: input.payments ?? NO_PAYMENTS,
+      payments,
+      obligations,
       todayIso: input.todayIso ?? TODAY,
       locale: 'fr-BE',
       forgotten: input.forgotten,
     }),
   );
 }
+
+/**
+ * #349 — « reste à payer » must mean what @thierry says it means: everything
+ * still to pay this month, bills AND commitment instalments. The card used to
+ * sum bills only while its own JSDoc claimed « the SAME definition as the
+ * charges-page banner ». A property asserted in a comment and verified by
+ * nothing is how the two screens drifted 400 € apart.
+ *
+ * These four cases are the witness that comment never had.
+ */
+describe('<ProchainesFacturesCard /> — #349, le total couvre les deux familles', () => {
+  it('additionne les échéances d’engagement au reste à payer, et dit combien', async () => {
+    await renderCard({
+      charges: [makeCharge({ id: 'c1', amount: money('100'), paymentDay: 25 })],
+      commitments: [makeCommitment({ id: 'k1', installmentAmount: 50 })],
+    });
+    // 100 € de facture + 50 € d'échéance = 150 €, pas 100 €.
+    expect(screen.getByTestId('prochaines-factures-remaining')).toHaveTextContent(/150/);
+    // Et les 50 € ne tombent pas du ciel : la carte nomme leur origine.
+    expect(screen.getByTestId('prochaines-factures-remaining-commitments')).toHaveTextContent(/50/);
+  });
+
+  it('ne compte pas une échéance déjà cochée', async () => {
+    await renderCard({
+      charges: [makeCharge({ id: 'c1', amount: money('100'), paymentDay: 25 })],
+      commitments: [makeCommitment({ id: 'k1', installmentAmount: 50 })],
+      paidKeysByCommitment: new Map([['k1', new Set(['2026-7'])]]),
+    });
+    expect(screen.getByTestId('prochaines-factures-remaining')).toHaveTextContent(/100/);
+    // Plus rien à renvoyer vers les engagements : la ligne disparaît.
+    expect(screen.queryByTestId('prochaines-factures-remaining-commitments')).toBeNull();
+  });
+
+  /**
+   * Le cas que le premier plan aurait AGGRAVÉ, relevé par `plan-reviewer`.
+   * `thisMonthRows` ne contient que des factures ; toutes cochées, il est vide,
+   * et l'état de succès s'affichait sur ce seul critère. La carte aurait donc
+   * annoncé « Tout est payé ce mois » pendant que 400 € s'apprêtaient à partir.
+   * Aujourd'hui elle sous-estime ; là elle aurait affirmé.
+   */
+  it('n’annonce pas « tout est payé » quand une échéance reste due', async () => {
+    await renderCard({
+      charges: [makeCharge({ id: 'c1', amount: money('100'), paymentDay: 10 })],
+      payments: paid(['c1']),
+      commitments: [makeCommitment({ id: 'k1', installmentAmount: 400 })],
+    });
+    expect(screen.queryByTestId('prochaines-factures-all-paid')).toBeNull();
+    expect(screen.getByTestId('prochaines-factures-remaining')).toHaveTextContent(/400/);
+    expect(screen.getByTestId('prochaines-factures-remaining-commitments')).toHaveTextContent(
+      /400/,
+    );
+  });
+
+  it('reste visible quand l’espace n’a aucune facture mais une échéance due', async () => {
+    await renderCard({
+      charges: [],
+      commitments: [makeCommitment({ id: 'k1', installmentAmount: 400 })],
+    });
+    // Sans ce garde-fou : « Aucune charge active pour le moment » pendant que
+    // 400 € quittent le compte.
+    expect(screen.queryByTestId('prochaines-factures-empty')).toBeNull();
+    expect(screen.getByTestId('prochaines-factures-remaining')).toHaveTextContent(/400/);
+  });
+
+  it('conserve l’état de succès quand tout est réellement payé, les deux familles', async () => {
+    await renderCard({
+      charges: [makeCharge({ id: 'c1', amount: money('100'), paymentDay: 10 })],
+      payments: paid(['c1']),
+      commitments: [makeCommitment({ id: 'k1', installmentAmount: 400 })],
+      paidKeysByCommitment: new Map([['k1', new Set(['2026-7'])]]),
+    });
+    expect(screen.getByTestId('prochaines-factures-all-paid')).toBeInTheDocument();
+  });
+});
 
 describe('<ProchainesFacturesCard /> — THI-329 PR-C', () => {
   it('renders the FR title and the view-all link', async () => {
