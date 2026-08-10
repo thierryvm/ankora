@@ -7,6 +7,9 @@ import { revalidateAppPath, revalidateDashboard } from '@/lib/actions/revalidate
 import { todayInAnkoraTz } from '@/lib/date/tz';
 import { commitmentRowToDomain } from '@/lib/data/commitment-row';
 import { getCommitmentsWithLedger } from '@/lib/data/commitments';
+import { accountTypeFromKind } from '@/lib/domain/accounts/account-type';
+import type { AccountType } from '@/lib/domain/cockpit/types';
+import type { ChargePaidFrom } from '@/lib/domain/types';
 import { paymentKey, type CockpitCharge, type PaymentLedger } from '@/lib/domain/cockpit/types';
 import {
   ciblesDuGesteGroupe,
@@ -55,6 +58,28 @@ const periodSchema = z.object({
   periodYear: z.number().int().min(2000).max(2100),
   periodMonth: z.number().int().min(1).max(12),
 });
+
+/**
+ * ADR-038 D3 — which account settled an obligation, for the bulk tick.
+ *
+ * The domain deliberately does not carry it: `MonthObligation` describes what
+ * is OWED, not where it is paid from, and adding the field there would be dead
+ * weight in `domain/obligations/du-mois.ts`. So the value is looked up from the
+ * rows this action already read, keyed by id.
+ *
+ * The lookup refuses to guess. Every target id comes from the very array the
+ * map was built from, so a miss is impossible by construction — and if that
+ * construction ever changes, a loud throw beats writing NULL into the column
+ * D6 (J4) will derive account balances from. No id in the message: it would end
+ * up in a log line.
+ */
+function attributionDe(map: ReadonlyMap<string, ChargePaidFrom>, id: string): AccountType {
+  const paidFrom = map.get(id);
+  if (paidFrom === undefined) {
+    throw new Error('Bulk tick: no settling account found for one of the obligations');
+  }
+  return accountTypeFromKind(paidFrom);
+}
 
 /**
  * « Marquer les échéances passées comme payées » — and undo it.
@@ -124,6 +149,15 @@ export async function togglePastDueObligationsAction(
     paymentDay: c.payment_day,
     isActive: c.is_active,
   }));
+
+  // ADR-038 D3 — rebuilt from the rows already read above, because the domain
+  // shapes drop the field on the way through (see `attributionDe`).
+  const paidFromByChargeId = new Map<string, ChargePaidFrom>(
+    (chargesRes.data ?? []).map((c) => [c.id, c.paid_from as ChargePaidFrom] as const),
+  );
+  const paidFromByCommitmentId = new Map<string, ChargePaidFrom>(
+    ledger.commitments.map((c) => [c.id, c.paidFrom] as const),
+  );
 
   const paidRowIdByChargeId = new Map(
     (chargePaymentsRes.data ?? []).map((p) => [p.charge_id, p.id] as const),
@@ -196,8 +230,10 @@ export async function togglePastDueObligationsAction(
               period_year: ref.year,
               period_month: ref.month,
               // The amount is read from the obligation the SERVER derived, never
-              // from the client — same rule as the single-row toggles.
+              // from the client — same rule as the single-row toggles. Same for
+              // the settling account (ADR-038 D3).
               paid_amount: o.amountDue.toNumber(),
+              paid_from_account_type: attributionDe(paidFromByChargeId, o.id),
               created_by: ctx.userId,
             })),
           ),
@@ -210,6 +246,7 @@ export async function togglePastDueObligationsAction(
               period_year: ref.year,
               period_month: ref.month,
               paid_amount: o.amountDue.toNumber(),
+              paid_from_account_type: attributionDe(paidFromByCommitmentId, o.id),
               created_by: ctx.userId,
             })),
           ),

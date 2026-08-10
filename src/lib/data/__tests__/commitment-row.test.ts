@@ -16,6 +16,7 @@ const carLoan: CommitmentRow = {
   frequency: 'monthly',
   notes: null,
   isActive: true,
+  paidFrom: 'principal',
 };
 
 /** Ledger keys for a fully-settled 17-instalment monthly commitment. */

@@ -2,6 +2,8 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidateAppPath, revalidateDashboard } from '@/lib/actions/revalidate';
+import { accountTypeFromKind } from '@/lib/domain/accounts/account-type';
+import type { ChargePaidFrom } from '@/lib/domain/types';
 import { chargePaymentToggleSchema } from '@/lib/schemas/charge-payment';
 import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
 import { rateLimit } from '@/lib/security/rate-limit';
@@ -75,7 +77,10 @@ export async function togglePaymentAction(
   // 1. Authz: confirm the charge exists in the caller's workspace.
   const { data: charge, error: chargeError } = await supabase
     .from('charges')
-    .select('id, amount, workspace_id')
+    // `paid_from` is read here and nowhere else: ADR-038 D3 freezes the
+    // settling account ON the payment, so it must be read from the parent row
+    // at the moment of the tick — never received from the client (rule 3).
+    .select('id, amount, workspace_id, paid_from')
     .eq('id', chargeId)
     .eq('workspace_id', ctx.workspaceId)
     .maybeSingle();
@@ -118,6 +123,7 @@ export async function togglePaymentAction(
       period_year: periodYear,
       period_month: periodMonth,
       paid_amount: amountToPersist,
+      paid_from_account_type: accountTypeFromKind(charge.paid_from as ChargePaidFrom),
       note: note ?? null,
       created_by: ctx.userId,
     });

@@ -47,6 +47,7 @@ const carLoan: RawCommitment = {
   frequency: 'monthly',
   notes: null,
   isActive: true,
+  paidFrom: 'principal',
 };
 
 function renderPage(

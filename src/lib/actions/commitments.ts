@@ -4,6 +4,8 @@ import { z } from 'zod';
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidateAppPath, revalidateDashboard } from '@/lib/actions/revalidate';
+import { accountTypeFromKind } from '@/lib/domain/accounts/account-type';
+import type { ChargePaidFrom } from '@/lib/domain/types';
 import { commitmentInputSchema, commitmentUpdateSchema } from '@/lib/schemas/commitment';
 import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
 import { rateLimit } from '@/lib/security/rate-limit';
@@ -202,7 +204,10 @@ export async function toggleCommitmentPaymentAction(
   // Authz: the row must belong to the caller's workspace (RLS + explicit filter).
   const { data: commitment, error: readError } = await supabase
     .from('commitments')
-    .select('total_amount, installment_amount, installments_total')
+    // `paid_from` joins the read for ADR-038 D3: the settling account is
+    // stamped onto the payment row at tick time, read from the parent here and
+    // never sent by the client (rule 3).
+    .select('total_amount, installment_amount, installments_total, paid_from')
     .eq('id', commitmentId)
     .eq('workspace_id', ctx.workspaceId)
     .maybeSingle();
@@ -243,6 +248,7 @@ export async function toggleCommitmentPaymentAction(
     period_year: periodYear,
     period_month: periodMonth,
     paid_amount: paidAmount,
+    paid_from_account_type: accountTypeFromKind(commitment.paid_from as ChargePaidFrom),
     created_by: ctx.userId,
   });
 

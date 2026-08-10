@@ -1,5 +1,6 @@
 import { isFinished } from '@/lib/domain/commitments';
 import type { Commitment, CommitmentFrequency, CommitmentKind } from '@/lib/domain/commitments';
+import type { ChargePaidFrom } from '@/lib/domain/types';
 
 /**
  * Transport shape of a commitment across the RSC boundary — money as plain
@@ -23,6 +24,22 @@ export type CommitmentRow = {
   frequency: CommitmentFrequency;
   notes: string | null;
   isActive: boolean;
+  /**
+   * Which account settles this commitment's instalments. Same two values as
+   * `charges.paid_from` — `commitments.paid_from` carries the identical CHECK,
+   * so the type is reused rather than re-declared.
+   *
+   * REQUIRED on purpose (ADR-038 D3). The bulk tick in `obligations.ts` has to
+   * stamp each instalment payment with the account it came from, and the
+   * domain's `MonthObligation` deliberately does not carry it. Making the field
+   * optional would let a future producer forget it and silently attribute every
+   * instalment to the main account. TypeScript pointing at each producer IS the
+   * point.
+   *
+   * Not on `Commitment` (the pure-domain shape below): the schedule maths has
+   * no use for it, and carrying it there would be dead weight.
+   */
+  paidFrom: ChargePaidFrom;
 };
 
 /**

@@ -16,6 +16,21 @@ const db = createClient(url, key, { auth: { persistSession: false } });
 
 const EMAIL = 'ankora-test-profil@ankora.test';
 
+// ADR-038 D3 — chaque paiement porte le compte qui l'a réglé. Miroir de
+// `src/lib/domain/accounts/account-type.ts` : un script .mjs ne peut pas importer
+// le module TypeScript, donc la table est recopiée ici. Elle refuse l'inconnu
+// plutôt que de retomber sur une valeur par défaut, exactement comme l'original.
+const TYPE_DE_COMPTE = {
+  principal: 'income_bills',
+  vie_courante: 'daily_card',
+  epargne: 'provisions',
+};
+const typeDeCompte = (paidFrom) => {
+  const type = TYPE_DE_COMPTE[paidFrom];
+  if (!type) throw new Error(`paid_from inconnu : ${paidFrom}`);
+  return type;
+};
+
 const { data: liste } = await db.auth.admin.listUsers();
 const user = liste.users.find((u) => u.email === EMAIL);
 if (!user) throw new Error('profil de base absent — lancer seed-profil-test.mjs d abord');
@@ -75,7 +90,7 @@ const CREDIT = {
 const { data: credit, error: crErr } = await db
   .from('commitments')
   .insert(CREDIT)
-  .select('id')
+  .select('id, paid_from')
   .single();
 if (crErr) throw new Error(`credit: ${crErr.message}`);
 
@@ -91,6 +106,7 @@ for (let i = 0; i < 19; i++) {
     commitment_id: credit.id,
     created_by: userId,
     paid_amount: 180,
+    paid_from_account_type: typeDeCompte(credit.paid_from),
     period_year: annee,
     period_month: mois,
     paid_at: new Date(Date.UTC(annee, mois - 1, 20)).toISOString(),
@@ -104,7 +120,7 @@ for (let i = 0; i < 19; i++) {
 // Le plan d'apurement du SPF : 7 échéances de 2026 réglées (janvier → juillet).
 const { data: plan } = await db
   .from('commitments')
-  .select('id')
+  .select('id, paid_from')
   .eq('workspace_id', ws)
   .eq('kind', 'installment_plan')
   .single();
@@ -114,6 +130,7 @@ for (let m = 1; m <= 7; m++) {
     commitment_id: plan.id,
     created_by: userId,
     paid_amount: 220,
+    paid_from_account_type: typeDeCompte(plan.paid_from),
     period_year: 2026,
     period_month: m,
     paid_at: new Date(Date.UTC(2026, m - 1, 5)).toISOString(),
@@ -130,7 +147,7 @@ const AN = maintenant.getUTCFullYear();
 const MOIS = maintenant.getUTCMonth() + 1;
 const { data: charges } = await db
   .from('charges')
-  .select('id,label,amount')
+  .select('id,label,amount,paid_from')
   .eq('workspace_id', ws)
   .in('label', ['Loyer', 'Orange', 'Belfius']);
 const paiements = charges.map((c) => ({
@@ -138,6 +155,7 @@ const paiements = charges.map((c) => ({
   charge_id: c.id,
   created_by: userId,
   paid_amount: c.amount,
+  paid_from_account_type: typeDeCompte(c.paid_from),
   period_year: AN,
   period_month: MOIS,
   paid_at: new Date(Date.UTC(AN, MOIS - 1, 4)).toISOString(),

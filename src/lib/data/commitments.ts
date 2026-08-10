@@ -61,6 +61,10 @@ export async function getCommitmentsWithLedger(
     frequency: c.frequency as CommitmentRow['frequency'],
     notes: c.notes,
     isActive: c.is_active,
+    // Same narrowing as `kind` and `frequency` above: the DB CHECK
+    // (`paid_from in ('principal','epargne')`) is the guarantee, the generated
+    // type only says `string`.
+    paidFrom: c.paid_from as CommitmentRow['paidFrom'],
   }));
 
   const paidKeysByCommitment: Record<string, string[]> = {};

@@ -122,7 +122,13 @@ export async function convertChargeToCommitmentAction(
   const supabase = await createClient();
   const { data: charge, error: readError } = await supabase
     .from('charges')
-    .select('id, label, amount, frequency, payment_day, payment_months, category_id, is_active')
+    .select(
+      // `paid_from` travels with the conversion (ADR-038 D3). Without it, a
+      // charge settled from the savings account would silently become a
+      // commitment settled from the main one — the exact class of silent
+      // re-attribution D3 exists to close.
+      'id, label, amount, frequency, payment_day, payment_months, category_id, is_active, paid_from',
+    )
     .eq('id', d.chargeId)
     .eq('workspace_id', ctx.workspaceId)
     .maybeSingle();
@@ -189,6 +195,7 @@ export async function convertChargeToCommitmentAction(
       payment_day: charge.payment_day,
       frequency,
       category_id: charge.category_id,
+      paid_from: charge.paid_from,
       notes: null,
       is_active: true,
     })

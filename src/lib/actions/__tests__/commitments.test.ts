@@ -276,7 +276,12 @@ describe('toggleCommitmentPaymentAction', () => {
       table: 'commitments',
       op: 'select',
       result: {
-        data: { total_amount: 4200, installment_amount: 250, installments_total: 17 },
+        data: {
+          total_amount: 4200,
+          installment_amount: 250,
+          installments_total: 17,
+          paid_from: 'principal',
+        },
         error: null,
       },
     });
@@ -292,7 +297,13 @@ describe('toggleCommitmentPaymentAction', () => {
     });
     const r = await toggleCommitmentPaymentAction(period);
     expect(r).toEqual({ ok: true, data: { paid: true } });
-    expect(supa.lastInsertPayload()).toMatchObject({ paid_amount: 250, workspace_id: 'ws-1' });
+    expect(supa.lastInsertPayload()).toMatchObject({
+      paid_amount: 250,
+      workspace_id: 'ws-1',
+      // ADR-038 D3 — read from the commitment, translated to the
+      // `accounts.account_type` vocabulary.
+      paid_from_account_type: 'income_bills',
+    });
   });
 
   it('uses the full total for a one-off (no instalment amount stored)', async () => {
@@ -301,7 +312,14 @@ describe('toggleCommitmentPaymentAction', () => {
       table: 'commitments',
       op: 'select',
       result: {
-        data: { total_amount: 340, installment_amount: null, installments_total: 1 },
+        data: {
+          total_amount: 340,
+          installment_amount: null,
+          installments_total: 1,
+          // The other value, so a hard-coded `income_bills` cannot pass every
+          // case in this file.
+          paid_from: 'epargne',
+        },
         error: null,
       },
     });
@@ -316,7 +334,10 @@ describe('toggleCommitmentPaymentAction', () => {
       result: { data: null, error: null },
     });
     await toggleCommitmentPaymentAction(period);
-    expect(supa.lastInsertPayload()).toMatchObject({ paid_amount: 340 });
+    expect(supa.lastInsertPayload()).toMatchObject({
+      paid_amount: 340,
+      paid_from_account_type: 'provisions',
+    });
   });
 
   it('deletes the tick when one already exists (idempotent toggle)', async () => {
@@ -378,7 +399,12 @@ describe('toggleCommitmentPaymentAction', () => {
       table: 'commitments',
       op: 'select',
       result: {
-        data: { total_amount: 4200, installment_amount: 250, installments_total: 17 },
+        data: {
+          total_amount: 4200,
+          installment_amount: 250,
+          installments_total: 17,
+          paid_from: 'principal',
+        },
         error: null,
       },
     });
