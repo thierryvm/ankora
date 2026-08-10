@@ -2,6 +2,8 @@
 // Totaux attendus : chargesFixes 1804,21 · provisions 59 · engagements 220.
 import { createClient } from '@supabase/supabase-js';
 
+import { moisDePaiement } from './lib/payment-months.mjs';
+
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!url || !key) throw new Error('env manquant');
@@ -80,18 +82,13 @@ await db.from('workspaces').update({ monthly_income: 2500 }).eq('id', ws);
 // retard et gonflait le « reste à payer » de 573 € — un défaut du harnais, pas du produit,
 // mais qui faussait toute mesure prise sur ce profil. Mesuré le 10 août 2026.
 //
-// On reproduit ici le calcul que fait le formulaire (`paymentMonthsFromFrequency`) plutôt
-// que de l'importer : ce script tourne hors du bundle applicatif.
-const moisDePaiement = (frequency, dueMonth) => {
-  const roule = (m) => ((m - 1) % 12) + 1;
-  if (frequency === 'monthly') return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-  if (frequency === 'quarterly')
-    return [0, 3, 6, 9].map((d) => roule(dueMonth + d)).sort((a, b) => a - b);
-  if (frequency === 'semiannual')
-    return [0, 6].map((d) => roule(dueMonth + d)).sort((a, b) => a - b);
-  return [dueMonth];
-};
-
+// Le calcul vit dans `./lib/payment-months.mjs`, miroir de la fonction du domaine
+// `paymentMonthsFromFrequency()` — ce script tourne hors du bundle applicatif et ne
+// peut pas importer le TypeScript ni l'alias `@/`. Ce miroir était auparavant recopié
+// ici même, non testé, et il avait DÉJÀ dérivé : sa branche annuelle enroulait un mois
+// hors bornes là où le domaine le plafonne. Il est désormais tenu par
+// `scripts/dev/__tests__/payment-months-parity.test.ts`, qui échoue si l'un des deux
+// côtés bouge seul.
 const rows = [];
 let sort = 0;
 for (const [label, amount, day] of MENSUELLES) {
