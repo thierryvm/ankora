@@ -36,14 +36,35 @@ depuis avril, et trois affirmations publiques étaient inexactes.
 | Préflight : vérifier les comptes **actifs** Supabase/Vercel, pas les fichiers de lien | ✅ #276                                                                          |
 | Agents QA : `silent-failure-auditor` + 3 agents corrigés                              | ✅ #277                                                                          |
 | ADR-024 — conception de la file (reprise plutôt qu'atomicité) + plan d'exécution      | ✅ #279                                                                          |
-| **PR-A** — la file, inerte : migration, orchestration extraite, UI, i18n, tests       | ⏳ **suivante**                                                                  |
-| **PR-B** — l'armement : route de cron, `CRON_SECRET`, 30 → 14 jours appliqué          | 📋 après PR-A                                                                    |
+| **PR-A** — la file, inerte : migration, orchestration extraite, UI, i18n, tests       | ✅ #282                                                                          |
+| **PR-B** — le code de l'armement : route de cron, comparaison à temps constant        | ✅ #284                                                                          |
+| ADR-042 — la file ne compte pas ses tentatives, donc elle peut s'affamer              | 🟡 proposé le 2026-08-10, cf. ci-dessous                                         |
+| **PR-C** — les tentatives comptées, la quarantaine, l'écran honnête                   | 📋 **suivante**, sur ADR-042                                                     |
+| **Armement** — `CRON_SECRET` posé, redéploiement, vérification                        | ⛔ [#285](https://github.com/thierryvm/ankora/issues/285) — bloqué par PR-C      |
 | `auth.audit_log_entries` garde l'email et l'IP après effacement (art. 17)             | 📋 [#278](https://github.com/thierryvm/ankora/issues/278) — ADR + session dédiés |
 
-**Verrou** : PR-B est bloquée tant que les trois lectures production du plan
-([`docs/plans/step-3b-deletion-queue.md`](./plans/step-3b-deletion-queue.md)) ne sont pas
-revenues. La troisième est un NO-GO : toute la conception repose sur un chemin PostgREST
-`service_role` jamais re-vérifié en production depuis #273.
+### Le droit à l'effacement est construit, mergé, et INERTE
+
+**Mesuré le 2026-08-10** : `CRON_SECRET` n'existe pas dans les variables de production
+(`vercel env ls production`), donc la route rend `401` et `executeDeletion` n'a aucun appelant
+effectif. La file contient **zéro demande** — personne n'attend, et le défaut ci-dessous ne
+nuit donc à personne aujourd'hui. Il nuirait au premier qui cliquerait, si on armait sans
+corriger.
+
+**Pourquoi c'est bloqué, et ce n'est pas de la prudence excessive** : `claim_pending_deletions`
+n'a **aucune colonne de tentative**. Une ligne après un échec et une ligne après trois cents
+échecs sont identiques en base, donc **25 lignes en échec occupent le lot chaque nuit, pour
+toujours** — sans qu'aucune alerte n'existe pour le dire. Et pendant ce temps la personne
+concernée a perdu son bouton d'annulation tout en lisant que sa suppression est irréversible.
+
+**Source de vérité** : [`docs/adr/ADR-042-file-de-suppression-compter-les-tentatives.md`](./adr/ADR-042-file-de-suppression-compter-les-tentatives.md),
+amendement d'ADR-024. Quatre tours de `plan-reviewer`, neuf défauts bloquants trouvés **avant
+toute ligne de code** — dont un introduit par une révision de l'ADR lui-même.
+
+**L'armement n'est PAS une PR, c'est un runbook indivisible** : les deux lectures de
+production dues par ADR-024, puis `CRON_SECRET` → **redéploiement** → `vercel crons ls` →
+exécution manuelle sur file vide. Poser la variable sans redéployer donne un `401` quotidien
+**silencieux** — `expected` devient défini, juste faux.
 
 ## Programme parallèle — refonte landing « Le relevé corrigé »
 

@@ -49,6 +49,7 @@ Chaque ADR est immuable une fois `Accepted`. Pour le faire évoluer :
 | 039 | [Portée des tokens « papier » de la landing (`.mkt-paper`)](./ADR-039-portee-tokens-marketing-papier.md)                   | Proposed                    | 2026-08-08 |
 | 040 | [Ordre d'exécution du journal (D0 en dernier)](./ADR-040-ordre-execution-du-journal.md)                                    | Accepted                    | 2026-08-10 |
 | 041 | [Provisionner n'est pas payer](./ADR-041-provisionner-nest-pas-payer.md)                                                   | Accepted                    | 2026-08-10 |
+| 042 | [File de suppression : compter les tentatives](./ADR-042-file-de-suppression-compter-les-tentatives.md)                    | Proposed                    | 2026-08-10 |
 
 > **Note numérotation** : ADR-013/014/015 jamais rédigés (réservés en buffer lors de la consolidation ADR-007 → 011/012, finalement non utilisés). La numérotation reprend à 016 pour les ADRs de la session 2026-05-08.
 

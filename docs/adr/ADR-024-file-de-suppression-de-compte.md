@@ -1,6 +1,7 @@
 # ADR-024 — File de suppression de compte : reprise plutôt qu'atomicité
 
 - **Statut** : Accepted
+- **Amendé par** : [ADR-042](ADR-042-file-de-suppression-compter-les-tentatives.md) (2026-08-10) — **lire ADR-042 avant d'armer quoi que ce soit d'ici.** La file décrite en D1/D2 ne compte pas ses tentatives : 25 lignes en échec suffisent à l'affamer pour toujours, sans bruit. ADR-042 ajoute cinq colonnes, une quarantaine, un ordre de réclamation, rend l'écran honnête et **requalifie l'armement en runbook** plutôt qu'en PR (D6). Aucune décision de fond d'ici n'est annulée.
 - **Date** : 27 juillet 2026
 - **Décideurs** : @cc-ankora, second avis `plan-reviewer` (3 tours), @thierry (validation)
 - **Complète** : [ADR-023](ADR-023-delai-de-grace-suppression-de-compte.md) (délai de grâce 30 → 14 jours)
