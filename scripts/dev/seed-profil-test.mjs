@@ -2,6 +2,8 @@
 // Totaux attendus : chargesFixes 1804,21 · provisions 59 · engagements 220.
 import { createClient } from '@supabase/supabase-js';
 
+import { moisDePaiement } from './lib/payment-months.mjs';
+
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!url || !key) throw new Error('env manquant');
@@ -72,6 +74,21 @@ const ws = member.workspace_id;
 // (chargesFixes, provisions, engagements) se déduisent des charges seules.
 await db.from('workspaces').update({ monthly_income: 2500 }).eq('id', ws);
 
+// `payment_months` est la SEULE colonne que l'interface lit pour décider si une charge
+// tombe ce mois-ci (`ChargesClient.tsx:226,463` — `paymentMonths.includes(mois)`), et
+// `due_month` n'est qu'une référence héritée. Ce script ne la renseignait pas : la valeur
+// par défaut de la colonne est `{1,…,12}`, si bien que la taxe annuelle de mars était due
+// TOUS LES MOIS dans le profil semé. Le cockpit affichait alors cinq fausses factures en
+// retard et gonflait le « reste à payer » de 573 € — un défaut du harnais, pas du produit,
+// mais qui faussait toute mesure prise sur ce profil. Mesuré le 10 août 2026.
+//
+// Le calcul vit dans `./lib/payment-months.mjs`, miroir de la fonction du domaine
+// `paymentMonthsFromFrequency()` — ce script tourne hors du bundle applicatif et ne
+// peut pas importer le TypeScript ni l'alias `@/`. Ce miroir était auparavant recopié
+// ici même, non testé, et il avait DÉJÀ dérivé : sa branche annuelle enroulait un mois
+// hors bornes là où le domaine le plafonne. Il est désormais tenu par
+// `scripts/dev/__tests__/payment-months-parity.test.ts`, qui échoue si l'un des deux
+// côtés bouge seul.
 const rows = [];
 let sort = 0;
 for (const [label, amount, day] of MENSUELLES) {
@@ -82,6 +99,7 @@ for (const [label, amount, day] of MENSUELLES) {
     amount,
     frequency: 'monthly',
     due_month: 1,
+    payment_months: moisDePaiement('monthly', 1),
     payment_day: day,
     paid_from: 'principal',
     sort_order: sort++,
@@ -95,6 +113,7 @@ for (const [label, amount, m] of TRIMESTRIELLE) {
     amount,
     frequency: 'quarterly',
     due_month: m,
+    payment_months: moisDePaiement('quarterly', m),
     payment_day: 1,
     paid_from: 'epargne',
     sort_order: sort++,
@@ -108,6 +127,7 @@ for (const [label, amount, m] of ANNUELLES) {
     amount,
     frequency: 'annual',
     due_month: m,
+    payment_months: moisDePaiement('annual', m),
     payment_day: 1,
     paid_from: 'epargne',
     sort_order: sort++,
