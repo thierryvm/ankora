@@ -159,6 +159,13 @@ Aujourd'hui `page.tsx:42` somme **toutes** les dépenses du mois, tous `paid_fro
 
 `accounts.balance` est **déclaratif** (`20260417000004:24`), aucun trigger n'existe sur `expenses`. C'est un choix volontaire mais **non écrit**. À graver : « Ankora est un journal d'enveloppes, pas un grand livre comptable. Les soldes de comptes ne dérivent jamais des dépenses. »
 
+> **⛔ ABANDONNÉ le 2026-08-10. ADR-027 n'a jamais été écrit.** La proposition ci-dessus a été
+> tranchée en sens inverse par [ADR-038](../../adr/ADR-038-journal-des-mouvements.md) D6, accepté
+> le 2026-08-05 : les soldes **se dérivent** des flux — mouvements, dépenses, paiements de charges
+> et d'engagements — et cessent d'être saisis. La ligne est conservée parce qu'elle documente une
+> intention antérieure et son abandon ; elle ne doit plus être exécutée. Ordre d'exécution :
+> [ADR-040](../../adr/ADR-040-ordre-execution-du-journal.md).
+
 ### D7 — Une primitive modale unique → **ADR-028** (amende ADR-020)
 
 `ADR-020` (Accepted) désigne `ui/` comme couche Radix canonique et rejette l'alternative au motif « réécrire Dialog, Form, Select, Sheet, Switch sans Radix = risque a11y MAJEUR ». Or **ces composants ont zéro call-site prod**, pendant qu'il existe **cinq implémentations maison de panneau** avec chacune son focus trap : `SimulatorDrawer` (211 l.), `AjusterResteAVivreDrawer` (306 l.), `ExpenseEditDrawer` (217 l.), `ChargeEditDrawer` (254 l.), `atoms/Drawer` (615 l., démo seule). La prémisse de l'ADR est fausse dans les faits : le risque a11y est déjà là, en cinq exemplaires.

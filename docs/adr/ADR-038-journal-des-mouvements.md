@@ -8,6 +8,7 @@
 - **Tags** : `domain`, `schema`, `produit`, `cockpit`, `fondation`
 - **Amende** : [ADR-002](ADR-002-bucket-model.md) (convention de clé étrangère composite sur `accounts`), [ADR-012](ADR-012-assistant-virements.md) (l'assistant de virements cesse d'être un conseil sans mémoire), [ADR-035](ADR-035-vocabulaire-des-quatre-chiffres.md) (un cinquième nom, nommé)
 - **Rend caducs** : [ADR-016](ADR-016-tracking-paiements-multi-sources.md) et [ADR-018](ADR-018-provisions-bidirectionnelles-audit-trail.md), tous deux `Proposed` et jamais implémentés — passés `Superseded` le 2026-08-05, en même temps que l'acceptation de celui-ci
+- **Amendé par** : [ADR-040](ADR-040-ordre-execution-du-journal.md) (2026-08-10) — **lire ADR-040 avant d'exécuter quoi que ce soit d'ici.** Il inverse le §Découpage d'exécution (D0 passe en dernier), déplace `commitments.paid_from` de D0 vers D3, corrige deux faits de schéma cités de travers, retire la surévaluation du risque de D0, et ajoute trois décisions (D10 reliquat, D11 cohérence/exhaustivité, D12 invariants). **Aucune décision de fond de cet ADR n'est annulée.**
 
 > **Révision 2.** La v1 a été rejetée par `plan-reviewer` sur trois points de fond : D1
 > reposait sur une prémisse de schéma fausse, l'invariant central de D5 était inécrivable,

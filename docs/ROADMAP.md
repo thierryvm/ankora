@@ -79,6 +79,38 @@ dashboard et le positionnement FSMA sont rappelés dans [`CLAUDE.md`](../CLAUDE.
 
 ---
 
+## Programme décidé, pas encore commencé — le journal des mouvements
+
+**Sources de vérité** : [`docs/adr/ADR-038-journal-des-mouvements.md`](./adr/ADR-038-journal-des-mouvements.md)
+(accepté le 5 août 2026 par @thierry) **et son amendement**
+[`docs/adr/ADR-040-ordre-execution-du-journal.md`](./adr/ADR-040-ordre-execution-du-journal.md)
+(10 août 2026), qui fixe l'ordre réel. **Lire les deux, ADR-040 en premier.**
+
+**Pourquoi cette section existe** : ADR-038 porte la décision de fond la plus lourde du
+produit — les soldes cessent d'être saisis, `workspaces.monthly_income` disparaît, les
+rentrées deviennent des lignes datées — et **n'était tracé dans aucun document qui pilote
+quoi et quand**. `grep ADR-038 docs/ROADMAP.md` ne rendait rien. Résultat mesuré : une
+session entière du 10 août a re-dérivé une décision déjà prise cinq jours plus tôt. Une
+décision qu'on ne peut pas trouver n'existe pas.
+
+| PR  | Objet                                                                            | État                              |
+| --- | -------------------------------------------------------------------------------- | --------------------------------- |
+| —   | ADR-040 — inversion de l'ordre, corrections de schéma, D10/D11/D12               | 🔄 Proposed                       |
+| J1  | D3 — attribution figée sur les deux tables de paiement + `commitments.paid_from` | 📋 après acceptation d'ADR-040    |
+| J2  | D1 — table de mouvements, RLS, export art. 20 (+ 4 tables absentes)              | 📋                                |
+| J3  | D2 — rentrées datées, suppression de `monthly_income`, sémantique d'`incomplet`  | 📋                                |
+| J4  | D6 — dérivation des soldes, suppression de `savings_balance`, ancienneté         | 📋                                |
+| J5  | D4 + D8 — ventilation contrôlée et arbitrage mensuel                             | 📋                                |
+| J6  | D0 — clé de substitution `accounts.id` + backfill                                | 📋 **en dernier**, cf. ADR-040 E1 |
+
+**L'ordre a changé le 10 août** : ADR-038 plaçait D0 en tête. ADR-040 le renvoie en fin de
+programme, parce que D0 sert le découplage des rôles de comptes — qu'ADR-038 met lui-même
+hors périmètre — et qu'aucun des cinq autres lots n'en dépend. Le motif n'est pas le risque
+de la migration : mesuré, il est négligeable (une quinzaine de lignes, zéro clé étrangère
+entrante). Le motif est que la valeur visible passe de la 5ᵉ PR à la 1ʳᵉ.
+
+---
+
 ## Contraintes transverses
 
 **Budget 0 €** — aucune dépendance payante en production tant qu'Ankora n'a pas de
