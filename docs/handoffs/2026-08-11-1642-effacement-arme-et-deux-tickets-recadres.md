@@ -58,6 +58,53 @@ variable n'est pas armer.** Forme retenue : `vercel env add … --value $secret
 transcription ; résiduel nommé : une seconde d'exposition à la liste des
 processus locaux.
 
+### Merger le code ne pousse pas le schéma — mesuré le soir même
+
+Quelques heures après l'armement, la production n'avait **aucune** des cinq colonnes
+d'ADR-042. `supabase migration list --linked` montrait `20260811000001` en local,
+colonne distante vide ; la sonde de colonnes rendait `42703 column … does not
+exist` sur les cinq.
+
+Le déploiement Vercel avait suivi le merge de #372, pas la migration : le code
+déployé lisait donc des colonnes absentes. Rien n'avait cassé pour une seule
+raison — **la file était vide**. Un utilisateur demandant son effacement ce
+soir-là aurait eu un écran d'état en erreur.
+
+`supabase db push --linked` appliqué, puis vérifié dans les deux sens :
+
+| Sonde                                      | Avant      | Après             |
+| ------------------------------------------ | ---------- | ----------------- |
+| Les cinq colonnes                          | `42703` ×5 | `200` ×5          |
+| `rpc/claim_pending_deletions(5)`           | —          | `200` `[]`        |
+| Tri `order=attempts.asc,scheduled_for.asc` | —          | `200`             |
+| Statut inventé (témoin **négatif**)        | —          | `400` **`23514`** |
+
+La dernière ligne est celle qui compte : `23514` est une violation de CHECK. Si
+la contrainte de statut avait été supprimée sans être remplacée, c'est la clé
+étrangère qui aurait parlé (`23503`). Le code d'erreur prouve que la contrainte
+élargie est bien en place et qu'elle refuse.
+
+**Rappel de doctrine** : `supabase db push` est manuel et ne suit aucun merge.
+Toute PR portant une migration se termine par cette poussée, ou elle n'est pas
+terminée.
+
+### Troisième sonde mal placée de la journée
+
+Vouloir rejouer les trois appels d'armement après la migration a produit
+`401 / 401 / 401` — **y compris avec « le bon jeton »**. Le jeton n'en était pas
+un : `vercel env pull` **ne rend pas la valeur d'une variable marquée
+sensible**, il écrit un remplaçant entre crochets. La sonde envoyait ce
+remplaçant.
+
+Ce qui a évité la fausse conclusion « l'armement est cassé » : avoir imprimé la
+**longueur** du jeton avant de s'en servir — 11 caractères là où on en attendait
+des dizaines. Un témoin de forme coûte une ligne et vaut une session.
+
+La preuve du chemin cron a donc été refaite **côté base** (tableau ci-dessus)
+plutôt que côté HTTP : la fonction réécrite existe, s'exécute, et sa contrainte
+refuse. L'authentification de la route, elle, avait déjà été prouvée à
+l'armement et rien ne l'a touchée depuis.
+
 ## 3. PR-C (#372) — ce qu'il faut en retenir
 
 Cinq colonnes, un statut `failed` dans l'index d'unicité, une quarantaine
@@ -132,22 +179,26 @@ rend pas un résultat vide, elle rend une fausse certitude.**
 
 ## 8. Ce qui reste, par ordre
 
-1. **Merger #373 et #374.**
-2. **[#365](https://github.com/thierryvm/ankora/issues/365)** — « Charges » →
+> #373 et #374 sont mergées (#374 après un retour Codex fondé : le garde de
+> cible arrondissait au-dessus du plancher, donc 23,6 px passait pour 24 —
+> falsifié en rétrécissant le label depuis la page, jamais depuis la source).
+> La migration ADR-042 est en production (cf. §2).
+
+1. **[#365](https://github.com/thierryvm/ankora/issues/365)** — « Charges » →
    « Factures », ~1 h, mesurée : ~40 chaînes dans le périmètre sur 61, ~21
    exclusions (public/FAQ/légal, `chargesFixes`, et les faux amis
    « télécharger »/« recharger »). Aucune spec e2e ni Vitest n'assertit sur ces
    libellés.
-3. **Ce qui ment à l'utilisateur** : [#355](https://github.com/thierryvm/ankora/issues/355)
+2. **Ce qui ment à l'utilisateur** : [#355](https://github.com/thierryvm/ankora/issues/355)
    (dette comptée deux fois), [#351](https://github.com/thierryvm/ankora/issues/351)
    (deux « il te reste »), [#350](https://github.com/thierryvm/ankora/issues/350).
-4. **Ce qui rend les tests menteurs** : [#343](https://github.com/thierryvm/ankora/issues/343),
+3. **Ce qui rend les tests menteurs** : [#343](https://github.com/thierryvm/ankora/issues/343),
    [#344](https://github.com/thierryvm/ankora/issues/344),
    [#354](https://github.com/thierryvm/ankora/issues/354) (divergence
    d'hydratation sur le `nonce` — **mesurée aujourd'hui** : `ThemeBootScript`,
    `nonce="…"` côté serveur contre `nonce=""` côté client, sur `/login`).
-5. **J2** (ADR-038 D1 + ADR-041 F2) — session dédiée, `plan-reviewer` obligatoire.
-6. **Dette sécurité connue** : `is_workspace_member` / `is_workspace_editor`
+4. **J2** (ADR-038 D1 + ADR-041 F2) — session dédiée, `plan-reviewer` obligatoire.
+5. **Dette sécurité connue** : `is_workspace_member` / `is_workspace_editor`
    restent exécutables par `anon`. PR sécurité dédiée, jamais bundlée.
 
 **En parallèle, non bloqué** : L3 de la landing, pilotée par Fable 5 dans le
