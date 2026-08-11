@@ -52,7 +52,12 @@ export async function Principles() {
       <ul className="mt-12 grid gap-5 md:grid-cols-3">
         {items.map(({ key, Icon }) => (
           <li key={key}>
-            <Card className="h-full">
+            {/* shadow-md: on the paper page a white card sits at ~1.05:1
+                against the background — the shadow IS the card's boundary
+                (same measured trade-off as the hero card, ui-auditor
+                9 Aug 2026). h-full stays: it equalises the three card
+                heights inside the md 3-column grid. */}
+            <Card className="h-full shadow-md">
               <CardContent className="pt-6">
                 <div className="bg-brand-surface text-brand-text mb-5 flex h-11 w-11 items-center justify-center rounded-xl">
                   <Icon aria-hidden="true" className="h-5 w-5" />

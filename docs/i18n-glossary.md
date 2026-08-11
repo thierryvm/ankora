@@ -36,8 +36,17 @@ These terms have marketing weight and must match the decisions below in every lo
 | Ankora                           | Ankora                | Ankora                | Ankora                | Ankora                  | Ankora              |
 | Tagline: _Ton ancrage financier_ | Ton ancrage financier | Je financieel houvast | Your financial anchor | Dein finanzieller Anker | Tu ancla financiera |
 | cockpit (metaphor)               | cockpit               | cockpit               | cockpit               | Cockpit                 | cockpit             |
+| Thèse landing: _déjà engagé_     | déjà engagé           | al vastgelegd         | already committed     | bereits gebunden        | ya comprometido     |
+| Section: _La cascade du mois_    | La cascade du mois    | De cascade v.d. maand | The month's cascade   | Die Kaskade des Monats  | La cascada del mes  |
 
 **Note:** `Ankora™` is a trademark — never translated.
+
+**Note (refonte landing 2026, ADR-039):** « déjà engagé » is the landing
+thesis emphasis (hero H1, FooterCTA highlight, meta title/description) and
+« La cascade du mois » the Feature eyebrow. The nl/de/es columns above are the
+TARGET wording for the i18n-translator pass — today the three post-launch
+bundles carry the FR copy verbatim (tracked debt, cf.
+`src/lib/seo/indexable-locales.ts`).
 
 ### Core concepts
 
@@ -226,5 +235,6 @@ Compact labels for the charges-list frequency tag (THI-299). The full word above
 | 1.3     | 2026-07-22 | Add `{paid}` placeholder (§3, commitments stepper « X / N payées », PR #240).                                                                                                                               |
 | 1.4     | 2026-07-27 | Lock the GDPR legal-basis terms (§2bis). Privacy policy said "legal obligation" for the audit log; corrected to legitimate interest in all five locales.                                                    |
 | 1.5     | 2026-08-05 | Aligne le glossaire sur ADR-035 (accepté le 2026-07-29, jamais répercuté ici). Le KPI-héros prend son libellé définitif ; la ligne de l’enveloppe budgétaire part, ce concept ayant disparu au §4 de l’ADR. |
+| 1.6     | 2026-08-11 | Verrouille les deux phrases de la refonte landing (« déjà engagé », « La cascade du mois ») en §2 Brand — posées en L2/L3 sans passage par ici, l’écart est comblé (i18n-auditor, PR L3).                   |
 
 Any new term, any register change, any account-name update **must** be logged here before landing in messages/\*.json.

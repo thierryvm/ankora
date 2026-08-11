@@ -35,11 +35,13 @@ describe('<FAQ />', () => {
   // `price` a remplace la section Tarifs (2026-08-05). Il est EN TETE parce que
   // c'est la question qu'on se pose en premier, et parce que l'information ne
   // doit pas disparaitre avec la section.
-  it('exports FAQ_KEYS with the price question first', () => {
-    expect(FAQ_KEYS).toEqual(['price', 'advice', 'storage', 'sharing']);
+  // `bank` (PR L3) est l'objection frontale, en 2e position — la decision
+  // « price first » n'est pas rouverte.
+  it('exports FAQ_KEYS with the price question first and the bank objection second', () => {
+    expect(FAQ_KEYS).toEqual(['price', 'bank', 'advice', 'storage', 'sharing']);
   });
 
-  it('renders the heading and 3 question/answer pairs in a <dl>', async () => {
+  it('renders the heading and 5 question/answer pairs in a <dl>', async () => {
     const { container } = await renderFAQ();
     expect(
       screen.getByRole('heading', { level: 2, name: /questions fréquentes/i }),
@@ -61,5 +63,20 @@ describe('<FAQ />', () => {
   it('renders the localised "Ankora est-il un outil de conseil financier ?" question', async () => {
     await renderFAQ();
     expect(screen.getByText(/Ankora est-il un outil de conseil financier/i)).toBeInTheDocument();
+  });
+
+  it('renders the bank objection with its anti-PSD2 clause, without the reserved cockpit names', async () => {
+    await renderFAQ();
+    expect(
+      screen.getByText(/Pourquoi une deuxième app alors que j'ai déjà celle de ma banque/i),
+    ).toBeInTheDocument();
+    // The answer IS the thesis — and this is exactly where a reader assumes
+    // « donc Ankora lit mon compte », so the denial must live in the answer
+    // itself (plan-reviewer, 11 Aug 2026), phrased about DATA (not money).
+    expect(screen.getByText(/aucune donnée n'est lue sur ton compte/i)).toBeInTheDocument();
+    // Same negative guard as Hero.test.tsx: the landing never borrows the
+    // four reserved cockpit names (ADR-035 / ADR-039).
+    expect(screen.queryByText(/Il te reste/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Budget du mois/i)).not.toBeInTheDocument();
   });
 });

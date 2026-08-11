@@ -32,14 +32,18 @@ test.describe('Landing — cc-design sections smoke', () => {
     // dans la suite — le plancher ne bouge pas — et interdit un retour muet.
     await expect(page.locator('section#pricing')).toHaveCount(0);
 
-    // FooterCTA + MktFooter
+    // FooterCTA + MktFooter. The regex deliberately targets h2Lead — a
+    // PRESENCE probe for the section. It survived the PR L3 copy change on
+    // purpose: the exact highlight wording (« déjà engagé. ») is pinned one
+    // layer down by FooterCTA.test.tsx, not here. A green line here says
+    // « the section renders », never « the copy is right ».
     await expect(
       page.getByRole('heading', { level: 2, name: /commence par ce qui est/i }),
     ).toBeVisible();
     await expect(page.getByRole('contentinfo')).toBeVisible();
   });
 
-  test('emits a valid FAQPage JSON-LD schema with 4 questions', async ({ page }) => {
+  test('emits a valid FAQPage JSON-LD schema with 5 questions', async ({ page }) => {
     await page.goto('/');
 
     // `<script>` tags are never "visible" to Playwright's locator API on
@@ -61,9 +65,10 @@ test.describe('Landing — cc-design sections smoke', () => {
 
     expect(parsed['@context']).toBe('https://schema.org');
     expect(parsed['@type']).toBe('FAQPage');
-    // 4 depuis le 2026-08-05 : la question sur le prix a remplace la section
-    // Tarifs. L information reste indexable, la posture d offre commerciale non.
-    expect(parsed.mainEntity).toHaveLength(4);
+    // 5 depuis PR L3 : la question sur le prix a remplace la section Tarifs
+    // (2026-08-05), et l objection frontale « pourquoi une deuxieme app alors
+    // que j ai celle de ma banque ? » est entree en 2e position.
+    expect(parsed.mainEntity).toHaveLength(5);
 
     for (const q of parsed.mainEntity) {
       expect(q['@type']).toBe('Question');
@@ -96,8 +101,13 @@ test.describe('Landing — cc-design sections smoke', () => {
     await page.goto('/');
     await page.waitForLoadState('load');
 
+    // body.scrollWidth, NOT documentElement.scrollWidth: issue #344 measured
+    // (by falsifying the probes with a deliberately-200px-too-wide element)
+    // that the documentElement probe CANNOT go red on this repo under the
+    // overflow-x guard, while the body probe detects. Hardening measured
+    // green on main at 375px before entering this PR (plan L3 §K.3).
     const overflow = await page.evaluate(() => ({
-      scrollWidth: document.documentElement.scrollWidth,
+      scrollWidth: document.body.scrollWidth,
       clientWidth: document.documentElement.clientWidth,
     }));
 

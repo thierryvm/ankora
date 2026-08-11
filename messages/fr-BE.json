@@ -163,6 +163,10 @@
     }
   },
   "landing": {
+    "meta": {
+      "title": "Vois ce qui est déjà engagé",
+      "description": "Ta banque montre ce qui s'est passé. Ankora montre ce qui est déjà engagé : l'assurance du 15, la taxe de novembre. Sans connexion bancaire, hébergé en Europe."
+    },
     "mktnav": {
       "links": {
         "product": "Produit",
@@ -199,16 +203,6 @@
           "noSale": "Aucune vente de données",
           "languages": "FR · EN"
         }
-      },
-      "waterfall": {
-        "income": "Revenus",
-        "incomeAmount": "+2 466 €",
-        "expenses": "Dépenses courantes",
-        "expensesAmount": "−1 959 €",
-        "provisionsCaption": "dont {amount} € lissés vers provisions affectées",
-        "available": "Argent disponible",
-        "availableAmount": "+507 €",
-        "ariaLabel": "Cascade illustrative : 2 466 € de revenus, 1 959 € de dépenses courantes (dont 59 € lissés en provisions), 507 € disponibles."
       }
     },
     "principles": {
@@ -231,12 +225,23 @@
       }
     },
     "feature": {
-      "eyebrow": "Cashflow waterfall",
-      "h3Line1": "Du salaire au net disponible.",
-      "h3Line2": "En un seul coup d'œil.",
+      "eyebrow": "La cascade du mois",
+      "titleLine1": "Du salaire au net disponible.",
+      "titleLine2": "En un seul coup d'œil.",
       "description": "Plus de mystère sur où va ton argent. Chaque étape est visible : revenus, dépenses courantes, argent disponible. Tu vois immédiatement si un poste dérape.",
       "ctaPrimary": "Voir un exemple",
-      "ctaSecondary": "Comment ça marche ?"
+      "ctaSecondary": "Comment ça marche ?",
+      "waterfall": {
+        "income": "Revenus",
+        "incomeAmount": "+2 466 €",
+        "expenses": "Dépenses courantes",
+        "expensesAmount": "−1 959 €",
+        "provisionsCaption": "dont {amount} € lissés vers provisions affectées",
+        "provisionsDefinition": "Une provision : l'argent mis de côté chaque mois pour une facture qui ne tombe qu'une ou deux fois l'an.",
+        "available": "Argent disponible",
+        "availableAmount": "+507 €",
+        "ariaLabel": "Cascade illustrative : 2 466 € de revenus, 1 959 € de dépenses courantes (dont 59 € lissés en provisions), 507 € disponibles."
+      }
     },
     "whatif": {
       "title": "Et si tu changeais une seule chose ?",
@@ -291,7 +296,7 @@
     },
     "footerCta": {
       "h2Lead": "Commence par ce qui est",
-      "h2Highlight": "déjà à toi.",
+      "h2Highlight": "déjà engagé.",
       "description": "Gratuit pendant la Phase 1, pas de carte, export RGPD à tout moment. On fait simple parce que c'est déjà assez compliqué comme ça.",
       "ctaPrimary": "Créer mon compte"
     },
@@ -309,6 +314,10 @@
       "price": {
         "q": "Combien ça coûte ?",
         "a": "Rien. Ankora est gratuit, il n'existe aucune offre payante et aucune fonctionnalité n'est réservée à un plan supérieur. Cet engagement figure dans les conditions générales, pas seulement ici."
+      },
+      "bank": {
+        "q": "Pourquoi une deuxième app alors que j'ai déjà celle de ma banque ?",
+        "a": "L'app de ta banque te montre ton solde — ce qui s'est déjà passé. Elle ne te dit pas que l'assurance du 15 et la taxe de novembre sont déjà promises. Ankora tient ce registre-là : ce qui est déjà engagé, compté d'avance, pour que le chiffre que tu lis soit celui que tu peux vraiment dépenser. Et Ankora ne se connecte jamais à ta banque — aucune donnée n'est lue sur ton compte : c'est toi qui saisis tes chiffres."
       },
       "advice": {
         "q": "Ankora est-il un outil de conseil financier ?",

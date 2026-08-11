@@ -40,13 +40,16 @@ async function renderFooterCTA() {
 }
 
 describe('<FooterCTA />', () => {
-  it('renders the H2 with lead + serif italic highlight on h2Highlight', async () => {
+  it('renders the H2 with lead + serif italic highlight closing on the thesis word', async () => {
     await renderFooterCTA();
     const h2 = screen.getByRole('heading', { level: 2 });
     expect(h2.textContent).toContain('Commence par ce qui est');
-    expect(h2.textContent).toContain('déjà à toi.');
+    // PR L3 : « déjà à toi. » → « déjà engagé. » — le premier geste dans
+    // Ankora est de saisir ses charges engagées, et le bookend hero
+    // (« déjà engagé ») ↔ footer se referme sur le mot de la thèse.
+    expect(h2.textContent).toContain('déjà engagé.');
     const em = h2.querySelector('em');
-    expect(em?.textContent).toBe('déjà à toi.');
+    expect(em?.textContent).toBe('déjà engagé.');
   });
 
   // Renommé : ce test s'appelait « FSMA-safe trial caveat » et exigeait

@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 
 /**
- * FAQ — three question/answer pairs (advice, storage, sharing).
+ * FAQ — five question/answer pairs (price, bank, advice, storage, sharing).
  *
  * Visual: token-only restyle of the previous inline FAQ block in
  * `page.tsx`. The associated FAQPage JSON-LD `<script>` is kept in
@@ -25,7 +25,11 @@ import { getTranslations } from 'next-intl/server';
 // la posture d'offre commerciale disparait. Une carte avec un prix, une liste
 // de features et un bouton EST une offre, meme a 0 EUR ; une reponse de FAQ
 // est une information.
-export const FAQ_KEYS = ['price', 'advice', 'storage', 'sharing'] as const;
+// `bank` (PR L3) est l'objection frontale — « pourquoi une deuxieme app ? » —
+// et sa reponse est la these du site. En 2e position : la decision « price
+// first » du 2026-08-05 est verrouillee par un test nomme et n'est pas
+// rouverte ici.
+export const FAQ_KEYS = ['price', 'bank', 'advice', 'storage', 'sharing'] as const;
 
 export async function FAQ() {
   const t = await getTranslations('landing');
@@ -42,11 +46,14 @@ export async function FAQ() {
       >
         {t('faqHeading')}
       </h2>
+      {/* Cards carry shadow-md: on the paper page a white card sits at
+          ~1.05:1 against the background — the shadow IS the card's boundary
+          (same measured trade-off as the hero card, ui-auditor 9 Aug 2026). */}
       <dl className="space-y-4">
         {FAQ_KEYS.map((key) => (
           <div
             key={key}
-            className="border-border bg-card text-foreground rounded-xl border p-6 shadow-sm"
+            className="border-border bg-card text-foreground rounded-xl border p-6 shadow-md"
           >
             <dt className="text-foreground mb-2 font-semibold">{t(`faq.${key}.q`)}</dt>
             <dd className="text-muted-foreground text-sm leading-relaxed text-pretty">
