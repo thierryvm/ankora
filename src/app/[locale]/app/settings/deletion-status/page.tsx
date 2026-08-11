@@ -95,16 +95,27 @@ export default async function DeletionStatusPage() {
           {data.status === 'pending' && (
             <>
               <dl className="grid gap-4 md:grid-cols-3">
-                <div>
-                  <dt className="text-muted-foreground text-xs">{t('scheduledFor')}</dt>
-                  <dd className="mt-1 text-lg font-semibold tabular-nums">{scheduledAt}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground text-xs">{t('daysLeft')}</dt>
-                  <dd className="mt-1 text-lg font-semibold tabular-nums">
-                    {t('daysCount', { days: daysLeft })}
-                  </dd>
-                </div>
+                {/* The deadline pair is shown ONLY on a request that has never
+                    been relaunched. `scheduled_for` does not move, and a row can
+                    only be relaunched after being quarantined — so on a
+                    relaunched request that date is already in the PAST and the
+                    countdown reads "Aujourd'hui" for ever. That is the exact
+                    symptom of #285, and printing it here would recreate the
+                    defect this screen was rewritten to remove. */}
+                {!data.retried_at && (
+                  <>
+                    <div>
+                      <dt className="text-muted-foreground text-xs">{t('scheduledFor')}</dt>
+                      <dd className="mt-1 text-lg font-semibold tabular-nums">{scheduledAt}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground text-xs">{t('daysLeft')}</dt>
+                      <dd className="mt-1 text-lg font-semibold tabular-nums">
+                        {t('daysCount', { days: daysLeft })}
+                      </dd>
+                    </div>
+                  </>
+                )}
                 <div>
                   <dt className="text-muted-foreground text-xs">{t('auditLogs')}</dt>
                   <dd className="mt-1 text-sm">{t('auditLogsValue')}</dd>
@@ -118,10 +129,13 @@ export default async function DeletionStatusPage() {
                   which is the mute mechanism this whole change is about.
 
                   A DATE, not a state: a date can be checked, a state is merely
-                  believed. */}
+                  believed. And it replaces the stale deadline rather than
+                  sitting beside it, so the screen never carries two answers to
+                  "when". */}
               {data.retried_at && (
                 <p className="text-sm">
-                  {t('retriedOn', { date: formatDate(data.retried_at, locale) })}
+                  {t('retriedOn', { date: formatDate(data.retried_at, locale) })}{' '}
+                  {t('retriedNextRun')}
                 </p>
               )}
               <div className="flex flex-wrap gap-2">

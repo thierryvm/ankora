@@ -634,6 +634,21 @@ test.describe('GDPR deletion queue (ADR-024)', () => {
       await page.goto('/app/settings/deletion-status');
 
       await expect(page.getByText(/demande relancée le/i)).toBeVisible();
+
+      // And the STALE deadline is gone, which is the other half of the same
+      // sentence. `scheduled_for` does not move, and a request must have been
+      // quarantined to be relaunched at all — so that date is necessarily in
+      // the past and its countdown reads « Aujourd'hui » for ever. Showing it
+      // would rebuild the frozen countdown of #285 inside its own fix. Found by
+      // the Codex review on PR #372, and it was right.
+      await expect(page.getByText(/suppression prévue/i)).toHaveCount(0);
+      await expect(page.getByText(/jours restants/i)).toHaveCount(0);
+
+      // Same statement on the settings screen, which has its own copy and would
+      // otherwise announce « ton compte sera supprimé le <date passée> ».
+      await page.goto('/app/settings');
+      await expect(page.getByText(/relancée le/i)).toBeVisible();
+      await expect(page.getByText(/ton compte sera supprimé le/i)).toHaveCount(0);
     } finally {
       await deleteSeededUser(admin, user.userId);
     }

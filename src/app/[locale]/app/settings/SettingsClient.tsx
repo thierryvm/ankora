@@ -26,7 +26,7 @@ import {
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 
 type Factor = { id: string; friendlyName: string | null; status: string };
-type Deletion = { scheduledFor: string; status: string } | null;
+type Deletion = { scheduledFor: string; status: string; retriedAt: string | null } | null;
 
 type Props = {
   email: string;
@@ -395,18 +395,30 @@ function DangerZone({ deletion, email }: { deletion: Deletion; email: string }) 
         <CardContent>
           <p className="text-sm">
             {/* `scheduledBody` promises "you can cancel any time until then"
-                AND names a date. Neither is true in the other two states: once
-                a run owns the request cancellation is gone, and on a
-                quarantined one the date is a deadline the queue will never
-                honour. Saying either would be the same inexact statement
-                (art. 12(1)) the countdown itself used to make. */}
+                AND names a date. Neither survives the other states: once a run
+                owns the request cancellation is gone, and on a quarantined one
+                the date is a deadline the queue will never honour.
+
+                The RELAUNCHED case is the subtle one, and it is why this is not
+                a two-way ternary. *Retry* puts the row back to `pending` while
+                deliberately leaving `scheduled_for` untouched — and that date is
+                already in the past, since the request had to be quarantined to
+                be relaunched at all. Rendering the `pending` copy here would
+                announce an erasure "on 22 July" to someone reading it in
+                August: a date already gone, presented as the next deadline.
+                That is the frozen countdown of #285 in another costume, and the
+                exact art. 12(1) statement this whole change exists to remove. */}
             {deletion.status === 'processing' && t('scheduledBodyProcessing')}
             {deletion.status === 'failed' && t('scheduledBodyFailed')}
             {deletion.status === 'pending' &&
-              t.rich('scheduledBody', {
-                date,
-                strong: (chunks) => <strong>{chunks}</strong>,
-              })}
+              (deletion.retriedAt
+                ? t('scheduledBodyRetried', {
+                    date: formatDate(deletion.retriedAt, locale as Locale, 'long'),
+                  })
+                : t.rich('scheduledBody', {
+                    date,
+                    strong: (chunks) => <strong>{chunks}</strong>,
+                  }))}
           </p>
           <Button asChild variant="outline" className="mt-4">
             <Link href="/app/settings/deletion-status">{t('viewStatus')}</Link>
