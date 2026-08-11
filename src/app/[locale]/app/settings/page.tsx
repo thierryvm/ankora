@@ -8,7 +8,7 @@ import { SettingsClient } from './SettingsClient';
 import { CookiesPreferencesSection } from './CookiesPreferencesSection';
 
 type Factor = { id: string; friendlyName: string | null; status: string };
-type Deletion = { scheduledFor: string; status: string } | null;
+type Deletion = { scheduledFor: string; status: string; retriedAt: string | null } | null;
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('app.settings');
@@ -25,14 +25,21 @@ export default async function SettingsPage() {
     supabase.auth.mfa.listFactors(),
     supabase
       .from('deletion_requests')
-      .select('scheduled_for, status')
+      // `retried_at` travels with the status because the copy DEPENDS on it: a
+      // relaunched request is `pending` again while its `scheduled_for` stays
+      // frozen in the past, so announcing that date as the next deadline would
+      // state something false about an irreversible act (art. 12(1)).
+      .select('scheduled_for, status, retried_at')
       .eq('user_id', user.id)
-      // BOTH active statuses. Filtering on 'pending' alone made `deletion` null
-      // the moment a run claimed the request, so the danger zone re-showed the
-      // REQUEST FORM and dropped the only link to the status screen — exactly
-      // when the erasure had become irreversible. `.maybeSingle()` stays safe:
-      // `deletion_requests_one_active_idx` allows one active row per person.
-      .in('status', ['pending', 'processing'])
+      // ALL THREE active statuses. Filtering on 'pending' alone made `deletion`
+      // null the moment a run claimed the request, so the danger zone re-showed
+      // the REQUEST FORM and dropped the only link to the status screen —
+      // exactly when the erasure had become irreversible. `failed` joins them
+      // for the same reason (ADR-042 G7): a quarantined request is still a
+      // request, and the screen where it can be cancelled or relaunched is only
+      // reachable from here. `.maybeSingle()` stays safe precisely because
+      // `deletion_requests_one_active_idx` covers those same three statuses.
+      .in('status', ['pending', 'processing', 'failed'])
       .maybeSingle(),
     getCookieConsentAction(),
   ]);
@@ -52,7 +59,11 @@ export default async function SettingsPage() {
     }));
 
   const deletion: Deletion = deletionRes.data
-    ? { scheduledFor: deletionRes.data.scheduled_for, status: deletionRes.data.status }
+    ? {
+        scheduledFor: deletionRes.data.scheduled_for,
+        status: deletionRes.data.status,
+        retriedAt: deletionRes.data.retried_at,
+      }
     : null;
 
   return (

@@ -2,7 +2,13 @@ import { createHash, timingSafeEqual } from 'node:crypto';
 import { NextResponse } from 'next/server';
 
 import { env } from '@/lib/env';
-import { claimPendingDeletions, executeDeletion } from '@/lib/gdpr/deletion';
+import {
+  claimPendingDeletions,
+  countStuckDeletions,
+  executeDeletion,
+  recordDeletionAttempt,
+} from '@/lib/gdpr/deletion';
+import { deletionErrorCode } from '@/lib/gdpr/deletion-core';
 import { purgeAuditLogOlderThan12Months } from '@/lib/gdpr/retention';
 import { log } from '@/lib/log';
 
@@ -27,9 +33,17 @@ export const dynamic = 'force-dynamic';
 /**
  * INVARIANT — this value MUST stay BELOW the 1 hour stale-claim threshold of
  * `claim_pending_deletions()` (supabase/migrations/20260727000001_deletion_queue.sql).
- * The two form a couple: if a live run outlives that threshold, the next run
- * steals its batch and the same account is deleted twice. Raising this to 300 s
- * is touching the anti-double-deletion guard, not a timeout.
+ *
+ * It now anchors TWO guards, not one, and whoever raises it to 300 s is
+ * touching both:
+ *
+ *  1. **Anti-double-deletion.** If a live run outlives the threshold, the next
+ *     run steals its batch and the same account is deleted twice.
+ *  2. **The safety of the cancel button.** The status screen offers a cancel
+ *     control on `failed` (ADR-042 G5), and that is only safe because a row is
+ *     `pending` — hence quarantinable — solely when no run has ever claimed it
+ *     or when it has been resumed after ≥ 1 h of silence. A run allowed to live
+ *     for 300 s narrows that reasoning without touching a line of this file.
  */
 export const maxDuration = 60;
 
@@ -140,6 +154,32 @@ export async function GET(request: Request): Promise<NextResponse> {
         request_id: request_.requestId,
         error_message: safeErrorMessage(error),
       });
+
+      // The verdict, written onto the row: WHEN it was really attempted and
+      // WHICH step failed. A closed vocabulary, never the message — a raw
+      // GoTrue string can embed an email address, and this row is readable by
+      // the person concerned.
+      //
+      // Wrapped, because a failure to record a failure must not abort the rest
+      // of the batch: the account erasures still queued matter more than the
+      // annotation. And the ROW COUNT is checked rather than assumed —
+      // `deletion_requests` carries FORCE ROW LEVEL SECURITY, where a
+      // privileged write can touch nothing without raising. Zero here means the
+      // attempt counter is running blind, which is precisely the freeze this
+      // whole change exists to prevent.
+      try {
+        const recorded = await recordDeletionAttempt(request_.requestId, deletionErrorCode(error));
+        if (recorded === 0) {
+          log.error('Deletion attempt could not be recorded — the row was not touched', {
+            request_id: request_.requestId,
+          });
+        }
+      } catch (recordError) {
+        log.error('Deletion attempt could not be recorded', {
+          request_id: request_.requestId,
+          error_message: safeErrorMessage(recordError),
+        });
+      }
     }
   }
 
@@ -171,7 +211,34 @@ export async function GET(request: Request): Promise<NextResponse> {
     });
   }
 
+  // How many rows are in quarantine, read AFTER the run so it reflects what the
+  // run left behind. A STATE, not a delta: "how many went `failed` during THIS
+  // invocation" would need either a change to the RPC's return type — a
+  // contract consumed by `deletion-core.ts` and asserted by an e2e spec — or a
+  // before/after count, and it would buy a number nobody reads, in a JSON body,
+  // on a platform with no log drain. `stuck` is the durable surface, and it is
+  // the one the admin panel shows.
+  //
+  // `null` rather than 0 on failure, for the same reason `purged` is: a broken
+  // count and an empty quarantine must not be written identically.
+  let stuck: number | null = null;
+  try {
+    stuck = await countStuckDeletions();
+  } catch (error) {
+    log.error('Failed to count stuck deletion requests', {
+      error_message: safeErrorMessage(error),
+    });
+  }
+
   // Counts only. No user id, no email, no request id — this body ends up in
   // Vercel's cron invocation log.
-  return NextResponse.json({ claimed: claimed.length, deleted, failed, purged, purgeOk, capped });
+  return NextResponse.json({
+    claimed: claimed.length,
+    deleted,
+    failed,
+    purged,
+    purgeOk,
+    capped,
+    stuck,
+  });
 }

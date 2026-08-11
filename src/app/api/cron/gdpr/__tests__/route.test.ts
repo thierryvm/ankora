@@ -10,24 +10,33 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const SECRET = 'a'.repeat(32);
 
-const { envMock, claimSpy, executeSpy, purgeSpy, logErrorSpy } = vi.hoisted(() => ({
-  envMock: { CRON_SECRET: 'a'.repeat(32), NODE_ENV: 'test' } as Record<string, unknown>,
-  claimSpy: vi.fn(),
-  executeSpy: vi.fn(),
-  purgeSpy: vi.fn(),
-  logErrorSpy: vi.fn(),
-}));
+const { envMock, claimSpy, executeSpy, purgeSpy, recordSpy, stuckSpy, logErrorSpy } = vi.hoisted(
+  () => ({
+    envMock: { CRON_SECRET: 'a'.repeat(32), NODE_ENV: 'test' } as Record<string, unknown>,
+    claimSpy: vi.fn(),
+    executeSpy: vi.fn(),
+    purgeSpy: vi.fn(),
+    recordSpy: vi.fn(),
+    stuckSpy: vi.fn(),
+    logErrorSpy: vi.fn(),
+  }),
+);
 
 vi.mock('@/lib/env', () => ({ env: envMock, clientEnv: {} }));
 vi.mock('@/lib/gdpr/deletion', () => ({
   claimPendingDeletions: claimSpy,
   executeDeletion: executeSpy,
+  recordDeletionAttempt: recordSpy,
+  countStuckDeletions: stuckSpy,
 }));
 vi.mock('@/lib/gdpr/retention', () => ({ purgeAuditLogOlderThan12Months: purgeSpy }));
 vi.mock('@/lib/log', () => ({
   log: { error: logErrorSpy, warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }));
 
+// NOT mocked, deliberately: `deletionErrorCode()` is the piece under test on
+// the verdict path, and a mocked version would let any mapping pass.
+import { DeletionStepError } from '@/lib/gdpr/deletion-core';
 import { BATCH_SIZE, GET, maxDuration } from '../route';
 
 function call(authorization?: string) {
@@ -43,6 +52,10 @@ beforeEach(() => {
   claimSpy.mockReset().mockResolvedValue([]);
   executeSpy.mockReset().mockResolvedValue(undefined);
   purgeSpy.mockReset().mockResolvedValue(0);
+  // Default to a row actually touched: the interesting case is the OTHER one,
+  // and it is tested explicitly below.
+  recordSpy.mockReset().mockResolvedValue(1);
+  stuckSpy.mockReset().mockResolvedValue(0);
   logErrorSpy.mockReset();
 });
 
@@ -113,6 +126,7 @@ describe('authentication — the run refuses by default', () => {
       purged: 0,
       purgeOk: true,
       capped: false,
+      stuck: 0,
     });
   });
 });
@@ -147,6 +161,72 @@ describe('the run itself', () => {
     // Logging the id of an erasure that just failed would write the identifier
     // back into a durable log, one line after we set out to remove it.
     expect(JSON.stringify(logErrorSpy.mock.calls)).not.toContain('user-1');
+  });
+
+  it('writes the verdict onto the row — which step failed, and when it was tried', async () => {
+    claimSpy.mockResolvedValue([{ requestId: 'req-1', userId: 'user-1' }]);
+    executeSpy.mockRejectedValue(new DeletionStepError('gotrue_error', 'gotrue down'));
+
+    await call(`Bearer ${SECRET}`);
+
+    // A closed vocabulary read off a TYPED error, never a regular expression
+    // over its message. And the distinction between the two codes is not
+    // cosmetic: a pseudonymisation failure destroyed nothing, while a GoTrue
+    // failure after it leaves the audit trail anonymised for good.
+    expect(recordSpy).toHaveBeenCalledWith('req-1', 'gotrue_error');
+  });
+
+  it('falls back to `unknown` for anything that is not one of our two typed failures', async () => {
+    claimSpy.mockResolvedValue([{ requestId: 'req-1', userId: 'user-1' }]);
+    executeSpy.mockRejectedValue(new Error('some network thing'));
+
+    await call(`Bearer ${SECRET}`);
+
+    expect(recordSpy).toHaveBeenCalledWith('req-1', 'unknown');
+  });
+
+  it('SCREAMS when the verdict touches no row — a silent write is the whole failure class', async () => {
+    claimSpy.mockResolvedValue([{ requestId: 'req-1', userId: 'user-1' }]);
+    executeSpy.mockRejectedValue(new Error('boom'));
+    // `deletion_requests` carries FORCE ROW LEVEL SECURITY, where a privileged
+    // write can match nothing and report success. Zero rows here means the
+    // attempt counter is running blind — the row would loop for ever without
+    // ever reaching quarantine, which is exactly the freeze this change closes.
+    recordSpy.mockResolvedValue(0);
+
+    await call(`Bearer ${SECRET}`);
+
+    const messages = logErrorSpy.mock.calls.map((c) => String(c[0]));
+    expect(messages.some((m) => /could not be recorded/i.test(m))).toBe(true);
+    // Still no identifier, on this path either.
+    expect(JSON.stringify(logErrorSpy.mock.calls)).not.toContain('user-1');
+  });
+
+  it('does not abandon the batch when recording a verdict itself fails', async () => {
+    claimSpy.mockResolvedValue([
+      { requestId: 'req-1', userId: 'user-1' },
+      { requestId: 'req-2', userId: 'user-2' },
+    ]);
+    executeSpy.mockImplementation(async (userId: string) => {
+      if (userId === 'user-1') throw new Error('boom');
+    });
+    recordSpy.mockRejectedValue(new Error('rls refused'));
+
+    // The erasures still queued matter more than the annotation.
+    await expect((await call(`Bearer ${SECRET}`)).json()).resolves.toMatchObject({
+      claimed: 2,
+      deleted: 1,
+      failed: 1,
+    });
+  });
+
+  it('reports `stuck` as null rather than 0 when the count itself fails', async () => {
+    // Same reasoning as `purged`: a broken counter and an empty quarantine must
+    // not be written identically, or the alarm cannot tell "nothing to see"
+    // from "I could not look".
+    stuckSpy.mockRejectedValue(new Error('cannot count'));
+
+    await expect((await call(`Bearer ${SECRET}`)).json()).resolves.toMatchObject({ stuck: null });
   });
 
   it('purges the audit log at the end of the run', async () => {
@@ -215,6 +295,7 @@ describe('the run itself', () => {
       'failed',
       'purgeOk',
       'purged',
+      'stuck',
     ]);
     expect(JSON.stringify(body)).not.toContain('user-1');
     expect(JSON.stringify(body)).not.toContain('req-1');

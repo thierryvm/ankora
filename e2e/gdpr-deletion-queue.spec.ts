@@ -1,8 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
 
+import type { Page } from '@playwright/test';
+
 import { test, expect } from './helpers/test';
 import { adminClientOrNull, deleteSeededUser, seedOnboardedUser } from './helpers/seed';
-import { claimPendingDeletionsWith, executeDeletionWith } from '@/lib/gdpr/deletion-core';
+import {
+  claimPendingDeletionsWith,
+  countDeletionQueueAlertsWith,
+  executeDeletionWith,
+  recordDeletionAttemptWith,
+} from '@/lib/gdpr/deletion-core';
 
 /**
  * The only place the destructive path is exercised against a real schema.
@@ -60,6 +67,41 @@ function isoIn(days: number): string {
 
 function isoMinutesAgo(minutes: number): string {
   return new Date(Date.now() - minutes * 60 * 1000).toISOString();
+}
+
+/**
+ * Click a CLIENT-component control and wait until it actually did something.
+ *
+ * Playwright can click a server-rendered button before React has attached its
+ * handler: the click lands on the DOM, nothing happens, and the test fails
+ * describing a broken feature. Measured on this suite, 2026-08-11 — the failure
+ * snapshot showed the confirmation field filled and the submit button still
+ * `disabled`, i.e. a component that had rendered but was not listening.
+ *
+ * So the CLICK is retried, never the assertion: `settled` is read from the
+ * database, and a journey that is genuinely broken still fails — it just fails
+ * for its own reason instead of for a race.
+ */
+async function clickUntilSettled(
+  page: Page,
+  name: RegExp,
+  settled: () => Promise<boolean>,
+): Promise<void> {
+  await expect(async () => {
+    if (!(await settled())) {
+      await page.getByRole('button', { name }).click({ timeout: 2_000 });
+    }
+    expect(await settled()).toBe(true);
+  }).toPass({ timeout: 25_000, intervals: [250, 500, 1_000, 2_000] });
+}
+
+/** The seeded-user login, factored out once four cases needed it. */
+async function signIn(page: Page, user: { email: string; password: string }): Promise<void> {
+  await page.goto('/login');
+  await page.getByLabel('Email').fill(user.email);
+  await page.getByLabel('Mot de passe').fill(user.password);
+  await page.getByRole('button', { name: /^se connecter$/i }).click();
+  await page.waitForURL(/\/app\b/, { timeout: 15_000 });
 }
 
 test.describe('GDPR deletion queue (ADR-024)', () => {
@@ -281,11 +323,7 @@ test.describe('GDPR deletion queue (ADR-024)', () => {
       });
       if (error) throw new Error(`seed processing request: ${error.message}`);
 
-      await page.goto('/login');
-      await page.getByLabel('Email').fill(user.email);
-      await page.getByLabel('Mot de passe').fill(user.password);
-      await page.getByRole('button', { name: /^se connecter$/i }).click();
-      await page.waitForURL(/\/app\b/, { timeout: 15_000 });
+      await signIn(page, user);
 
       // `settings/page.tsx` filtered on `status='pending'` alone, so `deletion`
       // was null during `processing`: the danger zone fell back to the REQUEST
@@ -309,6 +347,308 @@ test.describe('GDPR deletion queue (ADR-024)', () => {
       // No cancel affordance: a run owns the row and GoTrue may already have
       // been called.
       await expect(page.getByRole('button', { name: /annuler la suppression/i })).toHaveCount(0);
+    } finally {
+      await deleteSeededUser(admin, user.userId);
+    }
+  });
+
+  /**
+   * ADR-042 proof 6 — the verdict is REALLY written on the row.
+   *
+   * Never a mock, and the reason is measured rather than theoretical:
+   * `deletion_requests` carries FORCE ROW LEVEL SECURITY, where a privileged
+   * write can match zero rows and report success — that is what H3 was. A unit
+   * test with a fake client would go green on a write that never lands.
+   */
+  test('writes the attempt verdict onto the row — against the real schema', async () => {
+    if (!admin) return;
+
+    const user = await seedOnboardedUser(admin);
+    try {
+      const { data: seeded, error } = await admin
+        .from('deletion_requests')
+        .insert({
+          user_id: user.userId,
+          scheduled_for: isoIn(-1),
+          status: 'processing',
+          claimed_at: new Date().toISOString(),
+          attempts: 1,
+          attempt_cycle_started_at: new Date().toISOString(),
+          last_error_code: 'not_attempted',
+        })
+        .select('id')
+        .single();
+      if (error) throw new Error(`seed request: ${error.message}`);
+
+      const before = Date.now();
+      const touched = await recordDeletionAttemptWith(admin, seeded.id, 'gotrue_error');
+      // The COUNT, not just the absence of an error. Zero is the silent failure.
+      expect(touched).toBe(1);
+
+      const { data: after } = await admin
+        .from('deletion_requests')
+        .select('last_error_code, last_attempted_at, attempts')
+        .eq('id', seeded.id)
+        .single();
+
+      expect(after?.last_error_code).toBe('gotrue_error');
+      // A REAL attempt is now dated, and it replaced `not_attempted` — that
+      // pair is the only thing separating a row claimed five times from a row
+      // genuinely tried five times.
+      expect(new Date(after?.last_attempted_at ?? 0).getTime()).toBeGreaterThanOrEqual(before);
+      // And the verdict does not touch the counter: the claim owns it.
+      expect(after?.attempts).toBe(1);
+    } finally {
+      await deleteSeededUser(admin, user.userId);
+    }
+  });
+
+  /**
+   * ADR-042 G6 — the admin counters really SEE something.
+   *
+   * This is the H3 ground. `deletion_requests` is FORCE ROW LEVEL SECURITY with
+   * self-only policies, so a privileged read there can quietly return nothing,
+   * and a founder-only screen showing a confident `0` would be indistinguishable
+   * from a healthy queue. The unit test cannot tell the difference — its client
+   * is a fake. Only a read against the real schema can.
+   *
+   * Both counters are asserted as DELTAS, not absolutes: on a local stack any
+   * leftover row would make an exact-equality assertion fail for a reason that
+   * has nothing to do with what is under test.
+   */
+  test('the admin counters see through FORCE RLS, and the second is wider than the first', async () => {
+    if (!admin) return;
+
+    const quarantined = await seedOnboardedUser(admin);
+    const starving = await seedOnboardedUser(admin);
+    try {
+      const before = await countDeletionQueueAlertsWith(admin);
+
+      const { error } = await admin.from('deletion_requests').insert([
+        {
+          user_id: quarantined.userId,
+          requested_at: isoIn(-28),
+          scheduled_for: isoIn(-14),
+          status: 'failed',
+          attempts: 5,
+          attempt_cycle_started_at: isoIn(-6),
+        },
+        // Never quarantined — just old, and walking into non-compliance. This
+        // row is the entire reason counter 2 is not restricted to `failed`.
+        //
+        // `attempts: 0` is spelled out rather than left to the default: a BULK
+        // insert through PostgREST unifies the column list across the array, so
+        // a key omitted here is sent as an explicit NULL — which a `not null`
+        // column refuses no matter what its default says. Measured.
+        {
+          user_id: starving.userId,
+          requested_at: isoIn(-27),
+          scheduled_for: isoIn(-13),
+          status: 'pending',
+          attempts: 0,
+        },
+      ]);
+      if (error) throw new Error(`seed alert rows: ${error.message}`);
+
+      const after = await countDeletionQueueAlertsWith(admin);
+
+      // Read at all — a refused read would leave both deltas at zero.
+      expect(after.stuck - before.stuck).toBe(1);
+      // TWO, not one: the quarantined row AND the starving `pending` one. A
+      // counter narrowed to `failed` would answer 1 here and miss a breach.
+      expect(after.nearBreach - before.nearBreach).toBe(2);
+    } finally {
+      await deleteSeededUser(admin, quarantined.userId);
+      await deleteSeededUser(admin, starving.userId);
+    }
+  });
+
+  /**
+   * ADR-042 proofs 7 and 11 — a quarantined request keeps BOTH ways out, and
+   * the settings page still points at them.
+   *
+   * The defect this closes is not a missing feature. While the queue had no
+   * notion of an attempt, someone whose erasure failed in a loop READ that the
+   * deletion had started and could no longer be cancelled, and the button was
+   * taken away from them — strictly worse than the original bug, which at least
+   * left the button.
+   */
+  test('a quarantined request shows the truth, and offers cancel AND relaunch', async ({
+    page,
+  }) => {
+    if (!admin) return;
+
+    const user = await seedOnboardedUser(admin);
+    try {
+      const { error } = await admin.from('deletion_requests').insert({
+        user_id: user.userId,
+        scheduled_for: isoIn(-20),
+        status: 'failed',
+        attempts: 5,
+        attempt_cycle_started_at: isoIn(-6),
+        last_error_code: 'gotrue_error',
+      });
+      if (error) throw new Error(`seed failed request: ${error.message}`);
+
+      await signIn(page, user);
+
+      // Proof 11, first half: the settings page must not fall over. `failed` is
+      // in the uniqueness index, so it must also be in the `.in(...)` of that
+      // page — otherwise `.maybeSingle()` is fine but the danger zone falls back
+      // to the REQUEST FORM and drops the only route to this screen.
+      await page.goto('/app/settings');
+      const viewStatus = page.getByRole('link', { name: /voir le statut/i });
+      await expect(viewStatus).toBeVisible();
+      await expect(page.getByLabel(/raison/i)).toHaveCount(0);
+
+      await viewStatus.click();
+      await page.waitForURL(/deletion-status/);
+
+      await expect(page.getByText('En échec', { exact: true })).toBeVisible();
+      // The cancel button is BACK: no run holds this row.
+      await expect(page.getByRole('button', { name: /annuler la suppression/i })).toBeVisible();
+      // And a way forward, which costs a typed address rather than a click.
+      await expect(page.getByLabel(/pour relancer/i)).toBeVisible();
+      // The copy must NOT still claim the erasure is under way and unstoppable.
+      await expect(page.getByText(/ne peut plus être annulée/i)).toHaveCount(0);
+    } finally {
+      await deleteSeededUser(admin, user.userId);
+    }
+  });
+
+  /**
+   * ADR-042 proofs 8 and 10 — cancelling a quarantined request MOVES THE ROW,
+   * and the person can then file a new one.
+   *
+   * Both halves matter and neither is decorative. The old `cancelDeletion`
+   * filtered on `pending` alone: on a `failed` row it touched nothing, the
+   * action still answered `ok`, and the button announced a cancellation that
+   * had not happened. And without `failed` in `requestDeletion`'s lookup, the
+   * person could never re-request their own erasure — a pure art. 17 blocker.
+   */
+  test('cancelling a quarantined request really cancels it, and a new one can follow', async ({
+    page,
+  }) => {
+    if (!admin) return;
+
+    const user = await seedOnboardedUser(admin);
+    try {
+      const { error } = await admin.from('deletion_requests').insert({
+        user_id: user.userId,
+        scheduled_for: isoIn(-20),
+        status: 'failed',
+        attempts: 5,
+        attempt_cycle_started_at: isoIn(-6),
+      });
+      if (error) throw new Error(`seed failed request: ${error.message}`);
+
+      await signIn(page, user);
+      await page.goto('/app/settings/deletion-status');
+
+      // Read the ROW, not the toast. A green toast is exactly what the defect
+      // produced while nothing moved: the old filter matched no row on a
+      // `failed` request and the action reported success anyway.
+      const rowStatus = async (): Promise<string | null> => {
+        const { data } = await admin
+          .from('deletion_requests')
+          .select('status')
+          .eq('user_id', user.userId)
+          .maybeSingle();
+        return data?.status ?? null;
+      };
+
+      await clickUntilSettled(
+        page,
+        /annuler la suppression/i,
+        async () => (await rowStatus()) === 'cancelled',
+      );
+
+      // Art. 17 stays open: the request form is back, and a new request lands.
+      await page.goto('/app/settings');
+      const confirmField = page.getByLabel(/tape ton adresse e-mail/i);
+      const submit = page.getByRole('button', { name: /supprimer mon compte/i });
+
+      // The fill is RETRIED until the button unlocks, and the reason is
+      // measured rather than defensive. Playwright can type into the
+      // server-rendered input before the client component is listening: the
+      // value lands in the DOM, React's controlled state never hears about it,
+      // and the submit button stays disabled for ever. The failure snapshot
+      // showed exactly that — the address present in the field, the button
+      // still `disabled`.
+      //
+      // This retries the INSTRUMENT, not the assertion: what is being proven
+      // (a new request lands after a quarantined one is cancelled) is
+      // unchanged, and still fails if the journey is broken.
+      await expect(async () => {
+        await confirmField.fill('');
+        await confirmField.fill(user.email);
+        await expect(submit).toBeEnabled({ timeout: 1_000 });
+      }).toPass({ timeout: 20_000 });
+
+      // NOT `rowStatus()` here: the cancelled row stays, so a second request
+      // means TWO rows for this person and `.maybeSingle()` would error rather
+      // than answer. A count on the pending ones says what we mean — and its
+      // being exactly 1 is also what proves the uniqueness index still holds.
+      await clickUntilSettled(page, /supprimer mon compte/i, async () => {
+        const { count } = await admin
+          .from('deletion_requests')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.userId)
+          .eq('status', 'pending');
+        return (count ?? 0) === 1;
+      });
+    } finally {
+      await deleteSeededUser(admin, user.userId);
+    }
+  });
+
+  /**
+   * ADR-042 proof 7bis — after a relaunch, the screen shows the DATE.
+   *
+   * And it shows it in the `pending` branch, which is the whole point: *retry*
+   * puts the row back to `pending`, so the natural way to build this — "I add
+   * the `failed` case, I leave the rest alone" — would write `retried_at` and
+   * never display it. A column added to be read that nothing forces to appear
+   * is the mute mechanism all of this is about.
+   *
+   * A date, not a state: a date can be checked, a state is merely believed.
+   */
+  test('after a relaunch, the status screen carries the date of the relaunch', async ({ page }) => {
+    if (!admin) return;
+
+    const user = await seedOnboardedUser(admin);
+    try {
+      const { error } = await admin.from('deletion_requests').insert({
+        user_id: user.userId,
+        scheduled_for: isoIn(-20),
+        // Exactly the state `retryDeletion()` leaves behind: back in the queue,
+        // counter and anchor cleared, relaunch dated.
+        status: 'pending',
+        attempts: 0,
+        attempt_cycle_started_at: null,
+        retried_at: new Date().toISOString(),
+      });
+      if (error) throw new Error(`seed relaunched request: ${error.message}`);
+
+      await signIn(page, user);
+      await page.goto('/app/settings/deletion-status');
+
+      await expect(page.getByText(/demande relancée le/i)).toBeVisible();
+
+      // And the STALE deadline is gone, which is the other half of the same
+      // sentence. `scheduled_for` does not move, and a request must have been
+      // quarantined to be relaunched at all — so that date is necessarily in
+      // the past and its countdown reads « Aujourd'hui » for ever. Showing it
+      // would rebuild the frozen countdown of #285 inside its own fix. Found by
+      // the Codex review on PR #372, and it was right.
+      await expect(page.getByText(/suppression prévue/i)).toHaveCount(0);
+      await expect(page.getByText(/jours restants/i)).toHaveCount(0);
+
+      // Same statement on the settings screen, which has its own copy and would
+      // otherwise announce « ton compte sera supprimé le <date passée> ».
+      await page.goto('/app/settings');
+      await expect(page.getByText(/relancée le/i)).toBeVisible();
+      await expect(page.getByText(/ton compte sera supprimé le/i)).toHaveCount(0);
     } finally {
       await deleteSeededUser(admin, user.userId);
     }

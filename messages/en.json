@@ -1037,6 +1037,9 @@
         "scheduledTitle": "Deletion in progress",
         "scheduledBody": "Your account will be deleted on <strong>{date}</strong>. You can cancel any time until then.",
         "scheduledBodyProcessing": "Deletion of your account has started. It can no longer be cancelled.",
+        "scheduledTitleFailed": "Deletion failed",
+        "scheduledBodyFailed": "Your deletion request did not succeed. It is still on file — open its status to cancel or relaunch it.",
+        "scheduledBodyRetried": "Your request was relaunched on {date}. It is back in the queue — the original date no longer applies.",
         "viewStatus": "View status",
         "title": "Danger zone",
         "description": "Permanent account deletion. 14-day grace period to cancel — after that, your financial data is erased and audit logs are pseudonymised. Some technical authentication logs remain.",
@@ -1120,6 +1123,7 @@
       "requestedOn": "Requested on {date}.",
       "statusPending": "Pending",
       "statusProcessing": "In progress",
+      "statusFailed": "Failed",
       "statusUnknown": "Unknown status",
       "processingBody": "Deletion of your account has started. It can no longer be cancelled.",
       "statusCancelled": "Cancelled",
@@ -1134,7 +1138,14 @@
       "cancelledNoDate": "Request cancelled. Your account is preserved.",
       "cancelButton": "Cancel deletion",
       "cancelling": "Cancelling…",
-      "toastCancelled": "Request cancelled — your account is preserved"
+      "toastCancelled": "Request cancelled — your account is preserved",
+      "failedBody": "Deleting your account did not succeed after several attempts. Your request is still on file: you can cancel it, or relaunch it below. No email was sent to you — Ankora sends none.",
+      "retriedOn": "Request relaunched on {date}.",
+      "retriedNextRun": "It is back in the queue and will be processed at the next daily run — the original date no longer applies.",
+      "retryConfirmLabel": "To relaunch, type your email address: <code>{email}</code>",
+      "retryButton": "Relaunch deletion",
+      "retrying": "Relaunching…",
+      "toastRetried": "Request relaunched — it is back in the queue"
     },
     "cockpit": {
       "santeProvisions": {
@@ -1497,6 +1508,10 @@
       "deletionRequestFailed": "Unable to schedule the deletion.",
       "deletionCancelFailed": "Unable to cancel the request.",
       "deletionCancelTooLate": "Deletion has already started and can no longer be cancelled.",
+      "deletionCancelNothing": "There is no request to cancel.",
+      "deletionAlreadyFailed": "Your previous request failed. Open its status to cancel or relaunch it.",
+      "deletionRetryFailed": "Could not relaunch the deletion.",
+      "deletionRetryNothing": "This request is no longer failed — reload the page to see its current state.",
       "exportLimited": "Export limited to once every 5 minutes."
     },
     "onboarding": {

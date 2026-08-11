@@ -15,7 +15,13 @@ import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
 import { rateLimit } from '@/lib/security/rate-limit';
 import { elevationDue } from '@/lib/auth/require-elevated';
 import { exportUserData } from '@/lib/gdpr/export';
-import { requestDeletion, cancelDeletion, type CancelDeletionResult } from '@/lib/gdpr/deletion';
+import {
+  requestDeletion,
+  cancelDeletion,
+  retryDeletion,
+  type CancelDeletionResult,
+  type RequestDeletionResult,
+} from '@/lib/gdpr/deletion';
 import { log } from '@/lib/log';
 import type { ActionResult } from '@/lib/actions/types';
 
@@ -326,10 +332,22 @@ export async function requestAccountDeletionAction(input: unknown): Promise<Acti
     };
   }
 
+  let requested: RequestDeletionResult;
   try {
-    await requestDeletion(user.id, parsed.data.reason);
+    requested = await requestDeletion(user.id, parsed.data.reason);
   } catch {
     return { ok: false, errorCode: 'errors.settings.deletionRequestFailed' };
+  }
+
+  // The return value is CONSUMED, and that is the whole point of it being
+  // discriminated. This call used to throw the result away: giving
+  // `requestDeletion` a union type would have compiled without a word, and the
+  // action would still have answered `ok: true` on a quarantined request —
+  // the same "it says it worked and nothing happened" defect, moved one
+  // function along. A Vitest pins this branch, because an end-to-end test would
+  // pass by accident: the screen redirects either way.
+  if (requested.kind === 'already_failed') {
+    return { ok: false, errorCode: 'errors.settings.deletionAlreadyFailed' };
   }
 
   await logAuditEvent(AuditEvent.GDPR_DELETION_REQUESTED, {
@@ -363,18 +381,89 @@ export async function cancelAccountDeletionAction(): Promise<ActionResult> {
     return { ok: false, errorCode: 'errors.settings.deletionCancelTooLate' };
   }
 
+  // `none` USED TO FALL THROUGH TO `ok: true`, and that was the defect: an
+  // issue that moved no row presented itself as a success, so the button
+  // announced "request cancelled" over a screen that still showed the request.
+  // Nothing moved is never a success — whatever the reason.
+  if (!result.cancelled) {
+    revalidateAppPath('settings');
+    revalidateAppPath('settings/deletion-status');
+    return { ok: false, errorCode: 'errors.settings.deletionCancelNothing' };
+  }
+
   // The audit row is emitted ONLY when a row actually moved. It used to fire
   // unconditionally, so a filter matching nothing still wrote a line asserting
-  // a cancellation that never happened. `none` is not an error — there is
-  // simply nothing to cancel, and the revalidation below sends the stale page
-  // back to settings.
-  if (result.cancelled) {
-    await logAuditEvent(AuditEvent.GDPR_DELETION_CANCELLED, {
-      userId: user.id,
-      ipAddress: ip,
-      userAgent,
-    });
+  // a cancellation that never happened.
+  await logAuditEvent(AuditEvent.GDPR_DELETION_CANCELLED, {
+    userId: user.id,
+    ipAddress: ip,
+    userAgent,
+  });
+
+  revalidateAppPath('settings');
+  revalidateAppPath('settings/deletion-status');
+  return { ok: true };
+}
+
+/**
+ * Relaunch an erasure that gave up — not a button more, the re-arming of an
+ * irreversible destruction.
+ *
+ * It therefore carries the SAME guarantees as the gesture it re-arms: the
+ * person types their own email address, the mutation is rate-limited, and an
+ * audit row is written. *Cancel*, by contrast, stays a single click — an
+ * undo never costs more than the action it undoes.
+ */
+export async function retryAccountDeletionAction(input: unknown): Promise<ActionResult> {
+  const { user } = await requireSessionUser();
+  const { ip, userAgent } = await contextFromHeaders();
+
+  const rl = await rateLimit('mutation', `user:${user.id}`);
+  if (!rl.success) return { ok: false, errorCode: 'errors.session.rateLimited' };
+
+  if (!user.email) {
+    log.error('User email missing for deletion retry', { user_id: user.id });
+    return { ok: false, errorCode: 'errors.settings.deletionRetryFailed' };
   }
+
+  // The same schema as the initial request. The screen shows two buttons with
+  // opposite consequences and one of them destroys: a single click is not
+  // enough of a gesture. The cost is one typed address.
+  const parsed = makeDeletionRequestSchema(user.email).safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      errorCode: 'errors.validation.generic',
+      fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+    };
+  }
+
+  let result: Awaited<ReturnType<typeof retryDeletion>>;
+  try {
+    result = await retryDeletion(user.id);
+  } catch {
+    return { ok: false, errorCode: 'errors.settings.deletionRetryFailed' };
+  }
+
+  // Two tabs open, a claim in between, and the relaunch lands on a row that is
+  // no longer `failed`. Same rule as cancellation: nothing moved is never a
+  // success.
+  if (!result.retried) {
+    revalidateAppPath('settings');
+    revalidateAppPath('settings/deletion-status');
+    return { ok: false, errorCode: 'errors.settings.deletionRetryNothing' };
+  }
+
+  // Non-negotiable, and not for symmetry: `retryDeletion` just reset `attempts`
+  // to 0, so the count of the previous cycle exists in this row and nowhere
+  // else. Without it we would re-introduce, one level up, the very amnesia
+  // ADR-042 exists to fix. No `resource_id` — the allow-list would take it, and
+  // it would put the person's UUID beside a deletion event.
+  await logAuditEvent(AuditEvent.GDPR_DELETION_RETRIED, {
+    userId: user.id,
+    ipAddress: ip,
+    userAgent,
+  });
 
   revalidateAppPath('settings');
   revalidateAppPath('settings/deletion-status');

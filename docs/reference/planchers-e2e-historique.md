@@ -19,11 +19,36 @@ les plus sensibles de l'app.
 Deux jobs, donc **deux planchers distincts** — un chiffre global agrégé serait
 ininterprétable au premier conflit, donc ignoré :
 
-| Job                              | Plancher au 10 août 2026                                |
-| -------------------------------- | ------------------------------------------------------- |
-| `Playwright E2E`                 | **241 passed** (231 au 09/08, 228 au 06/08 — cf. infra) |
-| `Playwright E2E (authenticated)` | **45 passed** (41 avant, +4 `attribution-paiements`)    |
+| Job                              | Plancher au 11 août 2026                                  |
+| -------------------------------- | --------------------------------------------------------- |
+| `Playwright E2E`                 | **241 passed** (231 au 09/08, 228 au 06/08 — cf. infra)   |
+| `Playwright E2E (authenticated)` | **50 passed** (45 avant, +5 `gdpr-deletion-queue` — PR-C) |
 
+> **Authentifié : 45 → 50, mesuré le 2026-08-11**, à la livraison de PR-C (ADR-042).
+> Les cinq cas s'ajoutent à `e2e/gdpr-deletion-queue.spec.ts`, **sans nouveau
+> fichier de spec** : la sélection authentifiée est détectée par contenu et ce
+> fichier y figurait déjà, donc `e2e/authenticated-specs.json` ne bouge pas.
+>
+> **Mesuré dans les deux sens, même machine, même serveur, même base locale** :
+> la spec rend **`6 passed`** en excluant les cinq nouveaux titres
+> (`--grep-invert`) et **`11 passed`** avec. Delta **+5**, sans reste.
+>
+> **Plancher public inchangé à 241** : le `describe` entier saute sans clé
+> `service_role` **et** sans Supabase locale (`test.skip(!admin)` puis
+> `test.skip(!isLocalSupabase)`), et un cas sauté ne sort pas de `N passed`.
+>
+> Ce que ces cinq cas prouvent et qu'aucun Vitest ne peut rendre : une écriture
+> et deux lectures privilégiées sur une table en `FORCE ROW LEVEL SECURITY` —
+> là où l'incident H3 a montré qu'on peut ne toucher **aucune ligne sans lever
+> d'erreur** — et le parcours complet d'une demande en quarantaine (annuler,
+> puis redéposer), qui traverse l'index d'unicité.
+>
+> **Réparation d'instrument nécessaire au passage** : Playwright peut cliquer un
+> bouton **avant que React n'ait attaché son gestionnaire**. Le cliché d'échec
+> montrait le champ de confirmation rempli et le bouton toujours `disabled` —
+> un composant rendu, mais qui n'écoutait pas. `clickUntilSettled()` réessaie le
+> **clic**, jamais l'assertion : la condition de sortie est lue en base.
+>
 > **Authentifié : 41 → 45, mesuré le 2026-08-10**, à la livraison J1 (ADR-038 D3).
 > `e2e/attribution-paiements.spec.ts` ajoute 4 cas, exécutés par
 > `chromium-desktop` seul — la spec n'est pas sous `mobile-ios/`, donc le projet
