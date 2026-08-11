@@ -86,11 +86,13 @@ export async function Hero() {
                 anti-PSD2 note in the same breath */}
             {/* Every dt is a flex item, so it gets min-w-0: flex's default
                 min-width:auto would refuse to shrink below the longest word
-                and push the row past the card edge. Today's FR/EN copy fits at
-                320px by arithmetic; the guard is for the copy nobody measured
-                yet — German compounds, longer locales (mobile-ios-auditor). */}
+                and push the row past the card edge. break-words is the safety
+                net behind it — min-w-0 alone cannot break a single unbreakable
+                word. Today's FR/EN copy fits at 320px by arithmetic; the guard
+                is for the copy nobody measured yet — German compounds, longer
+                locales (mobile-ios-auditor, L2 + L3). */}
             <div className="flex items-baseline justify-between gap-4">
-              <dt className="min-w-0">
+              <dt className="min-w-0 break-words">
                 <span className="text-foreground font-medium">{t('card.title')}</span>
                 <span className="text-muted-foreground mt-0.5 block max-w-[16rem] text-xs">
                   {t('card.titleNote')}
@@ -103,13 +105,15 @@ export async function Hero() {
 
             {/* Dated commitments — what the bank balance silently promises */}
             <div className="border-border mt-3 flex items-baseline justify-between gap-4 border-t pt-3">
-              <dt className="text-muted-foreground min-w-0">{t('card.insuranceLabel')}</dt>
+              <dt className="text-muted-foreground min-w-0 break-words">
+                {t('card.insuranceLabel')}
+              </dt>
               <dd>
                 <Num size="md">{t('card.insuranceAmount')}</Num>
               </dd>
             </div>
             <div className="border-border mt-3 flex items-baseline justify-between gap-4 border-t pt-3">
-              <dt className="text-muted-foreground min-w-0">{t('card.taxLabel')}</dt>
+              <dt className="text-muted-foreground min-w-0 break-words">{t('card.taxLabel')}</dt>
               <dd>
                 <Num size="md">{t('card.taxAmount')}</Num>
               </dd>
@@ -120,7 +124,7 @@ export async function Hero() {
               data-testid="hero-payoff"
               className="border-foreground/60 mt-3 flex items-baseline justify-between gap-4 border-t-[3px] border-double pt-3"
             >
-              <dt className="min-w-0">
+              <dt className="min-w-0 break-words">
                 <span className="text-foreground font-semibold">{t('card.payoffLabel')}</span>
                 <span className="text-muted-foreground mt-0.5 block text-xs">
                   {t('card.payoffNote')}

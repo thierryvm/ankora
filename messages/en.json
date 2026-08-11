@@ -163,6 +163,10 @@
     }
   },
   "landing": {
+    "meta": {
+      "title": "See what's already committed",
+      "description": "Your bank shows what happened. Ankora shows what's already committed: the insurance due the 15th, the November tax. No bank connection, hosted in Europe."
+    },
     "mktnav": {
       "links": {
         "product": "Product",
@@ -199,16 +203,6 @@
           "noSale": "No data selling",
           "languages": "FR · EN"
         }
-      },
-      "waterfall": {
-        "income": "Income",
-        "incomeAmount": "+2,466 €",
-        "expenses": "Daily expenses",
-        "expensesAmount": "−1,959 €",
-        "provisionsCaption": "of which {amount} € smoothed into earmarked provisions",
-        "available": "Available money",
-        "availableAmount": "+507 €",
-        "ariaLabel": "Illustrative cascade: 2,466 € income, 1,959 € daily expenses (of which 59 € smoothed into provisions), 507 € available."
       }
     },
     "principles": {
@@ -231,12 +225,23 @@
       }
     },
     "feature": {
-      "eyebrow": "Cashflow waterfall",
-      "h3Line1": "From salary to net available.",
-      "h3Line2": "At a single glance.",
+      "eyebrow": "The month's cascade",
+      "titleLine1": "From salary to net available.",
+      "titleLine2": "At a single glance.",
       "description": "No more mystery about where your money goes. Every step is visible: income, daily expenses, available money. You see immediately if anything drifts.",
       "ctaPrimary": "See an example",
-      "ctaSecondary": "How does it work?"
+      "ctaSecondary": "How does it work?",
+      "waterfall": {
+        "income": "Income",
+        "incomeAmount": "+2,466 €",
+        "expenses": "Daily expenses",
+        "expensesAmount": "−1,959 €",
+        "provisionsCaption": "of which {amount} € smoothed into earmarked provisions",
+        "provisionsDefinition": "A provision: money set aside each month for a bill that only lands once or twice a year.",
+        "available": "Available money",
+        "availableAmount": "+507 €",
+        "ariaLabel": "Illustrative cascade: 2,466 € income, 1,959 € daily expenses (of which 59 € smoothed into provisions), 507 € available."
+      }
     },
     "whatif": {
       "title": "What if you changed one thing?",
@@ -291,7 +296,7 @@
     },
     "footerCta": {
       "h2Lead": "Start with what's",
-      "h2Highlight": "already yours.",
+      "h2Highlight": "already committed.",
       "description": "Free during Phase 1, no card, GDPR export anytime. We keep it simple because it's already complicated enough.",
       "ctaPrimary": "Create my account"
     },
@@ -309,6 +314,10 @@
       "price": {
         "q": "What does it cost?",
         "a": "Nothing. Ankora is free, there is no paid tier, and no feature is reserved for a higher plan. That commitment is written into the terms, not just stated here."
+      },
+      "bank": {
+        "q": "Why a second app when I already have my bank's?",
+        "a": "Your bank's app shows your balance — what already happened. It doesn't tell you that the insurance due the 15th and the November tax are already promised. Ankora keeps that register: what's already committed, counted in advance, so the figure you read is the one you can actually spend. And Ankora never connects to your bank — no data is read from your account: you type in your own figures."
       },
       "advice": {
         "q": "Is Ankora a financial advice tool?",

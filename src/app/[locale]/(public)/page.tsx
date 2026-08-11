@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, ResolvingMetadata } from 'next';
 import { getNonce } from '@/lib/security/nonce';
 import { getTranslations } from 'next-intl/server';
 
@@ -15,12 +15,66 @@ import { WhatIfDemo } from '@/components/marketing/landing/sections/WhatIfDemo';
 
 type LocaleParams = { params: Promise<{ locale: string }> };
 
-export async function generateMetadata({ params }: LocaleParams): Promise<Metadata> {
+export async function generateMetadata(
+  { params }: LocaleParams,
+  parent: ResolvingMetadata,
+): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale: locale as Locale, namespace: 'common' });
+  // The home page carries the landing thesis (`landing.meta.*`, PR L3);
+  // `common.tagline`/`common.description` stay the reference for the REST of
+  // the site (root layout, opengraph-image, manifest — untouched).
+  const t = await getTranslations({ locale: locale as Locale, namespace: 'landing.meta' });
+  const title = t('title');
+  const description = t('description');
+  // og/twitter titles do NOT receive the layout's `title.template` — the
+  // brand is added by hand, or the shared card would carry no brand at all.
+  const socialTitle = `${SITE.name} — ${title}`;
+  // The file-convention social image (src/app/[locale]/opengraph-image.tsx)
+  // does NOT survive a page-level `openGraph` declaration: measured on the
+  // local prod build — 0 og:image occurrences — despite the docs giving
+  // file-based metadata higher priority. Read the resolved parent and carry
+  // its images forward explicitly.
+  const resolvedParent = await parent;
+  const parentOgImages = resolvedParent.openGraph?.images ?? [];
+  // The resolved parent's twitter.images is EMPTY here (no twitter-image.tsx
+  // file exists — twitter only falls back to the og image when the page
+  // declares no `twitter` object at all, measured: 0 twitter:image after the
+  // first fix). Reuse the og images' urls so the card keeps its picture.
+  const parentTwitterImages =
+    resolvedParent.twitter?.images && resolvedParent.twitter.images.length > 0
+      ? resolvedParent.twitter.images
+      : parentOgImages.map((img) => (typeof img === 'object' && 'url' in img ? img.url : img));
   return {
-    title: `${SITE.name} — ${t('tagline')}`,
-    description: t('description'),
+    // No brand prefix in the key: the layout's `title.template` appends
+    // « · Ankora ». (The previous `${SITE.name} — …` value collided with the
+    // template and rendered a doubled brand — measured on production.)
+    title,
+    description,
+    openGraph: {
+      // A page-level `openGraph` REPLACES the layout's object — Next.js
+      // metadata merging is per exported field, not deep. Declare the FULL
+      // object (copying the layout's invariant fields), otherwise og:type,
+      // og:locale, og:url and og:site_name silently vanish from the most
+      // shared page of the site. Divergence risk with the layout copy is
+      // accepted for L3 (the root layout is out of this PR's perimeter) and
+      // filed with the vocabulary-reconciliation pass.
+      type: 'website',
+      locale,
+      url: SITE.url,
+      siteName: SITE.name,
+      title: socialTitle,
+      description,
+      images: parentOgImages,
+    },
+    twitter: {
+      // Same replacement rule as openGraph — redeclared in full so og and
+      // twitter never diverge on the same URL.
+      card: 'summary_large_image',
+      title: socialTitle,
+      description,
+      creator: SITE.twitter,
+      images: parentTwitterImages,
+    },
   };
 }
 
@@ -28,13 +82,14 @@ export default async function HomePage({ params }: LocaleParams) {
   const { locale } = await params;
   const nonce = await getNonce();
   const t = await getTranslations('landing');
-  const tCommon = await getTranslations('common');
 
   const softwareJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
     name: SITE.name,
-    description: tCommon('description'),
+    // Same source as the <meta name="description"> of this page — the
+    // JSON-LD describes the home, so it follows the landing thesis copy.
+    description: t('meta.description'),
     applicationCategory: 'FinanceApplication',
     operatingSystem: 'Web, iOS, Android',
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },

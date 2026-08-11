@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 
 import messages from '../../../../../../messages/fr-BE.json';
-import { HERO_WATERFALL_DEMO } from '../../constants';
+import { FEATURE_WATERFALL_DEMO } from '../../constants';
 
 vi.mock('next-intl/server', () => ({
   getLocale: async () => 'fr-BE',
@@ -46,13 +46,27 @@ async function renderFeature() {
   return render(await Feature());
 }
 
-describe('<Feature /> — 3-step canonical waterfall', () => {
-  it('renders the eyebrow + h3 split on 2 lines + description', async () => {
+// Exact fr-BE typography. These literals contain REAL no-break spaces
+// (U+00A0) and a real minus (U+2212) — invisible on screen, but toContain
+// compares code points, so a plain space smuggled into the bundle fails
+// here. Pinned as literals, not read from the bundle: a probe fed by the
+// same file the component reads can distinguish neither an NBSP regression
+// nor a copy drift (testing-library's normalizer folds NBSP, hence the
+// assertions below read raw textContent).
+const FR_INCOME = '+2 466 €';
+const FR_EXPENSES = '−1 959 €';
+const FR_AVAILABLE = '+507 €';
+
+describe('<Feature /> — the cascade as a statement (PR L3)', () => {
+  it('renders the eyebrow + h2 split on 2 lines + description', async () => {
     await renderFeature();
-    expect(screen.getByText('Cashflow waterfall', { selector: 'p' })).toBeInTheDocument();
-    const h3 = screen.getByRole('heading', { level: 3 });
-    expect(h3.textContent).toContain('Du salaire au net disponible.');
-    expect(h3.textContent).toContain("En un seul coup d'œil.");
+    expect(screen.getByText('La cascade du mois', { selector: 'p' })).toBeInTheDocument();
+    // h2, not h3: the section heading was an outline orphan until PR L3
+    // (no h2 existed in the section — WCAG 1.3.1, ui-auditor on L2).
+    const h2 = screen.getByRole('heading', { level: 2 });
+    expect(h2.textContent).toContain('Du salaire au net disponible.');
+    expect(h2.textContent).toContain("En un seul coup d'œil.");
+    expect(h2).toHaveAttribute('id', 'feature-heading');
   });
 
   it('renders the 2 CTAs pointing at /signup and #principles', async () => {
@@ -67,13 +81,14 @@ describe('<Feature /> — 3-step canonical waterfall', () => {
     );
   });
 
-  it('exposes the waterfall in a <figure> with a localised aria-label', async () => {
+  it('exposes the cascade in a <figure> with a localised aria-label carrying NBSP amounts', async () => {
     const { container } = await renderFeature();
     const figure = container.querySelector('figure[aria-label]');
     expect(figure).not.toBeNull();
-    expect(figure?.getAttribute('aria-label')).toContain('Cascade illustrative');
-    expect(figure?.getAttribute('aria-label')).toContain('2 466 €');
-    expect(figure?.getAttribute('aria-label')).toContain('507 €');
+    const aria = figure!.getAttribute('aria-label')!;
+    expect(aria).toContain('Cascade illustrative');
+    expect(aria).toContain('2 466 €');
+    expect(aria).toContain('507 €');
   });
 
   it('renders the 3 canonical steps in an <ol> (Revenus, Dépenses courantes, Argent disponible)', async () => {
@@ -81,9 +96,6 @@ describe('<Feature /> — 3-step canonical waterfall', () => {
     const list = container.querySelector('ol');
     expect(list).not.toBeNull();
 
-    // Exactly 3 <li> children — connector arrows live INSIDE the second
-    // and third <li>, not as standalone list items, so screen readers
-    // announce a 3-item ordered sequence.
     const items = list!.querySelectorAll(':scope > li');
     expect(items.length).toBe(3);
 
@@ -92,29 +104,41 @@ describe('<Feature /> — 3-step canonical waterfall', () => {
     expect(within(list!).getByText('Argent disponible')).toBeInTheDocument();
   });
 
-  it('renders the three step amounts with the correct sign + currency', async () => {
-    await renderFeature();
-    expect(screen.getByText('+2 466 €')).toBeInTheDocument();
-    expect(screen.getByText('−1 959 €')).toBeInTheDocument();
-    expect(screen.getByText('+507 €')).toBeInTheDocument();
+  it('pins the exact NBSP typography of the three amounts via raw textContent', async () => {
+    const { container } = await renderFeature();
+    const items = [...container.querySelectorAll('ol > li')].map((li) => li.textContent ?? '');
+    expect(items[0]).toContain(FR_INCOME);
+    expect(items[1]).toContain(FR_EXPENSES);
+    expect(items[2]).toContain(FR_AVAILABLE);
   });
 
-  it('renders the provisions sub-caption under the expenses step (FSMA-safe descriptive copy)', async () => {
+  it('renders the provisions sub-caption AND its inline definition under the expenses step', async () => {
     await renderFeature();
     const caption = screen.getByText(/lissés vers provisions affectées/i);
     expect(caption).toBeInTheDocument();
-    expect(caption.textContent).toContain(String(HERO_WATERFALL_DEMO.provisions));
+    expect(caption.textContent).toContain(String(FEATURE_WATERFALL_DEMO.provisions));
+    // "Provisions" explained at first contact (plan-cadre §L3.2) —
+    // descriptive copy only, no advice (FSMA).
+    expect(screen.getByText(/Une provision : l'argent mis de côté/i)).toBeInTheDocument();
   });
 
-  it('marks connector arrows as decorative SVG (not as list items)', async () => {
+  it('carries no decorative SVG connectors and no aria-hidden list items', async () => {
     const { container } = await renderFeature();
     const list = container.querySelector('ol');
     expect(list).not.toBeNull();
-    // Connectors are SVG decorations inside step 2 and step 3 — never
-    // standalone <li>, so the <ol> stays a clean 3-item ordered list.
-    const decorativeSvgs = list!.querySelectorAll('svg[aria-hidden="true"]');
-    expect(decorativeSvgs.length).toBe(2);
-    // No <li> should be aria-hidden — they all carry semantic meaning.
+    // PR L3: the arrows belonged to the old dashboard-mockup grammar — the
+    // statement rules and the reading order replaced them. Nothing in the
+    // <ol> should be hidden from assistive tech.
+    expect(list!.querySelectorAll('svg').length).toBe(0);
     expect(list!.querySelectorAll('li[aria-hidden="true"]').length).toBe(0);
+  });
+
+  it('renders the amounts in neutral ink — no success/danger colour coding', async () => {
+    const { container } = await renderFeature();
+    // The sign inside the string is the only carrier of direction (guarded
+    // per-bundle by constants.test.ts); colour must not come back as a
+    // second, colour-only channel (WCAG 1.4.1, ADR-035 §3 « jamais de vert »).
+    const list = container.querySelector('ol')!;
+    expect(list.innerHTML).not.toMatch(/text-success|text-danger|text-brand-text-strong/);
   });
 });

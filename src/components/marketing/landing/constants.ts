@@ -3,10 +3,11 @@
  *
  * These numbers are NOT real user data — they're the showroom figures used
  * by the Hero statement card and the Feature waterfall. Display strings are
- * pre-formatted per locale in the i18n bundles (`messages/{locale}.json`),
- * with NBSP separators kept for fr-BE only — see Sourcery #1 / PR #82
- * pattern. The numeric constants below remain the source of truth for tests
- * and any future computation.
+ * pre-formatted per locale in the i18n bundles (`messages/{locale}.json`);
+ * every locale keeps an NBSP before € (fr-BE also uses NBSP as thousands
+ * separator, en uses a comma) — pinned per-bundle by constants.test.ts.
+ * The numeric constants below remain the source of truth for tests and any
+ * future computation.
  */
 
 /**
@@ -31,11 +32,11 @@ export const RELEVE_DEMO = {
 } as const;
 
 /**
- * Hero waterfall — 3-step canonical cashflow (PR-3c-4).
+ * Feature waterfall — 3-step canonical cashflow (PR-3c-4, renamed in PR L3).
  *
- * Consumed by `Feature.tsx` (with the `landing.hero.waterfall.*` i18n
- * subtree) until PR L3 migrates both to the feature namespace. Kept intact
- * here per the L2 plan — do not rename or move before L3.
+ * Consumed by `Feature.tsx` with the `landing.feature.waterfall.*` i18n
+ * subtree — both migrated out of the hero namespace in PR L3, after the L2
+ * hero rewrite left the cascade living only in the Feature section.
  *
  * Replaces the previous 5-step mockup (`WATERFALL_BARS` removed) which
  * incorrectly mixed transfers (Provisions, Réserve) with real outflows
@@ -49,7 +50,7 @@ export const RELEVE_DEMO = {
  * step. The `available` figure is the visible bottom-line user takeaway
  * and equals `income − expenses` by construction.
  */
-export const HERO_WATERFALL_DEMO = {
+export const FEATURE_WATERFALL_DEMO = {
   /** Monthly income (illustrative, anchored on real anonymised user data). */
   income: 2466,
   /** Daily expenses incl. fixed bills + subscriptions + provision smoothing. */
@@ -59,18 +60,3 @@ export const HERO_WATERFALL_DEMO = {
   /** Bottom-line money available after expenses (= income − expenses). */
   available: 507,
 } as const;
-
-/**
- * Browser-chrome decorative dots (macOS window controls metaphor).
- *
- * DORMANT since PR L2: the rewritten Hero dropped the browser mockup, and a
- * grep at that point found no other consumer. Kept intact per the L2 plan —
- * PR L3 (sections restyle) decides whether the Feature mockup adopts or
- * deletes it. Colours are semantic Tailwind classes mapping to the design
- * system.
- */
-export const HERO_BROWSER_DOTS: readonly { key: string; className: string }[] = [
-  { key: 'close', className: 'bg-danger/40' },
-  { key: 'minimise', className: 'bg-warning/40' },
-  { key: 'maximise', className: 'bg-success/40' },
-];

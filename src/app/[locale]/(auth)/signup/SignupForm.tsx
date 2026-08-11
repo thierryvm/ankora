@@ -99,7 +99,14 @@ export function SignupForm() {
         )}
       </div>
 
-      <label className="text-muted-foreground flex items-start gap-2 text-sm">
+      {/* `min-h-6` — WCAG 2.2 AA · 2.5.8, cible de pointage 24 × 24 px.
+          Ce ne sont pas des liens en ligne : l'exception ne s'applique pas.
+
+          La cible EST le label, pas la case : cliquer un label bascule son
+          contrôle, et la case seule ne fait que 16 px. Mesuré le 10 août
+          (#348) : 308 × 20 px. La largeur allait — c'est la HAUTEUR qui rate un
+          doigt, et c'est elle qu'on borne. Épinglé par un test. */}
+      <label className="text-muted-foreground flex min-h-6 items-start gap-2 text-sm">
         <input
           type="checkbox"
           name="acceptTos"
@@ -122,7 +129,8 @@ export function SignupForm() {
         </p>
       )}
 
-      <label className="text-muted-foreground flex items-start gap-2 text-sm">
+      {/* Même borne, même raison — cf. le commentaire au-dessus. */}
+      <label className="text-muted-foreground flex min-h-6 items-start gap-2 text-sm">
         <input
           type="checkbox"
           name="acceptPrivacy"

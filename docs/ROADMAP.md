@@ -28,43 +28,61 @@ L'exécution des spécifications a révélé que le préalable n'était pas la f
 suppression, mais **ce sur quoi elle repose** : le journal d'audit n'enregistrait rien
 depuis avril, et trois affirmations publiques étaient inexactes.
 
-| Lot                                                                                   | État                                                                              |
-| ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| Le client `service_role` fuitait la session utilisateur (H3, #192)                    | ✅ #273                                                                           |
-| Trois affirmations publiques inexactes (export « complet », base légale)              | ✅ #274                                                                           |
-| ADR-023 — délai de grâce 30 → 14 jours (art. 12(3))                                   | ✅ #275                                                                           |
-| Préflight : vérifier les comptes **actifs** Supabase/Vercel, pas les fichiers de lien | ✅ #276                                                                           |
-| Agents QA : `silent-failure-auditor` + 3 agents corrigés                              | ✅ #277                                                                           |
-| ADR-024 — conception de la file (reprise plutôt qu'atomicité) + plan d'exécution      | ✅ #279                                                                           |
-| **PR-A** — la file, inerte : migration, orchestration extraite, UI, i18n, tests       | ✅ #282                                                                           |
-| **PR-B** — le code de l'armement : route de cron, comparaison à temps constant        | ✅ #284                                                                           |
-| ADR-042 — la file ne compte pas ses tentatives, donc elle peut s'affamer              | ✅ #370, figé après quatre tours de revue                                         |
-| **PR-C** — les tentatives comptées, la quarantaine, l'écran honnête                   | 🔵 en revue, sur ADR-042                                                          |
-| **Armement** — `CRON_SECRET` posé, redéploiement, vérification                        | ⛔ [#285](https://github.com/thierryvm/ankora/issues/285) — **débloqué par PR-C** |
-| `auth.audit_log_entries` garde l'email et l'IP après effacement (art. 17)             | 📋 [#278](https://github.com/thierryvm/ankora/issues/278) — ADR + session dédiés  |
+| Lot                                                                                   | État                                                                             |
+| ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Le client `service_role` fuitait la session utilisateur (H3, #192)                    | ✅ #273                                                                          |
+| Trois affirmations publiques inexactes (export « complet », base légale)              | ✅ #274                                                                          |
+| ADR-023 — délai de grâce 30 → 14 jours (art. 12(3))                                   | ✅ #275                                                                          |
+| Préflight : vérifier les comptes **actifs** Supabase/Vercel, pas les fichiers de lien | ✅ #276                                                                          |
+| Agents QA : `silent-failure-auditor` + 3 agents corrigés                              | ✅ #277                                                                          |
+| ADR-024 — conception de la file (reprise plutôt qu'atomicité) + plan d'exécution      | ✅ #279                                                                          |
+| **PR-A** — la file, inerte : migration, orchestration extraite, UI, i18n, tests       | ✅ #282                                                                          |
+| **PR-B** — le code de l'armement : route de cron, comparaison à temps constant        | ✅ #284                                                                          |
+| ADR-042 — la file ne compte pas ses tentatives, donc elle peut s'affamer              | ✅ #370, figé après quatre tours de revue                                        |
+| **PR-C** — les tentatives comptées, la quarantaine, l'écran honnête                   | ✅ #372                                                                          |
+| **Armement** — `CRON_SECRET` posé, redéploiement, vérification                        | ✅ [#285](https://github.com/thierryvm/ankora/issues/285) — 2026-08-11           |
+| `auth.audit_log_entries` garde l'email et l'IP après effacement (art. 17)             | 📋 [#278](https://github.com/thierryvm/ankora/issues/278) — ADR + session dédiés |
 
-### Le droit à l'effacement est construit, mergé, et INERTE
+### Le droit à l'effacement est ARMÉ — 2026-08-11
 
-**Mesuré le 2026-08-10** : `CRON_SECRET` n'existe pas dans les variables de production
-(`vercel env ls production`), donc la route rend `401` et `executeDeletion` n'a aucun appelant
-effectif. La file contient **zéro demande** — personne n'attend, et le défaut ci-dessous ne
-nuit donc à personne aujourd'hui. Il nuirait au premier qui cliquerait, si on armait sans
-corriger.
+Il aura été **construit, mergé et inerte pendant quinze jours**, délibérément : un défaut
+avait été trouvé avant l'armement, et l'armer sans le corriger aurait figé la file au premier
+échec durable.
 
-**Pourquoi c'est bloqué, et ce n'est pas de la prudence excessive** : `claim_pending_deletions`
-n'a **aucune colonne de tentative**. Une ligne après un échec et une ligne après trois cents
-échecs sont identiques en base, donc **25 lignes en échec occupent le lot chaque nuit, pour
-toujours** — sans qu'aucune alerte n'existe pour le dire. Et pendant ce temps la personne
-concernée a perdu son bouton d'annulation tout en lisant que sa suppression est irréversible.
+**Les trois lectures de production dues par ADR-024, faites avant de poser quoi que ce
+soit** — lectures seules, agrégées côté client, aucun identifiant sorti :
 
-**Source de vérité** : [`docs/adr/ADR-042-file-de-suppression-compter-les-tentatives.md`](./adr/ADR-042-file-de-suppression-compter-les-tentatives.md),
+| #   | Question                                                      | Résultat mesuré                                           |
+| --- | ------------------------------------------------------------- | --------------------------------------------------------- |
+| 1   | Un workspace a-t-il plus d'un membre ? (rayon de destruction) | 6 workspaces, **0 partagé** — l'invariant reste théorique |
+| 2   | Des demandes `pending` en double ?                            | **0**                                                     |
+| 3   | Le journal d'audit enregistre-t-il depuis #273 ?              | **202 lignes**, la plus récente il y a 17 h, 12 types     |
+
+La n° 3 était le NO-GO explicite d'ADR-024, et c'est elle qui compte : elle prouve que le
+chemin PostgREST `service_role` **écrit réellement en production**, ce qui n'avait jamais été
+revérifié depuis le correctif H3 du 27 juillet — où trois mois d'écritures avaient été
+refusées en silence.
+
+**Vérifié dans les trois sens** sur `ankora.be`, après redéploiement : sans jeton `401`,
+mauvais jeton `401`, **bon jeton `200`** avec
+`{"claimed":0,"deleted":0,"failed":0,"purged":0,"purgeOk":true,"capped":false,"stuck":0}`.
+Cron enregistré : `/api/cron/gdpr`, `0 3 * * *`.
+
+**Ce que la vérification a attrapé, et qui justifie à elle seule son existence** : la première
+tentative d'ajout de la variable a **échoué en silence** (la CLI Vercel bascule en mode non
+interactif et ne lit pas l'entrée standard). Le redéploiement a suivi, et les trois sondes ont
+rendu `401` — y compris avec le bon jeton. Sans la troisième sonde, l'armement aurait été
+annoncé sans exister. Poser la variable n'est pas armer ; **c'est l'exécution manuelle qui
+prouve**.
+
+**Source de vérité de la conception** :
+[`docs/adr/ADR-042-file-de-suppression-compter-les-tentatives.md`](./adr/ADR-042-file-de-suppression-compter-les-tentatives.md),
 amendement d'ADR-024. Quatre tours de `plan-reviewer`, neuf défauts bloquants trouvés **avant
 toute ligne de code** — dont un introduit par une révision de l'ADR lui-même.
 
-**L'armement n'est PAS une PR, c'est un runbook indivisible** : les deux lectures de
-production dues par ADR-024, puis `CRON_SECRET` → **redéploiement** → `vercel crons ls` →
-exécution manuelle sur file vide. Poser la variable sans redéployer donne un `401` quotidien
-**silencieux** — `expected` devient défini, juste faux.
+**Ce qui existe à partir d'aujourd'hui, et pas avant** : l'écart art. 17 de
+[#278](https://github.com/thierryvm/ankora/issues/278) — `auth.audit_log_entries` garde
+l'email et l'IP après l'effacement. Il était théorique tant que rien n'effaçait.
 
 ## Programme parallèle — refonte landing « Le relevé corrigé »
 
