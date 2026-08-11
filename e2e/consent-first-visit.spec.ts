@@ -297,13 +297,22 @@ test.describe('Consentement — première visite, sans état pré-rempli', () =>
         const input = document.querySelector(`input[name="${n}"]`);
         const label = input?.closest('label');
         const r = label?.getBoundingClientRect();
-        return { nom: n, w: Math.round(r?.width ?? 0), h: Math.round(r?.height ?? 0) };
+        // Valeurs BRUTES : `getBoundingClientRect` rend des pixels CSS
+        // fractionnaires, et arrondir avant de comparer remonte 23,6 px à 24 —
+        // le garde laisserait alors passer exactement ce qu'il doit refuser.
+        return { nom: n, w: r?.width ?? 0, h: r?.height ?? 0 };
       }),
     );
 
     for (const t of tailles) {
-      expect(t.w, `« ${t.nom} » — largeur de cible`).toBeGreaterThanOrEqual(24);
-      expect(t.h, `« ${t.nom} » — hauteur de cible (mesurée ${t.h} px)`).toBeGreaterThanOrEqual(24);
+      expect(
+        t.w,
+        `« ${t.nom} » — largeur de cible (mesurée ${t.w.toFixed(2)} px)`,
+      ).toBeGreaterThanOrEqual(24);
+      expect(
+        t.h,
+        `« ${t.nom} » — hauteur de cible (mesurée ${t.h.toFixed(2)} px)`,
+      ).toBeGreaterThanOrEqual(24);
     }
   });
 
