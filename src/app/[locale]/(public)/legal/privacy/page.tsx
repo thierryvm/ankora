@@ -52,7 +52,9 @@ export default async function PrivacyPage() {
           <ProseMeta>{tLegal('versionLine', { version: VERSION, date: LAST_UPDATED })}</ProseMeta>
 
           <h2>{t('s1.heading')}</h2>
-          <p>{t.rich('s1.body', { mail })}</p>
+          {/* `email` remplace l'adresse jadis écrite en dur dans les cinq
+              locales ; `mail` reste la balise qui l'entoure d'un lien. */}
+          <p>{t.rich('s1.body', { mail, email: brand.privacyEmail })}</p>
 
           <h2>{t('s2.heading')}</h2>
           <p>{t('s2.intro')}</p>

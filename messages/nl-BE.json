@@ -429,7 +429,6 @@
         "body": "Deze voorwaarden zijn onderworpen aan het Belgische recht. Bevoegde rechtbank: Brussel."
       },
       "draft": "Onze algemene gebruiksvoorwaarden worden momenteel opgesteld.",
-      "contact": "Voor elke vraag, contacteer ons: thierryvm@gmail.com",
       "backHome": "Terug naar de startpagina"
     },
     "privacy": {
@@ -438,7 +437,7 @@
       "title": "Privacybeleid",
       "s1": {
         "heading": "1. Verwerkingsverantwoordelijke",
-        "body": "Ankora, uitgegeven door Thierry Vanmeeteren (België). Contact: <mail>thierryvm@gmail.com</mail>."
+        "body": "Ankora, uitgegeven door Thierry Vanmeeteren (België). Contact: <mail>{email}</mail>."
       },
       "s2": {
         "heading": "2. Verzamelde gegevens",
@@ -494,7 +493,6 @@
         "body": "Elke materiële wijziging van dit beleid wordt per e-mail gemeld en vereist je vernieuwde toestemming om de dienst te blijven gebruiken."
       },
       "draft": "Ons privacybeleid wordt momenteel opgesteld.",
-      "contact": "Voor elke vraag, contacteer ons: thierryvm@gmail.com",
       "backHome": "Terug naar de startpagina"
     },
     "cookies": {
@@ -519,12 +517,11 @@
       "manageMethod2": "Aangemeld kun je in Instellingen → Cookies & privacy elke categorie in- of uitschakelen.",
       "manageMethod3": "Op elke pagina opent de link \"Cookievoorkeuren beheren\" in de voettekst het banner opnieuw.",
       "withdrawalHeading": "Toestemming intrekken",
-      "withdrawalBody": "Volgens de AVG (art. 7(3)) is toestemming intrekken even eenvoudig als ze geven. Drie gelijkwaardige methoden: 1) Instellingen → Cookies & privacy → \"Mijn keuze opnieuw instellen\". 2) Voettekst → \"Cookievoorkeuren beheren\". 3) E-mail naar thierryvm@gmail.com met onderwerp \"Cookietoestemming intrekken\".",
+      "withdrawalBody": "Volgens de AVG (art. 7(3)) is toestemming intrekken even eenvoudig als ze geven. Drie gelijkwaardige methoden: 1) Instellingen → Cookies & privacy → \"Mijn keuze opnieuw instellen\". 2) Voettekst → \"Cookievoorkeuren beheren\". 3) E-mail naar {email} met onderwerp \"Cookietoestemming intrekken\".",
       "lifetimeHeading": "Levensduur",
       "lifetimeItem1": "Sessie: einde van de navigatie",
       "lifetimeItem2": "Voorkeuren: 12 maanden",
       "lifetimeItem3": "Analytics: 6 maanden (indien aanvaard)",
-      "contact": "Voor elke vraag, contacteer ons: thierryvm@gmail.com",
       "backHome": "Terug naar de startpagina"
     }
   },

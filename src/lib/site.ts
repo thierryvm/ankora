@@ -1,3 +1,5 @@
+import { brand } from '@/lib/brand';
+
 export const SITE = {
   name: 'Ankora',
   tagline: 'Ton ancrage financier',
@@ -20,11 +22,14 @@ export const SITE = {
   authors: [{ name: 'thierryvm' }],
   twitter: '@ankora_app',
   /**
-   * Public contact address. Single source of truth: it also appears in the CGU
-   * and in the privacy notice, and three copies of an address drift into three
-   * addresses. Deliberately NOT an env var — it must be identical in every
-   * environment, and a legal contact that differs between preview and
-   * production is a legal contact nobody can rely on.
+   * Public contact address. This comment used to CLAIM to be the single source
+   * of truth while `brand.ts` held three more copies and the legal messages
+   * held twenty-five — a property asserted here and verified by nothing, which
+   * is the same failure that let two screens drift 400 € apart (#349).
+   *
+   * The source is now `brand.ts`, and `brand.test.ts` proves it rather than
+   * stating it. The reasoning against an env var was right and moved there
+   * with the value.
    */
-  contactEmail: 'thierryvm@gmail.com',
+  contactEmail: brand.contactEmail,
 } as const;

@@ -429,7 +429,6 @@
         "body": "Diese AGB unterliegen belgischem Recht. Zuständiges Gericht: Brüssel."
       },
       "draft": "Unsere Allgemeinen Nutzungsbedingungen werden derzeit erstellt.",
-      "contact": "Bei Fragen kontaktiere uns: thierryvm@gmail.com",
       "backHome": "Zurück zur Startseite"
     },
     "privacy": {
@@ -438,7 +437,7 @@
       "title": "Datenschutzerklärung",
       "s1": {
         "heading": "1. Verantwortlicher",
-        "body": "Ankora, herausgegeben von Thierry Vanmeeteren (Belgien). Kontakt: <mail>thierryvm@gmail.com</mail>."
+        "body": "Ankora, herausgegeben von Thierry Vanmeeteren (Belgien). Kontakt: <mail>{email}</mail>."
       },
       "s2": {
         "heading": "2. Erhobene Daten",
@@ -494,7 +493,6 @@
         "body": "Jede wesentliche Änderung dieser Richtlinie wird per E-Mail mitgeteilt und erfordert deine erneute Einwilligung, um den Dienst weiterhin zu nutzen."
       },
       "draft": "Unsere Datenschutzerklärung wird derzeit erstellt.",
-      "contact": "Bei Fragen kontaktiere uns: thierryvm@gmail.com",
       "backHome": "Zurück zur Startseite"
     },
     "cookies": {
@@ -519,12 +517,11 @@
       "manageMethod2": "Eingeloggt kannst du in Einstellungen → Cookies & Datenschutz jede Kategorie umschalten.",
       "manageMethod3": "Auf jeder Seite öffnet der Link \"Cookie-Einstellungen verwalten\" in der Fußzeile das Banner erneut.",
       "withdrawalHeading": "Widerruf der Einwilligung",
-      "withdrawalBody": "Gemäß DSGVO (Art. 7(3)) ist der Widerruf der Einwilligung genauso einfach wie deren Erteilung. Drei gleichwertige Methoden: 1) Einstellungen → Cookies & Datenschutz → \"Meine Wahl zurücksetzen\". 2) Fußzeile → \"Cookie-Einstellungen verwalten\". 3) E-Mail an thierryvm@gmail.com mit Betreff \"Cookie-Einwilligung widerrufen\".",
+      "withdrawalBody": "Gemäß DSGVO (Art. 7(3)) ist der Widerruf der Einwilligung genauso einfach wie deren Erteilung. Drei gleichwertige Methoden: 1) Einstellungen → Cookies & Datenschutz → \"Meine Wahl zurücksetzen\". 2) Fußzeile → \"Cookie-Einstellungen verwalten\". 3) E-Mail an {email} mit Betreff \"Cookie-Einwilligung widerrufen\".",
       "lifetimeHeading": "Lebensdauer",
       "lifetimeItem1": "Session: Ende der Navigation",
       "lifetimeItem2": "Präferenzen: 12 Monate",
       "lifetimeItem3": "Analytics: 6 Monate (falls akzeptiert)",
-      "contact": "Bei Fragen kontaktiere uns: thierryvm@gmail.com",
       "backHome": "Zurück zur Startseite"
     }
   },
