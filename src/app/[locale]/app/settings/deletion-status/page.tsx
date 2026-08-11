@@ -11,6 +11,7 @@ import { requireUser } from '@/lib/auth/require-user';
 import { formatDate, formatDateTime } from '@/lib/i18n/formatters';
 import { createClient } from '@/lib/supabase/server';
 import { CancelDeletionButton } from './CancelDeletionButton';
+import { RetryDeletionForm } from './RetryDeletionForm';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('app.deletionStatus');
@@ -25,7 +26,7 @@ export default async function DeletionStatusPage() {
 
   const { data } = await supabase
     .from('deletion_requests')
-    .select('requested_at, scheduled_for, status, cancelled_at')
+    .select('requested_at, scheduled_for, status, cancelled_at, retried_at')
     .eq('user_id', user.id)
     .order('requested_at', { ascending: false })
     .limit(1)
@@ -62,6 +63,10 @@ export default async function DeletionStatusPage() {
   const STATUS_PRESENTATION = {
     pending: { color: 'text-warning', label: 'statusPending' },
     processing: { color: 'text-warning', label: 'statusProcessing' },
+    // A state of PENDING NON-COMPLIANCE, not a resolved problem: quarantine
+    // does not stop the art. 12(3) clock. Hence `text-danger`, and a screen
+    // that offers a way out rather than an apology.
+    failed: { color: 'text-danger', label: 'statusFailed' },
     cancelled: { color: 'text-success', label: 'statusCancelled' },
     // Unreachable in practice (ADR-024 D1: the row cascades away with the
     // account, so nothing ever writes it), kept because the CHECK accepts it.
@@ -105,12 +110,48 @@ export default async function DeletionStatusPage() {
                   <dd className="mt-1 text-sm">{t('auditLogsValue')}</dd>
                 </div>
               </dl>
+              {/* The relaunch date belongs HERE, in the `pending` branch, and
+                  putting it in the `failed` one would be the natural mistake:
+                  *retry* moves the row back to `pending`, so a screen that only
+                  learned about `failed` would write `retried_at` and NEVER show
+                  it — a column added to be read that nothing forces to appear,
+                  which is the mute mechanism this whole change is about.
+
+                  A DATE, not a state: a date can be checked, a state is merely
+                  believed. */}
+              {data.retried_at && (
+                <p className="text-sm">
+                  {t('retriedOn', { date: formatDate(data.retried_at, locale) })}
+                </p>
+              )}
               <div className="flex flex-wrap gap-2">
                 <CancelDeletionButton />
                 <Button asChild variant="outline">
                   <Link href="/app/settings">{t('backToSettings')}</Link>
                 </Button>
               </div>
+            </>
+          )}
+
+          {/* Quarantine. The cancel button is BACK — the reason it is hidden
+              during `processing` is that a run HOLDS the row, and that reason
+              disappears here: a `failed` row is held by nobody (invariant n° 3
+              of the migration, `claimed_at is null`).
+
+              Two actions, opposite consequences, deliberately asymmetric in
+              cost: cancelling is one click, relaunching asks for the typed
+              address. And the copy says what is true — no notification was
+              sent, because the application sends none (ADR-023). */}
+          {data.status === 'failed' && (
+            <>
+              <p className="text-sm">{t('failedBody')}</p>
+              <div className="flex flex-wrap gap-2">
+                <CancelDeletionButton />
+                <Button asChild variant="outline">
+                  <Link href="/app/settings">{t('backToSettings')}</Link>
+                </Button>
+              </div>
+              <RetryDeletionForm email={user.email ?? ''} />
             </>
           )}
 

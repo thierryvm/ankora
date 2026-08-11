@@ -1037,6 +1037,8 @@
         "scheduledTitle": "Verwijdering in uitvoering",
         "scheduledBody": "Je account wordt verwijderd op <strong>{date}</strong>. Je kunt tot dan op elk moment annuleren.",
         "scheduledBodyProcessing": "Het verwijderen van je account is gestart. Dit kan niet meer worden geannuleerd.",
+        "scheduledTitleFailed": "Verwijdering mislukt",
+        "scheduledBodyFailed": "Je verwijderingsaanvraag is niet gelukt. Ze blijft geregistreerd — open de status om ze te annuleren of opnieuw te starten.",
         "viewStatus": "Status bekijken",
         "title": "Gevarenzone",
         "description": "Definitieve verwijdering van het account. 14 dagen grace period om te annuleren — daarna worden je financiële gegevens gewist en audit logs gepseudonimiseerd. Sommige technische authenticatielogs blijven bestaan.",
@@ -1120,6 +1122,7 @@
       "requestedOn": "Aangevraagd op {date}.",
       "statusPending": "In afwachting",
       "statusProcessing": "Bezig",
+      "statusFailed": "Mislukt",
       "statusUnknown": "Onbekende status",
       "processingBody": "Het verwijderen van je account is gestart. Dit kan niet meer worden geannuleerd.",
       "statusCancelled": "Geannuleerd",
@@ -1134,7 +1137,13 @@
       "cancelledNoDate": "Aanvraag geannuleerd. Je account blijft behouden.",
       "cancelButton": "Verwijdering annuleren",
       "cancelling": "Annuleren…",
-      "toastCancelled": "Aanvraag geannuleerd — je account blijft behouden"
+      "toastCancelled": "Aanvraag geannuleerd — je account blijft behouden",
+      "failedBody": "Het verwijderen van je account is na meerdere pogingen niet gelukt. Je aanvraag blijft geregistreerd: je kunt ze annuleren of hieronder opnieuw starten. Er is je geen e-mail gestuurd — Ankora verstuurt er geen.",
+      "retriedOn": "Aanvraag opnieuw gestart op {date}.",
+      "retryConfirmLabel": "Typ je e-mailadres om opnieuw te starten: <code>{email}</code>",
+      "retryButton": "Verwijdering opnieuw starten",
+      "retrying": "Opnieuw starten…",
+      "toastRetried": "Aanvraag opnieuw gestart — ze staat terug in de wachtrij"
     },
     "cockpit": {
       "santeProvisions": {
@@ -1497,6 +1506,10 @@
       "deletionRequestFailed": "Kan de verwijdering niet inplannen.",
       "deletionCancelFailed": "Kan de aanvraag niet annuleren.",
       "deletionCancelTooLate": "Het verwijderen is al gestart en kan niet meer worden geannuleerd.",
+      "deletionCancelNothing": "Er is geen aanvraag om te annuleren.",
+      "deletionAlreadyFailed": "Je vorige aanvraag is mislukt. Open de status om ze te annuleren of opnieuw te starten.",
+      "deletionRetryFailed": "Kan de verwijdering niet opnieuw starten.",
+      "deletionRetryNothing": "Deze aanvraag is niet meer mislukt — herlaad de pagina om de huidige staat te zien.",
       "exportLimited": "Export beperkt tot één keer per 5 minuten."
     },
     "onboarding": {

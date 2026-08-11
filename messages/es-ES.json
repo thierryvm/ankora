@@ -1037,6 +1037,8 @@
         "scheduledTitle": "Eliminación en curso",
         "scheduledBody": "Tu cuenta se eliminará el <strong>{date}</strong>. Puedes cancelar en cualquier momento hasta entonces.",
         "scheduledBodyProcessing": "La eliminación de tu cuenta ha comenzado. Ya no se puede cancelar.",
+        "scheduledTitleFailed": "Eliminación fallida",
+        "scheduledBodyFailed": "Tu solicitud de eliminación no se completó. Sigue registrada — abre su estado para cancelarla o relanzarla.",
         "viewStatus": "Ver el estado",
         "title": "Zona peligrosa",
         "description": "Eliminación definitiva de la cuenta. 14 días de gracia para cancelar — después, tus datos financieros se borran y los logs de auditoría se seudonimizan. Algunos registros técnicos de autenticación permanecen.",
@@ -1120,6 +1122,7 @@
       "requestedOn": "Solicitada el {date}.",
       "statusPending": "Pendiente",
       "statusProcessing": "En curso",
+      "statusFailed": "Fallida",
       "statusUnknown": "Estado desconocido",
       "processingBody": "La eliminación de tu cuenta ha comenzado. Ya no se puede cancelar.",
       "statusCancelled": "Cancelada",
@@ -1134,7 +1137,13 @@
       "cancelledNoDate": "Solicitud cancelada. Tu cuenta se conserva.",
       "cancelButton": "Cancelar la eliminación",
       "cancelling": "Cancelando…",
-      "toastCancelled": "Solicitud cancelada — tu cuenta se conserva"
+      "toastCancelled": "Solicitud cancelada — tu cuenta se conserva",
+      "failedBody": "La eliminación de tu cuenta no se completó tras varios intentos. Tu solicitud sigue registrada: puedes cancelarla o relanzarla abajo. No se te ha enviado ningún correo — Ankora no envía ninguno.",
+      "retriedOn": "Solicitud relanzada el {date}.",
+      "retryConfirmLabel": "Para relanzarla, escribe tu dirección de correo: <code>{email}</code>",
+      "retryButton": "Relanzar la eliminación",
+      "retrying": "Relanzando…",
+      "toastRetried": "Solicitud relanzada — vuelve a estar en la cola"
     },
     "cockpit": {
       "santeProvisions": {
@@ -1497,6 +1506,10 @@
       "deletionRequestFailed": "No se ha podido programar la eliminación.",
       "deletionCancelFailed": "No se ha podido cancelar la solicitud.",
       "deletionCancelTooLate": "La eliminación ya ha comenzado y no se puede cancelar.",
+      "deletionCancelNothing": "No hay ninguna solicitud que cancelar.",
+      "deletionAlreadyFailed": "Tu solicitud anterior ha fallado. Abre su estado para cancelarla o relanzarla.",
+      "deletionRetryFailed": "No se pudo relanzar la eliminación.",
+      "deletionRetryNothing": "Esta solicitud ya no está fallida — recarga la página para ver su estado actual.",
       "exportLimited": "Exportación limitada a una vez cada 5 minutos."
     },
     "onboarding": {

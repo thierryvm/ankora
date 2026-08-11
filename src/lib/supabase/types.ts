@@ -462,34 +462,49 @@ export type Database = {
       };
       deletion_requests: {
         Row: {
+          attempt_cycle_started_at: string | null;
+          attempts: number;
           cancelled_at: string | null;
           claimed_at: string | null;
           completed_at: string | null;
           id: string;
+          last_attempted_at: string | null;
+          last_error_code: string | null;
           reason: string | null;
           requested_at: string;
+          retried_at: string | null;
           scheduled_for: string;
           status: string;
           user_id: string;
         };
         Insert: {
+          attempt_cycle_started_at?: string | null;
+          attempts?: number;
           cancelled_at?: string | null;
           claimed_at?: string | null;
           completed_at?: string | null;
           id?: string;
+          last_attempted_at?: string | null;
+          last_error_code?: string | null;
           reason?: string | null;
           requested_at?: string;
+          retried_at?: string | null;
           scheduled_for: string;
           status?: string;
           user_id: string;
         };
         Update: {
+          attempt_cycle_started_at?: string | null;
+          attempts?: number;
           cancelled_at?: string | null;
           claimed_at?: string | null;
           completed_at?: string | null;
           id?: string;
+          last_attempted_at?: string | null;
+          last_error_code?: string | null;
           reason?: string | null;
           requested_at?: string;
+          retried_at?: string | null;
           scheduled_for?: string;
           status?: string;
           user_id?: string;

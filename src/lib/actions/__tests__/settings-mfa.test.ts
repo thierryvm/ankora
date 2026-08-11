@@ -89,9 +89,16 @@ vi.mock('@/lib/security/audit-log', () => ({
 vi.mock('@/lib/security/rate-limit', () => ({ rateLimit: rateLimitSpy }));
 vi.mock('@/lib/actions/revalidate', () => ({ revalidateAppPath: revalidateSpy }));
 vi.mock('@/lib/gdpr/export', () => ({ exportUserData: vi.fn() }));
+// This file does not exercise the deletion paths — the module is only mocked
+// because `../settings` imports it. `requestDeletion` still gets a default
+// resolved value rather than a bare `vi.fn()`: the action now reads `.kind` off
+// its return, and a mock resolving `undefined` would throw at RUNTIME while
+// passing the typecheck in silence. Untyped mocks are exactly where a
+// signature change hides.
 vi.mock('@/lib/gdpr/deletion', () => ({
-  requestDeletion: vi.fn(),
-  cancelDeletion: vi.fn(),
+  requestDeletion: vi.fn(async () => ({ kind: 'scheduled', scheduledFor: '2026-08-25' })),
+  cancelDeletion: vi.fn(async () => ({ cancelled: true })),
+  retryDeletion: vi.fn(async () => ({ retried: true })),
 }));
 
 type FakeFactor = { id: string; factor_type: string; status: string };

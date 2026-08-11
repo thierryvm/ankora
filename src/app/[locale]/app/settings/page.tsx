@@ -27,12 +27,15 @@ export default async function SettingsPage() {
       .from('deletion_requests')
       .select('scheduled_for, status')
       .eq('user_id', user.id)
-      // BOTH active statuses. Filtering on 'pending' alone made `deletion` null
-      // the moment a run claimed the request, so the danger zone re-showed the
-      // REQUEST FORM and dropped the only link to the status screen — exactly
-      // when the erasure had become irreversible. `.maybeSingle()` stays safe:
-      // `deletion_requests_one_active_idx` allows one active row per person.
-      .in('status', ['pending', 'processing'])
+      // ALL THREE active statuses. Filtering on 'pending' alone made `deletion`
+      // null the moment a run claimed the request, so the danger zone re-showed
+      // the REQUEST FORM and dropped the only link to the status screen —
+      // exactly when the erasure had become irreversible. `failed` joins them
+      // for the same reason (ADR-042 G7): a quarantined request is still a
+      // request, and the screen where it can be cancelled or relaunched is only
+      // reachable from here. `.maybeSingle()` stays safe precisely because
+      // `deletion_requests_one_active_idx` covers those same three statuses.
+      .in('status', ['pending', 'processing', 'failed'])
       .maybeSingle(),
     getCookieConsentAction(),
   ]);

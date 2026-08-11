@@ -78,6 +78,12 @@ export const AuditEvent = {
   GDPR_DELETION_REQUESTED: 'gdpr.deletion_requested',
   GDPR_DELETION_CANCELLED: 'gdpr.deletion_cancelled',
   GDPR_DELETION_COMPLETED: 'gdpr.deletion_completed',
+  // ADR-042 G5 — the person relaunching their own quarantined erasure. This
+  // row is NOT decorative: `retryDeletion()` resets `attempts` to 0, so the
+  // count of previous cycles survives here and nowhere else. Emitted without
+  // `resource_id`, like the rest of this family — the metadata allow-list would
+  // accept it, and it would put the person's UUID back beside a deletion event.
+  GDPR_DELETION_RETRIED: 'gdpr.deletion_retried',
 
   // Admin RBAC (PR-SEC-ADMIN 2026-05-10)
   ADMIN_ACCESS_GRANTED: 'admin.access.granted',

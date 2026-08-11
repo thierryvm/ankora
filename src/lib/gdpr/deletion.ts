@@ -2,8 +2,11 @@ import { createServiceRoleAdminClient, createServiceRoleClient } from '@/lib/sup
 import { logAuditEvent, AuditEvent } from '@/lib/security/audit-log';
 import {
   claimPendingDeletionsWith,
+  countDeletionQueueAlertsWith,
   executeDeletionWith,
+  recordDeletionAttemptWith,
   type ClaimedDeletion,
+  type DeletionErrorCode,
 } from '@/lib/gdpr/deletion-core';
 
 /**
@@ -47,10 +50,22 @@ import {
  */
 const GRACE_PERIOD_DAYS = 14;
 
+/**
+ * Discriminated on purpose, and the caller MUST branch on `kind`.
+ *
+ * A `failed` row has no honourable deadline: it is in quarantine and will never
+ * be claimed again. Returning its `scheduled_for` would be exactly what the
+ * 23505 branch below exists to prevent — stating a date the queue will not
+ * honour. The person is sent to the status screen instead, where *retry* waits.
+ */
+export type RequestDeletionResult =
+  | { kind: 'scheduled'; scheduledFor: string }
+  | { kind: 'already_failed' };
+
 export async function requestDeletion(
   userId: string,
   reason?: string,
-): Promise<{ scheduledFor: string }> {
+): Promise<RequestDeletionResult> {
   const supabase = createServiceRoleClient();
   const scheduledFor = new Date(Date.now() + GRACE_PERIOD_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
@@ -66,17 +81,23 @@ export async function requestDeletion(
     // request in flight; asking twice is not an error to show them, and
     // returning the NEW date would state a deadline the queue will not honour.
     // The existing one is the truth.
+    //
+    // `failed` is in the lookup because it is in the index (ADR-042 G7).
+    // Without it this branch would find nothing and THROW, and the person could
+    // never re-request their own erasure — a pure art. 17 blocker, caused by
+    // the very status added to make failures visible.
     if (error.code === '23505') {
       const { data } = await supabase
         .from('deletion_requests')
-        .select('scheduled_for')
+        .select('scheduled_for, status')
         .eq('user_id', userId)
-        .in('status', ['pending', 'processing'])
+        .in('status', ['pending', 'processing', 'failed'])
         .order('requested_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
-      if (data) return { scheduledFor: data.scheduled_for };
+      if (data?.status === 'failed') return { kind: 'already_failed' };
+      if (data) return { kind: 'scheduled', scheduledFor: data.scheduled_for };
     }
     throw new Error(`Failed to schedule deletion: ${error.message}`);
   }
@@ -85,7 +106,7 @@ export async function requestDeletion(
   // GDPR_DELETION_REQUESTED, and it has the request IP and user-agent that this
   // module does not. Logging from both produced two rows per request, one of
   // them impoverished — invisible only while audit writes were being refused.
-  return { scheduledFor };
+  return { kind: 'scheduled', scheduledFor };
 }
 
 export async function executeDeletion(userId: string): Promise<void> {
@@ -115,6 +136,105 @@ export async function claimPendingDeletions(batchSize: number): Promise<ClaimedD
   return claimPendingDeletionsWith(createServiceRoleClient(), batchSize);
 }
 
+/**
+ * Date the attempt and say WHY it failed — on the row, at the verdict.
+ *
+ * Both columns are written here and nowhere else, in one statement, because
+ * they mean the same thing at the same instant: *a real attempt happened, and
+ * this is how it ended*. Writing `last_attempted_at` at claim time instead
+ * would merely restate what `claimed_at` and `attempt_cycle_started_at` already
+ * say, and would erase the distinction between a row claimed five times and a
+ * row genuinely tried five times — the distinction the whole quarantine
+ * conjunction is built on (ADR-042 G1).
+ *
+ * Only on FAILURE. A successful erasure takes the request row with it (ADR-024
+ * D1: it cascades from `public.users`), so there is nothing left to annotate.
+ *
+ * Returns the number of rows touched, and the count is the point: this table
+ * carries FORCE ROW LEVEL SECURITY, and a privileged write there can return
+ * zero rows WITHOUT RAISING. A caller that ignores the count would be building
+ * exactly the mute mechanism this whole change removes.
+ */
+export async function recordDeletionAttempt(
+  requestId: string,
+  errorCode: DeletionErrorCode,
+): Promise<number> {
+  return recordDeletionAttemptWith(createServiceRoleClient(), requestId, errorCode);
+}
+
+/**
+ * How many rows are in quarantine right now — a number, and nothing else.
+ *
+ * `head: true` with `count: 'exact'` selects ZERO columns, so no identifier can
+ * reach the response body this ends up in. Read AFTER the run, so it reflects
+ * what the run left behind.
+ */
+export async function countStuckDeletions(): Promise<number> {
+  const { stuck } = await countDeletionQueueAlertsWith(createServiceRoleClient());
+  return stuck;
+}
+
+/**
+ * How many requests are within five days of the legal deadline — whatever their
+ * status, as long as they are not terminal.
+ *
+ * The width is a DEPENDENCY, not a comfort, and restricting it to `failed`
+ * would silently re-open two blind spots:
+ *
+ *  - a `pending` row starved by influx (the named residual of the claim order)
+ *    walks straight into non-compliance without ever becoming `failed`;
+ *  - anyone relaunching every four days keeps their own row out of quarantine
+ *    for ever, so a `failed`-only counter shows 0 while their erasure loops.
+ *
+ * `requested_at` never moves, so the art. 12(3) clock keeps running through all
+ * of it. What we are watching is the BREACH, not one of its causes.
+ *
+ * 25 days = the one-month obligation minus the ~5-day quarantine window. Zero
+ * columns selected: a number is all this returns.
+ */
+export async function countDeletionsNearBreach(): Promise<number> {
+  const { nearBreach } = await countDeletionQueueAlertsWith(createServiceRoleClient());
+  return nearBreach;
+}
+
+export type RetryDeletionResult = { retried: true } | { retried: false };
+
+/**
+ * Re-arm an erasure that gave up — the human gesture that replaces the
+ * automatic retry loop refused in ADR-042 G3.
+ *
+ * It resets the attempt CYCLE, not the history: `attempts` returns to 0 and the
+ * anchor to NULL, so the row is claimable again and its five-day clock starts
+ * over. `scheduled_for` is deliberately untouched — it dates the original
+ * request and the grace period has long since elapsed.
+ *
+ * The cross-cycle history is therefore NOT in this table any more: a row that
+ * failed 4 + 4 + 4 times becomes indistinguishable from one that failed 4. That
+ * history lives in the audit event the calling action emits, which is what
+ * makes that event non-negotiable rather than decorative.
+ *
+ * Returns whether a row actually moved. Two tabs open, a claim in between, and
+ * the relaunch lands on a row that is no longer `failed` — an issue that
+ * changed nothing must never present as a success.
+ */
+export async function retryDeletion(userId: string): Promise<RetryDeletionResult> {
+  const supabase = createServiceRoleClient();
+  const { data, error } = await supabase
+    .from('deletion_requests')
+    .update({
+      status: 'pending',
+      attempts: 0,
+      attempt_cycle_started_at: null,
+      retried_at: new Date().toISOString(),
+    })
+    .eq('user_id', userId)
+    .eq('status', 'failed')
+    .select('id');
+
+  if (error) throw new Error(`Failed to retry deletion: ${error.message}`);
+  return { retried: (data?.length ?? 0) > 0 };
+}
+
 export type CancelDeletionResult =
   | { cancelled: true }
   | { cancelled: false; reason: 'in_progress' | 'none' };
@@ -136,7 +256,12 @@ export async function cancelDeletion(userId: string): Promise<CancelDeletionResu
     .from('deletion_requests')
     .update({ status: 'cancelled', cancelled_at: new Date().toISOString() })
     .eq('user_id', userId)
-    .eq('status', 'pending')
+    // BOTH exits from the screen's point of view. Filtering `pending` alone
+    // made this a lie the day `failed` appeared: on a quarantined row the
+    // update touched nothing, `reason: 'none'` was not treated as an error, and
+    // the button announced "request cancelled" while the screen still showed
+    // the failure. The button is offered exactly where it can work.
+    .in('status', ['pending', 'failed'])
     .select('id');
 
   if (error) throw new Error(`Failed to cancel deletion: ${error.message}`);

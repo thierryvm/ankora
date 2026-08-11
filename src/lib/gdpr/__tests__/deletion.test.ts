@@ -70,7 +70,18 @@ function builder(table: string) {
       filters.push({ op: `${op}:${table}`, column, value });
       return link;
     },
-    in: () => link,
+    // Recorded like `.eq`, and it has to be: the scoping of `cancelDeletion`
+    // moved from `.eq('status', …)` to `.in('status', […])`. Left unrecorded,
+    // the assertion that a cancellation cannot touch a claimed row would have
+    // kept passing while proving nothing.
+    in: (column: string, value: unknown) => {
+      filters.push({ op: `${op}:${table}`, column, value });
+      return link;
+    },
+    lt: (column: string, value: unknown) => {
+      filters.push({ op: `${op}:${table}`, column, value });
+      return link;
+    },
     order: () => link,
     limit: () => link,
     maybeSingle: async () => take(`${op}:${table}`),
@@ -113,8 +124,12 @@ vi.mock('@/lib/security/audit-log', () => ({
 import {
   cancelDeletion,
   claimPendingDeletions,
+  countDeletionsNearBreach,
+  countStuckDeletions,
   executeDeletion,
+  recordDeletionAttempt,
   requestDeletion,
+  retryDeletion,
 } from '../deletion';
 
 beforeEach(() => {
@@ -171,8 +186,14 @@ describe('executeDeletion', () => {
 describe('requestDeletion', () => {
   it('schedules the erasure 14 days out', async () => {
     const before = Date.now();
-    const { scheduledFor } = await requestDeletion(USER_ID);
+    const result = await requestDeletion(USER_ID);
     const after = Date.now();
+
+    // The discriminant is asserted first, and not just narrowed: an action that
+    // reads `.scheduledFor` off the wrong branch is exactly the defect the
+    // union exists to make impossible.
+    expect(result.kind).toBe('scheduled');
+    const scheduledFor = result.kind === 'scheduled' ? result.scheduledFor : '';
 
     expect(calls).toEqual(['insert:deletion_requests']);
 
@@ -192,14 +213,40 @@ describe('requestDeletion', () => {
       error: { code: '23505', message: 'duplicate key value violates unique constraint' },
     });
     program('select:deletion_requests', {
-      data: { scheduled_for: '2026-08-10T00:00:00.000Z' },
+      data: { scheduled_for: '2026-08-10T00:00:00.000Z', status: 'pending' },
       error: null,
     });
 
-    const { scheduledFor } = await requestDeletion(USER_ID);
+    const result = await requestDeletion(USER_ID);
 
-    expect(scheduledFor).toBe('2026-08-10T00:00:00.000Z');
+    expect(result).toEqual({ kind: 'scheduled', scheduledFor: '2026-08-10T00:00:00.000Z' });
     expect(calls).toEqual(['insert:deletion_requests', 'select:deletion_requests']);
+  });
+
+  it('answers `already_failed` — never a deadline — when the existing request is quarantined', async () => {
+    // A `failed` row has NO honourable deadline: it is out of the batch and
+    // will never be claimed again. Returning its `scheduled_for` would be
+    // precisely what the 23505 branch exists to prevent — stating a date the
+    // queue will not honour. This is also the branch that keeps art. 17 open:
+    // without `failed` in the lookup, this call would find nothing and THROW,
+    // and the person could never re-request their own erasure.
+    program('insert:deletion_requests', {
+      error: { code: '23505', message: 'duplicate key value violates unique constraint' },
+    });
+    program('select:deletion_requests', {
+      data: { scheduled_for: '2026-08-01T00:00:00.000Z', status: 'failed' },
+      error: null,
+    });
+
+    await expect(requestDeletion(USER_ID)).resolves.toEqual({ kind: 'already_failed' });
+
+    // And the lookup covers all three ACTIVE statuses — the same three the
+    // uniqueness index covers. Any narrower and the branch above is dead code.
+    expect(filters).toContainEqual({
+      op: 'select:deletion_requests',
+      column: 'status',
+      value: ['pending', 'processing', 'failed'],
+    });
   });
 
   it('still throws when the conflicting request cannot be found afterwards', async () => {
@@ -232,17 +279,24 @@ describe('requestDeletion', () => {
 });
 
 describe('cancelDeletion', () => {
-  it('cancels the caller’s own pending request', async () => {
+  it('cancels the caller’s own request, whether it is pending or quarantined', async () => {
     program('update:deletion_requests', { data: [{ id: 'req-1' }], error: null });
 
     await expect(cancelDeletion(USER_ID)).resolves.toEqual({ cancelled: true });
 
     expect(calls).toEqual(['update:deletion_requests']);
-    // Both filters matter: without `status`, a cancellation would also rewrite
-    // requests already claimed by a run.
+    // Both filters matter, and each for its own reason. Without `user_id`, one
+    // cancellation would reach another person's row. Without the status list,
+    // it would also rewrite a request a run has already claimed.
+    //
+    // `failed` is in that list because the screen offers the button there —
+    // and it MUST be: while the filter said `pending` alone, cancelling a
+    // quarantined request touched zero rows and still reported success, so the
+    // button announced a cancellation over a screen still showing the failure.
+    // `processing` stays out: a run owns that row.
     expect(filters).toEqual([
       { op: 'update:deletion_requests', column: 'user_id', value: USER_ID },
-      { op: 'update:deletion_requests', column: 'status', value: 'pending' },
+      { op: 'update:deletion_requests', column: 'status', value: ['pending', 'failed'] },
     ]);
   });
 
@@ -267,6 +321,114 @@ describe('cancelDeletion', () => {
     program('update:deletion_requests', { error: { message: 'nope' } });
 
     await expect(cancelDeletion(USER_ID)).rejects.toThrow(/cancel deletion/i);
+  });
+});
+
+describe('retryDeletion', () => {
+  it('re-arms a quarantined request and resets the attempt CYCLE', async () => {
+    program('update:deletion_requests', { data: [{ id: 'req-1' }], error: null });
+
+    await expect(retryDeletion(USER_ID)).resolves.toEqual({ retried: true });
+
+    // Only a `failed` row, and only the caller's own. `pending` is absent on
+    // purpose: relaunching something already in the queue is a no-op that would
+    // silently reset a live attempt counter.
+    expect(filters).toEqual([
+      { op: 'update:deletion_requests', column: 'user_id', value: USER_ID },
+      { op: 'update:deletion_requests', column: 'status', value: 'failed' },
+    ]);
+  });
+
+  it('reports that nothing moved rather than a false success', async () => {
+    // Two tabs open, a claim in between: the relaunch lands on a row that is no
+    // longer `failed`. This is the same defect class as a cancellation that
+    // cancels nothing and says it did.
+    program('update:deletion_requests', { data: [], error: null });
+
+    await expect(retryDeletion(USER_ID)).resolves.toEqual({ retried: false });
+  });
+
+  it('propagates a relaunch failure', async () => {
+    program('update:deletion_requests', { error: { message: 'nope' } });
+
+    await expect(retryDeletion(USER_ID)).rejects.toThrow(/retry deletion/i);
+  });
+});
+
+describe('recordDeletionAttempt', () => {
+  it('returns the number of rows touched, because zero is a real outcome here', async () => {
+    program('update:deletion_requests', { data: [{ id: 'req-1' }], error: null });
+
+    await expect(recordDeletionAttempt('req-1', 'gotrue_error')).resolves.toBe(1);
+    expect(filters).toEqual([{ op: 'update:deletion_requests', column: 'id', value: 'req-1' }]);
+  });
+
+  it('returns 0 — WITHOUT raising — when the privileged write touches nothing', async () => {
+    // `deletion_requests` carries FORCE ROW LEVEL SECURITY, where a privileged
+    // write can match no row and report success. If this returned `void`, the
+    // attempt counter could stop being written and nothing would ever say so —
+    // the exact mute failure this whole change removes. The caller checks the
+    // count and logs.
+    program('update:deletion_requests', { data: [], error: null });
+
+    await expect(recordDeletionAttempt('req-1', 'unknown')).resolves.toBe(0);
+  });
+
+  it('propagates a write failure', async () => {
+    program('update:deletion_requests', { error: { message: 'nope' } });
+
+    await expect(recordDeletionAttempt('req-1', 'unknown')).rejects.toThrow(
+      /record deletion attempt/i,
+    );
+  });
+});
+
+describe('the admin counters', () => {
+  /** Two reads per call, issued in order: quarantined first, near-breach second. */
+  function programBothCounts(stuck: number, nearBreach: number) {
+    program('select:deletion_requests', { count: stuck, error: null });
+    program('select:deletion_requests', { count: nearBreach, error: null });
+  }
+
+  it('counts quarantined requests and nothing else', async () => {
+    programBothCounts(3, 9);
+
+    await expect(countStuckDeletions()).resolves.toBe(3);
+    expect(filters).toContainEqual({
+      op: 'select:deletion_requests',
+      column: 'status',
+      value: 'failed',
+    });
+  });
+
+  it('counts EVERY non-terminal request near the deadline, not just the failed ones', async () => {
+    // The width is the point. A `pending` row starved by influx never becomes
+    // `failed`, and anyone relaunching every four days keeps their row out of
+    // quarantine for ever: a `failed`-only counter would read 0 through both,
+    // while the art. 12(3) clock kept running. What is watched is the BREACH,
+    // not one of its causes.
+    programBothCounts(0, 1);
+
+    await expect(countDeletionsNearBreach()).resolves.toBe(1);
+
+    expect(filters).toContainEqual({
+      op: 'select:deletion_requests',
+      column: 'status',
+      value: ['pending', 'processing', 'failed'],
+    });
+
+    // 25 days back — one month minus the five-day quarantine window.
+    const cutoff = filters.find((f) => f.column === 'requested_at');
+    const age = Date.now() - new Date(String(cutoff?.value)).getTime();
+    expect(age).toBeGreaterThanOrEqual(24 * 24 * 60 * 60 * 1000);
+    expect(age).toBeLessThanOrEqual(26 * 24 * 60 * 60 * 1000);
+  });
+
+  it('propagates a counting failure instead of reporting a confident zero', async () => {
+    program('select:deletion_requests', { error: { message: 'permission denied' } });
+    program('select:deletion_requests', { count: 0, error: null });
+
+    await expect(countStuckDeletions()).rejects.toThrow(/count stuck deletions/i);
   });
 });
 
