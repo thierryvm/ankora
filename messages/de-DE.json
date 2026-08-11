@@ -229,8 +229,8 @@
       "titleLine1": "Du salaire au net disponible.",
       "titleLine2": "En un seul coup d'œil.",
       "description": "Plus de mystère sur où va ton argent. Chaque étape est visible : revenus, dépenses courantes, argent disponible. Tu vois immédiatement si un poste dérape.",
-      "ctaPrimary": "Voir un exemple",
-      "ctaSecondary": "Comment ça marche ?",
+      "ctaPrimary": "Eine Änderung testen",
+      "ctaSecondary": "Wie funktioniert das?",
       "waterfall": {
         "income": "Revenus",
         "incomeAmount": "+2 466 €",
@@ -278,14 +278,6 @@
           "scenario": "Avec ton choix"
         },
         "aria": "Graphique projection sur 6 mois de la réserve libre, avec et sans le changement choisi",
-        "months": {
-          "may": "mai",
-          "jun": "juin",
-          "jul": "juil",
-          "aug": "août",
-          "sep": "sept",
-          "oct": "oct"
-        },
         "thresholds": {
           "danger": "⚠️ Découvert estimé",
           "fragile": "Zone fragile",

@@ -69,16 +69,30 @@ describe('<Feature /> — the cascade as a statement (PR L3)', () => {
     expect(h2).toHaveAttribute('id', 'feature-heading');
   });
 
-  it('renders the 2 CTAs pointing at /signup and #principles', async () => {
-    await renderFeature();
-    expect(screen.getByRole('link', { name: /voir un exemple/i })).toHaveAttribute(
+  /**
+   * Les deux liens doivent AVANCER dans la page. « Voir un exemple » menait à
+   * /signup — un formulaire d'inscription, ou le cockpit pour un visiteur
+   * connecté (`redirectIfSignedIn`), jamais un exemple, alors que l'exemple est
+   * la carte affichée juste à côté. « Comment ça marche ? » renvoyait vers
+   * #principles, une section déjà dépassée par le lecteur.
+   *
+   * Le cas vérifie donc la DESTINATION et l'ORDRE : le simulateur est la
+   * section suivante, la FAQ vient après.
+   */
+  it('renders 2 CTAs that move the reader FORWARD (#simulator, then #faq)', async () => {
+    const { container } = await renderFeature();
+    expect(screen.getByRole('link', { name: /tester un changement/i })).toHaveAttribute(
       'href',
-      '/signup',
+      '#simulator',
     );
     expect(screen.getByRole('link', { name: /comment ça marche/i })).toHaveAttribute(
       'href',
-      '#principles',
+      '#faq',
     );
+    // Aucun lien de cette section ne doit repartir vers l'inscription : c'est
+    // le rôle du hero et du pied de page, pas celui d'une démonstration.
+    const hrefs = [...container.querySelectorAll('a')].map((a) => a.getAttribute('href'));
+    expect(hrefs).not.toContain('/signup');
   });
 
   it('exposes the cascade in a <figure> with a localised aria-label carrying NBSP amounts', async () => {

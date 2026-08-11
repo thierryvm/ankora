@@ -45,11 +45,13 @@ export const RESERVE_BASELINE_6M = [480, 612, 740, 866, 988, 1108] as const;
  */
 export const FLECHE_RATIO = 0.7;
 
-/**
- * i18n key suffixes for the SVG x-axis month labels. Matches cc-design line 196
- * but read via `landing.whatif.chart.months.{key}` so locales stay in control.
+/*
+ * `PROJECTION_MONTH_KEYS` a été supprimé le 11 août 2026. C'étaient six noms de
+ * mois FIGÉS (« mai … oct ») sous un sous-titre annonçant « 6 mois à partir
+ * d'aujourd'hui » : faux dix mois sur douze, et entièrement dans le passé à
+ * partir de novembre. L'axe est désormais calculé depuis la date du jour dans
+ * `WhatIfDemo.tsx` et formaté par `Intl`, ce qui le traduit sans clé.
  */
-export const PROJECTION_MONTH_KEYS = ['may', 'jun', 'jul', 'aug', 'sep', 'oct'] as const;
 
 /**
  * Threshold zones drawn behind the projection chart.

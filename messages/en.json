@@ -229,7 +229,7 @@
       "titleLine1": "From salary to net available.",
       "titleLine2": "At a single glance.",
       "description": "No more mystery about where your money goes. Every step is visible: income, daily expenses, available money. You see immediately if anything drifts.",
-      "ctaPrimary": "See an example",
+      "ctaPrimary": "Try a change",
       "ctaSecondary": "How does it work?",
       "waterfall": {
         "income": "Income",
@@ -278,14 +278,6 @@
           "scenario": "With your choice"
         },
         "aria": "6-month projection chart of free reserve, with and without the chosen change",
-        "months": {
-          "may": "May",
-          "jun": "Jun",
-          "jul": "Jul",
-          "aug": "Aug",
-          "sep": "Sep",
-          "oct": "Oct"
-        },
         "thresholds": {
           "danger": "⚠️ Estimated overdraft",
           "fragile": "Fragile zone",

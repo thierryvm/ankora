@@ -10,7 +10,6 @@ import { cn } from '@/lib/utils';
 
 import {
   FLECHE_RATIO,
-  PROJECTION_MONTH_KEYS,
   RESERVE_BASELINE_6M,
   THRESHOLD_ZONES,
   WHAT_IF_SCENARIOS,
@@ -52,7 +51,18 @@ const FLEX_BASELINE = H - P * 2 - 12;
  * `simulator/scenarios.ts`. Caveat reminds users this is a demo and Ankora
  * never imports bank data.
  */
-export function WhatIfDemoClient() {
+type Props = {
+  /**
+   * Les six libellés de mois de l'axe, calculés côté serveur à partir de la
+   * date du jour (cf. `WhatIfDemo.tsx`). Reçus en props plutôt que calculés
+   * ici : `new Date()` dans un composant client diverge du rendu serveur au
+   * passage de minuit, et une divergence d'hydratation sur la landing est
+   * exactement ce que #354 traque ailleurs.
+   */
+  mois: readonly string[];
+};
+
+export function WhatIfDemoClient({ mois }: Props) {
   const t = useTranslations('landing.whatif');
   // Pull the active locale so number formatting (slider value, annual KPI,
   // SVG edge labels) follows the user's chosen language. Hardcoding `fr-BE`
@@ -76,7 +86,10 @@ export function WhatIfDemoClient() {
   const newSeries = RESERVE_BASELINE_6M.map((b, i) => b + monthly * (i + 1));
   const yMax = Math.max(...newSeries, 1500);
 
-  const xAt = (i: number) => P + (i / (PROJECTION_MONTH_KEYS.length - 1)) * (W - P * 2);
+  // L'axe est défini par les DONNÉES, pas par les libellés : si les deux
+  // longueurs divergeaient un jour, le tracé resterait juste et seul un
+  // libellé manquerait, plutôt que l'inverse.
+  const xAt = (i: number) => P + (i / (RESERVE_BASELINE_6M.length - 1)) * (W - P * 2);
   const yAt = (v: number) => H - P - (v / yMax) * FLEX_BASELINE;
 
   const yAt0 = yAt(0);
@@ -344,11 +357,11 @@ export function WhatIfDemoClient() {
               );
             })}
 
-            {/* X-axis month labels */}
+            {/* X-axis month labels — calculés depuis aujourd'hui, cf. Props. */}
             <g aria-hidden="true">
-              {PROJECTION_MONTH_KEYS.map((monthKey, i) => (
+              {mois.map((libelle, i) => (
                 <text
-                  key={monthKey}
+                  key={`${i}-${libelle}`}
                   x={xAt(i)}
                   y={H - 10}
                   fontSize="10"
@@ -357,7 +370,7 @@ export function WhatIfDemoClient() {
                   fill="var(--color-muted-foreground)"
                   textAnchor="middle"
                 >
-                  {t(`chart.months.${monthKey}`)}
+                  {libelle}
                 </text>
               ))}
             </g>
