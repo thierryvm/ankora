@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 
 import messages from '../../../../messages/fr-BE.json';
@@ -164,6 +164,55 @@ describe('<ConsentBanner /> — extended (PR-LEGAL-1)', () => {
     reopenConsentBanner();
     expect(window.localStorage.getItem(STORAGE_KEY)).toBeNull();
     expect(window.localStorage.getItem(REOPEN_KEY)).toBe('1');
+  });
+
+  /**
+   * Régression, signalée par @thierry le 11 août 2026 sur la landing en
+   * production : cliquer « Modifier mes préférences cookies » ne ramenait pas
+   * la bannière ; seul un rechargement complet la faisait revenir.
+   *
+   * Les deux cas ci-dessus passaient pourtant, et passent toujours — c'est ce
+   * qui rend ce test nécessaire plutôt que redondant :
+   *
+   * - « reopens when the reopen flag is set » pose le drapeau AVANT le rendu.
+   *   Il exerce le chemin du rechargement, précisément celui qui fonctionnait.
+   * - « reopenConsentBanner() clears the decision » n'assertit que sur
+   *   `localStorage`, sans jamais monter la bannière. Le mécanisme était prouvé,
+   *   l'effet visible ne l'était pas — et c'est l'effet visible qui portait le
+   *   défaut.
+   *
+   * Le seul cas qui échoue sans le correctif est celui-ci : DÉCIDER, puis
+   * rouvrir SANS démonter le composant. C'est la situation réelle, la bannière
+   * vivant dans le layout racine — son état `dismissed` survit donc à toute
+   * navigation client.
+   *
+   * L'enjeu est réglementaire, pas cosmétique : le retrait du consentement doit
+   * être aussi simple que son octroi (RGPD art. 7(3)). Un retrait qui exige un
+   * rechargement complet ne l'est pas.
+   */
+  it('reopens WITHOUT a remount after a decision was taken in the same session', async () => {
+    render(wrapped());
+
+    // 1. L'utilisateur décide — la bannière disparaît.
+    fireEvent.click(screen.getByRole('button', { name: messages.consent.acceptAll }));
+    await waitFor(() => {
+      expect(readStored()).toMatchObject({ analytics: true, marketing: true });
+    });
+    expect(
+      screen.queryByRole('button', { name: messages.consent.acceptAll }),
+    ).not.toBeInTheDocument();
+
+    // 2. Il clique « Modifier mes préférences cookies » dans le pied de page.
+    //    Aucun démontage, aucun rechargement : exactement ce que fait le lien.
+    act(() => {
+      reopenConsentBanner();
+    });
+
+    // 3. La bannière doit revenir. Sans le correctif, `dismissed` reste à true
+    //    et l'annule, alors même que le store a bien été mis à jour.
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: messages.consent.acceptAll })).toBeInTheDocument();
+    });
   });
 
   it('getServerSnapshot returns a referentially stable value across calls (no React loop)', () => {
