@@ -110,7 +110,7 @@ Elles se déclenchent quand une COPIE du logiciel est remise à quelqu'un. Ankor
 | `prettier-plugin-tailwindcss` | 0.7.2 | MIT |
 | `sharp` | 0.35.3 | Apache-2.0 |
 | `tailwindcss` | 4.2.2 | MIT |
-| `tsx` | 4.21.0 | MIT |
+| `tsx` | 4.22.5 | MIT |
 | `typescript` | 5.9.3 | Apache-2.0 |
 | `vitest` | 4.1.4 | MIT |
 
