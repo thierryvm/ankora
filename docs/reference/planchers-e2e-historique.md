@@ -19,10 +19,29 @@ les plus sensibles de l'app.
 Deux jobs, donc **deux planchers distincts** — un chiffre global agrégé serait
 ininterprétable au premier conflit, donc ignoré :
 
-| Job                              | Plancher au 11 août 2026                                  |
-| -------------------------------- | --------------------------------------------------------- |
-| `Playwright E2E`                 | **241 passed** (231 au 09/08, 228 au 06/08 — cf. infra)   |
-| `Playwright E2E (authenticated)` | **50 passed** (45 avant, +5 `gdpr-deletion-queue` — PR-C) |
+| Job                              | Plancher au 11 août 2026                                           |
+| -------------------------------- | ------------------------------------------------------------------ |
+| `Playwright E2E`                 | **247 passed** (241 plus tôt le 11/08, 231 au 09/08, 228 au 06/08) |
+| `Playwright E2E (authenticated)` | **50 passed** (45 avant, +5 `gdpr-deletion-queue` — PR-C)          |
+
+> **Public : 241 → 247, mesuré le 2026-08-11**, à la correction de
+> [#348](https://github.com/thierryvm/ankora/issues/348). Deux cas ajoutés à
+> `e2e/consent-first-visit.spec.ts`, **× trois projets** (`chromium-desktop`,
+> `mobile-safari`, `mobile-chrome`) — la spec n'est pas sous `mobile-ios/`, donc
+> les trois projets iPhone ne la découvrent pas.
+>
+> **Mesuré dans les deux sens** : la spec rend **`6 passed`** en excluant les deux
+> nouveaux titres et **`12 passed`** avec. Delta **+6**, sans reste.
+>
+> **Authentifié inchangé à 50** : ce fichier ne porte aucun marqueur de seed
+> (`adminClientOrNull`, `seededUser`), donc la sélection authentifiée ne le
+> découvre pas et `e2e/authenticated-specs.json` ne bouge pas.
+>
+> Les deux cas restent sur le `test` de base de `@playwright/test`, jamais sur la
+> fixture partagée — c'est tout l'objet de ce fichier. Y brancher la fixture
+> reviendrait à les supprimer sans le dire.
+
+---
 
 > **Authentifié : 45 → 50, mesuré le 2026-08-11**, à la livraison de PR-C (ADR-042).
 > Les cinq cas s'ajoutent à `e2e/gdpr-deletion-queue.spec.ts`, **sans nouveau
