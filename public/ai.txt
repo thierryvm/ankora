@@ -56,4 +56,4 @@ Disallow: /auth/
 Disallow: /onboarding/
 Disallow: /api/
 
-Contact: thierryvm@gmail.com
+Contact: https://ankora.be/legal/privacy

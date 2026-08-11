@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 
+import { brand } from '@/lib/brand';
+
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Prose, ProseMeta } from '@/components/layout/Prose';
@@ -70,7 +72,7 @@ export default async function CookiesPage() {
           </ol>
 
           <h2>{t('withdrawalHeading')}</h2>
-          <p>{t('withdrawalBody')}</p>
+          <p>{t('withdrawalBody', { email: brand.privacyEmail })}</p>
 
           <h2>{t('lifetimeHeading')}</h2>
           <ul>

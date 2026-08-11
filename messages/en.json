@@ -429,7 +429,6 @@
         "body": "These terms are governed by Belgian law. Competent court: Brussels."
       },
       "draft": "Our terms of service are being drafted.",
-      "contact": "For any questions, contact us: thierryvm@gmail.com",
       "backHome": "Back to home"
     },
     "privacy": {
@@ -438,7 +437,7 @@
       "title": "Privacy policy",
       "s1": {
         "heading": "1. Data controller",
-        "body": "Ankora, published by Thierry Vanmeeteren (Belgium). Contact: <mail>thierryvm@gmail.com</mail>."
+        "body": "Ankora, published by Thierry Vanmeeteren (Belgium). Contact: <mail>{email}</mail>."
       },
       "s2": {
         "heading": "2. Data collected",
@@ -494,7 +493,6 @@
         "body": "Any material change to this policy is notified by email and requires your renewed consent to keep using the service."
       },
       "draft": "Our privacy policy is being drafted.",
-      "contact": "For any questions, contact us: thierryvm@gmail.com",
       "backHome": "Back to home"
     },
     "cookies": {
@@ -519,12 +517,11 @@
       "manageMethod2": "When logged in, Settings → Cookies & privacy lets you toggle each category.",
       "manageMethod3": "From any page, the \"Manage cookie preferences\" link in the footer reopens the banner.",
       "withdrawalHeading": "Withdrawing consent",
-      "withdrawalBody": "Under GDPR (art. 7(3)), withdrawing consent is as easy as giving it. Three equivalent methods: 1) Settings → Cookies & privacy → \"Reset my choice\". 2) Footer → \"Manage cookie preferences\". 3) Email thierryvm@gmail.com with subject \"Cookies consent withdrawal\".",
+      "withdrawalBody": "Under GDPR (art. 7(3)), withdrawing consent is as easy as giving it. Three equivalent methods: 1) Settings → Cookies & privacy → \"Reset my choice\". 2) Footer → \"Manage cookie preferences\". 3) Email {email} with subject \"Cookies consent withdrawal\".",
       "lifetimeHeading": "Lifetime",
       "lifetimeItem1": "Session: end of browsing",
       "lifetimeItem2": "Preferences: 12 months",
       "lifetimeItem3": "Analytics: 6 months (if accepted)",
-      "contact": "For any questions, contact us: thierryvm@gmail.com",
       "backHome": "Back to home"
     }
   },

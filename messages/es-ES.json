@@ -429,7 +429,6 @@
         "body": "Estas CGU están sujetas al derecho belga. Tribunal competente: Bruselas."
       },
       "draft": "Nuestras condiciones generales de uso están en proceso de redacción.",
-      "contact": "Para cualquier pregunta, contáctanos: thierryvm@gmail.com",
       "backHome": "Volver al inicio"
     },
     "privacy": {
@@ -438,7 +437,7 @@
       "title": "Política de privacidad",
       "s1": {
         "heading": "1. Responsable del tratamiento",
-        "body": "Ankora, editado por Thierry Vanmeeteren (Bélgica). Contacto: <mail>thierryvm@gmail.com</mail>."
+        "body": "Ankora, editado por Thierry Vanmeeteren (Bélgica). Contacto: <mail>{email}</mail>."
       },
       "s2": {
         "heading": "2. Datos recogidos",
@@ -494,7 +493,6 @@
         "body": "Toda modificación material de esta política se notifica por email y requiere tu consentimiento renovado para seguir utilizando el servicio."
       },
       "draft": "Nuestra política de privacidad está en proceso de redacción.",
-      "contact": "Para cualquier pregunta, contáctanos: thierryvm@gmail.com",
       "backHome": "Volver al inicio"
     },
     "cookies": {
@@ -519,12 +517,11 @@
       "manageMethod2": "Una vez identificado, en Ajustes → Cookies y privacidad puedes activar/desactivar cada categoría.",
       "manageMethod3": "Desde cualquier página, el enlace \"Gestionar preferencias de cookies\" en el pie de página reabre el banner.",
       "withdrawalHeading": "Retirada del consentimiento",
-      "withdrawalBody": "Según el RGPD (art. 7(3)), retirar el consentimiento es tan fácil como darlo. Tres métodos equivalentes: 1) Ajustes → Cookies y privacidad → \"Restablecer mi elección\". 2) Pie de página → \"Gestionar preferencias de cookies\". 3) Correo a thierryvm@gmail.com con el asunto \"Retirada del consentimiento de cookies\".",
+      "withdrawalBody": "Según el RGPD (art. 7(3)), retirar el consentimiento es tan fácil como darlo. Tres métodos equivalentes: 1) Ajustes → Cookies y privacidad → \"Restablecer mi elección\". 2) Pie de página → \"Gestionar preferencias de cookies\". 3) Correo a {email} con el asunto \"Retirada del consentimiento de cookies\".",
       "lifetimeHeading": "Duración",
       "lifetimeItem1": "Sesión: fin de la navegación",
       "lifetimeItem2": "Preferencias: 12 meses",
       "lifetimeItem3": "Analíticas: 6 meses (si se aceptan)",
-      "contact": "Para cualquier pregunta, contáctanos: thierryvm@gmail.com",
       "backHome": "Volver al inicio"
     }
   },

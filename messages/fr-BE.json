@@ -429,7 +429,6 @@
         "body": "Ces CGU sont soumises au droit belge. Tribunal compétent : Bruxelles."
       },
       "draft": "Nos conditions générales d'utilisation sont en cours de rédaction.",
-      "contact": "Pour toute question, contacte-nous : thierryvm@gmail.com",
       "backHome": "Retour à l'accueil"
     },
     "privacy": {
@@ -438,7 +437,7 @@
       "title": "Politique de confidentialité",
       "s1": {
         "heading": "1. Responsable de traitement",
-        "body": "Ankora, édité par Thierry Vanmeeteren (Belgique). Contact : <mail>thierryvm@gmail.com</mail>."
+        "body": "Ankora, édité par Thierry Vanmeeteren (Belgique). Contact : <mail>{email}</mail>."
       },
       "s2": {
         "heading": "2. Données collectées",
@@ -494,7 +493,6 @@
         "body": "Toute modification matérielle de cette politique est notifiée par email et nécessite ton consentement renouvelé pour continuer à utiliser le service."
       },
       "draft": "Notre politique de confidentialité est en cours de rédaction.",
-      "contact": "Pour toute question, contacte-nous : thierryvm@gmail.com",
       "backHome": "Retour à l'accueil"
     },
     "cookies": {
@@ -519,12 +517,11 @@
       "manageMethod2": "Connecté, dans Paramètres → Cookies & confidentialité, tu peux activer/désactiver chaque catégorie.",
       "manageMethod3": "Depuis n'importe quelle page, le lien « Modifier mes préférences cookies » dans le pied de page rouvre le bandeau.",
       "withdrawalHeading": "Retrait du consentement",
-      "withdrawalBody": "Conformément au RGPD (art. 7(3)), retirer ton consentement est aussi simple que de le donner. Trois méthodes équivalentes : 1) Paramètres → Cookies & confidentialité → bouton « Réinitialiser mon choix ». 2) Pied de page → « Modifier mes préférences cookies ». 3) Email à thierryvm@gmail.com avec l'objet « Retrait consentement cookies ».",
+      "withdrawalBody": "Conformément au RGPD (art. 7(3)), retirer ton consentement est aussi simple que de le donner. Trois méthodes équivalentes : 1) Paramètres → Cookies & confidentialité → bouton « Réinitialiser mon choix ». 2) Pied de page → « Modifier mes préférences cookies ». 3) Email à {email} avec l'objet « Retrait consentement cookies ».",
       "lifetimeHeading": "Durée de vie",
       "lifetimeItem1": "Session : fin de navigation",
       "lifetimeItem2": "Préférences : 12 mois",
       "lifetimeItem3": "Analytics : 6 mois (si acceptés)",
-      "contact": "Pour toute question, contacte-nous : thierryvm@gmail.com",
       "backHome": "Retour à l'accueil"
     }
   },
