@@ -53,7 +53,7 @@ test.describe('THI-195 — simulator drawer', () => {
       // URL must NOT have navigated — the drawer is in-page.
       await expect(page).toHaveURL(/\/app\b(?!\/simulator)/);
       // The calculator mounted: the three mode pills come from SimulatorClient.
-      await expect(page.getByRole('button', { name: 'Annuler une charge' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Annuler une facture' })).toBeVisible();
     } finally {
       await deleteSeededUser(admin, user.userId);
     }
@@ -138,7 +138,7 @@ test.describe('THI-195 — simulator drawer', () => {
       await expect(drawer).toBeVisible();
 
       // Q3 guided default: no charge pre-selected → empty impact, no rent default.
-      await expect(drawer.getByText("Choisis une charge pour voir l'impact.")).toBeVisible();
+      await expect(drawer.getByText("Choisis une facture pour voir l'impact.")).toBeVisible();
 
       // Select the seeded charge (Radix option renders in a portal).
       await drawer.locator('#chargeId').click();

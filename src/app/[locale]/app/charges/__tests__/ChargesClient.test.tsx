@@ -841,7 +841,9 @@ describe('<ChargesClient /> — chantier 3: obligations in one list', () => {
     renderCharges([monthly], { commitmentInstalments: [instalment] });
     expect(screen.getByTestId('charges-group-commitments')).toBeInTheDocument();
     expect(screen.getByTestId('charges-instalment-spf')).toBeInTheDocument();
-    expect(screen.getByTestId('charges-instalment-position-spf')).toHaveTextContent('échéance 5/11');
+    expect(screen.getByTestId('charges-instalment-position-spf')).toHaveTextContent(
+      'échéance 5/11',
+    );
     expect(screen.getByTestId('charges-instalment-amount-spf')).toHaveTextContent(/220/);
   });
 
@@ -998,10 +1000,10 @@ describe('<ChargesClient /> — chantier 3: the conversion entry point', () => {
       fireEvent.click(screen.getByTestId('charge-edit-convert'));
     });
     // No horizon yet: the button is disabled and the degraded-case copy says
-    // what happens if none of the three is known — the charge stays a charge.
+    // what happens if none of the three is known — the bill stays a bill.
     expect(screen.getByTestId('convert-charge-submit')).toBeDisabled();
     expect(screen.getByTestId('convert-charge-no-horizon')).toHaveTextContent(
-      /la charge reste une charge/,
+      /la facture reste une facture/,
     );
     expect(convertChargeMock).not.toHaveBeenCalled();
   });

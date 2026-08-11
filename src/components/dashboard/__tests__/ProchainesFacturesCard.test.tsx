@@ -184,7 +184,7 @@ describe('<ProchainesFacturesCard /> — #349, le total couvre les deux familles
       charges: [],
       commitments: [makeCommitment({ id: 'k1', installmentAmount: 400 })],
     });
-    // Sans ce garde-fou : « Aucune charge active pour le moment » pendant que
+    // Sans ce garde-fou : « Aucune facture active pour le moment » pendant que
     // 400 € quittent le compte.
     expect(screen.queryByTestId('prochaines-factures-empty')).toBeNull();
     expect(screen.getByTestId('prochaines-factures-remaining')).toHaveTextContent(/400/);

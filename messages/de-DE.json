@@ -23,7 +23,7 @@
       "myCockpit": "Mein Cockpit",
       "dashboard": "Dashboard",
       "accounts": "Konten",
-      "charges": "Fixkosten",
+      "charges": "Rechnungen",
       "expenses": "Ausgaben",
       "simulator": "Simulator",
       "settings": "Einstellungen",
@@ -660,23 +660,23 @@
       "incomeLabel": "Nettoeinkommen monatlich (€)"
     },
     "step3": {
-      "title": "Deine ersten Fixkosten (optional)",
+      "title": "Deine erste Rechnung (optional)",
       "description": "Füge eine Miete, eine Versicherung, ein Abo hinzu…",
       "labelLabel": "Bezeichnung",
       "labelPlaceholder": "Miete, Autoversicherung…",
       "amountLabel": "Betrag (€)",
       "frequencyLabel": "Frequenz",
       "dueMonthLabel": "Referenzmonat",
-      "skipLater": "Ich trage meine Fixkosten später ein"
+      "skipLater": "Ich trage meine Rechnungen später ein"
     }
   },
   "app": {
     "dashboard": {
       "metaTitle": "Dashboard",
       "headerTitle": "{month} — dein Cockpit",
-      "emptyTitle": "Beginne mit dem Hinzufügen deiner Fixkosten",
+      "emptyTitle": "Beginne mit dem Hinzufügen deiner Rechnungen",
       "emptyDescription": "Miete, Versicherungen, Abos — Ankora verteilt sie für dich auf 12 Monate.",
-      "emptyCta": "Fixkosten hinzufügen",
+      "emptyCta": "Rechnung hinzufügen",
       "kpiProvisionsMonthly": "Rücklagen / Monat",
       "kpiProvisionsAnnualHint": "Jährlich: {amount}",
       "kpiHealth": "Rücklagen-Status",
@@ -702,7 +702,7 @@
       "transferEpargneHint": "{provision} zurückzulegen − {bills} an Rechnungen diesen Monat",
       "transferPrincipalRemaining": "Nach deinen Ausgaben · {month}",
       "transferPrincipalRemainingHint": "Nach {bills} Rechnungen und {commitments} Raten.",
-      "ctaCharges": "Meine Fixkosten",
+      "ctaCharges": "Meine Rechnungen",
       "ctaExpenses": "Meine Ausgaben",
       "ctaSimulator": "Simulieren",
       "expensesTitle": "Ausgaben — {month}",
@@ -715,16 +715,16 @@
       "commitmentsSectionHeading": "Meine Verpflichtungen"
     },
     "charges": {
-      "title": "Meine Fixkosten",
-      "subtitle": "Jede Fixkost wird automatisch auf 12 Monate verteilt.",
-      "addFormTitle": "Fixkosten hinzufügen",
-      "emptyState": "Noch keine Fixkosten.",
+      "title": "Meine Rechnungen",
+      "subtitle": "Jede Rechnung wird automatisch auf 12 Monate verteilt.",
+      "addFormTitle": "Rechnung hinzufügen",
+      "emptyState": "Noch keine Rechnungen.",
       "labelLabel": "Bezeichnung",
       "amountLabel": "Betrag (€)",
       "frequencyLabel": "Frequenz",
       "dueMonthLabel": "Referenzmonat",
       "paymentDayLabel": "Tag im Monat",
-      "paymentDayHint": "Der Tag, an dem die Fixkost abgebucht wird (1–31).",
+      "paymentDayHint": "Der Tag, an dem die Rechnung abgebucht wird (1–31).",
       "cadence": {
         "frequencyLabel": "Frequenz",
         "dayLabel": "Tag im Monat",
@@ -736,15 +736,15 @@
       },
       "addButton": "Hinzufügen",
       "adding": "Hinzufügen…",
-      "count": "{count, plural, =0 {keine Fixkosten} one {1 Fixkosten-Eintrag} other {# Fixkosten-Einträge}}",
+      "count": "{count, plural, =0 {keine Rechnungen} one {1 Rechnung} other {# Rechnungen}}",
       "totalMonthlyLabel": "Monatlich verteilt",
       "totalAnnualLabel": "Jährliches Äquivalent",
       "referenceFormat": "{frequency} · Ref. {month}",
       "deleteAria": "{label} löschen",
       "editAria": "{label} bearbeiten",
-      "toastCreated": "Fixkosten hinzugefügt",
-      "toastUpdated": "Fixkosten aktualisiert",
-      "toastDeleted": "Fixkosten gelöscht",
+      "toastCreated": "Rechnung hinzugefügt",
+      "toastUpdated": "Rechnung aktualisiert",
+      "toastDeleted": "Rechnung gelöscht",
       "toastMarkedPaid": "Rechnung als bezahlt markiert",
       "toastMarkedUnpaid": "Rechnung als zu zahlen markiert",
       "markPaidAria": "{label} als bezahlt markieren",
@@ -771,7 +771,7 @@
       "toastWatched": "Zu „Im Blick“ hinzugefügt",
       "toastUnwatched": "Aus „Im Blick“ entfernt",
       "drawer": {
-        "title": "Fixkosten bearbeiten",
+        "title": "Rechnung bearbeiten",
         "save": "Speichern",
         "saving": "Speichern…",
         "cancel": "Abbrechen",
@@ -780,7 +780,7 @@
       "aPayerCeMoisLabel": "Diesen Monat fällig",
       "aPayerCeMoisHint": "Was wirklich vom Konto abgeht — Rechnungen und Raten zusammen.",
       "effortLisseLabel": "Geglätteter Aufwand",
-      "effortLisseHint": "Monatliche Kosten + geglättete Rücklagen + Verpflichtungsraten.",
+      "effortLisseHint": "Monatliche Rechnungen + geglättete Rücklagen + Verpflichtungsraten.",
       "commitmentsGroupTitle": "Kredite & Ratenpläne",
       "installmentPosition": "Rate {index}/{total}",
       "commitmentRemaining": "noch {amount}",
@@ -821,9 +821,9 @@
         "submit": "Umwandeln",
         "submitting": "Wird umgewandelt…",
         "cancel": "Abbrechen",
-        "noHorizon": "Ohne Horizont bleibt die Kostenposition eine Kostenposition: das Budget bleibt richtig, nur der Countdown fehlt.",
+        "noHorizon": "Ohne Horizont bleibt die Rechnung eine Rechnung: das Budget bleibt richtig, nur der Countdown fehlt.",
         "toastConverted": "{label} ist jetzt eine Verpflichtung · Ende {end}",
-        "drawerHint": "Ist diese Kostenposition ein Kredit mit Ende, kann Ankora den Countdown zeigen."
+        "drawerHint": "Ist diese Rechnung ein Kredit mit Ende, kann Ankora den Countdown zeigen."
       }
     },
     "accounts": {
@@ -837,7 +837,7 @@
       "saving": "Speichern…",
       "income": {
         "title": "Nettoeinkommen (monatlich)",
-        "description": "Das Gehalt, das jeden Monat auf deinem Hauptkonto eingeht. Dient zur Berechnung dessen, was dir nach Fixkosten und Überweisung auf Alltag bleibt.",
+        "description": "Das Gehalt, das jeden Monat auf deinem Hauptkonto eingeht. Dient zur Berechnung dessen, was dir nach Rechnungen und Überweisung auf Alltag bleibt.",
         "placeholder": "Z. B. 2500",
         "toastSaved": "Monatliches Einkommen aktualisiert"
       },
@@ -856,7 +856,7 @@
       },
       "kind": {
         "principal": {
-          "description": "Erhält das Gehalt, zahlt die monatlichen Fixkosten.",
+          "description": "Erhält das Gehalt, zahlt die monatlichen Rechnungen.",
           "usage": "Not used in any calculation yet."
         },
         "vieCourante": {
@@ -948,7 +948,7 @@
     },
     "expenses": {
       "title": "Meine Ausgaben",
-      "subtitle": "Die Ausgaben abseits wiederkehrender Fixkosten — Einkäufe, Restaurant, Freizeit…",
+      "subtitle": "Die Ausgaben abseits wiederkehrender Rechnungen — Einkäufe, Restaurant, Freizeit…",
       "addSheet": {
         "title": "Neue Ausgabe",
         "cancel": "Abbrechen",
@@ -1037,7 +1037,7 @@
       },
       "data": {
         "title": "Meine Daten",
-        "description": "DSGVO-Datenübertragbarkeit (Art. 20) — lade ein JSON mit deinem Profil, deinen Budgets, Fixkosten, Ausgaben, Kategorien, Einwilligungen und deinem Aktivitätsprotokoll herunter.",
+        "description": "DSGVO-Datenübertragbarkeit (Art. 20) — lade ein JSON mit deinem Profil, deinen Budgets, Rechnungen, Ausgaben, Kategorien, Einwilligungen und deinem Aktivitätsprotokoll herunter.",
         "exportButton": "Meine Daten herunterladen",
         "exporting": "Generieren…",
         "toastDownloaded": "Export heruntergeladen"
@@ -1083,14 +1083,14 @@
         "title": "Szenario",
         "description": "Wähle eine zu simulierende Aktion.",
         "modes": {
-          "cancel": "Fixkosten kündigen",
+          "cancel": "Rechnung kündigen",
           "negotiate": "Neu verhandeln",
-          "add": "Fixkosten hinzufügen"
+          "add": "Rechnung hinzufügen"
         }
       },
       "fields": {
-        "charge": "Fixkosten",
-        "chargePlaceholder": "Wähle einen Posten zum Simulieren",
+        "charge": "Rechnung",
+        "chargePlaceholder": "Wähle eine Rechnung zum Simulieren",
         "chargeExample": "z. B. deinen Handytarif neu verhandeln, ein Streaming-Abo kündigen…",
         "newAmount": "Neuer Betrag (€)",
         "label": "Bezeichnung",
@@ -1100,7 +1100,7 @@
       },
       "impact": {
         "title": "Auswirkung",
-        "empty": "Wähle einen Posten, um die Auswirkung zu sehen.",
+        "empty": "Wähle eine Rechnung, um die Auswirkung zu sehen.",
         "resteDisponible": "Monatsbudget",
         "resteDisponibleRange": "Monatsbudget: von {from} bis {to} pro Monat",
         "perMonth": "/ Monat",
@@ -1164,7 +1164,7 @@
         "statutAJour": "On track ✨",
         "deficit": "Deficit detected:",
         "rattrapageDescription": "Includes +{amount} € to recover the deficit over 3 months.",
-        "tooltip": "The algorithm computes how much your Savings account should hold today to absorb all upcoming periodic charges smoothly."
+        "tooltip": "The algorithm computes how much your Savings account should hold today to absorb all upcoming periodic bills smoothly."
       },
       "virements": {
         "title": "Transfer Assistant",
@@ -1187,7 +1187,7 @@
     "breadcrumbs": {
       "dashboard": "Übersicht",
       "accounts": "Meine Konten",
-      "charges": "Meine Fixkosten",
+      "charges": "Meine Rechnungen",
       "expenses": "Meine Ausgaben",
       "simulator": "Simulator",
       "settings": "Einstellungen",
@@ -1203,12 +1203,12 @@
         "vert": "Du hast diesen Monat gut im Griff",
         "orangeDepasse": "Du hast diesen Monat zu viel ausgegeben",
         "orangeProvisions": "Rücklagen auffüllen",
-        "rouge": "Deine Fixkosten übersteigen dein Einkommen"
+        "rouge": "Deine Rechnungen übersteigen dein Einkommen"
       },
       "nudge": {
         "orangeDepasse": "Du hast {montant} mehr ausgegeben, als dir diesen Monat zur Verfügung stand. Schauen wir gemeinsam, was sich ändern lässt.",
-        "orangeProvisions": "Es fehlen {deficit}, um deine kommenden Kosten zu decken. Vorgeschlagener Ausgleich: {rattrapage}/Monat.",
-        "rouge": "Deine Fixkosten und Rücklagen ({obligations}) übersteigen dein Einkommen ({revenus}). Wir sehen uns gemeinsam an, was sich bewegen lässt."
+        "orangeProvisions": "Es fehlen {deficit}, um deine kommenden Rechnungen zu decken. Vorgeschlagener Ausgleich: {rattrapage}/Monat.",
+        "rouge": "Deine Rechnungen und Rücklagen ({obligations}) übersteigen dein Einkommen ({revenus}). Wir sehen uns gemeinsam an, was sich bewegen lässt."
       },
       "incomplet": {
         "title": "Vervollständige deine Übersicht",
@@ -1217,7 +1217,7 @@
       },
       "flow": {
         "revenus": "Einkommen",
-        "chargesFixes": "Fixkosten",
+        "chargesFixes": "Monatliche Rechnungen",
         "lissage": "Smoothing",
         "engagements": "Verpflichtungen",
         "resteDisponible": "Monatsbudget",
@@ -1228,7 +1228,7 @@
         "detailToggle": "Breakdown: {poste}",
         "detailOrigine": "{montant} {cycleMois, plural, =3 {every 3 months} =6 {every 6 months} =12 {once a year} other {every # months}}"
       },
-      "barAria": "Aufteilung deiner Einnahmen: {charges} Fixkosten, {provisions} Rücklagen, {depense} ausgegeben, {reste} übrig.",
+      "barAria": "Aufteilung deiner Einnahmen: {charges} Rechnungen, {provisions} Rücklagen, {depense} ausgegeben, {reste} übrig.",
       "barAriaEngagements": "Davon {engagements} an Verpflichtungen.",
       "pace": {
         "barAria": "{depense} von {budget} Monatsbudget ausgegeben, Tag {jours} von {total}.",
@@ -1246,7 +1246,7 @@
       "ratio": "Zielabdeckung",
       "target": "Theoretisches Ziel",
       "current": "Aktueller Saldo",
-      "empty": "Keine periodischen Kosten geplant — noch nichts anzusparen.",
+      "empty": "Keine periodischen Rechnungen geplant — noch nichts anzusparen.",
       "ariaLabel": "Gesundheit der Rücklagen: {percent}% des theoretischen Ziels",
       "deficit": "3-Monats-Aufholplan: {amount}/Monat",
       "objectifDepasse": "+ {amount} über dem Ziel",
@@ -1267,7 +1267,7 @@
     "upcomingBills": {
       "title": "Anstehende Rechnungen",
       "viewAll": "Alle anzeigen",
-      "empty": "Noch keine aktiven Fixkosten.",
+      "empty": "Noch keine aktiven Rechnungen.",
       "itemCount": "{count, plural, =1 {1 Rechnung} other {# Rechnungen}}",
       "dueToday": "Heute",
       "daysUntil": "In {days, plural, =1 {1 Tag} other {# Tagen}}",
@@ -1279,7 +1279,7 @@
       "remainingCommitments": "davon {amount} an Raten",
       "watched": "Im Blick",
       "watchedHint": "Deine markierten Rechnungen, um sie kommen zu sehen.",
-      "watchedEmptyHint": "Tipp: Markiere eine Rechnung auf der Fixkosten-Seite als „im Blick“, um sie hier zu verfolgen.",
+      "watchedEmptyHint": "Tipp: Markiere eine Rechnung auf der Rechnungen-Seite als „im Blick“, um sie hier zu verfolgen.",
       "forgottenAlert": "In {month} nie abgehakt: {labels} — prüfe, ob {count, plural, =1 {sie wirklich bezahlt wurde} other {sie wirklich bezahlt wurden}}.",
       "forgottenSee": "{month} ansehen",
       "buckets": {
@@ -1490,13 +1490,13 @@
       }
     },
     "charges": {
-      "createFailed": "Fixkosten konnten nicht erstellt werden.",
-      "updateFailed": "Fixkosten konnten nicht aktualisiert werden.",
-      "deleteFailed": "Fixkosten konnten nicht gelöscht werden.",
+      "createFailed": "Rechnung konnte nicht erstellt werden.",
+      "updateFailed": "Rechnung konnte nicht aktualisiert werden.",
+      "deleteFailed": "Rechnung konnte nicht gelöscht werden.",
       "watchFailed": "Die Markierung der Rechnung konnte nicht geändert werden.",
-      "notFound": "Diese Fixkosten wurden nicht gefunden.",
+      "notFound": "Diese Rechnung wurde nicht gefunden.",
       "payments": {
-        "toggleFailed": "Fixkosten konnten nicht als bezahlt markiert werden."
+        "toggleFailed": "Rechnung konnte nicht als bezahlt markiert werden."
       }
     },
     "accounts": {
@@ -1526,7 +1526,7 @@
     "onboarding": {
       "workspaceNotFound": "Workspace nicht gefunden. Kontaktiere den Support.",
       "workspaceUpdateFailed": "Workspace konnte nicht aktualisiert werden.",
-      "chargeFailed": "Workspace erstellt, aber Fixkosten nicht gespeichert."
+      "chargeFailed": "Workspace erstellt, aber Rechnung nicht gespeichert."
     },
     "locale": {
       "invalid": "Ungültige Sprache."
