@@ -1,6 +1,6 @@
 # ankora.be — Full content export for LLMs
 
-Last generated: 2026-07-27
+Last generated: 2026-08-11
 Canonical URL: https://ankora.be
 License: content available for citation with attribution. Code is proprietary.
 
@@ -20,13 +20,13 @@ Ankora is a Belgian personal-finance app that converts irregular yearly charges 
 
 # Ankora
 
-> Ankora is a privacy-first personal finance app for Belgium, designed around budget smoothing and bucket accounts. It helps households convert irregular annual charges into predictable monthly contributions and separates savings by purpose (emergency fund, taxes, holidays, car), without requiring bank-account access via PSD2.
+> Ankora is a privacy-first personal finance app for Belgium, designed around budget smoothing and bucket accounts. Its thesis: a bank statement shows what already happened; Ankora keeps the register of what is already committed — dated upcoming charges counted in advance. It helps households convert irregular annual charges into predictable monthly contributions and separates savings by purpose (emergency fund, taxes, holidays, car), without requiring bank-account access via PSD2.
 
 Ankora is built and operated in Belgium by a solo indie developer. The app deliberately stays outside the PSD2 open-banking framework: users enter or import their data manually, the app never reads bank account transactions directly. This is a conscious privacy trade-off.
 
 ## Core concepts
 
-- [Cashflow waterfall](https://ankora.be/): three canonical steps — income → daily expenses → available money. Earmarked provisions are surfaced as a discreet sub-caption under expenses (smoothing mechanism), not as a standalone step.
+- [The month's cascade (cashflow waterfall)](https://ankora.be/): three canonical steps — income → daily expenses → available money, presented as a statement with a double rule before the bottom line. Earmarked provisions are surfaced as a discreet sub-caption under expenses (smoothing mechanism), not as a standalone step.
 - [Smoothed budget](https://ankora.be/glossaire/budget-de-lissage): converting irregular annual charges into monthly contributions
 - [Bucket account](https://ankora.be/glossaire/compte-bucket): sub-savings-account earmarked for a specific goal
 - [Saving capacity](https://ankora.be/glossaire/capacite-d-epargne): maximum structural savings without cutting into baseline standard of living

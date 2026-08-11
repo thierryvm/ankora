@@ -5,7 +5,7 @@ import en from '../../../../../messages/en.json';
 import esES from '../../../../../messages/es-ES.json';
 import frBE from '../../../../../messages/fr-BE.json';
 import nlBE from '../../../../../messages/nl-BE.json';
-import { HERO_WATERFALL_DEMO, RELEVE_DEMO } from '../constants';
+import { FEATURE_WATERFALL_DEMO, RELEVE_DEMO } from '../constants';
 
 /**
  * The landing's illustrative figures must never contradict their own
@@ -34,6 +34,16 @@ function digits(amount: string): string {
 /** Expected digits for a whole-euro constant displayed with two decimals. */
 function euroDigits(value: number): string {
   return `${value}00`;
+}
+
+/**
+ * Expected digits for a whole-euro constant displayed WITHOUT decimals —
+ * the cascade amounts ('+2 466 €' → '2466'). Distinct from `euroDigits`
+ * on purpose: reusing the hero helper here would demand decimals the
+ * cascade strings never had, and fail on every bundle.
+ */
+function plainEuroDigits(value: number): string {
+  return String(value);
 }
 
 describe('RELEVE_DEMO — the hero statement arithmetic', () => {
@@ -68,14 +78,37 @@ describe('RELEVE_DEMO — the hero statement arithmetic', () => {
   });
 });
 
-describe('HERO_WATERFALL_DEMO — the feature cascade arithmetic (kept until L3)', () => {
+describe('FEATURE_WATERFALL_DEMO — the feature cascade arithmetic', () => {
   it('available equals income − expenses', () => {
-    expect(HERO_WATERFALL_DEMO.available).toBe(
-      HERO_WATERFALL_DEMO.income - HERO_WATERFALL_DEMO.expenses,
+    expect(FEATURE_WATERFALL_DEMO.available).toBe(
+      FEATURE_WATERFALL_DEMO.income - FEATURE_WATERFALL_DEMO.expenses,
     );
   });
 
   it('provisions stays a sub-segment of expenses, never a fourth step', () => {
-    expect(HERO_WATERFALL_DEMO.provisions).toBeLessThan(HERO_WATERFALL_DEMO.expenses);
+    expect(FEATURE_WATERFALL_DEMO.provisions).toBeLessThan(FEATURE_WATERFALL_DEMO.expenses);
+  });
+
+  describe.each(BUNDLES)('%s bundle matches the numeric source of truth', (_locale, bundle) => {
+    const waterfall = bundle.landing.feature.waterfall;
+
+    it.each([
+      ['incomeAmount', waterfall.incomeAmount, FEATURE_WATERFALL_DEMO.income],
+      ['expensesAmount', waterfall.expensesAmount, FEATURE_WATERFALL_DEMO.expenses],
+      ['availableAmount', waterfall.availableAmount, FEATURE_WATERFALL_DEMO.available],
+    ])('%s displays the constant', (_key, displayed, expected) => {
+      expect(digits(displayed)).toBe(plainEuroDigits(expected));
+    });
+
+    it('carries the signs the neutral-ink restyle relies on', () => {
+      // PR L3 removed the success/danger colouring from the cascade — the
+      // sign inside the string is now the ONLY carrier of direction, and
+      // `digits()` strips signs, so it gets its own guard (same reasoning
+      // as the hero deductions, Sourcery PR #339). Income and available are
+      // inflows (+); expenses is the one deduction (U+2212).
+      expect(waterfall.incomeAmount.startsWith('+')).toBe(true);
+      expect(waterfall.availableAmount.startsWith('+')).toBe(true);
+      expect(waterfall.expensesAmount.startsWith('−')).toBe(true);
+    });
   });
 });

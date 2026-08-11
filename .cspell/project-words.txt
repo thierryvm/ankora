@@ -221,6 +221,7 @@ TRACKÉ
 trackée
 unfixme
 uploadé
+vastgelegd
 vérif
 viewports
 worktree
@@ -356,6 +357,7 @@ Beobachten
 Beobank
 Berchem
 berechtigtes
+bereits
 Bestätigen
 betaald
 Bevestigen
@@ -411,6 +413,7 @@ committe
 como
 compartido
 Completado
+comprometido
 Compromisos
 computadora
 Confirmar
@@ -538,6 +541,7 @@ Gaté
 gatée
 gdpr
 Geannuleerd
+gebunden
 gedeelde
 Geen
 gefunden
@@ -629,6 +633,7 @@ junio
 kaart
 kannst
 Karte
+Kaskade
 Kategorie
 Keine
 keydown
@@ -668,6 +673,7 @@ Logtail
 Lopende
 luistergeld
 Luminus
+maand
 Maandbudget
 Maandelijks
 maandelijkse
@@ -699,6 +705,7 @@ Modificar
 Monatlich
 monatliche
 Monatliches
+Monats
 Monatsbudget
 monitorable
 Monzo
@@ -815,6 +822,7 @@ recommise
 recommitter
 recomputé
 recurrings
+redéclaration
 redéclencher
 Redeployer
 refacto

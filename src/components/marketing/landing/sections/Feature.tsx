@@ -5,80 +5,50 @@ import { Eyebrow } from '@/components/ui/eyebrow';
 import { Num } from '@/components/ui/num';
 import { Link } from '@/i18n/navigation';
 
-import { HERO_WATERFALL_DEMO } from '../constants';
+import { FEATURE_WATERFALL_DEMO } from '../constants';
 import { ArrowRight } from '../icons';
 
 /**
- * Inline SVG used as connector between successive waterfall steps.
- * Decorative — always rendered with `aria-hidden="true"` and no text content.
- * Lifted out of `<Feature>` so React tree-shaking can pick it up and to
- * keep the parent function pure (`react/no-unstable-nested-components`).
- */
-function WaterfallArrowConnector() {
-  return (
-    <svg
-      aria-hidden="true"
-      width="14"
-      height="20"
-      viewBox="0 0 14 20"
-      fill="none"
-      className="text-muted-foreground mx-auto"
-    >
-      <path
-        d="M7 0 L7 16 M2 11 L7 16 L12 11"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-/**
- * Feature — Cashflow waterfall surface highlight (3 canonical steps).
+ * Feature — the cashflow cascade, restyled as a statement (PR L3).
  *
  * 3 canonical steps per `docs/design/claude-design-brief.md` L95 + L250
  * (*"salary → envelopes → expenses"*) and the coherence audit at
- * `Athenaeum/10_Projects/ankora/analysis/2026-04-28-waterfall-coherence-audit.md`.
- * See `cowork-handoffs/2026-04-28-2345-pr-3c-4-hero-waterfall-3steps.md`
- * for the full spec — this PR (PR-3c-4) realigned the waterfall away from
- * the cc-design 5-step mockup which over-represented provisions as a
- * primary siphon.
+ * `Athenaeum/10_Projects/ankora/analysis/2026-04-28-waterfall-coherence-audit.md`
+ * — the 3-step model itself is unchanged since PR-3c-4.
  *
- * Layout:
- * - LEFT: copy block (eyebrow accent, h3 split on 2 lines, paragraph, CTAs)
- * - RIGHT: 3-step ordered list (Revenus → Dépenses courantes → Argent
- *   disponible) with token-coloured amounts. Connector arrows live INSIDE
- *   the second and third `<li>` (above the step content) so the `<ol>`
- *   contains exactly 3 list items — screen readers announce a 3-item
- *   ordered sequence (not 5). The expenses step also carries a discreet
- *   sub-caption ("dont 59 € lissés vers provisions affectées") that
- *   surfaces the provisioning mechanism without elevating it to a
- *   standalone step.
+ * What PR L3 changed, and why:
+ * - The cascade adopts the hero statement-card grammar (« relevé corrigé »
+ *   direction, ADR-039): white card on paper, rows separated by rules, a
+ *   double rule before the bottom line. The SVG arrow connectors are gone —
+ *   the rules and the reading order do their work; arrows belonged to the
+ *   old dashboard-mockup grammar.
+ * - Amounts are neutral ink. The previous success/danger/brand colouring was
+ *   REDUNDANT with the sign already carried by the i18n strings ("+2 466 €",
+ *   "−1 959 €"), and colour as the only carrier is a WCAG 1.4.1 defect. Same
+ *   doctrine as the hero card and ADR-035 §3 (never green; the sign does the
+ *   work). The sign is pinned per-bundle by `constants.test.ts`.
+ * - The heading is an `<h2>`: this section's main heading was an `<h3>` with
+ *   no `<h2>` above it in the section — an orphan in the page outline
+ *   (WCAG 1.3.1, flagged by ui-auditor on PR L2).
+ * - i18n moved to `landing.feature.waterfall.*` (the cascade stopped living
+ *   in the hero at L2; the namespace now says where the copy renders).
  *
- * Numbers come from `HERO_WATERFALL_DEMO` (anchored on a real anonymised
- * user case — 2 466 € income, 1 959 € expenses, 507 € available). The
- * displayed strings are pre-formatted per-locale in the i18n bundles.
+ * Accessibility: the cascade stays a `<figure>` with a plain-language
+ * aria-label, and the step list stays an `<ol>` of exactly 3 items so screen
+ * readers announce a 3-item ordered sequence.
  *
- * Accessibility:
- * - The waterfall is wrapped in a `<figure>` with an `aria-label` that
- *   reads the full cascade in plain language for assistive tech.
- * - The step list uses `<ol>` so screen readers announce a 3-item
- *   ordered sequence. Connector arrows are pure SVG decorations marked
- *   `aria-hidden="true"` and live inside their step's `<li>`.
- * - Token-driven colours (`text-success`, `text-danger`, `text-brand-text-strong`)
- *   guarantee AA/AAA contrast across light + dark + admin accent flips.
+ * Numbers come from `FEATURE_WATERFALL_DEMO` (anchored on a real anonymised
+ * user case); display strings are pre-formatted per locale in the bundles.
  */
 export async function Feature() {
   const t = await getTranslations('landing.feature');
-  const tWaterfall = await getTranslations('landing.hero.waterfall');
+  const tWaterfall = await getTranslations('landing.feature.waterfall');
   const locale = await getLocale();
 
-  // Locale-aware formatter for the provisions sub-amount, which is the
-  // one figure rendered dynamically (the three step amounts come straight
-  // from i18n strings so designers can tweak punctuation per locale).
-  const provisions = HERO_WATERFALL_DEMO.provisions.toLocaleString(locale);
+  // Locale-aware formatter for the provisions sub-amount, the one figure
+  // rendered dynamically (the three step amounts come straight from i18n
+  // strings so designers can tweak punctuation per locale).
+  const provisions = FEATURE_WATERFALL_DEMO.provisions.toLocaleString(locale);
 
   return (
     <section
@@ -86,82 +56,86 @@ export async function Feature() {
       aria-labelledby="feature-heading"
       className="mx-auto max-w-6xl px-4 py-16 md:px-6"
     >
-      <div className="from-brand-surface to-accent-surface border-border grid gap-12 rounded-2xl border bg-linear-to-br p-8 md:grid-cols-2 md:items-center md:p-12">
+      <div className="grid gap-8 md:grid-cols-2 md:items-center md:gap-12">
         {/* LEFT: copy + CTAs */}
         <div>
           <Eyebrow tone="accent">{t('eyebrow')}</Eyebrow>
-          <h3
+          <h2
             id="feature-heading"
             className="font-display text-foreground mt-3 text-3xl leading-tight font-semibold tracking-tight md:text-4xl"
           >
-            {t('h3Line1')}
+            {t('titleLine1')}
             <br />
-            {t('h3Line2')}
-          </h3>
+            {t('titleLine2')}
+          </h2>
           <p className="text-muted-foreground mt-4 text-base leading-relaxed text-pretty">
             {t('description')}
           </p>
+          {/* min-h-11 on both CTAs: they measured 36px under size="sm",
+              below the 44px target this repo imposes on itself everywhere
+              else (same fix as the MktFooter links). Kept size="sm" for the
+              visual weight — only the hit area grows. */}
           <div className="mt-6 flex flex-wrap gap-2.5">
-            <Button asChild size="sm">
+            <Button asChild size="sm" className="min-h-11">
               <Link href="/signup">
                 {t('ctaPrimary')}
                 <ArrowRight aria-hidden="true" />
               </Link>
             </Button>
-            <Button asChild variant="ghost" size="sm">
+            <Button asChild variant="ghost" size="sm" className="min-h-11">
               <a href="#principles">{t('ctaSecondary')}</a>
             </Button>
           </div>
         </div>
 
-        {/* RIGHT: 3-step waterfall */}
+        {/* RIGHT: the cascade as a statement */}
         <figure
           aria-label={tWaterfall('ariaLabel')}
-          className="border-border bg-card/50 rounded-2xl border p-5"
+          data-testid="feature-waterfall-card"
+          // shadow-md, not sm: on the paper page a white card sits at ~1.05:1
+          // against the background — the shadow IS the card's boundary (same
+          // measured trade-off as the hero card, ui-auditor 9 Aug 2026).
+          className="bg-card border-border rounded-2xl border p-4 shadow-md md:p-6"
         >
-          <ol className="grid gap-0">
+          <ol className="text-sm">
             {/* Step 1 — Income */}
-            <li className="border-border bg-card/60 flex items-center justify-between rounded-xl border p-4">
-              <span className="text-foreground text-sm font-medium">{tWaterfall('income')}</span>
-              <Num size="md" className="text-success font-semibold">
-                {tWaterfall('incomeAmount')}
-              </Num>
+            <li className="flex items-baseline justify-between gap-4">
+              {/* Labels are flex items: min-w-0 lets the label shrink, and
+                  break-words is the safety net behind it — min-w-0 alone
+                  cannot break a single unbreakable word (German compounds at
+                  DE activation). Same guard family as the hero card's dt
+                  (mobile-ios-auditor, L2 + L3). */}
+              <span className="text-foreground min-w-0 font-medium break-words">
+                {tWaterfall('income')}
+              </span>
+              <Num size="md">{tWaterfall('incomeAmount')}</Num>
             </li>
 
-            {/* Step 2 — Expenses + provisions caption (arrow connector at top) */}
-            <li className="grid gap-2">
-              <WaterfallArrowConnector />
-              <div className="border-border bg-card/60 grid gap-1.5 rounded-xl border p-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-foreground text-sm font-medium">
-                    {tWaterfall('expenses')}
-                  </span>
-                  <Num size="md" className="text-danger font-semibold">
-                    {tWaterfall('expensesAmount')}
-                  </Num>
-                </div>
-                <p className="text-muted-foreground pl-3 font-mono text-xs tabular-nums">
-                  {tWaterfall('provisionsCaption', { amount: provisions })}
-                </p>
-              </div>
-            </li>
-
-            {/* Step 3 — Available (arrow connector at top) */}
-            <li className="grid gap-2">
-              <WaterfallArrowConnector />
-              <div className="border-brand-surface-border bg-brand-surface flex items-center justify-between rounded-xl border p-4">
-                <span className="text-foreground text-sm font-medium">
-                  {tWaterfall('available')}
+            {/* Step 2 — Expenses, with the provisions caption + definition */}
+            <li className="border-border mt-3 border-t pt-3">
+              <div className="flex items-baseline justify-between gap-4">
+                <span className="text-foreground min-w-0 font-medium break-words">
+                  {tWaterfall('expenses')}
                 </span>
-                {/* All three step amounts use the same `<Num size>` + token-coloured
-                    className pattern (`text-success`, `text-danger`, `text-brand-text-strong`)
-                    so the visual semantic stays in sync across the cascade. The
-                    `<Num tone>` prop only covers `default` / `accent` — success / danger
-                    do not have prop equivalents, hence the className alignment. */}
-                <Num size="md" className="text-brand-text-strong font-semibold">
-                  {tWaterfall('availableAmount')}
-                </Num>
+                <Num size="md">{tWaterfall('expensesAmount')}</Num>
               </div>
+              <p className="text-muted-foreground mt-1.5 text-xs">
+                {tWaterfall('provisionsCaption', { amount: provisions })}
+              </p>
+              {/* "Provisions" explained at first contact (plan-cadre §L3.2):
+                  a definition in plain language, descriptive only (FSMA). */}
+              <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
+                {tWaterfall('provisionsDefinition')}
+              </p>
+            </li>
+
+            {/* Step 3 — Available, under the double rule (the statement's
+                bottom line, same grammar as the hero payoff row) */}
+            <li className="border-foreground/60 mt-3 flex items-baseline justify-between gap-4 border-t-[3px] border-double pt-3">
+              <span className="text-foreground min-w-0 font-semibold break-words">
+                {tWaterfall('available')}
+              </span>
+              <Num size="lg">{tWaterfall('availableAmount')}</Num>
             </li>
           </ol>
         </figure>
