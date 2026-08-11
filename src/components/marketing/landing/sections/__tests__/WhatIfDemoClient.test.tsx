@@ -33,9 +33,17 @@ vi.mock('next-intl', () => ({
 import { WhatIfDemoClient } from '../WhatIfDemoClient';
 import { RESERVE_BASELINE_6M, THRESHOLD_ZONES, WHAT_IF_SCENARIOS } from '../simulator/scenarios';
 
+/**
+ * Les libellés d'axe viennent désormais du serveur, calculés depuis la date du
+ * jour. Une liste fixe ici est délibérée : ces cas testent le TRACÉ, pas le
+ * calendrier — c'est `WhatIfDemo.test.tsx` qui vérifie que les six mois partent
+ * bien du mois courant.
+ */
+const MOIS = ['jan', 'fév', 'mar', 'avr', 'mai', 'juin'] as const;
+
 describe('<WhatIfDemoClient />', () => {
   it('renders one button per scenario', () => {
-    render(<WhatIfDemoClient />);
+    render(<WhatIfDemoClient mois={MOIS} />);
     expect(screen.getByRole('button', { name: /Renégocier mon GSM/i })).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /Changer de fournisseur d'électricité/i }),
@@ -44,7 +52,7 @@ describe('<WhatIfDemoClient />', () => {
   });
 
   it('marks the first scenario as active via aria-pressed on initial render', () => {
-    render(<WhatIfDemoClient />);
+    render(<WhatIfDemoClient mois={MOIS} />);
     const gsm = screen.getByRole('button', { name: /Renégocier mon GSM/i });
     const elec = screen.getByRole('button', { name: /Changer de fournisseur d'électricité/i });
     const stream = screen.getByRole('button', { name: /Couper deux streamings/i });
@@ -54,7 +62,7 @@ describe('<WhatIfDemoClient />', () => {
   });
 
   it('flips aria-pressed when the user picks a different scenario', () => {
-    render(<WhatIfDemoClient />);
+    render(<WhatIfDemoClient mois={MOIS} />);
     const gsm = screen.getByRole('button', { name: /Renégocier mon GSM/i });
     const stream = screen.getByRole('button', { name: /Couper deux streamings/i });
 
@@ -65,7 +73,7 @@ describe('<WhatIfDemoClient />', () => {
   });
 
   it('snaps the slider to the new scenario default when switching scenarios', () => {
-    render(<WhatIfDemoClient />);
+    render(<WhatIfDemoClient mois={MOIS} />);
     const elec = screen.getByRole('button', { name: /Changer de fournisseur d'électricité/i });
     const elecScenario = WHAT_IF_SCENARIOS.find((s) => s.id === 'elec')!;
 
@@ -76,7 +84,7 @@ describe('<WhatIfDemoClient />', () => {
   });
 
   it('updates the monthly + annual figures when the slider value changes', () => {
-    const { container } = render(<WhatIfDemoClient />);
+    const { container } = render(<WhatIfDemoClient mois={MOIS} />);
     const slider = screen.getByRole('slider');
 
     fireEvent.change(slider, { target: { value: '20' } });
@@ -88,7 +96,7 @@ describe('<WhatIfDemoClient />', () => {
   });
 
   it('renders the fleche sub-text using Math.round(monthly × 0.7)', () => {
-    const { container } = render(<WhatIfDemoClient />);
+    const { container } = render(<WhatIfDemoClient mois={MOIS} />);
     const slider = screen.getByRole('slider');
 
     // 10 × 0.7 = 7 → "Ankora pourrait flécher +7 €/mois ..."
@@ -97,7 +105,7 @@ describe('<WhatIfDemoClient />', () => {
   });
 
   it('renders one circle per month in the projection (6 points)', () => {
-    const { container } = render(<WhatIfDemoClient />);
+    const { container } = render(<WhatIfDemoClient mois={MOIS} />);
     // `container.querySelectorAll('svg circle')` would also match Lucide icons
     // (Sparkles, TrendingUp, …) which embed <circle> shapes — so we scope to
     // the chart SVG via its role="img" anchor.
@@ -108,7 +116,7 @@ describe('<WhatIfDemoClient />', () => {
   });
 
   it('renders the 3 threshold zones inside an aria-hidden group', () => {
-    const { container } = render(<WhatIfDemoClient />);
+    const { container } = render(<WhatIfDemoClient mois={MOIS} />);
     const rects = container.querySelectorAll('svg rect[data-threshold]');
     expect(rects).toHaveLength(THRESHOLD_ZONES.length);
     rects.forEach((rect) => {
@@ -117,7 +125,7 @@ describe('<WhatIfDemoClient />', () => {
   });
 
   it('applies motion-reduce:transition-none on the area + scenario paths', () => {
-    const { container } = render(<WhatIfDemoClient />);
+    const { container } = render(<WhatIfDemoClient mois={MOIS} />);
     const area = container.querySelector('[data-testid="whatif-area"]');
     const line = container.querySelector('[data-testid="whatif-line"]');
     expect(area?.getAttribute('class')).toContain('motion-reduce:transition-none');
@@ -125,7 +133,7 @@ describe('<WhatIfDemoClient />', () => {
   });
 
   it('drives the slider accent colour via the .accent-brand-400 utility class', () => {
-    render(<WhatIfDemoClient />);
+    render(<WhatIfDemoClient mois={MOIS} />);
     const slider = screen.getByRole('slider') as HTMLInputElement;
     // PR P0-V2 (2026-05-19): the inline `style="accent-color: var(...)"`
     // was migrated to the `.accent-brand-400` utility class defined in
@@ -138,7 +146,7 @@ describe('<WhatIfDemoClient />', () => {
   });
 
   it('passes the active scenario label into the slider aria-label', () => {
-    render(<WhatIfDemoClient />);
+    render(<WhatIfDemoClient mois={MOIS} />);
     const slider = screen.getByRole('slider');
     expect(slider.getAttribute('aria-label')).toBe('Économie mensuelle pour Renégocier mon GSM');
 
@@ -149,7 +157,7 @@ describe('<WhatIfDemoClient />', () => {
   });
 
   it('exposes the SVG chart as role="img" with a localised aria-label', () => {
-    const { container } = render(<WhatIfDemoClient />);
+    const { container } = render(<WhatIfDemoClient mois={MOIS} />);
     const svg = container.querySelector('svg[role="img"]');
     expect(svg).not.toBeNull();
     expect(svg?.getAttribute('aria-label')).toBe(messages.landing.whatif.chart.aria);

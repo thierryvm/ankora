@@ -3,7 +3,6 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { Button } from '@/components/ui/button';
 import { Eyebrow } from '@/components/ui/eyebrow';
 import { Num } from '@/components/ui/num';
-import { Link } from '@/i18n/navigation';
 
 import { FEATURE_WATERFALL_DEMO } from '../constants';
 import { ArrowRight } from '../icons';
@@ -75,15 +74,24 @@ export async function Feature() {
               below the 44px target this repo imposes on itself everywhere
               else (same fix as the MktFooter links). Kept size="sm" for the
               visual weight — only the hit area grows. */}
+          {/* Les deux liens pointaient au mauvais endroit. « Voir un exemple »
+              menait à /signup — donc un formulaire d'inscription pour un
+              visiteur, et le cockpit pour quelqu'un de connecté
+              (`redirectIfSignedIn`) : jamais un exemple, alors que l'exemple
+              est la carte affichée juste à droite. Et « Comment ça marche ? »
+              renvoyait vers #principles, une section DÉJÀ dépassée par le
+              lecteur.
+              Les deux avancent désormais : le simulateur est la section
+              suivante et ne demande pas de compte, la FAQ vient après. */}
           <div className="mt-6 flex flex-wrap gap-2.5">
             <Button asChild size="sm" className="min-h-11">
-              <Link href="/signup">
+              <a href="#simulator">
                 {t('ctaPrimary')}
                 <ArrowRight aria-hidden="true" />
-              </Link>
+              </a>
             </Button>
             <Button asChild variant="ghost" size="sm" className="min-h-11">
-              <a href="#principles">{t('ctaSecondary')}</a>
+              <a href="#faq">{t('ctaSecondary')}</a>
             </Button>
           </div>
         </div>

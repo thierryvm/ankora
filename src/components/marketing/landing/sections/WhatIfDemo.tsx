@@ -1,4 +1,4 @@
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 
 import { Glass } from '@/components/ui/glass';
 import { Sliders } from '@/components/marketing/landing/icons';
@@ -22,8 +22,31 @@ import { WhatIfDemoClient } from './WhatIfDemoClient';
  * inner `<WhatIfDemoClient />` Client Component — kept as small as possible so
  * the rest of the section ships as static HTML.
  */
+/**
+ * Les six mois de l'axe, à partir du mois courant.
+ *
+ * Ils étaient FIGÉS à « mai … oct » dans six clés de traduction, sous un
+ * sous-titre qui annonce « 6 mois à partir d'aujourd'hui ». Relevé le 11 août
+ * 2026 : le graphique montrait une fenêtre à moitié passée, et en décembre elle
+ * l'aurait été entièrement. Les chiffres de cette démo sont explicitement
+ * hypothétiques ; la DATE, elle, était une affirmation, et elle était fausse
+ * dix mois sur douze.
+ *
+ * Calculés côté serveur et passés en props : les calculer dans le composant
+ * client produirait une divergence d'hydratation au passage de minuit, et
+ * `Intl` les traduit sans qu'aucune clé n'ait à exister.
+ */
+function moisAVenir(locale: string, depuis: Date): string[] {
+  const format = new Intl.DateTimeFormat(locale, { month: 'short' });
+  return Array.from({ length: 6 }, (_, i) =>
+    format.format(new Date(depuis.getFullYear(), depuis.getMonth() + i, 1)),
+  );
+}
+
 export async function WhatIfDemo() {
   const t = await getTranslations('landing.whatif');
+  const locale = await getLocale();
+  const mois = moisAVenir(locale, new Date());
 
   return (
     <section
@@ -51,7 +74,7 @@ export async function WhatIfDemo() {
         padding="none"
         className="mx-auto grid max-w-5xl overflow-hidden md:grid-cols-[1fr_1.05fr]"
       >
-        <WhatIfDemoClient />
+        <WhatIfDemoClient mois={mois} />
       </Glass>
     </section>
   );

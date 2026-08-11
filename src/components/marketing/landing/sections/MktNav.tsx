@@ -58,7 +58,12 @@ export async function MktNav() {
             <a
               key={link.key}
               href={link.href}
-              className="text-muted-foreground hover:text-foreground focus-visible:ring-brand-600 rounded-md text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+              /* `inline-flex min-h-6 items-center` : la cible mesurait 48 × 20
+                 et 72 × 20 px, sous le plancher de 24 px de WCAG 2.2 AA ·
+                 2.5.8. Ce ne sont pas des liens en ligne dans une phrase,
+                 l'exception ne s'applique pas. Seule la zone cliquable grandit
+                 — le dessin ne bouge pas. Même correctif que #374 sur /signup. */
+              className="text-muted-foreground hover:text-foreground focus-visible:ring-brand-600 inline-flex min-h-6 items-center rounded-md text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             >
               {t(`links.${link.key}`)}
             </a>
