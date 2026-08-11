@@ -24,6 +24,26 @@ ininterprétable au premier conflit, donc ignoré :
 | `Playwright E2E`                 | **247 passed** (241 plus tôt le 11/08, 231 au 09/08, 228 au 06/08) |
 | `Playwright E2E (authenticated)` | **50 passed** (45 avant, +5 `gdpr-deletion-queue` — PR-C)          |
 
+> **Planchers inchangés (247 / 50), lecture PR L3 du 2026-08-11** (#376, dernière
+> PR du programme landing). Aucune spec ajoutée ni retirée — delta **0 mesuré
+> dans les deux sens** par `npx playwright test --list` avec le diff puis avec
+> la spec restaurée de HEAD : **462 cas dans 41 fichiers, identiques**. Seul le
+> contenu d'assertions bouge (`mainEntity` 4 → 5, sonde 375 px durcie vers
+> `body.scrollWidth` — #344, mesurée verte sur main avant d'entrer).
+>
+> **Un piège de lecture à connaître** : les jobs de la PR affichent
+> **241 passed / 50 passed** (run `31506385973`) pendant que ce tableau disait
+> déjà 247 — les deux sont vrais. La branche L3 est partie de `b0d634e`,
+> AVANT le +6 de #348 (`299386e`) ; sa CI a donc exécuté la suite d'avant.
+> Un plancher se compare **au niveau de la base de la branche**, jamais au
+> tableau du jour — c'est le delta qui se transporte, pas la valeur absolue
+> (règle déjà écrite pour les machines, elle vaut aussi pour les bases). La
+> fusion porte les deux changements — **mesuré sur la CI de main post-merge**
+> (run `31515868208`, squash `e74a499`) : public **247 passed / 221 skipped**,
+> authentifié **50 passed / 5 skipped**. Les deux planchers du tableau, exacts.
+
+---
+
 > **Public : 241 → 247, mesuré le 2026-08-11**, à la correction de
 > [#348](https://github.com/thierryvm/ankora/issues/348). Deux cas ajoutés à
 > `e2e/consent-first-visit.spec.ts`, **× trois projets** (`chromium-desktop`,

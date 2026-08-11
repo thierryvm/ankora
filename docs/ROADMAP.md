@@ -92,23 +92,29 @@ uniquement), mené en worktree dédié sur exception de modèle @thierry du 8 ao
 et [`docs/adr/ADR-039-portee-tokens-marketing-papier.md`](./adr/ADR-039-portee-tokens-marketing-papier.md)
 (approuvé par la relecture cockpit).
 
-| PR  | Objet                                                            | État        |
-| --- | ---------------------------------------------------------------- | ----------- |
-| —   | ADR-039 + plan d'exécution validé `plan-reviewer`                | ✅ #334     |
-| L1  | Tokens papier + portée `.mkt-paper` + durcissement `blockAfter`  | ✅ #338     |
-| L2  | Hero « relevé corrigé » + wrapper + parade flex + fixme iOS levé | ✅ #339     |
-| L3  | Sections au ton « relevé » + 5ᵉ FAQ + migration waterfall + SEO  | 📋 suivante |
+| PR  | Objet                                                            | État    |
+| --- | ---------------------------------------------------------------- | ------- |
+| —   | ADR-039 + plan d'exécution validé `plan-reviewer`                | ✅ #334 |
+| L1  | Tokens papier + portée `.mkt-paper` + durcissement `blockAfter`  | ✅ #338 |
+| L2  | Hero « relevé corrigé » + wrapper + parade flex + fixme iOS levé | ✅ #339 |
+| L3  | Sections au ton « relevé » + 5ᵉ FAQ + migration waterfall + SEO  | ✅ #376 |
 
-**L'ordre est contraint, pas constaté** — ces trois lignes ne sont pas
-interchangeables. L1 pose la portée `.mkt-paper` et les six pigments ; L2 **et**
-L3 la consomment, donc aucune des deux ne rend quoi que ce soit sans elle. L3
-reprend en plus le hero introduit par L2 pour y migrer la waterfall. Attaquer L3
-seule ne donnerait ni le papier ni la surface sur laquelle se poser.
+**Programme TERMINÉ le 11 août 2026** — les trois PR sont en production
+(vérifié sur ankora.be : titre sans marque doublée, cascade-relevé, 5 questions
+FAQ). Rapports : [`docs/prs/PR-L1-report.md`](./prs/PR-L1-report.md),
+[`docs/prs/PR-L2-report.md`](./prs/PR-L2-report.md),
+[`docs/prs/PR-L3-report.md`](./prs/PR-L3-report.md). Planchers e2e : L2 a
+relevé le public 228 → 231, L3 n'a rien déplacé (delta 0 mesuré dans les deux
+sens), cf. [`docs/reference/planchers-e2e-historique.md`](./reference/planchers-e2e-historique.md).
 
-Plancher e2e public relevé par L2 : **228 → 231** (levée BUG-iOS-HERO-OVERFLOW,
-mesurée par projet, cf. [`docs/reference/planchers-e2e-historique.md`](./reference/planchers-e2e-historique.md)).
-Rapports : [`docs/prs/PR-L1-report.md`](./prs/PR-L1-report.md),
-[`docs/prs/PR-L2-report.md`](./prs/PR-L2-report.md).
+**Suites nommées, avec propriétaire** : réconciliation vocabulaire
+« Réserve libre » ↔ « Encore vraiment à toi » ↔ glossaire (@thierry + session
+cockpit, ADR-039 §Décisions de vocabulaire) ; passe `i18n-translator` nl/de/es
+(les 6 items L3 sont FR-verbatim, dette trackée) ; tickets Lighthouse
+[#377](https://github.com/thierryvm/ankora/issues/377) (LCP bannière
+consentement) et [#378](https://github.com/thierryvm/ankora/issues/378) (style
+runtime sonner sans nonce) ; contrôles iPhone réel dus par @thierry (rapports
+L2 §Agents QA et L3 §Agents QA).
 
 ### Vision produit
 
