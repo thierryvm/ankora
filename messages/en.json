@@ -780,7 +780,7 @@
       "aPayerCeMoisLabel": "Due this month",
       "aPayerCeMoisHint": "What actually leaves the account — bills and instalments together.",
       "effortLisseLabel": "Smoothed effort",
-      "effortLisseHint": "Monthly charges + smoothed provisions + commitment instalments.",
+      "effortLisseHint": "Monthly bills + smoothed provisions + commitment instalments.",
       "commitmentsGroupTitle": "Loans & instalment plans",
       "installmentPosition": "instalment {index}/{total}",
       "commitmentRemaining": "{amount} left",
@@ -821,9 +821,9 @@
         "submit": "Convert",
         "submitting": "Converting…",
         "cancel": "Cancel",
-        "noHorizon": "Without an horizon the charge stays a charge: the budget stays right, only the countdown is missing.",
+        "noHorizon": "Without a horizon the bill stays a bill: the budget stays right, only the countdown is missing.",
         "toastConverted": "{label} is now a commitment · ends {end}",
-        "drawerHint": "If this charge is a loan that ends, Ankora can show you its countdown."
+        "drawerHint": "If this bill is a loan that ends, Ankora can show you its countdown."
       }
     },
     "accounts": {
@@ -1037,7 +1037,7 @@
       },
       "data": {
         "title": "My data",
-        "description": "GDPR portability (art. 20) — download a JSON of your profile, budgets, charges, expenses, categories, consents and activity log.",
+        "description": "GDPR portability (art. 20) — download a JSON of your profile, budgets, bills, expenses, categories, consents and activity log.",
         "exportButton": "Download my data",
         "exporting": "Generating…",
         "toastDownloaded": "Export downloaded"
@@ -1164,7 +1164,7 @@
         "statutAJour": "On track ✨",
         "deficit": "Deficit detected:",
         "rattrapageDescription": "Includes +{amount} € to recover the deficit over 3 months.",
-        "tooltip": "The algorithm computes how much your Savings account should hold today to absorb all upcoming periodic charges smoothly."
+        "tooltip": "The algorithm computes how much your Savings account should hold today to absorb all upcoming periodic bills smoothly."
       },
       "virements": {
         "title": "Transfer Assistant",
@@ -1203,12 +1203,12 @@
         "vert": "You're on track this month",
         "orangeDepasse": "You have overspent this month",
         "orangeProvisions": "Provisions to top up",
-        "rouge": "Your charges exceed your income"
+        "rouge": "Your bills exceed your income"
       },
       "nudge": {
         "orangeDepasse": "You have spent {montant} more than you had this month. Let's look at what can move.",
-        "orangeProvisions": "You're short {deficit} to cover upcoming charges. Suggested catch-up: {rattrapage}/month.",
-        "rouge": "Your charges and provisions ({obligations}) exceed your income ({revenus}). Let's look at what can move."
+        "orangeProvisions": "You're short {deficit} to cover upcoming bills. Suggested catch-up: {rattrapage}/month.",
+        "rouge": "Your bills and provisions ({obligations}) exceed your income ({revenus}). Let's look at what can move."
       },
       "incomplet": {
         "title": "Complete your setup",
@@ -1217,7 +1217,7 @@
       },
       "flow": {
         "revenus": "Income",
-        "chargesFixes": "Fixed charges",
+        "chargesFixes": "Monthly bills",
         "lissage": "Smoothing",
         "engagements": "Commitments",
         "resteDisponible": "Monthly budget",
@@ -1228,7 +1228,7 @@
         "detailToggle": "Breakdown: {poste}",
         "detailOrigine": "{montant} {cycleMois, plural, =3 {every 3 months} =6 {every 6 months} =12 {once a year} other {every # months}}"
       },
-      "barAria": "How your income splits: {charges} of charges, {provisions} of provisions, {depense} spent, {reste} left.",
+      "barAria": "How your income splits: {charges} of bills, {provisions} of provisions, {depense} spent, {reste} left.",
       "barAriaEngagements": "Including {engagements} of commitments.",
       "pace": {
         "barAria": "{depense} spent of a {budget} monthly budget, on day {jours} of {total}.",
@@ -1246,7 +1246,7 @@
       "ratio": "Target coverage",
       "target": "Theoretical target",
       "current": "Current balance",
-      "empty": "No periodic charges scheduled — nothing to save up for yet.",
+      "empty": "No periodic bills scheduled — nothing to save up for yet.",
       "ariaLabel": "Provisions health: {percent}% of theoretical target",
       "deficit": "3-month catch-up plan: {amount}/month",
       "objectifDepasse": "+ {amount} beyond target",
@@ -1279,7 +1279,7 @@
       "remainingCommitments": "of which {amount} in commitment instalments",
       "watched": "Watching",
       "watchedHint": "Your flagged bills, to see them coming.",
-      "watchedEmptyHint": "Tip: flag a bill as “watching” on the Charges page to track it here.",
+      "watchedEmptyHint": "Tip: flag a bill as “watching” on the Bills page to track it here.",
       "forgottenAlert": "Never ticked in {month}: {labels} — check {count, plural, =1 {it was} other {they were}} actually paid.",
       "forgottenSee": "View {month}",
       "buckets": {

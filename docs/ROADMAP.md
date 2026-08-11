@@ -75,6 +75,17 @@ rendu `401` — y compris avec le bon jeton. Sans la troisième sonde, l'armemen
 annoncé sans exister. Poser la variable n'est pas armer ; **c'est l'exécution manuelle qui
 prouve**.
 
+**Le schéma a suivi trois heures plus tard, et ce n'était pas automatique.** La migration
+`20260811000001` n'était appliquée qu'en local : Vercel avait déployé le code de PR-C, personne
+n'avait poussé le schéma, et la production répondait `42703` sur les cinq colonnes que ce code
+lit. Rien n'avait cassé pour une seule raison — **la file était vide**. Poussée par
+`supabase db push --linked`, puis vérifiée dans les deux sens : les cinq colonnes en `200`,
+`rpc/claim_pending_deletions(5)` en `200` avec une liste vide, et — le témoin qui compte, parce
+qu'il est **négatif** — un statut inventé refusé avec **`23514`** (violation de CHECK) et non
+`23503` (clé étrangère), ce qui prouve que la contrainte élargie est en place et refuse, plutôt
+que d'avoir été supprimée. Règle qui en découle : **toute PR portant une migration se termine
+par cette poussée, ou elle n'est pas terminée.**
+
 **Source de vérité de la conception** :
 [`docs/adr/ADR-042-file-de-suppression-compter-les-tentatives.md`](./adr/ADR-042-file-de-suppression-compter-les-tentatives.md),
 amendement d'ADR-024. Quatre tours de `plan-reviewer`, neuf défauts bloquants trouvés **avant
@@ -109,8 +120,15 @@ sens), cf. [`docs/reference/planchers-e2e-historique.md`](./reference/planchers-
 
 **Suites nommées, avec propriétaire** : réconciliation vocabulaire
 « Réserve libre » ↔ « Encore vraiment à toi » ↔ glossaire (@thierry + session
-cockpit, ADR-039 §Décisions de vocabulaire) ; passe `i18n-translator` nl/de/es
-(les 6 items L3 sont FR-verbatim, dette trackée) ; tickets Lighthouse
+cockpit, ADR-039 §Décisions de vocabulaire) — **à laquelle s'ajoute, depuis
+[#365](https://github.com/thierryvm/ankora/issues/365), le couple « charges »
+(public, FAQ, légal) ↔ « Factures » (application)**. L'écart est délibéré et
+documenté : « charges » y est du français courant pour « sorties », dans une
+copie relue pour la contrainte FSMA, et #365 l'a explicitement laissée hors
+périmètre. Il reste que quelqu'un lit la FAQ avant d'entrer dans l'app.
+Arbitrage éditorial dû à @cowork, pas à la session code ; passe
+`i18n-translator` nl/de/es (les 6 items L3 sont FR-verbatim, dette trackée) ;
+tickets Lighthouse
 [#377](https://github.com/thierryvm/ankora/issues/377) (LCP bannière
 consentement) et [#378](https://github.com/thierryvm/ankora/issues/378) (style
 runtime sonner sans nonce) ; contrôles iPhone réel dus par @thierry (rapports

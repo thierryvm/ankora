@@ -160,7 +160,7 @@ describe('<Header />', () => {
     await renderHeader({ variant: 'app', isAuthenticated: true });
     expect(screen.getByRole('link', { name: 'Tableau de bord' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Comptes' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Charges' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Factures' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Dépenses' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Paramètres' })).toBeInTheDocument();
   });
@@ -180,7 +180,7 @@ describe('<Header />', () => {
   it('app variant links point to the correct routes', async () => {
     await renderHeader({ variant: 'app', isAuthenticated: true });
     expect(screen.getByRole('link', { name: 'Dépenses' })).toHaveAttribute('href', '/app/expenses');
-    expect(screen.getByRole('link', { name: 'Charges' })).toHaveAttribute('href', '/app/charges');
+    expect(screen.getByRole('link', { name: 'Factures' })).toHaveAttribute('href', '/app/charges');
   });
 
   it('marketing variant does not show the app-only links (Dépenses)', async () => {

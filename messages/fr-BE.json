@@ -23,7 +23,7 @@
       "myCockpit": "Mon cockpit",
       "dashboard": "Tableau de bord",
       "accounts": "Comptes",
-      "charges": "Charges",
+      "charges": "Factures",
       "expenses": "Dépenses",
       "simulator": "Simulateur",
       "settings": "Paramètres",
@@ -660,23 +660,23 @@
       "incomeLabel": "Revenu mensuel net (€)"
     },
     "step3": {
-      "title": "Ta première charge (optionnel)",
+      "title": "Ta première facture (optionnel)",
       "description": "Ajoute un loyer, une assurance, un abonnement…",
       "labelLabel": "Libellé",
       "labelPlaceholder": "Loyer, assurance auto…",
       "amountLabel": "Montant (€)",
       "frequencyLabel": "Fréquence",
       "dueMonthLabel": "Mois de référence",
-      "skipLater": "Je renseignerai mes charges plus tard"
+      "skipLater": "Je renseignerai mes factures plus tard"
     }
   },
   "app": {
     "dashboard": {
       "metaTitle": "Tableau de bord",
       "headerTitle": "{month} — ton cockpit",
-      "emptyTitle": "Commence par ajouter tes charges",
+      "emptyTitle": "Commence par ajouter tes factures",
       "emptyDescription": "Loyer, assurances, abonnements — Ankora les lisse sur 12 mois pour toi.",
-      "emptyCta": "Ajouter une charge",
+      "emptyCta": "Ajouter une facture",
       "kpiProvisionsMonthly": "Provisions / mois",
       "kpiProvisionsAnnualHint": "Annuel : {amount}",
       "kpiHealth": "Santé provisions",
@@ -702,7 +702,7 @@
       "transferEpargneHint": "{provision} à mettre de côté − {bills} de factures ce mois",
       "transferPrincipalRemaining": "Après tes sorties · {month}",
       "transferPrincipalRemainingHint": "Après {bills} de factures et {commitments} d’échéances d’engagement.",
-      "ctaCharges": "Mes charges",
+      "ctaCharges": "Mes factures",
       "ctaExpenses": "Mes dépenses",
       "ctaSimulator": "Simuler",
       "expensesTitle": "Dépenses — {month}",
@@ -715,16 +715,16 @@
       "commitmentsSectionHeading": "Mes engagements"
     },
     "charges": {
-      "title": "Mes charges",
-      "subtitle": "Chaque charge est lissée automatiquement sur 12 mois.",
-      "addFormTitle": "Ajouter une charge",
-      "emptyState": "Aucune charge pour l'instant.",
+      "title": "Mes factures",
+      "subtitle": "Chaque facture est lissée automatiquement sur 12 mois.",
+      "addFormTitle": "Ajouter une facture",
+      "emptyState": "Aucune facture pour l'instant.",
       "labelLabel": "Libellé",
       "amountLabel": "Montant (€)",
       "frequencyLabel": "Fréquence",
       "dueMonthLabel": "Mois de référence",
       "paymentDayLabel": "Jour du mois",
-      "paymentDayHint": "Le jour où la charge est prélevée (1 à 31).",
+      "paymentDayHint": "Le jour où la facture est prélevée (1 à 31).",
       "cadence": {
         "frequencyLabel": "Fréquence",
         "dayLabel": "Jour du mois",
@@ -736,15 +736,15 @@
       },
       "addButton": "Ajouter",
       "adding": "Ajout…",
-      "count": "{count, plural, =0 {aucune charge} one {1 charge} other {# charges}}",
+      "count": "{count, plural, =0 {aucune facture} one {1 facture} other {# factures}}",
       "totalMonthlyLabel": "Effort lissé / mois",
       "totalAnnualLabel": "Équivalent annuel",
       "referenceFormat": "{frequency} · ref. {month}",
       "deleteAria": "Supprimer {label}",
       "editAria": "Modifier {label}",
-      "toastCreated": "Charge ajoutée",
-      "toastUpdated": "Charge mise à jour",
-      "toastDeleted": "Charge supprimée",
+      "toastCreated": "Facture ajoutée",
+      "toastUpdated": "Facture mise à jour",
+      "toastDeleted": "Facture supprimée",
       "toastMarkedPaid": "Facture marquée payée",
       "toastMarkedUnpaid": "Facture marquée à payer",
       "markPaidAria": "Marquer {label} comme payée",
@@ -771,7 +771,7 @@
       "toastWatched": "Ajoutée à « À surveiller »",
       "toastUnwatched": "Retirée de « À surveiller »",
       "drawer": {
-        "title": "Modifier la charge",
+        "title": "Modifier la facture",
         "save": "Enregistrer",
         "saving": "Enregistrement…",
         "cancel": "Annuler",
@@ -780,7 +780,7 @@
       "aPayerCeMoisLabel": "À payer ce mois",
       "aPayerCeMoisHint": "Ce qui quitte réellement le compte, factures et échéances confondues.",
       "effortLisseLabel": "Effort lissé",
-      "effortLisseHint": "Charges mensuelles + provisions lissées + mensualités d’engagement.",
+      "effortLisseHint": "Factures mensuelles + provisions lissées + mensualités d’engagement.",
       "commitmentsGroupTitle": "Crédits & échéanciers",
       "installmentPosition": "échéance {index}/{total}",
       "commitmentRemaining": "reste {amount}",
@@ -821,9 +821,9 @@
         "submit": "Convertir",
         "submitting": "Conversion…",
         "cancel": "Annuler",
-        "noHorizon": "Sans horizon, la charge reste une charge : le budget reste juste, seul le compte à rebours manque.",
+        "noHorizon": "Sans horizon, la facture reste une facture : le budget reste juste, seul le compte à rebours manque.",
         "toastConverted": "{label} est devenu un engagement · fin {end}",
-        "drawerHint": "Si cette charge est un crédit qui se termine, Ankora peut afficher son compte à rebours."
+        "drawerHint": "Si cette facture est un crédit qui se termine, Ankora peut afficher son compte à rebours."
       }
     },
     "accounts": {
@@ -837,7 +837,7 @@
       "saving": "Enregistrement…",
       "income": {
         "title": "Revenu mensuel net",
-        "description": "Le salaire qui arrive chaque mois sur ton compte Principal. Sert à calculer ce qu'il te reste après les charges et le virement vers Vie Courante.",
+        "description": "Le salaire qui arrive chaque mois sur ton compte Principal. Sert à calculer ce qu'il te reste après les factures et le virement vers Vie Courante.",
         "placeholder": "Ex. 2500",
         "toastSaved": "Revenu mensuel mis à jour"
       },
@@ -856,7 +856,7 @@
       },
       "kind": {
         "principal": {
-          "description": "Reçoit le salaire, paye les charges fixes mensuelles.",
+          "description": "Reçoit le salaire, paye les factures mensuelles.",
           "usage": "N'entre dans aucun calcul pour l'instant."
         },
         "vieCourante": {
@@ -948,7 +948,7 @@
     },
     "expenses": {
       "title": "Mes dépenses",
-      "subtitle": "Les sorties hors charges récurrentes — courses, resto, loisirs…",
+      "subtitle": "Les sorties hors factures récurrentes — courses, resto, loisirs…",
       "addSheet": {
         "title": "Nouvelle dépense",
         "cancel": "Annuler",
@@ -1037,7 +1037,7 @@
       },
       "data": {
         "title": "Mes données",
-        "description": "Portabilité RGPD (art. 20) — télécharge un JSON de ton profil, tes budgets, charges, dépenses, catégories, consentements et journal d'activité.",
+        "description": "Portabilité RGPD (art. 20) — télécharge un JSON de ton profil, tes budgets, factures, dépenses, catégories, consentements et journal d'activité.",
         "exportButton": "Télécharger mes données",
         "exporting": "Génération…",
         "toastDownloaded": "Export téléchargé"
@@ -1083,14 +1083,14 @@
         "title": "Scénario",
         "description": "Choisis une action à simuler.",
         "modes": {
-          "cancel": "Annuler une charge",
+          "cancel": "Annuler une facture",
           "negotiate": "Renégocier",
-          "add": "Ajouter une charge"
+          "add": "Ajouter une facture"
         }
       },
       "fields": {
-        "charge": "Charge",
-        "chargePlaceholder": "Choisis une charge à simuler",
+        "charge": "Facture",
+        "chargePlaceholder": "Choisis une facture à simuler",
         "chargeExample": "ex : renégocier ton forfait, couper un streaming…",
         "newAmount": "Nouveau montant (€)",
         "label": "Libellé",
@@ -1100,7 +1100,7 @@
       },
       "impact": {
         "title": "Impact",
-        "empty": "Choisis une charge pour voir l'impact.",
+        "empty": "Choisis une facture pour voir l'impact.",
         "resteDisponible": "Budget du mois",
         "resteDisponibleRange": "Budget du mois : de {from} à {to} par mois",
         "perMonth": "/ mois",
@@ -1164,7 +1164,7 @@
         "statutAJour": "À jour ✨",
         "deficit": "Déficit détecté :",
         "rattrapageDescription": "Inclut +{amount} € pour rattraper le déficit sur 3 mois.",
-        "tooltip": "L'algorithme calcule ce que ton compte Épargne devrait contenir aujourd'hui pour absorber sereinement toutes tes charges périodiques à venir."
+        "tooltip": "L'algorithme calcule ce que ton compte Épargne devrait contenir aujourd'hui pour absorber sereinement toutes tes factures périodiques à venir."
       },
       "virements": {
         "title": "Assistant Virements",
@@ -1187,7 +1187,7 @@
     "breadcrumbs": {
       "dashboard": "Tableau de bord",
       "accounts": "Mes comptes",
-      "charges": "Mes charges",
+      "charges": "Mes factures",
       "expenses": "Mes dépenses",
       "simulator": "Simulateur",
       "settings": "Paramètres",
@@ -1203,12 +1203,12 @@
         "vert": "Tu gères bien ce mois-ci",
         "orangeDepasse": "Tu as dépassé ce mois-ci",
         "orangeProvisions": "Provisions à renflouer",
-        "rouge": "Tes charges dépassent tes revenus"
+        "rouge": "Tes factures dépassent tes revenus"
       },
       "nudge": {
         "orangeDepasse": "Tu as dépensé {montant} de plus que ce dont tu disposais ce mois-ci. On regarde ensemble ce qui peut bouger.",
-        "orangeProvisions": "Il manque {deficit} pour couvrir tes charges à venir. Rattrapage suggéré : {rattrapage}/mois.",
-        "rouge": "Tes charges et provisions ({obligations}) dépassent tes revenus ({revenus}). On regarde ensemble ce qui peut bouger."
+        "orangeProvisions": "Il manque {deficit} pour couvrir tes factures à venir. Rattrapage suggéré : {rattrapage}/mois.",
+        "rouge": "Tes factures et provisions ({obligations}) dépassent tes revenus ({revenus}). On regarde ensemble ce qui peut bouger."
       },
       "incomplet": {
         "title": "Complète ta situation",
@@ -1217,7 +1217,7 @@
       },
       "flow": {
         "revenus": "Revenus",
-        "chargesFixes": "Charges fixes",
+        "chargesFixes": "Factures mensuelles",
         "lissage": "Lissage",
         "engagements": "Engagements",
         "resteDisponible": "Budget du mois",
@@ -1228,7 +1228,7 @@
         "detailToggle": "Détail : {poste}",
         "detailOrigine": "{montant} {cycleMois, plural, =3 {tous les 3 mois} =6 {tous les 6 mois} =12 {une fois par an} other {tous les # mois}}"
       },
-      "barAria": "Répartition de tes revenus : {charges} de charges, {provisions} de provisions, {depense} dépensés, {reste} restants.",
+      "barAria": "Répartition de tes revenus : {charges} de factures, {provisions} de provisions, {depense} dépensés, {reste} restants.",
       "barAriaEngagements": "Dont {engagements} d'engagements.",
       "pace": {
         "barAria": "{depense} dépensés sur {budget} de budget du mois, au jour {jours} sur {total}.",
@@ -1246,7 +1246,7 @@
       "ratio": "Couverture cible",
       "target": "Cible théorique",
       "current": "Solde actuel",
-      "empty": "Aucune charge périodique programmée — rien à provisionner pour l'instant.",
+      "empty": "Aucune facture périodique programmée — rien à provisionner pour l'instant.",
       "ariaLabel": "Santé des provisions : {percent}% de la cible théorique",
       "deficit": "Plan de rattrapage sur 3 mois : {amount}/mois",
       "objectifDepasse": "+ {amount} au-delà de la cible",
@@ -1267,7 +1267,7 @@
     "upcomingBills": {
       "title": "Prochaines factures",
       "viewAll": "Voir toutes",
-      "empty": "Aucune charge active pour le moment.",
+      "empty": "Aucune facture active pour le moment.",
       "itemCount": "{count, plural, =1 {1 facture} other {# factures}}",
       "dueToday": "Aujourd'hui",
       "daysUntil": "Dans {days, plural, =1 {1 jour} other {# jours}}",
@@ -1279,7 +1279,7 @@
       "remainingCommitments": "dont {amount} d’échéances d’engagement",
       "watched": "À surveiller",
       "watchedHint": "Tes factures marquées, pour les voir venir.",
-      "watchedEmptyHint": "Astuce : marque une facture « à surveiller » depuis la page Charges pour la suivre ici.",
+      "watchedEmptyHint": "Astuce : marque une facture « à surveiller » depuis la page Factures pour la suivre ici.",
       "forgottenAlert": "Jamais {count, plural, =1 {cochée} other {cochées}} en {month} : {labels} — vérifie {count, plural, =1 {qu'elle a bien été payée} other {qu'elles ont bien été payées}}.",
       "forgottenSee": "Voir {month}",
       "buckets": {
@@ -1490,13 +1490,13 @@
       }
     },
     "charges": {
-      "createFailed": "Impossible de créer la charge.",
-      "updateFailed": "Impossible de mettre à jour la charge.",
-      "deleteFailed": "Impossible de supprimer la charge.",
+      "createFailed": "Impossible de créer la facture.",
+      "updateFailed": "Impossible de mettre à jour la facture.",
+      "deleteFailed": "Impossible de supprimer la facture.",
       "watchFailed": "Impossible de modifier la surveillance de la facture.",
-      "notFound": "Cette charge est introuvable.",
+      "notFound": "Cette facture est introuvable.",
       "payments": {
-        "toggleFailed": "Impossible de marquer la charge comme payée."
+        "toggleFailed": "Impossible de marquer la facture comme payée."
       }
     },
     "accounts": {
@@ -1526,7 +1526,7 @@
     "onboarding": {
       "workspaceNotFound": "Workspace introuvable. Contacte le support.",
       "workspaceUpdateFailed": "Impossible de mettre à jour le workspace.",
-      "chargeFailed": "Workspace créé mais charge non enregistrée."
+      "chargeFailed": "Workspace créé mais facture non enregistrée."
     },
     "locale": {
       "invalid": "Langue invalide."

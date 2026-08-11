@@ -23,7 +23,7 @@
       "myCockpit": "Mijn cockpit",
       "dashboard": "Dashboard",
       "accounts": "Rekeningen",
-      "charges": "Vaste kosten",
+      "charges": "Facturen",
       "expenses": "Uitgaven",
       "simulator": "Simulator",
       "settings": "Instellingen",
@@ -660,23 +660,23 @@
       "incomeLabel": "Maandelijks nettoloon (€)"
     },
     "step3": {
-      "title": "Je eerste vaste kost (optioneel)",
+      "title": "Je eerste factuur (optioneel)",
       "description": "Voeg een huur, een verzekering, een abonnement toe…",
       "labelLabel": "Omschrijving",
       "labelPlaceholder": "Huur, autoverzekering…",
       "amountLabel": "Bedrag (€)",
       "frequencyLabel": "Frequentie",
       "dueMonthLabel": "Referentiemaand",
-      "skipLater": "Ik geef mijn vaste kosten later in"
+      "skipLater": "Ik geef mijn facturen later in"
     }
   },
   "app": {
     "dashboard": {
       "metaTitle": "Dashboard",
       "headerTitle": "{month} — je cockpit",
-      "emptyTitle": "Begin met het toevoegen van je vaste kosten",
+      "emptyTitle": "Begin met het toevoegen van je facturen",
       "emptyDescription": "Huur, verzekeringen, abonnementen — Ankora spreidt ze voor jou over 12 maanden.",
-      "emptyCta": "Vaste kost toevoegen",
+      "emptyCta": "Factuur toevoegen",
       "kpiProvisionsMonthly": "Voorzieningen / maand",
       "kpiProvisionsAnnualHint": "Jaarlijks: {amount}",
       "kpiHealth": "Gezondheid voorzieningen",
@@ -702,7 +702,7 @@
       "transferEpargneHint": "{provision} opzij te zetten − {bills} aan facturen deze maand",
       "transferPrincipalRemaining": "Na je uitgaven · {month}",
       "transferPrincipalRemainingHint": "Na {bills} facturen en {commitments} aflossingen.",
-      "ctaCharges": "Mijn vaste kosten",
+      "ctaCharges": "Mijn facturen",
       "ctaExpenses": "Mijn uitgaven",
       "ctaSimulator": "Simuleren",
       "expensesTitle": "Uitgaven — {month}",
@@ -715,16 +715,16 @@
       "commitmentsSectionHeading": "Mijn verbintenissen"
     },
     "charges": {
-      "title": "Mijn vaste kosten",
-      "subtitle": "Elke vaste kost wordt automatisch over 12 maanden gespreid.",
-      "addFormTitle": "Vaste kost toevoegen",
-      "emptyState": "Nog geen vaste kosten.",
+      "title": "Mijn facturen",
+      "subtitle": "Elke factuur wordt automatisch over 12 maanden gespreid.",
+      "addFormTitle": "Factuur toevoegen",
+      "emptyState": "Nog geen facturen.",
       "labelLabel": "Omschrijving",
       "amountLabel": "Bedrag (€)",
       "frequencyLabel": "Frequentie",
       "dueMonthLabel": "Referentiemaand",
       "paymentDayLabel": "Dag van de maand",
-      "paymentDayHint": "De dag waarop de kost wordt afgeschreven (1–31).",
+      "paymentDayHint": "De dag waarop de factuur wordt afgeschreven (1–31).",
       "cadence": {
         "frequencyLabel": "Frequentie",
         "dayLabel": "Dag van de maand",
@@ -736,15 +736,15 @@
       },
       "addButton": "Toevoegen",
       "adding": "Toevoegen…",
-      "count": "{count, plural, =0 {geen vaste kosten} one {1 vaste kost} other {# vaste kosten}}",
+      "count": "{count, plural, =0 {geen facturen} one {1 factuur} other {# facturen}}",
       "totalMonthlyLabel": "Gespreid per maand",
       "totalAnnualLabel": "Jaarlijks equivalent",
       "referenceFormat": "{frequency} · ref. {month}",
       "deleteAria": "{label} verwijderen",
       "editAria": "{label} bewerken",
-      "toastCreated": "Vaste kost toegevoegd",
-      "toastUpdated": "Vaste kost bijgewerkt",
-      "toastDeleted": "Vaste kost verwijderd",
+      "toastCreated": "Factuur toegevoegd",
+      "toastUpdated": "Factuur bijgewerkt",
+      "toastDeleted": "Factuur verwijderd",
       "toastMarkedPaid": "Factuur als betaald gemarkeerd",
       "toastMarkedUnpaid": "Factuur als te betalen gemarkeerd",
       "markPaidAria": "{label} als betaald markeren",
@@ -771,7 +771,7 @@
       "toastWatched": "Toegevoegd aan 'In het oog houden'",
       "toastUnwatched": "Verwijderd uit 'In het oog houden'",
       "drawer": {
-        "title": "Vaste kost bewerken",
+        "title": "Factuur bewerken",
         "save": "Opslaan",
         "saving": "Opslaan…",
         "cancel": "Annuleren",
@@ -780,7 +780,7 @@
       "aPayerCeMoisLabel": "Deze maand te betalen",
       "aPayerCeMoisHint": "Wat echt van de rekening gaat — facturen en aflossingen samen.",
       "effortLisseLabel": "Gespreide inspanning",
-      "effortLisseHint": "Maandelijkse kosten + gespreide voorzieningen + aflossingen.",
+      "effortLisseHint": "Maandelijkse facturen + gespreide voorzieningen + aflossingen.",
       "commitmentsGroupTitle": "Kredieten & afbetalingen",
       "installmentPosition": "aflossing {index}/{total}",
       "commitmentRemaining": "nog {amount}",
@@ -821,9 +821,9 @@
         "submit": "Omzetten",
         "submitting": "Bezig met omzetten…",
         "cancel": "Annuleren",
-        "noHorizon": "Zonder horizon blijft de kost een kost: het budget blijft juist, alleen de aftelling ontbreekt.",
+        "noHorizon": "Zonder horizon blijft de factuur een factuur: het budget blijft juist, alleen de aftelling ontbreekt.",
         "toastConverted": "{label} is nu een verbintenis · einde {end}",
-        "drawerHint": "Als deze kost een krediet is dat eindigt, kan Ankora de aftelling tonen."
+        "drawerHint": "Als deze factuur een krediet is dat eindigt, kan Ankora de aftelling tonen."
       }
     },
     "accounts": {
@@ -837,7 +837,7 @@
       "saving": "Opslaan…",
       "income": {
         "title": "Maandelijks nettoloon",
-        "description": "Het loon dat elke maand op je Hoofdrekening toekomt. Dient om te berekenen wat je overhoudt na vaste kosten en de overschrijving naar Dagelijks Leven.",
+        "description": "Het loon dat elke maand op je Hoofdrekening toekomt. Dient om te berekenen wat je overhoudt na facturen en de overschrijving naar Dagelijks Leven.",
         "placeholder": "Bv. 2500",
         "toastSaved": "Maandelijks nettoloon bijgewerkt"
       },
@@ -856,7 +856,7 @@
       },
       "kind": {
         "principal": {
-          "description": "Ontvangt het loon, betaalt de maandelijkse vaste kosten.",
+          "description": "Ontvangt het loon, betaalt de maandelijkse facturen.",
           "usage": "Not used in any calculation yet."
         },
         "vieCourante": {
@@ -948,7 +948,7 @@
     },
     "expenses": {
       "title": "Mijn uitgaven",
-      "subtitle": "De uitgaven buiten de terugkerende vaste kosten — boodschappen, resto, vrije tijd…",
+      "subtitle": "De uitgaven buiten de terugkerende facturen — boodschappen, resto, vrije tijd…",
       "addSheet": {
         "title": "Nieuwe uitgave",
         "cancel": "Annuleren",
@@ -1037,7 +1037,7 @@
       },
       "data": {
         "title": "Mijn gegevens",
-        "description": "AVG-dataportabiliteit (art. 20) — download een JSON met je profiel, budgetten, vaste kosten, uitgaven, categorieën, toestemmingen en activiteitenlogboek.",
+        "description": "AVG-dataportabiliteit (art. 20) — download een JSON met je profiel, budgetten, facturen, uitgaven, categorieën, toestemmingen en activiteitenlogboek.",
         "exportButton": "Mijn gegevens downloaden",
         "exporting": "Genereren…",
         "toastDownloaded": "Export gedownload"
@@ -1083,14 +1083,14 @@
         "title": "Scenario",
         "description": "Kies een actie om te simuleren.",
         "modes": {
-          "cancel": "Een vaste kost annuleren",
+          "cancel": "Een factuur annuleren",
           "negotiate": "Heronderhandelen",
-          "add": "Een vaste kost toevoegen"
+          "add": "Een factuur toevoegen"
         }
       },
       "fields": {
-        "charge": "Vaste kost",
-        "chargePlaceholder": "Kies een vaste kost om te simuleren",
+        "charge": "Factuur",
+        "chargePlaceholder": "Kies een factuur om te simuleren",
         "chargeExample": "bv. je gsm-abonnement heronderhandelen, een streamingdienst opzeggen…",
         "newAmount": "Nieuw bedrag (€)",
         "label": "Omschrijving",
@@ -1100,7 +1100,7 @@
       },
       "impact": {
         "title": "Impact",
-        "empty": "Kies een vaste kost om de impact te zien.",
+        "empty": "Kies een factuur om de impact te zien.",
         "resteDisponible": "Maandbudget",
         "resteDisponibleRange": "Maandbudget: van {from} tot {to} per maand",
         "perMonth": "/ maand",
@@ -1164,7 +1164,7 @@
         "statutAJour": "On track ✨",
         "deficit": "Deficit detected:",
         "rattrapageDescription": "Includes +{amount} € to recover the deficit over 3 months.",
-        "tooltip": "The algorithm computes how much your Savings account should hold today to absorb all upcoming periodic charges smoothly."
+        "tooltip": "The algorithm computes how much your Savings account should hold today to absorb all upcoming periodic bills smoothly."
       },
       "virements": {
         "title": "Transfer Assistant",
@@ -1187,7 +1187,7 @@
     "breadcrumbs": {
       "dashboard": "Dashboard",
       "accounts": "Mijn rekeningen",
-      "charges": "Mijn vaste kosten",
+      "charges": "Mijn facturen",
       "expenses": "Mijn uitgaven",
       "simulator": "Simulator",
       "settings": "Instellingen",
@@ -1203,12 +1203,12 @@
         "vert": "Je houdt deze maand goed overzicht",
         "orangeDepasse": "Je gaf deze maand te veel uit",
         "orangeProvisions": "Voorzieningen aanvullen",
-        "rouge": "Je vaste kosten overstijgen je inkomen"
+        "rouge": "Je facturen overstijgen je inkomen"
       },
       "nudge": {
         "orangeDepasse": "Je gaf {montant} meer uit dan je deze maand had. Laten we samen kijken wat kan bewegen.",
-        "orangeProvisions": "Er ontbreekt {deficit} om je komende kosten te dekken. Voorgestelde inhaalbeweging: {rattrapage}/maand.",
-        "rouge": "Je vaste kosten en voorzieningen ({obligations}) overstijgen je inkomen ({revenus}). We bekijken samen wat kan bewegen."
+        "orangeProvisions": "Er ontbreekt {deficit} om je komende facturen te dekken. Voorgestelde inhaalbeweging: {rattrapage}/maand.",
+        "rouge": "Je facturen en voorzieningen ({obligations}) overstijgen je inkomen ({revenus}). We bekijken samen wat kan bewegen."
       },
       "incomplet": {
         "title": "Vervolledig je situatie",
@@ -1217,7 +1217,7 @@
       },
       "flow": {
         "revenus": "Inkomen",
-        "chargesFixes": "Vaste kosten",
+        "chargesFixes": "Maandelijkse facturen",
         "lissage": "Smoothing",
         "engagements": "Verbintenissen",
         "resteDisponible": "Maandbudget",
@@ -1228,7 +1228,7 @@
         "detailToggle": "Breakdown: {poste}",
         "detailOrigine": "{montant} {cycleMois, plural, =3 {every 3 months} =6 {every 6 months} =12 {once a year} other {every # months}}"
       },
-      "barAria": "Verdeling van je inkomen: {charges} vaste kosten, {provisions} voorzieningen, {depense} uitgegeven, {reste} over.",
+      "barAria": "Verdeling van je inkomen: {charges} facturen, {provisions} voorzieningen, {depense} uitgegeven, {reste} over.",
       "barAriaEngagements": "Waarvan {engagements} aan verbintenissen.",
       "pace": {
         "barAria": "{depense} besteed van {budget} maandbudget, op dag {jours} van {total}.",
@@ -1246,7 +1246,7 @@
       "ratio": "Dekking doel",
       "target": "Theoretisch doel",
       "current": "Huidig saldo",
-      "empty": "Geen periodieke kosten gepland — nog niets om voor te sparen.",
+      "empty": "Geen periodieke facturen gepland — nog niets om voor te sparen.",
       "ariaLabel": "Gezondheid van de voorzieningen: {percent}% van het theoretische doel",
       "deficit": "Inhaalplan over 3 maanden: {amount}/maand",
       "objectifDepasse": "+ {amount} boven het doel",
@@ -1267,7 +1267,7 @@
     "upcomingBills": {
       "title": "Aankomende facturen",
       "viewAll": "Alles bekijken",
-      "empty": "Nog geen actieve vaste kosten.",
+      "empty": "Nog geen actieve facturen.",
       "itemCount": "{count, plural, =1 {1 factuur} other {# facturen}}",
       "dueToday": "Vandaag",
       "daysUntil": "Over {days, plural, =1 {1 dag} other {# dagen}}",
@@ -1279,7 +1279,7 @@
       "remainingCommitments": "waarvan {amount} aan aflossingen",
       "watched": "In het oog houden",
       "watchedHint": "Je gemarkeerde facturen, om ze te zien aankomen.",
-      "watchedEmptyHint": "Tip: markeer een factuur als 'in het oog houden' op de pagina Vaste kosten om ze hier te volgen.",
+      "watchedEmptyHint": "Tip: markeer een factuur als 'in het oog houden' op de pagina Facturen om ze hier te volgen.",
       "forgottenAlert": "Nooit afgevinkt in {month}: {labels} — controleer of {count, plural, =1 {die echt betaald is} other {die echt betaald zijn}}.",
       "forgottenSee": "Bekijk {month}",
       "buckets": {
@@ -1490,13 +1490,13 @@
       }
     },
     "charges": {
-      "createFailed": "Kan de vaste kost niet aanmaken.",
-      "updateFailed": "Kan de vaste kost niet bijwerken.",
-      "deleteFailed": "Kan de vaste kost niet verwijderen.",
+      "createFailed": "Kan de factuur niet aanmaken.",
+      "updateFailed": "Kan de factuur niet bijwerken.",
+      "deleteFailed": "Kan de factuur niet verwijderen.",
       "watchFailed": "Kan de markering van de factuur niet bijwerken.",
-      "notFound": "Deze vaste kost is niet gevonden.",
+      "notFound": "Deze factuur is niet gevonden.",
       "payments": {
-        "toggleFailed": "Kan de vaste kost niet als betaald markeren."
+        "toggleFailed": "Kan de factuur niet als betaald markeren."
       }
     },
     "accounts": {
@@ -1526,7 +1526,7 @@
     "onboarding": {
       "workspaceNotFound": "Workspace niet gevonden. Contacteer de support.",
       "workspaceUpdateFailed": "Kan de workspace niet bijwerken.",
-      "chargeFailed": "Workspace aangemaakt maar vaste kost niet opgeslagen."
+      "chargeFailed": "Workspace aangemaakt maar factuur niet opgeslagen."
     },
     "locale": {
       "invalid": "Taal niet geldig."

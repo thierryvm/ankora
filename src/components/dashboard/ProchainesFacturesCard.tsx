@@ -174,7 +174,7 @@ export async function ProchainesFacturesCard({
 
   const hasAnyWatched = charges.some((c) => c.isActive && c.isWatched === true);
   // An account with no active charge but a commitment instalment due used to
-  // short-circuit to « Aucune charge active pour le moment » while the money
+  // short-circuit to « Aucune facture active pour le moment » while the money
   // left anyway. The card is empty only when NOTHING is due, either family.
   const isEmpty = charges.filter((c) => c.isActive).length === 0 && obligations.length === 0;
 
