@@ -253,6 +253,48 @@ export function ConsentBanner({ liftedForBottomBar = false }: ConsentBannerProps
     notify();
   }, []);
 
+  /**
+   * `dismissed` est un état LOCAL, et il ne se remettait jamais à zéro.
+   *
+   * Signalé par @thierry le 11 août 2026 : cliquer « Modifier mes préférences
+   * cookies » ne ramenait pas la bannière ; seul un rechargement complet la
+   * faisait revenir. Reproduit, puis remonté jusqu'ici.
+   *
+   * Le store faisait pourtant son travail — `reopenConsentBanner()` vidait bien
+   * la décision et posait le drapeau. Mais `setDismissed(true)`, posé au moment
+   * de la décision, n'était annulé par rien, et `shouldShow` le lit en premier :
+   * `!dismissed` suffisait à masquer une bannière que tout le reste demandait à
+   * afficher. Un rechargement « réparait » en remontant le composant, ce qui
+   * remettait l'état local à `false` — d'où un symptôme qui ressemblait à un
+   * cache, alors qu'il n'y en avait aucun.
+   *
+   * Ce composant vit dans le layout racine : son état survit donc à TOUTE la
+   * navigation client. Une fois la décision prise, le retrait devenait
+   * inatteignable pour le reste de la session.
+   *
+   * L'enjeu est réglementaire : retirer son consentement doit être aussi simple
+   * que le donner (RGPD art. 7(3)). Un retrait qui exige un rechargement complet
+   * ne l'est pas.
+   *
+   * Ajustement PENDANT le rendu, et non dans un `useEffect` : c'est le motif que
+   * React documente pour réinitialiser un état local quand une valeur externe
+   * change. Un effet ferait la même chose au prix d'un rendu en cascade — le
+   * linter le refuse, à raison, et le contourner par un commentaire de
+   * désactivation masquerait le coût sans le supprimer. Ici React redémarre le
+   * rendu avant de peindre : aucun affichage intermédiaire.
+   *
+   * La bascule est comparée plutôt que lue à plat : au moment d'une décision,
+   * `persist()` retire le drapeau mais `notify()` n'est appelé qu'APRÈS l'action
+   * serveur. Sans cette comparaison, un `snap.reopen` encore à `true` dans cet
+   * intervalle rouvrirait la bannière que `setDismissed(true)` vient de fermer,
+   * et la garantie « la bannière disparaît immédiatement » tomberait.
+   */
+  const [reopenPrecedent, setReopenPrecedent] = useState(snap.reopen);
+  if (snap.reopen !== reopenPrecedent) {
+    setReopenPrecedent(snap.reopen);
+    if (snap.reopen) setDismissed(false);
+  }
+
   const hasDecided = snap.stored !== null;
   const shouldShow = !dismissed && (!hasDecided || snap.reopen);
 
