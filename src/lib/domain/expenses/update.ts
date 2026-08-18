@@ -4,8 +4,7 @@ import type { ExpenseRecord, ExpenseUpdateInput } from './types';
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 export type ExpenseUpdateValidation =
-  | { ok: true }
-  | { ok: false; errors: Record<string, string[]> };
+  { ok: true } | { ok: false; errors: Record<string, string[]> };
 
 /**
  * Validate an `ExpenseUpdateInput` mirroring `expenseUpdateSchema` (Zod) but

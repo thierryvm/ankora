@@ -92,7 +92,7 @@ Le prompt @cowork annonçait 18 consommateurs ; ma liste directe en montre 10. P
 | #   | Critère                                               | État                                                 |
 | --- | ----------------------------------------------------- | ---------------------------------------------------- |
 | 1   | CI checks verts (sauf E2E pré-existants attendus)     | ⏳ 5/7 pass, Lint+TC en cours, Security ✅ Vercel ✅ |
-| 2   | Sourcery silent / résolu                              | ⏭ skipping (rate limit hebdo accepté)               |
+| 2   | Sourcery silent / résolu                              | ⏭ skipping (rate limit hebdo accepté)                |
 | 3   | Threads humains résolus                               | ⏳ aucun thread ouvert (PR fraîche)                  |
 | 4   | mergeStateStatus CLEAN (post-bypass admin Playwright) | ⏳ UNSTABLE initial post-push                        |
 | 5   | Rapport livré                                         | ✅ ce document                                       |

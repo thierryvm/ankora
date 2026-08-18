@@ -167,12 +167,13 @@ where n.nspname = 'public' and proname = 'touch_updated_at';
 - Coût du fix : moyen (1 migration + tests RLS étendus). Bénéfice sécurité réel : marginal (false anyway pour anon).
 
 **WARN persistants attendus** :
-| WARN | Raison | Action |
-|---|---|---|
-| 0011 sur `is_workspace_member` | PUBLIC retient EXECUTE, anon WARN reste | Accepté — fonction retourne false pour anon, pas de fuite |
-| 0011 sur `is_workspace_editor` | Idem | Idem |
-| Leaked password protection | Free tier Supabase | Hors scope ROADMAP — paid tier requis |
-| 2 autres (à détailler après re-run final) | À investiguer | Suivi follow-up si nécessaire |
+
+| WARN                                      | Raison                                  | Action                                                    |
+| ----------------------------------------- | --------------------------------------- | --------------------------------------------------------- |
+| 0011 sur `is_workspace_member`            | PUBLIC retient EXECUTE, anon WARN reste | Accepté — fonction retourne false pour anon, pas de fuite |
+| 0011 sur `is_workspace_editor`            | Idem                                    | Idem                                                      |
+| Leaked password protection                | Free tier Supabase                      | Hors scope ROADMAP — paid tier requis                     |
+| 2 autres (à détailler après re-run final) | À investiguer                           | Suivi follow-up si nécessaire                             |
 
 ---
 

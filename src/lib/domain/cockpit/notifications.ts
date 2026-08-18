@@ -5,10 +5,7 @@ import { paymentKey, type CockpitCharge, type PaymentLedger, type ReferencePerio
 export type NotificationLevel = 'info' | 'warning' | 'danger';
 
 export type NotificationKind =
-  | 'transfer_to_savings'
-  | 'transfer_from_savings'
-  | 'charge_overdue'
-  | 'charge_due_soon';
+  'transfer_to_savings' | 'transfer_from_savings' | 'charge_overdue' | 'charge_due_soon';
 
 export type CockpitNotification = Readonly<{
   kind: NotificationKind;

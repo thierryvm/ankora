@@ -1,8 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 type TerminalResult =
-  | { data: unknown; error: null }
-  | { data: null; error: { code?: string; message: string } };
+  { data: unknown; error: null } | { data: null; error: { code?: string; message: string } };
 
 type ScriptedQueue = {
   table: string;

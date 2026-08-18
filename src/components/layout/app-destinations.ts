@@ -43,12 +43,7 @@
  * rendu ce retrait sûr.
  */
 export type AppDestinationId =
-  | 'cockpit'
-  | 'accounts'
-  | 'bills'
-  | 'commitments'
-  | 'expenses'
-  | 'settings';
+  'cockpit' | 'accounts' | 'bills' | 'commitments' | 'expenses' | 'settings';
 
 export type AppDestination = {
   id: AppDestinationId;
@@ -119,8 +114,7 @@ export const ADD_EXPENSE_ACTION: AppAction = { id: 'addExpense' } as const;
 
 /** A slot in the mobile tab bar: either a destination or the ⊕ action. */
 export type MobileTabItem =
-  | ({ kind: 'destination' } & AppDestination)
-  | ({ kind: 'action' } & AppAction);
+  ({ kind: 'destination' } & AppDestination) | ({ kind: 'action' } & AppAction);
 
 /**
  * The bar's slots, in display order: Mois · Factures · ⊕ · Dépenses — with

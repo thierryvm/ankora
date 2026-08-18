@@ -28,8 +28,9 @@ const charge = (over: Partial<CockpitCharge> = {}): CockpitCharge => ({
 
 describe('the accumulator', () => {
   it('projects 12 months by default', () => {
-    expect(projeterFondsProvision({ charges: [charge()], soldeInitial: new Decimal(0), ref: REF }))
-      .toHaveLength(12);
+    expect(
+      projeterFondsProvision({ charges: [charge()], soldeInitial: new Decimal(0), ref: REF }),
+    ).toHaveLength(12);
   });
 
   it('feeds the fund every month and draws it on the bill month', () => {

@@ -119,13 +119,13 @@ Playwright E2E                 ⏳ pending — **6 specs anciennement rouges →
 
 ## DoD 5-step
 
-| #   | Critère                                                 | État                                   |
-| --- | ------------------------------------------------------- | -------------------------------------- |
-| 1   | CI checks verts (sauf BUG-iOS-011 #116 backlog accepté) | ⏳ en cours                            |
+| #   | Critère                                                 | État                                  |
+| --- | ------------------------------------------------------- | ------------------------------------- |
+| 1   | CI checks verts (sauf BUG-iOS-011 #116 backlog accepté) | ⏳ en cours                           |
 | 2   | Sourcery silent / résolu                                | ⏭ skipping (rate limit hebdo accepté) |
-| 3   | Threads humains résolus                                 | ⏳ aucun thread ouvert                 |
-| 4   | mergeStateStatus CLEAN (post-bypass admin BUG-iOS-011)  | ⏳ UNSTABLE initial post-push          |
-| 5   | Rapport livré                                           | ✅ ce document                         |
+| 3   | Threads humains résolus                                 | ⏳ aucun thread ouvert                |
+| 4   | mergeStateStatus CLEAN (post-bypass admin BUG-iOS-011)  | ⏳ UNSTABLE initial post-push         |
+| 5   | Rapport livré                                           | ✅ ce document                        |
 
 ---
 

@@ -32,14 +32,14 @@ document.cookie = `${cookieKey}=${theme}; max-age=31536000; path=/; SameSite=Lax
 
 ## Verifications PASS
 
-| #   | Check                                                      | File                          | Result                                             |
+| # | Check | File | Result |
 | --- | ---------------------------------------------------------- | ----------------------------- | -------------------------------------------------- | ------------------- |
-| V1  | Pas de PII dans 11 fixtures demos                          | `_components/demos/*Demo.tsx` | ✅ 0 PII (initiales `AD`, emojis, valeurs neutres) |
-| V2  | Env var `ANKORA_PLAYGROUND_ENABLED` non leak bundle client | `page.tsx:42`, `env.ts:19`    | ✅ server-only (pas `NEXT_PUBLIC_`)                |
-| V3  | `metadata.robots noindex/nofollow` sur playground          | `page.tsx:18-22`              | ✅ présent                                         |
-| V4  | Aucun fetch external dans atoms                            | `src/components/atoms/*.tsx`  | ✅ 0 occurrence                                    |
-| V5  | LangSwitcher ne pose pas de cookie (PR-A headless)         | `LangSwitcher.tsx`            | ✅ pas de `document.cookie`                        |
-| V6  | Cookie `theme` exemption ePrivacy "strictly necessary"     | `ThemeToggle.tsx:50`          | ✅ valeur `light                                   | dark` non-trackable |
+| V1 | Pas de PII dans 11 fixtures demos | `_components/demos/*Demo.tsx` | ✅ 0 PII (initiales `AD`, emojis, valeurs neutres) |
+| V2 | Env var `ANKORA_PLAYGROUND_ENABLED` non leak bundle client | `page.tsx:42`, `env.ts:19` | ✅ server-only (pas `NEXT_PUBLIC_`) |
+| V3 | `metadata.robots noindex/nofollow` sur playground | `page.tsx:18-22` | ✅ présent |
+| V4 | Aucun fetch external dans atoms | `src/components/atoms/*.tsx` | ✅ 0 occurrence |
+| V5 | LangSwitcher ne pose pas de cookie (PR-A headless) | `LangSwitcher.tsx` | ✅ pas de `document.cookie` |
+| V6 | Cookie `theme` exemption ePrivacy "strictly necessary" | `ThemeToggle.tsx:50` | ✅ valeur `light                                   | dark` non-trackable |
 
 ## Verdict & actions
 

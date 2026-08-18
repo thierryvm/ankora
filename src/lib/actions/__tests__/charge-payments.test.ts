@@ -3,8 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // vi.mock factories run hoisted above top-level `const`. Use `vi.hoisted` so
 // the shared mocks exist before the factories execute.
 type TerminalResult =
-  | { data: unknown; error: null }
-  | { data: null; error: { code?: string; message: string } };
+  { data: unknown; error: null } | { data: null; error: { code?: string; message: string } };
 
 type ScriptedQueue = {
   table: string;

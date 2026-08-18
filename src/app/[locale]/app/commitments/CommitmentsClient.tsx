@@ -413,11 +413,7 @@ export function CommitmentsClient({
     const toEnd = endPeriod(after);
     const fromBalance = remainingBalance(before, paidKeys);
     const toBalance = remainingBalance(after, paidKeys);
-    if (
-      fromEnd.year === toEnd.year &&
-      fromEnd.month === toEnd.month &&
-      fromBalance === toBalance
-    ) {
+    if (fromEnd.year === toEnd.year && fromEnd.month === toEnd.month && fromBalance === toBalance) {
       return { changed: false as const };
     }
     return { changed: true as const, fromEnd, toEnd, fromBalance, toBalance };

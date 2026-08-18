@@ -123,13 +123,13 @@ const extraHint =
 
 ## DoD canonique 5/5 — état actuel
 
-| #   | Critère DoD                           | État                                              |
-| --- | ------------------------------------- | ------------------------------------------------- |
-| 1   | `gh pr checks` ✅ tous verts          | ⏳ CI en cours sur `a7ae5ad`                      |
+| #   | Critère DoD                           | État                                             |
+| --- | ------------------------------------- | ------------------------------------------------ |
+| 1   | `gh pr checks` ✅ tous verts          | ⏳ CI en cours sur `a7ae5ad`                     |
 | 2   | Sourcery silent sur le DERNIER commit | ⏭ Sourcery `skipping` (rate limit hebdo accepté) |
-| 3   | Threads humains résolus               | ⏳ aucun thread humain ouvert (PR fraîche)        |
-| 4   | Branch up-to-date with main           | ✅ basée sur `d8b606f` (PR-LEGAL-1 mergée)        |
-| 5   | mergeStateStatus CLEAN                | ⏳ `UNSTABLE` initial post-push (normal)          |
+| 3   | Threads humains résolus               | ⏳ aucun thread humain ouvert (PR fraîche)       |
+| 4   | Branch up-to-date with main           | ✅ basée sur `d8b606f` (PR-LEGAL-1 mergée)       |
+| 5   | mergeStateStatus CLEAN                | ⏳ `UNSTABLE` initial post-push (normal)         |
 
 **À surveiller** : Playwright E2E job va potentiellement échouer sur BUG-iOS-011 #116 (overflow iPhone SE landing). **Accepté @cowork** pour le merge bypass admin.
 

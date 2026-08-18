@@ -91,8 +91,6 @@ export function projeterFondsProvision(input: ProjectionFondsInput): readonly Mo
  * the whole horizon. This is the sentence the screen leads with; the 12 rows
  * are the proof behind it.
  */
-export function premierMoisEnDeficit(
-  projection: readonly MoisDuFonds[],
-): MoisDuFonds | null {
+export function premierMoisEnDeficit(projection: readonly MoisDuFonds[]): MoisDuFonds | null {
   return projection.find((m) => m.solde.lt(0)) ?? null;
 }
