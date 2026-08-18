@@ -20,12 +20,29 @@ on:
   pull_request:
     branches: [main, develop]
 
-# `head_ref || ref` plutôt que `ref` seul : sur une branche portant une PR, les
-# événements `push` et `pull_request` produisent deux refs différentes et donc
-# deux runs concurrents du même code. Les regrouper sous le nom de branche fait
+# Sur une branche portant une PR, les événements `push` et `pull_request`
+# produisent deux runs du même code. Les regrouper sous le NOM de branche fait
 # que le second annule le premier, au lieu de payer deux fois.
+#
+# `ref_name` et non `ref` — corrigé le 18 août 2026, et la nuance est tout le
+# sujet. `github.head_ref` n'est renseigné que sur `pull_request` ; sur `push`
+# il est vide, donc l'expression retombe sur son alternative. Or :
+#
+#   github.ref       = "refs/heads/fix/xyz"   <- push
+#   github.head_ref  = "fix/xyz"              <- pull_request
+#
+# Deux chaînes différentes, donc DEUX groupes, donc aucun run n'annulait
+# l'autre. L'intention décrite au-dessus était écrite depuis le début ; elle
+# n'était simplement pas réalisée. `github.ref_name` rend "fix/xyz" — la même
+# valeur que `head_ref`, et les deux événements retombent enfin sur un groupe
+# unique.
+#
+# Mesuré avant correction sur #422 et #424 : chaque push lançait deux CI
+# complètes. Coût doublé, et surtout deux tirages au sort d'un runner — d'où des
+# `Playwright E2E (authenticated)` qui passaient en 5 min dans un run et
+# atteignaient le délai de 25 min dans l'autre, sur le même commit.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
