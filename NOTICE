@@ -19,10 +19,10 @@ This file lists all open-source and third-party dependencies used in this projec
 | `@radix-ui/react-select` | 2.2.6 | MIT |
 | `@radix-ui/react-slot` | 1.2.3 | MIT |
 | `@radix-ui/react-switch` | 1.2.6 | MIT |
-| `@supabase/ssr` | 0.10.2 | MIT |
-| `@supabase/supabase-js` | 2.103.3 | MIT |
+| `@supabase/ssr` | 0.10.3 | MIT |
+| `@supabase/supabase-js` | 2.112.3 | MIT |
 | `@upstash/ratelimit` | 2.0.8 | MIT |
-| `@upstash/redis` | 1.37.0 | MIT |
+| `@upstash/redis` | 1.38.2 | MIT |
 | `@vercel/analytics` | 2.0.1 | MIT |
 | `@vercel/speed-insights` | 2.0.0 | Apache-2.0 |
 | `class-variance-authority` | 0.7.1 | Apache-2.0 |
@@ -32,23 +32,23 @@ This file lists all open-source and third-party dependencies used in this projec
 | `lucide-react` | 1.8.0 | ISC |
 | `nanoid` | 5.1.16 | MIT |
 | `next` | 16.2.11 | MIT |
-| `next-intl` | 4.11.0 | MIT |
+| `next-intl` | 4.13.7 | MIT |
 | `pino` | 10.3.1 | MIT |
 | `react` | 19.2.4 | MIT |
 | `react-dom` | 19.2.4 | MIT |
-| `react-hook-form` | 7.72.1 | MIT |
+| `react-hook-form` | 7.85.0 | MIT |
 | `server-only` | 0.0.1 | MIT |
 | `sonner` | 2.0.7 | MIT |
 | `tailwind-merge` | 3.5.0 | MIT |
-| `zod` | 4.3.6 | MIT |
+| `zod` | 4.4.3 | MIT |
 
 ## Licences de l'arbre de production complet
 
-Arbre complet : **195** paquets, transitives comprises. Ankora est un service hébergé — aucune copie du logiciel n'est remise aux personnes qui l'utilisent, donc l'obligation de redistribution des licences permissives n'est pas déclenchée. Le décompte par licence suffit ; les attributions nominatives sont listées séparément ci-dessous.
+Arbre complet : **191** paquets, transitives comprises. Ankora est un service hébergé — aucune copie du logiciel n'est remise aux personnes qui l'utilisent, donc l'obligation de redistribution des licences permissives n'est pas déclenchée. Le décompte par licence suffit ; les attributions nominatives sont listées séparément ci-dessous.
 
 | Licence | Paquets |
 | --- | --- |
-| MIT | 140 |
+| MIT | 136 |
 | Apache-2.0 | 22 |
 | Apache-2.0 AND MIT | 11 |
 | LGPL-3.0-or-later | 10 |
