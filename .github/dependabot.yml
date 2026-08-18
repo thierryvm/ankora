@@ -1,101 +1,133 @@
 version: 2
 
 # ---------- Dependabot policy (Ankora) ----------
-# Status : PAUSED for routine bumps until V1.0 release window stabilizes.
-# Security advisories remain active (Dependabot continues to detect vulns
-# but does NOT open routine version-bump PRs while open-pull-requests-limit=0).
-# Re-enable post-V1.0 by setting limits back to 10 (npm) and 5 (github-actions).
-# Decision @cowork+@thierry 2026-05-08 : avoid lockfile churn during PR-D4-PHASE2
-# atoms integration + PR-D5 backend tracking paiements.
+# Status : ACTIVE since 2026-08-18.
+#
+# It was PAUSED on 2026-05-08 (@cowork + @thierry) with open-pull-requests-limit
+# set to 0, to avoid lockfile churn during the PR-D4-PHASE2 atoms integration and
+# PR-D5 payment tracking. Both landed long ago. The pause was to be lifted
+# "post-V1.0"; three months on, the cost of holding it had inverted.
+#
+# What the pause actually cost, measured on 2026-08-18: 40 packages behind, of
+# which 27 were merely a patch or minor away — the kind Dependabot would have
+# proposed one small PR at a time. Left alone, an in-range bump ages into a major
+# one, and a major bump can no longer be taken "right away": it has to be
+# scheduled outside a delivery window. The delay is paid twice, in risk and in
+# calendar.
+#
+# The pause hid nothing about security — advisories kept firing (esbuild #33 was
+# caught and fixed on 2026-08-11). It only stopped the routine bumps, which is
+# precisely where the debt piled up.
+#
+# The groups below are the reason this is safe to switch back on: minor+patch
+# arrive grouped by ecosystem, so one CI run covers a coherent family, and any
+# regression stays attributable to that family. Majors are deliberately NOT
+# grouped — each gets its own PR and its own reading of the release notes.
+#
+# ⚠️ One update Dependabot cannot land on its own: `@playwright/test`. The E2E
+# job runs inside a container image pinned to the resolved version (`ci.yml`, and
+# the comment there says so). Bump the package without the image tag and the
+# runner keeps pre-baked browsers of the old version — the whole job fails on a
+# missing executable, with no code at fault.
+#
+# It is deliberately NOT added to `ignore` here. An ignore rule would also
+# suppress SECURITY updates for it, which trades a loud, harmless red CI for a
+# silent blind spot — the worse of the two by far. Instead: let Dependabot open
+# the PR, let it go red, and fix the image tag inside that same PR. Editing a
+# workflow there is legitimate precisely because that PR is dedicated to
+# Playwright; the ban in CLAUDE.md targets workflow edits smuggled into feature
+# PRs, not a PR whose whole subject is the runner.
 
 updates:
-  # ---------- npm dependencies (PAUSED) ----------
-  - package-ecosystem: "npm"
-    directory: "/"
+  # ---------- npm dependencies (ACTIVE) ----------
+  - package-ecosystem: 'npm'
+    directory: '/'
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "08:00"
-      timezone: "Europe/Brussels"
-    open-pull-requests-limit: 0
+      interval: 'weekly'
+      day: 'monday'
+      time: '08:00'
+      timezone: 'Europe/Brussels'
+    # 10 : assez pour que les groupes ci-dessous sortent tous la même semaine,
+    # assez bas pour que la file reste lisible. C'était la valeur d'avant la pause.
+    open-pull-requests-limit: 10
     labels:
-      - "dependencies"
-      - "npm"
+      - 'dependencies'
+      - 'npm'
     commit-message:
-      prefix: "chore(deps)"
-      include: "scope"
+      prefix: 'chore(deps)'
+      include: 'scope'
     groups:
       # Group minor + patch updates by ecosystem to reduce PR noise.
       next:
         patterns:
-          - "next"
-          - "@next/*"
-          - "eslint-config-next"
+          - 'next'
+          - '@next/*'
+          - 'eslint-config-next'
         update-types:
-          - "minor"
-          - "patch"
+          - 'minor'
+          - 'patch'
       react:
         patterns:
-          - "react"
-          - "react-dom"
-          - "@types/react"
-          - "@types/react-dom"
+          - 'react'
+          - 'react-dom'
+          - '@types/react'
+          - '@types/react-dom'
         update-types:
-          - "minor"
-          - "patch"
+          - 'minor'
+          - 'patch'
       supabase:
         patterns:
-          - "@supabase/*"
-          - "supabase"
+          - '@supabase/*'
+          - 'supabase'
         update-types:
-          - "minor"
-          - "patch"
+          - 'minor'
+          - 'patch'
       tailwind:
         patterns:
-          - "tailwindcss"
-          - "@tailwindcss/*"
-          - "prettier-plugin-tailwindcss"
+          - 'tailwindcss'
+          - '@tailwindcss/*'
+          - 'prettier-plugin-tailwindcss'
         update-types:
-          - "minor"
-          - "patch"
+          - 'minor'
+          - 'patch'
       testing:
         patterns:
-          - "vitest"
-          - "@vitest/*"
-          - "@playwright/*"
-          - "playwright"
-          - "@testing-library/*"
-          - "@vitejs/*"
+          - 'vitest'
+          - '@vitest/*'
+          - '@playwright/*'
+          - 'playwright'
+          - '@testing-library/*'
+          - '@vitejs/*'
         update-types:
-          - "minor"
-          - "patch"
+          - 'minor'
+          - 'patch'
       lint-format:
         patterns:
-          - "eslint"
-          - "eslint-*"
-          - "@eslint/*"
-          - "@typescript-eslint/*"
-          - "prettier"
-          - "husky"
-          - "lint-staged"
-          - "@commitlint/*"
+          - 'eslint'
+          - 'eslint-*'
+          - '@eslint/*'
+          - '@typescript-eslint/*'
+          - 'prettier'
+          - 'husky'
+          - 'lint-staged'
+          - '@commitlint/*'
         update-types:
-          - "minor"
-          - "patch"
+          - 'minor'
+          - 'patch'
       # Major bumps stay individual to allow careful review.
 
-  # ---------- GitHub Actions (PAUSED) ----------
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  # ---------- GitHub Actions (ACTIVE) ----------
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "08:00"
-      timezone: "Europe/Brussels"
-    open-pull-requests-limit: 0
+      interval: 'weekly'
+      day: 'monday'
+      time: '08:00'
+      timezone: 'Europe/Brussels'
+    open-pull-requests-limit: 5
     labels:
-      - "dependencies"
-      - "github-actions"
+      - 'dependencies'
+      - 'github-actions'
     commit-message:
-      prefix: "chore(ci)"
-      include: "scope"
+      prefix: 'chore(ci)'
+      include: 'scope'
