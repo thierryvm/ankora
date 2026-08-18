@@ -82,19 +82,19 @@
 
 **Symptôme** : même nom de composant, deux fichiers, deux philosophies.
 
-| Aspect      | `atoms/Button.tsx` (CD#3)                   | `ui/button.tsx` (shadcn)                   |
+| Aspect | `atoms/Button.tsx` (CD#3) | `ui/button.tsx` (shadcn) |
 | ----------- | ------------------------------------------- | ------------------------------------------ | ----- | ------------ | -------- | ----------- | ------- | ----- | --------------- |
-| Variants    | `primary                                    | secondary                                  | ghost | destructive` | `default | destructive | outline | ghost | link` (via cva) |
-| Sizes       | `sm                                         | md                                         | lg`   | `default     | sm       | lg          | icon`   |
-| Props extra | `icon`, `iconRight`, `loading`              | `asChild` (Slot Radix)                     |
-| Style       | classes statiques `atm-button-*` + Tailwind | cva + tokens shadcn (`bg-brand-700`, etc.) |
-| forwardRef  | ✅ custom                                   | ✅ implicite                               |
+| Variants | `primary                                    | secondary                                  | ghost | destructive` | `default | destructive | outline | ghost | link` (via cva) |
+| Sizes | `sm                                         | md                                         | lg` | `default     | sm       | lg          | icon` |
+| Props extra | `icon`, `iconRight`, `loading` | `asChild` (Slot Radix) |
+| Style | classes statiques `atm-button-*` + Tailwind | cva + tokens shadcn (`bg-brand-700`, etc.) |
+| forwardRef | ✅ custom | ✅ implicite |
 
-| Aspect                   | `atoms/Card.tsx` (CD#3)          | `ui/card.tsx` (shadcn)                                                    |
+| Aspect | `atoms/Card.tsx` (CD#3) | `ui/card.tsx` (shadcn) |
 | ------------------------ | -------------------------------- | ------------------------------------------------------------------------- | ---- | ------- | ----- | -------- | ----------------------------------------------------------------------------------------------------------------- |
-| Modèle                   | **monolithique** (props `padding | elevation                                                                 | tone | eyebrow | title | footer`) | **composable** (`<Card><CardHeader><CardTitle>...</CardTitle></CardHeader><CardContent>...</CardContent></Card>`) |
-| Sous-composants exportés | aucun                            | `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter` |
-| Tone/elevation           | props CSS variants               | classes manuelles                                                         |
+| Modèle | **monolithique** (props `padding | elevation                                                                 | tone | eyebrow | title | footer`) | **composable** (`<Card><CardHeader><CardTitle>...</CardTitle></CardHeader><CardContent>...</CardContent></Card>`) |
+| Sous-composants exportés | aucun | `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter` |
+| Tone/elevation | props CSS variants | classes manuelles |
 
 **Conséquence** : impossible de migrer un call-site `ui/card` → `atoms/Card` sans réécrire le JSX (passage de composition à props).
 

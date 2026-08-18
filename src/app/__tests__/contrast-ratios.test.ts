@@ -57,7 +57,7 @@ const css = readFileSync(cssPath, 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ');
  * scopes below, preceded by `(`, and must not be mistaken for the dark block.
  */
 function blockAfter(marker: string): string {
-  for (let from = 0; from < css.length; ) {
+  for (let from = 0; from < css.length;) {
     const start = css.indexOf(marker, from);
     if (start === -1) break;
     const before = css.slice(0, start).trimEnd();

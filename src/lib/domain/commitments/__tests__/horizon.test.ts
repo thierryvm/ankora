@@ -101,10 +101,7 @@ describe('confronting the doors — redundancy is a gift, not a duplicate', () =
   });
 
   it('two doors that disagree are BOTH reported, and neither is corrected', () => {
-    const out = confronterPortes(
-      [PORTE_COUNT, { kind: 'soldeRestantDu', balance: 8000 }],
-      OPTS,
-    );
+    const out = confronterPortes([PORTE_COUNT, { kind: 'soldeRestantDu', balance: 8000 }], OPTS);
     expect(out?.installmentsTotal).toBe(35);
     expect(out?.ecarts).toEqual([{ porte: 'soldeRestantDu', installmentsTotal: 32 }]);
   });

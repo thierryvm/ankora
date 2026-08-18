@@ -569,7 +569,6 @@ export function ChargesClient({
           </span>
         </div>
 
-
         {/* Watch + Edit + Delete: stacked top-right tap targets on mobile,
             inline cells 5 / 6 / 7 on desktop. The Bookmark fills brand when
             the charge is flagged "à surveiller" (dashboard section). */}
@@ -656,12 +655,12 @@ export function ChargesClient({
         </button>
 
         <div className="flex items-baseline justify-between gap-3 md:contents">
-          <span className="text-muted-foreground md:order-1 text-xs font-medium tracking-wide md:text-sm">
+          <span className="text-muted-foreground text-xs font-medium tracking-wide md:order-1 md:text-sm">
             {formatDate(dueIso, locale, 'medium')}
           </span>
           <span
             data-testid={`charges-instalment-amount-${row.id}`}
-            className={`md:order-4 shrink-0 text-base font-semibold tabular-nums md:text-right md:text-sm md:font-medium ${
+            className={`shrink-0 text-base font-semibold tabular-nums md:order-4 md:text-right md:text-sm md:font-medium ${
               paid ? 'text-muted-foreground line-through' : 'text-foreground'
             }`}
           >
@@ -670,7 +669,7 @@ export function ChargesClient({
         </div>
 
         <div className="mt-2 flex flex-wrap items-center gap-2 md:mt-0 md:contents">
-          <span className="text-foreground md:order-2 min-w-0 truncate text-sm font-medium md:text-base">
+          <span className="text-foreground min-w-0 truncate text-sm font-medium md:order-2 md:text-base">
             {row.label}
           </span>
           {/* The instalment carries its position in the schedule — « échéance
@@ -678,7 +677,7 @@ export function ChargesClient({
               anchor + cadence, never stored. */}
           <span
             data-testid={`charges-instalment-position-${row.id}`}
-            className="text-muted-foreground md:order-3 shrink-0 text-xs tabular-nums"
+            className="text-muted-foreground shrink-0 text-xs tabular-nums md:order-3"
           >
             {t('installmentPosition', {
               index: row.installmentIndex,
@@ -698,9 +697,7 @@ export function ChargesClient({
     commitmentInstalments.filter((i) => optimisticInstalmentPaid.has(i.id)).length;
   const dueThisMonthCount = dueThisMonth.length + commitmentInstalments.length;
   const remainingThisMonth =
-    dueThisMonth
-      .filter((c) => !optimisticPaid.has(c.id))
-      .reduce((sum, c) => sum + c.amount, 0) +
+    dueThisMonth.filter((c) => !optimisticPaid.has(c.id)).reduce((sum, c) => sum + c.amount, 0) +
     commitmentInstalments
       .filter((i) => !optimisticInstalmentPaid.has(i.id))
       .reduce((sum, i) => sum + i.amountDue, 0);

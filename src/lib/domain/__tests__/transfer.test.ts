@@ -292,7 +292,9 @@ describe('computeMonthlyTransferPlan — commitment instalments are cash', () =>
 
     expect(withCommitment.commitmentsDue.toNumber()).toBe(250);
     expect(
-      withoutCommitment.netPrincipalAfterPlan.minus(withCommitment.netPrincipalAfterPlan).toNumber(),
+      withoutCommitment.netPrincipalAfterPlan
+        .minus(withCommitment.netPrincipalAfterPlan)
+        .toNumber(),
     ).toBe(250);
   });
 

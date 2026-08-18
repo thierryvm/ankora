@@ -64,7 +64,12 @@ describe('les deux aperçus s’accordent avec le domaine', () => {
         const periods = installmentPeriods(c);
         expect(periods).toHaveLength(installmentsTotal);
         expect(endPeriod(c)).toEqual(periods[periods.length - 1]);
-        expect(endOrdinal(c)).toBe(c.startYear * 12 + (c.startMonth - 1) + (installmentsTotal - 1) * ({ monthly: 1, quarterly: 3, semiannual: 6, annual: 12 } as const)[frequency]);
+        expect(endOrdinal(c)).toBe(
+          c.startYear * 12 +
+            (c.startMonth - 1) +
+            (installmentsTotal - 1) *
+              ({ monthly: 1, quarterly: 3, semiannual: 6, annual: 12 } as const)[frequency],
+        );
       }
     }
   });
@@ -73,7 +78,11 @@ describe('les deux aperçus s’accordent avec le domaine', () => {
     // 1200 € en 35 mensualités : 34,285714… € l'une. Le flottant natif rend
     // 207.92999999999984 sur ce type de reste ; le domaine doit rendre 2 décimales.
     const c = { ...base, totalAmount: 1200, installmentsTotal: 35 };
-    const paid = new Set(installmentPeriods(c).slice(0, 29).map((p) => `${p.year}-${p.month}`));
+    const paid = new Set(
+      installmentPeriods(c)
+        .slice(0, 29)
+        .map((p) => `${p.year}-${p.month}`),
+    );
     const solde = remainingBalance(c, paid);
 
     expect(Number.isFinite(solde)).toBe(true);

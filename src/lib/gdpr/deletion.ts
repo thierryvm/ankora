@@ -59,8 +59,7 @@ const GRACE_PERIOD_DAYS = 14;
  * honour. The person is sent to the status screen instead, where *retry* waits.
  */
 export type RequestDeletionResult =
-  | { kind: 'scheduled'; scheduledFor: string }
-  | { kind: 'already_failed' };
+  { kind: 'scheduled'; scheduledFor: string } | { kind: 'already_failed' };
 
 export async function requestDeletion(
   userId: string,
@@ -236,8 +235,7 @@ export async function retryDeletion(userId: string): Promise<RetryDeletionResult
 }
 
 export type CancelDeletionResult =
-  | { cancelled: true }
-  | { cancelled: false; reason: 'in_progress' | 'none' };
+  { cancelled: true } | { cancelled: false; reason: 'in_progress' | 'none' };
 
 /**
  * Cancel a pending request — and say honestly when there was nothing to cancel.

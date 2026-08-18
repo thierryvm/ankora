@@ -112,11 +112,7 @@ describe('each view counts an obligation exactly once', () => {
   });
 
   it('« Effort lissé » smooths the same obligations, and also counts each once', () => {
-    const engagements = engagementsMensuelsLisses(
-      commitments,
-      NO_COMMITMENT_PAYMENTS,
-      REF,
-    );
+    const engagements = engagementsMensuelsLisses(commitments, NO_COMMITMENT_PAYMENTS, REF);
     // 1 584,21 (mensuel) + 59,00 (177 / 3) + 220,00 (engagement) = 1 863,21
     expect(effortLisse(charges, engagements).toNumber()).toBeCloseTo(1863.21, 2);
   });
@@ -242,7 +238,10 @@ describe('non-contamination — a remembered figure reaches no cockpit total', (
   it('the test is not vacuous — the instalment IS what drives both figures', () => {
     const heavier = [alphaCredit(8750)].map((c) => ({ ...c, installmentAmount: 300 }));
     expect(
-      effortLisse(charges, engagementsMensuelsLisses(heavier, NO_COMMITMENT_PAYMENTS, REF)).toNumber(),
+      effortLisse(
+        charges,
+        engagementsMensuelsLisses(heavier, NO_COMMITMENT_PAYMENTS, REF),
+      ).toNumber(),
     ).toBeCloseTo(1884.21, 2);
   });
 });

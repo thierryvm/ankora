@@ -18,26 +18,26 @@
 
 ## Hardcoded FR strings inventory (à wirer en PR-D)
 
-| Atom             | File:line             | Hardcoded string                                          | Priorité PR-D     |
+| Atom | File:line | Hardcoded string | Priorité PR-D |
 | ---------------- | --------------------- | --------------------------------------------------------- | ----------------- | ------ |
-| **Drawer**       | `Drawer.tsx:413`      | `'Requis'` (validation message)                           | HIGH              |
-| **Drawer**       | `Drawer.tsx:420`      | `'Montant invalide'` (validation)                         | HIGH              |
-| **Drawer**       | `Drawer.tsx:545`      | `'Fermer'` (close aria-label)                             | HIGH              |
-| **Drawer**       | `Drawer.tsx:569`      | `'Confirmer la suppression ?'`                            | HIGH              |
-| **Drawer**       | `Drawer.tsx:574`      | `'Non'`                                                   | HIGH              |
-| **Drawer**       | `Drawer.tsx:578`      | `'Oui, supprimer'`                                        | HIGH              |
-| **Drawer**       | `Drawer.tsx:607`      | `'Annuler'`                                               | HIGH              |
-| **Drawer**       | `Drawer.tsx:610`      | `'Enregistrer'`                                           | HIGH              |
-| **Drawer**       | `Drawer.tsx:367`      | `deleteLabel` default `'Supprimer'`                       | HIGH              |
-| **Drawer**       | `Drawer.tsx:292-295`  | Frequency: `'Mensuel'`, `'Trim.'`, `'Annuel'`, `'Unique'` | MEDIUM            |
-| **ThemeToggle**  | `ThemeToggle.tsx:70`  | `'Activer le thème {clair                                 | sombre}'`         | MEDIUM |
-| **ThemeToggle**  | `ThemeToggle.tsx:71`  | `'Thème {clair                                            | sombre}'` (title) | MEDIUM |
-| **LangSwitcher** | `LangSwitcher.tsx:57` | `ariaLabel` default `'Changer de langue'`                 | MEDIUM            |
-| **Chip**         | `Chip.tsx:54`         | `aria-label` `'Retirer'`                                  | MEDIUM            |
-| **ColorPicker**  | `ColorPicker.tsx:46`  | `ariaLabel` default `'Choisir une couleur'`               | LOW               |
-| **ColorPicker**  | `ColorPicker.tsx:65`  | `aria-label` swatch `Couleur ${color}`                    | LOW               |
-| **IconPicker**   | `IconPicker.tsx:34`   | `ariaLabel` default `'Choisir une icône'`                 | LOW               |
-| **ProgressBar**  | `ProgressBar.tsx:66`  | `ariaLabel` fallback `'Progression'`                      | LOW               |
+| **Drawer** | `Drawer.tsx:413` | `'Requis'` (validation message) | HIGH |
+| **Drawer** | `Drawer.tsx:420` | `'Montant invalide'` (validation) | HIGH |
+| **Drawer** | `Drawer.tsx:545` | `'Fermer'` (close aria-label) | HIGH |
+| **Drawer** | `Drawer.tsx:569` | `'Confirmer la suppression ?'` | HIGH |
+| **Drawer** | `Drawer.tsx:574` | `'Non'` | HIGH |
+| **Drawer** | `Drawer.tsx:578` | `'Oui, supprimer'` | HIGH |
+| **Drawer** | `Drawer.tsx:607` | `'Annuler'` | HIGH |
+| **Drawer** | `Drawer.tsx:610` | `'Enregistrer'` | HIGH |
+| **Drawer** | `Drawer.tsx:367` | `deleteLabel` default `'Supprimer'` | HIGH |
+| **Drawer** | `Drawer.tsx:292-295` | Frequency: `'Mensuel'`, `'Trim.'`, `'Annuel'`, `'Unique'` | MEDIUM |
+| **ThemeToggle** | `ThemeToggle.tsx:70` | `'Activer le thème {clair                                 | sombre}'` | MEDIUM |
+| **ThemeToggle** | `ThemeToggle.tsx:71` | `'Thème {clair                                            | sombre}'` (title) | MEDIUM |
+| **LangSwitcher** | `LangSwitcher.tsx:57` | `ariaLabel` default `'Changer de langue'` | MEDIUM |
+| **Chip** | `Chip.tsx:54` | `aria-label` `'Retirer'` | MEDIUM |
+| **ColorPicker** | `ColorPicker.tsx:46` | `ariaLabel` default `'Choisir une couleur'` | LOW |
+| **ColorPicker** | `ColorPicker.tsx:65` | `aria-label` swatch `Couleur ${color}` | LOW |
+| **IconPicker** | `IconPicker.tsx:34` | `ariaLabel` default `'Choisir une icône'` | LOW |
+| **ProgressBar** | `ProgressBar.tsx:66` | `ariaLabel` fallback `'Progression'` | LOW |
 
 **Note `ANKORA_V1_LOCALES` labels** : `'Français (Belgique)'`, `'English'` — convention CLDR : noms de langues restent dans leur langue native, pas wiring i18n. ✅ OK as-is.
 
