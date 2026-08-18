@@ -78,6 +78,21 @@ describe('<MktFooter />', () => {
     expect(screen.getByRole('link', { name: 'Cookies' })).toHaveAttribute('href', '/legal/cookies');
   });
 
+  // Ce repère portait pour nom le texte de copyright : un lecteur d'écran
+  // annonçait les liens légaux sous « Ankora · éditeur ancré à Bruxelles ·
+  // 2026 », qui ne dit rien de l'endroit où ils mènent.
+  //
+  // L'assertion porte sur les DEUX faces. Vérifier seulement le bon nom
+  // laisserait passer un retour au copyright le jour où quelqu'un ajusterait la
+  // chaîne attendue plutôt que le composant — et c'est exactement le geste que
+  // ce dépôt s'interdit.
+  it('names the legal navigation for what it is, not with the copyright line', async () => {
+    await renderMktFooter();
+    const nav = screen.getByRole('navigation', { name: 'Liens légaux' });
+    expect(nav).toBeInTheDocument();
+    expect(nav.getAttribute('aria-label')).not.toMatch(/éditeur ancré à Bruxelles/i);
+  });
+
   // Ce test exigeait `href="/"` pour un lien intitulé « Contact » — il
   // épinglait donc le défaut au lieu de l'interdire. L'assertion porte
   // maintenant sur ce qui rend le lien honnête : il doit mener AILLEURS que

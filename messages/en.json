@@ -299,7 +299,8 @@
         "cookies": "Cookies",
         "contact": "Contact"
       },
-      "copyright": "Ankora · Brussels-anchored editor · 2026"
+      "copyright": "Ankora · Brussels-anchored editor · 2026",
+      "navLabel": "Legal links"
     },
     "faqHeading": "Frequently asked questions",
     "faq": {

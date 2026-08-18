@@ -70,7 +70,13 @@ export async function MktFooter() {
           <AnkoraLogo className="h-5 w-auto" aria-hidden="true" />
           <span className="text-muted-foreground text-xs font-medium">{t('copyright')}</span>
         </div>
-        <nav aria-label={t('copyright')} className="flex flex-wrap items-center gap-5">
+        {/*
+          `navLabel` et non `copyright` : cette navigation portait pour nom
+          « Ankora · éditeur ancré à Bruxelles · 2026 ». Un lecteur d'écran
+          annonçait donc les liens légaux sous une mention de copyright, qui ne
+          décrit pas ce qu'ils sont. Le nom d'un repère doit dire à quoi il mène.
+        */}
+        <nav aria-label={t('navLabel')} className="flex flex-wrap items-center gap-5">
           {links.map((link) =>
             'external' in link && link.external ? (
               // Plain <a>: `mailto:` is not a route, so the localised Link
