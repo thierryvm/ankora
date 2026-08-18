@@ -99,7 +99,7 @@
     "@types/react-dom": "^19",
     "@vitest/coverage-v8": "^4.1.4",
     "cspell": "^10.0.1",
-    "eslint": "^9",
+    "eslint": "^10",
     "eslint-config-next": "16.2.6",
     "fast-check": "^4.7.0",
     "husky": "^9.1.7",
