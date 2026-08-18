@@ -277,6 +277,15 @@ update public.commitment_payments cmp
 --
 -- Pas d'index dédié sur (workspace_id, paid_from_account_type) : les index
 -- existants `*_period_idx` portent déjà `workspace_id` en tête.
+--
+-- RENVERSÉ le 18 août 2026 — cf. `20260818000001_index_cles_etrangeres.sql`.
+-- Le raisonnement ci-dessus s'arrête à la première colonne. Un index couvre
+-- une vérification de clé étrangère seulement si les colonnes de la clé en
+-- forment un PRÉFIXE, dans l'ordre ; or `charge_payments_period_idx` est
+-- `(workspace_id, period_year, period_month)`, dont la deuxième colonne n'est
+-- pas `paid_from_account_type`. Les advisors Supabase signalent ces deux clés
+-- comme non indexées. Le SQL de ce fichier reste correct — seule cette
+-- justification était fausse.
 alter table public.charge_payments
   add constraint charge_payments_paid_from_account_fkey
   foreign key (workspace_id, paid_from_account_type)
