@@ -1,14 +1,14 @@
 version: 2
 
 # ---------- Dependabot policy (Ankora) ----------
-# Status : ACTIVE since 2026-08-12.
+# Status : ACTIVE since 2026-08-18.
 #
 # It was PAUSED on 2026-05-08 (@cowork + @thierry) with open-pull-requests-limit
 # set to 0, to avoid lockfile churn during the PR-D4-PHASE2 atoms integration and
 # PR-D5 payment tracking. Both landed long ago. The pause was to be lifted
 # "post-V1.0"; three months on, the cost of holding it had inverted.
 #
-# What the pause actually cost, measured on 2026-08-12: 40 packages behind, of
+# What the pause actually cost, measured on 2026-08-18: 40 packages behind, of
 # which 27 were merely a patch or minor away — the kind Dependabot would have
 # proposed one small PR at a time. Left alone, an in-range bump ages into a major
 # one, and a major bump can no longer be taken "right away": it has to be
@@ -39,7 +39,7 @@ version: 2
 # PRs, not a PR whose whole subject is the runner.
 
 updates:
-  # ---------- npm dependencies (PAUSED) ----------
+  # ---------- npm dependencies (ACTIVE) ----------
   - package-ecosystem: 'npm'
     directory: '/'
     schedule:
@@ -116,7 +116,7 @@ updates:
           - 'patch'
       # Major bumps stay individual to allow careful review.
 
-  # ---------- GitHub Actions (PAUSED) ----------
+  # ---------- GitHub Actions (ACTIVE) ----------
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
