@@ -82,7 +82,7 @@
     "react-hook-form": "^7.72.1",
     "server-only": "^0.0.1",
     "sonner": "^2.0.7",
-    "tailwind-merge": "^3.5.0",
+    "tailwind-merge": "^3.6.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
