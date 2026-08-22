@@ -369,11 +369,16 @@ export function MoreSheet({ isOpen, onClose, isAdmin = false }: MoreSheetProps) 
              * Component used in `Footer.tsx` — single source of truth
              * for the reopen-consent contract.
              */}
-            <div
-              data-testid="more-sheet-cookie-preferences"
-              className="hover:bg-muted focus-within:ring-brand-600 rounded-md px-3 py-3 transition-colors focus-within:ring-2 focus-within:ring-offset-0"
-            >
-              <CookiePreferencesLink />
+            {/*
+             * The row IS the button, like the theme toggle above it. It used to
+             * be a padded `<div>` wrapping a 20 px-tall button: the padding made
+             * the ROW look like a 44 px target while the only thing that
+             * actually took a tap stayed 20 px. `focus-within` on the wrapper is
+             * the tell — a container borrowing its child's focus is a container
+             * pretending to be the control.
+             */}
+            <div data-testid="more-sheet-cookie-preferences">
+              <CookiePreferencesLink className="text-foreground hover:bg-muted focus-visible:ring-brand-600 flex min-h-11 w-full cursor-pointer items-center rounded-md px-3 py-3 text-left text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none" />
             </div>
             {/*
              * « Recharger l'application » — le geste que le mode `standalone`
