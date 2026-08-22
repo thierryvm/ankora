@@ -1,55 +1,59 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 
-import { Check, Sparkles, TrendingUp } from '@/components/marketing/landing/icons';
+import { Check } from '@/components/marketing/landing/icons';
 import { Eyebrow } from '@/components/ui/eyebrow';
-import { Num } from '@/components/ui/num';
 import { cn } from '@/lib/utils';
 
-import {
-  FLECHE_RATIO,
-  RESERVE_BASELINE_6M,
-  THRESHOLD_ZONES,
-  WHAT_IF_SCENARIOS,
-  type WhatIfScenarioId,
-} from './simulator/scenarios';
+import { PROJECTION_MONTHS, WHAT_IF_SCENARIOS, type WhatIfScenarioId } from './simulator/scenarios';
 
 /**
- * SVG geometry — matches cc-design `Landing.jsx` line 200 (`W = 480, H = 220, P = 32`).
- * The plot top sits 12px above the highest gridline (`H - P*2 - 12`).
+ * Géométrie du tracé. La hauteur inclut la bande des libellés de mois : un
+ * conteneur dimensionné sur le seul tracé produit une barre de défilement
+ * imbriquée quand l'axe déborde.
  */
 const W = 480;
-const H = 220;
-const P = 32;
-const PLOT_TOP = P + 12;
-const FLEX_BASELINE = H - P * 2 - 12;
+const H = 190;
+const PAD_X = 30;
+const PAD_TOP = 26;
+const PAD_BOTTOM = 30;
 
 /**
- * WhatIfDemoClient — interactive simulator (slider + chart).
+ * WhatIfDemoClient — la démo publique « et si tu changeais une seule chose ? ».
  *
- * Mirrors the inner half of cc-design `WhatIfDemo` (`Landing.jsx` 207-361):
- * - Two-column grid placed by the parent `<Glass>` wrapper
- * - LEFT: scenario buttons + savings slider + 12-month KPI card
- * - RIGHT: header + SVG projection (6 months, threshold zones, baseline +
- *   scenario paths, edge labels) + caveat box
+ * CE QUE CE GRAPHIQUE MONTRE, ET CE QU'IL MONTRAIT AVANT.
  *
- * Improvements over the cc-design source (validated 2026-04-28
- * `docs/design/copywriting-review-2026-04-28.md`):
- * - **Threshold zones**: 3 colour bands (`var(--color-danger|warning|success)`)
- *   give a discreet emotional read of the trajectory. `aria-hidden="true"`
- *   because the values + legend already carry the same information.
- * - **Tokens for SVG colours**: `var(--color-brand-text-strong)` for edge
- *   labels (AAA both modes) instead of the cc-design hardcoded `#5eead4`.
- * - **`prefers-reduced-motion`**: `motion-reduce:transition-none` on every
- *   transitioning element (paths, button hovers, icon background).
- * - **Slider accent**: `accent-color: var(--color-brand-400)` so the native
- *   range thumb stays in sync with `[data-accent="admin"]` flips.
+ * Il traçait deux courbes : une réserve de départ codée en dur, et la même
+ * augmentée de l'économie choisie. Sur le scénario par défaut, le visiteur
+ * voyait la courbe monter de 494 € à 1192 €. Sur ces +698 €, **628 € (90 %)**
+ * venaient de la trajectoire inventée et **70 €** de sa décision. La section
+ * promettait « vois l'impact de ton choix » et montrait à 90 % autre chose.
  *
- * Numbers (baseline, max, default, FLECHE_RATIO) are illustrative — see
- * `simulator/scenarios.ts`. Caveat reminds users this is a demo and Ankora
- * never imports bank data.
+ * Une seule série désormais : **l'écart cumulé attribuable au choix**, partant
+ * de zéro. Chaque euro tracé a une cause nommée, et le total se recalcule de
+ * tête — économie mensuelle × nombre de mois. C'est la règle « un chiffre qu'on
+ * ne peut pas ouvrir est une injonction, pas une information » (CLAUDE.md).
+ *
+ * DÉCISIONS DE TRACÉ, toutes issues de la même grammaire :
+ *
+ * - **Série unique donc aucune légende.** Un cartouche à une entrée répète le
+ *   titre et coûte de la place. Le titre dit ce qui est tracé.
+ * - **Un seul libellé direct**, au bout de la ligne. Une valeur sur chaque point
+ *   ne se lit pas.
+ * - **Grilles pleines**, jamais pointillées : un pointillé se lit comme une
+ *   projection ou un seuil alors que ce n'est qu'une grille.
+ * - **Aire à 10 % d'opacité** — un lavis, jamais un aplat saturé.
+ * - **`brand-600` et non `brand-400`.** Vérifié par le validateur de palette :
+ *   `#2dd4bf` (brand-400) sort de la bande de luminosité sur fond sombre
+ *   (0,785), `#0d9488` passe toutes les vérifications dans LES DEUX thèmes. Le
+ *   mode sombre se choisit et se mesure, il ne se déduit pas d'une inversion.
+ * - **Aucun `style` inline.** La CSP de production (`src/proxy.ts`) n'autorise
+ *   pas `'unsafe-hashes'` : un `style={{ left }}` est retiré en production alors
+ *   qu'il reste vert en développement et en test. Le dépôt compte cinq
+ *   précédents, dont un qui affichait « soldé » sur tous les plans en prod. Le
+ *   repère de survol est donc positionné par `transform` SVG, un attribut.
  */
 type Props = {
   /**
@@ -62,84 +66,124 @@ type Props = {
   mois: readonly string[];
 };
 
+/**
+ * Plafond de l'axe — FIXE PAR SCÉNARIO, jamais recalculé sur la valeur courante.
+ *
+ * Cette distinction est tout le sujet, et je l'ai ratée au premier essai. Un axe
+ * qui s'ajuste à la série rend le graphique MUET : mesuré sur le scénario GSM,
+ * le total passait de 108 € à 36 € — divisé par trois — pendant que le dernier
+ * point restait exactement à la même hauteur, parce que le plafond suivait. La
+ * courbe gardait sa pente, puis s'effondrait d'un coup en fin de course.
+ * Constat de @thierry : « le graphique monte et descend bizarrement ».
+ *
+ * Ancré sur le gain MAXIMAL du scénario, l'axe devient une règle graduée : la
+ * courbe monte quand on gagne plus, descend quand on gagne moins, et sa hauteur
+ * se compare d'un réglage à l'autre. C'est la seule façon dont un tracé peut
+ * répondre au geste.
+ */
+function plafondAxe(gainMaximal: number): number {
+  if (gainMaximal <= 0) return 60;
+  const pas = gainMaximal <= 120 ? 20 : gainMaximal <= 300 ? 50 : 100;
+  return Math.max(pas, Math.ceil(gainMaximal / pas) * pas);
+}
+
 export function WhatIfDemoClient({ mois }: Props) {
   const t = useTranslations('landing.whatif');
-  // Pull the active locale so number formatting (slider value, annual KPI,
-  // SVG edge labels) follows the user's chosen language. Hardcoding `fr-BE`
-  // would mismatch the rest of the UI on EN / NL / DE / ES.
   const locale = useLocale();
 
   const [scenarioId, setScenarioId] = useState<WhatIfScenarioId>('gsm');
-  // `find` is safe — scenarioId is constrained to keys that always exist.
   const scenario = WHAT_IF_SCENARIOS.find((s) => s.id === scenarioId)!;
-  const [savingsValue, setSavingsValue] = useState(scenario.default);
 
-  // Snap the slider back to the new scenario's resting position whenever the
-  // user picks a different scenario (cc-design line 192 behaviour).
-  useEffect(() => {
-    setSavingsValue(scenario.default);
-  }, [scenario]);
+  /**
+   * Le curseur porte l'ÉCONOMIE, et l'écran affiche le PRIX qui en découle.
+   *
+   * Premier essai : le curseur portait directement le prix futur. Arithmétique
+   * juste, geste faux — pousser vers la droite AUGMENTAIT le prix, donc
+   * RÉDUISAIT le gain, et la courbe descendait. Le sens de lecture s'y opposait
+   * (constat de @thierry). Vers la droite doit vouloir dire « mieux ».
+   *
+   * On garde pourtant le prix à l'écran, parce que c'est la donnée que le
+   * visiteur possède : il sait ce qu'il paie et ce qu'il paierait, jamais leur
+   * différence. Le curseur suit le geste, l'affichage suit la tête.
+   */
+  const economieMax = scenario.current - scenario.floor;
+  const [economie, setEconomie] = useState(scenario.current - scenario.default);
+  const [survol, setSurvol] = useState<number | null>(null);
 
-  const monthly = savingsValue;
-  const yearly = monthly * 12;
-  const fleche = Math.round(monthly * FLECHE_RATIO);
-  const newSeries = RESERVE_BASELINE_6M.map((b, i) => b + monthly * (i + 1));
-  const yMax = Math.max(...newSeries, 1500);
+  /**
+   * Remise au repos quand on change de scénario — par AJUSTEMENT AU RENDU, pas
+   * par un effet.
+   *
+   * Un `useEffect` qui appelle `setState` déclenche un second rendu après que le
+   * premier a été peint : le visiteur voit brièvement le prix de l'ancien
+   * scénario sur les bornes du nouveau. Le linter le refuse d'ailleurs
+   * explicitement (« cascading renders »), et la parade n'est pas de le faire
+   * taire — c'est le motif documenté par React pour ajuster un état quand une
+   * entrée change. React ré-exécute simplement ce composant avant de peindre.
+   */
+  const [scenarioPrecedent, setScenarioPrecedent] = useState(scenarioId);
+  if (scenarioId !== scenarioPrecedent) {
+    setScenarioPrecedent(scenarioId);
+    setEconomie(scenario.current - scenario.default);
+    setSurvol(null);
+  }
 
-  // L'axe est défini par les DONNÉES, pas par les libellés : si les deux
-  // longueurs divergeaient un jour, le tracé resterait juste et seul un
-  // libellé manquerait, plutôt que l'inverse.
-  const xAt = (i: number) => P + (i / (RESERVE_BASELINE_6M.length - 1)) * (W - P * 2);
-  const yAt = (v: number) => H - P - (v / yMax) * FLEX_BASELINE;
+  const prixFutur = scenario.current - economie;
+  const serie = Array.from({ length: PROJECTION_MONTHS }, (_, i) => economie * (i + 1));
+  const total = economie * PROJECTION_MONTHS;
 
-  const yAt0 = yAt(0);
-  const yAt200 = yAt(200);
+  /**
+   * L'axe est gradué sur le gain MAXIMAL du scénario, pas sur le gain courant :
+   * c'est ce qui permet à la courbe de monter et de descendre quand on bouge le
+   * curseur. Cf. `plafondAxe`.
+   */
+  const yMax = plafondAxe(economieMax * PROJECTION_MONTHS);
+  const plotBas = H - PAD_BOTTOM;
+  const plotHaut = PAD_TOP;
 
-  const pathFor = (series: readonly number[]) =>
-    series.map((v, i) => `${i === 0 ? 'M' : 'L'} ${xAt(i)} ${yAt(v)}`).join(' ');
-  const areaFor = (series: readonly number[]) =>
-    `${pathFor(series)} L ${xAt(series.length - 1)} ${H - P} L ${xAt(0)} ${H - P} Z`;
+  const xAt = (i: number) => PAD_X + (i / (PROJECTION_MONTHS - 1)) * (W - PAD_X * 2);
+  const yAt = (v: number) => plotBas - (v / yMax) * (plotBas - plotHaut);
 
-  // Threshold zone rectangles, computed against the visible plot area.
-  // `danger` (< 0 €) renders as a 12px strip in the bottom padding so it
-  // stays visible even though the scenarios never produce negative values.
-  const getZoneRect = (zoneKey: 'danger' | 'fragile' | 'comfortable') => {
-    if (zoneKey === 'danger') {
-      return { x: P, y: H - P, width: W - P * 2, height: 12 };
-    }
-    if (zoneKey === 'fragile') {
-      return { x: P, y: yAt200, width: W - P * 2, height: Math.max(0, yAt0 - yAt200) };
-    }
-    return { x: P, y: PLOT_TOP, width: W - P * 2, height: Math.max(0, yAt200 - PLOT_TOP) };
-  };
+  const ligne = serie.map((v, i) => `${i === 0 ? 'M' : 'L'} ${xAt(i)} ${yAt(v)}`).join(' ');
+  const aire = `${ligne} L ${xAt(PROJECTION_MONTHS - 1)} ${plotBas} L ${xAt(0)} ${plotBas} Z`;
 
-  const formatNumber = (n: number) => {
-    const formatted = n.toLocaleString(locale);
-    return n > 0 ? `+${formatted}` : formatted;
-  };
-  const formatEur = (n: number) => `${formatNumber(n)} €`;
+  /**
+   * Signé seulement quand il y a quelque chose à signer. À 0 € — curseur au
+   * prix actuel — « +0 € » se lirait comme un gain nul mais acquis ; « 0 € »
+   * dit qu'il ne se passe rien, ce qui est exact.
+   */
+  const eur = (n: number) => `${n > 0 ? '+' : ''}${n.toLocaleString(locale)} €`;
+  const prix = (n: number) => `${n.toLocaleString(locale)} €`;
+
+  const indexActif = survol ?? PROJECTION_MONTHS - 1;
+  /**
+   * `noUncheckedIndexedAccess` est actif : un accès indexé rend `T | undefined`
+   * même quand la longueur est connue à la construction. Le repli sur 0 n'est
+   * donc pas défensif, il est structurel — et 0 est la bonne valeur de repli
+   * ici, puisque la série part de zéro.
+   */
+  const valeurActive = serie[indexActif] ?? 0;
 
   return (
     <>
-      {/* LEFT — controls */}
+      {/* GAUCHE — les contrôles */}
       <div className="border-border grid content-start gap-5 border-b p-7 md:border-r md:border-b-0 md:p-8">
-        {/* Scenario picker */}
         <div>
           <Eyebrow className="mb-2.5">{t('controls.scenario')}</Eyebrow>
           <div className="grid gap-1.5">
             {WHAT_IF_SCENARIOS.map((s) => {
-              const active = s.id === scenarioId;
+              const actif = s.id === scenarioId;
               const Icon = s.icon;
               return (
                 <button
                   key={s.id}
                   type="button"
                   onClick={() => setScenarioId(s.id)}
-                  aria-pressed={active}
+                  aria-pressed={actif}
                   className={cn(
                     'flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left transition motion-reduce:transition-none',
                     'focus-visible:ring-brand-400/60 focus-visible:ring-2 focus-visible:outline-none',
-                    active
+                    actif
                       ? 'border-brand-surface-border bg-brand-surface text-foreground'
                       : 'border-border text-muted-foreground hover:bg-card/40 hover:text-foreground',
                   )}
@@ -147,7 +191,7 @@ export function WhatIfDemoClient({ mois }: Props) {
                   <span
                     className={cn(
                       'grid h-6 w-6 flex-none place-items-center rounded-md transition-colors motion-reduce:transition-none',
-                      active
+                      actif
                         ? 'bg-brand-surface-border text-brand-text-strong'
                         : 'bg-card/40 text-muted-foreground',
                     )}
@@ -155,7 +199,7 @@ export function WhatIfDemoClient({ mois }: Props) {
                     <Icon aria-hidden="true" className="h-3 w-3" />
                   </span>
                   <span className="flex-1 text-sm font-medium">{t(`scenarios.${s.id}.label`)}</span>
-                  {active && (
+                  {actif && (
                     <Check
                       aria-hidden="true"
                       className="text-brand-text-strong h-3.5 w-3.5 flex-none"
@@ -167,226 +211,225 @@ export function WhatIfDemoClient({ mois }: Props) {
           </div>
         </div>
 
-        {/* Savings slider */}
+        {/* Le curseur glisse sur le prix futur — la donnée qu'on possède. */}
         <div>
-          <div className="mb-2.5 flex items-baseline justify-between">
-            <Eyebrow>{t('controls.savings')}</Eyebrow>
-            <Num size="sm" className="text-brand-text-strong text-base font-semibold">
-              {formatEur(monthly)}
-            </Num>
+          <div className="mb-2.5 flex items-baseline justify-between gap-3">
+            <Eyebrow>{t('controls.future')}</Eyebrow>
+            <span className="text-foreground font-mono text-base font-semibold tabular-nums">
+              {prix(prixFutur)}
+            </span>
           </div>
+          {/*
+            `aria-valuemin` / `aria-valuemax` / `aria-valuenow` EXPLICITES —
+            BUG-iOS-010. Un `<input type="range">` expose implicitement ses
+            bornes depuis `min`/`max` et les navigateurs les déduisent bien, mais
+            les technologies d'assistance divergent sur cette déduction : le cas
+            vivait en `test.fixme` dans `e2e/mobile-ios/simulator.spec.ts` depuis
+            la campagne QA iOS. Trois attributs suffisent à lever le bug.
+          */}
           <input
             type="range"
-            min={scenario.min}
-            max={scenario.max}
+            min={0}
+            max={economieMax}
             step={scenario.step}
-            value={savingsValue}
-            onChange={(e) => setSavingsValue(Number(e.target.value))}
+            value={economie}
+            onChange={(e) => setEconomie(Number(e.target.value))}
             aria-label={t('controls.slider_aria', {
               label: t(`scenarios.${scenarioId}.label`),
             })}
+            aria-valuetext={t('controls.slider_valuetext', {
+              price: prix(prixFutur),
+              saving: prix(economie),
+            })}
+            aria-valuemin={0}
+            aria-valuemax={economieMax}
+            aria-valuenow={economie}
             className="accent-brand-400 h-6 w-full"
           />
-          <div className="text-muted-foreground mt-0.5 flex justify-between font-mono text-xs">
-            <span>{scenario.min} €</span>
-            <span>+ {scenario.max} €</span>
+          {/*
+            Les deux bouts nomment les PRIX, dans l'ordre où le geste les
+            rencontre : à gauche ce qu'on paie aujourd'hui, à droite le mieux
+            qu'on puisse faire. Le nombre décroît de gauche à droite, et c'est
+            exactement le propos — on glisse vers la droite pour payer moins.
+          */}
+          <div className="text-muted-foreground mt-0.5 flex justify-between gap-2 text-xs">
+            <span>{t('controls.bound_current', { price: prix(scenario.current) })}</span>
+            <span className="text-right">
+              {t('controls.bound_best', { price: prix(scenario.floor) })}
+            </span>
           </div>
+          {/*
+            Le texte d'aide est ÉCRIT DEPUIS les bornes du curseur. Avant, la
+            fourchette de marché vivait dans la traduction et les bornes dans le
+            code : le curseur descendait à 0 € pendant que la phrase annonçait un
+            marché à 18 €. Une seule source, donc plus de contradiction possible.
+          */}
           <p className="text-muted-foreground mt-3 text-xs leading-relaxed text-pretty">
-            {t(`scenarios.${scenarioId}.hint`)}
+            {t(`scenarios.${scenarioId}.hint`, {
+              current: prix(scenario.current),
+              floor: prix(scenario.floor),
+            })}
           </p>
         </div>
 
-        {/* 12-month KPI card */}
-        <div className="bg-brand-surface border-brand-surface-border grid gap-1 rounded-lg border p-4">
-          <div className="flex items-center justify-between">
-            <Eyebrow tone="accent">{t('annual.eyebrow')}</Eyebrow>
-            <TrendingUp aria-hidden="true" className="text-brand-text-strong h-3.5 w-3.5" />
-          </div>
-          <Num size="xl" tone="accent">
-            {formatEur(yearly)}
-          </Num>
-          <p className="text-muted-foreground text-xs leading-relaxed text-pretty">
-            {t('annual.fleche', { amount: formatNumber(fleche) })}
-          </p>
-        </div>
+        <p className="text-muted-foreground text-sm leading-relaxed text-pretty">
+          {t('controls.saving', { amount: prix(economie) })}
+        </p>
       </div>
 
-      {/* RIGHT — projection chart */}
+      {/* DROITE — le chiffre, puis sa trajectoire */}
       <div className="grid content-start gap-3.5 p-7 md:p-8">
-        {/* Header */}
-        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
-          <div>
-            <Eyebrow>{t('chart.title')}</Eyebrow>
-            <p className="font-display text-foreground mt-1 text-base font-semibold">
-              {t('chart.subtitle')}
-            </p>
-          </div>
-          <ul className="flex items-center gap-3.5 text-xs">
-            <li className="flex items-center gap-1.5">
-              {/* Inline SVG line so the marker colour comes from currentColor —
-                  `bg-muted-foreground` is forbidden by `docs/design/token-usage.md` §3. */}
-              <svg
-                aria-hidden="true"
-                width="10"
-                height="2"
-                className="text-muted-foreground inline-block"
-              >
-                <line x1="0" y1="1" x2="10" y2="1" stroke="currentColor" strokeWidth="2" />
-              </svg>
-              <span className="text-muted-foreground">{t('chart.legend.baseline')}</span>
-            </li>
-            <li className="flex items-center gap-1.5">
-              <svg aria-hidden="true" width="10" height="2" className="text-brand-400 inline-block">
-                <line x1="0" y1="1" x2="10" y2="1" stroke="currentColor" strokeWidth="2" />
-              </svg>
-              <span className="text-brand-text-strong">{t('chart.legend.scenario')}</span>
-            </li>
-          </ul>
+        <div>
+          <Eyebrow>{t('chart.title')}</Eyebrow>
+          {/*
+            Le chiffre héros. Chiffres PROPORTIONNELS et non `tabular-nums` :
+            à cette taille, des chasses égales font paraître un nombre comme
+            « 121 » anormalement lâche. Les chasses fixes sont réservées aux
+            colonnes qui doivent s'aligner — l'axe, le tableau ci-dessous.
+          */}
+          <p className="font-display text-brand-text-strong mt-1 text-5xl leading-none font-semibold">
+            {eur(total)}
+          </p>
+          <p className="text-muted-foreground mt-2 text-sm leading-relaxed text-pretty">
+            {t('chart.subtitle', { months: PROJECTION_MONTHS })}
+          </p>
         </div>
 
-        {/* SVG card */}
         <div className="bg-card/60 border-border rounded-xl border p-3">
           <svg
             viewBox={`0 0 ${W} ${H}`}
             role="img"
-            aria-label={t('chart.aria')}
+            aria-label={t('chart.aria', { months: PROJECTION_MONTHS })}
             className="block h-auto w-full"
+            onMouseLeave={() => setSurvol(null)}
           >
             <defs>
-              <linearGradient id="ankora-area" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--color-brand-400)" stopOpacity="0.32" />
-                <stop offset="100%" stopColor="var(--color-brand-400)" stopOpacity="0" />
+              <linearGradient id="ankora-aire" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="var(--color-brand-600)" stopOpacity="0.14" />
+                <stop offset="100%" stopColor="var(--color-brand-600)" stopOpacity="0.02" />
               </linearGradient>
             </defs>
 
-            {/* Threshold zones (decorative — info redundant with values + legend) */}
+            {/* Grilles : pleines et discrètes. Un pointillé se lirait comme un seuil. */}
             <g aria-hidden="true">
-              {THRESHOLD_ZONES.map((zone) => {
-                const rect = getZoneRect(zone.key);
-                return (
-                  <rect
-                    key={zone.key}
-                    data-threshold={zone.key}
-                    x={rect.x}
-                    y={rect.y}
-                    width={rect.width}
-                    height={rect.height}
-                    fill={zone.cssVar}
-                    fillOpacity={zone.opacity}
-                  />
-                );
-              })}
-            </g>
-
-            {/* Gridlines (4 horizontal, low opacity) */}
-            <g aria-hidden="true">
-              {[0.25, 0.5, 0.75, 1].map((g) => {
-                const y = H - P - g * FLEX_BASELINE;
+              {[0, 0.5, 1].map((g) => {
+                const y = plotBas - g * (plotBas - plotHaut);
                 return (
                   <line
                     key={g}
-                    x1={P}
-                    x2={W - P}
+                    x1={PAD_X}
+                    x2={W - PAD_X}
                     y1={y}
                     y2={y}
-                    stroke="var(--color-foreground)"
-                    strokeOpacity="0.05"
+                    stroke="var(--color-border)"
                     strokeWidth="1"
-                    strokeDasharray="2 4"
                   />
                 );
               })}
             </g>
 
-            {/* Baseline path (dashed — "without change") */}
-            <path
-              d={pathFor(RESERVE_BASELINE_6M)}
-              fill="none"
-              stroke="var(--color-muted-foreground)"
-              strokeWidth="1.5"
-              strokeDasharray="4 4"
-              strokeOpacity="0.7"
-            />
-
-            {/* Scenario area + line — animated on slider change */}
             <path
               data-testid="whatif-area"
-              d={areaFor(newSeries)}
-              fill="url(#ankora-area)"
+              d={aire}
+              fill="url(#ankora-aire)"
               className="transition-[d] duration-200 motion-reduce:transition-none"
             />
             <path
               data-testid="whatif-line"
-              d={pathFor(newSeries)}
+              d={ligne}
               fill="none"
-              stroke="var(--color-brand-400)"
-              strokeWidth="2.5"
+              stroke="var(--color-brand-600)"
+              strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
               className="transition-[d] duration-200 motion-reduce:transition-none"
             />
 
-            {/* Scenario points + first/last edge labels */}
-            {newSeries.map((v, i) => {
-              const isEdge = i === 0 || i === newSeries.length - 1;
-              return (
-                <g key={i}>
-                  <circle
-                    cx={xAt(i)}
-                    cy={yAt(v)}
-                    r="3.5"
-                    fill="var(--color-card)"
-                    stroke="var(--color-brand-400)"
-                    strokeWidth="2"
-                  />
-                  {isEdge && (
-                    <text
-                      x={xAt(i)}
-                      y={yAt(v) - 12}
-                      fontSize="10"
-                      fontFamily="var(--font-mono)"
-                      fontWeight="600"
-                      fill="var(--color-brand-text-strong)"
-                      textAnchor={i === 0 ? 'start' : 'end'}
-                      className="tabular-nums"
-                    >
-                      {v.toLocaleString(locale)} €
-                    </text>
-                  )}
-                </g>
-              );
-            })}
+            {/* Repère de survol — positionné par `transform`, jamais par `style`. */}
+            <g
+              data-testid="whatif-marker"
+              transform={`translate(${xAt(indexActif)}, ${yAt(valeurActive)})`}
+              className="transition-transform duration-150 motion-reduce:transition-none"
+            >
+              <circle r="5" fill="var(--color-brand-600)" />
+              <circle r="5" fill="none" stroke="var(--color-card)" strokeWidth="2" />
+            </g>
 
-            {/* X-axis month labels — calculés depuis aujourd'hui, cf. Props. */}
+            {/* Un seul libellé direct : la valeur du point actif. */}
+            <text
+              x={xAt(indexActif)}
+              y={yAt(valeurActive) - 14}
+              fontSize="12"
+              fontWeight="600"
+              fill="var(--color-brand-text-strong)"
+              textAnchor={indexActif === PROJECTION_MONTHS - 1 ? 'end' : 'middle'}
+              className="tabular-nums"
+            >
+              {eur(valeurActive)}
+            </text>
+
+            {/* Libellés de mois. */}
             <g aria-hidden="true">
-              {mois.map((libelle, i) => (
+              {mois.map((m, i) => (
                 <text
-                  key={`${i}-${libelle}`}
+                  key={m}
                   x={xAt(i)}
                   y={H - 10}
                   fontSize="10"
-                  fontFamily="var(--font-sans)"
-                  fontWeight="500"
                   fill="var(--color-muted-foreground)"
                   textAnchor="middle"
                 >
-                  {libelle}
+                  {m}
                 </text>
+              ))}
+            </g>
+
+            {/*
+              Zones de survol. Larges à dessein : viser un point de 10 px est un
+              exercice d'adresse, pas une interface. Chaque bande couvre tout son
+              mois, sur toute la hauteur.
+            */}
+            <g>
+              {serie.map((_, i) => (
+                <rect
+                  key={i}
+                  x={xAt(i) - (W - PAD_X * 2) / (PROJECTION_MONTHS - 1) / 2}
+                  y={plotHaut}
+                  width={(W - PAD_X * 2) / (PROJECTION_MONTHS - 1)}
+                  height={plotBas - plotHaut}
+                  fill="transparent"
+                  onMouseEnter={() => setSurvol(i)}
+                />
               ))}
             </g>
           </svg>
         </div>
 
-        {/* Caveat box */}
-        <div className="bg-card/40 border-border flex items-start gap-2.5 rounded-lg border p-3">
-          <span
-            aria-hidden="true"
-            className="bg-accent-surface text-accent-text mt-0.5 grid h-5 w-5 flex-none place-items-center rounded-md"
-          >
-            <Sparkles className="h-3 w-3" />
-          </span>
-          <p className="text-muted-foreground text-xs leading-relaxed text-pretty">{t('caveat')}</p>
-        </div>
+        {/*
+          La vue tableau. Le survol ENRICHIT la lecture, il ne la conditionne
+          jamais : sans elle, toute valeur intermédiaire ne serait accessible
+          qu'à la souris. `sr-only` et non `hidden` — masquer à l'oeil, pas aux
+          lecteurs d'écran.
+        */}
+        <table className="sr-only">
+          <caption>{t('chart.table_caption', { months: PROJECTION_MONTHS })}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{t('chart.table_month')}</th>
+              <th scope="col">{t('chart.table_cumulative')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {serie.map((v, i) => (
+              <tr key={i}>
+                <th scope="row">{mois[i]}</th>
+                <td>{eur(v)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <p className="text-muted-foreground text-xs leading-relaxed text-pretty">{t('caveat')}</p>
       </div>
     </>
   );

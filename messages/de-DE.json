@@ -245,44 +245,38 @@
     },
     "whatif": {
       "title": "Et si tu changeais une seule chose ?",
-      "subtitle": "Bouge le curseur. Vois l'impact sur ta réserve libre, sur six mois. C'est ce que fait Ankora à chaque décision financière.",
+      "subtitle": "Choisis ce que tu paierais. Vois ce que ce seul changement te rapporte, mois après mois. C'est ce que fait Ankora à chaque décision.",
       "badge": "Démo · pas de compte requis",
       "scenarios": {
         "gsm": {
           "label": "Renégocier mon GSM",
-          "hint": "Forfait actuel : 42 €/mois · marché : 18–28 €/mois"
+          "hint": "Tu paies {current} par mois. Les offres du marché descendent à {floor}."
         },
         "elec": {
           "label": "Changer de fournisseur d'électricité",
-          "hint": "Conso actuelle : 168 €/mois · 3 offres moins chères dans ta zone"
+          "hint": "Tu paies {current} par mois. Trois offres de ta zone descendent à {floor}."
         },
         "stream": {
           "label": "Couper deux streamings",
-          "hint": "5 abonnements actifs · usage réel : 2 sur 30 jours"
+          "hint": "Tu paies {current} par mois pour cinq abonnements. En gardant les deux que tu regardes : {floor}."
         }
       },
       "controls": {
         "scenario": "Scénario",
-        "savings": "Économie mensuelle",
-        "slider_aria": "Économie mensuelle pour {label}"
-      },
-      "annual": {
-        "eyebrow": "Sur 12 mois",
-        "fleche": "Ankora pourrait flécher {amount} €/mois vers ton épargne longue."
+        "future": "Je paierais",
+        "saving": "Tu économises {amount} par mois.",
+        "slider_aria": "Ce que tu paierais pour : {label}",
+        "slider_valuetext": "{price} par mois, soit {saving} économisés",
+        "bound_current": "{price} aujourd'hui",
+        "bound_best": "{price} au mieux"
       },
       "chart": {
-        "title": "Réserve libre · projection",
-        "subtitle": "6 mois à partir d'aujourd'hui",
-        "legend": {
-          "baseline": "Sans changement",
-          "scenario": "Avec ton choix"
-        },
-        "aria": "Graphique projection sur 6 mois de la réserve libre, avec et sans le changement choisi",
-        "thresholds": {
-          "danger": "⚠️ Découvert estimé",
-          "fragile": "Zone fragile",
-          "comfortable": "Zone confortable"
-        }
+        "title": "Ce que ce choix te rapporte",
+        "subtitle": "cumulé sur {months} mois",
+        "aria": "Graphique du gain cumulé sur {months} mois, dû au seul changement choisi",
+        "table_caption": "Gain cumulé mois par mois, sur {months} mois",
+        "table_month": "Mois",
+        "table_cumulative": "Gain cumulé"
       },
       "caveat": "Démo basée sur des hypothèses moyennes. Ankora ne fournit pas de conseil en placement. Aucun import bancaire — tu saisis tes charges manuellement."
     },

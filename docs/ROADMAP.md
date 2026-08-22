@@ -95,6 +95,31 @@ toute ligne de code** — dont un introduit par une révision de l'ADR lui-même
 [#278](https://github.com/thierryvm/ankora/issues/278) — `auth.audit_log_entries` garde
 l'email et l'IP après l'effacement. Il était théorique tant que rien n'effaçait.
 
+### Le simulateur montrait à 90 % autre chose que le choix du visiteur — 2026-08-22
+
+Le simulateur « what-if » superposait une trajectoire de réserve **codée en dur**
+et la même augmentée de l'économie choisie. Mesuré sur le scénario par défaut, il
+montait de 494 € à 1192 € : sur ces **+698 €**, **628 € (90 %)** venaient de la
+trajectoire inventée et **70 €** de la décision du visiteur. La section promettait
+« vois l'impact de ton choix ». Constat de @thierry.
+
+Trois changements, une seule intention — que chaque euro affiché ait une cause
+nommée :
+
+- **Le graphique** ne trace plus qu'une série : l'écart cumulé attribuable au
+  choix, à partir de zéro. Un chiffre héros porte le total, la vue tableau le rend
+  lisible sans souris, et un survol donne le mois par mois.
+- **Le curseur** porte le **prix futur** et non plus l'écart — la donnée que le
+  visiteur possède. L'économie en est déduite. Ses bornes viennent du même endroit
+  que le texte d'aide, donc elles ne peuvent plus le contredire : avant, le
+  curseur descendait à 0 € pendant que la phrase annonçait un marché à 18 €.
+- **Les zones de seuil** (`copywriting-review-2026-04-28.md` §5.1) sont retirées.
+  Elles qualifiaient un **niveau** de réserve ; la série est un **écart**. Elles
+  sont sans objet, pas fausses — l'addendum daté est dans le document d'origine.
+
+Levé au passage : **BUG-iOS-010** — le curseur porte désormais `aria-valuemin` /
+`aria-valuemax` / `aria-valuenow` explicites, et son cas e2e sort de `test.fixme`.
+
 ## Programme parallèle — refonte landing « Le relevé corrigé »
 
 Chantier **parallèle** à la refonte v2 (surfaces disjointes : marketing public

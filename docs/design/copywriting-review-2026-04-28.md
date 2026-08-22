@@ -87,6 +87,29 @@ Ces améliorations sont à inscrire dans le brief PR-3c-3 :
 
 ### 5.1 Threshold zones colorées sur le chart projection 6 mois
 
+> **⛔ ANNULÉ le 22 août 2026 — les zones ont été retirées du simulateur.**
+>
+> Elles ne sont pas devenues fausses : elles sont devenues **sans objet**. Ces
+> bornes — 0 € et 200 € — qualifient un **niveau de réserve**. Or le graphique ne
+> trace plus un niveau : il trace l'**écart cumulé attribuable au choix**, à
+> partir de zéro. Un écart de 84 € n'est ni « fragile » ni « confortable », la
+> question ne se pose pas.
+>
+> Ce qui a motivé la refonte : le graphique superposait une trajectoire de
+> réserve codée en dur et la même augmentée de l'économie choisie. Mesuré sur le
+> scénario par défaut, il montait de 494 € à 1192 € — dont **628 € (90 %)**
+> venaient de la trajectoire inventée et **70 €** du choix du visiteur. La
+> section promettait « vois l'impact de ton choix » et montrait à 90 % autre
+> chose. Constat de @thierry, le 22/08/2026.
+>
+> **Le principe 4 de ce document (« feedback émotionnel discret mais présent »)
+> reste honoré**, autrement : par un chiffre héros et par une aire qui monte. Ce
+> qui disparaît est le dispositif, pas l'intention.
+>
+> Détail complet dans les en-têtes de
+> `src/components/marketing/landing/sections/WhatIfDemoClient.tsx` et
+> `simulator/scenarios.ts`.
+
 Concept : ajouter 3 zones horizontales sur le SVG timeline du WhatIfDemo :
 
 - **Zone rouge** : `< 0 €` — label "⚠️ Découvert estimé"
