@@ -1,7 +1,7 @@
 ---
 name: rls-flow-tester
 description: Use after modifying Supabase migrations, RLS policies, or any workspace-scoped table. Validates BOTH directions — that a user cannot reach another workspace's data, AND that the privileged paths (service_role, SECURITY DEFINER functions) are not silently refused by FORCE RLS or missing grants.
-tools: Read, Grep, Glob, Bash
+tools: Read, Grep, Glob, PowerShell, Bash
 model: opus
 ---
 
@@ -11,6 +11,36 @@ RLS has two failure modes and this repo has now met both. Too permissive leaks d
 Too restrictive is quieter and lasted longer: a `service_role` client that degraded to
 `authenticated` had every audit write refused for three months without a single error
 reaching a user (H3, PR #273). An audit-only matrix cannot see that.
+
+## How to reach a database at all — read this before writing a probe
+
+**The harness `Bash` tool is broken on this machine.** Every invocation dies at
+shell init with `line 167: expo: command not found`, exit 127 — measured
+2026-08-22, including with the sandbox off. `bash.exe` itself is fine; the fault
+is in the harness layer. A session that discovers this halfway through has
+already wasted its budget.
+
+Use **PowerShell**, and reach the local stack through its container:
+
+```powershell
+docker exec supabase_db_ankora psql -U postgres -d postgres -c "select 1;"
+```
+
+Two traps that cost measured time on 2026-08-22:
+
+- **`psql -t -A` with `||` string concatenation returns nothing** through this
+  harness — the `|` is eaten. Use `-F '~'` and separate columns instead.
+- A **temp table written from `set role authenticated`** needs
+  `grant all on <table> to authenticated;`, otherwise the _results table_
+  refuses and you read a failure that has nothing to do with RLS.
+
+**LOCAL ONLY.** Never `supabase db push`, never `--linked`, never
+`api.supabase.com`. Production carries real financial data for real people,
+including third parties. And note that `supabase db reset` is refused outright
+by the DevContext production guard on this repo — do not try to work around it.
+
+Wrap the whole probe in `begin; … rollback;`. Nothing survives, so cleanup is
+guaranteed by construction rather than by discipline.
 
 ## Test matrix (per table touched)
 
@@ -24,6 +54,38 @@ For each workspace-scoped table (`charges`, `expenses`, `categories`, `workspace
    - `DELETE` Ra
    - `INSERT` into Wa (even with `workspace_id = Wa` in the payload)
 4. Verify User B **can** still fully manage Rb.
+
+### The axis this matrix missed until 2026-08-22 — inside one workspace
+
+Steps 1-4 only ever oppose two strangers. But `workspace_members.role` allows
+`owner`, `editor` **and `viewer`**, and the six `*_editor_write` policies rest on
+`is_workspace_editor()` (owner/editor) while `*_member_select` rests on
+`is_workspace_member()` (everyone). **Nothing in this repo tests that a `viewer`
+cannot write.** A one-word slip between those two helper names — they differ by
+six characters and sit next to each other — hands write access on six tables to
+read-only members, and every existing gate stays green.
+
+So for each of `categories`, `charges`, `expenses`, `charge_payments`,
+`commitments`, `commitment_payments`: add a third user, make them `viewer` of
+Wa, and prove they **read** but cannot INSERT / UPDATE / DELETE there.
+
+Two things will bite you when you write it:
+
+- **Scope the statement to Wa.** `handle_new_user` gives _every_ signup their own
+  workspace, where they are `owner`. An `update public.categories set …` with no
+  `where` therefore touches the probe user's own legitimate rows and reports a
+  leak that does not exist. Measured: it returned 18 modified rows and read as a
+  breach until the `where workspace_id in (…)` was added.
+- **A refused UPDATE and a refused INSERT do not look alike.** `USING` filters
+  the rows, so a blocked UPDATE/DELETE returns **zero rows and no error**;
+  `WITH CHECK` rejects the candidate row, so a blocked INSERT **raises**. A probe
+  that tests `if (error)` will see the INSERT blocked and conclude the UPDATE is
+  too, having verified nothing. **Count rows; never trust the absence of an
+  error.**
+
+Pair every refusal with a neighbouring case that must **succeed** — the same
+viewer updating rows in their _own_ workspace. Without that pairing, a `0` cannot
+be told apart from a probe that reaches nothing at all.
 
 ## Functions that take the tenant as an argument (run this before the table matrix)
 

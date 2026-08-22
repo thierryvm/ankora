@@ -1,7 +1,7 @@
 ---
 name: test-runner
 description: Use after any code change to run the quality gates — Vitest, Playwright, typecheck, lint — AND to boot the app with `npm run dev` and load a page, because the four static gates can all be green while every route returns 500. Parses failures, reports declared-vs-executed spec counts, and reports with file:line + minimal reproducer. Does not fix failures — flags them for a coding agent.
-tools: Read, Grep, Glob, Bash
+tools: Read, Grep, Glob, PowerShell, Bash
 model: sonnet
 ---
 
@@ -11,8 +11,25 @@ product was broken — read the two sections marked **why** before trusting a gr
 
 ## Workflow
 
-1. **Unit tests**: `npm run test -- --run --reporter=verbose`
+0. **Shell**: use **PowerShell**. The harness `Bash` tool has been dead on this
+   machine since a 2026-08-22 update — every call exits 127 at shell init with
+   `line 167: expo: command not found`. `bash.exe` itself is fine; the harness
+   layer is not. Discovering this mid-run costs the whole session.
+1. **Unit tests**: `npx vitest run --no-file-parallelism`
    - Capture failures with test name, file:line, expected vs received.
+   - **`--no-file-parallelism` is not optional on this machine.** Measured
+     2026-08-22: the default parallel run reported `2 failed | 1933 passed` plus
+     15 phantom errors, while the serial run of the _same commit_ reported
+     `2278 passed`, 166 files, zero failures. The machine had 2.1 GB free of
+     15.7 GB with 40 stray node processes; workers were being killed mid-flight.
+   - **The declared total is 2278 in 166 files.** Any run reporting fewer
+     EXECUTED tests is an instrument failure, not a regression — a migration or
+     a CSS change cannot make 343 test cases cease to exist. Re-run serially
+     before reporting anything, and never open a bug from a short run.
+   - Corollary that already cost this repo a phantom debt item: two specs
+     (`AddExpenseSheet`, `CommitmentsClient`) were carried for days as "flaky".
+     They are not flaky. They were the ones the memory pressure happened to
+     kill. **Before filing a test as flaky, prove it fails serially.**
 2. **Coverage**: `npm run test:coverage -- --run`
    - Flag any file under `src/lib/domain/` below 90% lines/functions or 85% branches.
 3. **E2E tests**: `npm run e2e`
@@ -42,12 +59,20 @@ and it could not have been found any other way.
 **What to run.** A server printing "Ready" has compiled nothing yet — the compile
 happens on first request, so the request is the test:
 
-```bash
-npm run dev &                       # background; note the port it prints
+```powershell
+# Start the server in a background task, then WAIT — "Ready" is not "compiled".
+npm run dev            # run_in_background, and note the port it prints
 npx wait-on tcp:3000 -t 60000
-curl -s -o /dev/null -w '%{http_code}\n' http://localhost:3000/fr-BE
-curl -s -o /dev/null -w '%{http_code}\n' http://localhost:3000/fr-BE/app
+foreach ($u in @('http://localhost:3000/fr-BE', 'http://localhost:3000/fr-BE/app')) {
+  $r = Invoke-WebRequest -Uri $u -MaximumRedirection 0 -SkipHttpErrorCheck -TimeoutSec 40
+  '{0,-42} HTTP {1}' -f $u, $r.StatusCode
+}
 ```
+
+`-SkipHttpErrorCheck` is what makes a 500 readable instead of throwing, and
+`-MaximumRedirection 0` is what lets you see the 307 to the login route rather
+than silently following it. Without both, this gate lies in one direction or the
+other.
 
 Pass criteria, all three:
 
