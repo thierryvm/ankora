@@ -67,10 +67,11 @@ test.describe('Simulator — iPhone Safari WebKit (PR-QA-1b)', () => {
   });
 
   test('range slider: visible and accessible by role', async ({ page }) => {
-    test.fixme(
-      true,
-      'BUG-iOS-010: simulator <input type="range"> is exposed as role=slider but lacks explicit aria-valuemin / aria-valuemax attributes (browsers infer from min/max but assistive tech behavior varies). Fix in PR-QA-1c-10 (add aria-valuemin={0} aria-valuemax={22} on the range input).',
-    );
+    // BUG-iOS-010 levé le 22 août 2026 : le curseur porte désormais
+    // `aria-valuemin` / `aria-valuemax` / `aria-valuenow` explicites. Les
+    // navigateurs déduisaient déjà ces bornes de `min`/`max`, mais les
+    // technologies d'assistance divergent sur cette déduction — c'est
+    // précisément pour ça que ce cas dormait en `test.fixme`.
     await page.goto('/');
     const section = page.locator('section#simulator');
     await section.scrollIntoViewIfNeeded();
@@ -81,15 +82,25 @@ test.describe('Simulator — iPhone Safari WebKit (PR-QA-1b)', () => {
     await expect(slider).toHaveAttribute('aria-valuemax');
   });
 
-  test('SVG chart: 6 projection points + threshold zones render', async ({ page }) => {
+  test('SVG chart: une seule série, et sa vue tableau', async ({ page }) => {
     await page.goto('/');
     const section = page.locator('section#simulator');
     await section.scrollIntoViewIfNeeded();
 
     const svg = section.locator('svg[role="img"]');
     await expect(svg).toBeVisible();
-    await expect(svg.locator('circle')).toHaveCount(6);
-    await expect(svg.locator('rect[data-threshold]')).toHaveCount(3);
+
+    // Refonte du 22/08/2026 : le graphique traçait deux courbes — une réserve
+    // codée en dur et la même augmentée du choix — avec trois bandes de seuil.
+    // Il ne trace plus que l'écart attribuable au choix, donc une seule série,
+    // et les bandes n'ont plus d'objet : elles qualifiaient un NIVEAU de
+    // réserve, la série est un ÉCART cumulé partant de zéro.
+    await expect(svg.locator('path[data-testid="whatif-line"]')).toHaveCount(1);
+    await expect(svg.locator('rect[data-threshold]')).toHaveCount(0);
+
+    // Sur iPhone il n'y a pas de survol : la vue tableau n'est pas un confort,
+    // c'est le seul chemin vers les valeurs intermédiaires.
+    await expect(section.locator('table tbody tr')).toHaveCount(6);
   });
 
   test('scroll-to-top button: respects safe-area-inset-bottom (no overlap with home indicator)', async ({

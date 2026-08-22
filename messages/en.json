@@ -245,46 +245,38 @@
     },
     "whatif": {
       "title": "What if you changed one thing?",
-      "subtitle": "Move the slider. See the impact on your free reserve, over six months. That's what Ankora does for every financial decision.",
+      "subtitle": "Pick what you would pay. See what that single change gives you back, month after month. This is what Ankora does with every decision.",
       "badge": "Demo · no account needed",
       "scenarios": {
         "gsm": {
-          "label": "Renegotiate my mobile plan",
-          "hint": "Current plan: €42/month · market: €18–28/month"
+          "label": "Renegotiate my phone plan",
+          "hint": "You pay {current} a month. Market offers go down to {floor}."
         },
         "elec": {
-          "label": "Switch electricity provider",
-          "hint": "Current bill: €168/month · 3 cheaper offers in your area"
+          "label": "Switch electricity supplier",
+          "hint": "You pay {current} a month. Three offers in your area go down to {floor}."
         },
         "stream": {
-          "label": "Cut two streaming subscriptions",
-          "hint": "5 active subscriptions · actual use: 2 over 30 days"
+          "label": "Cancel two streaming services",
+          "hint": "You pay {current} a month for five subscriptions. Keeping the two you actually watch: {floor}."
         }
       },
       "controls": {
         "scenario": "Scenario",
-        "savings": "Monthly savings",
-        "slider_aria": "Monthly savings for {label}"
-      },
-      "annual": {
-        "eyebrow": "Over 12 months",
-        "fleche": "Ankora could route {amount} €/month towards your long-term savings."
+        "future": "I would pay",
+        "saving": "You save {amount} a month.",
+        "slider_aria": "What you would pay for: {label}",
+        "slider_valuetext": "{price} a month, saving {saving}"
       },
       "chart": {
-        "title": "Free reserve · projection",
-        "subtitle": "6 months from today",
-        "legend": {
-          "baseline": "Without change",
-          "scenario": "With your choice"
-        },
-        "aria": "6-month projection chart of free reserve, with and without the chosen change",
-        "thresholds": {
-          "danger": "⚠️ Estimated overdraft",
-          "fragile": "Fragile zone",
-          "comfortable": "Comfortable zone"
-        }
+        "title": "What this choice gives back",
+        "subtitle": "cumulative over {months} months",
+        "aria": "Chart of the cumulative gain over {months} months, from the selected change alone",
+        "table_caption": "Cumulative gain month by month, over {months} months",
+        "table_month": "Month",
+        "table_cumulative": "Cumulative gain"
       },
-      "caveat": "Demo based on average assumptions. Ankora does not provide investment advice. No bank import — you enter your expenses manually."
+      "caveat": "Demo based on average assumptions. Ankora does not provide investment advice. No bank import — you enter your charges manually."
     },
     "footerCta": {
       "h2Lead": "Start with what's",

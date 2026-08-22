@@ -205,11 +205,16 @@ test.describe('Landing — WhatIfDemo simulator (PR-3c-3)', () => {
       input.dispatchEvent(new Event('input', { bubbles: true }));
     });
 
-    // 20 × 12 = 240 €
-    await expect(section.getByText(/\+240\s*€/)).toBeVisible();
+    // Le curseur porte le PRIX FUTUR depuis le 22/08/2026, plus l'écart. Amené
+    // à 20 € sur un forfait actuel de 42 €, il produit 22 €/mois d'économie,
+    // donc 132 € sur six mois. C'est la seule chose que le graphique trace :
+    // avant cette date il montait de 698 € dont 628 € venaient d'une réserve
+    // codée en dur.
+    await expect(section.getByText(/Tu économises 22\s*€ par mois/)).toBeVisible();
+    await expect(section.getByText(/\+132\s*€/).first()).toBeVisible();
   });
 
-  test('renders 6 projection points + 3 threshold zones in the SVG chart', async ({ page }) => {
+  test('trace une seule série, sans zone de seuil ni seconde courbe', async ({ page }) => {
     await page.goto('/');
     const section = page.locator('section#simulator');
     await section.scrollIntoViewIfNeeded();
@@ -217,11 +222,33 @@ test.describe('Landing — WhatIfDemo simulator (PR-3c-3)', () => {
     const svg = section.locator('svg[role="img"]');
     await expect(svg).toBeVisible();
 
-    // 6 months × 1 point = 6 circles
-    await expect(svg.locator('circle')).toHaveCount(6);
+    // Une ligne, une aire. La courbe « sans changement » a disparu avec la
+    // réserve fictive qu'elle traçait.
+    await expect(svg.locator('path[data-testid="whatif-line"]')).toHaveCount(1);
+    await expect(svg.locator('path[data-testid="whatif-area"]')).toHaveCount(1);
 
-    // 3 threshold rects (danger / fragile / comfortable), all aria-hidden
-    const thresholds = svg.locator('rect[data-threshold]');
-    await expect(thresholds).toHaveCount(3);
+    // Les bandes danger/fragile/confortable qualifiaient un NIVEAU de réserve.
+    // La série est désormais un ÉCART cumulé partant de zéro : elles n'ont plus
+    // d'objet, elles ne sont pas seulement masquées.
+    await expect(svg.locator('rect[data-threshold]')).toHaveCount(0);
+
+    // Aucun pointillé : ni seconde série, ni grille pointillée — un pointillé
+    // se lit comme un seuil ou une projection.
+    await expect(svg.locator('[stroke-dasharray]')).toHaveCount(0);
+  });
+
+  test('double le graphique d une vue tableau, lisible sans souris', async ({ page }) => {
+    await page.goto('/');
+    const section = page.locator('section#simulator');
+    await section.scrollIntoViewIfNeeded();
+
+    // Le survol enrichit la lecture, il ne la conditionne jamais : sans ce
+    // tableau, les valeurs intermédiaires ne seraient atteignables qu'à la
+    // souris. `sr-only` le masque à l'oeil sans le retirer de l'arbre
+    // d'accessibilité — c'est pourquoi on l'interroge en `attached` et non en
+    // `visible`.
+    const table = section.locator('table');
+    await expect(table).toBeAttached();
+    await expect(table.locator('tbody tr')).toHaveCount(6);
   });
 });
