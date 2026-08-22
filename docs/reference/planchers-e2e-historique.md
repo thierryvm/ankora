@@ -19,10 +19,34 @@ les plus sensibles de l'app.
 Deux jobs, donc **deux planchers distincts** — un chiffre global agrégé serait
 ininterprétable au premier conflit, donc ignoré :
 
-| Job                              | Plancher au 11 août 2026                                           |
-| -------------------------------- | ------------------------------------------------------------------ |
-| `Playwright E2E`                 | **247 passed** (241 plus tôt le 11/08, 231 au 09/08, 228 au 06/08) |
-| `Playwright E2E (authenticated)` | **50 passed** (45 avant, +5 `gdpr-deletion-queue` — PR-C)          |
+| Job                              | Plancher au 22 août 2026                                                         |
+| -------------------------------- | -------------------------------------------------------------------------------- |
+| `Playwright E2E`                 | **253 passed** (247 au 11/08, 241 plus tôt le 11/08, 231 au 09/08, 228 au 06/08) |
+| `Playwright E2E (authenticated)` | **50 passed** (45 avant, +5 `gdpr-deletion-queue` — PR-C)                        |
+
+> **Public : 247 → 253, mesuré le 2026-08-22**, à la refonte du simulateur
+> ([#429](https://github.com/thierryvm/ankora/pull/429)). Deux sources, et elles
+> se distinguent :
+>
+> - **+1 cas × 3 projets** — `e2e/landing-sections.spec.ts` gagne « double le
+>   graphique d'une vue tableau » : la refonte ajoute une vue tableau que rien
+>   n'exerçait, et sans elle les valeurs intermédiaires ne seraient atteignables
+>   qu'à la souris.
+> - **+1 `test.fixme` levé × 3 projets iPhone** — `e2e/mobile-ios/simulator.spec.ts`,
+>   BUG-iOS-010. Le curseur porte désormais `aria-valuemin` / `aria-valuemax` /
+>   `aria-valuenow` explicites, donc le cas s'exécute au lieu de dormir. **Un
+>   plancher qui monte parce qu'un cas cesse d'être ignoré vaut mieux qu'un
+>   plancher qui monte parce qu'on a écrit un test de plus.**
+>
+> **Delta mesuré dans les deux sens AVANT le premier push**, par
+> `npx playwright test --list` sur la branche puis sur `main` :
+> **468 → 471 cas déclarés, soit +3.** Deux cas remplacés au passage (zones de
+> seuil et KPI annuel) plutôt que supprimés — d'où un delta de +3 et non +6 sur
+> les déclarés, alors que les _exécutés_ gagnent 6 : les deux cas remplacés
+> tournaient déjà.
+>
+> **Confirmé sur la CI de la PR** (run `32574663536`) : public
+> **253 passed / 218 skipped**, authentifié **50 passed / 5 skipped**.
 
 > **Planchers inchangés (247 / 50), lecture PR L3 du 2026-08-11** (#376, dernière
 > PR du programme landing). Aucune spec ajoutée ni retirée — delta **0 mesuré
