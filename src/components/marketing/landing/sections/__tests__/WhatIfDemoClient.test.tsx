@@ -71,34 +71,41 @@ describe('<WhatIfDemoClient />', () => {
   // leur différence. Il porte maintenant le prix futur, borné par le plancher
   // marché et le prix actuel.
 
-  it('borne le curseur entre le plancher marché et le prix actuel', () => {
+  it('gradue le curseur en ECONOMIE, de zero au gain maximal', () => {
     render(<WhatIfDemoClient mois={MOIS} />);
     const curseur = screen.getByRole('slider') as HTMLInputElement;
-    expect(curseur.min).toBe(String(GSM.floor));
-    expect(curseur.max).toBe(String(GSM.current));
-    expect(curseur.value).toBe(String(GSM.default));
+    // Le curseur portait d'abord le prix futur. Arithmetique juste, geste faux :
+    // pousser vers la droite AUGMENTAIT le prix, donc REDUISAIT le gain, et la
+    // courbe descendait. Il porte desormais l'economie — a droite, on gagne
+    // plus — pendant que l'ecran continue d'afficher le prix, qui est la donnee
+    // que le visiteur possede.
+    expect(curseur.min).toBe('0');
+    expect(curseur.max).toBe(String(GSM.current - GSM.floor));
+    expect(curseur.value).toBe(String(GSM.current - GSM.default));
   });
 
-  it('ramène le curseur au repos du nouveau scénario', () => {
+  it('ramene le curseur au repos du nouveau scenario', () => {
     render(<WhatIfDemoClient mois={MOIS} />);
     fireEvent.click(screen.getByRole('button', { name: /Changer de fournisseur/i }));
     const curseur = screen.getByRole('slider') as HTMLInputElement;
-    expect(curseur.value).toBe(String(ELEC.default));
-    expect(curseur.min).toBe(String(ELEC.floor));
+    expect(curseur.value).toBe(String(ELEC.current - ELEC.default));
+    expect(curseur.max).toBe(String(ELEC.current - ELEC.floor));
   });
 
-  it('DÉDUIT l économie du prix choisi, au lieu de la demander', () => {
+  it('AFFICHE le prix qui decoule de l economie choisie', () => {
     const { container } = render(<WhatIfDemoClient mois={MOIS} />);
-    // 42 € payés aujourd'hui, curseur amené à 30 € → 12 € par mois.
-    fireEvent.change(screen.getByRole('slider'), { target: { value: '30' } });
+    // 12 EUR d'economie sur un forfait de 42 EUR : le visiteur paierait 30 EUR.
+    // C'est la traduction que le curseur lui epargne.
+    fireEvent.change(screen.getByRole('slider'), { target: { value: '12' } });
     expect(within(container).getByText(/Tu économises 12\s*€ par mois/)).toBeInTheDocument();
+    expect(within(container).getByText(/30\s*€/)).toBeInTheDocument();
   });
 
   // ─── Ce que le graphique montre ─────────────────────────────────────────
 
   it('affiche un total qui vaut exactement économie × mois, et rien d autre', () => {
     const { container } = render(<WhatIfDemoClient mois={MOIS} />);
-    fireEvent.change(screen.getByRole('slider'), { target: { value: '30' } });
+    fireEvent.change(screen.getByRole('slider'), { target: { value: '12' } });
     // 12 €/mois × 6 mois = 72 €. Aucune réserve fictive ne s'y ajoute : avant le
     // 22/08 le graphique montait de 698 € dont 628 € (90 %) venaient d'une
     // trajectoire codée en dur que le visiteur ne pouvait pas décomposer.
@@ -212,7 +219,7 @@ describe('<WhatIfDemoClient />', () => {
     const { container } = render(<WhatIfDemoClient mois={MOIS} />);
     // Curseur au prix actuel : aucun changement, donc aucun gain. « +0 € » se
     // lirait comme un gain acquis mais nul ; « 0 € » dit qu'il ne se passe rien.
-    fireEvent.change(screen.getByRole('slider'), { target: { value: String(GSM.current) } });
+    fireEvent.change(screen.getByRole('slider'), { target: { value: '0' } });
     expect(within(container).queryByText(/\+0\s*€/)).toBeNull();
     expect(within(container).getAllByText(/\b0\s*€/).length).toBeGreaterThan(0);
   });

@@ -266,7 +266,9 @@
         "future": "I would pay",
         "saving": "You save {amount} a month.",
         "slider_aria": "What you would pay for: {label}",
-        "slider_valuetext": "{price} a month, saving {saving}"
+        "slider_valuetext": "{price} a month, saving {saving}",
+        "bound_current": "{price} today",
+        "bound_best": "{price} at best"
       },
       "chart": {
         "title": "What this choice gives back",

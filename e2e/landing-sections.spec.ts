@@ -205,13 +205,17 @@ test.describe('Landing — WhatIfDemo simulator (PR-3c-3)', () => {
       input.dispatchEvent(new Event('input', { bubbles: true }));
     });
 
-    // Le curseur porte le PRIX FUTUR depuis le 22/08/2026, plus l'écart. Amené
-    // à 20 € sur un forfait actuel de 42 €, il produit 22 €/mois d'économie,
-    // donc 132 € sur six mois. C'est la seule chose que le graphique trace :
-    // avant cette date il montait de 698 € dont 628 € venaient d'une réserve
-    // codée en dur.
-    await expect(section.getByText(/Tu économises 22\s*€ par mois/)).toBeVisible();
-    await expect(section.getByText(/\+132\s*€/).first()).toBeVisible();
+    // Le curseur porte l'ECONOMIE depuis le 22/08/2026, et l'ecran affiche le
+    // prix qui en decoule. Il portait d'abord le prix : arithmetique juste,
+    // geste faux — pousser vers la droite reduisait le gain et faisait
+    // DESCENDRE la courbe.
+    //
+    // 20 EUR d'economie sur un forfait de 42 EUR : le visiteur paierait 22 EUR,
+    // et gagnerait 120 EUR sur six mois. C'est la seule chose que le graphique
+    // trace ; avant cette date il montait de 698 EUR dont 628 venaient d'une
+    // reserve codee en dur.
+    await expect(section.getByText(/Tu économises 20\s*€ par mois/)).toBeVisible();
+    await expect(section.getByText(/\+120\s*€/).first()).toBeVisible();
   });
 
   test('trace une seule série, sans zone de seuil ni seconde courbe', async ({ page }) => {

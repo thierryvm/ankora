@@ -67,17 +67,24 @@ type Props = {
 };
 
 /**
- * Plafond de l'axe — arrondi au pas « rond » supérieur.
+ * Plafond de l'axe — FIXE PAR SCÉNARIO, jamais recalculé sur la valeur courante.
  *
- * Sans cela le tracé serait écrasé : l'ancien code plafonnait à
- * `Math.max(...serie, 1500)`, hérité d'une réserve qui atteignait 1192 €. La
- * nouvelle série culmine vers 84–270 € ; le même plafond la collerait au bas
- * d'un axe six fois trop haut, et la refonte aurait l'air cassée en production.
+ * Cette distinction est tout le sujet, et je l'ai ratée au premier essai. Un axe
+ * qui s'ajuste à la série rend le graphique MUET : mesuré sur le scénario GSM,
+ * le total passait de 108 € à 36 € — divisé par trois — pendant que le dernier
+ * point restait exactement à la même hauteur, parce que le plafond suivait. La
+ * courbe gardait sa pente, puis s'effondrait d'un coup en fin de course.
+ * Constat de @thierry : « le graphique monte et descend bizarrement ».
+ *
+ * Ancré sur le gain MAXIMAL du scénario, l'axe devient une règle graduée : la
+ * courbe monte quand on gagne plus, descend quand on gagne moins, et sa hauteur
+ * se compare d'un réglage à l'autre. C'est la seule façon dont un tracé peut
+ * répondre au geste.
  */
-function plafondAxe(max: number): number {
-  if (max <= 0) return 60;
-  const pas = max <= 120 ? 20 : max <= 300 ? 50 : 100;
-  return Math.max(pas, Math.ceil(max / pas) * pas);
+function plafondAxe(gainMaximal: number): number {
+  if (gainMaximal <= 0) return 60;
+  const pas = gainMaximal <= 120 ? 20 : gainMaximal <= 300 ? 50 : 100;
+  return Math.max(pas, Math.ceil(gainMaximal / pas) * pas);
 }
 
 export function WhatIfDemoClient({ mois }: Props) {
@@ -87,8 +94,20 @@ export function WhatIfDemoClient({ mois }: Props) {
   const [scenarioId, setScenarioId] = useState<WhatIfScenarioId>('gsm');
   const scenario = WHAT_IF_SCENARIOS.find((s) => s.id === scenarioId)!;
 
-  /** Le curseur porte le PRIX FUTUR, pas l'écart. Cf. `scenarios.ts`. */
-  const [prixFutur, setPrixFutur] = useState(scenario.default);
+  /**
+   * Le curseur porte l'ÉCONOMIE, et l'écran affiche le PRIX qui en découle.
+   *
+   * Premier essai : le curseur portait directement le prix futur. Arithmétique
+   * juste, geste faux — pousser vers la droite AUGMENTAIT le prix, donc
+   * RÉDUISAIT le gain, et la courbe descendait. Le sens de lecture s'y opposait
+   * (constat de @thierry). Vers la droite doit vouloir dire « mieux ».
+   *
+   * On garde pourtant le prix à l'écran, parce que c'est la donnée que le
+   * visiteur possède : il sait ce qu'il paie et ce qu'il paierait, jamais leur
+   * différence. Le curseur suit le geste, l'affichage suit la tête.
+   */
+  const economieMax = scenario.current - scenario.floor;
+  const [economie, setEconomie] = useState(scenario.current - scenario.default);
   const [survol, setSurvol] = useState<number | null>(null);
 
   /**
@@ -105,15 +124,20 @@ export function WhatIfDemoClient({ mois }: Props) {
   const [scenarioPrecedent, setScenarioPrecedent] = useState(scenarioId);
   if (scenarioId !== scenarioPrecedent) {
     setScenarioPrecedent(scenarioId);
-    setPrixFutur(scenario.default);
+    setEconomie(scenario.current - scenario.default);
     setSurvol(null);
   }
 
-  const economie = Math.max(0, scenario.current - prixFutur);
+  const prixFutur = scenario.current - economie;
   const serie = Array.from({ length: PROJECTION_MONTHS }, (_, i) => economie * (i + 1));
   const total = economie * PROJECTION_MONTHS;
 
-  const yMax = plafondAxe(total);
+  /**
+   * L'axe est gradué sur le gain MAXIMAL du scénario, pas sur le gain courant :
+   * c'est ce qui permet à la courbe de monter et de descendre quand on bouge le
+   * curseur. Cf. `plafondAxe`.
+   */
+  const yMax = plafondAxe(economieMax * PROJECTION_MONTHS);
   const plotBas = H - PAD_BOTTOM;
   const plotHaut = PAD_TOP;
 
@@ -205,11 +229,11 @@ export function WhatIfDemoClient({ mois }: Props) {
           */}
           <input
             type="range"
-            min={scenario.floor}
-            max={scenario.current}
+            min={0}
+            max={economieMax}
             step={scenario.step}
-            value={prixFutur}
-            onChange={(e) => setPrixFutur(Number(e.target.value))}
+            value={economie}
+            onChange={(e) => setEconomie(Number(e.target.value))}
             aria-label={t('controls.slider_aria', {
               label: t(`scenarios.${scenarioId}.label`),
             })}
@@ -217,14 +241,22 @@ export function WhatIfDemoClient({ mois }: Props) {
               price: prix(prixFutur),
               saving: prix(economie),
             })}
-            aria-valuemin={scenario.floor}
-            aria-valuemax={scenario.current}
-            aria-valuenow={prixFutur}
+            aria-valuemin={0}
+            aria-valuemax={economieMax}
+            aria-valuenow={economie}
             className="accent-brand-400 h-6 w-full"
           />
-          <div className="text-muted-foreground mt-0.5 flex justify-between font-mono text-xs tabular-nums">
-            <span>{prix(scenario.floor)}</span>
-            <span>{prix(scenario.current)}</span>
+          {/*
+            Les deux bouts nomment les PRIX, dans l'ordre où le geste les
+            rencontre : à gauche ce qu'on paie aujourd'hui, à droite le mieux
+            qu'on puisse faire. Le nombre décroît de gauche à droite, et c'est
+            exactement le propos — on glisse vers la droite pour payer moins.
+          */}
+          <div className="text-muted-foreground mt-0.5 flex justify-between gap-2 text-xs">
+            <span>{t('controls.bound_current', { price: prix(scenario.current) })}</span>
+            <span className="text-right">
+              {t('controls.bound_best', { price: prix(scenario.floor) })}
+            </span>
           </div>
           {/*
             Le texte d'aide est ÉCRIT DEPUIS les bornes du curseur. Avant, la

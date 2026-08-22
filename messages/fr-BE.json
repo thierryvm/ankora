@@ -266,7 +266,9 @@
         "future": "Je paierais",
         "saving": "Tu économises {amount} par mois.",
         "slider_aria": "Ce que tu paierais pour : {label}",
-        "slider_valuetext": "{price} par mois, soit {saving} économisés"
+        "slider_valuetext": "{price} par mois, soit {saving} économisés",
+        "bound_current": "{price} aujourd'hui",
+        "bound_best": "{price} au mieux"
       },
       "chart": {
         "title": "Ce que ce choix te rapporte",
