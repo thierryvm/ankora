@@ -19,10 +19,34 @@ les plus sensibles de l'app.
 Deux jobs, donc **deux planchers distincts** — un chiffre global agrégé serait
 ininterprétable au premier conflit, donc ignoré :
 
-| Job                              | Plancher au 22 août 2026                                                         |
-| -------------------------------- | -------------------------------------------------------------------------------- |
-| `Playwright E2E`                 | **253 passed** (247 au 11/08, 241 plus tôt le 11/08, 231 au 09/08, 228 au 06/08) |
-| `Playwright E2E (authenticated)` | **50 passed** (45 avant, +5 `gdpr-deletion-queue` — PR-C)                        |
+| Job                              | Plancher au 22 août 2026                                                                                |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `Playwright E2E`                 | **259 passed** (253 plus tôt le 22/08, 247 au 11/08, 241 plus tôt le 11/08, 231 au 09/08, 228 au 06/08) |
+| `Playwright E2E (authenticated)` | **50 passed** (45 avant, +5 `gdpr-deletion-queue` — PR-C)                                               |
+
+> **Public : 253 → 259, mesuré le 2026-08-22**, à la correction des cibles
+> tactiles ([#432](https://github.com/thierryvm/ankora/pull/432)). Une seule
+> source, et c'est le cas le plus simple du journal : **+2 cas × 3 projets**.
+> `e2e/a11y/cibles-tactiles.spec.ts` n'est pas sous `mobile-ios/`, elle tourne
+> donc sur `chromium-desktop`, `mobile-safari` et `mobile-chrome`.
+>
+> Delta mesuré **dans les deux sens avant le premier push**, par
+> `npx playwright test --list` sur la branche puis sur `main` : **471 → 477**
+> déclarés. Ici le +6 déclaré et le +6 exécuté coïncident — contrairement au
+> relèvement précédent, aucun cas n'a été remplacé ni réveillé, il n'y a que de
+> l'ajout.
+>
+> Falsification dans les deux sens, elle aussi avant le push : sans le correctif,
+> `« /login "Mot de passe oublié ?" — hauteur de cible (mesurée 20.00 px,
+plancher 24) »` → 2 failed ; avec, 6 passed. Un test de plancher qui n'a pas
+> été **vu rouge** ne prouve pas qu'il mesure quelque chose.
+>
+> **Confirmé sur la CI de la PR** (run `32580942195`) : public
+> **259 passed / 218 skipped**, authentifié **50 passed / 5 skipped**. Le nombre
+> de `skipped` ne bouge pas, ce qui est le contrôle attendu : les deux cas ajoutés
+> s'exécutent partout où ils sont découverts, aucun ne dort.
+
+---
 
 > **Public : 247 → 253, mesuré le 2026-08-22**, à la refonte du simulateur
 > ([#429](https://github.com/thierryvm/ankora/pull/429)). Deux sources, et elles
