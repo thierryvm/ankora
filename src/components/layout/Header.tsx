@@ -162,19 +162,51 @@ export async function Header({ variant = 'marketing', isAuthenticated, userEmail
           </nav>
         )}
 
+        {/*
+         * `hidden sm:inline-flex` on every CTA below — measured 2026-08-23, and
+         * the omission cost a navigation DEAD END in production.
+         *
+         * This group had no responsive rule at all, so at mobile widths it grew
+         * to 297 px and its right edge landed at x=461 whatever the viewport.
+         * `HeaderNav` — the burger, i.e. the ONLY way to reach the nav below
+         * 1024 px, since the `<nav>` above is `hidden lg:flex` — sits last in
+         * the group and was therefore the first thing pushed off-screen:
+         *
+         *     iPhone SE  320 : menu visible   0/40 px, unreachable
+         *     iPhone 14  390 : menu visible   0/40 px, unreachable
+         *     15 Pro Max 430 : menu visible   9/40 px, unreachable
+         *
+         * `overflow-x: clip` on <html> hid the usual symptom — the page does
+         * not slide under the finger, `window.scrollX` never moves — so the
+         * content was simply cut, in silence. The guard was doing its job; that
+         * is precisely what made the defect invisible.
+         *
+         * `MktNav.tsx:83-91` already carried this exact rule and its pages
+         * measured 0 overflow. Same bug shape as `CookiePreferencesLink` the
+         * day before: a fix applied to one surface and not to its twin.
+         *
+         * Nothing is lost by hiding them: `HeaderNav`'s drawer renders
+         * `/login` and `/signup` itself (`drawer-login-link`,
+         * `drawer-signup-link`), added to resolve BUG-iOS-003 — "login
+         * unreachable in ≤ 2 taps". The bar defers to the drawer; it does not
+         * drop the destination.
+         *
+         * Affected pages: /faq, /glossaire, /legal/* — every page rendering
+         * `Header`. The landing uses `MktNav` and was never affected.
+         */}
         <div className="ml-auto flex items-center gap-1 md:gap-2">
           {variant === 'marketing' && !resolvedAuth && (
             <>
-              <Button asChild variant="ghost" size="sm">
+              <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
                 <Link href="/login">{t('nav.login')}</Link>
               </Button>
-              <Button asChild size="sm">
+              <Button asChild size="sm" className="hidden sm:inline-flex">
                 <Link href="/signup">{t('nav.signup')}</Link>
               </Button>
             </>
           )}
           {variant === 'marketing' && resolvedAuth && (
-            <Button asChild size="sm">
+            <Button asChild size="sm" className="hidden sm:inline-flex">
               <Link href="/app">{t('nav.myCockpit')}</Link>
             </Button>
           )}
