@@ -15,21 +15,59 @@ product was broken — read the two sections marked **why** before trusting a gr
    machine since a 2026-08-22 update — every call exits 127 at shell init with
    `line 167: expo: command not found`. `bash.exe` itself is fine; the harness
    layer is not. Discovering this mid-run costs the whole session.
-1. **Unit tests**: `npx vitest run --no-file-parallelism`
+1. **Unit tests**: `npx vitest run` — the parallel default, which is what CI runs.
    - Capture failures with test name, file:line, expected vs received.
-   - **`--no-file-parallelism` is not optional on this machine.** Measured
-     2026-08-22: the default parallel run reported `2 failed | 1933 passed` plus
-     15 phantom errors, while the serial run of the _same commit_ reported
-     `2278 passed`, 166 files, zero failures. The machine had 2.1 GB free of
-     15.7 GB with 40 stray node processes; workers were being killed mid-flight.
-   - **The declared total is 2278 in 166 files.** Any run reporting fewer
-     EXECUTED tests is an instrument failure, not a regression — a migration or
-     a CSS change cannot make 343 test cases cease to exist. Re-run serially
-     before reporting anything, and never open a bug from a short run.
+   - **The reference is not a MODE, it is the executed COUNT** — and the count
+     invariant applies to **UNFILTERED full-suite runs only**. The declared total
+     is **2283 in 166 files**. A run you deliberately narrowed (one spec file,
+     `-t`, a directory) executes fewer cases by construction: judge it on its own
+     selection and never against this number. Only when you ran the whole suite
+     and it came back **materially** short — tens or hundreds of cases, not the
+     handful a new test adds — is that an instrument failure rather than a
+     regression. A migration or a CSS change cannot make 350 cases cease to
+     exist.
+   - **Each mode hides what the other shows. Neither is "the safe one".**
+
+     | Mode                    | What it hides                                                                                                             |
+     | ----------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+     | parallel (CI)           | cross-file contamination — a leak between files lands in a different worker and never fires                               |
+     | `--no-file-parallelism` | nothing about contamination, but it collapses under memory pressure far less, so a short count there means something else |
+
+     Measured **2026-08-22**, parallel, machine at 2.1 GB free of 15.7 GB with 40
+     stray node processes: `2 failed | 1933 passed` plus 15 phantom errors —
+     350 cases short. Workers were being killed mid-flight. Serial on the same
+     commit: full count, zero failures.
+
+     Measured **2026-08-23**, same commit, minutes apart, machine healthy:
+     serial → **2 failed** in `settings-mfa.test.ts`; parallel → **2283 passed**.
+     The exact opposite verdict, from the same code.
+
+   - **Triage in two steps, in this order. The count says whether the run is
+     usable; the MODE says whom to blame.** Collapsing the two is how a suite
+     leak gets filed as a broken feature.
+
+     1. **Count.** Materially short → the machine, not the code. Free memory and
+        re-run; report nothing from a short run.
+     2. **Mode**, only once the count is full:
+
+        | parallel | serial | isolation | Verdict                                                                                |
+        | -------- | ------ | --------- | -------------------------------------------------------------------------------------- |
+        | fails    | fails  | fails     | **the code** — a real regression                                                       |
+        | green    | fails  | green     | **the SUITE** — cross-file leak (#382). Name the failing file, say the feature is fine |
+        | fails    | green  | —         | re-check memory first, then treat as a leak the other way                              |
+
+     A full count with failures is therefore **not** automatically "the code".
+     `settings-mfa.test.ts` executes all 2283 and still fails serially, for a
+     reason that has nothing to do with MFA.
+
    - Corollary that already cost this repo a phantom debt item: two specs
      (`AddExpenseSheet`, `CommitmentsClient`) were carried for days as "flaky".
      They are not flaky. They were the ones the memory pressure happened to
-     kill. **Before filing a test as flaky, prove it fails serially.**
+     kill. **Before filing a test as flaky, run it in isolation AND in both
+     modes, and say which combination fails.** A single mode is not evidence —
+     this very instruction said "prove it fails serially" until 2026-08-23, and
+     that advice would have filed `settings-mfa` as a broken feature when the
+     feature is fine and the suite is what leaks.
 2. **Coverage**: `npm run test:coverage -- --run`
    - Flag any file under `src/lib/domain/` below 90% lines/functions or 85% branches.
 3. **E2E tests**: `npm run e2e`
