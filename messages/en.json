@@ -823,13 +823,15 @@
         "title": "Net monthly income",
         "description": "The salary that lands every month in your Main account. Used to calculate what's left after bills and the transfer to Daily Spending.",
         "placeholder": "e.g. 2500",
-        "toastSaved": "Monthly income updated"
+        "toastSaved": "Monthly income updated",
+        "amountLabel": "Net monthly income (€)"
       },
       "transfer": {
         "title": "Monthly transfer to Daily Spending",
         "description": "Fixed amount transferred every month from Main to your Daily Spending account. This is what covers groceries, fuel and dining.",
         "placeholder": "e.g. 500",
-        "toastSaved": "Monthly transfer updated"
+        "toastSaved": "Monthly transfer updated",
+        "amountLabel": "Monthly transfer to Daily Spending (€)"
       },
       "balance": {
         "invalidAmount": "Enter a valid amount.",

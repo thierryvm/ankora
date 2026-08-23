@@ -823,13 +823,15 @@
         "title": "Revenu mensuel net",
         "description": "Le salaire qui arrive chaque mois sur ton compte Principal. Sert à calculer ce qu'il te reste après les factures et le virement vers Vie Courante.",
         "placeholder": "Ex. 2500",
-        "toastSaved": "Revenu mensuel mis à jour"
+        "toastSaved": "Revenu mensuel mis à jour",
+        "amountLabel": "Revenu mensuel net (€)"
       },
       "transfer": {
         "title": "Virement mensuel vers Vie Courante",
         "description": "Somme fixe transférée chaque mois du Principal vers ton compte Vie Courante. C'est ce qui servira aux courses, à l'essence et aux restos.",
         "placeholder": "Ex. 500",
-        "toastSaved": "Virement mensuel mis à jour"
+        "toastSaved": "Virement mensuel mis à jour",
+        "amountLabel": "Virement mensuel vers Vie Courante (€)"
       },
       "balance": {
         "invalidAmount": "Entre un montant valide.",

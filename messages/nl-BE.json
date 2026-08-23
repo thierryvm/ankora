@@ -823,13 +823,15 @@
         "title": "Maandelijks nettoloon",
         "description": "Het loon dat elke maand op je Hoofdrekening toekomt. Dient om te berekenen wat je overhoudt na facturen en de overschrijving naar Dagelijks Leven.",
         "placeholder": "Bv. 2500",
-        "toastSaved": "Maandelijks nettoloon bijgewerkt"
+        "toastSaved": "Maandelijks nettoloon bijgewerkt",
+        "amountLabel": "Maandelijks nettoloon (€)"
       },
       "transfer": {
         "title": "Maandelijkse overschrijving naar Dagelijks Leven",
         "description": "Vast bedrag dat elke maand van de Hoofdrekening naar je rekening Dagelijks Leven wordt overgeschreven. Dat dient voor boodschappen, benzine en uit eten.",
         "placeholder": "Bv. 500",
-        "toastSaved": "Maandelijkse overschrijving bijgewerkt"
+        "toastSaved": "Maandelijkse overschrijving bijgewerkt",
+        "amountLabel": "Maandelijkse overschrijving naar Dagelijks Leven (€)"
       },
       "balance": {
         "invalidAmount": "Geef een geldig bedrag in.",
