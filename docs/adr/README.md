@@ -11,11 +11,15 @@ pourquoi telle ou telle route a été prise — et ne pas la défaire par accide
 Les ADR suivent le format [MADR](https://adr.github.io/madr/) (Markdown Any
 Decision Records) — light, lisible, versionnable en git.
 
-Chaque ADR est immuable une fois `Accepted`. Pour le faire évoluer :
+**Le corps** d'un ADR est immuable une fois `Accepted`. Pour le faire évoluer :
 
 1. créer un nouvel ADR qui explique la bascule,
-2. marquer l'ancien `Superseded by ADR-NNN`,
-3. ne **jamais** réécrire l'ancien (l'historique est précieux).
+2. ajouter à l'ancien un **addendum daté** qui pointe vers le successeur — `Superseded by ADR-NNN` s'il est entièrement remplacé, une note d'amendement s'il ne l'est qu'en partie,
+3. ne **jamais** réécrire le raisonnement d'origine (l'historique est précieux).
+
+> **Le point 2 a été précisé le 23 août 2026.** Il disait « ne jamais réécrire l'ancien », sans distinguer le corps de l'en-tête — ce qui interdisait littéralement d'y poser le moindre pointeur, et rendait donc invisible depuis l'ADR d'origine le fait qu'il ait été dépassé. Le dépôt pratiquait déjà l'addendum daté : ADR-020 porte une ligne `Superseded le`, ADR-039 un addendum du 23 août, ADR-038 est marqué « amendé 040, 041 ». La convention est alignée sur ce qui se fait, plutôt que l'inverse.
+>
+> **La ligne de partage** : on **ajoute** un pointeur daté, on ne **retire** ni ne **reformule** une décision passée. Un lecteur doit pouvoir lire le raisonnement d'origine tel qu'il était, et savoir en même temps qu'il a bougé.
 
 ## Statuts
 
@@ -72,18 +76,11 @@ Chaque ADR est immuable une fois `Accepted`. Pour le faire évoluer :
 >
 > **ADR-039** : le GO @thierry est arrivé le 23 août 2026, et il a **inversé la réponse Q1**. La portée `.mkt-paper` est supprimée, les six pigments sont devenus les valeurs claires de `@theme` (PR #442). L'ADR porte l'addendum daté ; cette ligne ne dit plus « attend le GO », parce que le code est en production.
 
-> ⚠️ **Cet index est incomplet — mesuré le 8 août 2026.** `docs/adr/` contient
-> 27 fichiers ; ce tableau en listait 15, et affichait 018 en `Proposed` alors
-> que le fichier le déclare `Superseded` depuis le 5 août. La PR L1 corrige ces
-> deux points et ajoute sa propre ligne (039). **Elle ne rattrape pas les onze
-> restants** (019-024, 034-038) : ce serait un chantier de relecture à part
-> entière, et l'ajouter à une PR de tokens le rendrait invérifiable. À traiter
-> dans une PR dédiée.
+> **Historique de ce rattrapage — clos le 23 août 2026, conservé parce qu'il explique un délai de quinze jours.**
 >
-> **Rattrapage partiel le 10 août 2026** : 038, 040 et 041 sont ajoutés parce
-> qu'ils forment le programme **en cours** — un ADR qu'on ne trouve pas est un
-> ADR qu'on re-dérive, et c'est arrivé le 10 août sur ADR-038 précisément. Les
-> dix restants (019-024, 034-037) attendent toujours leur PR dédiée.
+> - **8 août** : l'index est mesuré incomplet — 27 fichiers, 15 lignes, et 018 affiché `Proposed` alors que le fichier le déclarait `Superseded`. La PR L1 corrige ces deux points et ajoute 039, mais **pas** les onze restants : les glisser dans une PR de tokens l'aurait rendue invérifiable.
+> - **10 août** : rattrapage partiel — 038, 040 et 041, parce qu'ils formaient le programme en cours. Un ADR qu'on ne trouve pas est un ADR qu'on re-dérive, et c'était arrivé sur ADR-038 deux jours plus tôt.
+> - **23 août** : les dix derniers (019-024, 034-037) sont ajoutés. **L'index est complet** — 31 lignes pour 31 fichiers.
 
 ## Conventions de nommage
 

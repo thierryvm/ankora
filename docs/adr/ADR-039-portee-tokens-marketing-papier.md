@@ -1,12 +1,18 @@
 # ADR-039 — Portée des tokens « papier » de la landing (`.mkt-paper`)
 
-- **Statut** : **Proposed** — relecture cockpit **rendue le 2026-08-08** (verdict ✅ APPROUVÉ, cf. §Relecture cockpit) et **implémentée en PR L1**. Le passage à `Accepted` attend le GO explicite de @thierry.
-  > Pourquoi le statut ne bascule pas dans la PR qui implémente : `README.md` de ce
-  > dossier pose qu'un ADR est **immuable une fois `Accepted`**. C'est une porte à
-  > sens unique, et un merge de PR technique ne vaut pas ratification — @thierry
-  > mergerait pour le code, pas pour le statut. Faire porter à ce geste une
-  > décision qu'il n'a pas prise serait fabriquer un consentement. La bascule est
-  > un commit d'une ligne, le jour où il le dit.
+- **Statut** : **Accepted le 2026-08-23**, et le GO a **inversé la réponse Q1** — cf. l'addendum daté plus bas. La portée `.mkt-paper` est supprimée : ses six pigments sont devenus les valeurs claires de `@theme`, en production depuis la PR #442.
+  > Le statut est resté `Proposed` du 8 au 23 août **délibérément**, alors même que
+  > la relecture cockpit était rendue (✅ APPROUVÉ, cf. §Relecture cockpit) et
+  > l'implémentation mergée en PR L1. Raison écrite à l'époque : un merge de PR
+  > technique ne vaut pas ratification — @thierry mergeait pour le code, pas pour le
+  > statut, et faire porter à ce geste une décision qu'il n'avait pas prise serait
+  > fabriquer un consentement. La bascule devait être « un commit d'une ligne, le
+  > jour où il le dit ».
+  >
+  > **Il l'a dit le 23 août**, et l'attente s'est révélée justifiée au-delà de la
+  > forme : sa réponse n'était pas le oui attendu à Q1, c'était son contraire. Une
+  > bascule automatique au merge de PR L1 aurait enregistré `Accepted` sur une
+  > décision qui allait être renversée.
 - **Date** : 2026-08-08
 - **Proposé par** : @cc-fable (session landing, worktree dédié) — suite au choix de direction visuelle « Le relevé corrigé » par @thierry le 8 août 2026
 - **Deciders** : @thierry (direction visuelle actée) ; mécanisme de portée soumis à relecture croisée
