@@ -19,10 +19,37 @@ les plus sensibles de l'app.
 Deux jobs, donc **deux planchers distincts** — un chiffre global agrégé serait
 ininterprétable au premier conflit, donc ignoré :
 
-| Job                              | Plancher au 22 août 2026                                                                                |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `Playwright E2E`                 | **259 passed** (253 plus tôt le 22/08, 247 au 11/08, 241 plus tôt le 11/08, 231 au 09/08, 228 au 06/08) |
-| `Playwright E2E (authenticated)` | **50 passed** (45 avant, +5 `gdpr-deletion-queue` — PR-C)                                               |
+| Job                              | Plancher au 23 août 2026                                                                                              |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `Playwright E2E`                 | **268 passed** (259 au 22/08, 253 plus tôt le 22/08, 247 au 11/08, 241 plus tôt le 11/08, 231 au 09/08, 228 au 06/08) |
+| `Playwright E2E (authenticated)` | **50 passed** (45 avant, +5 `gdpr-deletion-queue` — PR-C)                                                             |
+
+> **Public : 259 → 268, mesuré le 2026-08-23**, à la correction de l'en-tête
+> mobile ([#438](https://github.com/thierryvm/ankora/pull/438)). **+3 cas × 3
+> projets iPhone** — la spec vit sous `e2e/mobile-ios/`, elle ne tourne donc que
+> sur les trois presets WebKit, et elle couvre trois pages (`/faq`, `/glossaire`,
+> `/legal/cgu`).
+>
+> Delta mesuré **dans les deux sens avant le premier push** : **477 → 486**
+> déclarés. Déclarés et exécutés coïncident, aucun cas remplacé ni réveillé.
+>
+> **Piège d'instrument rencontré ici, et il vaut d'être noté** : `git stash push`
+> **sans `-u`** n'emporte pas un fichier non suivi. Les deux premières mesures
+> portaient donc sur le même arbre et rendaient **486 des deux côtés** — un delta
+> de 0 parfaitement crédible, et faux. Une spec neuve est toujours non suivie au
+> moment où l'on mesure son delta : c'est le cas le plus fréquent, pas un cas
+> limite.
+>
+> Falsification dans les deux sens : sans le correctif, 3 échecs sur iPhone SE ;
+> avec, 9/9. Le test n'assert PAS `toBeVisible()` — vrai pour un élément peint
+> hors du viewport, c'est-à-dire l'état exact qu'on corrige — mais
+> `elementFromPoint` au centre du bouton.
+>
+> **Confirmé sur la CI de la PR** (run `32640067745`) : public
+> **268 passed / 218 skipped**, authentifié **50 passed / 5 skipped**. Le nombre
+> de `skipped` ne bouge pas.
+
+---
 
 > **Public : 253 → 259, mesuré le 2026-08-22**, à la correction des cibles
 > tactiles ([#432](https://github.com/thierryvm/ankora/pull/432)). Une seule
