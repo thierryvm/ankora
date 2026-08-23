@@ -260,3 +260,81 @@ duplication) vers le bloc sombre resterait vert.
   lui faire attraper le mauvais `{`.
 - Les valeurs sombres restent inchangées et déjà testées ; les paires papier
   n'existent qu'en clair par construction (garde `html:not([data-theme='dark'])`).
+
+---
+
+## Addendum du 23 août 2026 — la portée est supprimée, le papier descend dans l'app
+
+**Statut** : cette section **renverse la réponse Q1 de la relecture cockpit du
+8 août** (« NON, pas de `.app-surface` — `:root` EST l'identité du produit,
+`.mkt-paper` en est un écart »). La conclusion tenait sur une prémisse que la
+mesure a démentie.
+
+### Le constat
+
+@thierry, en regardant l'application : « je ne vois rien niveau des couleurs
+prévues ».
+
+### Ce que la mesure a montré, et qui n'avait pas été vu le 8 août
+
+La relecture supposait que `.mkt-paper` portait une **voix éditoriale** propre à
+la vitrine, dont le produit n'avait pas à hériter — donc une asymétrie assumée
+entre deux identités distinctes.
+
+Relevé le 23 août, au navigateur :
+
+|             | mode clair                         | mode sombre    |
+| ----------- | ---------------------------------- | -------------- |
+| vitrine     | papier `#faf9f6` / encre `#171d26` | navy `#0b1120` |
+| application | **slate `#f8fafc` / `#0f172a`**    | navy `#0b1120` |
+
+Le fond sombre `#0b1120` est **littéralement** ce que la maquette Fable nomme
+« Nuit — fond (**navy existant**) » dans sa direction B : Fable a repris le navy
+de l'application. Les deux surfaces parlaient donc **déjà** la même langue la
+nuit.
+
+Il n'y avait pas deux identités. Il y en avait **une**, et le mode clair de
+l'application n'en faisait pas partie : il portait le slate par défaut de
+Tailwind, qui n'a jamais été un choix de conception.
+
+### La décision
+
+Les six pigments deviennent les valeurs claires de `@theme`. La portée
+`.mkt-paper` et son compagnon `body:has(.mkt-paper)` sont **supprimés**.
+
+Le mouvement **retire** du code plutôt qu'il n'en ajoute, et referme trois
+pièges que l'ADR d'origine documentait lui-même :
+
+1. **Les cinq surfaces `fixed` hors wrapper** (bannière de consentement,
+   toaster, barre d'onglets, bandeau de mise à jour, retour-en-haut) exigeaient
+   un compagnon `body:has()` pour recevoir le papier. Elles l'héritent
+   maintenant de `:root`.
+2. **Le plancher navigateur de `:has()`** (Firefox 121+, contre 113+ accepté par
+   le projet) n'a plus d'objet — la branche de repli n'existe plus.
+3. **La duplication des deux blocs**, qu'un test devait comparer pour qu'aucun
+   ne soit édité seul, disparaît avec eux.
+
+### Ce que ça coûte, dit honnêtement
+
+- **Le contraste du texte secondaire MONTE** : 8,55:1 contre 7,24 en slate.
+  Aucune paire ne descend sous AA — 45 cas le vérifient.
+- **`--color-danger` reste le point de vigilance** : 4,59 sur papier, soit 0,09
+  au-dessus de la barre. Tout assombrissement du papier la fait passer dessous,
+  et le test le dit.
+- **Le fichier de test perd 15 cas.** Ils vérifiaient le CÂBLAGE d'une
+  substitution qui n'existe plus — que les deux blocs ne divergent pas, que le
+  remappage porte sa garde de thème clair, que les pigments soient
+  mono-déclarés. Supprimer le mécanisme supprime ses gardiens. Les assertions
+  qui portaient sur la LISIBILITÉ sont toutes conservées, et deux paires
+  nouvelles ont été ajoutées (texte sur carte). Une ancre de valeurs littérales
+  remplace la garde de câblage : elle échoue si quelqu'un remet du slate, ce
+  qu'un test de contraste ne saurait pas voir — le slate passe AA lui aussi.
+
+### Ce que cet addendum ne fait PAS
+
+Le `<div class="mkt-paper">` **existe toujours** dans la vitrine et ne sert plus
+qu'à la mise en page (`body > .mkt-paper` porte le rôle de lien flex que
+`body > main` joue ailleurs). Son retrait rendrait `<main>` enfant direct de
+`<body>` et supprimerait ces règles avec lui — c'est un chantier de **mise en
+page**, délibérément séparé de celui des **couleurs**, pour qu'une régression
+éventuelle reste attribuable.
