@@ -90,7 +90,7 @@ Elles se déclenchent quand une COPIE du logiciel est remise à quelqu'un. Ankor
 | `@cspell/dict-fr-fr` | 2.3.2 | MIT |
 | `@lhci/cli` | 0.15.1 | Apache-2.0 |
 | `@playwright/test` | 1.59.1 | Apache-2.0 |
-| `@tailwindcss/postcss` | 4.2.2 | MIT |
+| `@tailwindcss/postcss` | 4.3.3 | MIT |
 | `@testing-library/jest-dom` | 6.9.1 | MIT |
 | `@testing-library/react` | 16.3.2 | MIT |
 | `@testing-library/user-event` | 14.6.5 | MIT |
@@ -109,7 +109,7 @@ Elles se déclenchent quand une COPIE du logiciel est remise à quelqu'un. Ankor
 | `prettier` | 3.9.6 | MIT |
 | `prettier-plugin-tailwindcss` | 0.7.4 | MIT |
 | `sharp` | 0.35.3 | Apache-2.0 |
-| `tailwindcss` | 4.2.2 | MIT |
+| `tailwindcss` | 4.3.3 | MIT |
 | `tsx` | 4.23.12 | MIT |
 | `typescript` | 5.9.3 | Apache-2.0 |
 | `vitest` | 4.1.10 | MIT |
