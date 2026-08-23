@@ -156,3 +156,10 @@ exactement ce qu'Ankora reproche implicitement aux banques.
 **Catégories libres saisies par l'utilisateur** — reportée. Elles produisent des doublons
 (« courses », « Courses », « supermarché ») qui rendent tout graphique inexploitable. À
 rouvrir une fois la taxonomie fixe éprouvée.
+
+> **Rouvert le 23 août 2026 par [ADR-043](ADR-043-categories-creees-par-l-utilisateur.md).**
+> La condition posée ici est remplie : la taxonomie fixe a été éprouvée en production, et le
+> manque a été reformulé par @thierry un mois après l'ajout des 10 catégories du 29 juillet.
+> L'objection « doublons » n'est pas écartée par ADR-043 — elle y est acceptée et pesée contre
+> le fait qu'une catégorie qu'on ne peut pas créer envoie la dépense dans « Autres », ce qui ne
+> rend pas le graphique plus juste, seulement faux plus discrètement.
