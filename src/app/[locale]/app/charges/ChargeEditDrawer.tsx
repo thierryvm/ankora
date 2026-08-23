@@ -55,7 +55,7 @@ type Props = {
  *   - JS throw → toast generic, drawer STAYS OPEN
  *   - NEXT_REDIRECT / NEXT_NOT_FOUND → re-thrown so Next.js can navigate
  *
- * Slide-from-right on desktop, full-screen on mobile (h-dvh + sm:max-w-md).
+ * Slide-from-right on desktop, full-screen on mobile (h-svh + sm:max-w-md).
  */
 export function ChargeEditDrawer({ charge, onClose, onConvert }: Props) {
   const t = useTranslations('app.charges');
@@ -170,7 +170,8 @@ export function ChargeEditDrawer({ charge, onClose, onConvert }: Props) {
       <aside
         className={cn(
           'bg-card text-foreground border-border relative flex w-full flex-col border shadow-xl',
-          'h-dvh max-h-dvh',
+          // `svh` et jamais `dvh` — cf. ExpenseEditDrawer pour la mesure.
+          'h-svh max-h-svh',
           'sm:h-full sm:max-w-md sm:border-l',
         )}
       >

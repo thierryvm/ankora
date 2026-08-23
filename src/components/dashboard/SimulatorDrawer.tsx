@@ -179,8 +179,10 @@ export function SimulatorDrawer({ charges, revenus, engagementsMensuels }: Props
             data-testid="simulator-drawer"
             className={cn(
               'bg-card text-foreground border-border relative flex w-full flex-col border shadow-xl',
-              // Mobile: full-screen, slide from bottom.
-              'h-dvh max-h-dvh',
+              // Mobile: full-screen, slide from bottom. `svh` et jamais `dvh` —
+              // cf. ExpenseEditDrawer : `dvh` suit la barre d'URL de Safari, donc
+              // le tiroir se redimensionne à chaque défilement.
+              'h-svh max-h-svh',
               // Desktop: slide from right, fixed width.
               'sm:h-full sm:max-w-md sm:border-l',
             )}

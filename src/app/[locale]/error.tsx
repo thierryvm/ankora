@@ -68,7 +68,7 @@ export default function ErrorBoundary({ error, reset }: ErrorProps) {
   return (
     <main
       role="alert"
-      className="bg-background flex min-h-dvh items-center justify-center px-4 py-16"
+      className="bg-background flex min-h-svh items-center justify-center px-4 py-16"
     >
       <div className="mx-auto max-w-md text-center">
         <div

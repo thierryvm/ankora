@@ -41,7 +41,7 @@ type Props = {
  *   - JS throw → toast generic, drawer STAYS OPEN
  *   - NEXT_REDIRECT / NEXT_NOT_FOUND → re-thrown so Next.js can navigate
  *
- * Slide-from-right on desktop, full-screen on mobile (h-dvh + sm:max-w-md).
+ * Slide-from-right on desktop, full-screen on mobile (h-svh + sm:max-w-md).
  */
 export function ExpenseEditDrawer({ expense, onClose }: Props) {
   const t = useTranslations('app.expenses');
@@ -179,7 +179,13 @@ export function ExpenseEditDrawer({ expense, onClose }: Props) {
       <aside
         className={cn(
           'bg-card text-foreground border-border relative flex w-full flex-col border shadow-xl',
-          'h-dvh max-h-dvh',
+          // `svh`, jamais `dvh`. Mesuré le 2026-08-23 : avec `h-dvh`, la hauteur
+          // du tiroir suivait le viewport AU PIXEL — 664 → 664, 560 → 560,
+          // 420 → 420. Sur iPhone, la barre d'URL de Safari fait varier ce
+          // viewport à chaque défilement, donc le tiroir se redimensionnait sans
+          // arrêt sous le doigt. `svh` est calculé barre déployée et ne bouge
+          // pas quand elle se rétracte.
+          'h-svh max-h-svh',
           'sm:h-full sm:max-w-md sm:border-l',
         )}
       >

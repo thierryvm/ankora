@@ -359,10 +359,12 @@ export function Sheet({
         tabIndex={-1}
         className={[
           'bg-card border-border fixed z-50 flex flex-col shadow-xl outline-none',
-          // Mobile: bottom sheet. `max-h-[92dvh]` and not `vh` — the dynamic
-          // viewport unit is the one that accounts for the iOS URL bar, so the
-          // footer stays reachable instead of hiding under browser chrome.
-          'inset-x-0 bottom-0 max-h-[92dvh] rounded-t-3xl border-t',
+          // Mobile: bottom sheet. `svh`, and the choice is load-bearing —
+          // see the §Viewport units note in this file's header. `dvh` made the
+          // sheet resize under the reader's fingers every time Safari's URL bar
+          // moved; `svh` is defined against the viewport with browser UI
+          // EXPANDED and, by spec, does not change when that UI retracts.
+          'inset-x-0 bottom-0 max-h-[92svh] rounded-t-3xl border-t',
           // ≥ md: right-anchored side panel, per the primitive contract.
           'md:inset-y-0 md:right-0 md:left-auto md:max-h-none md:w-[26rem] md:rounded-t-none md:rounded-l-3xl md:border-t-0 md:border-l',
           'transition-transform duration-[var(--dur-structural)] ease-[var(--ease-spring)] motion-reduce:transition-none',
