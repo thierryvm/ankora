@@ -955,7 +955,22 @@
         "submitting": "Adding…",
         "toastCreated": "{amount} expense saved",
         "pastMonthNotice": "This date is outside the current month: the monthly figure will not move.",
-        "contextFailed": "Your categories could not be loaded. You can still save the amount."
+        "contextFailed": "Your categories could not be loaded. You can still save the amount.",
+        "newCategory": "New",
+        "newCategoryName": "Category name",
+        "newCategoryColor": "Colour",
+        "newCategoryCreate": "Create",
+        "newCategoryCancel": "Cancel",
+        "color": {
+          "blue": "Blue",
+          "cyan": "Teal",
+          "emerald": "Green",
+          "amber": "Amber",
+          "rose": "Deep pink",
+          "pink": "Pink",
+          "purple": "Purple",
+          "zinc": "Grey"
+        }
       },
       "addFormTitle": "Add an expense",
       "labelLabel": "Label",
@@ -1546,6 +1561,11 @@
       "noSchedule": "This bill has no usable schedule.",
       "horizonUnknown": "The end date, the number of instalments or the outstanding balance is missing.",
       "failed": "The conversion failed. Nothing was changed."
+    },
+    "categories": {
+      "createFailed": "Could not create the category.",
+      "duplicate": "You already have a category with this name.",
+      "duplicateBill": "That name is already taken by a bill category. It is not offered here because a bill is not an expense — it is already deducted from your budget."
     }
   },
   "opengraphImage": {

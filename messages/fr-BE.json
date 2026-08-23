@@ -955,7 +955,22 @@
         "submitting": "Ajout…",
         "toastCreated": "Dépense de {amount} enregistrée",
         "pastMonthNotice": "Cette date est hors du mois en cours : le chiffre du mois ne bougera pas.",
-        "contextFailed": "Tes catégories n'ont pas pu être chargées. Tu peux quand même enregistrer le montant."
+        "contextFailed": "Tes catégories n'ont pas pu être chargées. Tu peux quand même enregistrer le montant.",
+        "newCategory": "Nouvelle",
+        "newCategoryName": "Nom de la catégorie",
+        "newCategoryColor": "Couleur",
+        "newCategoryCreate": "Créer",
+        "newCategoryCancel": "Annuler",
+        "color": {
+          "blue": "Bleu",
+          "cyan": "Turquoise",
+          "emerald": "Vert",
+          "amber": "Ambre",
+          "rose": "Rose profond",
+          "pink": "Rose",
+          "purple": "Violet",
+          "zinc": "Gris"
+        }
       },
       "addFormTitle": "Ajouter une dépense",
       "labelLabel": "Libellé",
@@ -1546,6 +1561,11 @@
       "noSchedule": "Cette facture n’a pas d’échéancier exploitable.",
       "horizonUnknown": "Il manque la date de fin, le nombre d’échéances ou le solde restant dû.",
       "failed": "La conversion a échoué. Rien n’a été modifié."
+    },
+    "categories": {
+      "createFailed": "Impossible de créer la catégorie.",
+      "duplicate": "Tu as déjà une catégorie qui porte ce nom.",
+      "duplicateBill": "Ce nom est déjà pris par une catégorie de facture. Elle ne s’affiche pas ici parce qu’une facture n’est pas une dépense — elle est déjà déduite de ton budget."
     }
   },
   "opengraphImage": {

@@ -6,6 +6,8 @@ export {
   rankExpenseCategories,
   selectableExpenseCategories,
 } from './expense-categories';
+export { couleurLaMoinsUtilisee } from './couleur';
+export { categorieHomonyme, cleNomCategorie } from './nom-disponible';
 export {
   CATEGORY_COLOR_TOKENS,
   CATEGORY_KINDS,

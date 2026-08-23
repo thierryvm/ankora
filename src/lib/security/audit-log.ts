@@ -64,6 +64,15 @@ export const AuditEvent = {
   COMMITMENT_UPDATED: 'commitment.updated',
   COMMITMENT_DELETED: 'commitment.deleted',
   COMMITMENT_PAYMENT_TOGGLED: 'commitment.payment_toggled',
+  /**
+   * Une catégorie de dépense créée par l'utilisateur (ADR-043).
+   *
+   * Les métadonnées portent `resource_id` et `resource_type`, jamais le NOM :
+   * c'est une saisie libre, donc une donnée de l'utilisateur. La liste blanche
+   * plus bas le jetterait de toute façon — raison de plus pour ne pas l'écrire,
+   * plutôt que de compter sur elle.
+   */
+  CATEGORY_CREATED: 'category.created',
   EXPENSE_CREATED: 'expense.created',
   EXPENSE_UPDATED: 'expense.updated',
   EXPENSE_DELETED: 'expense.deleted',

@@ -955,7 +955,22 @@
         "submitting": "Añadiendo…",
         "toastCreated": "Gasto de {amount} guardado",
         "pastMonthNotice": "Esta fecha está fuera del mes en curso: la cifra del mes no cambiará.",
-        "contextFailed": "No se han podido cargar tus categorías. Puedes guardar el importe de todos modos."
+        "contextFailed": "No se han podido cargar tus categorías. Puedes guardar el importe de todos modos.",
+        "newCategory": "Nouvelle",
+        "newCategoryName": "Nom de la catégorie",
+        "newCategoryColor": "Couleur",
+        "newCategoryCreate": "Créer",
+        "newCategoryCancel": "Annuler",
+        "color": {
+          "blue": "Bleu",
+          "cyan": "Turquoise",
+          "emerald": "Vert",
+          "amber": "Ambre",
+          "rose": "Rose profond",
+          "pink": "Rose",
+          "purple": "Violet",
+          "zinc": "Gris"
+        }
       },
       "addFormTitle": "Añadir un gasto",
       "labelLabel": "Etiqueta",
@@ -1546,6 +1561,11 @@
       "noSchedule": "Esta factura no tiene un calendario utilizable.",
       "horizonUnknown": "Falta la fecha de fin, el número de cuotas o el saldo pendiente.",
       "failed": "La conversión ha fallado. No se ha modificado nada."
+    },
+    "categories": {
+      "createFailed": "Impossible de créer la catégorie.",
+      "duplicate": "Tu as déjà une catégorie qui porte ce nom.",
+      "duplicateBill": "Ce nom est déjà pris par une catégorie de facture. Elle ne s’affiche pas ici parce qu’une facture n’est pas une dépense — elle est déjà déduite de ton budget."
     }
   },
   "opengraphImage": {
