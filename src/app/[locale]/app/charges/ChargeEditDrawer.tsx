@@ -172,7 +172,8 @@ export function ChargeEditDrawer({ charge, onClose, onConvert }: Props) {
           'bg-card text-foreground border-border relative flex w-full flex-col border shadow-xl',
           // `svh` et jamais `dvh` — cf. ExpenseEditDrawer pour la mesure.
           'h-svh max-h-svh',
-          'sm:h-full sm:max-w-md sm:border-l',
+          // `sm:max-h-none` obligatoire — cf. ExpenseEditDrawer.
+          'sm:h-full sm:max-h-none sm:max-w-md sm:border-l',
         )}
       >
         <header className="border-border flex items-center justify-between gap-3 border-b px-5 py-4">

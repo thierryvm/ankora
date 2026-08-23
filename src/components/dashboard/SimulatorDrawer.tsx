@@ -183,8 +183,9 @@ export function SimulatorDrawer({ charges, revenus, engagementsMensuels }: Props
               // cf. ExpenseEditDrawer : `dvh` suit la barre d'URL de Safari, donc
               // le tiroir se redimensionne à chaque défilement.
               'h-svh max-h-svh',
-              // Desktop: slide from right, fixed width.
-              'sm:h-full sm:max-w-md sm:border-l',
+              // Desktop: slide from right, fixed width. `sm:max-h-none`
+              // obligatoire — cf. ExpenseEditDrawer.
+              'sm:h-full sm:max-h-none sm:max-w-md sm:border-l',
             )}
           >
             <header className="border-border flex items-center justify-between gap-3 border-b px-5 py-4">

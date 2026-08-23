@@ -69,7 +69,13 @@ function sansCommentaires(source: string): string {
   return source
     .replace(/\/\*[\s\S]*?\*\//g, (bloc) => bloc.replace(/[^\n]/g, ' '))
     .split('\n')
-    .map((l) => (l.trim().startsWith('//') ? '' : l))
+    .map((ligne) =>
+      // Couper à partir de `//`, pas seulement les lignes qui COMMENCENT par
+      // `//` : sinon `'h-svh', // remplace h-dvh` serait accusé. Le `(?<!:)`
+      // épargne les URL (`https://`), seul cas courant de `//` en milieu de
+      // ligne qui ne soit pas un commentaire.
+      ligne.replace(/(?<!:)\/\/.*$/, ''),
+    )
     .join('\n');
 }
 
@@ -100,5 +106,24 @@ describe('unités de viewport — `svh`, jamais `dvh`', () => {
     expect(MOTIF.test("'max-h-[92dvh]'")).toBe(true);
     expect(MOTIF.test("'min-h-dvh'")).toBe(true);
     expect(MOTIF.test("'h-svh max-h-svh'")).toBe(false);
+  });
+
+  /**
+   * Les trois formes de commentaire doivent être neutralisées, y compris celle
+   * en FIN de ligne — signalée par Sourcery le 2026-08-23. Un filtre qui ne
+   * traitait que les lignes commençant par `//` aurait accusé
+   * `'h-svh', // remplace h-dvh`, c'est-à-dire la ligne même qui documente le
+   * correctif.
+   */
+  it('neutralise les trois formes de commentaire, et épargne les URL', () => {
+    expect(sansCommentaires("  'h-svh', // remplace h-dvh").includes('dvh')).toBe(false);
+    expect(sansCommentaires('  // h-dvh partout').includes('dvh')).toBe(false);
+    expect(sansCommentaires('/* bloc\n   avec h-dvh dedans\n*/').includes('dvh')).toBe(false);
+
+    // Une URL n'est pas un commentaire : la ligne doit survivre entière.
+    expect(sansCommentaires("const u = 'https://exemple.be/h-dvh';")).toContain('exemple.be');
+
+    // Et le code NU reste vu — sans quoi le nettoyage avalerait la règle.
+    expect(sansCommentaires("  'h-dvh max-h-dvh',")).toContain('dvh');
   });
 });

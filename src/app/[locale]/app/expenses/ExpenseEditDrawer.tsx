@@ -186,7 +186,13 @@ export function ExpenseEditDrawer({ expense, onClose }: Props) {
           // arrêt sous le doigt. `svh` est calculé barre déployée et ne bouge
           // pas quand elle se rétracte.
           'h-svh max-h-svh',
-          'sm:h-full sm:max-w-md sm:border-l',
+          // `sm:max-h-none` est OBLIGATOIRE à côté de `sm:h-full`. Le parent est
+          // `fixed inset-0`, donc sa hauteur EST le viewport courant ; sans cette
+          // surcharge, `max-h-svh` continuerait de plafonner le panneau au PETIT
+          // viewport au point d'arrêt bureau, et sur un iPad dont la barre d'URL
+          // s'est rétractée le panneau laisserait un vide que le fond, lui,
+          // couvre. `Sheet.tsx` portait déjà `md:max-h-none` pour cette raison.
+          'sm:h-full sm:max-h-none sm:max-w-md sm:border-l',
         )}
       >
         <header className="border-border flex items-center justify-between gap-3 border-b px-5 py-4">
