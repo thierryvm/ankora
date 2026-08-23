@@ -398,3 +398,75 @@ describe('when the context cannot be read', () => {
     expect(createExpenseAction.mock.calls[0]?.[0]).toMatchObject({ categoryId: null });
   });
 });
+
+/**
+ * Chantier « feuille de saisie », 23 août 2026 — les trois griefs de @thierry,
+ * chacun mesuré au navigateur avant d'être corrigé.
+ *
+ * Ces cas sont écrits EN NÉGATIF : ils disent ce qui ne doit plus revenir. Une
+ * régression visuelle ne casse aucun test de rendu — la feuille afficherait
+ * toujours ses champs, simplement mal. Seule une assertion sur le mécanisme
+ * exact qui produisait le défaut peut l'attraper.
+ */
+describe('la feuille après le chantier visuel', () => {
+  it('la rangée de catégories ne défile plus horizontalement', async () => {
+    await openSheet();
+    // MESURÉ avant : 602 px de puces dans une fenêtre de 390, donc 212 px hors
+    // écran et 3 puces sur 6 entièrement visibles, sans la moindre affordance.
+    // Le pied de `Sheet` étant `shrink-0`, l'enroulement ne peut plus le
+    // pousser sous le clavier — la raison d'être du défilement a disparu.
+    const groupe = screen.getByRole('radiogroup');
+    expect(groupe.className).toContain('flex-wrap');
+    expect(groupe.className).not.toContain('overflow-x-auto');
+    expect(groupe.className).not.toContain('flex-nowrap');
+  });
+
+  it('le déclencheur du reste dit COMBIEN il en reste', async () => {
+    getExpenseEntryContextAction.mockResolvedValue(context({ overflow: [RESTO, RESTO, RESTO] }));
+    await openSheet();
+    // Un « + » seul ne dit ni ce qu'il révèle ni combien. Sur la seule commande
+    // qui pouvait signaler le contenu caché, c'était la pire des économies.
+    expect(screen.getByTestId('add-expense-chip-more').textContent).toContain('3');
+  });
+
+  it('et il le dit AUSSI à un lecteur d’écran', async () => {
+    getExpenseEntryContextAction.mockResolvedValue(context({ overflow: [RESTO, RESTO, RESTO] }));
+    await openSheet();
+    // Défaut signalé par Sourcery : le texte visible est `aria-hidden`, donc un
+    // `aria-label` sans compteur rendait le nombre — la seule information que
+    // ce chantier ajoutait — invisible pour un lecteur d'écran. Le nom
+    // accessible doit porter le VERBE et le NOMBRE : « 3 autres » seul ne dit
+    // pas ce que fait le bouton.
+    const nom = screen.getByTestId('add-expense-chip-more').getAttribute('aria-label') ?? '';
+    expect(nom).toContain('3');
+    expect(nom.replace(/\d/g, '').trim().length).toBeGreaterThan(8);
+  });
+
+  it('le montant n’est plus enfermé dans un pavé', async () => {
+    await openSheet();
+    // MESURÉ avant : 134 px de haut pour un champ de 66 — 68 px de rembourrage
+    // autour d’un nombre — et 30 % de la hauteur de la feuille.
+    const champ = screen.getByTestId('add-expense-amount');
+    expect(champ.closest('.bg-surface-soft')).toBeNull();
+  });
+
+  it('l’étiquette du montant est visible, plus seulement lue par les lecteurs d’écran', async () => {
+    await openSheet();
+    const etiquette = document.querySelector('label[for="add-expense-amount"]');
+    expect(etiquette).not.toBeNull();
+    // `sr-only` était le défaut : rien à l’écran ne disait ce qu’on tapait.
+    expect(etiquette?.className).not.toContain('sr-only');
+  });
+
+  it('la largeur du champ suit le montant tapé', async () => {
+    const user = userEvent.setup();
+    await openSheet();
+    const champ = screen.getByTestId('add-expense-amount');
+    // Largeur fixe de 6ch avant : sur un champ vide, le cadre de focus faisait
+    // 156 px pour un seul « 0 », collé contre son bord droit.
+    expect(champ.className).toContain('w-[1.1ch]');
+    await user.type(champ, '18,50');
+    expect(champ.className).toContain('w-[5.1ch]');
+    expect(champ.className).not.toContain('w-[1.1ch]');
+  });
+});

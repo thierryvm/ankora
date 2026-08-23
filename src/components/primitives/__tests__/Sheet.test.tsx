@@ -43,10 +43,12 @@ function Harness({
   footer,
   withInput = true,
   autoFocusAmount = false,
+  desktop,
 }: {
   footer?: boolean;
   withInput?: boolean;
   autoFocusAmount?: boolean;
+  desktop?: 'panel' | 'dialog';
 }) {
   const [open, setOpen] = useState(false);
   const amountRef = useRef<HTMLInputElement>(null);
@@ -60,6 +62,7 @@ function Harness({
         onClose={() => setOpen(false)}
         title="Nouvelle dépense"
         testId="test-sheet"
+        desktop={desktop}
         initialFocusRef={autoFocusAmount ? amountRef : undefined}
         footer={
           footer ? (
@@ -323,5 +326,64 @@ describe('Sheet — mounting', () => {
     // the bar on iOS WebKit. The portal is the fix, so its absence is a bug.
     expect(container.contains(panel)).toBe(false);
     expect(document.body.contains(panel)).toBe(true);
+  });
+});
+
+/**
+ * La variante bureau, ajoutée le 23 août 2026.
+ *
+ * Motif MESURÉ, pas esthétique : la colonne pleine hauteur laissait **484 px de
+ * vide** entre le dernier champ de la feuille de saisie et son bouton
+ * « Ajouter », sur un écran de 1280 × 900 — plus de la moitié du panneau.
+ *
+ * jsdom ne calcule aucune mise en page, donc ces cas vérifient les CLASSES qui
+ * la produisent, jamais des pixels. La mesure en pixels se fait au navigateur
+ * avant livraison, et elle a été faite.
+ */
+describe('Sheet — ce que la feuille devient sur un grand écran', () => {
+  it('reste une colonne pleine hauteur par défaut', async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    const panel = await open(user);
+    // Le menu « Plus » dépend de ce défaut : une liste de destinations remplit
+    // sa colonne, et l'ancrage au bord droit la rend prévisible. Le changer
+    // sans le vouloir est exactement ce que ce cas empêche.
+    expect(panel.className).toContain('md:inset-y-0');
+    expect(panel.className).toContain('md:right-0');
+    expect(panel.className).not.toContain('md:h-fit');
+  });
+
+  it('devient une boîte centrée ajustée au contenu en `dialog`', async () => {
+    const user = userEvent.setup();
+    render(<Harness desktop="dialog" />);
+    const panel = await open(user);
+    // `md:h-fit` est la clé de tout : sans lui, `inset-0` réétire la boîte et
+    // le vide revient sans qu'aucune autre classe ne change.
+    expect(panel.className).toContain('md:h-fit');
+    expect(panel.className).toContain('md:inset-0');
+    expect(panel.className).toContain('md:m-auto');
+    expect(panel.className).not.toContain('md:right-0');
+  });
+
+  it('la boîte centrée se fond au lieu de glisser hors du bord', async () => {
+    const user = userEvent.setup();
+    render(<Harness desktop="dialog" />);
+    const panel = await open(user);
+    // Une boîte centrée n'a aucun bord vers lequel sortir. Sans le fondu, elle
+    // resterait entièrement visible, décalée de quelques pixels, pendant toute
+    // la durée de la sortie, puis disparaîtrait d'un coup.
+    expect(panel.className).toContain('transition-[transform,opacity]');
+    expect(panel.className).not.toContain('md:translate-x-full');
+  });
+
+  it('le mobile ne bouge pas, quelle que soit la variante', async () => {
+    const user = userEvent.setup();
+    render(<Harness desktop="dialog" />);
+    const panel = await open(user);
+    // La feuille monte du bas dans les DEUX cas : la variante ne parle que de
+    // ce qui se passe à partir de `md`.
+    expect(panel.className).toContain('inset-x-0');
+    expect(panel.className).toContain('bottom-0');
+    expect(panel.className).toContain('max-h-[92svh]');
   });
 });
