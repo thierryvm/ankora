@@ -86,6 +86,36 @@ describe('AccountsClient — un solde, un seul rendu', () => {
   });
 
   /**
+   * Deux champs, deux noms accessibles distincts.
+   *
+   * Les cartes « Revenu mensuel net » et « Virement mensuel vers Vie Courante »
+   * portaient toutes deux l'étiquette partagée `app.accounts.amountLabel`,
+   * « Montant (€) ». À l'écran, le titre de la carte les distingue ; dans
+   * l'arbre d'accessibilité, rien ne le fait — et c'est le seul arbre que lit
+   * une synthèse vocale.
+   *
+   * L'assertion est écrite en deux temps, et le premier compte autant que le
+   * second : on vérifie d'abord qu'AUCUN champ ne répond au libellé partagé,
+   * puis que chacun répond au sien. Sans le premier, remettre « Montant (€) »
+   * sur l'un des deux laisserait le test vert.
+   *
+   * `getByLabelText` lève dès qu'il trouve plusieurs correspondances : c'est
+   * donc `getBy`, jamais `queryAllBy`, qui porte ici la garantie d'unicité.
+   */
+  it('les deux champs de montant ont des noms accessibles distincts', () => {
+    renderClient();
+
+    const partage = messages.app.accounts.amountLabel;
+    expect(
+      screen.queryAllByLabelText(partage),
+      `aucun champ ne doit s'appeler « ${partage} » — deux le faisaient`,
+    ).toHaveLength(0);
+
+    expect(screen.getByLabelText(messages.app.accounts.income.amountLabel)).toHaveValue(2693);
+    expect(screen.getByLabelText(messages.app.accounts.transfer.amountLabel)).toHaveValue(500);
+  });
+
+  /**
    * `computeMonthlyTransferPlan` ne prend AUCUN solde en entrée (vérifié :
    * `src/lib/domain/transfer.ts` reçoit charges / month / monthlyIncome /
    * vieCouranteMonthlyTransfer / commitmentsDue). Le seul consommateur d'un

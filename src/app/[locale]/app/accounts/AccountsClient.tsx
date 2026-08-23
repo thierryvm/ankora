@@ -96,7 +96,17 @@ function MonthlyIncomeCard({ initialValue }: { initialValue: number | null }) {
       <CardContent>
         <form onSubmit={onSubmit} className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <div className="flex flex-1 flex-col gap-2">
-            <Label htmlFor="monthly-income">{t('amountLabel')}</Label>
+            {/*
+              Étiquette PROPRE à ce champ, et non le `app.accounts.amountLabel`
+              partagé. Les deux cartes de cette page portaient toutes deux
+              « Montant (€) » : à l'écran le titre de la carte les distingue, mais
+              le nom accessible du champ — le seul que lit une synthèse vocale, et
+              le seul sur lequel une sonde peut viser — était identique. Un
+              `getByLabel('Montant (€)')` remonte alors deux éléments, et un
+              lecteur d'écran annonce deux fois le même champ.
+              Cf. chantier 3 de docs/superpowers/specs/2026-08-08-refonte-app-architecture-cible.md
+            */}
+            <Label htmlFor="monthly-income">{tIncome('amountLabel')}</Label>
             <Input
               id="monthly-income"
               type="number"
@@ -143,7 +153,8 @@ function VieCouranteTransferCard({ initialValue }: { initialValue: number | null
       <CardContent>
         <form onSubmit={onSubmit} className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <div className="flex flex-1 flex-col gap-2">
-            <Label htmlFor="vie-transfer">{t('amountLabel')}</Label>
+            {/* Même raison qu'au champ de revenu ci-dessus. */}
+            <Label htmlFor="vie-transfer">{tTransfer('amountLabel')}</Label>
             <Input
               id="vie-transfer"
               type="number"

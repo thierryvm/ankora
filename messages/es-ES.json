@@ -823,13 +823,15 @@
         "title": "Ingreso neto mensual",
         "description": "El salario que llega cada mes a tu cuenta Principal. Sirve para calcular lo que te queda tras las facturas y la transferencia a Día a Día.",
         "placeholder": "Ej. 2500",
-        "toastSaved": "Ingreso mensual actualizado"
+        "toastSaved": "Ingreso mensual actualizado",
+        "amountLabel": "Ingreso neto mensual (€)"
       },
       "transfer": {
         "title": "Transferencia mensual a Día a Día",
         "description": "Suma fija transferida cada mes desde Principal a tu cuenta Día a Día. Es lo que se usará para la compra, la gasolina y los restaurantes.",
         "placeholder": "Ej. 500",
-        "toastSaved": "Transferencia mensual actualizada"
+        "toastSaved": "Transferencia mensual actualizada",
+        "amountLabel": "Transferencia mensual a Día a Día (€)"
       },
       "balance": {
         "invalidAmount": "Introduce un importe válido.",

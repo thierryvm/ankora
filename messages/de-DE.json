@@ -823,13 +823,15 @@
         "title": "Nettoeinkommen (monatlich)",
         "description": "Das Gehalt, das jeden Monat auf deinem Hauptkonto eingeht. Dient zur Berechnung dessen, was dir nach Rechnungen und Überweisung auf Alltag bleibt.",
         "placeholder": "Z. B. 2500",
-        "toastSaved": "Monatliches Einkommen aktualisiert"
+        "toastSaved": "Monatliches Einkommen aktualisiert",
+        "amountLabel": "Monatliches Nettoeinkommen (€)"
       },
       "transfer": {
         "title": "Monatliche Überweisung auf Alltag",
         "description": "Fester Betrag, der jeden Monat vom Hauptkonto auf dein Alltag-Konto überwiesen wird. Das ist das Geld für Einkäufe, Benzin und Restaurants.",
         "placeholder": "Z. B. 500",
-        "toastSaved": "Monatliche Überweisung aktualisiert"
+        "toastSaved": "Monatliche Überweisung aktualisiert",
+        "amountLabel": "Monatliche Überweisung auf Alltag (€)"
       },
       "balance": {
         "invalidAmount": "Gib einen gültigen Betrag ein.",
