@@ -502,7 +502,9 @@ Ankora est construit par un trio IA + Thierry (vision produit humaine) :
 
 - Aucun merge direct sur `main`, toujours une branche `feat/cc-design-<surface>`
 - Tokens CSS prod = source de vérité (pas de pollution en douce)
-- Agents QA obligatoires : `ui-auditor`, `design:accessibility-review`, `gdpr-compliance-auditor`
+- Agents QA obligatoires : `ui-auditor` (WCAG 2.2 AA), `dashboard-ux-auditor`, `gdpr-compliance-auditor`
+  — cette ligne nommait `design:accessibility-review` jusqu'au 23 août 2026 ; **cet agent n'existe
+  pas**, il n'a donc jamais pu tourner. `ui-auditor` est le contrôle d'accessibilité réel.
 - Aucune dépendance payante ajoutée sans validation Thierry
 - Micro-copy UI relue par @cowork avant intégration (FSMA + qualité FR)
 

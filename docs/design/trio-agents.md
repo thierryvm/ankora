@@ -53,7 +53,7 @@ Pour une nouvelle surface UI (ex: `admin-dashboard`, `onboarding`, `dashboard-v3
 
 1. **Jamais de merge direct de l'export brut.** Toujours une branche `feat/cc-design-<surface>` dédiée, review CC Ankora + agents QA, revue Thierry.
 2. **Tokens CSS prod = source de vérité.** Si Claude Design propose une palette différente, on arbitre au niveau `@cowork` avant d'intégrer. Pas de pollution des tokens live en douce.
-3. **Accessibilité WCAG AA minimum.** Tous les exports passent `design:accessibility-review` avant merge.
+3. **Accessibilité WCAG AA minimum.** Tous les exports passent `ui-auditor` avant merge — c'est lui qui porte le contrôle WCAG 2.2 AA. Cette règle nommait `design:accessibility-review` jusqu'au 23 août 2026 : **cet agent n'existe pas** (ni dans `.claude/agents/`, ni comme compétence installée), la règle désignait donc un garde-fou qu'aucune session ne pouvait invoquer. Même famille que les huit agents branchés sur un outil mort (#428).
 4. **Pas de dépendance payante ajoutée sans validation Thierry.** Claude Design peut suggérer Framer Motion / GSAP — validation explicite requise.
 5. **FSMA / GDPR.** Aucune copie UI ne doit suggérer du conseil en investissement. @cowork relit toute la micro-copy avant intégration.
 6. **Sécurité.** Aucun secret, aucune clé API dans un export. CC Ankora doit vérifier au moment du merge.

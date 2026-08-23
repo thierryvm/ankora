@@ -142,8 +142,9 @@ NOTE : le sous-dossier design_handoff_ankora_v1/ duplique tout le contenu racine
 
 ÉTAPE 9 — Lancer agents QA (obligatoire avant rapport)
 
-- design:accessibility-review — sur src/components/ui/ et src/app/(marketing)/page.tsx
-- ui-auditor — sur Landing complète
+- ui-auditor — sur Landing complète, src/components/ui/ et src/app/(marketing)/page.tsx
+  (porte le contrôle WCAG 2.2 AA ; cette ligne appelait `design:accessibility-review`
+  jusqu'au 23 août 2026 — cet agent n'existe pas)
 - lighthouse-auditor — sur build prod (mobile + desktop)
 - gdpr-compliance-auditor — sur copy publique
 - test-runner — full suite

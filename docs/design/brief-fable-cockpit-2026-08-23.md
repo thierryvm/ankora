@@ -31,13 +31,13 @@ palette. C'est le cockpit qu'il faut refaire.
 
 ## Le problème, mesuré au navigateur le 23 août
 
-Le tableau de bord fait **~2 900 px sur un écran de 900**, soit 9 blocs
-empilés, et **la réponse est donnée dans les 250 premiers pixels**.
+Le tableau de bord empile **neuf cartes**, soit plus de **1 790 px de contenu
+sur un écran de 900**, et **la réponse est donnée dans les 250 premiers pixels**.
 
 ```
 1  hero « Il te reste 501,61 € »     250 px  ← la réponse
 2  D'où vient ce chiffre             400 px  ← l'explication, le plus gros bloc
-3  Santé provisions + Engagements    200 px  ← grille 2 colonnes mal appariée
+3  Santé provisions + Engagements    200 px  ← 2 cartes en grille, mal appariées
 4  Prochaines factures               160 px  ← dit « tout est payé ce mois »
 5  3 cartes de comptes               130 px  ← 3 cartes pour 3 nombres
 6  Plan du mois (3 cartes)           180 px
@@ -45,7 +45,11 @@ empilés, et **la réponse est donnée dans les 250 premiers pixels**.
 8  3 boutons                          70 px  ← doublent la navigation
 ```
 
-**Quatre de ces neuf blocs n'avaient rien à signaler ce mois-là** — « tout est
+Huit rangées, neuf cartes : la rangée 3 en tient deux côte à côte. Les hauteurs
+sont celles des cartes seules — la page est plus haute encore, en-tête,
+gouttières et marge basse en plus.
+
+**Quatre de ces neuf cartes n'avaient rien à signaler ce mois-là** — « tout est
 payé », « à jour », une seule échéance, un plan statique — et occupaient chacun
 une carte pleine.
 
@@ -130,8 +134,11 @@ l'assombrir, ne pas le poser sur une surface plus claire.
 
 ## Contraintes dures — une seule violée et la maquette est inintégrable
 
-- **Mobile d'abord, 390 × 844.** Fenêtre réellement utile : **550 px** (en-tête
-  collant 65 + barre d'onglets 49 déduits). Bureau 1280 en second.
+- **Mobile d'abord, 390 × 844.** Attention à l'arithmétique : 844 est la hauteur
+  de l'**écran**, pas celle de la page. Safari en garde une part pour sa propre
+  barre — la fenêtre web mesurée sur iPhone 14 vaut **664 px**. Moins l'en-tête
+  collant (65) et la barre d'onglets (49), il reste **550 px** réellement
+  utiles. Bureau 1280 en second.
 - **SVG écrit à la main. Aucune bibliothèque de graphiques** — budget 0 €.
 - **Aucun style inline** : la CSP est stricte, un attribut `style` est refusé.
 - **WCAG 2.2 AA**, cibles tactiles ≥ 44 px, `prefers-reduced-motion` respecté.
@@ -166,6 +173,17 @@ remplace un mot, pas de grand nombre qui n'est pas LE nombre.
 2. Le même à **1280 px**.
 3. Une section dépliée, pour montrer ce que « ouvrir » veut dire.
 4. Une note courte : ce que cette direction privilégie, et ce qu'elle sacrifie.
+5. **Deux tableaux de traçabilité**, exigés par [`claude-design-brief.md`](claude-design-brief.md) §7 :
+   - l'usage de chaque token employé — `texte seul` / `fond seul` / `bordure` /
+     `mixte, à quelles conditions` ;
+   - les paires avant-plan × arrière-plan effectivement rendues, avec leur ratio
+     calculé et le verdict AA.
+
+   Les deux autres exigences de §7 — livrer les valeurs, documenter les
+   anti-patterns — sont déjà couvertes plus haut : les valeurs sont données et
+   aucune n'est à inventer. Ce qui reste à prouver, c'est **où** chacune est
+   posée. Un token de texte utilisé comme surface casse AA sans qu'aucune valeur
+   ne soit fausse — c'est précisément l'incident qui a fait écrire §7.
 
 Le reste du produit garde son langage actuel — ne pas redessiner la navigation,
 la feuille de saisie, ni les autres pages.
@@ -175,7 +193,17 @@ la feuille de saisie, ni les autres pages.
 ## À la réception — ce qui sera vérifié avant intégration
 
 Rappel de la doctrine `CLAUDE.md` §« exports Claude Design » : jamais de merge
-direct, toujours une branche `feat/cc-design-<surface>`, et les agents QA
-`ui-auditor`, `dashboard-ux-auditor` et `gdpr-compliance-auditor` passent avant
-la revue humaine. Les tokens de production sont la source de vérité : une couleur
-absente du tableau ci-dessus se remplace par la sienne, elle ne s'ajoute pas.
+direct, toujours une branche `feat/cc-design-<surface>`. Passent avant la revue
+humaine : **`ui-auditor`** — le contrôle d'accessibilité obligatoire, WCAG 2.2
+AA —, `dashboard-ux-auditor` et `gdpr-compliance-auditor`. Les tokens de
+production sont la source de vérité : une couleur absente du tableau ci-dessus
+se remplace par la sienne, elle ne s'ajoute pas.
+
+> **Un garde-fou corrigé au passage.** `CLAUDE.md` et `trio-agents.md`
+> nommaient `design:accessibility-review` comme contrôle d'accessibilité
+> obligatoire des exports. **Cet agent n'existe pas** — ni dans
+> `.claude/agents/`, ni comme compétence installée ; cherché deux fois le
+> 23 août 2026, par nom et par motif. Les deux fichiers sont corrigés dans cette
+> PR pour nommer `ui-auditor`, qui est le contrôle qui tourne réellement. Un
+> garde-fou qu'on ne peut pas invoquer n'a jamais gardé — même famille que les
+> huit agents branchés sur un outil mort (#428).
