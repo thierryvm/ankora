@@ -521,7 +521,22 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
                 <button
                   type="button"
                   onClick={() => setShowAllCategories(true)}
-                  aria-label={t('moreCategories')}
+                  /*
+                    Le nom accessible porte LE VERBE ET LE NOMBRE.
+
+                    Défaut signalé par Sourcery le 2026-08-23, et c'en était un :
+                    le texte visible « + 9 autres » est `aria-hidden`, donc un
+                    `aria-label` sans compteur annonçait « Voir toutes les
+                    catégories » — le nombre, seule information que ce chantier
+                    ajoutait, n'existait pas pour un lecteur d'écran.
+
+                    Sa correction remplaçait l'étiquette par « 9 autres », ce qui
+                    perdait le verbe : un bouton nommé par un décompte ne dit pas
+                    ce qu'il fait. D'où une clé dédiée qui garde les deux.
+                  */
+                  aria-label={t('moreCategoriesAria', {
+                    count: context?.overflow.length ?? 0,
+                  })}
                   data-testid="add-expense-chip-more"
                   className="bg-surface-muted text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-brand-600 flex min-h-11 items-center gap-1.5 rounded-full px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
                 >

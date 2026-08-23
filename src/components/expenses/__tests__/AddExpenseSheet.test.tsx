@@ -429,6 +429,19 @@ describe('la feuille après le chantier visuel', () => {
     expect(screen.getByTestId('add-expense-chip-more').textContent).toContain('3');
   });
 
+  it('et il le dit AUSSI à un lecteur d’écran', async () => {
+    getExpenseEntryContextAction.mockResolvedValue(context({ overflow: [RESTO, RESTO, RESTO] }));
+    await openSheet();
+    // Défaut signalé par Sourcery : le texte visible est `aria-hidden`, donc un
+    // `aria-label` sans compteur rendait le nombre — la seule information que
+    // ce chantier ajoutait — invisible pour un lecteur d'écran. Le nom
+    // accessible doit porter le VERBE et le NOMBRE : « 3 autres » seul ne dit
+    // pas ce que fait le bouton.
+    const nom = screen.getByTestId('add-expense-chip-more').getAttribute('aria-label') ?? '';
+    expect(nom).toContain('3');
+    expect(nom.replace(/\d/g, '').trim().length).toBeGreaterThan(8);
+  });
+
   it('le montant n’est plus enfermé dans un pavé', async () => {
     await openSheet();
     // MESURÉ avant : 134 px de haut pour un champ de 66 — 68 px de rembourrage
