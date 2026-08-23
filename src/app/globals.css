@@ -609,10 +609,13 @@ body > .mkt-paper > main {
 
 html {
   /* Editors flag the unprefixed `text-size-adjust` as unsupported by Firefox
-     and Safari. Both lines are needed and both are correct: the prefixed one
-     above covers exactly those two, and Lightning CSS adds `-moz-` on top —
-     the compiled sheet carries all three. Checked 2026-08-23; same reasoning as
-     the `color-mix` note above. */
+     and Safari. What was MEASURED on 2026-08-23, and all that needs asserting:
+     the compiled sheet carries all THREE forms — `-webkit-`, `-moz-` and
+     unprefixed — from these two source lines. Lightning CSS adds the `-moz-`
+     one; `-webkit-` is the WebKit/Safari path, which is the one that matters on
+     iPhone. Do not restate which engine consumes which beyond that: it changes
+     with releases, and the compiled sheet is the thing to re-read. Same
+     reasoning as the `color-mix` note above. */
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   scroll-behavior: smooth;
