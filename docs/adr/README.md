@@ -11,11 +11,15 @@ pourquoi telle ou telle route a été prise — et ne pas la défaire par accide
 Les ADR suivent le format [MADR](https://adr.github.io/madr/) (Markdown Any
 Decision Records) — light, lisible, versionnable en git.
 
-Chaque ADR est immuable une fois `Accepted`. Pour le faire évoluer :
+**Le corps** d'un ADR est immuable une fois `Accepted`. Pour le faire évoluer :
 
 1. créer un nouvel ADR qui explique la bascule,
-2. marquer l'ancien `Superseded by ADR-NNN`,
-3. ne **jamais** réécrire l'ancien (l'historique est précieux).
+2. ajouter à l'ancien un **addendum daté** qui pointe vers le successeur — `Superseded by ADR-NNN` s'il est entièrement remplacé, une note d'amendement s'il ne l'est qu'en partie,
+3. ne **jamais** réécrire le raisonnement d'origine (l'historique est précieux).
+
+> **Le point 2 a été précisé le 23 août 2026.** Il disait « ne jamais réécrire l'ancien », sans distinguer le corps de l'en-tête — ce qui interdisait littéralement d'y poser le moindre pointeur, et rendait donc invisible depuis l'ADR d'origine le fait qu'il ait été dépassé. Le dépôt pratiquait déjà l'addendum daté : ADR-020 porte une ligne `Superseded le`, ADR-039 un addendum du 23 août, ADR-038 est marqué « amendé 040, 041 ». La convention est alignée sur ce qui se fait, plutôt que l'inverse.
+>
+> **La ligne de partage** : on **ajoute** un pointeur daté, on ne **retire** ni ne **reformule** une décision passée. Un lecteur doit pouvoir lire le raisonnement d'origine tel qu'il était, et savoir en même temps qu'il a bougé.
 
 ## Statuts
 
@@ -28,45 +32,55 @@ Chaque ADR est immuable une fois `Accepted`. Pour le faire évoluer :
 
 ## Index
 
-| #   | Titre                                                                                                                      | Statut                      | Date       |
-| --- | -------------------------------------------------------------------------------------------------------------------------- | --------------------------- | ---------- |
-| 001 | [No-PSD2 : agrégation via import manuel](./ADR-001-no-psd2.md)                                                             | Accepted                    | 2026-04-20 |
-| 002 | [Modèle bucket (comptes + enveloppes)](./ADR-002-bucket-model.md)                                                          | Accepted                    | 2026-04-20 |
-| 003 | [Système de notifications (in-app first)](./ADR-003-notifications-system.md)                                               | Accepted                    | 2026-04-20 |
-| 004 | [Logger structuré (Pino + wrapper Edge)](./ADR-004-structured-logging.md)                                                  | Accepted                    | 2026-04-20 |
-| 005 | [PR-3a anticipée comme prérequis architectural](./ADR-005-pr3a-anticipated-design-system.md)                               | Accepted                    | 2026-04-25 |
-| 006 | [Testing strategy v1.0](./ADR-006-testing-strategy-v1.md)                                                                  | Accepted                    | 2026-04-26 |
-| 007 | [Payment tracking consolidation](./ADR-007-payment-tracking-consolidation.md)                                              | Superseded by ADR-011 + 012 | 2026-05-03 |
-| 008 | [Naming comptes user-defined (display_name + account_type)](./ADR-008-account-naming-and-typing.md)                        | Accepted                    | 2026-05-03 |
-| 009 | [Capacité d'épargne réelle — KPI hero + formule (amendé 2026-05-09 : 3 concepts UX)](./ADR-009-capacite-epargne-reelle.md) | Accepted                    | 2026-05-03 |
-| 010 | [Live decrement quotidien](./ADR-010-live-decrement-quotidien.md)                                                          | Accepted                    | 2026-05-03 |
-| 011 | [Détection déficit + plan rattrapage 3 mois](./ADR-011-detection-deficit-plan-rattrapage.md)                               | Accepted                    | 2026-05-03 |
-| 012 | [Assistant virements (calcul intelligent provisions ↔ factures du mois)](./ADR-012-assistant-virements.md)                 | Accepted                    | 2026-05-03 |
-| 016 | [Tracking paiements multi-sources (présomption J+3 + import CSV 5 sources)](./ADR-016-tracking-paiements-multi-sources.md) | Proposed                    | 2026-05-08 |
-| 017 | [Plans d'apurement (table installment_plans + génération auto N transactions)](./ADR-017-plans-apurement.md)               | Proposed                    | 2026-05-09 |
-| 018 | [Provisions bidirectionnelles : audit trail OUT/IN](./ADR-018-provisions-bidirectionnelles-audit-trail.md)                 | Superseded by ADR-038       | 2026-05-09 |
-| 038 | [Le journal des mouvements](./ADR-038-journal-des-mouvements.md)                                                           | Accepted (amendé 040, 041)  | 2026-08-05 |
-| 039 | [Portée des tokens « papier » de la landing (`.mkt-paper`)](./ADR-039-portee-tokens-marketing-papier.md)                   | Proposed                    | 2026-08-08 |
-| 040 | [Ordre d'exécution du journal (D0 en dernier)](./ADR-040-ordre-execution-du-journal.md)                                    | Accepted                    | 2026-08-10 |
-| 041 | [Provisionner n'est pas payer](./ADR-041-provisionner-nest-pas-payer.md)                                                   | Accepted                    | 2026-08-10 |
-| 042 | [File de suppression : compter les tentatives](./ADR-042-file-de-suppression-compter-les-tentatives.md)                    | Proposed                    | 2026-08-10 |
+| #   | Titre                                                                                                                      | Statut                       | Date       |
+| --- | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ---------- |
+| 001 | [No-PSD2 : agrégation via import manuel](./ADR-001-no-psd2.md)                                                             | Accepted                     | 2026-04-20 |
+| 002 | [Modèle bucket (comptes + enveloppes)](./ADR-002-bucket-model.md)                                                          | Accepted                     | 2026-04-20 |
+| 003 | [Système de notifications (in-app first)](./ADR-003-notifications-system.md)                                               | Accepted                     | 2026-04-20 |
+| 004 | [Logger structuré (Pino + wrapper Edge)](./ADR-004-structured-logging.md)                                                  | Accepted                     | 2026-04-20 |
+| 005 | [PR-3a anticipée comme prérequis architectural](./ADR-005-pr3a-anticipated-design-system.md)                               | Accepted                     | 2026-04-25 |
+| 006 | [Testing strategy v1.0](./ADR-006-testing-strategy-v1.md)                                                                  | Accepted                     | 2026-04-26 |
+| 007 | [Payment tracking consolidation](./ADR-007-payment-tracking-consolidation.md)                                              | Superseded by ADR-011 + 012  | 2026-05-03 |
+| 008 | [Naming comptes user-defined (display_name + account_type)](./ADR-008-account-naming-and-typing.md)                        | Accepted                     | 2026-05-03 |
+| 009 | [Capacité d'épargne réelle — KPI hero + formule (amendé 2026-05-09 : 3 concepts UX)](./ADR-009-capacite-epargne-reelle.md) | Accepted                     | 2026-05-03 |
+| 010 | [Live decrement quotidien](./ADR-010-live-decrement-quotidien.md)                                                          | Accepted                     | 2026-05-03 |
+| 011 | [Détection déficit + plan rattrapage 3 mois](./ADR-011-detection-deficit-plan-rattrapage.md)                               | Accepted                     | 2026-05-03 |
+| 012 | [Assistant virements (calcul intelligent provisions ↔ factures du mois)](./ADR-012-assistant-virements.md)                 | Accepted                     | 2026-05-03 |
+| 016 | [Tracking paiements multi-sources (présomption J+3 + import CSV 5 sources)](./ADR-016-tracking-paiements-multi-sources.md) | Proposed                     | 2026-05-08 |
+| 017 | [Plans d'apurement (table installment_plans + génération auto N transactions)](./ADR-017-plans-apurement.md)               | Proposed                     | 2026-05-09 |
+| 018 | [Provisions bidirectionnelles : audit trail OUT/IN](./ADR-018-provisions-bidirectionnelles-audit-trail.md)                 | Superseded by ADR-038        | 2026-05-09 |
+| 019 | [Admin route security baseline](./ADR-019-admin-security-baseline.md)                                                      | Accepted                     | 2026-05-10 |
+| 020 | [Frontière `atoms/` vs `ui/`](./ADR-020-atoms-vs-ui-canonical-frontier.md)                                                 | Superseded par 034           | 2026-05-18 |
+| 021 | [Engagements dans le cockpit (effort lissé fini)](./ADR-021-engagements-dans-le-cockpit.md)                                | Proposed                     | 2026-05-18 |
+| 022 | [Taxonomie des catégories et catégorisation assistée](./ADR-022-taxonomie-categories-et-categorisation-assistee.md)        | Accepted (amendé 043)        | 2026-07-26 |
+| 023 | [Délai de grâce de la suppression de compte : 30 → 14 jours](./ADR-023-delai-de-grace-suppression-de-compte.md)            | Accepted                     | 2026-07-27 |
+| 024 | [File de suppression de compte : reprise plutôt qu'atomicité](./ADR-024-file-de-suppression-de-compte.md)                  | Accepted                     | 2026-07-27 |
+| 034 | [Suppression de `atoms/` et de `/design-playground`](./ADR-034-suppression-atoms-et-design-playground.md)                  | Accepted                     | 2026-07-29 |
+| 035 | [Le vocabulaire des quatre chiffres](./ADR-035-vocabulaire-des-quatre-chiffres.md)                                         | Accepted                     | 2026-07-29 |
+| 036 | [`--color-warning` à `#9a3412`](./ADR-036-token-warning-9a3412.md)                                                         | Accepted                     | 2026-07-29 |
+| 037 | [La primitive `<Sheet>`, extraite et non décrétée](./ADR-037-primitive-sheet.md)                                           | Accepted                     | 2026-07-29 |
+| 038 | [Le journal des mouvements](./ADR-038-journal-des-mouvements.md)                                                           | Accepted (amendé 040, 041)   | 2026-08-05 |
+| 039 | [Portée des tokens « papier » de la landing (`.mkt-paper`)](./ADR-039-portee-tokens-marketing-papier.md)                   | Accepted (Q1 inversée 08-23) | 2026-08-08 |
+| 040 | [Ordre d'exécution du journal (D0 en dernier)](./ADR-040-ordre-execution-du-journal.md)                                    | Accepted                     | 2026-08-10 |
+| 041 | [Provisionner n'est pas payer](./ADR-041-provisionner-nest-pas-payer.md)                                                   | Accepted                     | 2026-08-10 |
+| 042 | [File de suppression : compter les tentatives](./ADR-042-file-de-suppression-compter-les-tentatives.md)                    | Proposed                     | 2026-08-10 |
+| 043 | [Les catégories que l'utilisateur crée lui-même](./ADR-043-categories-creees-par-l-utilisateur.md)                         | Accepted (amende 022)        | 2026-08-23 |
 
 > **Note numérotation** : ADR-013/014/015 jamais rédigés (réservés en buffer lors de la consolidation ADR-007 → 011/012, finalement non utilisés). La numérotation reprend à 016 pour les ADRs de la session 2026-05-08.
-
-> **Pour les ADRs `Proposed`** (016, 017) : à valider en `Accepted` post-PR-D5 (implémentation effective des tables `installment_plans` + `provision_transfers` + tracking paiements multi-sources). **ADR-039** attend le GO @thierry, son implémentation (PR L1) et sa relecture cockpit étant faites.
-
-> ⚠️ **Cet index est incomplet — mesuré le 8 août 2026.** `docs/adr/` contient
-> 27 fichiers ; ce tableau en listait 15, et affichait 018 en `Proposed` alors
-> que le fichier le déclare `Superseded` depuis le 5 août. La PR L1 corrige ces
-> deux points et ajoute sa propre ligne (039). **Elle ne rattrape pas les onze
-> restants** (019-024, 034-038) : ce serait un chantier de relecture à part
-> entière, et l'ajouter à une PR de tokens le rendrait invérifiable. À traiter
-> dans une PR dédiée.
 >
-> **Rattrapage partiel le 10 août 2026** : 038, 040 et 041 sont ajoutés parce
-> qu'ils forment le programme **en cours** — un ADR qu'on ne trouve pas est un
-> ADR qu'on re-dérive, et c'est arrivé le 10 août sur ADR-038 précisément. Les
-> dix restants (019-024, 034-037) attendent toujours leur PR dédiée.
+> **025 à 033 ne correspondent à aucun fichier** — vérifié par glob le 23 août 2026. La raison n'est pas documentée et n'est pas inventée ici : le tableau saute de 024 à 034 parce que le dossier le fait.
+>
+> **Ce tableau a été complété le 23 août 2026** : dix ADRs existants (019 à 024, 034 à 037) n'y figuraient pas. Un index qui liste 21 entrées pour 31 fichiers ne se lit pas comme incomplet — il se lit comme exhaustif, et c'est pire. Les lignes ajoutées sont recopiées des en-têtes de chaque fichier, pas reconstituées de mémoire.
+
+> **Pour les ADRs `Proposed`** (016, 017) : à valider en `Accepted` post-PR-D5 (implémentation effective des tables `installment_plans` + `provision_transfers` + tracking paiements multi-sources).
+>
+> **ADR-039** : le GO @thierry est arrivé le 23 août 2026, et il a **inversé la réponse Q1**. La portée `.mkt-paper` est supprimée, les six pigments sont devenus les valeurs claires de `@theme` (PR #442). L'ADR porte l'addendum daté ; cette ligne ne dit plus « attend le GO », parce que le code est en production.
+
+> **Historique de ce rattrapage — clos le 23 août 2026, conservé parce qu'il explique un délai de quinze jours.**
+>
+> - **8 août** : l'index est mesuré incomplet — 27 fichiers, 15 lignes, et 018 affiché `Proposed` alors que le fichier le déclarait `Superseded`. La PR L1 corrige ces deux points et ajoute 039, mais **pas** les onze restants : les glisser dans une PR de tokens l'aurait rendue invérifiable.
+> - **10 août** : rattrapage partiel — 038, 040 et 041, parce qu'ils formaient le programme en cours. Un ADR qu'on ne trouve pas est un ADR qu'on re-dérive, et c'était arrivé sur ADR-038 deux jours plus tôt.
+> - **23 août** : les dix derniers (019-024, 034-037) sont ajoutés. **L'index est complet** — 31 lignes pour 31 fichiers.
 
 ## Conventions de nommage
 

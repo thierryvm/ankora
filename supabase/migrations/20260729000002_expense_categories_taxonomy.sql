@@ -4,6 +4,14 @@
 -- ⚠️  WRITTEN, NOT APPLIED. The linked Supabase project is PRODUCTION and there
 --     is no staging environment. This file is for @thierry to read and run.
 --
+-- ↑ STALE SINCE — corrected 2026-08-23. This migration IS applied in production:
+--   `supabase migration list --linked` reports a remote counterpart for every one
+--   of the 24 local migrations, this one included. The warning above is kept
+--   verbatim rather than rewritten — an applied migration's history is not edited
+--   after the fact — but it must not be read as current state. Anyone planning a
+--   change to `categories` should assume `category_group` EXISTS remotely; naming
+--   it in a SELECT is safe, and that is the opposite of what this header implied.
+--
 -- WHY THIS EXISTS
 -- ---------------
 -- `categories` has been seeded with 8 rows at every signup since 2026-05-03:

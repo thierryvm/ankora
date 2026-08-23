@@ -120,6 +120,33 @@ nommée :
 Levé au passage : **BUG-iOS-010** — le curseur porte désormais `aria-valuemin` /
 `aria-valuemax` / `aria-valuenow` explicites, et son cas e2e sort de `test.fixme`.
 
+## Programme en cours — le cockpit, la saisie, la palette (août 2026)
+
+Série de chantiers ouverte le 23 août 2026 sur constat d'usage de @thierry, en marge de
+la refonte v2. **Cette section a été créée le 23 août** : les cinq PR ci-dessous étaient
+mergées et le ROADMAP n'en portait aucune trace — le delta que la §« Synchronisation
+ROADMAP ↔ repo » du `CLAUDE.md` demande de corriger en priorité absolue.
+
+| Chantier                                                                    | État                               |
+| --------------------------------------------------------------------------- | ---------------------------------- |
+| Les tiroirs suivaient la barre d'URL de Safari — `dvh` → `svh`              | ✅ #439                            |
+| Le pli du cockpit : le hero ne tenait pas dans la fenêtre (554 px pour 550) | ✅ #440                            |
+| La feuille ⊕ : cadre du montant, catégories hors écran, vide sur bureau     | ✅ #441                            |
+| La palette « papier » descend du site vitrine dans l'application            | ✅ #442 — inverse la Q1 d'ADR-039  |
+| Le brief de refonte du cockpit envoyé à Fable                               | ✅ #443                            |
+| **ADR-043** — les catégories que l'utilisateur crée lui-même                | 🔄 en cours, décision seule        |
+| **PR catégories 1** — créer sa catégorie depuis la feuille ⊕                | 📋 session suivante (cooldown ADR) |
+| **PR catégories 2** — renommer, recolorer, retirer depuis `/app/settings`   | 📋 après un ADR d'archivage        |
+
+**Pourquoi la PR de code n'est pas dans la même session que l'ADR.** ADR-022 avait
+explicitement **reporté** les catégories libres. Les rouvrir est un amendement à un ADR
+`Accepted`, et la liste bannie du `CLAUDE.md` §2 impose la séparation : décision écrite
+en session N, exécution en session N+1. La carte blanche de @thierry ne lève pas cette
+règle — elle dit l'inverse.
+
+**En attente** : les directions du cockpit dessinées par Fable 5, sur le brief #443.
+À réception → branche `feat/cc-design-cockpit`, agents QA, jamais de merge direct.
+
 ## Programme parallèle — refonte landing « Le relevé corrigé »
 
 Chantier **parallèle** à la refonte v2 (surfaces disjointes : marketing public
