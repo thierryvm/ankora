@@ -942,6 +942,7 @@
         "amountLabel": "Importe en euros",
         "categoryLabel": "Categoría",
         "moreCategories": "Ver todas las categorías",
+        "moreCategoriesCount": "{count} más",
         "noCategories": "No hay ninguna categoría de gasto en tu espacio. El importe se guardará sin categoría.",
         "dateLabel": "Fecha",
         "dateToday": "Hoy",

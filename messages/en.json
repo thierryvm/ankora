@@ -942,6 +942,7 @@
         "amountLabel": "Amount in euros",
         "categoryLabel": "Category",
         "moreCategories": "See all categories",
+        "moreCategoriesCount": "{count} more",
         "noCategories": "No expense category in your workspace. The amount will be saved without one.",
         "dateLabel": "Date",
         "dateToday": "Today",

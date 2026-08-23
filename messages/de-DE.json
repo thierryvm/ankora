@@ -942,6 +942,7 @@
         "amountLabel": "Betrag in Euro",
         "categoryLabel": "Kategorie",
         "moreCategories": "Alle Kategorien anzeigen",
+        "moreCategoriesCount": "{count} weitere",
         "noCategories": "Keine Ausgabenkategorie in deinem Bereich. Der Betrag wird ohne Kategorie gespeichert.",
         "dateLabel": "Datum",
         "dateToday": "Heute",

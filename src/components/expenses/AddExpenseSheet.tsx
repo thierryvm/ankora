@@ -52,6 +52,39 @@ import type { Locale } from '@/i18n/routing';
  * never into an empty box.
  */
 
+/**
+ * Largeur du champ montant, en caractères, indexée par le nombre de caractères
+ * tapés.
+ *
+ * **Pourquoi une table et non un calcul.** Le champ avait une largeur FIXE de
+ * `6ch` avec le texte aligné à droite, pour que le « € » reste collé aux
+ * chiffres. Conséquence mesurée le 2026-08-23 : sur un montant vide, le cadre de
+ * focus faisait 156 px pour un seul « 0 » — un rectangle presque vide avec le
+ * chiffre écrasé contre son bord droit. C'est une part du « horrible
+ * visuellement » signalé par @thierry.
+ *
+ * `field-sizing: content` réglerait cela en une ligne et reste hors de la base
+ * de compatibilité de ce projet (Chrome 111 / Safari 16.2). Une largeur en
+ * `style` inline est refusée par la CSP. Restent des classes littérales — que
+ * Tailwind ne génère QUE s'il les lit telles quelles dans la source, d'où cette
+ * table écrite en toutes lettres plutôt qu'un gabarit interpolé.
+ *
+ * Le `.1` de rattrapage couvre le curseur et l'inexactitude de `ch` sur les
+ * séparateurs : `tabular-nums` égalise les chiffres entre eux, pas la virgule.
+ */
+const LARGEURS_MONTANT = [
+  'w-[1.1ch]',
+  'w-[2.1ch]',
+  'w-[3.1ch]',
+  'w-[4.1ch]',
+  'w-[5.1ch]',
+  'w-[6.1ch]',
+  'w-[7.1ch]',
+  'w-[8.1ch]',
+  'w-[9.1ch]',
+  'w-[10.1ch]',
+] as const;
+
 /** Chip palette. Closed set, mirroring the DB `color_token` check constraint. */
 const CHIP_DOT: Record<string, string> = {
   blue: 'bg-info',
@@ -252,6 +285,18 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
       testId="add-expense-sheet"
       closeLabel={t('close')}
       initialFocusRef={amountRef}
+      /*
+        Boîte centrée à partir de `md`, jamais la colonne pleine hauteur.
+
+        MESURÉ le 2026-08-23 sur un écran de 1280 × 900 : le panneau latéral
+        laissait **484 px de vide** entre le dernier champ et le bouton
+        « Ajouter » — plus de la moitié de sa hauteur. Une colonne pleine
+        hauteur est la bonne forme pour une NAVIGATION, qui la remplit ; ce
+        formulaire fait cinq champs, et une boîte de la taille de ce qu'elle
+        contient n'a pas de vide à distribuer. Le menu « Plus » garde la
+        colonne, qui reste le défaut de la primitive.
+      */
+      desktop="dialog"
       leading={
         <button
           type="button"
@@ -277,12 +322,42 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
       }
     >
       <div className="flex flex-col gap-5 pb-2">
-        {/* ---------- 1. Amount. The only field that matters. ---------- */}
-        <div className="bg-surface-soft flex flex-col items-center gap-1 rounded-2xl px-4 py-6">
-          <label htmlFor="add-expense-amount" className="sr-only">
+        {/*
+          ---------- 1. Le montant. Le seul champ qui compte. ----------
+
+          Le pavé gris est parti. Mesuré le 2026-08-23 : il faisait **134 px de
+          haut pour un champ de 66 px** — soit 68 px de rembourrage autour d'un
+          nombre — et occupait **30 % de la feuille** sur un iPhone 14. Constat
+          de @thierry : « l'encadrement pour rajouter un montant est juste
+          énorme et horrible visuellement ».
+
+          À la place, la grammaire que le cockpit vient d'adopter : une micro-
+          étiquette en capitales, le nombre en grand, la conséquence dessous.
+          L'étiquette devient VISIBLE — elle était `sr-only`, donc l'écran ne
+          disait nulle part ce qu'on tapait — et un filet sous le nombre garde
+          l'affordance de champ que le pavé portait, pour 2 px au lieu de 68.
+        */}
+        <div className="flex flex-col items-center gap-1 pt-1">
+          <label
+            htmlFor="add-expense-amount"
+            className="text-muted-foreground text-[11px] font-semibold tracking-[0.09em] uppercase"
+          >
             {t('amountLabel')}
           </label>
-          <div className="flex items-baseline justify-center gap-1">
+          {/*
+            Le filet est l'affordance AU REPOS, et rien d'autre : il ne s'allume
+            pas au focus. `globals.css` porte une règle `:focus-visible`
+            NON-LAYERÉE — donc prioritaire sur toute utilitaire Tailwind, y
+            compris le `outline-none` de l'`input` ci-dessous, ce qui se vérifie
+            au navigateur : l'outline calculée vaut bien 2 px brand. Le champ a
+            donc déjà son indicateur de focus, à l'échelle de toute l'app. En
+            ajouter un second, d'une autre forme, donnait deux cadres qui ne se
+            recouvraient pas.
+
+            `min-w-44` et non `w-44` : le filet garde une longueur lisible quand
+            le champ ne fait qu'un caractère, et s'allonge si le montant dépasse.
+          */}
+          <div className="border-border flex min-w-44 items-baseline justify-center gap-2.5 border-b pb-1">
             <input
               ref={amountRef}
               id="add-expense-amount"
@@ -300,19 +375,35 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
               aria-describedby={projection !== null ? 'add-expense-projection' : undefined}
               data-testid="add-expense-amount"
               /*
-                `text-right` on a fixed 6ch box, not `text-center`: the digits
-                grow leftward from a fixed point so the € stays glued to them.
-                Centred, the input kept its full 6ch and left a gap of up to
-                five characters between « 0 » and « € » — the field read as two
-                unrelated things. `field-sizing-content` would be the elegant
-                fix and is outside the Chrome 111 / Safari 16.2 baseline.
+                Largeur suivant le contenu via `LARGEURS_MONTANT` — cf. la note
+                de cette table en tête de fichier. `text-right` est conservé :
+                sur le dernier palier, quand le montant dépasse la table, les
+                chiffres restent collés au « € » au lieu de s'en éloigner.
               */
-              className="text-foreground caret-brand-600 placeholder:text-muted-foreground/40 w-[6ch] border-0 bg-transparent text-right text-[44px] font-bold tracking-tight tabular-nums outline-none"
+              /*
+                `min-w-[3ch]` : le cadre de focus de `globals.css` épouse la
+                largeur du champ. Sur un champ vide de `1.1ch`, il dessinait un
+                rectangle haut et étroit autour d'un seul « 0 » — et c'est
+                justement l'état qu'on voit en ouvrant la feuille. Trois
+                caractères de plancher lui donnent la forme d'un champ.
+              */
+              className={`text-foreground caret-brand-600 placeholder:text-muted-foreground/40 min-w-[3ch] border-0 bg-transparent text-right text-[40px] font-bold tracking-tight tabular-nums outline-none ${
+                LARGEURS_MONTANT[Math.min(Math.max(amount.length, 1), LARGEURS_MONTANT.length) - 1]
+              }`}
             />
-            <span
-              aria-hidden="true"
-              className="text-muted-foreground ml-1.5 text-2xl font-semibold"
-            >
+            {/*
+              `gap-2.5` (10 px) sur le conteneur, et aucune marge ici.
+
+              Ce n'est pas un réglage à l'œil : la locale `fr-BE` place une
+              ESPACE INSÉCABLE (U+00A0) entre le montant et le symbole, et c'est
+              ce que `formatCurrency` produit partout ailleurs dans l'app.
+              Mesuré au navigateur le 2026-08-23, cette espace rend **9,9 px**
+              en Inter à 40 px. Le champ de saisie affiche donc le même écart
+              que les montants formatés qu'il côtoie — sans quoi la seule
+              surface où l'on ÉCRIT un montant serait la seule à ne pas
+              respecter la typographie de tous ceux qu'on LIT.
+            */}
+            <span aria-hidden="true" className="text-muted-foreground text-xl font-semibold">
               €
             </span>
           </div>
@@ -338,13 +429,35 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
           ) : null}
         </div>
 
-        {/* ---------- 2. Categories. One row, horizontal scroll. ---------- */}
-        <div>
-          <span id="add-expense-category-label" className="sr-only">
+        {/*
+          ---------- 2. Les catégories. Elles ne défilent plus. ----------
+
+          MESURÉ le 2026-08-23 : la rangée contenait **602 px de puces dans une
+          fenêtre de 390** — 212 px hors écran — et **3 puces sur 6 étaient
+          entièrement visibles**. Aucune ombre, aucune flèche, rien ne disait
+          qu'il y avait une suite. Constat de @thierry : « les catégories ne
+          sont pas facilement accessibles ».
+
+          Le commentaire d'origine justifiait le défilement ainsi : « une 6ᵉ
+          puce pousse la rangée sur deux lignes et fait passer le bouton
+          Ajouter sous le clavier ». **Cette contrainte n'existe plus.** Le pied
+          de `Sheet` est `shrink-0` et son contenu `min-h-0 flex-1
+          overflow-y-auto` : le pied ne PEUT plus être poussé hors écran, c'est
+          le contenu qui défile. Vérifié dans `Sheet.tsx` avant de changer ceci.
+
+          Donc `flex-wrap`. Rien n'est caché sans le dire, et le repli tient à
+          ce que le serveur classe déjà les puces par usage — ce qu'on voit en
+          premier est ce qu'on utilise le plus.
+        */}
+        <div className="flex flex-col gap-2">
+          <span
+            id="add-expense-category-label"
+            className="text-muted-foreground text-[11px] font-semibold tracking-[0.09em] uppercase"
+          >
             {t('categoryLabel')}
           </span>
           {context === null && !contextFailed ? (
-            <div className="flex gap-2" aria-hidden="true">
+            <div className="flex flex-wrap gap-2" aria-hidden="true">
               {[0, 1, 2].map((i) => (
                 <span
                   key={i}
@@ -364,10 +477,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
             <div
               role="radiogroup"
               aria-labelledby="add-expense-category-label"
-              /* `flex-nowrap` + horizontal scroll, NEVER wrap: measured on the
-                 mockup, a 6th chip pushes the row onto two lines and shoves the
-                 « Ajouter » button under the keyboard. */
-              className="-mx-4 flex snap-x flex-nowrap gap-2 overflow-x-auto px-4 pb-1"
+              className="flex flex-wrap gap-2"
             >
               {categories.map((category) => {
                 const selected = category.id === categoryId;
@@ -380,7 +490,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
                     onClick={() => setCategoryId(category.id)}
                     data-testid={`add-expense-chip-${category.id}`}
                     className={[
-                      'focus-visible:ring-brand-600 flex min-h-11 shrink-0 snap-start items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none',
+                      'focus-visible:ring-brand-600 flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none',
                       selected
                         ? 'bg-brand-700 text-primary-foreground'
                         : 'bg-surface-muted text-foreground hover:bg-muted',
@@ -398,15 +508,27 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
                   </button>
                 );
               })}
+              {/*
+                Le déclencheur portait un « + » seul dans un rond de 44 px.
+                Un glyphe sans mot ne dit ni ce qu'il révèle ni combien : sur
+                une rangée qui cachait déjà la moitié de son contenu, c'était la
+                seule chose qui aurait pu le dire, et elle ne le disait pas.
+                Il porte maintenant le nombre — « + 12 autres » — parce qu'on
+                décide d'ouvrir bien plus volontiers quand on sait ce qu'il y a
+                derrière.
+              */}
               {!showAllCategories && (context?.overflow.length ?? 0) > 0 && (
                 <button
                   type="button"
                   onClick={() => setShowAllCategories(true)}
                   aria-label={t('moreCategories')}
                   data-testid="add-expense-chip-more"
-                  className="bg-surface-muted text-foreground hover:bg-muted focus-visible:ring-brand-600 flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                  className="bg-surface-muted text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-brand-600 flex min-h-11 items-center gap-1.5 rounded-full px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
                 >
                   <Plus className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+                  <span aria-hidden="true">
+                    {t('moreCategoriesCount', { count: context?.overflow.length ?? 0 })}
+                  </span>
                 </button>
               )}
             </div>

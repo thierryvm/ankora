@@ -942,6 +942,7 @@
         "amountLabel": "Bedrag in euro",
         "categoryLabel": "Categorie",
         "moreCategories": "Alle categorieën bekijken",
+        "moreCategoriesCount": "{count} andere",
         "noCategories": "Geen uitgavecategorie in je ruimte. Het bedrag wordt zonder categorie opgeslagen.",
         "dateLabel": "Datum",
         "dateToday": "Vandaag",

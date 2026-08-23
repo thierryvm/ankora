@@ -150,6 +150,23 @@ export type SheetProps = {
   hideCloseButton?: boolean;
   /** Accessible label for the close button (UI copy is French, callers translate). */
   closeLabel?: string;
+  /**
+   * Ce que devient la feuille à partir de `md`. Le mobile ne change jamais :
+   * c'est une feuille qui monte du bas, dans les deux cas.
+   *
+   * - `panel` (défaut) — colonne ancrée à droite, pleine hauteur. La forme juste
+   *   pour une NAVIGATION : une liste de destinations remplit sa colonne, et
+   *   l'ancrage au bord droit la rend prévisible.
+   * - `dialog` — boîte centrée, hauteur ajustée au contenu, plafonnée à 85 % de
+   *   la fenêtre. La forme juste pour un FORMULAIRE COURT.
+   *
+   * Le motif est mesuré, pas esthétique. `panel` étire un contenu de cinq champs
+   * sur toute la hauteur de l'écran : relevé le 2026-08-23 sur la feuille de
+   * saisie, **484 px de vide** entre le dernier champ et le bouton « Ajouter »,
+   * soit plus de la moitié du panneau. Une boîte qui fait la taille de ce
+   * qu'elle contient n'a pas de vide à distribuer.
+   */
+  desktop?: 'panel' | 'dialog';
 };
 
 export function Sheet({
@@ -163,6 +180,7 @@ export function Sheet({
   testId = 'sheet',
   hideCloseButton = false,
   closeLabel = 'Fermer',
+  desktop = 'panel',
 }: SheetProps) {
   const isClient = useIsClient();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -365,15 +383,35 @@ export function Sheet({
           // moved; `svh` is defined against the viewport with browser UI
           // EXPANDED and, by spec, does not change when that UI retracts.
           'inset-x-0 bottom-0 max-h-[92svh] rounded-t-3xl border-t',
-          // ≥ md: right-anchored side panel, per the primitive contract.
-          'md:inset-y-0 md:right-0 md:left-auto md:max-h-none md:w-[26rem] md:rounded-t-none md:rounded-l-3xl md:border-t-0 md:border-l',
-          'transition-transform duration-[var(--dur-structural)] ease-[var(--ease-spring)] motion-reduce:transition-none',
+          // ≥ md, `panel` : colonne ancrée à droite, pleine hauteur.
+          desktop === 'panel' &&
+            'md:inset-y-0 md:right-0 md:left-auto md:max-h-none md:w-[26rem] md:rounded-t-none md:rounded-l-3xl md:border-t-0 md:border-l',
+          // ≥ md, `dialog` : boîte centrée, HAUTEUR AJUSTÉE AU CONTENU.
+          // `md:h-fit` est la clé — sans lui, `inset-0` étire la boîte et on
+          // retrouve le vide que cette variante existe pour supprimer.
+          desktop === 'dialog' &&
+            'md:inset-0 md:m-auto md:h-fit md:max-h-[85vh] md:w-md md:rounded-3xl md:border',
+          // `opacity` fait partie de la transition pour `dialog` SEULEMENT.
+          // Une boîte centrée n'a aucun bord vers lequel sortir : sans le fondu,
+          // elle resterait entièrement visible, décalée de 16 px, pendant toute
+          // la durée de la sortie, puis disparaîtrait d'un coup.
+          desktop === 'dialog' ? 'transition-[transform,opacity]' : 'transition-transform',
+          'duration-[var(--dur-structural)] ease-[var(--ease-spring)] motion-reduce:transition-none',
           // Discrete enter/exit states as CLASSES, never an inline style — the
           // CSP would drop the attribute and the sheet would pop into place.
+          // `dialog` ne glisse pas depuis la droite : une boîte centrée qui
+          // arrive par le bord traverserait tout l'écran pour rien. Elle monte
+          // de quelques pixels en se révélant.
           shown
-            ? 'translate-y-0 md:translate-x-0'
-            : 'translate-y-full md:translate-x-full md:translate-y-0',
-        ].join(' ')}
+            ? desktop === 'dialog'
+              ? 'translate-y-0 md:opacity-100'
+              : 'translate-y-0 md:translate-x-0'
+            : desktop === 'dialog'
+              ? 'translate-y-full md:translate-y-4 md:opacity-0'
+              : 'translate-y-full md:translate-x-full md:translate-y-0',
+        ]
+          .filter(Boolean)
+          .join(' ')}
       >
         {/* Drag zone: the handle and the header travel together, so the whole
             top strip of the sheet is grabbable rather than a 5px target. */}

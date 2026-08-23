@@ -942,6 +942,7 @@
         "amountLabel": "Montant en euros",
         "categoryLabel": "Catégorie",
         "moreCategories": "Voir toutes les catégories",
+        "moreCategoriesCount": "{count} autres",
         "noCategories": "Aucune catégorie de dépense dans ton espace. Le montant sera enregistré sans catégorie.",
         "dateLabel": "Date",
         "dateToday": "Aujourd'hui",
