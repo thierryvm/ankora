@@ -416,7 +416,29 @@ body > .mkt-paper > main {
 
 /* ---------- Liquid Glass primitive (multi-layer, non-negotiable) ----------
    Single-layer backdrop-filter is REJECTED. Always use blur + color-mix tint +
-   inset edge highlight + opaque fallback for prefers-reduced-transparency. */
+   inset edge highlight + opaque fallback for prefers-reduced-transparency.
+
+   ON EDITOR DIAGNOSTICS ABOUT `color-mix()` — measured 2026-08-23, do not act
+   on them. Edge Tools flags `color-mix` here as "not supported by Chrome < 111".
+   That reads THIS FILE; it is not what ships. Lightning CSS (Tailwind 4's
+   engine) downlevels every occurrence on its own, emitting a static fallback
+   first and re-declaring the modern value inside `@supports`:
+
+     .glass{background:#ffffffb3;position:relative}
+     …border:1px solid #e2e8f099}
+     @supports (color:color-mix(in lab, red, red)){ .glass{border:…color-mix…} }
+
+   60 such blocks in the compiled sheet. Verified end-to-end rather than
+   inferred: rewriting the PRODUCTION stylesheet so the parser never sees
+   `color-mix` leaves `.glass` with `rgba(255,255,255,.7)` and a
+   `rgba(226,232,240,.6)` border — card and border intact.
+
+   The general rule, and the reason this note exists: THE SOURCE IS NOT THE
+   ARTEFACT. Before acting on a CSS compatibility diagnostic, grep the compiled
+   sheet (`.next/static/chunks/*.css`). Some are real — the one at
+   `prefers-reduced-transparency` below was, because no toolchain can guess that
+   resetting only the unprefixed `backdrop-filter` leaves the `-webkit-` one in
+   force. A tool can add a fallback; it cannot repair a rule that is wrong. */
 .glass {
   position: relative;
   background: color-mix(in oklab, var(--color-card) 70%, transparent);
@@ -586,6 +608,11 @@ body > .mkt-paper > main {
 }
 
 html {
+  /* Editors flag the unprefixed `text-size-adjust` as unsupported by Firefox
+     and Safari. Both lines are needed and both are correct: the prefixed one
+     above covers exactly those two, and Lightning CSS adds `-moz-` on top —
+     the compiled sheet carries all three. Checked 2026-08-23; same reasoning as
+     the `color-mix` note above. */
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   scroll-behavior: smooth;
