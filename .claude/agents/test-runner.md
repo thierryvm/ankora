@@ -17,10 +17,15 @@ product was broken — read the two sections marked **why** before trusting a gr
    layer is not. Discovering this mid-run costs the whole session.
 1. **Unit tests**: `npx vitest run` — the parallel default, which is what CI runs.
    - Capture failures with test name, file:line, expected vs received.
-   - **The reference is not a MODE, it is the executed COUNT.** The declared
-     total is **2283 in 166 files**. Read that number first, every time. Any run
-     reporting fewer EXECUTED tests is an instrument failure, not a regression —
-     a migration or a CSS change cannot make hundreds of cases cease to exist.
+   - **The reference is not a MODE, it is the executed COUNT** — and the count
+     invariant applies to **UNFILTERED full-suite runs only**. The declared total
+     is **2283 in 166 files**. A run you deliberately narrowed (one spec file,
+     `-t`, a directory) executes fewer cases by construction: judge it on its own
+     selection and never against this number. Only when you ran the whole suite
+     and it came back **materially** short — tens or hundreds of cases, not the
+     handful a new test adds — is that an instrument failure rather than a
+     regression. A migration or a CSS change cannot make 350 cases cease to
+     exist.
    - **Each mode hides what the other shows. Neither is "the safe one".**
 
      | Mode                    | What it hides                                                                                                             |
@@ -37,12 +42,24 @@ product was broken — read the two sections marked **why** before trusting a gr
      serial → **2 failed** in `settings-mfa.test.ts`; parallel → **2283 passed**.
      The exact opposite verdict, from the same code.
 
-   - **So: run parallel, and check the count.** A short count means the machine,
-     not the code — free memory, then re-run. A full count with failures means
-     the code. If parallel is green and you still suspect something, re-run
-     serially: a failure that appears ONLY serially is a real cross-file leak
-     (see #382), not noise — but it is a defect of the SUITE, not of the feature
-     you are testing, and it must be reported as such.
+   - **Triage in two steps, in this order. The count says whether the run is
+     usable; the MODE says whom to blame.** Collapsing the two is how a suite
+     leak gets filed as a broken feature.
+
+     1. **Count.** Materially short → the machine, not the code. Free memory and
+        re-run; report nothing from a short run.
+     2. **Mode**, only once the count is full:
+
+        | parallel | serial | isolation | Verdict                                                                                |
+        | -------- | ------ | --------- | -------------------------------------------------------------------------------------- |
+        | fails    | fails  | fails     | **the code** — a real regression                                                       |
+        | green    | fails  | green     | **the SUITE** — cross-file leak (#382). Name the failing file, say the feature is fine |
+        | fails    | green  | —         | re-check memory first, then treat as a leak the other way                              |
+
+     A full count with failures is therefore **not** automatically "the code".
+     `settings-mfa.test.ts` executes all 2283 and still fails serially, for a
+     reason that has nothing to do with MFA.
+
    - Corollary that already cost this repo a phantom debt item: two specs
      (`AddExpenseSheet`, `CommitmentsClient`) were carried for days as "flaky".
      They are not flaky. They were the ones the memory pressure happened to
