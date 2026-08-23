@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import frMessages from '../../../../messages/fr-BE.json';
@@ -18,6 +18,7 @@ import { todayInAnkoraTz } from '@/lib/date/tz';
  */
 
 const createExpenseAction = vi.fn();
+const createExpenseCategoryAction = vi.fn();
 const getExpenseEntryContextAction = vi.fn();
 const announceOptimisticValue = vi.fn();
 const settleSpend = vi.fn();
@@ -30,6 +31,16 @@ vi.mock('@/lib/actions/expenses', () => ({
 
 vi.mock('@/lib/actions/expense-entry', () => ({
   getExpenseEntryContextAction: () => getExpenseEntryContextAction(),
+}));
+
+/*
+  Mocké, et pas seulement par commodité : le module réel importe le client
+  Supabase serveur, qui valide `env` à l'import et lève dans l'environnement de
+  test des composants. Sans ce mock, la suite entière échoue au CHARGEMENT — et
+  le message parle de variables d'environnement, jamais du composant.
+*/
+vi.mock('@/lib/actions/categories', () => ({
+  createExpenseCategoryAction: (...args: unknown[]) => createExpenseCategoryAction(...args),
 }));
 
 vi.mock('@/lib/expenses/optimistic-spend', () => ({
@@ -468,5 +479,140 @@ describe('la feuille après le chantier visuel', () => {
     await user.type(champ, '18,50');
     expect(champ.className).toContain('w-[5.1ch]');
     expect(champ.className).not.toContain('w-[1.1ch]');
+  });
+});
+
+/**
+ * Créer sa catégorie sans quitter la saisie (ADR-043).
+ *
+ * Le cas qui compte est le dernier : une catégorie créée a ZÉRO usage, donc le
+ * classement du serveur la mettrait en dernier, donc elle tomberait derrière
+ * « + N autres ». Livrer « crée ta catégorie » et la faire disparaître à
+ * l'instant de sa création serait pire que ne rien livrer.
+ */
+describe('AddExpenseSheet — créer une catégorie', () => {
+  const CREEE = { id: 'cat-coiffeur', name: 'Coiffeur', colorToken: 'rose' };
+
+  it('le déclencheur n’est PAS dans le radiogroup des catégories', async () => {
+    // Un `radiogroup` ne doit contenir que des `radio`. Le bouton de
+    // débordement y vivait déjà en infraction ; y ajouter celui-ci aurait
+    // aggravé le défaut au lieu de le corriger.
+    await openSheet();
+    const groupe = screen.getByRole('radiogroup');
+    expect(groupe).not.toContainElement(screen.getByTestId('add-expense-new-category'));
+    expect(within(groupe).queryByTestId('add-expense-chip-more')).toBeNull();
+  });
+
+  it('reste proposé quand l’espace n’a AUCUNE catégorie', async () => {
+    // C'est l'état où créer sert le plus. Rattacher le bouton au `radiogroup`
+    // l'aurait fait disparaître exactement là.
+    getExpenseEntryContextAction.mockResolvedValue(
+      context({ chips: [], overflow: [], preselectedId: null }),
+    );
+    await openSheet();
+    expect(screen.getByTestId('add-expense-no-categories')).toBeInTheDocument();
+    expect(screen.getByTestId('add-expense-new-category')).toBeInTheDocument();
+  });
+
+  it('ouvre la ligne de création et pré-choisit une couleur', async () => {
+    const user = userEvent.setup();
+    await openSheet();
+    await user.click(screen.getByTestId('add-expense-new-category'));
+    expect(screen.getByTestId('add-expense-new-category-name')).toBeInTheDocument();
+    // Une pastille est cochée : la moins utilisée parmi les catégories connues.
+    const cochees = screen
+      .getAllByRole('radio')
+      .filter((r) => (r as HTMLInputElement).name === 'add-expense-new-category-color')
+      .filter((r) => (r as HTMLInputElement).checked);
+    expect(cochees).toHaveLength(1);
+  });
+
+  it('chaque pastille porte le NOM de sa couleur, jamais la couleur seule', async () => {
+    const user = userEvent.setup();
+    await openSheet();
+    await user.click(screen.getByTestId('add-expense-new-category'));
+    expect(screen.getByRole('radio', { name: 'Bleu' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Gris' })).toBeInTheDocument();
+  });
+
+  it('Entrée soumet', async () => {
+    const user = userEvent.setup();
+    createExpenseCategoryAction.mockResolvedValue({ ok: true, data: CREEE });
+    await openSheet();
+    await user.click(screen.getByTestId('add-expense-new-category'));
+    await user.type(screen.getByTestId('add-expense-new-category-name'), 'Coiffeur{Enter}');
+    await waitFor(() => expect(createExpenseCategoryAction).toHaveBeenCalledTimes(1));
+    expect(createExpenseCategoryAction).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Coiffeur' }),
+    );
+  });
+
+  it('Échap referme la ligne SANS fermer la feuille ni perdre le montant', async () => {
+    // `Sheet` pose son écouteur `keydown` sur `document` et referme sans
+    // condition : sans `stopPropagation`, annuler la création détruirait le
+    // montant déjà tapé.
+    const user = userEvent.setup();
+    const { onClose } = await openSheet();
+    await user.type(screen.getByTestId('add-expense-amount'), '18,50');
+    await user.click(screen.getByTestId('add-expense-new-category'));
+    await user.type(screen.getByTestId('add-expense-new-category-name'), 'Coiffeur{Escape}');
+
+    expect(screen.queryByTestId('add-expense-new-category-name')).toBeNull();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByTestId('add-expense-amount')).toHaveValue('18,50');
+  });
+
+  it('un échec conserve la saisie et annonce l’erreur', async () => {
+    const user = userEvent.setup();
+    createExpenseCategoryAction.mockResolvedValue({
+      ok: false,
+      errorCode: 'errors.categories.duplicate',
+    });
+    await openSheet();
+    await user.click(screen.getByTestId('add-expense-new-category'));
+    await user.type(screen.getByTestId('add-expense-new-category-name'), 'Courses');
+    await user.click(screen.getByTestId('add-expense-new-category-submit'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('add-expense-new-category-error')).toHaveAttribute('role', 'alert'),
+    );
+    // Retaper un nom pour un homonyme corrigible d'un caractère serait une
+    // punition, pas une information.
+    expect(screen.getByTestId('add-expense-new-category-name')).toHaveValue('Courses');
+  });
+
+  it('le succès rend la puce VISIBLE et sélectionnée, sans toucher au montant', async () => {
+    const user = userEvent.setup();
+    createExpenseCategoryAction.mockResolvedValue({ ok: true, data: CREEE });
+    await openSheet();
+    await user.type(screen.getByTestId('add-expense-amount'), '18,50');
+    await user.click(screen.getByTestId('add-expense-new-category'));
+    await user.type(screen.getByTestId('add-expense-new-category-name'), 'Coiffeur');
+    await user.click(screen.getByTestId('add-expense-new-category-submit'));
+
+    const puce = await screen.findByTestId(`add-expense-chip-${CREEE.id}`);
+    expect(puce).toBeInTheDocument();
+    expect(puce).toHaveAttribute('aria-checked', 'true');
+    expect(screen.queryByTestId('add-expense-new-category-name')).toBeNull();
+    expect(screen.getByTestId('add-expense-amount')).toHaveValue('18,50');
+  });
+
+  it('la dépense part sous la catégorie qui vient d’être créée', async () => {
+    // La preuve de bout en bout : sans elle, la puce pourrait paraître
+    // sélectionnée sans que l'identifiant atteigne l'insertion.
+    const user = userEvent.setup();
+    createExpenseCategoryAction.mockResolvedValue({ ok: true, data: CREEE });
+    await openSheet();
+    await user.type(screen.getByTestId('add-expense-amount'), '18,50');
+    await user.click(screen.getByTestId('add-expense-new-category'));
+    await user.type(screen.getByTestId('add-expense-new-category-name'), 'Coiffeur');
+    await user.click(screen.getByTestId('add-expense-new-category-submit'));
+    await screen.findByTestId(`add-expense-chip-${CREEE.id}`);
+    await user.click(screen.getByTestId('add-expense-submit'));
+
+    await waitFor(() => expect(createExpenseAction).toHaveBeenCalledTimes(1));
+    expect(createExpenseAction).toHaveBeenCalledWith(
+      expect.objectContaining({ categoryId: CREEE.id }),
+    );
   });
 });

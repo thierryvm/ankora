@@ -95,8 +95,37 @@ function panelFiles(): { path: string; source: string }[] {
     }));
 }
 
-/** Does this file re-implement Escape-to-close itself? */
-const ownsEscape = (source: string) => /['"]Escape['"]/.test(source);
+/**
+ * Does this file re-implement Escape-to-close itself?
+ *
+ * ## Why the literal alone is not enough — precised 2026-08-23
+ *
+ * The check was `/['"]Escape['"]/` and nothing more. It flagged
+ * `AddExpenseSheet.tsx` the day that file gained an inline creation row whose
+ * input calls `stopPropagation()` on Escape — which is the **opposite** of
+ * owning the behaviour: it composes `<Sheet>`, and it shields one inner control
+ * from the primitive's own global handler so that Escape closes the sub-control
+ * rather than destroying a half-typed amount.
+ *
+ * Two ways out were wrong. Adding the file to `PENDING_MIGRATION` would grow a
+ * list whose whole discipline is that it may only shrink, and would label the
+ * primitive's exemplar call-site a legacy offender. Dropping the Escape handler
+ * would trade a false positive for a real defect.
+ *
+ * So the detector is made to say what the guard already claims: **owning**
+ * Escape means catching it wherever focus is, i.e. a `document`/`window` key
+ * listener. An element-level `onKeyDown` only fires when focus is already
+ * inside — it cannot serve as a panel's close-on-Escape, so it was never the
+ * thing this guard was built to catch.
+ *
+ * Measured before changing it, on all seven files: the five pending panels AND
+ * the primitive each carry a global listener; `AddExpenseSheet` carries none.
+ * The guard therefore loses nothing — the last two cases below still hold it to
+ * that, and would fail the moment this regex stopped matching the primitive.
+ */
+const ownsEscape = (source: string) =>
+  /['"]Escape['"]/.test(source) &&
+  /(document|window)\.addEventListener\(\s*['"]keydown/.test(source);
 
 /**
  * Does this file re-implement the body scroll lock itself?
