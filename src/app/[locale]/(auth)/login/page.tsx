@@ -54,10 +54,19 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <div className="mt-6 flex flex-col gap-2 text-center text-sm">
           {/* PR-D5 a11y: hover-only affordances are invisible on iOS touch
               devices (no hover state). Underline made permanent so the link
-              is recognisable regardless of input modality. */}
+              is recognisable regardless of input modality.
+
+              `inline-flex min-h-11` — WCAG 2.2 AA · 2.5.8. Measured 308 × 20 on
+              2026-08-22 (WebKit, iPhone 14). This link sits alone in its own
+              block, so the criterion's inline exception does NOT cover it; the
+              "Créer un compte" link below DOES sit inside a sentence and is
+              genuinely exempt, which is why only this one moves. Password
+              recovery is a rare gesture made under pressure — exactly where a
+              missed tap costs the most. `w-fit self-center` keeps the target
+              hugging its text rather than spanning the card. */}
           <Link
             href="/forgot-password"
-            className="text-muted-foreground hover:text-foreground underline underline-offset-2"
+            className="text-muted-foreground hover:text-foreground inline-flex min-h-11 w-fit items-center justify-center self-center px-2 underline underline-offset-2"
           >
             {t('forgotLink')}
           </Link>
