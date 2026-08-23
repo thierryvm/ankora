@@ -6,7 +6,8 @@ import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AccountCard } from '@/components/features/AccountCard';
-import { SituationDuMoisHero, type PartAffichee } from '@/components/dashboard/SituationDuMoisHero';
+import { SituationDuMoisHero } from '@/components/dashboard/SituationDuMoisHero';
+import { CascadeDuMois, type PartAffichee } from '@/components/dashboard/CascadeDuMois';
 import { ProvisionHealthGaugeCard } from '@/components/dashboard/ProvisionHealthGaugeCard';
 import { ProchainesFacturesCard } from '@/components/dashboard/ProchainesFacturesCard';
 import { EngagementsCard } from '@/components/dashboard/EngagementsCard';
@@ -153,19 +154,30 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-8">
+      {/*
+        Chantier 6 — le pli est le budget de conception.
+
+        Ce bloc de titre coûtait 88 px sur les 550 px utiles d'un iPhone 14
+        (mesuré le 2026-08-23), pour deux informations : le nom de l'espace de
+        travail — « Mon espace », la valeur par défaut, qu'aucun écran ne permet
+        de changer aujourd'hui — et le mois. Le nom part ; le mois reste, parce
+        qu'il dit de QUEL mois parlent tous les chiffres en dessous, et il
+        descend de `text-3xl` à `text-2xl`. Le `h1` demeure un `h1` : c'est sa
+        taille qui change, pas son rang.
+      */}
       <header>
-        <p className="text-muted-foreground text-sm">{snapshot.workspaceName}</p>
-        <h1 id="dashboard-heading" className="text-3xl font-bold tracking-tight md:text-4xl">
+        <h1 id="dashboard-heading" className="text-2xl font-bold tracking-tight md:text-3xl">
           {t('headerTitle', { month: monthLabel })}
         </h1>
       </header>
 
       {/*
-        THI-327 Phase 0 — unified "Situation du mois" hero (NORTH_STAR #1
-        cashflow waterfall). Subsumes the former Effort + Capacité card pair
-        into one calm narration: status + "Reste disponible" headline +
-        allocation bar + waterfall flow + FSMA-safe nudge. The incomplet state
-        guards the no-income case (THI-335).
+        THI-327 Phase 0 — "Situation du mois" hero (NORTH_STAR #1), ramené au
+        pli par le chantier 6 : un statut en mots, UN montant dominant, une
+        ligne d'ancrage, le rythme du mois. Sa cascade est partie juste dessous
+        (`CascadeDuMois`) — la carte mesurait 554 px pour 550 px de fenêtre
+        utile sur iPhone 14, donc elle se coupait en plein milieu de sa liste.
+        L'état incomplet garde le cas sans revenu (THI-335).
       */}
       <section aria-labelledby="dashboard-heading">
         <SituationDuMoisHero
@@ -174,22 +186,45 @@ export default async function DashboardPage() {
           chargesFixes={situation.chargesFixes.toNumber()}
           provisionsLissees={situation.provisionsLissees.toNumber()}
           engagementsMensuels={situation.engagementsMensuels.toNumber()}
-          chargesFixesParts={partsAffichees(decomposition.chargesFixes)}
-          lissageParts={partsAffichees(decomposition.lissage)}
-          engagementsParts={partsAffichees(decomposition.engagements)}
           resteDisponible={situation.resteDisponible.toNumber()}
           depensesDuMois={situation.depensesDuMois.toNumber()}
           ilTeReste={situation.ilTeReste.toNumber()}
-          epargneEstimee={situation.epargneEstimee?.toNumber() ?? null}
           deficitEpargne={situation.deficitEpargne.toNumber()}
           rattrapageMensuel={situation.rattrapageMensuel.toNumber()}
-          provisionsAJour={situation.provisionsAJour}
           joursRestants={joursRestants}
           joursEcoules={joursEcoules}
           joursDuMois={daysInMonth}
           locale={locale}
         />
       </section>
+
+      {/*
+        Chantier 6 / §3.2 — « la cascade est l'explication, pas la réponse ».
+
+        Elle suit immédiatement le hero, jamais ailleurs : c'est le lien
+        « D'où vient ce chiffre » du hero qui y mène, et un lecteur qui défile
+        d'un cran doit tomber dessus sans l'avoir cherchée. L'état incomplet du
+        hero (revenu absent) n'a rien à expliquer — il n'y a pas de cascade
+        d'un revenu qu'on ne connaît pas.
+      */}
+      {situation.statut !== 'incomplet' && (
+        <section aria-labelledby="cascade-heading">
+          <CascadeDuMois
+            revenus={situation.revenus.toNumber()}
+            chargesFixes={situation.chargesFixes.toNumber()}
+            provisionsLissees={situation.provisionsLissees.toNumber()}
+            engagementsMensuels={situation.engagementsMensuels.toNumber()}
+            chargesFixesParts={partsAffichees(decomposition.chargesFixes)}
+            lissageParts={partsAffichees(decomposition.lissage)}
+            engagementsParts={partsAffichees(decomposition.engagements)}
+            resteDisponible={situation.resteDisponible.toNumber()}
+            depensesDuMois={situation.depensesDuMois.toNumber()}
+            ilTeReste={situation.ilTeReste.toNumber()}
+            epargneEstimee={situation.epargneEstimee?.toNumber() ?? null}
+            locale={locale}
+          />
+        </section>
+      )}
 
       {/*
         THI-190 — Santé des Provisions (cockpit v3 section #2 of 8).
@@ -332,7 +367,11 @@ export default async function DashboardPage() {
         <section aria-labelledby="plan-heading" className="flex flex-col gap-4">
           <div className="flex items-end justify-between gap-2">
             <div>
-              <h2 id="plan-heading" className="text-xl font-semibold">
+              {/* Même défaut que la cascade, et il précédait ce chantier : le
+                  nudge du hero pointe `/app#plan-heading`, et l'en-tête collant
+                  de 65 px recouvrait ce titre à l'arrivée. `scroll-mt-24`
+                  corrige les deux liens de la même façon. */}
+              <h2 id="plan-heading" className="scroll-mt-24 text-xl font-semibold">
                 {t('planTitle', { month: monthLabel })}
               </h2>
               <p className="text-muted-foreground text-sm">{t('planDescription')}</p>

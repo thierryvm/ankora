@@ -1185,6 +1185,11 @@
       "heroLabel": "Dir bleibt",
       "heroAnchor": "von {budget} Budget · {depense} ausgegeben",
       "voirPlan": "Plan ansehen",
+      "cascade": {
+        "title": "Woher diese Zahl kommt",
+        "subtitle": "Dein Einkommen und alles, was vor dir davon abgeht.",
+        "lien": "Woher diese Zahl kommt"
+      },
       "statut": {
         "vert": "Du hast diesen Monat gut im Griff",
         "orangeDepasse": "Du hast diesen Monat zu viel ausgegeben",
