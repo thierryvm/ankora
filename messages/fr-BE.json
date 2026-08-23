@@ -1185,6 +1185,11 @@
       "heroLabel": "Il te reste",
       "heroAnchor": "sur {budget} de budget · {depense} dépensés",
       "voirPlan": "Voir le plan",
+      "cascade": {
+        "title": "D'où vient ce chiffre",
+        "subtitle": "Ton revenu, et tout ce qui en part avant toi.",
+        "lien": "D'où vient ce chiffre"
+      },
       "statut": {
         "vert": "Tu gères bien ce mois-ci",
         "orangeDepasse": "Tu as dépassé ce mois-ci",

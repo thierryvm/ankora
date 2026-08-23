@@ -1185,6 +1185,11 @@
       "heroLabel": "Te queda",
       "heroAnchor": "de {budget} de presupuesto · {depense} gastado",
       "voirPlan": "Ver el plan",
+      "cascade": {
+        "title": "De dónde sale esta cifra",
+        "subtitle": "Tus ingresos, y todo lo que sale de ellos antes que tú.",
+        "lien": "De dónde sale esta cifra"
+      },
       "statut": {
         "vert": "Llevas bien este mes",
         "orangeDepasse": "Este mes te has pasado",

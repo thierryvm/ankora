@@ -1185,6 +1185,11 @@
       "heroLabel": "You have left",
       "heroAnchor": "of {budget} budget · {depense} spent",
       "voirPlan": "See the plan",
+      "cascade": {
+        "title": "Where this figure comes from",
+        "subtitle": "Your income, and everything that leaves it before you do.",
+        "lien": "Where this figure comes from"
+      },
       "statut": {
         "vert": "You're on track this month",
         "orangeDepasse": "You have overspent this month",

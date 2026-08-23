@@ -1185,6 +1185,11 @@
       "heroLabel": "Je houdt over",
       "heroAnchor": "van {budget} budget · {depense} uitgegeven",
       "voirPlan": "Bekijk het plan",
+      "cascade": {
+        "title": "Waar dit bedrag vandaan komt",
+        "subtitle": "Je inkomen, en alles wat er vóór jou afgaat.",
+        "lien": "Waar dit bedrag vandaan komt"
+      },
       "statut": {
         "vert": "Je houdt deze maand goed overzicht",
         "orangeDepasse": "Je gaf deze maand te veel uit",
