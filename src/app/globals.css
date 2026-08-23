@@ -108,14 +108,28 @@
    *                                (use this when you'd reach for "bg-muted" by reflex)
    *   --color-border             → 1px borders / dividers
    * --------------------------------------------------- */
-  --color-background: #f8fafc;
-  --color-foreground: #0f172a;
-  --color-muted: #64748b;
-  --color-muted-foreground: #475569;
-  --color-border: #e2e8f0;
-  --color-card: #ffffff;
-  --color-surface-soft: #fbfcfe;
-  --color-surface-muted: #f1f5f9;
+  /* Les six pigments de la direction « Le relevé corrigé » (Fable 5, 8 août
+     2026). Ils vivaient dans une portée `.mkt-paper` réservée à la vitrine ;
+     ils sont ici depuis le 23 août 2026 — cf. l'addendum d'ADR-039.
+
+     Motif, en une phrase : le mode SOMBRE de l'application parlait déjà la
+     direction B (son fond `#0b1120` est ce que la maquette appelle « Nuit —
+     navy existant »), et le mode clair ne parlait rien du tout — il portait le
+     slate par défaut de Tailwind, qui n'a jamais été un choix.
+
+     Les valeurs ne sont pas nouvelles : ce sont exactement celles que la
+     vitrine peint en production depuis le 11 août. Aucune couleur n'est
+     inventée ici, une portée est supprimée. */
+  --color-background: #faf9f6; /* papier — fond, à peine chaud */
+  --color-foreground: #171d26; /* encre — texte, bleutée */
+  --color-muted: #64748b; /* décoratif — hors palette papier, cf. convention ci-dessus */
+  --color-muted-foreground: #3d4a5c; /* encre atténuée — 8,55:1 sur papier, contre 7,24 en slate */
+  --color-border: #e7e4dc; /* filet — les règles du relevé */
+  --color-card: #ffffff; /* la carte reste blanche SUR le papier : c'est ce contraste
+                            tiède/blanc qui fait lire « relevé posé sur une table »,
+                            et c'est déjà ce que peint la vitrine (mesuré). */
+  --color-surface-soft: #fbfaf7;
+  --color-surface-muted: #f3f1ea;
 
   /* ---------- Semantic text colors (Light mode) ---------- */
   --color-brand-text: #0f766e;
@@ -271,108 +285,45 @@
   --color-brand-text-strong: var(--color-accent-text-strong);
 }
 
-/* ---------- Marketing paper scope — raw values (ADR-039) ----------
-   The six raw pigments of the "relevé corrigé" landing direction. They exist
-   for ONE purpose: to be pointed at by the remap below. Nothing reads them
-   directly, and nothing should.
+/* ---------- La portée « papier » de la vitrine a été SUPPRIMÉE ----------
+   Le 23 août 2026, sur constat de @thierry : « je ne vois rien niveau des
+   couleurs prévues ».
 
-   Why a bare `:root` and not `@theme` — amendment to ADR-039 §Décision, point 1.
-   A `--color-*` key in `@theme` makes Tailwind generate a whole family of
-   utilities for it (background, text, border, ring, divide, outline, caret,
-   gradient stops, fill, stroke). That would put a SECOND colour vocabulary in
-   reach of every component — which is precisely the alternative ADR-039
-   §Alternatives écartées rejects ("divergence garantie"). Declared here, no
-   theme key exists, so no utility can be generated: the wrong path is closed by
-   construction rather than by a lint rule someone can silence. It also means a
-   markdown table documenting these names cannot be picked up by the Tailwind
-   source scanner and quietly create the very class it forbids.
+   Ce qui vivait ici : six pigments bruts (papier, filet, encre…) dans un
+   :root nu, plus DEUX blocs de remappage — `.mkt-paper` et son compagnon
+   `body:has(.mkt-paper)` — qui les substituaient aux tokens sémantiques, pour
+   la vitrine uniquement. La relecture cockpit d'ADR-039 (8 août) avait tranché
+   `:root` EST l'identité du produit, `.mkt-paper` en est un ÉCART.
 
-   Cost, stated so this amendment is not one-sided: the six are emitted on every
-   page and in both themes, `/app` included (~200 inert bytes). Accepted.
+   Ce qui a changé, et pourquoi cette conclusion ne tient plus : l'écart était
+   supposé porter une VOIX ÉDITORIALE que le produit n'avait pas à emprunter.
+   Mesuré depuis, ce n'était pas ça — le mode sombre de l'application parlait
+   DÉJÀ la direction B de la même session Fable (son fond `#0b1120` est
+   littéralement ce que la maquette nomme « Nuit — navy existant »), pendant que
+   le mode clair portait le slate par défaut de Tailwind. L'app n'avait donc pas
+   une identité différente de la vitrine : elle n'en avait aucune en clair.
 
-   Light-only by construction: there is no dark counterpart, and
-   `contrast-ratios.test.ts` asserts each of the six is declared exactly once
-   AND that no paper token appears in the dark block. Neither assertion can be
-   removed on its own — together they encode "raw, light-only, single source".
-   Ratios: ink/paper 16.08, ink-soft/paper 8.55 — computed by that test, never
-   copied. */
-:root {
-  --color-paper: #faf9f6;
-  --color-paper-line: #e7e4dc;
-  --color-paper-soft: #fbfaf7;
-  --color-paper-muted: #f3f1ea;
-  --color-ink: #171d26;
-  --color-ink-soft: #3d4a5c;
-}
+   La descente supprime plus de code qu'elle n'en ajoute, et referme trois
+   pièges que ces blocs documentaient eux-mêmes :
 
-/* ---------- Marketing paper scope — the remap (ADR-039) ----------
-   Fourth scope pattern in this file, after `@theme`, `[data-theme='dark']` and
-   `[data-accent='admin']`. Same grammar as the admin flip: a block of variable
-   remaps, outside any `@layer`, so components keep using one vocabulary
-   (`text-foreground`, `bg-background`) on both surfaces.
+     — les cinq surfaces `fixed` hors de tout wrapper (bannière de
+       consentement, toaster, barre d'onglets, bandeau de mise à jour,
+       retour-en-haut) recevaient le papier par un compagnon `body:has()` ;
+       elles l'héritent maintenant de `:root`, sans compagnon ;
+     — le plancher navigateur de `:has()` (Firefox 121+, alors que le projet
+       accepte 113+) n'a plus d'objet ;
+     — la duplication des deux blocs, qu'un test devait comparer pour qu'aucun
+       ne soit édité seul, n'existe plus.
 
-   THE ASYMMETRY IS DELIBERATE — there is no `.app-surface` counterpart, and
-   adding one would be a mistake. `:root` IS the product's identity; this class
-   is a DEPARTURE from it, not a peer. A scope that remaps nothing would drift
-   into "the place where app overrides go", which is `:root`'s job — and every
-   wrapper costs a layout risk (see the `body > main` note further down for what
-   that costs in practice). Decided in the cockpit review of ADR-039, 8 Aug 2026.
-   Do not harmonise these.
+   Contrastes : ils MONTENT sur le texte secondaire — 8,55:1 contre 7,24 en
+   slate. Vérifié par `contrast-ratios.test.ts`, qui mesure désormais le mode
+   clair réel plutôt qu'une portée.
 
-   WHY THE COMPANION EXISTS. `body { background: var(--color-background) }` is
-   resolved on `body` itself, so a wrapper remapping the variable for its
-   descendants leaves the viewport, the iOS overscroll area and `min-height`
-   slate under cream. The companion redeclares THE SAME variables one level up,
-   which also feeds the five `fixed` slots that live outside any page wrapper
-   (consent banner, toaster, bottom tab bar, update banner, scroll-to-top) —
-   they are children of `body`, so the consent card reads as paper over a paper
-   hero instead of fighting it. The duplication is intentional; a test compares
-   the two property sets so neither can be edited alone.
-
-   NEVER MERGE THE TWO BLOCKS INTO A SELECTOR LIST. Their six remaps are
-   identical, so collapsing them reads as an obvious cleanup — and it would be a
-   serious regression. A CSS selector list is NOT forgiving: on a browser that
-   cannot parse `:has()`, one unsupported selector invalidates the WHOLE rule,
-   taking the `.mkt-paper` branch down with it. Written apart, the fallback
-   survives. A test compares the two property sets, but it compares custom
-   properties only — the `background` below is deliberately not duplicated onto
-   `body`, which paints from `--color-background` on its own.
-
-   BROWSER FLOOR. `:has()` needs Firefox 121+ (Dec 2023); the project baseline
-   allows 113+. On 113-120 the companion does not match, so `body` and the five
-   `fixed` slots stay on the complete slate set while this class still paints
-   paper for the page content — which is why it declares `background` and not
-   only variables. Internally consistent either way, so no pair should drop
-   below AA. REASONED, NOT MEASURED. What CI actually covers: the three
-   Playwright projects are Chromium desktop, mobile Safari and mobile Chrome,
-   all of which support `:has()` — companion path 3/3, fallback path 0/3.
-
-   No dark remap, on purpose: the landing keeps the existing navy. A second
-   "paper by night" palette was never asked for. */
-html:not([data-theme='dark']) .mkt-paper {
-  --color-background: var(--color-paper);
-  --color-border: var(--color-paper-line);
-  --color-foreground: var(--color-ink);
-  --color-muted-foreground: var(--color-ink-soft);
-  --color-surface-soft: var(--color-paper-soft);
-  --color-surface-muted: var(--color-paper-muted);
-
-  /* Paints what it remaps, so the scope is self-sufficient: without this the
-     Firefox 113-120 fallback described above would render an entirely slate
-     landing, and L2 would have to remember to add a background utility to the
-     wrapper. ADR-039 already assumed this line existed. */
-  background: var(--color-background);
-}
-
-html:not([data-theme='dark']) body:has(.mkt-paper) {
-  --color-background: var(--color-paper);
-  --color-border: var(--color-paper-line);
-  --color-foreground: var(--color-ink);
-  --color-muted-foreground: var(--color-ink-soft);
-  --color-surface-soft: var(--color-paper-soft);
-  --color-surface-muted: var(--color-paper-muted);
-}
-
+   RESTE À FAIRE, tracé ici pour ne pas se perdre : le `<div class="mkt-paper">`
+   existe toujours dans la vitrine et ne sert plus qu'à la MISE EN PAGE (règles
+   ci-dessous). Son retrait rendrait `<main>` enfant direct de `<body>` et
+   supprimerait ces règles avec lui — un chantier de mise en page, délibérément
+   séparé de celui des couleurs. */
 /* ---------- Marketing paper scope — layout link (PR L2) ----------
    Wrapping nav + main + footer in the scope makes `<main>` a GRANDCHILD of
    `<body>`, so the shared `body > main` rule further down (see its
