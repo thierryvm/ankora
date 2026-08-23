@@ -22,7 +22,7 @@ export default async function OnboardingPage() {
   if (profile?.onboarded_at) return redirect({ href: '/app', locale: await getLocale() });
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-2xl flex-col px-4 py-8 md:py-16">
+    <div className="mx-auto flex min-h-svh max-w-2xl flex-col px-4 py-8 md:py-16">
       <OnboardingWizard />
     </div>
   );

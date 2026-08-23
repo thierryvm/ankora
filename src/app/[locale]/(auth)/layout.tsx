@@ -3,7 +3,11 @@ import { AnkoraLogo } from '@/components/brand/AnkoraLogo';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-dvh flex-col">
+    // `svh` et non `dvh` : la hauteur du conteneur ne doit pas suivre la barre
+    // d'URL de Safari, sans quoi la page se reflowe à chaque défilement. Même
+    // raison que les tiroirs (cf. ExpenseEditDrawer, mesuré le 2026-08-23), et
+    // même unité que `body { min-height: 100svh }` dans globals.css.
+    <div className="flex min-h-svh flex-col">
       <header className="border-border bg-card border-b">
         <div className="mx-auto flex h-16 max-w-6xl items-center px-4 md:px-6">
           <Link

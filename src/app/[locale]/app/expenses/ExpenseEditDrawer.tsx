@@ -41,7 +41,7 @@ type Props = {
  *   - JS throw → toast generic, drawer STAYS OPEN
  *   - NEXT_REDIRECT / NEXT_NOT_FOUND → re-thrown so Next.js can navigate
  *
- * Slide-from-right on desktop, full-screen on mobile (h-dvh + sm:max-w-md).
+ * Slide-from-right on desktop, full-screen on mobile (h-svh + sm:max-w-md).
  */
 export function ExpenseEditDrawer({ expense, onClose }: Props) {
   const t = useTranslations('app.expenses');
@@ -179,8 +179,20 @@ export function ExpenseEditDrawer({ expense, onClose }: Props) {
       <aside
         className={cn(
           'bg-card text-foreground border-border relative flex w-full flex-col border shadow-xl',
-          'h-dvh max-h-dvh',
-          'sm:h-full sm:max-w-md sm:border-l',
+          // `svh`, jamais `dvh`. Mesuré le 2026-08-23 : avec `h-dvh`, la hauteur
+          // du tiroir suivait le viewport AU PIXEL — 664 → 664, 560 → 560,
+          // 420 → 420. Sur iPhone, la barre d'URL de Safari fait varier ce
+          // viewport à chaque défilement, donc le tiroir se redimensionnait sans
+          // arrêt sous le doigt. `svh` est calculé barre déployée et ne bouge
+          // pas quand elle se rétracte.
+          'h-svh max-h-svh',
+          // `sm:max-h-none` est OBLIGATOIRE à côté de `sm:h-full`. Le parent est
+          // `fixed inset-0`, donc sa hauteur EST le viewport courant ; sans cette
+          // surcharge, `max-h-svh` continuerait de plafonner le panneau au PETIT
+          // viewport au point d'arrêt bureau, et sur un iPad dont la barre d'URL
+          // s'est rétractée le panneau laisserait un vide que le fond, lui,
+          // couvre. `Sheet.tsx` portait déjà `md:max-h-none` pour cette raison.
+          'sm:h-full sm:max-h-none sm:max-w-md sm:border-l',
         )}
       >
         <header className="border-border flex items-center justify-between gap-3 border-b px-5 py-4">
