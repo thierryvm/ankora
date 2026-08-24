@@ -19,4 +19,5 @@ export * from './simulateur';
 export * from './situation-mois';
 export * from './engagements-lisses';
 export * from './depenses-du-mois';
+export * from './depenses-par-jour';
 export * from './epargne-estimee';
