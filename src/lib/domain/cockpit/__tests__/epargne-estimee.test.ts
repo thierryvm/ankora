@@ -1,7 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import Decimal from 'decimal.js';
 
-import { epargneEstimee, JOURS_MIN_PROJECTION } from '@/lib/domain/cockpit/epargne-estimee';
+import {
+  depensesProjetees,
+  epargneEstimee,
+  JOURS_MIN_PROJECTION,
+} from '@/lib/domain/cockpit/epargne-estimee';
 
 const input = (over: Partial<Parameters<typeof epargneEstimee>[0]> = {}) => ({
   budgetDuMois: new Decimal(736.79),
@@ -81,5 +85,49 @@ describe('epargneEstimee', () => {
       joursDuMois: 30,
     });
     expect(out!.toString()).toBe('0.2');
+  });
+});
+
+describe('depensesProjetees — le point terminal de la courbe', () => {
+  /**
+   * Ces deux fonctions décrivent le MÊME mois : l'une dit où la dépense
+   * atterrit, l'autre ce qu'il resterait alors. Elles s'affichent côte à côte —
+   * le point terminal de `MonthCurve` et la ligne « Épargne estimée » de la
+   * cascade. Si elles divergeaient d'un centime, l'écran se contredirait sur
+   * une seule question, et personne ne saurait laquelle croire.
+   */
+  const JEUX: Array<[string, Parameters<typeof epargneEstimee>[0]]> = [
+    ['un mois ordinaire', input()],
+    ['rien de dépensé', input({ depensesDuMois: new Decimal(0) })],
+    ['un rythme qui dépasse le budget', input({ depensesDuMois: new Decimal(700) })],
+    ['le premier jour projetable', input({ joursEcoules: JOURS_MIN_PROJECTION })],
+    ['le dernier jour du mois', input({ joursEcoules: 31 })],
+    ['un remboursement net', input({ depensesDuMois: new Decimal(-50) })],
+    ['un mois de février', input({ joursDuMois: 28, joursEcoules: 14 })],
+  ];
+
+  it.each(JEUX)('%s : epargneEstimee = budgetDuMois − depensesProjetees', (_nom, params) => {
+    const projetees = depensesProjetees(params);
+    const epargne = epargneEstimee(params);
+    expect(projetees).not.toBeNull();
+    expect(epargne?.toFixed(6)).toBe(params.budgetDuMois.minus(projetees!).toFixed(6));
+  });
+
+  it.each([
+    ['avant le 7e jour', input({ joursEcoules: JOURS_MIN_PROJECTION - 1 })],
+    ['un mois de zéro jour', input({ joursDuMois: 0 })],
+    ['un jour écoulé non fini', input({ joursEcoules: Number.NaN })],
+  ])('%s : les deux rendent null ENSEMBLE', (_nom, params) => {
+    // L'état « la courbe s'arrête mais la cascade affiche encore une
+    // estimation » n'a pas de sens à l'écran. Les deux fonctions partagent leurs
+    // conditions parce que l'une appelle l'autre — ce cas tient cette promesse.
+    expect(depensesProjetees(params)).toBeNull();
+    expect(epargneEstimee(params)).toBeNull();
+  });
+
+  it('projette la dépense, pas ce qu il en reste', () => {
+    // La preuve que la fonction ne rend pas l'autre chiffre par mégarde :
+    // 288,40 × 31 / 18 = 496,69, quand l'épargne estimée vaut 240,10.
+    expect(depensesProjetees(input())?.toFixed(2)).toBe('496.69');
   });
 });

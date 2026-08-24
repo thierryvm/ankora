@@ -5,7 +5,7 @@ import {
   provisionsMensuellesLissees,
   totalChargesMensuelles,
 } from './effort-financier-lisse';
-import { epargneEstimee } from './epargne-estimee';
+import { depensesProjetees, epargneEstimee } from './epargne-estimee';
 import { calculerSanteProvisions } from './sante-provisions';
 import type { CockpitCharge, PaymentLedger, ReferencePeriod } from './types';
 
@@ -79,6 +79,13 @@ export type SituationDuMois = Readonly<{
    * n'est pas « une estimation à zéro ».
    */
   epargneEstimee: Decimal | null;
+  /**
+   * Où la dépense du mois atterrit si le rythme tient — le point terminal de la
+   * courbe. `null` exactement quand `epargneEstimee` l'est : les deux sortent de
+   * la même fonction, donc une courbe qui s'arrêterait pendant que la cascade
+   * affiche encore une estimation n'est pas représentable.
+   */
+  depensesProjetees: Decimal | null;
   provisionsAJour: boolean;
   deficitEpargne: Decimal;
   rattrapageMensuel: Decimal;
@@ -117,12 +124,18 @@ export function calculerSituationDuMois(input: SituationDuMoisInput): SituationD
   // l'invariant du domaine veut qu'une occurrence de charge/engagement ne soit
   // jamais une `expense`. Les deux univers sont disjoints.
   const ilTeReste = resteDisponible.minus(depensesDuMois);
-  const epargne = epargneEstimee({
+  const paramsProjection = {
     budgetDuMois: resteDisponible,
     depensesDuMois,
     joursEcoules: input.joursEcoules,
     joursDuMois: input.joursDuMois,
-  });
+  };
+  const epargne = epargneEstimee(paramsProjection);
+  // La projection de DÉPENSE, pour le point terminal de la courbe. Lue à la
+  // source plutôt que reconstruite par `resteDisponible − epargne` : deux
+  // calculs de la même quantité finissent toujours par diverger, et celui-ci
+  // s'afficherait à côté de l'autre.
+  const projetees = depensesProjetees(paramsProjection);
 
   let statut: SituationStatut;
   if (!hasRevenus) {
@@ -150,6 +163,7 @@ export function calculerSituationDuMois(input: SituationDuMoisInput): SituationD
     depensesDuMois,
     ilTeReste,
     epargneEstimee: epargne,
+    depensesProjetees: projetees,
     provisionsAJour,
     deficitEpargne: sante.deficitEpargne,
     rattrapageMensuel: sante.rattrapageMensuel,

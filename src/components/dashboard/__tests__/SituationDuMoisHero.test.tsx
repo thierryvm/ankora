@@ -56,10 +56,19 @@ const BASE: Omit<SituationDuMoisHeroProps, 'statut'> = {
   rattrapageMensuel: 0,
   joursRestants: 18,
   // Day 13 of 31 — a month whose 200 € of spending (30 % of the 662 € budget) is
-  // slightly ahead of an even pace (42 %), so the pace bar renders neutrally by
+  // slightly ahead of an even pace (42 %), so the curve renders neutrally by
   // default and each state gets an explicit case below.
   joursEcoules: 13,
   joursDuMois: 31,
+  // A linear month reaching exactly `depensesDuMois` on day 13. Coherent on
+  // purpose: `MonthCurve` ends its line on the figure it is GIVEN, so a series
+  // that contradicted the total would hide a real defect rather than expose it.
+  serieDuMois: Array.from({ length: 31 }, (_, i) => ({
+    jour: i + 1,
+    cumule: Math.min(200, ((i + 1) * 200) / 13),
+  })),
+  // Day 13 ≥ 7, so the projection exists: 200 × 31 / 13 ≈ 476,92.
+  depensesProjetees: 476.92,
   locale: 'fr-BE' as const,
 };
 
