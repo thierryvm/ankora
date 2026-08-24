@@ -185,7 +185,23 @@ test.describe('Dashboard — iPhone Safari WebKit (PR-QA-1b)', () => {
       const input = card.getByRole('textbox');
       await expect(input).toBeFocused();
       await input.fill('iPhone test');
-      await input.press('Enter');
+      // Attendre la réponse de la Server Action AVANT de recharger.
+      //
+      // Le titre bascule OPTIMISTEMENT, avant toute écriture : recharger dans la
+      // foulée court après l'écriture, et le reload relit une base qui peut
+      // encore porter l'ancien nom. C'est exactement ce qui s'est produit à la
+      // première exécution de cette spec (24/08/2026) — échec sur l'assertion
+      // POST-RELOAD, jamais sur l'optimiste, la signature même de cette course.
+      //
+      // Le remède n'est pas de mon invention : `e2e/dashboard-account-rename.spec.ts:48-70`
+      // avait diagnostiqué et refermé le même piège en juillet. Le prédicat porte
+      // sur l'en-tête `next-action`, que Next envoie sur les appels de Server
+      // Action et sur rien d'autre — un POST sans rapport ne peut donc pas
+      // satisfaire l'attente et laisser passer le reload trop tôt.
+      await Promise.all([
+        page.waitForResponse((r) => 'next-action' in r.request().headers(), { timeout: 15_000 }),
+        input.press('Enter'),
+      ]);
 
       await expect(
         card.getByRole('button', { name: /Renommer le compte « iPhone test »/i }),
