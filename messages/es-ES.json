@@ -1207,7 +1207,7 @@
         "lien": "De dónde sale esta cifra"
       },
       "statut": {
-        "vert": "Llevas bien este mes",
+        "vert": "Este mes está todo cubierto",
         "orangeDepasse": "Este mes te has pasado",
         "orangeProvisions": "Reponer reservas",
         "rouge": "Tus facturas superan tus ingresos"
@@ -1243,6 +1243,11 @@
         "onTrack": "al ritmo",
         "faster": "por encima del ritmo",
         "exceeded": "presupuesto superado"
+      },
+      "courbe": {
+        "reel": "Gastado",
+        "rythme": "Ritmo constante",
+        "projection": "Estimación"
       }
     },
     "daily": {
