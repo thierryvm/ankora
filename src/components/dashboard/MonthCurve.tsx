@@ -63,8 +63,17 @@ import {
  * fournisseur i18n.
  */
 
-/** Hauteur de rendu, en ATTRIBUT — jamais une chaîne Tailwind (quirk WebKit < 17.4). */
-const RENDER_HEIGHT = 112;
+/**
+ * Hauteur de rendu, en ATTRIBUT — jamais une chaîne Tailwind (quirk WebKit < 17.4).
+ *
+ * **88 et non 112, et le chiffre vient d'une mesure.** Sur un iPhone 14, le
+ * document ne reçoit que ~664 px une fois la barre de Safari posée, dont 65
+ * pour l'en-tête collant et 49 pour les onglets : il reste **550 px** pour
+ * répondre à la question du jour. La barre remplacée occupait 31 px ; une
+ * courbe à 112 en prenait 164 avec sa légende, et poussait la carte hors du
+ * pli. Mesuré au DOM, pas jugé à l'œil.
+ */
+const RENDER_HEIGHT = 88;
 
 export type MonthCurveProps = {
   /** La série cumulée du mois, un point par jour (`depensesParJour`). */
@@ -254,6 +263,23 @@ export function MonthCurve({
         )}
       </svg>
 
+      {/*
+        Le verdict a SA rangée, et ce n'est pas une préférence.
+
+        Rangé avec les légendes, il passait à la ligne sur un écran de 390 px et
+        se lisait comme une QUATRIÈME entrée de légende — mesuré à la capture,
+        pas supposé. Or une légende est une clé de lecture (« ce trait-ci veut
+        dire ceci ») et le verdict est un constat sur le mois : les confondre
+        fait chercher au lecteur quel trait porte « budget dépassé ».
+      */}
+      {/* Le verdict D'ABORD, la clé de lecture ensuite. C'est l'ordre dans
+          lequel on lit un graphique : ce qu'il dit, puis comment il le dit. */}
+      {labels.verdict && (
+        <p className="text-foreground text-xs font-semibold" data-testid="month-curve-verdict">
+          {labels.verdict}
+        </p>
+      )}
+
       <div className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
         <LegendItem forme="point" teinte={teinte} libelle={labels.reel} />
         <LegendItem
@@ -263,11 +289,6 @@ export function MonthCurve({
         />
         {geometrie.projectionPath && (
           <LegendItem forme="tiret-epais" teinte={teinte} libelle={labels.projection} />
-        )}
-        {labels.verdict && (
-          <span className="ms-auto shrink-0" data-testid="month-curve-verdict">
-            {labels.verdict}
-          </span>
         )}
       </div>
     </div>

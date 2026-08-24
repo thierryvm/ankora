@@ -198,7 +198,11 @@ export async function SituationDuMoisHero(props: Props) {
         aria-hidden
         className={`pointer-events-none absolute inset-0 bg-linear-to-br ${accent.from} to-transparent`}
       />
-      <CardContent className="relative flex flex-col gap-5 py-6">
+      {/* `gap-4 py-5` et non `gap-5 py-6` : 12 px repris sur les respirations
+          internes, mesurés au DOM contre les 550 px utiles d'un iPhone 14. La
+          courbe a remplacé une barre sept fois moins haute — il fallait les
+          reprendre quelque part, et une respiration coûte moins qu'un contenu. */}
+      <CardContent className="relative flex flex-col gap-4 py-5">
         {/*
           La puce d'état. L'icône n'est pas choisie ici : `StatusChip` la dérive
           du ton, ce qui rend impossible une puce colorée sans son glyphe —
