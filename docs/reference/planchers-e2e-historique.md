@@ -54,6 +54,8 @@ ininterprétable au premier conflit, donc ignoré :
 > juillet. Un garde-fou qui n'a jamais tourné n'est pas un garde-fou : c'est une
 > intention, et elle se périme.
 
+---
+
 > **Public : 259 → 268, mesuré le 2026-08-23**, à la correction de l'en-tête
 > mobile ([#438](https://github.com/thierryvm/ankora/pull/438)). **+3 cas × 3
 > projets iPhone** — la spec vit sous `e2e/mobile-ios/`, elle ne tourne donc que
