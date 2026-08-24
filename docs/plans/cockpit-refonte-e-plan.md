@@ -1,9 +1,9 @@
-# Cockpit `/app` — refonte direction E · plan d'intégration (v5)
+# Cockpit `/app` — refonte direction E · plan d'intégration
 
-> v5 du 24 août 2026. v1 rejetée ; v2, v3 et v4 approuvées sous réserves. Les
-> huit édits de la v4 sont traités ici, marqués **[F1]** à **[F8]**.
+> État final du 24 août 2026, après **six tours** de `plan-reviewer` : v1
+> rejetée, v2 à v5 approuvées sous réserves, puis une revue ciblée sur les deux
+> sections qui bloquaient encore la PR 0. Verdict : **GO**.
 > Base `main` = `cc02e1b` (#448 mergée). Branche `feat/cc-design-cockpit`.
-> **Aucun code n'est écrit avant `✅ APPROVED`.**
 
 ## 0. Phase 0
 
@@ -130,9 +130,9 @@ d'identité selon le thème — plus un neutre pour « Autres » :
   au pire en sombre (`graph-rest` sur `card`). Le seuil est 3:1, donc c'est tenu —
   mais la marge réelle en clair est de 28 %, pas de 38 %, et une marge annoncée
   trop haute est ce qui fait accepter la retouche de trop.
-  Aucun arc n'est censé se poser sur `surface-muted`, qui est une surface de
-  survol : le chiffre est donné quand même, parce qu'un seuil mesuré sur les
-  surfaces qu'on croit utiliser n'est pas un seuil.
+  Aucun arc n'est censé se poser sur `surface-muted`, qui est un fond de piste
+  (§1.2a) : le chiffre est donné quand même, parce qu'un seuil mesuré sur les
+  seules surfaces qu'on croit utiliser n'est pas un seuil.
 - **Séparation mutuelle : pire paire dE = 13,1 (clair) / 12,8 (sombre)** en
   OKLab ×100. C'est **au-dessus** du plancher de 8 pour la vision des couleurs
   déficiente, et **en dessous** de la cible de 15 pour la vision normale. Le

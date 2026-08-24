@@ -131,6 +131,32 @@
   --color-surface-soft: #fbfaf7;
   --color-surface-muted: #f3f1ea;
 
+  /* ---------- Graph ramp (Light mode) ----------
+     Categorical hues for DATA SURFACES — donut arcs, stacked segments, bars.
+     Never for status: `success`/`warning`/`danger`/`info` say what a thing IS,
+     these say only which thing it is.
+
+     They exist because the eight `categories.color_token` values are not a
+     palette — they are the semantic tokens borrowed (`emerald` → success,
+     `amber` → warning, `rose` → danger), and one of them is a mix TOWARDS
+     `--color-card`, which can therefore never reach 3:1 against that card. An
+     arc painted in those would also judge: "Groceries" in green, "Rent" in red.
+
+     Six shared hues plus a neutral for "Other" — a residual is not a category.
+     The hues are the SAME across themes so a category keeps its identity; only
+     lightness changes. Found by OKLCH sweep, then measured: worst ratio against
+     the four surfaces is 3.85:1 here (graph-3 on surface-muted), worst mutual
+     separation is dE 13.1. Both are asserted in contrast-ratios.test.ts, which
+     is the point — this file already records a colour decision that silently
+     dropped a separation to 1.03 for want of a test. */
+  --color-graph-1: #bd4d00; /* orange — the categorical one, not the warning */
+  --color-graph-2: #6d5d14; /* or */
+  --color-graph-3: #138c35; /* vert */
+  --color-graph-4: #1880a0; /* bleu */
+  --color-graph-5: #6943ab; /* violet */
+  --color-graph-6: #9b2a68; /* framboise */
+  --color-graph-rest: #475569; /* « Autres » — neutre, jamais une teinte */
+
   /* ---------- Semantic text colors (Light mode) ---------- */
   --color-brand-text: #0f766e;
   --color-brand-text-strong: #115e59;
@@ -227,7 +253,23 @@
   --color-border: #1e293b;
   --color-card: #111a2e;
   --color-surface-soft: #0f172a;
-  --color-surface-muted: #0f172a;
+  /* Was #0f172a until 2026-08-24 — the SAME value as surface-soft, so this
+     theme had three elevation steps for four tokens. That is the measurable
+     cause of the cockpit reading flat in the dark: a shadow is invisible here,
+     so surfaces are the only thing that can elevate, and two of them had
+     collapsed onto each other.
+
+     It goes DOWN, not up. `surface-muted` is a TRACK — the groove under
+     `progress`, `PaceBar`, `AllocationBar`, and the rail under a `bg-card`
+     thumb in `LocaleSwitcher`. A track lighter than its thumb reads inverted,
+     so the elevation order is the same in both themes even though the
+     intuition in the dark says "step away from the ground by getting lighter".
+
+     #070c18 is not picked by eye: it reproduces the LIGHT theme's own
+     thumb-over-track relation (1.127 here, 1.130 there). That relation is 1.030
+     today, which `LocaleSwitcher` already compensates with a ring — the
+     compensation stays, the defect it compensates shrinks. */
+  --color-surface-muted: #070c18;
 
   /* Semantic status colors (Dark mode — lighter for contrast on #111a2e cards).
      Before 2026-07-29 these four had no dark override at all: a single value
@@ -239,6 +281,19 @@
   --color-warning: #fbbf24;
   --color-danger: #f87171;
   --color-info: #38bdf8;
+
+  /* ---------- Graph ramp (Dark mode) ----------
+     Same six hues as the light block, lighter — a category keeps its identity
+     across themes; only the value changes. Redeclared rather than inherited:
+     a token left out here would keep its light value on a night ground.
+     Worst ratio against the four surfaces: 6.76:1. Worst separation: dE 12.8. */
+  --color-graph-1: #fb864d;
+  --color-graph-2: #d6b603;
+  --color-graph-3: #76e085;
+  --color-graph-4: #60d4fe;
+  --color-graph-5: #b595fd;
+  --color-graph-6: #f47cb7;
+  --color-graph-rest: #94a3b8;
 
   /* Semantic text colors (Dark mode — lighter for contrast) */
   --color-brand-text: #2dd4bf;
