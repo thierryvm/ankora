@@ -42,9 +42,13 @@
  * `seedUserWithSomething`. Widening the list a third time would have fixed this
  * pair and left the class untouched.
  *
- * So the list is committed (`e2e/authenticated-specs.json`) and verified on every
- * run. Divergence in EITHER direction fails. Adding a spec is one line in a JSON
- * file; losing coverage without noticing is what this prevents.
+ * ## Which is why the list is committed, and not merely computed
+ *
+ * No predicate over file contents will ever be airtight — the two occurrences
+ * above are the proof, not the exception. `e2e/authenticated-specs.json` is
+ * therefore the backstop: discovery is compared against it on every run and
+ * diverging in EITHER direction fails. Adding a spec is one line in a JSON file;
+ * losing coverage without noticing is what this prevents.
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
