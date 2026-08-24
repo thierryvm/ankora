@@ -146,6 +146,41 @@ describe('depensesParJour — l’invariant de réconciliation', () => {
 });
 
 describe('depensesParJour — les entrées dégénérées', () => {
+  it.each([[Number.NaN], [Number.POSITIVE_INFINITY], [30.5]])(
+    'rend une série vide pour joursDuMois = %p, au lieu de LANCER',
+    (joursDuMois) => {
+      // Mesuré : `NaN <= 0` vaut `false`, donc l'ancien garde laissait passer,
+      // puis `Math.min(Math.max(jour, 1), NaN)` rendait `NaN` — pas `null` — et
+      // l'indexation `parJour[NaN]` lançait un `TypeError`. `30.5` faisait de
+      // même par l'indice `29.5` ; `Infinity` levait un `RangeError` sur la
+      // longueur du tableau.
+      //
+      // Cette fonction est appelée depuis un Server Component : un jet ici,
+      // c'est le cockpit ENTIER en HTTP 500, pas une courbe manquante.
+      expect(depensesParJour([d(1, '10')], AOUT, joursDuMois)).toEqual([]);
+    },
+  );
+
+  it('ne rejoint « Dépensé ce mois » qu’au dernier jour DU MOIS, pas au jour écoulé', () => {
+    // Le docblock a d'abord annoncé l'invariant « au dernier jour ÉCOULÉ ».
+    // C'était plus fort que ce qui tient, et faux : rien n'empêche aujourd'hui
+    // d'enregistrer une dépense datée plus tard dans le mois courant — ni le
+    // champ date, ni le schéma Zod, ni une contrainte en base. `depensesDuMois`
+    // la compte ; la portion écoulée de la série, non.
+    //
+    // Ce cas fige le comportement RÉEL plutôt que le comportement rêvé. La
+    // conséquence à l'écran — la dépense post-datée apparaît comme une marche
+    // sur AUJOURD'HUI, parce que le composant force son dernier point visible
+    // sur le total affiché — est écrite dans le docblock et attend son ticket.
+    const expenses = [d(5, '20'), d(28, '50')];
+    const serie = depensesParJour(expenses, AOUT, 31);
+    const total = depensesDuMois(expenses as never, AOUT).toNumber();
+
+    expect(total).toBe(70);
+    expect(serie[24 - 1]?.cumule).toBe(20);
+    expect(serie.at(-1)?.cumule).toBe(total);
+  });
+
   it('supporte une date illisible sans casser la série', () => {
     const serie = depensesParJour(
       [{ occurredOn: 'pas-une-date', amount: new Decimal('50') }, d(3, '10')],

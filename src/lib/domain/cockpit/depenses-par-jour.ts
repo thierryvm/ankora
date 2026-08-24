@@ -5,11 +5,24 @@ import Decimal from 'decimal.js';
  *
  * ## L'invariant, et pourquoi il est la raison d'être de ce fichier
  *
- * **Le cumulé au dernier jour écoulé vaut « Dépensé ce mois » au centime.**
+ * **Le cumulé au dernier jour DU MOIS vaut « Dépensé ce mois » au centime.**
  * Cette fonction ne recalcule pas un total qui existe ailleurs pour l'afficher
  * autrement — elle le décompose. Si les deux divergent, l'écran affiche un
  * chiffre et une courbe qui se contredisent, sur la seule question que la page
  * pose.
+ *
+ * **Le mot « du mois » n'est pas un détail, et il a été écrit faux d'abord.**
+ * L'énoncé initial disait « au dernier jour ÉCOULÉ », ce qui est plus fort et
+ * **faux** : rien n'empêche aujourd'hui d'enregistrer une dépense datée plus
+ * tard dans le mois courant — ni le champ date, ni le schéma Zod, ni une
+ * contrainte en base. `depensesDuMois()` la compte ; la portion écoulée de cette
+ * série, non. Les deux totaux ne se rejoignent qu'au 31.
+ *
+ * Conséquence à l'écran, connue et non résolue ici : `MonthCurve` force son
+ * dernier point visible sur le total affiché, donc une dépense post-datée
+ * apparaît comme une marche verticale sur AUJOURD'HUI plutôt qu'au jour qu'elle
+ * porte. La courbe reste d'accord avec le chiffre du hero — c'est ce qui
+ * compte le plus — mais elle place la dépense au mauvais jour. Ticket à ouvrir.
  *
  * D'où deux choix qui n'en sont pas vraiment :
  *
@@ -82,7 +95,17 @@ export function depensesParJour(
   ref: { year: number; month: number },
   joursDuMois: number,
 ): JourDeDepense[] {
-  if (joursDuMois <= 0) return [];
+  // `<= 0` ne suffisait PAS, et ça se mesure : `NaN <= 0` vaut `false`, donc le
+  // garde laissait passer — puis `Math.min(Math.max(jour, 1), NaN)` rendait
+  // `NaN`, qui n'est pas `null`, et l'indexation `parJour[NaN]` lançait un
+  // `TypeError`. Un `30.5` faisait la même chose par l'indice `29.5`, et
+  // `Infinity` levait un `RangeError` sur la longueur du tableau.
+  //
+  // Cette fonction est appelée depuis un Server Component : un jet ici, c'est
+  // le cockpit ENTIER en HTTP 500, pas une courbe manquante. Le commentaire du
+  // test disait déjà « `joursDuMois` vient d'un calcul » — il ne couvrait qu'une
+  // seule des façons dont un calcul se trompe.
+  if (!Number.isInteger(joursDuMois) || joursDuMois <= 0) return [];
 
   const parJour = Array.from({ length: joursDuMois }, () => new Decimal(0));
 

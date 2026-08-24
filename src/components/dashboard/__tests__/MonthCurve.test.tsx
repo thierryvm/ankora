@@ -106,7 +106,7 @@ describe('MonthCurve — les trois états, et la couleur jamais seule', () => {
   });
 
   it.each([
-    ['dans-le-rythme', 200, 'var(--color-brand-500)'],
+    ['dans-le-rythme', 200, 'var(--color-brand-text)'],
     ['au-dessus', 500, 'var(--color-warning)'],
     ['depasse', 1200, 'var(--color-danger)'],
   ])('peint l’état %s avec son jeton, et pas un autre', (_etat, depensesDuMois, jeton) => {

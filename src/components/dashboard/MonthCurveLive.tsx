@@ -32,8 +32,20 @@ import { MonthCurve, type MonthCurveProps } from './MonthCurve';
  * côté client, et surtout la courbe est **supplémentaire, pas la source** — le
  * chiffre du hero porte déjà un `aria-live` qui annonce le changement. Faire
  * annoncer la même dépense deux fois serait une régression d'accessibilité, pas
- * une amélioration. L'écart dure le temps d'un aller-retour, et la charge RSC le
- * referme.
+ * une amélioration.
+ *
+ * **Ce que ce choix coûte, et qu'il faut nommer.** Pendant la fenêtre optimiste,
+ * le TRACÉ bouge déjà pendant que la description du SVG énonce encore les
+ * montants d'avant. Ce n'est donc pas seulement « une annonce évitée » : c'est
+ * une description momentanément fausse, pour qui atterrit sur le graphique au
+ * rotor juste après la saisie. La fenêtre vaut un aller-retour et la charge RSC
+ * la referme.
+ *
+ * Le correctif propre existe — reconstruire la phrase ici avec
+ * `useTranslations` — et il a un prix : ce composant deviendrait dépendant du
+ * fournisseur i18n, donc intestable sans lui, là où il n'est aujourd'hui qu'un
+ * aiguillage de trois lignes. Arbitrage assumé, à rouvrir si la fenêtre
+ * s'allonge.
  */
 export type MonthCurveLiveProps = MonthCurveProps;
 

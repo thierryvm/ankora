@@ -44,6 +44,21 @@ vi.mock('@/i18n/navigation', () => ({
   ),
 }));
 
+/**
+ * Le hero et la courbe doivent être D'ACCORD sur l'état du mois.
+ *
+ * Le seuil à trois états était écrit deux fois — dans `MonthCurve` pour la
+ * teinte, dans le hero pour le mot — et rien ne les comparait. Un `>` devenu
+ * `>=` d'un seul côté aurait affiché « budget dépassé » sous un trait vert,
+ * précisément au point limite. Les deux passent désormais par `etatDuMois`, et
+ * ces cas-ci le vérifient à l'écran plutôt que par lecture de code.
+ */
+const ETATS_ATTENDUS = [
+  ['dans-le-rythme', 200, 'pace.onTrack'],
+  ['au-dessus', 500, 'pace.faster'],
+  ['depasse', 900, 'pace.exceeded'],
+] as const;
+
 const BASE: Omit<SituationDuMoisHeroProps, 'statut'> = {
   revenus: 2500,
   chargesFixes: 1500,
@@ -190,5 +205,30 @@ describe('<SituationDuMoisHero /> — le pli ne porte que la réponse', () => {
   it('l’état incomplet n’offre pas ce lien — il n’y a rien à décomposer', async () => {
     await renderHero({ statut: 'incomplet', revenus: 0 });
     expect(screen.queryByTestId('situation-cascade-link')).toBeNull();
+  });
+});
+
+describe('SituationDuMoisHero — le hero et la courbe disent le MÊME état', () => {
+  it.each(ETATS_ATTENDUS)(
+    'état %s : la teinte du tracé et le mot du verdict sortent du même seuil',
+    async (etat, depensesDuMois, cle) => {
+      await renderHero({
+        statut: 'vert',
+        depensesDuMois,
+        ilTeReste: BASE.resteDisponible - depensesDuMois,
+      });
+      expect(screen.getByTestId('month-curve')).toHaveAttribute('data-etat', etat);
+      const attendu = messages.dashboard.situation.pace[cle.split('.')[1] as 'onTrack'];
+      expect(screen.getByTestId('month-curve-verdict')).toHaveTextContent(attendu);
+    },
+  );
+
+  it('n’écrit aucun verdict quand le budget est nul', () => {
+    // Pas d'échelle, donc pas de proportion à énoncer — et le chiffre du hero
+    // porte déjà le constat. Le seuil partagé rend `null`, les deux côtés se
+    // taisent ensemble.
+    return renderHero({ statut: 'vert', resteDisponible: 0, ilTeReste: 0 }).then(() => {
+      expect(screen.queryByTestId('month-curve-verdict')).toBeNull();
+    });
   });
 });

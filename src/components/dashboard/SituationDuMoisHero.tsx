@@ -11,7 +11,7 @@ import type { Locale } from '@/i18n/routing';
 import { HeroAmount } from './HeroAmount';
 import { MonthCurveLive } from './MonthCurveLive';
 import { StatusChip, type StatusTone } from './StatusChip';
-import type { CurvePoint } from './month-curve-geometry';
+import { etatDuMois, type CurvePoint } from './month-curve-geometry';
 
 /**
  * Exporté pour que les tests puissent typer leur harnais.
@@ -53,6 +53,17 @@ type Props = {
   depensesProjetees: number | null;
   locale: Locale;
 };
+
+/**
+ * Le mot qui accompagne chaque état — les trois clés sont déjà traduites dans
+ * les cinq locales, et elles survivent au remplacement de la barre par la
+ * courbe parce qu'elles disent la même chose.
+ */
+const VERDICT_PAR_ETAT = {
+  'dans-le-rythme': 'pace.onTrack',
+  'au-dessus': 'pace.faster',
+  depasse: 'pace.exceeded',
+} as const;
 
 const STATUT_ACCENT: Record<
   'vert' | 'orange' | 'rouge',
@@ -173,20 +184,21 @@ export async function SituationDuMoisHero(props: Props) {
   // case — the R-06 doctrine bans « tu dépenses trop », and it is also simply
   // not this screen's job to have an opinion.
   //
-  // Computed here and handed to the curve rather than derived inside it: the
-  // three labels are already translated in the five locales under `pace.*`, and
-  // `MonthCurve` takes translated strings so it can be tested without an i18n
-  // provider.
-  const spentRatio = props.resteDisponible > 0 ? props.depensesDuMois / props.resteDisponible : 0;
-  const paceRatio = props.joursDuMois > 0 ? props.joursEcoules / props.joursDuMois : 0;
-  const paceVerdict =
-    props.resteDisponible <= 0
-      ? null
-      : props.depensesDuMois > props.resteDisponible
-        ? t('pace.exceeded')
-        : spentRatio > paceRatio
-          ? t('pace.faster')
-          : t('pace.onTrack');
+  // Le MOT vient d'ici, l'ÉTAT vient d'`etatDuMois` — la même fonction que la
+  // courbe utilise pour choisir sa teinte. Le seuil était écrit deux fois ; un
+  // `>` devenu `>=` d'un seul côté aurait affiché « budget dépassé » sous un
+  // trait vert, précisément au point limite.
+  //
+  // Le mot reste calculé ici parce que les trois libellés sont déjà traduits
+  // dans les cinq locales sous `pace.*`, et que `MonthCurve` reçoit des chaînes
+  // traduites pour rester testable sans fournisseur i18n.
+  const etat = etatDuMois({
+    budgetDuMois: props.resteDisponible,
+    depensesDuMois: props.depensesDuMois,
+    joursEcoules: props.joursEcoules,
+    joursDuMois: props.joursDuMois,
+  });
+  const paceVerdict = etat ? t(VERDICT_PAR_ETAT[etat]) : null;
 
   return (
     <Card

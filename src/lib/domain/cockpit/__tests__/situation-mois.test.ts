@@ -18,6 +18,41 @@ const charge = (over: Partial<CockpitCharge>): CockpitCharge => ({
   ...over,
 });
 
+describe('calculerSituationDuMois — les deux chiffres de la projection', () => {
+  const base = {
+    revenus: new Decimal(2500),
+    charges: [charge({ amount: new Decimal(1838), frequency: 'monthly' as const })],
+    soldeEpargneActuel: new Decimal(0),
+    payments: NO_PAYMENTS,
+    ref: REF,
+    engagementsMensuels: new Decimal(0),
+    depensesDuMois: new Decimal(200),
+    joursDuMois: 30,
+  };
+
+  it('les rend ENSEMBLE, et elles se recomposent au centime', () => {
+    // `depensesProjetees` a été extraite d'`epargneEstimee`, qui l'appelle
+    // désormais. Les deux modules le testent chacun de leur côté ; rien ne le
+    // vérifiait à l'AGRÉGAT, c'est-à-dire à l'endroit où l'écran les lit. Le
+    // champ neuf de `SituationDuMois` n'avait aucune assertion propre.
+    const out = calculerSituationDuMois({ ...base, joursEcoules: 15 });
+    expect(out.depensesProjetees).not.toBeNull();
+    expect(out.epargneEstimee).not.toBeNull();
+    expect(out.resteDisponible.minus(out.depensesProjetees!).toFixed(6)).toBe(
+      out.epargneEstimee!.toFixed(6),
+    );
+  });
+
+  it('sont nulles ensemble avant le septième jour', () => {
+    // L'état « la courbe s'arrête mais la cascade affiche encore une
+    // estimation » n'a pas de sens à l'écran. Les deux sortent de la même
+    // fonction ; ce cas le tient là où la page les lit.
+    const out = calculerSituationDuMois({ ...base, joursEcoules: 6 });
+    expect(out.depensesProjetees).toBeNull();
+    expect(out.epargneEstimee).toBeNull();
+  });
+});
+
 describe('calculerSituationDuMois', () => {
   it('statut vert when capacité ≥ 0 and provisions à jour (no periodic charge)', () => {
     const out = calculerSituationDuMois({

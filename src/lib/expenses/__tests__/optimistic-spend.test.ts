@@ -117,14 +117,25 @@ describe('optimistic-spend — les propriétés qui ont survécu au changement d
     expect(result.current).toBeNull();
   });
 
-  it('solde les DEUX figures, jamais une seule', () => {
-    // L'état « le hero est revenu à la vérité serveur mais la courbe est
-    // restée sur l'estimation » est celui qu'on veut rendre inexprimable.
+  it('republie un couple ENTIER après un solde, jamais un reliquat', () => {
+    // Ce cas s'appelait « solde les DEUX figures, jamais une seule » et
+    // s'appuyait sur `expect(result.current?.depensesDuMois).toBeUndefined()`
+    // après avoir vérifié `toBeNull()`. **Cette seconde ligne ne pouvait pas
+    // échouer** : `null?.x` vaut `undefined` par court-circuit, quel que soit
+    // l'état antérieur. Elle promettait une propriété qu'elle ne tenait pas.
+    //
+    // L'état « purgé à moitié » est de toute façon inexprimable : le magasin
+    // porte UN objet nullable, pas deux champs indépendants. C'est le TYPE qui
+    // le garantit, pas un test — et le prétendre testé aurait été faux.
+    //
+    // Ce qu'on peut réellement exercer, et qui vaut la peine : après un solde,
+    // une nouvelle annonce revient avec ses deux membres, pas avec le reliquat
+    // de la précédente.
     const { result } = renderHook(() => useOptimisticSpend());
     act(() => announceOptimisticSpend(COUPLE));
     act(() => settleSpend());
-    expect(result.current).toBeNull();
-    expect(result.current?.depensesDuMois).toBeUndefined();
+    act(() => announceOptimisticSpend({ ilTeReste: 12, depensesDuMois: 34 }));
+    expect(result.current).toEqual({ ilTeReste: 12, depensesDuMois: 34 });
   });
 });
 

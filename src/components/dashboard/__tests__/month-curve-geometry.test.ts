@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import {
   CURVE_HEIGHT,
+  CURVE_END_RADIUS,
   CURVE_PAD_BOTTOM,
   CURVE_PAD_TOP,
+  CURVE_PAD_X,
   CURVE_WIDTH,
   monthCurveGeometry,
   type MonthCurveGeometryInput,
@@ -59,8 +61,8 @@ describe('monthCurveGeometry — le repère', () => {
   it('place le premier jour à gauche et le dernier à droite', () => {
     const g = monthCurveGeometry(entree({ serie: serieLineaire(31, 10), joursEcoules: 31 }));
     const p = points(g.linePath!);
-    expect(p[0]?.[0]).toBe(0);
-    expect(p.at(-1)?.[0]).toBe(CURVE_WIDTH);
+    expect(p[0]?.[0]).toBe(CURVE_PAD_X);
+    expect(p.at(-1)?.[0]).toBe(CURVE_WIDTH - CURVE_PAD_X);
   });
 
   it('respecte les marges haute et basse', () => {
@@ -101,7 +103,10 @@ describe('monthCurveGeometry — le tracé du réel', () => {
       entree({ serie: serieLineaire(31, 10), joursEcoules: 10, joursDuMois: 31 }),
     );
     expect(points(g.linePath!)).toHaveLength(10);
-    expect(g.todayPoint?.x).toBeCloseTo((9 / 30) * CURVE_WIDTH, 6);
+    expect(g.todayPoint?.x).toBeCloseTo(
+      CURVE_PAD_X + (9 / 30) * (CURVE_WIDTH - CURVE_PAD_X * 2),
+      6,
+    );
   });
 
   it('monte quand le cumulé monte', () => {
@@ -141,8 +146,8 @@ describe('monthCurveGeometry — la référence de rythme', () => {
   it('va de zéro le premier jour au budget le dernier', () => {
     const g = monthCurveGeometry(entree({ budgetDuMois: 1000, joursDuMois: 31 }));
     const [debut, fin] = points(g.pacePath!);
-    expect(debut).toEqual([0, g.baselineY]);
-    expect(fin?.[0]).toBe(CURVE_WIDTH);
+    expect(debut).toEqual([CURVE_PAD_X, g.baselineY]);
+    expect(fin?.[0]).toBe(CURVE_WIDTH - CURVE_PAD_X);
     expect(fin?.[1]).toBeCloseTo(CURVE_PAD_TOP, 6);
   });
 
@@ -163,8 +168,22 @@ describe('monthCurveGeometry — la projection', () => {
     );
     const [depart, arrivee] = points(g.projectionPath!);
     expect(depart).toEqual([g.todayPoint!.x, g.todayPoint!.y]);
-    expect(arrivee?.[0]).toBe(CURVE_WIDTH);
+    expect(arrivee?.[0]).toBe(CURVE_WIDTH - CURVE_PAD_X);
     expect(g.projectionEnd).toEqual({ x: arrivee![0], y: arrivee![1] });
+  });
+
+  it('garde le point terminal ENTIER dans le cadre, rayon compris', () => {
+    // La propriété que `PaceBar` protégeait sous une autre forme — « repère
+    // borné à 99,2, sinon il sort de la piste » — et que la PREMIÈRE version de
+    // cette géométrie avait perdue : `x(joursDuMois)` se simplifie toujours à
+    // `CURVE_WIDTH`, donc le marqueur de fin était centré SUR le bord droit et
+    // coupé en deux par le viewBox. Visible à la capture du 24 août 2026, tous
+    // les jours du mois où une projection existe — c'est-à-dire la plupart.
+    const g = monthCurveGeometry(
+      entree({ serie: serieLineaire(10, 10), joursEcoules: 10, projection: 310 }),
+    );
+    expect(g.projectionEnd!.x + CURVE_END_RADIUS).toBeLessThanOrEqual(CURVE_WIDTH);
+    expect(g.projectionEnd!.x - CURVE_END_RADIUS).toBeGreaterThanOrEqual(0);
   });
 
   it('n’existe pas avant le septième jour', () => {
@@ -210,7 +229,11 @@ describe('monthCurveGeometry — la projection', () => {
 describe('monthCurveGeometry — les échéances marquées', () => {
   it('place chaque échéance sur son jour', () => {
     const g = monthCurveGeometry(entree({ billDays: [1, 16, 31], joursDuMois: 31 }));
-    expect(g.billMarks.map((b) => b.x)).toEqual([0, CURVE_WIDTH / 2, CURVE_WIDTH]);
+    expect(g.billMarks.map((b) => b.x)).toEqual([
+      CURVE_PAD_X,
+      CURVE_WIDTH / 2,
+      CURVE_WIDTH - CURVE_PAD_X,
+    ]);
   });
 
   it('écarte une échéance hors du mois', () => {
@@ -232,6 +255,22 @@ describe('monthCurveGeometry — les entrées dégénérées', () => {
     expect(g.projectionPath).toBeNull();
     expect(g.billMarks).toEqual([]);
   });
+
+  it.each([[Number.NaN], [Number.POSITIVE_INFINITY], [30.5]])(
+    'refuse un joursDuMois à %p sans empoisonner les coordonnées',
+    (joursDuMois) => {
+      // `NaN <= 0` vaut `false` : l'ancien garde laissait passer, `denom`
+      // devenait `NaN`, et CHAQUE coordonnée avec lui. Un `d` contenant `NaN`
+      // n'est pas dessiné partiellement — il n'est pas dessiné du tout, et la
+      // page perd sa courbe sans qu'aucune erreur ne soit levée.
+      const g = monthCurveGeometry(
+        entree({ serie: serieLineaire(5, 10), joursEcoules: 5, joursDuMois }),
+      );
+      expect(g.linePath).toBeNull();
+      expect(g.pacePath).toBeNull();
+      expect(g.billMarks).toEqual([]);
+    },
+  );
 
   it('supporte un mois d’un seul jour', () => {
     const g = monthCurveGeometry(

@@ -1,6 +1,8 @@
 import {
+  CURVE_END_RADIUS,
   CURVE_HEIGHT,
   CURVE_WIDTH,
+  etatDuMois,
   monthCurveGeometry,
   type CurvePoint,
 } from './month-curve-geometry';
@@ -142,19 +144,31 @@ export function MonthCurve({
     billDays,
   });
 
-  // Un budget non positif n'a pas de proportion : pas d'état, pas de verdict.
-  // Le chiffre du hero porte déjà le constat.
-  const aUneEchelle = budgetDuMois > 0;
-  const depasse = aUneEchelle && depensesDuMois > budgetDuMois;
-  const auDessus =
-    aUneEchelle && joursDuMois > 0 && depensesDuMois / budgetDuMois > joursEcoules / joursDuMois;
-
-  const etat = depasse ? 'depasse' : auDessus ? 'au-dessus' : 'dans-le-rythme';
+  // Le seuil vient d'`etatDuMois`, pas d'un calcul refait ici : le hero choisit
+  // le MOT du verdict avec la MÊME fonction. Deux implémentations du même seuil
+  // finissent par diverger, et l'écart se voit exactement au point limite — un
+  // trait vert sous un texte « budget dépassé ».
+  //
+  // `null` (budget non positif) retombe sur l'état sans alarme : il n'y a pas de
+  // proportion à énoncer, et le chiffre du hero porte déjà le constat.
+  const etat =
+    etatDuMois({ budgetDuMois, depensesDuMois, joursEcoules, joursDuMois }) ?? 'dans-le-rythme';
+  const depasse = etat === 'depasse';
+  const auDessus = etat === 'au-dessus';
+  // `--color-brand-text` et NON `--color-brand-500`, et le motif est mesuré :
+  // `brand-500` (#14b8a6) est un pas de PALETTE, sans override sombre, et il
+  // rend **2,49:1** sur une carte blanche — sous les 3:1 qu'exige WCAG 1.4.11
+  // pour un objet graphique. C'était l'état par DÉFAUT, donc le plus fréquent :
+  // le tracé du mois où tout va bien était le moins lisible des trois.
+  //
+  // `--color-brand-text` est la teinte de marque garantie lisible SUR la
+  // surface, définie dans les deux thèmes : 5,47:1 en clair, 9,31:1 en sombre.
+  // C'est exactement la propriété qu'un trait de graphique demande.
   const teinte = depasse
     ? 'var(--color-danger)'
     : auDessus
       ? 'var(--color-warning)'
-      : 'var(--color-brand-500)';
+      : 'var(--color-brand-text)';
 
   return (
     <div className="flex flex-col gap-2" data-testid="month-curve" data-etat={etat}>
@@ -253,7 +267,7 @@ export function MonthCurve({
           <circle
             cx={geometrie.projectionEnd.x}
             cy={geometrie.projectionEnd.y}
-            r={2.4}
+            r={CURVE_END_RADIUS}
             fill="var(--color-card)"
             stroke={teinte}
             strokeWidth={2}
