@@ -26,7 +26,9 @@
     "e2e/navigation-reachable.spec.ts",
     "e2e/navigation-usable-first-visit.spec.ts",
     "e2e/mobile-ios/expenses-crud.spec.ts",
-    "e2e/mobile-ios/settings-locale-field.spec.ts"
+    "e2e/mobile-ios/settings-locale-field.spec.ts",
+    "e2e/mobile-ios/auth-flow.spec.ts",
+    "e2e/mobile-ios/dashboard.spec.ts"
   ],
 
   "$quarantine_comment": [
