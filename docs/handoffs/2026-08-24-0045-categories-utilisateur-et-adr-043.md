@@ -10,7 +10,7 @@ type: handoff
 
 ## 1. Ce qui a été fait
 
-**Sept PR mergées dans la journée du 23 août.**
+**Huit PR mergées dans la journée du 23 août.**
 
 | PR       | Objet                                                                   |
 | -------- | ----------------------------------------------------------------------- |
