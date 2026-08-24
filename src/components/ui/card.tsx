@@ -2,11 +2,33 @@ import * as React from 'react';
 
 import { cn } from '@/lib/utils';
 
+/**
+ * L'échelle d'élévation, et pourquoi elle n'est pas portée par le même moyen
+ * dans les deux thèmes.
+ *
+ * Trois crans : le **sol** (`--color-background`), l'**objet** (cette carte,
+ * `--color-card`), et le **panneau interne** creusé dans la carte
+ * (`--color-surface-soft` — champs, aires de tracé). Le cockpit se lisait plat
+ * parce que tout vivait au même cran, pas parce qu'il manquait un effet.
+ *
+ * En mode **clair**, la carte se détache par l'ombre autant que par la couleur :
+ * blanc sur papier tiède, plus une ombre portée. `shadow-sm` était le cran le
+ * plus discret de l'échelle, choisi quand la carte était le seul objet de
+ * l'écran ; `shadow-md` la décolle vraiment, sans rien changer à la géométrie.
+ *
+ * En mode **sombre**, une ombre sur fond de nuit ne se voit pas : l'élévation y
+ * repose **entièrement** sur l'écart entre surfaces. C'est pour cela que la même
+ * PR sépare `--color-surface-muted` de `--color-surface-soft`, qui portaient la
+ * même valeur — trois crans déclarés pour quatre jetons, donc un cran perdu là
+ * où il était le seul moyen disponible.
+ *
+ * Aucune mise en page ne change ici : ni rayon, ni bordure, ni espacement.
+ */
 const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn('border-border bg-card text-foreground rounded-xl border shadow-sm', className)}
+      className={cn('border-border bg-card text-foreground rounded-xl border shadow-md', className)}
       {...props}
     />
   ),

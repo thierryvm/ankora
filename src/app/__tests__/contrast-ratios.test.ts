@@ -412,3 +412,186 @@ describe('globals.css — le mode clair porte la direction « Le relevé corrig�
     });
   });
 });
+
+/**
+ * Distance perceptuelle en OKLab ×100.
+ *
+ * Le ratio de contraste répond à « peut-on lire ceci sur cela » ; il ne répond
+ * pas à « peut-on distinguer ces deux-ci l'un de l'autre ». Deux teintes de même
+ * clarté et de teintes opposées ont un ratio de 1,0 entre elles tout en passant
+ * chacune AA sur la même carte. C'est exactement le défaut que ce fichier
+ * raconte plus haut : une décision de couleur sans test de séparation a laissé
+ * une paire tomber à 1,03 sans que rien ne bronche.
+ *
+ * OKLab plutôt que la distance RGB, qui n'a aucun rapport avec la perception.
+ */
+function oklab(hex: string): [number, number, number] {
+  const n = parseInt(hex.slice(1), 16);
+  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => {
+    const c = v / 255;
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  }) as [number, number, number];
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  return [
+    0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+    1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+    0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
+  ];
+}
+
+function deltaE(a: string, b: string): number {
+  const [p, q] = [oklab(a), oklab(b)];
+  return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]) * 100;
+}
+
+/** WCAG 2.2 §1.4.11 — objet graphique, seuil plus bas que celui du texte. */
+const AA_GRAPHIC_OBJECT = 3;
+
+/**
+ * Plancher de séparation de la rampe, mesuré puis arrondi vers le bas.
+ *
+ * Valeurs relevées à la conception : 13,1 en clair, 12,8 en sombre. Le plancher
+ * est posé à 12 — assez près pour qu'une retouche de teinte le franchisse et
+ * fasse rougir, assez loin pour qu'un arrondi de rendu ne le déclenche pas.
+ *
+ * Il est **sous** la cible de 15 souvent citée pour la vision normale, et c'est
+ * assumé : la lisibilité de l'anneau ne repose pas sur la seule couleur — les
+ * arcs sont séparés par un écart de fond, ils sont six au maximum, et la légende
+ * porte libellé, montant et part. Le chiffre est écrit tel qu'il est plutôt
+ * qu'ajusté jusqu'à ce qu'un seuil s'allume.
+ */
+const MIN_GRAPH_SEPARATION = 12;
+
+/** Les quatre surfaces sur lesquelles une donnée peut se poser. */
+const SURFACE_TOKENS = [
+  'color-background',
+  'color-surface-soft',
+  'color-card',
+  'color-surface-muted',
+] as const;
+
+const GRAPH_TOKENS = [
+  'color-graph-1',
+  'color-graph-2',
+  'color-graph-3',
+  'color-graph-4',
+  'color-graph-5',
+  'color-graph-6',
+  'color-graph-rest',
+] as const;
+
+const THEMES = [
+  ['clair', THEME_BLOCK],
+  ['sombre', DARK_BLOCK],
+] as const;
+
+describe('globals.css — la rampe graphique et l’échelle d’élévation (PR 0)', () => {
+  describe.each(THEMES)('mode %s', (_theme, block) => {
+    it.each(GRAPH_TOKENS)('--%s tient 3:1 sur les QUATRE surfaces', (token) => {
+      // Les quatre, pas les trois « où un arc se pose » : un seuil mesuré sur
+      // les seules surfaces qu'on croit utiliser n'est pas un seuil, et la
+      // première version de ce chantier a annoncé 4,13 au lieu de 3,85 pour
+      // avoir oublié `surface-muted`.
+      const value = tokenIn(block, token);
+      for (const surface of SURFACE_TOKENS) {
+        const bg = tokenIn(block, surface);
+        const ratio = contrastRatio(value, bg);
+        expect(
+          ratio,
+          `--${token} (${value}) sur --${surface} (${bg}) → ${ratio.toFixed(2)}:1, sous ${AA_GRAPHIC_OBJECT}:1`,
+        ).toBeGreaterThanOrEqual(AA_GRAPHIC_OBJECT);
+      }
+    });
+
+    it('garde ses sept teintes distinguables deux à deux', () => {
+      const echecs: string[] = [];
+      for (let i = 0; i < GRAPH_TOKENS.length; i++) {
+        for (let j = i + 1; j < GRAPH_TOKENS.length; j++) {
+          const [a, b] = [GRAPH_TOKENS[i]!, GRAPH_TOKENS[j]!];
+          const d = deltaE(tokenIn(block, a), tokenIn(block, b));
+          if (d < MIN_GRAPH_SEPARATION) {
+            echecs.push(`--${a} / --${b} → dE ${d.toFixed(1)}`);
+          }
+        }
+      }
+      expect(
+        echecs,
+        `paires sous le plancher ${MIN_GRAPH_SEPARATION} : ${echecs.join(', ')}`,
+      ).toEqual([]);
+    });
+
+    it('range ses quatre surfaces dans l’ordre d’élévation', () => {
+      // Le même ordre dans les deux thèmes, et ce n'est pas un hasard :
+      // `surface-muted` est un fond de PISTE, sous un curseur qui porte
+      // `bg-card` (`LocaleSwitcher`), et sous les rainures de `progress`,
+      // `PaceBar` et `AllocationBar`. Une piste plus claire que son curseur se
+      // lirait à l'envers — donc « muted » descend, dans les deux thèmes, même
+      // si en mode sombre l'intuition voudrait qu'on s'écarte du fond vers le
+      // haut.
+      const lums = SURFACE_TOKENS.map((t) => [t, luminance(tokenIn(block, t))] as const);
+      const attendu = [
+        'color-surface-muted',
+        'color-background',
+        'color-surface-soft',
+        'color-card',
+      ];
+      const observe = [...lums].sort((a, b) => a[1] - b[1]).map(([t]) => t);
+      expect(observe, `ordre observé : ${observe.join(' < ')}`).toEqual(attendu);
+    });
+
+    it('donne aux quatre surfaces quatre valeurs distinctes', () => {
+      // En sombre, `surface-soft` et `surface-muted` ont porté la MÊME valeur
+      // jusqu'au 24 août 2026 : trois crans d'élévation pour quatre jetons.
+      // C'est la cause mesurable de la platitude du cockpit dans ce thème, où
+      // l'ombre ne se voit pas et où seule la surface peut élever.
+      const valeurs = SURFACE_TOKENS.map((t) => tokenIn(block, t));
+      expect(new Set(valeurs).size, `valeurs : ${valeurs.join(', ')}`).toBe(SURFACE_TOKENS.length);
+    });
+
+    it.each(['color-foreground', 'color-muted-foreground'] as const)(
+      '--%s passe AA 4.5:1 sur les quatre surfaces',
+      (token) => {
+        const value = tokenIn(block, token);
+        for (const surface of SURFACE_TOKENS) {
+          const bg = tokenIn(block, surface);
+          const ratio = contrastRatio(value, bg);
+          expect(
+            ratio,
+            `--${token} (${value}) sur --${surface} (${bg}) → ${ratio.toFixed(2)}:1`,
+          ).toBeGreaterThanOrEqual(AA_NORMAL_TEXT);
+        }
+      },
+    );
+  });
+
+  it('déclare la rampe dans les DEUX blocs, jamais héritée', () => {
+    // Un jeton non redéclaré garde sa valeur claire sur fond de nuit. Rien ne
+    // l'interdit aujourd'hui : `DIRECTION_A` ne couvre que six jetons de
+    // surface et de texte, aucun de rampe.
+    for (const token of GRAPH_TOKENS) {
+      expect(tokenIn(THEME_BLOCK, token)).toMatch(/^#[0-9a-f]{6}$/i);
+      expect(tokenIn(DARK_BLOCK, token)).toMatch(/^#[0-9a-f]{6}$/i);
+      expect(
+        tokenIn(DARK_BLOCK, token),
+        `--${token} porte la même valeur dans les deux thèmes`,
+      ).not.toBe(tokenIn(THEME_BLOCK, token));
+    }
+  });
+
+  it('n’emprunte aucune valeur aux jetons d’état', () => {
+    // La rampe n'a pas à FUIR les couleurs d'état — cette contrainte-là s'est
+    // révélée insatisfiable à la mesure, et elle excluait tout orange. Elle doit
+    // en revanche ne jamais en RÉUTILISER une : sans quoi retoucher
+    // `--color-warning` demain repeindrait des catégories, en silence.
+    for (const [, block] of THEMES) {
+      const etats = STATUS_TOKENS.map((t) => tokenIn(block, t));
+      for (const token of GRAPH_TOKENS) {
+        expect(etats, `--${token} réutilise une couleur d’état`).not.toContain(
+          tokenIn(block, token),
+        );
+      }
+    }
+  });
+});
