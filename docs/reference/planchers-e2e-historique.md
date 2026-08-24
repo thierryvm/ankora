@@ -19,10 +19,40 @@ les plus sensibles de l'app.
 Deux jobs, donc **deux planchers distincts** — un chiffre global agrégé serait
 ininterprétable au premier conflit, donc ignoré :
 
-| Job                              | Plancher au 23 août 2026                                                                                              |
+| Job                              | Plancher au 24 août 2026                                                                                              |
 | -------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | `Playwright E2E`                 | **268 passed** (259 au 22/08, 253 plus tôt le 22/08, 247 au 11/08, 241 plus tôt le 11/08, 231 au 09/08, 228 au 06/08) |
-| `Playwright E2E (authenticated)` | **50 passed** (45 avant, +5 `gdpr-deletion-queue` — PR-C)                                                             |
+| `Playwright E2E (authenticated)` | **62 passed** (50 au 23/08, 45 avant — +5 `gdpr-deletion-queue`, PR-C)                                                |
+
+> **Authentifié : 50 → 62, mesuré le 2026-08-24** ([#448](https://github.com/thierryvm/ankora/pull/448)).
+> **+12 cas qui ne tournaient nulle part**, et c'est le point : aucun n'est neuf.
+>
+> Le sélecteur de specs authentifiées reconnaît une spec par **sous-chaîne** de
+> son source. Deux fichiers nommaient leurs semeurs autrement et passaient à
+> côté : `mobile-ios/dashboard.spec.ts` (`seedUserWithCharges`) — tous ses cas
+> `test.skip(!admin)`, donc sautés dans le job public **et** jamais sélectionnés
+> dans le job authentifié — et `mobile-ios/auth-flow.spec.ts` (`seedOnboardedUser`),
+> qui y perdait son cas de persistance de session.
+>
+> **Deuxième occurrence du même angle mort.** Le prédicat cherchait autrefois
+> `adminClientOrNull` seul et manquait trois specs passant par `seededUser` ; ce
+> correctif-là avait élargi une **liste de littéraux**. Détail qui donne la forme
+> du défaut : `deleteSeededUser` ne contient pas `seededUser` — la majuscule
+> défait la recherche par sous-chaîne. Un littéral matche le nom que quelqu'un a
+> choisi, pas la chose nommée. Le prédicat est donc devenu un **motif** sur le
+> verbe de semis, et il est désormais couvert par un test.
+>
+> **Le public ne bouge pas — 268 des deux côtés.** C'est correct et voulu : ces
+> deux specs sautent dans le job public faute de Supabase, comme la doctrine
+> l'exige d'une spec authentifiée découverte par les deux jobs.
+>
+> **Ce que la première exécution a rendu, et pourquoi ça vaut douze cas** : elle
+> a rougi sur trois. Les trois étaient des défauts de **test**, aucun n'était un
+> défaut de l'application — un attendu `httpOnly` faux contre l'architecture de
+> `@supabase/ssr`, une sonde cherchant un menu de bureau sur un écran de
+> téléphone, et une course au rechargement déjà diagnostiquée côté bureau en
+> juillet. Un garde-fou qui n'a jamais tourné n'est pas un garde-fou : c'est une
+> intention, et elle se périme.
 
 > **Public : 259 → 268, mesuré le 2026-08-23**, à la correction de l'en-tête
 > mobile ([#438](https://github.com/thierryvm/ankora/pull/438)). **+3 cas × 3
