@@ -201,7 +201,7 @@ test.describe('Auth flow — iPhone Safari WebKit (PR-QA-1b)', () => {
     }
   });
 
-  test('auth cookies: session cookie is httpOnly + Secure-when-HTTPS + SameSite=Lax|Strict', async ({
+  test('auth cookies: session cookie is Secure-when-HTTPS + SameSite=Lax|Strict', async ({
     page,
     context,
     admin,
@@ -231,10 +231,28 @@ test.describe('Auth flow — iPhone Safari WebKit (PR-QA-1b)', () => {
 
       const isHttps = page.url().startsWith('https://');
       for (const cookie of supabaseAuthCookies) {
-        expect(
-          cookie.httpOnly,
-          `Auth cookie "${cookie.name}" is NOT httpOnly — vulnerable to XSS exfiltration on iOS Safari.`,
-        ).toBeTruthy();
+        // `httpOnly` N'EST PAS asserté ici, et l'attendu d'origine était FAUX.
+        //
+        // Jusqu'au 24/08/2026 cette boucle exigeait `cookie.httpOnly` et jetait
+        // « vulnerable to XSS exfiltration ». À sa première exécution — elle
+        // n'avait jamais tourné nulle part, cf. `scripts/lib/auth-specs.mjs` —
+        // elle a échoué. Vérification faite dans la version installée plutôt que
+        // de corriger l'application : `@supabase/ssr` 0.10.3 pose
+        // `httpOnly: false` dans ses DEFAULT_COOKIE_OPTIONS, délibérément, et
+        // `createBrowserClient` (`src/lib/supabase/client.ts`) lit la session
+        // dans `document.cookie`. Un cookie `httpOnly` rendrait la session
+        // illisible au client navigateur : l'assertion réclamait une propriété
+        // que cette architecture ne peut pas avoir.
+        //
+        // L'attendu est donc retiré parce qu'il était faux, pas parce qu'il
+        // gênait — et il est retiré À VOIX HAUTE : sans cette note, le prochain
+        // lecteur du message d'erreur irait « corriger » une application saine,
+        // et casserait l'authentification en le faisant.
+        //
+        // Ce qui reste asserté ci-dessous est vrai et utile : `SameSite` borne
+        // l'envoi inter-sites, et `Secure` interdit le transport en clair. Si le
+        // choix de Supabase doit être remis en cause un jour, cela se décide
+        // dans un ADR sur la pile d'authentification, pas dans une spec e2e.
         if (isHttps) {
           expect(
             cookie.secure,
@@ -268,30 +286,24 @@ test.describe('Auth flow — iPhone Safari WebKit (PR-QA-1b)', () => {
       await page.getByRole('button', { name: /^se connecter$/i }).click();
       await page.waitForURL(/\/app\b/, { timeout: 15_000 });
 
-      // Step 1: open user menu (most apps use a button with the user's email
-      // or initials, or a "Compte" / "Profil" affordance).
-      const userMenu = page
-        .getByRole('button', { name: /menu|profil|compte|deconnexion|déconnexion/i })
-        .first();
-      const directLogout = page.getByRole('button', { name: /se déconnecter|déconnexion/i });
-
-      const directVisible = await directLogout
-        .first()
-        .isVisible()
-        .catch(() => false);
-      if (directVisible) {
-        await directLogout.first().click();
-      } else {
-        const menuVisible = await userMenu.isVisible().catch(() => false);
-        if (!menuVisible) {
-          throw new Error(
-            'No visible logout button AND no user menu in /app — logout path > 2 taps.',
-          );
-        }
-        await userMenu.click();
-        const inMenuLogout = page.getByRole('button', { name: /se déconnecter|déconnexion/i });
-        await inMenuLogout.first().click();
-      }
+      // Le chemin RÉEL de la déconnexion sur iPhone, et pourquoi ce n'est pas
+      // celui que cette spec cherchait jusqu'au 24/08/2026.
+      //
+      // Elle cherchait un bouton nommé « menu | profil | compte | déconnexion »
+      // et jetait « logout path > 2 taps » quand elle n'en trouvait aucun. Sur
+      // mobile il n'y en a effectivement aucun — par décision, pas par oubli :
+      // `AccountButton` est `hidden xl:flex` (depuis le 02/08/2026, cf. sa
+      // JSDoc), et la barre d'onglets du bas plus la feuille « Plus » portent la
+      // navigation secondaire (THI-277).
+      //
+      // La sonde regardait donc une affordance de bureau sur un écran de
+      // téléphone : elle rendait « la déconnexion est hors d'atteinte » alors
+      // que le chemin existe et tient en deux taps. C'était un faux positif, et
+      // il aurait accusé une application saine.
+      //
+      // Deux taps, comptés : l'onglet « Plus », puis « Se déconnecter ».
+      await page.getByTestId('bottom-tab-more').click();
+      await page.getByTestId('more-sheet-logout').click();
 
       // After logout, we expect a redirect away from /app.
       await page.waitForURL(/^(?!.*\/app).*$/, { timeout: 10_000 });

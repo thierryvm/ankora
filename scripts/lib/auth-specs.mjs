@@ -17,15 +17,62 @@
  *   2. Renaming. Rename `seededUser` and the job shrinks, green.
  *   3. False positives — a comment mentioning the symbol. Costs time, not truth.
  *
- * So the list is committed (`e2e/authenticated-specs.json`) and verified on every
- * run. Divergence in EITHER direction fails. Adding a spec is one line in a JSON
- * file; losing coverage without noticing is what this prevents.
+ * ## Blind spot 1 happened a SECOND time — 2026-08-24
+ *
+ * The first fix widened a list of literals: `adminClientOrNull` gained
+ * `seededUser`. Two specs then drifted past the new literal exactly as they had
+ * past the old one, because they name their helpers differently:
+ *
+ *   - `e2e/mobile-ios/dashboard.spec.ts` seeds via `seedUserWithCharges`. Every
+ *     one of its cases is `test.skip(!admin)`, so it skipped in the public job
+ *     AND was never selected for the authenticated one. It had never executed
+ *     anywhere — including the check that no element overflows the viewport
+ *     horizontally, which is the whole reason the file exists.
+ *   - `e2e/mobile-ios/auth-flow.spec.ts` seeds via `seedOnboardedUser` inside a
+ *     dynamic import. Its other cases DO run publicly; the one that never ran is
+ *     the session-persistence regression from 2026-05-04.
+ *
+ * Note that `deleteSeededUser` does not contain `seededUser` — the capital S
+ * defeats a substring test. That is the shape of the whole defect: a literal
+ * matches the name someone happened to choose, not the thing being named.
+ *
+ * So the predicate is now a PATTERN over the seeding verb rather than a list of
+ * names. It still cannot see through arbitrary indirection — nothing content
+ * based can — but it no longer breaks on the next helper called
+ * `seedUserWithSomething`. Widening the list a third time would have fixed this
+ * pair and left the class untouched.
+ *
+ * ## Which is why the list is committed, and not merely computed
+ *
+ * No predicate over file contents will ever be airtight — the two occurrences
+ * above are the proof, not the exception. `e2e/authenticated-specs.json` is
+ * therefore the backstop: discovery is compared against it on every run and
+ * diverging in EITHER direction fails. Adding a spec is one line in a JSON file;
+ * losing coverage without noticing is what this prevents.
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
-/** Symbols that prove a spec seeds a user, directly or through a fixture. */
-const SEED_MARKERS = ['adminClientOrNull', 'seededUser'];
+/**
+ * Proof that a spec seeds a user, directly or through a fixture.
+ *
+ * `seed\w*User` covers the whole family in one rule — `seedUser`, `seededUser`,
+ * `seedOnboardedUser`, `seedUserWithCharges`, and whatever the next one is
+ * called. Case matters: it is what keeps `deleteSeededUser` from qualifying a
+ * spec on its own, which is right — deleting a user is cleanup, seeding one is
+ * the dependency on a real Supabase.
+ */
+const SEED_PATTERN = /seed\w*User|adminClientOrNull/;
+
+/**
+ * Exported so the rule itself is testable, not just its result on today's tree.
+ * A test that asserts "this particular file is discovered" passes forever once
+ * the file is listed; one that asserts "a spec calling `seedAnythingUser` is
+ * discovered" is the one that catches the next drift.
+ */
+export function needsRealSupabase(source) {
+  return SEED_PATTERN.test(source);
+}
 
 /**
  * Specs that need a real Supabase but seed nothing, so no marker can find them.
@@ -60,10 +107,7 @@ function walk(dir, found = []) {
 
 /** Discovered specs, sorted, with the named inclusions merged in. */
 export function discoverAuthSpecs(root = 'e2e') {
-  const discovered = walk(root).filter((path) => {
-    const source = readFileSync(path, 'utf8');
-    return SEED_MARKERS.some((marker) => source.includes(marker));
-  });
+  const discovered = walk(root).filter((path) => needsRealSupabase(readFileSync(path, 'utf8')));
   return [...new Set([...discovered, ...NAMED_INCLUSIONS])].sort();
 }
 
