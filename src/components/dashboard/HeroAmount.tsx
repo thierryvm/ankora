@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { formatCurrency } from '@/lib/i18n/formatters';
-import { settleSpend, useOptimisticValue } from '@/lib/expenses/optimistic-spend';
+import { settleSpend, useOptimisticSpend } from '@/lib/expenses/optimistic-spend';
 import type { Locale } from '@/i18n/routing';
 
 /**
@@ -25,11 +25,12 @@ import type { Locale } from '@/i18n/routing';
  *
  * ## Two sources, one figure
  *
- * `value` is server truth. `useOptimisticValue()` carries the figure the ⊕ sheet
- * has just committed to but which the server has not echoed back yet, so the
- * descent starts on the tap rather than on the round-trip (ADR-010's < 100 ms).
- * It is an absolute amount rather than a delta — `optimistic-spend.ts` records
- * the frame-accurate bug that distinction fixes.
+ * `value` is server truth. `useOptimisticSpend()` carries the figures the ⊕
+ * sheet has just committed to but which the server has not echoed back yet, so
+ * the descent starts on the tap rather than on the round-trip (ADR-010's
+ * < 100 ms). They are absolute amounts rather than deltas —
+ * `optimistic-spend.ts` records the frame-accurate bug that distinction fixes,
+ * and why the two figures travel as one object.
  *
  * ## No layout shift, ever
  *
@@ -90,8 +91,13 @@ export function HeroAmount({ value, locale, className, testId }: HeroAmountProps
   // `optimistic-spend.ts` for why a delta was wrong: the revalidated server
   // value already includes the spend, so subtracting again dipped the hero 18 €
   // below the truth for one committed render.
-  const optimistic = useOptimisticValue();
-  const target = optimistic ?? value;
+  //
+  // The store now carries a COUPLE — this figure and « Dépensé ce mois », which
+  // the curve of the month reads. This component takes its half and ignores the
+  // other; what matters is that neither can be purged without the other, so the
+  // number and the curve can never disagree about the same month.
+  const optimistic = useOptimisticSpend();
+  const target = optimistic?.ilTeReste ?? value;
 
   // Seeded with the target so the first client render matches what the server
   // rendered — animating on mount would be a hydration mismatch AND would make

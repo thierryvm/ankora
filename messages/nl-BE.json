@@ -1207,7 +1207,7 @@
         "lien": "Waar dit bedrag vandaan komt"
       },
       "statut": {
-        "vert": "Je houdt deze maand goed overzicht",
+        "vert": "Alles is gedekt deze maand",
         "orangeDepasse": "Je gaf deze maand te veel uit",
         "orangeProvisions": "Voorzieningen aanvullen",
         "rouge": "Je facturen overstijgen je inkomen"
@@ -1243,6 +1243,11 @@
         "onTrack": "op schema",
         "faster": "boven schema",
         "exceeded": "budget overschreden"
+      },
+      "courbe": {
+        "reel": "Besteed",
+        "rythme": "Gelijkmatig tempo",
+        "projection": "Schatting"
       }
     },
     "daily": {

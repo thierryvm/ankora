@@ -482,10 +482,66 @@ const GRAPH_TOKENS = [
   'color-graph-rest',
 ] as const;
 
+/**
+ * Les teintes que `MonthCurve` pose en `stroke`, et pourquoi elles ont leur
+ * propre contrôle.
+ *
+ * La rampe ci-dessus couvre les jetons **catégoriels** — ceux d'un anneau de
+ * répartition. Les traits de la courbe du mois viennent d'ailleurs : trois
+ * teintes d'ÉTAT plus une neutre pour la référence de rythme. Rien ne les
+ * vérifiait, et le trou a coûté exactement ce qu'un trou coûte.
+ *
+ * **Mesuré le 24 août 2026** : la première version prenait `--color-brand-500`
+ * (#14b8a6) pour l'état « dans le rythme ». Sur une carte blanche : **2,49:1**,
+ * sous les 3:1 de WCAG 1.4.11. Et c'était l'état par DÉFAUT — le tracé du mois
+ * où tout va bien était le moins lisible des trois. `brand-500` est un pas de
+ * palette sans override sombre ; `--color-brand-text` est la teinte de marque
+ * garantie lisible sur la surface, définie dans les deux thèmes.
+ *
+ * Les quatre surfaces et pas seulement la carte : la courbe vit dans un `Card`
+ * aujourd'hui, et un seuil mesuré sur la seule surface qu'on croit utiliser
+ * n'est pas un seuil.
+ */
+const CURVE_STROKE_TOKENS = [
+  'color-brand-text',
+  'color-warning',
+  'color-danger',
+  'color-muted-foreground',
+] as const;
+
 const THEMES = [
   ['clair', THEME_BLOCK],
   ['sombre', DARK_BLOCK],
 ] as const;
+
+describe('globals.css — les traits de la courbe du mois (PR 1)', () => {
+  describe.each(THEMES)('mode %s', (_theme, block) => {
+    it.each(CURVE_STROKE_TOKENS)('--%s tient 3:1 sur les QUATRE surfaces', (token) => {
+      const value = tokenIn(block, token);
+      for (const surface of SURFACE_TOKENS) {
+        const bg = tokenIn(block, surface);
+        const ratio = contrastRatio(value, bg);
+        expect(
+          ratio,
+          `--${token} (${value}) sur --${surface} (${bg}) → ${ratio.toFixed(2)}:1, sous ${AA_GRAPHIC_OBJECT}:1`,
+        ).toBeGreaterThanOrEqual(AA_GRAPHIC_OBJECT);
+      }
+    });
+  });
+
+  it('refuse un pas de palette sans override sombre', () => {
+    // Le défaut de fond n'était pas la valeur, c'était la NATURE du jeton : un
+    // pas de palette porte une teinte, pas une garantie de lisibilité, et sans
+    // override il vaut la même chose sur une carte blanche et sur une carte de
+    // nuit. Ce cas nomme la classe plutôt que l'instance.
+    for (const token of CURVE_STROKE_TOKENS) {
+      expect(
+        DARK_BLOCK,
+        `--${token} n'a pas d'override sombre : une seule valeur ne peut pas tenir sur les deux surfaces`,
+      ).toMatch(new RegExp(`--${token}:\\s*#[0-9a-fA-F]{6}`));
+    }
+  });
+});
 
 describe('globals.css — la rampe graphique et l’échelle d’élévation (PR 0)', () => {
   describe.each(THEMES)('mode %s', (_theme, block) => {

@@ -1207,7 +1207,7 @@
         "lien": "Woher diese Zahl kommt"
       },
       "statut": {
-        "vert": "Du hast diesen Monat gut im Griff",
+        "vert": "Diesen Monat ist alles gedeckt",
         "orangeDepasse": "Du hast diesen Monat zu viel ausgegeben",
         "orangeProvisions": "Rücklagen auffüllen",
         "rouge": "Deine Rechnungen übersteigen dein Einkommen"
@@ -1243,6 +1243,11 @@
         "onTrack": "im Rhythmus",
         "faster": "über dem Rhythmus",
         "exceeded": "Budget überschritten"
+      },
+      "courbe": {
+        "reel": "Ausgegeben",
+        "rythme": "Gleichmäßiger Rhythmus",
+        "projection": "Schätzung"
       }
     },
     "daily": {

@@ -44,6 +44,14 @@ const LEAF_KEYS = [
   'flow.epargneEstimee',
   'flow.parJour',
   'barAria',
+  // Les trois légendes de `MonthCurve`. Elles sont le CANAL NON-COULEUR de la
+  // courbe : trois tracés qui ne se distingueraient que par leur teinte
+  // violeraient WCAG 1.4.1. Une locale qui en perdrait une rendrait donc une
+  // courbe illisible pour un daltonien — sans qu'aucun autre test ne bouge,
+  // puisque le tracé, lui, serait intact.
+  'courbe.reel',
+  'courbe.rythme',
+  'courbe.projection',
 ] as const;
 
 /**

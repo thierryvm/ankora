@@ -1207,7 +1207,7 @@
         "lien": "Where this figure comes from"
       },
       "statut": {
-        "vert": "You're on track this month",
+        "vert": "Everything is covered this month",
         "orangeDepasse": "You have overspent this month",
         "orangeProvisions": "Provisions to top up",
         "rouge": "Your bills exceed your income"
@@ -1243,6 +1243,11 @@
         "onTrack": "on pace",
         "faster": "above pace",
         "exceeded": "budget exceeded"
+      },
+      "courbe": {
+        "reel": "Spent",
+        "rythme": "Even pace",
+        "projection": "Estimate"
       }
     },
     "daily": {

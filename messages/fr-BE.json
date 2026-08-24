@@ -1207,7 +1207,7 @@
         "lien": "D'où vient ce chiffre"
       },
       "statut": {
-        "vert": "Tu gères bien ce mois-ci",
+        "vert": "Tout est couvert ce mois-ci",
         "orangeDepasse": "Tu as dépassé ce mois-ci",
         "orangeProvisions": "Provisions à renflouer",
         "rouge": "Tes factures dépassent tes revenus"
@@ -1243,6 +1243,11 @@
         "onTrack": "dans le rythme",
         "faster": "au-dessus du rythme",
         "exceeded": "budget dépassé"
+      },
+      "courbe": {
+        "reel": "Dépensé",
+        "rythme": "Rythme régulier",
+        "projection": "Estimation"
       }
     },
     "daily": {

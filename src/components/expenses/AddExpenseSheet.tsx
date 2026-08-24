@@ -12,7 +12,7 @@ import { getExpenseEntryContextAction } from '@/lib/actions/expense-entry';
 import { CATEGORY_COLOR_TOKENS, couleurLaMoinsUtilisee } from '@/lib/domain/categories';
 import type { ExpenseEntryCategory, ExpenseEntryContext } from '@/lib/actions/expense-entry.types';
 import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
-import { announceOptimisticValue, settleSpend } from '@/lib/expenses/optimistic-spend';
+import { announceOptimisticSpend, settleSpend } from '@/lib/expenses/optimistic-spend';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 import { formatCurrency } from '@/lib/i18n/formatters';
 import { dayOffsetFrom, todayInAnkoraTz } from '@/lib/date/tz';
@@ -241,11 +241,23 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
   ];
   const selectedName = categories.find((c) => c.id === categoryId)?.name ?? '';
 
-  // « Il te restera X € » — the line that turns entry into a decision.
-  // `pendingLocal` accounts for spends made in this same sheet session, since
-  // the fetched `ilTeReste` predates them.
-  const projection =
-    context && !context.incomplet ? context.ilTeReste - pendingLocal - (parsed ?? 0) : null;
+  // « Il te restera X € » — the line that turns entry into a decision — and its
+  // twin, « Dépensé ce mois », which the curve of the month reads.
+  //
+  // Built as ONE object from ONE guard: the two figures describe the same
+  // month, so a state where one exists and the other does not would be a
+  // contradiction we would then have to handle. `pendingLocal` accounts for
+  // spends made in this same sheet session, since the fetched context predates
+  // them — it is added to one and subtracted from the other, which is the same
+  // statement said twice.
+  const optimiste =
+    context && !context.incomplet
+      ? {
+          ilTeReste: context.ilTeReste - pendingLocal - (parsed ?? 0),
+          depensesDuMois: context.depensesDuMois + pendingLocal + (parsed ?? 0),
+        }
+      : null;
+  const projection = optimiste?.ilTeReste ?? null;
 
   const isCurrentMonth = occurredOn.slice(0, 7) === todayInAnkoraTz().slice(0, 7);
 
@@ -360,14 +372,15 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
     const resolvedLabel = label.trim() || selectedName || t('fallbackLabel');
     // Only a spend inside the current month moves this month's hero. A
     // backdated one is recorded, and correctly changes nothing on screen.
-    // `projection` is null when income is unconfigured (THI-335) — there is no
+    // `optimiste` is null when income is unconfigured (THI-335) — there is no
     // figure to be optimistic about, so the hero is left alone.
-    const affectsHero = isCurrentMonth && projection !== null;
+    const affectsHero = isCurrentMonth && optimiste !== null;
 
-    // The RESULTING figure, not the amount spent: it is the « Il te restera X € »
-    // this sheet is already showing, and publishing it absolute makes the
-    // update idempotent (see `optimistic-spend.ts`).
-    if (affectsHero) announceOptimisticValue(projection);
+    // The RESULTING figures, not the amount spent: « Il te restera X € » is
+    // what this sheet is already showing, and publishing absolutes makes the
+    // update idempotent (see `optimistic-spend.ts`). Both travel together, so
+    // the number and the curve cannot end up describing different months.
+    if (affectsHero) announceOptimisticSpend(optimiste);
     setPendingLocal((current) => current + value);
 
     startSubmit(async () => {

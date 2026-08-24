@@ -1,4 +1,4 @@
-import { AlertCircle, AlertTriangle, ArrowRight, CheckCircle2, Wallet } from 'lucide-react';
+import { ArrowRight, Wallet } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,9 @@ import type { SituationStatut } from '@/lib/domain/cockpit';
 import type { Locale } from '@/i18n/routing';
 
 import { HeroAmount } from './HeroAmount';
-import { PaceBar } from './PaceBar';
+import { MonthCurveLive } from './MonthCurveLive';
+import { StatusChip, type StatusTone } from './StatusChip';
+import { etatDuMois, type CurvePoint } from './month-curve-geometry';
 
 /**
  * Exporté pour que les tests puissent typer leur harnais.
@@ -39,34 +41,45 @@ type Props = {
   deficitEpargne: number;
   rattrapageMensuel: number;
   joursRestants: number;
-  /** Days elapsed in the month, today included — positions the pace tick. */
+  /** Days elapsed in the month, today included — where the curve stops. */
   joursEcoules: number;
   joursDuMois: number;
+  /** « Dépensé ce mois » cumulé jour par jour (`depensesParJour`). */
+  serieDuMois: readonly CurvePoint[];
+  /**
+   * Où la dépense atterrit si le rythme tient. `null` avant le 7ᵉ jour
+   * (ADR-035) — la courbe s'arrête alors à aujourd'hui, sans rien inventer.
+   */
+  depensesProjetees: number | null;
   locale: Locale;
 };
 
-const STATUT_ACCENT = {
-  vert: {
-    Icon: CheckCircle2,
-    ring: 'ring-success/15',
-    icon: 'text-success',
-    from: 'from-success/8',
-  },
-  orange: {
-    Icon: AlertTriangle,
-    ring: 'ring-warning/15',
-    icon: 'text-warning',
-    from: 'from-warning/8',
-  },
-  rouge: { Icon: AlertCircle, ring: 'ring-danger/15', icon: 'text-danger', from: 'from-danger/8' },
+/**
+ * Le mot qui accompagne chaque état — les trois clés sont déjà traduites dans
+ * les cinq locales, et elles survivent au remplacement de la barre par la
+ * courbe parce qu'elles disent la même chose.
+ */
+const VERDICT_PAR_ETAT = {
+  'dans-le-rythme': 'pace.onTrack',
+  'au-dessus': 'pace.faster',
+  depasse: 'pace.exceeded',
 } as const;
+
+const STATUT_ACCENT: Record<
+  'vert' | 'orange' | 'rouge',
+  { tone: StatusTone; ring: string; from: string }
+> = {
+  vert: { tone: 'success', ring: 'ring-success/15', from: 'from-success/8' },
+  orange: { tone: 'warning', ring: 'ring-warning/15', from: 'from-warning/8' },
+  rouge: { tone: 'danger', ring: 'ring-danger/15', from: 'from-danger/8' },
+};
 
 /**
  * Hero « Situation du mois » — cockpit dashboard #1, THI-327 Phase 0, revu par
  * ADR-035 puis par le chantier 6 de la refonte 2026.
  *
  * **Ce que cette carte porte, et rien d'autre** : un statut en mots, UN montant
- * dominant, une ligne d'ancrage, et le rythme du mois. C'est le §3.1 de
+ * dominant, une ligne d'ancrage, et la courbe du mois. C'est le §3.1 de
  * `docs/superpowers/specs/2026-08-08-refonte-app-architecture-cible.md` :
  *
  * > Deux grands nombres ne font pas une réponse : ils font une question.
@@ -166,20 +179,26 @@ export async function SituationDuMoisHero(props: Props) {
         })
       : null;
 
-  // The pace tick, in words. Three states and no fourth: ahead of an even pace,
-  // on it, or the budget is already exceeded. A statement of fact in every case
-  // — the R-06 doctrine bans « tu dépenses trop », and it is also simply not
-  // this screen's job to have an opinion.
-  const spentRatio = props.resteDisponible > 0 ? props.depensesDuMois / props.resteDisponible : 0;
-  const paceRatio = props.joursDuMois > 0 ? props.joursEcoules / props.joursDuMois : 0;
-  const paceVerdict =
-    props.resteDisponible <= 0
-      ? null
-      : props.depensesDuMois > props.resteDisponible
-        ? t('pace.exceeded')
-        : spentRatio > paceRatio
-          ? t('pace.faster')
-          : t('pace.onTrack');
+  // The state of the month, in words. Three and no fourth: ahead of an even
+  // pace, on it, or the budget is already exceeded. A statement of fact in every
+  // case — the R-06 doctrine bans « tu dépenses trop », and it is also simply
+  // not this screen's job to have an opinion.
+  //
+  // Le MOT vient d'ici, l'ÉTAT vient d'`etatDuMois` — la même fonction que la
+  // courbe utilise pour choisir sa teinte. Le seuil était écrit deux fois ; un
+  // `>` devenu `>=` d'un seul côté aurait affiché « budget dépassé » sous un
+  // trait vert, précisément au point limite.
+  //
+  // Le mot reste calculé ici parce que les trois libellés sont déjà traduits
+  // dans les cinq locales sous `pace.*`, et que `MonthCurve` reçoit des chaînes
+  // traduites pour rester testable sans fournisseur i18n.
+  const etat = etatDuMois({
+    budgetDuMois: props.resteDisponible,
+    depensesDuMois: props.depensesDuMois,
+    joursEcoules: props.joursEcoules,
+    joursDuMois: props.joursDuMois,
+  });
+  const paceVerdict = etat ? t(VERDICT_PAR_ETAT[etat]) : null;
 
   return (
     <Card
@@ -191,15 +210,18 @@ export async function SituationDuMoisHero(props: Props) {
         aria-hidden
         className={`pointer-events-none absolute inset-0 bg-linear-to-br ${accent.from} to-transparent`}
       />
-      <CardContent className="relative flex flex-col gap-5 py-6">
-        {/* Status pill (icon + text — never colour alone). */}
-        <div className="flex items-center gap-2">
-          <accent.Icon
-            aria-hidden
-            strokeWidth={1.5}
-            className={`h-5 w-5 shrink-0 ${accent.icon}`}
-          />
-          <p className="text-sm font-semibold tracking-tight">{statusTitle}</p>
+      {/* `gap-4 py-5` et non `gap-5 py-6` : 12 px repris sur les respirations
+          internes, mesurés au DOM contre les 550 px utiles d'un iPhone 14. La
+          courbe a remplacé une barre sept fois moins haute — il fallait les
+          reprendre quelque part, et une respiration coûte moins qu'un contenu. */}
+      <CardContent className="relative flex flex-col gap-4 py-5">
+        {/*
+          La puce d'état. L'icône n'est pas choisie ici : `StatusChip` la dérive
+          du ton, ce qui rend impossible une puce colorée sans son glyphe —
+          c'est-à-dire une information portée par la seule couleur.
+        */}
+        <div className="flex">
+          <StatusChip tone={accent.tone} label={statusTitle} />
         </div>
 
         {/*
@@ -257,36 +279,45 @@ export async function SituationDuMoisHero(props: Props) {
         </div>
 
         {/*
-          The pace bar (§3.3): denominator « Budget du mois », fill « Dépensé ce
-          mois », tick at joursEcoules / joursDuMois. It replaced a progress bar
-          measured against a 500 € constant nobody chose, and it asks the user
-          for nothing — which is what makes it better than an envelope.
+          La courbe du mois, à la place de la barre de rythme.
+
+          Elle garde le denominateur honnête de la barre (« Budget du mois ») et
+          sa référence de rythme, et corrige son défaut structurel : `PaceBar`
+          PLAFONNAIT son remplissage, donc un dépassement de 300 % ressemblait à
+          un dépassement de 1 %. Ici l'échelle s'ouvre et le dépassement se voit.
+
+          `MonthCurveLive` plutôt que `MonthCurve` : elle suit le magasin
+          optimiste, donc elle bouge du même geste que le chiffre au-dessus
+          quand une dépense est saisie. Le verdict a migré dedans — il décrit la
+          courbe, il vit avec elle.
         */}
         <div className="flex flex-col gap-2">
-          <PaceBar
-            budgetDuMois={props.resteDisponible}
-            depensesDuMois={props.depensesDuMois}
+          <MonthCurveLive
+            serie={props.serieDuMois}
             joursEcoules={props.joursEcoules}
             joursDuMois={props.joursDuMois}
-            ariaLabel={t('pace.barAria', {
-              depense: fmt(props.depensesDuMois),
-              budget: fmt(props.resteDisponible),
-              jours: props.joursEcoules,
-              total: props.joursDuMois,
-            })}
+            budgetDuMois={props.resteDisponible}
+            depensesDuMois={props.depensesDuMois}
+            projection={props.depensesProjetees}
+            labels={{
+              aria: t('pace.barAria', {
+                depense: fmt(props.depensesDuMois),
+                budget: fmt(props.resteDisponible),
+                jours: props.joursEcoules,
+                total: props.joursDuMois,
+              }),
+              reel: t('courbe.reel'),
+              rythme: t('courbe.rythme'),
+              projection: t('courbe.projection'),
+              verdict: paceVerdict,
+            }}
           />
-          <div className="text-muted-foreground flex items-baseline justify-between gap-3 text-xs">
-            <span className="tabular-nums" data-testid="situation-par-jour">
-              {perJour ?? ''}
-            </span>
-            {/* The verdict in words rather than an arrow pointing at the tick:
-                a glyph the reader has to decode is not an explanation, and the
-                design system forbids unicode arrows as decoration. Stated as a
-                fact — never « tu dépenses trop » (R-06). */}
-            <span data-testid="situation-pace-verdict" className="shrink-0">
-              {paceVerdict}
-            </span>
-          </div>
+          <span
+            className="text-muted-foreground text-xs tabular-nums"
+            data-testid="situation-par-jour"
+          >
+            {perJour ?? ''}
+          </span>
         </div>
 
         {/* Nudge (orange/rouge only) + plan link. */}

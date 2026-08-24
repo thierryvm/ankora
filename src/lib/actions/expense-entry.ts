@@ -54,6 +54,7 @@ export async function getExpenseEntryContextAction(): Promise<ActionResult<Expen
       // prototype. Numbers here, formatting client-side.
       ilTeReste: situation.ilTeReste.toNumber(),
       budgetDuMois: situation.resteDisponible.toNumber(),
+      depensesDuMois: situation.depensesDuMois.toNumber(),
       incomplet: situation.statut === 'incomplet',
       todayIso,
     },

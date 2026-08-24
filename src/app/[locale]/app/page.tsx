@@ -15,7 +15,7 @@ import { SimulatorDrawer } from '@/components/dashboard/SimulatorDrawer';
 import { Expenses, Transfer, money } from '@/lib/domain';
 import { unpaidChargesForPeriod } from '@/lib/domain/charges';
 import * as Obligations from '@/lib/domain/obligations';
-import type { Poste } from '@/lib/domain/cockpit';
+import { depensesParJour, type Poste } from '@/lib/domain/cockpit';
 import type { NamedCommitment } from '@/lib/domain/obligations';
 import { loadMonthSituation } from '@/lib/data/month-situation';
 import { commitmentRowToDomain, hasLiveCommitments } from '@/lib/data/commitment-row';
@@ -97,6 +97,15 @@ export default async function DashboardPage() {
   const fmtMoney = (value: Parameters<typeof formatCurrency>[0]) => formatCurrency(value, locale);
 
   const hasCharges = snapshot.charges.length > 0;
+
+  // La série que trace la courbe du mois. Calculée depuis les MÊMES dépenses que
+  // `situation.depensesDuMois` : un invariant du domaine lie le dernier cumulé
+  // au chiffre du hero, et il ne tient que si les deux lisent la même source.
+  const serieDuMois = depensesParJour(
+    snapshot.monthlyExpenses,
+    snapshot.currentPeriod,
+    daysInMonth,
+  );
 
   const monthlyExpenseTotal = Expenses.totalAmount(snapshot.monthlyExpenses);
   const latestMonthlyExpenses = Expenses.latestExpenses(snapshot.monthlyExpenses, 5);
@@ -194,6 +203,8 @@ export default async function DashboardPage() {
           joursRestants={joursRestants}
           joursEcoules={joursEcoules}
           joursDuMois={daysInMonth}
+          serieDuMois={serieDuMois}
+          depensesProjetees={situation.depensesProjetees?.toNumber() ?? null}
           locale={locale}
         />
       </section>
