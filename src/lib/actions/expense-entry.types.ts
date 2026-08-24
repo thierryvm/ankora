@@ -26,6 +26,17 @@ export type ExpenseEntryContext = {
   ilTeReste: number;
   /** « Budget du mois » — the anchor. */
   budgetDuMois: number;
+  /**
+   * « Dépensé ce mois » right now.
+   *
+   * The pivot of the optimistic couple: the sheet needs it to announce the
+   * RESULTING spend total alongside the resulting « Il te reste », so the curve
+   * of the month moves with the hero instead of freezing beside it. Deriving it
+   * from the other two on the client would be a second computation of the same
+   * sum at display time — what `CLAUDE.md` rule 10 forbids, and how two
+   * readings of one month start to drift apart.
+   */
+  depensesDuMois: number;
   /** True when income is not configured: no figure may be shown (THI-335). */
   incomplet: boolean;
   /** Today in Europe/Brussels, so the date field defaults to the user's day. */

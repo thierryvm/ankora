@@ -38,13 +38,22 @@ const categorie = (id: string, name: string, colorToken: string) => ({
 });
 
 function situationFactice(
-  over: Partial<{ ilTeReste: Decimal; resteDisponible: Decimal; statut: string }> = {},
+  over: Partial<{
+    ilTeReste: Decimal;
+    resteDisponible: Decimal;
+    depensesDuMois: Decimal;
+    statut: string;
+  }> = {},
 ) {
   return {
     snapshot: { workspaceId: 'ws-1', monthlyExpenses: [] },
     situation: {
       ilTeReste: new Decimal('429.89'),
       resteDisponible: new Decimal('838.52'),
+      // 838,52 − 429,89. Cohérent avec les deux autres délibérément : la feuille
+      // publie désormais un couple, et une situation dont les membres se
+      // contredisent laisserait passer une implémentation qui les intervertit.
+      depensesDuMois: new Decimal('408.63'),
       statut: 'vert',
       ...over,
     },
@@ -73,8 +82,24 @@ describe('getExpenseEntryContextAction — la frontière Decimal', () => {
     // type qui doit être asserté.
     expect(typeof res.data.ilTeReste).toBe('number');
     expect(typeof res.data.budgetDuMois).toBe('number');
+    expect(typeof res.data.depensesDuMois).toBe('number');
     expect(res.data.ilTeReste).toBe(429.89);
     expect(res.data.budgetDuMois).toBe(838.52);
+    expect(res.data.depensesDuMois).toBe(408.63);
+  });
+
+  it('LIT « Dépensé ce mois », au lieu de le déduire des deux autres', async () => {
+    // Le pivot du couple optimiste. La feuille pourrait le dériver de « Budget
+    // du mois » moins « Il te reste » — un SECOND calcul de la même somme au
+    // moment de l'affichage, que la règle 10 interdit, et par lequel deux
+    // lectures d'un même mois commencent à diverger.
+    //
+    // Ce cas le prouve en cassant la cohérence exprès : ici la soustraction
+    // rendrait 408,63 et la lecture rend 7. Avec la fixture cohérente des
+    // autres cas, les deux implémentations seraient indiscernables.
+    loadMonthSituation.mockResolvedValue(situationFactice({ depensesDuMois: new Decimal('7') }));
+    const res = await getExpenseEntryContextAction();
+    expect(res.ok && res.data.depensesDuMois).toBe(7);
   });
 
   it('lit le budget dans `resteDisponible`, pas ailleurs', async () => {

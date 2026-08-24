@@ -2,7 +2,18 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
 
 import { HeroAmount } from '../HeroAmount';
-import { announceOptimisticValue, settleSpend } from '@/lib/expenses/optimistic-spend';
+import { announceOptimisticSpend, settleSpend } from '@/lib/expenses/optimistic-spend';
+
+/**
+ * The store now publishes a COUPLE — « Il te reste » and « Dépensé ce mois »,
+ * so the curve of the month moves with this figure instead of freezing beside
+ * it. These cases are about the descent of the hero, so they only care about
+ * the first member; the second is set to something inert.
+ *
+ * Note that the finite guard applies to BOTH members, which is why an inert
+ * value is a real number here and not a placeholder like `NaN`.
+ */
+const annonce = (ilTeReste: number) => announceOptimisticSpend({ ilTeReste, depensesDuMois: 0 });
 
 /**
  * The descent, asserted frame by frame.
@@ -122,7 +133,7 @@ describe('HeroAmount — the optimistic figure (ADR-010)', () => {
   it('starts coming down on the announcement, before the server answers', () => {
     render(<HeroAmount value={448.39} locale="fr-BE" testId="hero" />);
 
-    act(() => announceOptimisticValue(429.89));
+    act(() => annonce(429.89));
     advanceFrame(0);
     advanceFrame(1000);
 
@@ -147,7 +158,7 @@ describe('HeroAmount — the optimistic figure (ADR-010)', () => {
   it('never shows a wrong frame when the server value catches up', () => {
     const { rerender } = render(<HeroAmount value={448.39} locale="fr-BE" testId="hero" />);
 
-    act(() => announceOptimisticValue(429.89));
+    act(() => annonce(429.89));
     advanceFrame(0);
     advanceFrame(1000);
     expect(numeric()).toBeCloseTo(429.89, 2);
@@ -163,7 +174,7 @@ describe('HeroAmount — the optimistic figure (ADR-010)', () => {
   it('goes back up when the sheet reverts a rejected insert', () => {
     render(<HeroAmount value={448.39} locale="fr-BE" testId="hero" />);
 
-    act(() => announceOptimisticValue(403.39));
+    act(() => annonce(403.39));
     advanceFrame(0);
     advanceFrame(1000);
     expect(numeric()).toBeCloseTo(403.39, 2);
@@ -180,7 +191,7 @@ describe('HeroAmount — the optimistic figure (ADR-010)', () => {
     (next) => {
       render(<HeroAmount value={448.39} locale="fr-BE" testId="hero" />);
 
-      act(() => announceOptimisticValue(next));
+      act(() => annonce(next));
       advanceFrame(0);
       advanceFrame(1000);
 
@@ -191,10 +202,22 @@ describe('HeroAmount — the optimistic figure (ADR-010)', () => {
     },
   );
 
+  it('reads « Il te reste » from the couple, never the other member', () => {
+    // The store carries two figures that are deliberately different numbers.
+    // Wiring this component to the wrong one would still animate, still format
+    // correctly, and be wrong by exactly the month's spending — the kind of
+    // defect that looks like a working feature.
+    render(<HeroAmount value={448.39} locale="fr-BE" testId="hero" />);
+    act(() => announceOptimisticSpend({ ilTeReste: 429.89, depensesDuMois: 118.5 }));
+    advanceFrame(0);
+    advanceFrame(1000);
+    expect(numeric()).toBeCloseTo(429.89, 2);
+  });
+
   it('shows a negative optimistic figure — going under is a real outcome', () => {
     render(<HeroAmount value={20} locale="fr-BE" testId="hero" />);
 
-    act(() => announceOptimisticValue(-25));
+    act(() => annonce(-25));
     advanceFrame(0);
     advanceFrame(1000);
 

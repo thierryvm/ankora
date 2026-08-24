@@ -20,7 +20,7 @@ import { todayInAnkoraTz } from '@/lib/date/tz';
 const createExpenseAction = vi.fn();
 const createExpenseCategoryAction = vi.fn();
 const getExpenseEntryContextAction = vi.fn();
-const announceOptimisticValue = vi.fn();
+const announceOptimisticSpend = vi.fn();
 const settleSpend = vi.fn();
 const toastSuccess = vi.fn();
 const toastError = vi.fn();
@@ -44,7 +44,7 @@ vi.mock('@/lib/actions/categories', () => ({
 }));
 
 vi.mock('@/lib/expenses/optimistic-spend', () => ({
-  announceOptimisticValue: (...args: unknown[]) => announceOptimisticValue(...args),
+  announceOptimisticSpend: (...args: unknown[]) => announceOptimisticSpend(...args),
   settleSpend: () => settleSpend(),
 }));
 
@@ -92,6 +92,10 @@ function context(over: Record<string, unknown> = {}) {
       preselectedId: COURSES.id,
       ilTeReste: 448.39,
       budgetDuMois: 736.79,
+      // 736,79 − 448,39. Coherent with the two above on purpose: the sheet now
+      // publishes a couple, and a fixture whose members contradict each other
+      // would let an implementation that mixes them up still look right.
+      depensesDuMois: 288.4,
       incomplet: false,
       todayIso: '2026-07-18',
       ...over,
@@ -296,7 +300,13 @@ describe('the hero moves before the server answers (ADR-010)', () => {
     // 448,39 − 45 = 403,39. Absolute rather than a delta so that applying it
     // twice is applying it once — see `optimistic-spend.ts` for the one-frame
     // dip a delta produced when the revalidated server value landed.
-    expect(announceOptimisticValue).toHaveBeenCalledWith(403.39);
+    // Les DEUX figures partent ensemble, et elles bougent en sens opposés du
+    // même montant : 448,39 − 45 d'un côté, 288,40 + 45 de l'autre. Une seule
+    // publiée laisserait le nombre et la courbe décrire deux mois différents.
+    expect(announceOptimisticSpend).toHaveBeenCalledWith({
+      ilTeReste: 403.39,
+      depensesDuMois: expect.closeTo(333.4, 2),
+    });
   });
 
   it('reverts the optimistic descent when the insert is rejected', async () => {
@@ -336,7 +346,7 @@ describe('the hero moves before the server answers (ADR-010)', () => {
 
     await waitFor(() => expect(createExpenseAction).toHaveBeenCalled());
     // Recorded, and correctly changes nothing on this month's figure.
-    expect(announceOptimisticValue).not.toHaveBeenCalled();
+    expect(announceOptimisticSpend).not.toHaveBeenCalled();
     expect(screen.getByTestId('add-expense-past-month')).toBeInTheDocument();
     // No friendly name for a date two months back: the figures ARE the label.
     expect(screen.queryByTestId('add-expense-date-friendly')).not.toBeInTheDocument();
