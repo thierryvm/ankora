@@ -27,6 +27,10 @@ import { fileURLToPath } from 'node:url';
 const EXPECTED = {
   ghLogin: 'thierryvm',
   ghRepo: 'thierryvm/ankora',
+  // L'adresse `noreply` de GitHub. Déjà publique — elle signe 322 commits de ce
+  // dépôt — donc la figer ici n'ajoute aucune fuite, et c'est précisément une
+  // adresse conçue pour ne rien révéler.
+  commitEmail: '46031203+thierryvm@users.noreply.github.com',
   vercelLogin: 'thierryvm',
   // Référence publique : elle est déjà exposée dans NEXT_PUBLIC_SUPABASE_URL,
   // donc la figer ici n'ajoute aucune fuite.
@@ -250,6 +254,46 @@ try {
   check('Identité des commits', name === EXPECTED.ghLogin, `user.name=${name}`);
 } catch {
   check('Identité des commits', false, 'git config user.name absent');
+}
+
+// ── 2bis) Adresse des commits ────────────────────────────────────────────────
+//
+// LE CONTRÔLE CI-DESSUS REGARDAIT LA MOITIÉ QUI NE DÉCIDE RIEN.
+//
+// `user.name` est une étiquette d'affichage. **GitHub attribue un commit par son
+// ADRESSE**, et par elle seule : c'est l'email qui rattache la ligne à un compte,
+// qui la fait compter dans les contributions, et qui reste lisible par n'importe
+// qui dans un dépôt public. Un `user.name` juste au-dessus d'une adresse fausse
+// passait donc au vert.
+//
+// Mesuré le 24 août 2026, et c'est ce qui a motivé ce contrôle : **68 commits de
+// ce dépôt public portaient une adresse personnelle** au lieu du `noreply`. La
+// cause était un `user.email` en dur dans `.git/config`, qui prime sur la règle
+// `includeIf` posée par DevContext. Trois garde-fous regardaient ailleurs — ce
+// préflight (mauvais champ), les hooks git (ils appellent ce préflight), et
+// `ctx` (qui AFFICHE l'adresse sans jamais la comparer). Seul `ctx doctor` le
+// disait, et il n'est dans aucune boucle automatique.
+//
+// La leçon dépasse ce fichier : **un garde-fou qui mesure le champ voisin de
+// celui qui décide est pire qu'un garde-fou absent** — il rend un vert que
+// personne ne rouvre.
+//
+// Le correctif, quand ce contrôle rougit, est presque toujours le même :
+//   git config --unset user.email      (la règle includeIf reprend la main)
+try {
+  const email = execFileSync('git', ['config', 'user.email'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  }).trim();
+  const ok = email === EXPECTED.commitEmail;
+  check(
+    'Adresse des commits',
+    ok,
+    ok ? `user.email=${email}` : `user.email=${email} — attendu ${EXPECTED.commitEmail}`,
+  );
+} catch {
+  check('Adresse des commits', false, 'git config user.email absent');
 }
 
 // ── 3) Remote git ────────────────────────────────────────────────────────────
@@ -478,7 +522,8 @@ if (allOk) {
   console.log('  → GO : tous les comptes correspondent au projet personnel.\n');
 } else {
   console.log('  → NO-GO : corrige les ❌ avant toute opération prod (push / migration / deploy).');
-  console.log('     Mauvais compte GitHub ? `gh auth switch --user thierryvm`\n');
+  console.log('     Mauvais compte GitHub ?  `gh auth switch --user thierryvm`');
+  console.log('     Mauvaise adresse ?       `git config --unset user.email`\n');
 }
 
 // exitCode plutôt que process.exit : laisse les handles se fermer proprement
