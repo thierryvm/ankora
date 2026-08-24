@@ -471,7 +471,22 @@ Ces 5 items s'ajoutent aux interdictions historiques (`feedback_irreversibility_
 
 Chaque session CC Ankora **doit** écrire un handoff au format canonique `Athenaeum/10_Projects/ankora/cc-handoffs/YYYY-MM-DD-HHMM-<slug>.md` AVANT toute compaction de contexte OU fin de session. Le template impératif (8 sections) est documenté dans `Athenaeum/10_Projects/ankora/cc-handoffs/_template-handoff.md`.
 
-**Règle non négociable** : double redondance — fichier dans le vault Obsidian iCloud + commit miroir dans `docs/handoffs/` du repo Ankora. Si l'iCloud n'a pas sync (crash PC), le repo Git GitHub reste la source de vérité.
+**Règle non négociable** : double redondance — fichier dans le vault Obsidian iCloud + commit miroir dans un dépôt Git. Si l'iCloud n'a pas sync (crash PC), le dépôt reste la source de vérité.
+
+**Le miroir a changé de place le 24 août 2026, et la redondance est intacte.** Il
+va désormais dans le dépôt **privé** `claude-config` (`handoffs/ankora/`), plus
+dans `docs/handoffs/` de ce dépôt-ci.
+
+Motif, mesuré : 50 fichiers, 494 Ko, que **rien dans le code ne lit** — vérifié —
+dans un dépôt **public**. Chaque passation exigeait donc une passe d'expurgation
+avant commit, c'est-à-dire une occasion de laisser passer un chemin local, un
+état de sauvegarde ou une donnée nominative ; et depuis peu, une PR dédiée par
+session. Un dépôt privé rend l'expurgation inutile : la version complète y va
+telle quelle, celle qui sert vraiment à la session suivante.
+
+Ce que ça ne fait pas : les 50 passations déjà publiées **restent où elles
+sont**. Les supprimer ne les retirerait pas de l'historique d'un dépôt public,
+donc ça ne protégerait rien — ça effacerait seulement une lecture utile.
 
 ## Trio d'agents & handoff design (verrouillé 2026-04-24, amendé 2026-05-27)
 
