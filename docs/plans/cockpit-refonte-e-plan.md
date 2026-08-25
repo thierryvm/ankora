@@ -4,6 +4,13 @@
 > rejetée, v2 à v5 approuvées sous réserves, puis une revue ciblée sur les deux
 > sections qui bloquaient encore la PR 0. Verdict : **GO**.
 > Base `main` = `cc02e1b` (#448 mergée). Branche `feat/cc-design-cockpit`.
+>
+> **v6 — amendée le 25 août 2026**, après la livraison de la PR 1 et un septième
+> tour de `plan-reviewer` (🟡 _APPROVED WITH CHANGES_, deux points bloquants).
+> Le §8 désignait comme patron un fichier que la PR 1 avait supprimé ; le §12
+> ne mesurait qu'en 390 × 844, laissant la PR 2 libre d'aggraver l'aplatissement
+> en bureau. **La PR 2 est scindée en 2a / 2b** (§4). Corrections mesurées au
+> §5.3, §6.1, §11, §14. Sections amendées : 4, 5.3, 6.1, 8, 11, 12, 13, 14.
 
 ## 0. Phase 0
 
@@ -64,7 +71,8 @@ En sombre, `--color-surface-muted` quitte la valeur qu'il partageait avec
 | `--color-surface-muted` | `#0f172a`     | **`#070c18`** |
 
 **`surface-muted` est un FOND DE PISTE, pas une teinte de survol** — et c'est ce
-qui fixe la direction. Relevé sur les usages : `progress.tsx:95`, `PaceBar.tsx:76`,
+qui fixe la direction. Relevé sur les usages : `progress.tsx:95`, `PaceBar.tsx:76`
+(_fichier supprimé depuis par la PR 1 — relevé conservé tel qu'il a servi_),
 `AllocationBar.tsx:48`, `loading.tsx:56` sont des rainures, et
 `LocaleSwitcher.tsx:101` en fait la **piste** d'un contrôle segmenté dont le
 curseur est `bg-card` (`:128`). Une piste plus claire que son curseur se lit à
@@ -270,25 +278,50 @@ reçoit aucune donnée en props, tout vient du contexte.
 
 ## 4. Découpage
 
-| PR                                     | Contenu                                                                                                                                              |
-| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **0 — grammaire visuelle**             | élévation, surfaces sombres séparées, rampe graphique, `Card`, paires de contraste neuves                                                            |
-| **1 — le pli mobile**                  | `StatusChip`, `MonthCurve`, hero recomposé, 3 tuiles, agrégateur par jour, correction FSMA, couple optimiste                                         |
-| **3-bis — documentaire**               | `.claude/skills/ankora-design-system/SKILL.md`, **après** la PR 3                                                                                    |
-| **2 — colonne gauche + grille bureau** | `CategoryDonut`, `MonthsAhead`, blocs Dépensé / Comptes / Six mois, grille 7/5, deux lectures neuves                                                 |
-| **3 — colonne droite + ménage**        | `DaysStrip`, `Ring`, `Segments`, `RowGlyph`, blocs Ce qui arrive / Provisions / Engagement / Dernières sorties, purge i18n, suppressions e2e écrites |
+| PR                              | Contenu                                                                                                                                              |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **0 — grammaire visuelle**      | élévation, surfaces sombres séparées, rampe graphique, `Card`, paires de contraste neuves                                                            |
+| **1 — le pli mobile**           | `StatusChip`, `MonthCurve`, hero recomposé, 3 tuiles, agrégateur par jour, correction FSMA, couple optimiste                                         |
+| **3-bis — documentaire**        | `.claude/skills/ankora-design-system/SKILL.md`, **après** la PR 3                                                                                    |
+| **2a — la donnée et l'anneau**  | deux lectures neuves, `depensesParCategorie`, `CategoryDonut`, bloc « Dépensé ce mois ». **Aucun changement de mise en page.**                       |
+| **2b — la grille bureau**       | grille 7/5, `MonthsAhead`, blocs Comptes / Six mois, largeur du hero en bureau, réécriture de l'assertion d'ordre DOM                                |
+| **3 — colonne droite + ménage** | `DaysStrip`, `Ring`, `Segments`, `RowGlyph`, blocs Ce qui arrive / Provisions / Engagement / Dernières sorties, purge i18n, suppressions e2e écrites |
+
+**La PR 2 a été scindée le 25/08/2026.** Le cadrage du programme pose « PR < 600
+lignes, pas un méga-PR ». La PR 2 d'un seul tenant en pesait **1 500 à 2 500** —
+estimation calibrée sur ce que la PR 1 a réellement produit (**≈ 1 879 lignes** de
+fichiers neufs seuls). Trois fois le plafond n'est pas un dépassement, c'est un
+autre format de PR.
+
+La coupure ne passe pas au milieu : **2a ne touche à aucune mise en page.** Elle
+ajoute une donnée et un composant dans la colonne existante. **2b** ne fait que
+déplacer des blocs et ne calcule rien de neuf. Chacune se révoque seule, et 2a peut
+partir en production sans 2b.
+
+**Budget** : ≤ 800 lignes nettes chacune, mesuré par
+`git diff --stat main...HEAD`. Si 2b déborde, elle se scinde encore — la grille
+d'un côté, `MonthsAhead` de l'autre. Un plafond qu'on annonce sans le mesurer ne
+freine rien.
 
 **PR 3-bis, et pourquoi elle a glissé de la place 1-bis.** `SKILL.md:101`
 **prescrit** `PaceBar`, et `:173` liste `PaceBar`, `AllocationBar`,
 `ProvisionHealthGaugeCard` et `ProchainesFacturesCard` comme les composants qui
 rendent le cockpit. La v5 plaçait la PR documentaire juste après la PR 1, en
-n'y voyant que la moitié `PaceBar` — mais **les PR 2 et 3 invalident les trois
+n'y voyant que la moitié `PaceBar` — mais **les PR 2a/2b et 3 invalident les trois
 autres** (`Ring`, `Segments`, `DaysStrip`, « Ce qui arrive »). Corriger après la
-PR 1 aurait donc produit un document faux à nouveau dès la PR 2, et la « fenêtre
+PR 1 aurait donc produit un document faux à nouveau dès la PR 2a, et la « fenêtre
 de quelques heures » annoncée au risque 7 aurait duré toute la refonte.
 
 Une seule PR documentaire, **après la PR 3**, quand la liste est stable. C'est un
 fichier de garde-fou : il ne voyage pas dans une PR feature.
+
+**Ce raisonnement tient — mais il laissait un trou, comblé le 25/08/2026.** Il
+conclut que la liste complète attend la PR 3, ce qui est juste ; il en déduisait
+implicitement qu'on ne touche à rien d'ici là, ce qui ne l'est pas. `SKILL.md:101`
+**prescrit** un composant supprimé, et les agents QA lisent ce fichier à chaque
+PR. Une **micro-PR de trois lignes** retire `PaceBar` de `:101` et `:173` avant la
+PR 2a — voir risque 7. Retirer ce qui est faux n'attend pas que le reste soit
+stable.
 
 **Recherche de bannissement faite** : hors `src/`, seuls `SKILL.md:101` et `:173`,
 plus `docs/prs/PR-chantier2-report.md:102,370` (rapport daté, en prose, aucune
@@ -375,10 +408,10 @@ explicite**, car `categoryId` est `string | null` (`workspace-snapshot.ts:330`) 
 **invariant ADR-022:134-136**, que l'ADR _commande_ : changer la catégorie d'une
 dépense ne déplace aucun total.
 
-**Cet invariant n'est asserté nulle part aujourd'hui, et la PR 2 l'écrit.**
+**Cet invariant n'est asserté nulle part aujourd'hui, et la PR 2a l'écrit.**
 `domain/categories/types.ts:8-23` le dit sans détour : le test qui était cité
 « n'existe pas, nulle part dans le dépôt… il est tenu par convention ». C'était
-supportable tant qu'aucun code n'agrégeait d'argent par `categoryId`. **La PR 2
+supportable tant qu'aucun code n'agrégeait d'argent par `categoryId`. **La PR 2a
 est ce code** : c'est le moment exact où une convention non testée devient une
 convention porteuse. Elle n'est donc pas laissée à ADR-043 — le test part avec
 l'agrégateur qui le rend nécessaire.
@@ -390,11 +423,25 @@ d'allocation ». C'est l'appui FSMA le plus direct, et il est déjà écrit.
 ### 5.3 Deux lectures neuves
 
 `getCategories` (`data/categories.ts:25`) n'a **qu'un appelant** aujourd'hui,
-`lib/actions/expense-entry.ts:33` : le cockpit ne lit jamais les catégories. PR 2
+`lib/actions/expense-entry.ts:33` : le cockpit ne lit jamais les catégories. PR 2a
 ajoute donc **deux** lectures — les catégories du workspace, et les dépenses de la
 période précédente bornées au jour courant — toutes deux dans le `Promise.all`
 existant de `workspace-snapshot.ts:194-256`, qui lit déjà `previousPeriod`. Le
 domaine reçoit les lignes : `comparaisonMoisPrecedent(expensesPrecedentes, jourCourant)`.
+
+**`MonthsAhead` n'en demande AUCUNE — et le plan ne le disait pas [ajouté
+25/08/2026].** Sa source existe, elle est testée, et elle a été écrite pour lui :
+`genererPrevisions()` (`src/lib/domain/cockpit/previsions.ts:37`, exportée par
+`cockpit/index.ts:16`, suite dédiée dans `__tests__/previsions.test.ts`). Son
+docblock `:31-33` dit littéralement « The UI renders the bar chart from this
+list », et son horizon par défaut vaut **6** — le « Six mois » du bloc. Elle a déjà
+un appelant, `projection-fonds.ts:74`.
+
+Un plan muet sur la provenance d'une donnée invite à en réinventer une. Ici il n'y
+a rien à écrire côté domaine : brancher, et **convertir**. `PrevisionMonth` porte
+**deux champs `Decimal`** — `totalCharges` et `margePrevue` (`:11`, `:17`) — donc
+**deux `.toNumber()`** avant la frontière RSC du §5.4. Un `Decimal` qui traverse
+cette frontière ne rend pas une valeur fausse : il fait planter le rendu.
 
 ### 5.4 Frontière Decimal → number
 
@@ -429,40 +476,52 @@ de schéma hors périmètre, cette promesse était inimplémentable.
 
 ### 6.1 Les huit ancres `aria-labelledby` de `page.tsx`
 
+**Re-mesurées le 25/08/2026** — les valeurs de la v5 avaient toutes glissé :
+**+9** pour `dashboard-heading`, **+11** pour les sept autres. Un exécutant qui
+recopiait la colonne atterrissait onze lignes à côté.
+
 | Ancre                      | Ligne     | Sort                                  | PR  |
 | -------------------------- | --------- | ------------------------------------- | --- |
-| `dashboard-heading`        | 169 / 182 | conservée                             | —   |
-| `cascade-heading`          | 211       | conservée                             | 1   |
-| `provision-health-heading` | 246-247   | migrée vers « Provisions »            | 3   |
-| `commitments-heading`      | 266-267   | migrée vers « Engagement »            | 3   |
-| `upcoming-bills-heading`   | 286-287   | migrée vers « Ce qui arrive »         | 3   |
-| `accounts-heading`         | 333-334   | conservée, position relative modifiée | 2   |
-| `plan-heading`             | 367 / 374 | conservée                             | 2   |
-| `expenses-heading`         | 478 / 483 | migrée vers « Dépensé ce mois »       | 2   |
+| `dashboard-heading`        | 178 / 191 | conservée                             | —   |
+| `cascade-heading`          | 222       | conservée                             | 1   |
+| `provision-health-heading` | 257-258   | migrée vers « Provisions »            | 3   |
+| `commitments-heading`      | 277-278   | migrée vers « Engagement »            | 3   |
+| `upcoming-bills-heading`   | 297-298   | migrée vers « Ce qui arrive »         | 3   |
+| `accounts-heading`         | 344-345   | conservée, position relative modifiée | 2b  |
+| `plan-heading`             | 378 / 385 | conservée                             | 2b  |
+| `expenses-heading`         | 489 / 494 | migrée vers « Dépensé ce mois »       | 2a  |
 
-**Assertion d'ordre DOM** : `dashboard-cockpit-bloc2.spec.ts:73-86` (vivante) exige
+**Ces numéros se re-mesurent, ils ne se recopient pas.** Toute PR qui touche
+`page.tsx` les décale. La sonde, à relancer avant de s'y fier :
+
+```bash
+grep -n "id=\"[a-z-]*-heading\"\|aria-labelledby" src/app/\[locale\]/app/page.tsx
+```
+
+**Assertion d'ordre DOM** : `dashboard-cockpit-bloc2.spec.ts:80-85` (vivante) exige
 `accountsBox.y < planBox.y`. La grille 7/5 la rend fausse par construction.
-**Réécrite en PR 2**, au même endroit que sa cause — jamais supprimée.
+**Réécrite en PR 2b**, au même endroit que sa cause — jamais supprimée.
 
 ### 6.2 Testids
 
-| Testid                                                                                                                                                                          | Sort                                                                                                                                                               | PR  |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --- |
-| `situation-hero`, `-value`, `-anchor`                                                                                                                                           | conservés                                                                                                                                                          | 1   |
-| `situation-cascade-link`                                                                                                                                                        | conservé, déplacé sous la courbe                                                                                                                                   | 1   |
-| `situation-setup-cta`, `situation-nudge-link`                                                                                                                                   | conservés                                                                                                                                                          | 1   |
-| `situation-par-jour`                                                                                                                                                            | conservé                                                                                                                                                           | 1   |
-| `situation-epargne-estimee`                                                                                                                                                     | **reste sur `CascadeDuMois:269`, porteur unique.** Le point terminal de la projection reçoit `month-curve-projection-end`. `CascadeDuMois.test.tsx:112` intouché.  | 1   |
-| `pace-bar`, `-spent`, `-tick`, `situation-pace-verdict`                                                                                                                         | **supprimés** avec `PaceBar`                                                                                                                                       | 1   |
-| nouveaux : `month-line`, `status-chip`, `month-curve`, `-line`, `-pace`, `-projection`, `-projection-end`, `-bill-*`, `-verdict`, `cockpit-tile-{avenir,provisions,engagement}` | créés                                                                                                                                                              | 1   |
-| `cascade-du-mois`, `allocation-bar`, `allocation-segment-*`, `flow-detail-*`                                                                                                    | conservés                                                                                                                                                          | —   |
-| `simulator-*` et `whatif-*`                                                                                                                                                     | conservés, **intouchés**                                                                                                                                           | —   |
-| `[data-account-type=…]` (`AccountCard.tsx:72`)                                                                                                                                  | **conservé.** PR 2 refait l'enveloppe du bloc Comptes et **ne touche pas `AccountCard`**. Preuve : `dashboard-account-rename.spec.ts` passe **sans modification**. | 2   |
-| `provision-health-gauge-*`, `provision-fund-*`                                                                                                                                  | migrés vers `Ring`                                                                                                                                                 | 3   |
-| `engagements-*`                                                                                                                                                                 | migrés vers `Segments`                                                                                                                                             | 3   |
-| `prochaines-factures-*`                                                                                                                                                         | migrés vers « Ce qui arrive » + `DaysStrip`                                                                                                                        | 3   |
-| nouveaux : `category-donut`, `-arc-*`, `-legend-*`, `months-ahead`, `-bar-*`                                                                                                    | créés                                                                                                                                                              | 2   |
-| nouveaux : `days-strip`, `-day-*`, `ring-provisions`, `segments-engagement`, `row-glyph-*`                                                                                      | créés                                                                                                                                                              | 3   |
+| Testid                                                                                                                                                                          | Sort                                                                                                                                                                | PR  |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- |
+| `situation-hero`, `-value`, `-anchor`                                                                                                                                           | conservés                                                                                                                                                           | 1   |
+| `situation-cascade-link`                                                                                                                                                        | conservé, déplacé sous la courbe                                                                                                                                    | 1   |
+| `situation-setup-cta`, `situation-nudge-link`                                                                                                                                   | conservés                                                                                                                                                           | 1   |
+| `situation-par-jour`                                                                                                                                                            | conservé                                                                                                                                                            | 1   |
+| `situation-epargne-estimee`                                                                                                                                                     | **reste sur `CascadeDuMois:269`, porteur unique.** Le point terminal de la projection reçoit `month-curve-projection-end`. `CascadeDuMois.test.tsx:112` intouché.   | 1   |
+| `pace-bar`, `-spent`, `-tick`, `situation-pace-verdict`                                                                                                                         | **supprimés** avec `PaceBar`                                                                                                                                        | 1   |
+| nouveaux : `month-line`, `status-chip`, `month-curve`, `-line`, `-pace`, `-projection`, `-projection-end`, `-bill-*`, `-verdict`, `cockpit-tile-{avenir,provisions,engagement}` | créés                                                                                                                                                               | 1   |
+| `cascade-du-mois`, `allocation-bar`, `allocation-segment-*`, `flow-detail-*`                                                                                                    | conservés                                                                                                                                                           | —   |
+| `simulator-*` et `whatif-*`                                                                                                                                                     | conservés, **intouchés**                                                                                                                                            | —   |
+| `[data-account-type=…]` (`AccountCard.tsx:72`)                                                                                                                                  | **conservé.** PR 2b refait l'enveloppe du bloc Comptes et **ne touche pas `AccountCard`**. Preuve : `dashboard-account-rename.spec.ts` passe **sans modification**. | 2b  |
+| `provision-health-gauge-*`, `provision-fund-*`                                                                                                                                  | migrés vers `Ring`                                                                                                                                                  | 3   |
+| `engagements-*`                                                                                                                                                                 | migrés vers `Segments`                                                                                                                                              | 3   |
+| `prochaines-factures-*`                                                                                                                                                         | migrés vers « Ce qui arrive » + `DaysStrip`                                                                                                                         | 3   |
+| nouveaux : `category-donut`, `-arc-*`, `-legend-*`                                                                                                                              | créés                                                                                                                                                               | 2a  |
+| nouveaux : `months-ahead`, `-bar-*`                                                                                                                                             | créés                                                                                                                                                               | 2b  |
+| nouveaux : `days-strip`, `-day-*`, `ring-provisions`, `segments-engagement`, `row-glyph-*`                                                                                      | créés                                                                                                                                                               | 3   |
 
 ## 7. Cohérence hero ↔ courbe **[F3]**
 
@@ -546,7 +605,13 @@ jamais une valeur re-dérivée de « Il te reste ».
 
 ## 8. Contrat des composants SVG **[F7]**
 
-`PaceBar.tsx` est le patron :
+> **Amendé le 25/08/2026.** Cette section prescrivait d'imiter `PaceBar.tsx`.
+> **Ce fichier n'existe plus** — la PR 1 l'a supprimé, et `Glob **/PaceBar*` ne
+> rend rien. Le patron était donc introuvable, et un exécutant serait allé copier
+> le voisin le plus proche : les trois SVG survivants portent **tous**
+> `preserveAspectRatio="none"`. Il en serait sorti un anneau ovale.
+
+### 8.1 Règles communes aux deux familles
 
 - **Géométrie par attributs** (`x`, `width`, `d`, `fill`, `fillOpacity`,
   `linearGradient`), **jamais** de `style` inline : `style-src` ne porte pas
@@ -557,8 +622,77 @@ jamais une valeur re-dérivée de « Il te reste ».
 - **Tokens de `globals.css` uniquement**, y compris les couleurs de données, qui
   viennent de la rampe de la PR 0.
 - `role="img"` + `aria-label` en **phrase complète**.
-- `height` en attribut, pas en chaîne Tailwind (quirk WebKit < 17.4 documenté sur
-  `PaceBar` et `AllocationBar`).
+- `height` en attribut, pas en chaîne Tailwind (quirk WebKit < 17.4, documenté
+  sur `AllocationBar`).
+
+### 8.2 Deux familles, et le choix ne se devine pas
+
+**Le repère d'un SVG n'est pas un détail de style : il décide de ce que la forme
+peut être.** `preserveAspectRatio="none"` étire l'abscisse et l'ordonnée
+indépendamment. C'est exactement ce qu'on veut d'une série qui court sur la
+largeur, et c'est fatal à tout ce qui est rond.
+
+| Famille                                   | Composants                                         | `preserveAspectRatio` |
+| ----------------------------------------- | -------------------------------------------------- | --------------------- |
+| **A — série sur la largeur**              | `MonthCurve`, `AllocationBar`, `ui/progress`       | `none`                |
+| **B — radial / à proportions conservées** | `CategoryDonut`, `Ring`, `Segments`, `MonthsAhead` | **jamais `none`**     |
+
+**Famille A — patrons vivants** : [`AllocationBar.tsx:57-63`](../../src/components/dashboard/AllocationBar.tsx)
+et [`ui/progress.tsx:104-110`](../../src/components/ui/progress.tsx). L'abscisse
+**est** la largeur, donc l'étirement est le comportement voulu. En contrepartie,
+**aucune géométrie ne peut dépendre de l'échelle horizontale** : ni cercle, ni
+arc, ni `stroke-linecap="round"`, ni texte pivoté. L'épaisseur d'un trait se
+préserve avec `vector-effect="non-scaling-stroke"` — qui préserve la **largeur du
+trait**, jamais la **forme**.
+
+**Famille B — patron vivant** : [`SimulatorProjection.tsx:20-25`](../../src/components/simulator/SimulatorProjection.tsx),
+qui mesure son conteneur au `ResizeObserver` et pose un `viewBox` en pixels
+correspondants. Son docblock nomme déjà l'échec évité : « a fixed 380-unit
+viewBox stretched to a wide card blew text/stroke up ~2.5× ».
+
+Pour un anneau, plus simple et sans observateur : **`viewBox` carré + le
+`preserveAspectRatio` par défaut** (`xMidYMid meet`, donc l'attribut s'omet) dans
+un conteneur `aspect-square` borné en `max-width`. Un anneau a un rapport
+intrinsèque de 1 : il n'a aucune raison de suivre la largeur de sa carte.
+
+### 8.3 La règle, et d'où elle vient
+
+> `preserveAspectRatio="none"` et la géométrie circulaire sont **incompatibles**.
+
+Établi par six mesures inter-moteurs pendant la **PR #454**, et consigné dans le
+docblock de `month-curve-geometry.ts`. Le piège qui a coûté la première tentative :
+un chemin de longueur nulle à capuchon rond rend **rond sur Chromium** (4 × 4) et
+**ovale sur WebKit** (52 × 10). Écrit en se fiant au moteur de développement, il
+passait la revue et cassait sur iPhone.
+
+Le correctif livré est un **trait vertical** : sans extension horizontale, il n'a
+rien à étirer — mesuré identique à 308 px et à 1054 px sur les deux moteurs.
+
+**Test de non-régression obligatoire pour tout composant de famille B** : asserter
+que le repère du SVG ne porte **pas** `preserveAspectRatio="none"`. Une assertion
+d'une ligne, à écrire avant le composant.
+
+### 8.4 Jusqu'où la famille A a le droit de s'étirer **[ajouté 25/08/2026]**
+
+La famille A s'étire par construction — mais **pas indéfiniment**. Constat de
+@thierry sur la production, le 25/08 : « sur desktop c'est allongé ». Mesuré :
+`MonthCurve` rend à `RENDER_HEIGHT` = 88 px avec `w-full`, donc **≈ 4,4:1 à
+390 px** et **≈ 12:1 à 1054 px**. À 12:1 une courbe ne montre plus une forme, elle
+montre une ligne.
+
+**Décision** : le rapport rendu de `MonthCurve` est **borné à 8:1**. Au-delà, c'est
+sa largeur qui s'arrête, pas sa hauteur qui grandit — une courbe plus haute
+mangerait le pli des 550 px que le §12 protège.
+
+Implémenté en **PR 2b** par un `max-width` sur le conteneur de la courbe, valeur
+**mesurée au DOM à 1440 × 900**, jamais choisie à l'œil. Le hero reste pleine
+largeur : le montant et la puce d'état ne souffrent pas de l'étirement, la courbe
+seule en souffre.
+
+**Arbitrable par @thierry à la porte visuelle de 2b** — le 8:1 est un point de
+départ mesuré, pas un dogme. Ce qui n'est pas arbitrable, c'est qu'une valeur soit
+fixée et **mesurée** : sans elle, la PR 2 pouvait aggraver l'aplatissement en
+franchissant chacune de ses portes.
 
 ## 9. `PaceBar` — les treize cas
 
@@ -630,14 +764,33 @@ réécrites. Une clé qui change de nom sans changer de sens n'est pas une clé 
 | `EngagementsCard.test.tsx`          | migrée vers `Segments`                                                                                                                                                                                                                       | 3   |
 | `ProchainesFacturesCard.test.tsx`   | migrée vers « Ce qui arrive » + `DaysStrip`                                                                                                                                                                                                  | 3   |
 
-**Les quatre entrées de quarantaine (`authenticated-specs.json:51-56`) :**
+**Les quatre entrées de quarantaine (`authenticated-specs.json:53-58`) — relues à
+la source le 25/08/2026.** La v5 annonçait « réécrite en PR 2 » pour les deux
+premières. **Le fichier dit autre chose**, et ça change le travail à faire :
 
-| Entrée                                 | Sort                                                                              |
-| -------------------------------------- | --------------------------------------------------------------------------------- |
-| `accounts.spec.ts`                     | réécrite en PR 2                                                                  |
-| `dashboard-expenses.spec.ts`           | réécrite en PR 2 — sa cible est « Dépensé ce mois »                               |
-| `dashboard-data-flow.spec.ts`          | réécrite en PR 3 — sa surface de remplacement n'existe qu'après la colonne droite |
-| `dashboard-capacite-tryptique.spec.ts` | supprimée par écrit en PR 3 : ADR-035 a retiré les concepts assertés              |
+| Entrée                                 | Ce que le fichier dit                                                       | Action réelle                                | PR          |
+| -------------------------------------- | --------------------------------------------------------------------------- | -------------------------------------------- | ----------- |
+| `accounts.spec.ts`                     | `READY TO VERIFY` — cause racine corrigée (`CardTitle` rend un vrai `<h3>`) | **l'exécuter**, pas la réécrire              | 2a ou avant |
+| `dashboard-expenses.spec.ts`           | `READY TO VERIFY` — même correctif ; libellé devenu « Dépensé ce mois »     | **l'exécuter** ; au plus une regex à ajuster | 2a          |
+| `dashboard-data-flow.spec.ts`          | `PARTIALLY FIXED` — `getByText(/^Factures /i)` vise une surface remplacée   | réécriture véritable                         | 3           |
+| `dashboard-capacite-tryptique.spec.ts` | `STILL INVALID, and now permanently` — ADR-035 a retiré les concepts        | suppression justifiée par écrit              | 3           |
+
+**Le blocage nommé dans le fichier n'existe plus.** Son commentaire (`:48-51`)
+dit : « Verifying them needs a local Supabase: `supabase start` requires Docker,
+which is not installed on the machine this ran on […] Whoever has Docker: run the
+job, then remove the entries that pass. » Docker tourne désormais, et la pile
+locale d'Ankora écoute sur les ports **5442x** (API `127.0.0.1:54421`) — montée et
+utilisée le 25/08 pour la porte visuelle authentifiée.
+
+**Deux entrées sur quatre peuvent donc sortir de quarantaine avant même que la
+PR 2a commence, sans réécrire une ligne.** À faire en premier : c'est le geste le
+moins cher du chantier, et il rend deux specs au job authentifié — dont le
+plancher **monte** en conséquence, ce qui est le bon sens du mouvement.
+
+**Ne les libérer qu'après les avoir VUES vertes.** Le commentaire du fichier pose
+déjà la règle et elle tient : sortir une spec jamais exécutée la fait entrer dans
+le job authentifié et rougir — soit exactement « une suite qui rétrécit en
+silence », par l'autre bout.
 
 À la fin des trois PR, la quarantaine est **vide**.
 
@@ -654,23 +807,49 @@ delta justifié par écrit.
 ## 12. Portes et DONE — par PR
 
 **Portes locales** : `lint` · `lint:use-server` · `typecheck` · `test` · `build` ·
-**`npm run dev` + une page en HTTP 200 + zéro erreur de compilation**. Puis
-captures 390 × 844 **clair et sombre** et **mesure DOM du pli**
-(`getBoundingClientRect`) : réponse complète dans les **550 px utiles**.
+**`npm run dev` + une page en HTTP 200 + zéro erreur de compilation**.
+
+**Porte visuelle — DEUX formats, pas un [amendé 25/08/2026].**
+
+| Format         | Ce qui s'y mesure                                                                             |
+| -------------- | --------------------------------------------------------------------------------------------- |
+| **390 × 844**  | **mesure DOM du pli** (`getBoundingClientRect`) : réponse complète dans les **550 px utiles** |
+| **1440 × 900** | **rapport rendu de `MonthCurve` ≤ 8:1** (§8.4), et aucun SVG de famille B plus large que haut |
+
+Captures **clair et sombre** dans les deux formats. Jusqu'au 25/08 cette section
+n'imposait que le 390 × 844 : une PR pouvait donc étirer la courbe jusqu'à 12:1 en
+bureau et rester verte de bout en bout. C'est ce qui est arrivé, et c'est
+@thierry qui l'a vu — pas une porte.
+
+**Et la porte se franchit dans un navigateur, pas seulement au DOM.** Une mesure
+prouve une propriété ; elle ne dit pas si le résultat est bon. Le 25/08, le
+marqueur de projection mesurait juste et se voyait à peine en bureau — deux
+constats qu'aucun `getBoundingClientRect` n'aurait rendus. Chrome pour les pages
+publiques de la preview, **Playwright local seedé** pour l'écran connecté (la
+preview pointe sur la production : y semer un compte écrirait de vraies lignes).
+Relever aussi la **console** : elle porte aujourd'hui #354 et #378, connus — tout
+message hors de ces deux-là est neuf et se traite.
 
 **DONE**, prouvé, pour chaque PR : CI verte (six checks) ; Sourcery silencieux sur
 le dernier commit — fils ancrés **et** remarques générales du corps de review ;
 tous les fils résolus, Codex compris ; `mergeStateStatus` **CLEAN** ; rapport dans
-`docs/prs/PR-cockpit-{0,1,2,3}-report.md` et `docs/ROADMAP.md` à jour.
+`docs/prs/PR-cockpit-{0,1,2a,2b,3}-report.md` et `docs/ROADMAP.md` à jour.
 
 **Agents QA** : `ui-auditor` + `mobile-ios-auditor` partout ;
-`dashboard-ux-auditor` sur 1, 2, 3 ; `financial-formula-validator` sur 1 et 2 ;
-`test-quality-auditor` sur les quatre ; `mobile-liquid-glass-auditor` sur la PR 0.
+`dashboard-ux-auditor` sur 1, 2a, 2b, 3 ; `financial-formula-validator` sur 1 et
+**2a** (2b ne calcule rien de neuf) ; `test-quality-auditor` sur les cinq ;
+`mobile-liquid-glass-auditor` sur la PR 0.
+
+**`plan-reviewer` avant chaque PR de ce plan**, et pas seulement au cadrage : le
+`CLAUDE.md` du projet le rend obligatoire au-delà de 50 lignes, et les cinq PR y
+sont toutes. C'est lui qui a trouvé le §8 mort et le silence du §12 sur le
+bureau — deux défauts qu'aucune porte automatique n'aurait vus, parce qu'ils
+vivaient dans le plan et non dans le code.
 
 ## 13. État de l'écran entre les PR
 
 Après la **PR 1**, le nouveau pli surmonte les surfaces d'aujourd'hui. Deux
-vocabulaires visuels cohabitent le temps de la PR 2. **Acceptable** : la frontière
+vocabulaires visuels cohabitent le temps des PR 2a et 2b. **Acceptable** : la frontière
 est horizontale et nette, le haut répond, le bas détaille, et les deux moitiés
 lisent les mêmes chiffres du même domaine — ce que le §5.1 impose.
 
@@ -682,12 +861,28 @@ migration, `AccountCard` intouché.
 1. **`MonthCurve` est le composant le plus lourd.** Écrit en premier, en TDD,
    **scindé tracé / états** plutôt que rogné.
 2. **Le pli à 550 px est serré.** La **mesure DOM tranche**, pas la maquette.
-3. **La grille bureau casse une assertion vivante** (§6.1). Traitée en PR 2.
-4. **PR 2 ajoute deux lectures en base**, dans le `Promise.all` existant.
+3. **La grille bureau casse une assertion vivante** (§6.1). Traitée en PR 2b.
+4. **PR 2a ajoute deux lectures en base**, dans le `Promise.all` existant.
 5. **PR 0 touche des jetons utilisés partout** et y ajoute une rampe. Aucun
    changement de mise en page dans cette PR, et les paires de contraste neuves
    comme filet.
 6. **Le magasin optimiste change de forme** et sert le hero, la feuille ⊕ et la
    courbe. Sept fichiers, tous nommés au §3.
-7. **`SKILL.md` prescrit un composant supprimé** entre PR 1 et PR 1-bis. Fenêtre
-   de quelques heures, nommée plutôt que subie.
+7. **`SKILL.md` prescrit un composant supprimé** — et la fenêtre n'est PAS « de
+   quelques heures » **[corrigé 25/08/2026]**. Le §4 a déplacé la PR documentaire
+   après la PR 3 pour ne pas produire un document faux deux fois ; la conséquence
+   arithmétique est que `SKILL.md:101` prescrit `PaceBar` **pendant toute la
+   refonte**. Et les agents QA lisent ce fichier à chaque PR.
+
+   **Donc une micro-PR de trois lignes, tout de suite**, avant la PR 2a : retirer
+   `PaceBar` de `:101` et `:173`, sans toucher au reste. Elle ne remplace pas la
+   PR 3-bis, qui refera la liste complète quand elle sera stable — elle retire le
+   seul élément déjà faux aujourd'hui, et le seul qui puisse induire du code.
+
+8. **Un plan périmé se lit comme un plan juste [ajouté 25/08/2026].** Trois
+   défauts trouvés le 25/08 étaient tous de cette famille : un patron supprimé
+   (§8), huit ancres décalées de 11 lignes (§6.1), deux entrées de quarantaine
+   dont l'action réelle avait changé (§11). Aucun ne rougit nulle part.
+   **Contre-mesure** : toute ancre, tout nom de fichier et tout état cité par ce
+   plan se **re-mesure** au début de la PR qui s'en sert — jamais recopié depuis
+   la version précédente.
