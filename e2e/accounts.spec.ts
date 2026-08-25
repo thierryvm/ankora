@@ -66,8 +66,22 @@ test.describe('Accounts — 3-comptes saisie + Plan du mois', () => {
       await page.goto('/app');
       await expect(page.getByRole('heading', { name: /plan du mois/i })).toBeVisible();
       await expect(page.getByText(/principal → vie courante/i)).toBeVisible();
-      await expect(page.getByText(/principal → épargne/i)).toBeVisible();
-      await expect(page.getByText(/restant principal/i)).toBeVisible();
+      // Two labels were RENAMED and this spec still named the old ones — measured
+      // 2026-08-25 on its first execution since 2026-07-26. Not a weakened
+      // assertion: it proves the same two lines are on the card, at the words the
+      // card actually shows (`messages/fr-BE.json:684,687`).
+      //
+      // The épargne line is BIDIRECTIONAL — `transferPrincipalToEpargne` (« À virer
+      // vers l'épargne ») or `transferEpargneToPrincipal` (« À reprendre sur
+      // l'épargne ») depending on sign. Here the direction is deterministic by
+      // construction: the quarterly charge is seeded on `nextMonth`, so nothing is
+      // withdrawn in the current one. Asserting the exact direction is therefore
+      // legitimate, and it keeps the check a wildcard would have lost.
+      //
+      // The apostrophe is TYPOGRAPHIC (U+2019) in the messages file; a straight `'`
+      // matches nothing. Same trap class as a missing accent in a French selector.
+      await expect(page.getByText(/à virer vers l['’]épargne/i)).toBeVisible();
+      await expect(page.getByText(/après tes sorties/i)).toBeVisible();
 
       const planCard = page
         .getByRole('heading', { name: /plan du mois/i })
