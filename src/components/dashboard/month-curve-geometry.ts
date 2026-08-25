@@ -50,11 +50,61 @@ export const CURVE_PAD_BOTTOM = 4;
  * borné à 99,2 « sinon il sort de la piste ». La courbe l'avait perdu en
  * chemin — c'est la seule des onze propriétés de la barre qui n'avait pas été
  * reprise.
+ *
+ * **Toujours nécessaire depuis que le marqueur est un trait** (25 août 2026),
+ * pour une raison plus étroite : un trait n'a plus de rayon à protéger, mais son
+ * ÉPAISSEUR est centrée sur `x`, donc la moitié déborderait encore d'un repère
+ * collé au bord. La marge n'a pas été réduite pour autant : la resserrer
+ * déplacerait chaque abscisse du tracé, donc chaque valeur attendue des suites
+ * de tests, pour un gain purement décoratif.
  */
 export const CURVE_PAD_X = 3;
 
-/** Rayon du point terminal, exporté pour que le test puisse vérifier qu'il tient dans le cadre. */
-export const CURVE_END_RADIUS = 2.4;
+/**
+ * Demi-hauteur du marqueur terminal — **et ce n'est plus un rayon, délibérément.**
+ *
+ * ## Pourquoi le cercle a disparu
+ *
+ * Ce repère porte `preserveAspectRatio="none"`, donc son échelle est
+ * **anisotrope** : la hauteur est figée à 88 px pendant que la largeur suit la
+ * carte. En desktop large, mesuré le 25 août 2026, l'étirement horizontal vaut
+ * **5,25 fois** l'étirement vertical — et un cercle de rayon 2,4 s'y rendait en
+ * ovale de 50 × 10 px. Visible à l'œil nu, signalé par @thierry sur la
+ * production.
+ *
+ * **Aucune astuce SVG ne rattrape ça.** Trois techniques ont été mesurées sur
+ * WebKit ET Chromium, en comptant les pixels réellement peints :
+ *
+ * | technique | Chromium | WebKit |
+ * | --- | --- | --- |
+ * | `<circle>` | ovale | ovale |
+ * | chemin de longueur nulle + `linecap` rond + `non-scaling-stroke` | **rond** | **ovale** |
+ * | `<svg>` imbriqué avec son propre `preserveAspectRatio` | ovale | ovale |
+ *
+ * La deuxième ligne est le piège : elle fonctionne sur le moteur de
+ * développement et **pas** sur celui de l'iPhone. Écrite sans mesure
+ * inter-moteurs, elle aurait produit un correctif vert en revue et faux en
+ * production. Un `<svg>` imbriqué échoue pour une raison de fond : il établit un
+ * nouveau viewport, mais ce viewport reste soumis à la transformée de l'ancêtre.
+ *
+ * **La règle qui en sort, et elle vaut pour toute la refonte :**
+ * `preserveAspectRatio="none"` et la géométrie circulaire sont **incompatibles**.
+ * Un anneau, un point, un arc ne peuvent pas vivre dans un repère étiré. Les
+ * composants radiaux à venir (`CategoryDonut`, `Ring`) ne doivent donc PAS
+ * reprendre `none` — ce sont des formes de taille fixe, pas des séries qui
+ * courent sur la largeur.
+ *
+ * ## Ce qui remplace, et pourquoi c'est stable
+ *
+ * Un **trait vertical**. Il n'a aucune étendue horizontale à étirer, et
+ * `vector-effect="non-scaling-stroke"` fige son épaisseur en pixels écran.
+ * Mesuré : 2 × 16 px à 330 px de large **comme** à 1050, sur les deux moteurs.
+ * Il dit la même chose que le point — « la projection finit ici, à cette
+ * valeur » — sans dépendre de la largeur du conteneur.
+ *
+ * Exporté pour que le test puisse vérifier que le marqueur tient dans le cadre.
+ */
+export const CURVE_END_HALF_HEIGHT = 2.4;
 
 const PLOT_HEIGHT = CURVE_HEIGHT - CURVE_PAD_TOP - CURVE_PAD_BOTTOM;
 const PLOT_WIDTH = CURVE_WIDTH - CURVE_PAD_X * 2;

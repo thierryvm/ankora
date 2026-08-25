@@ -1,5 +1,5 @@
 import {
-  CURVE_END_RADIUS,
+  CURVE_END_HALF_HEIGHT,
   CURVE_HEIGHT,
   CURVE_WIDTH,
   etatDuMois,
@@ -263,14 +263,19 @@ export function MonthCurve({
           />
         )}
 
+        {/*
+          Un TRAIT, plus un point — et les deux abscisses sont volontairement
+          égales. C'est cette égalité qui rend le marqueur insensible à
+          l'étirement : sans étendue horizontale, il n'y a rien à étirer. Le
+          raisonnement complet, et les six mesures inter-moteurs qui ont écarté
+          les autres pistes, vivent sur `CURVE_END_HALF_HEIGHT`.
+        */}
         {geometrie.projectionEnd && (
-          <circle
-            cx={geometrie.projectionEnd.x}
-            cy={geometrie.projectionEnd.y}
-            r={CURVE_END_RADIUS}
-            fill="var(--color-card)"
+          <path
+            d={`M ${geometrie.projectionEnd.x} ${geometrie.projectionEnd.y - CURVE_END_HALF_HEIGHT} L ${geometrie.projectionEnd.x} ${geometrie.projectionEnd.y + CURVE_END_HALF_HEIGHT}`}
             stroke={teinte}
-            strokeWidth={2}
+            strokeWidth={3}
+            strokeLinecap="butt"
             vectorEffect="non-scaling-stroke"
             data-testid="month-curve-projection-end"
           />
