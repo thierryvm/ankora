@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   CURVE_HEIGHT,
-  CURVE_END_RADIUS,
+  CURVE_END_HALF_HEIGHT,
   CURVE_PAD_BOTTOM,
   CURVE_PAD_TOP,
   CURVE_PAD_X,
@@ -172,7 +172,7 @@ describe('monthCurveGeometry — la projection', () => {
     expect(g.projectionEnd).toEqual({ x: arrivee![0], y: arrivee![1] });
   });
 
-  it('garde le point terminal ENTIER dans le cadre, rayon compris', () => {
+  it('garde le marqueur terminal ENTIER dans le cadre', () => {
     // La propriété que `PaceBar` protégeait sous une autre forme — « repère
     // borné à 99,2, sinon il sort de la piste » — et que la PREMIÈRE version de
     // cette géométrie avait perdue : `x(joursDuMois)` se simplifie toujours à
@@ -182,8 +182,8 @@ describe('monthCurveGeometry — la projection', () => {
     const g = monthCurveGeometry(
       entree({ serie: serieLineaire(10, 10), joursEcoules: 10, projection: 310 }),
     );
-    expect(g.projectionEnd!.x + CURVE_END_RADIUS).toBeLessThanOrEqual(CURVE_WIDTH);
-    expect(g.projectionEnd!.x - CURVE_END_RADIUS).toBeGreaterThanOrEqual(0);
+    expect(g.projectionEnd!.x + CURVE_END_HALF_HEIGHT).toBeLessThanOrEqual(CURVE_WIDTH);
+    expect(g.projectionEnd!.x - CURVE_END_HALF_HEIGHT).toBeGreaterThanOrEqual(0);
   });
 
   it('n’existe pas avant le septième jour', () => {

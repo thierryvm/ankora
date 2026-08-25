@@ -150,10 +150,47 @@ describe('MonthCurve — les trois états, et la couleur jamais seule', () => {
 });
 
 describe('MonthCurve — la projection', () => {
-  it('trace la continuation et son point terminal quand elle existe', () => {
+  it('trace la continuation et son marqueur terminal quand elle existe', () => {
     render(<MonthCurve {...base} projection={775} />);
     expect(screen.getByTestId('month-curve-projection')).toBeInTheDocument();
     expect(screen.getByTestId('month-curve-projection-end')).toBeInTheDocument();
+  });
+
+  it('donne au marqueur terminal une étendue horizontale NULLE', () => {
+    // LE CAS QUI MANQUAIT, ET QUI A COÛTÉ UN DÉFAUT EN PRODUCTION.
+    //
+    // Le repère porte `preserveAspectRatio="none"` : la hauteur est figée à 88 px
+    // pendant que la largeur suit la carte. L'échelle est donc ANISOTROPE, et
+    // l'écart grandit avec l'écran — mesuré le 25 août 2026, l'étirement
+    // horizontal vaut 5,25 fois le vertical en desktop large. Le marqueur était
+    // un `<circle>` : il s'y rendait en ovale de 50 × 10 px.
+    //
+    // Aucune suite ne pouvait l'attraper. Les tests de géométrie vérifient des
+    // nombres dans le viewBox, où le cercle EST rond ; le rendu jsdom ne met rien
+    // à l'échelle ; et la porte visuelle mesurait 390 × 844, où l'anisotropie
+    // n'est que de 1,65:1 — imperceptible. Le défaut vivait exactement dans
+    // l'angle mort commun aux trois.
+    //
+    // La propriété testée ici est celle qui rend le marqueur insensible à
+    // l'étirement, et c'est la SEULE qui compte : **sans étendue horizontale, il
+    // n'y a rien à étirer.** Un `<circle>`, un `<ellipse>`, un arc ou un chemin
+    // dont les deux abscisses diffèrent la violent tous — donc ce cas rougit si
+    // quelqu'un « restaure le joli point rond ».
+    //
+    // Six mesures inter-moteurs ont écarté les alternatives ; elles sont
+    // consignées sur `CURVE_END_HALF_HEIGHT`. Retenir surtout ceci : le chemin de
+    // longueur nulle à capuchon rond est rond sur Chromium et OVALE sur WebKit.
+    // Vérifier sur un seul moteur aurait validé un correctif faux sur l'iPhone.
+    render(<MonthCurve {...base} projection={775} />);
+    const marqueur = screen.getByTestId('month-curve-projection-end');
+
+    expect(marqueur.tagName.toLowerCase()).toBe('path');
+
+    const abscisses = [...marqueur.getAttribute('d')!.matchAll(/(-?[\d.]+)\s+(-?[\d.]+)/g)].map(
+      (m) => Number(m[1]),
+    );
+    expect(abscisses.length).toBeGreaterThanOrEqual(2);
+    expect(new Set(abscisses).size).toBe(1);
   });
 
   it('ne trace rien avant le septième jour', () => {
