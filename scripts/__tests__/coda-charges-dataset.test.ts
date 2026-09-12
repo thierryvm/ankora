@@ -167,6 +167,12 @@ describe('codaDatasetSchema', () => {
     ['an unknown frequency', { frequency: 'weekly' }],
     ['an unknown paidFrom', { paidFrom: 'other' }],
     ['an empty label', { label: '' }],
+    // The database checks char_length(label) between 1 and 120 and
+    // char_length(notes) <= 500 (20260416000001_initial_schema.sql). The import
+    // wipes the workspace before inserting, so a row the database would reject
+    // must be rejected here, before anything destructive runs.
+    ['a label longer than the 120-character column', { label: 'x'.repeat(121) }],
+    ['notes longer than the 500-character column', { notes: 'x'.repeat(501) }],
   ])('rejects a charge with %s', (_, patch) => {
     const invalid = { ...LOCAL_DATASET, charges: [{ ...LOCAL_DATASET.charges[0], ...patch }] };
     expect(codaDatasetSchema.safeParse(invalid).success).toBe(false);

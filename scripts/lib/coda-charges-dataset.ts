@@ -48,13 +48,16 @@ const categorySchema = z
 
 const chargeSchema = z
   .object({
-    label: z.string().min(1),
+    // Mirrors the database checks (char_length(label) between 1 and 120,
+    // char_length(notes) <= 500): the import wipes the workspace before it
+    // inserts, so a row the database would reject has to fail here first.
+    label: z.string().min(1).max(120),
     category: z.string().min(1),
     amount: z.number().positive().refine(Number.isFinite, { message: 'must be finite' }),
     frequency: z.enum(['monthly', 'quarterly', 'semiannual', 'annual']),
     dueMonth: z.number().int().min(1).max(12),
     paidFrom: z.enum(['principal', 'epargne']),
-    notes: z.string().optional(),
+    notes: z.string().max(500).optional(),
   })
   .strict();
 

@@ -61,9 +61,11 @@ import { useIsClient } from '@/lib/hooks/useIsClient';
  *
  * ## Two implementation choices worth defending
  *
- * **Not Radix.** `@radix-ui/react-dialog` is already a dependency and gives the
- * trap, `aria-modal` and focus restoration for free. It is not used because of
- * the scroll lock: THI-250 established in this codebase that iOS Safari ignores
+ * **Not Radix.** `@radix-ui/react-dialog` would give the trap, `aria-modal` and
+ * focus restoration for free (it was a dependency until the pre-redesign
+ * hygiene pass removed it with the dead `ui/dialog` wrapper, September 2026).
+ * It is not used because of the scroll lock: THI-250 established in this
+ * codebase that iOS Safari ignores
  * `overflow: hidden` on `<body>` for rubber-band scrolling, and the fix that
  * actually held is `position: fixed` + a captured `scrollY`, restored with
  * `behavior: 'instant'` (the document sets `scroll-behavior: smooth`). That,
