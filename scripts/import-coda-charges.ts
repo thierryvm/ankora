@@ -3,12 +3,18 @@
  * Imports the user's Coda "DB_Dépenses" table into Ankora.
  *
  * Idempotent: wipes existing categories + charges for the target workspace,
- * then recreates them from the hard-coded list below. Run against a real
- * Supabase project using the service role key from .env.local.
+ * then recreates them from the dataset. Run against a real Supabase project
+ * using the service role key from .env.local.
+ *
+ * Where the data lives: this repository is public, so the real categories and
+ * charges are NOT in it. They are read from `scripts/import-coda-charges.local.json`,
+ * a gitignored file (shape: `CodaDataset` in `scripts/lib/coda-charges-dataset.ts`).
+ * Without that file, the import uses a fictional dataset — the run logs which
+ * source it picked before writing anything, and refuses to WRITE the fictional
+ * dataset unless `--allow-fictional` is passed.
  *
  * Usage:
- *   tsx scripts/import-coda-charges.ts --email=thierryvm@hotmail.com --dry-run
- *   tsx scripts/import-coda-charges.ts --email=thierryvm@hotmail.com
+ *   tsx scripts/import-coda-charges.ts --email=you@example.com [--dry-run] [--allow-fictional]
  */
 
 import { readFileSync } from 'node:fs';
@@ -17,6 +23,8 @@ import { resolve } from 'node:path';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '@/lib/supabase/types';
+
+import { assertWritableDataset, loadCodaDataset } from './lib/coda-charges-dataset';
 
 // ---------- .env.local loader ----------
 function loadEnvLocal(): void {
@@ -45,215 +53,27 @@ for (const a of rawArgs) {
   if (!k) continue;
   args.set(k, v ?? 'true');
 }
-const email = args.get('email') ?? 'thierryvm@hotmail.com';
+const emailArg = args.get('email');
+if (!emailArg || emailArg === 'true') {
+  // A bare `--email` parses as 'true': reject it like a missing flag.
+  process.stderr.write(
+    '[import-coda] FAILED: --email=<address> is required (e.g. --email=you@example.com)\n',
+  );
+  process.exit(1);
+}
+const email: string = emailArg;
 const dryRun = args.get('dry-run') === 'true';
-
-// ---------- Reference data ----------
-type CategoryKind = 'fixed' | 'variable' | 'income';
-type CategoryDef = { name: string; color: string; icon: string; kind: CategoryKind };
-
-const CATEGORIES: CategoryDef[] = [
-  { name: 'Logement', color: '#4F46E5', icon: 'home', kind: 'fixed' },
-  { name: 'Abonnements', color: '#8B5CF6', icon: 'repeat', kind: 'fixed' },
-  { name: 'Assurances', color: '#0EA5E9', icon: 'shield', kind: 'fixed' },
-  { name: 'Transport', color: '#F59E0B', icon: 'car', kind: 'fixed' },
-  { name: 'Santé', color: '#EC4899', icon: 'heart', kind: 'fixed' },
-  { name: 'Taxes', color: '#DC2626', icon: 'landmark', kind: 'fixed' },
-  { name: 'Famille', color: '#14B8A6', icon: 'users', kind: 'fixed' },
-  { name: 'Courses', color: '#22C55E', icon: 'shopping-cart', kind: 'variable' },
-  { name: 'Autres', color: '#6B7280', icon: 'circle', kind: 'variable' },
-];
-
-type ChargeFrequency = 'monthly' | 'quarterly' | 'semiannual' | 'annual';
-type PaidFrom = 'principal' | 'epargne';
-type CodaCharge = {
-  label: string;
-  category: string;
-  amount: number;
-  frequency: ChargeFrequency;
-  dueMonth: number;
-  paidFrom: PaidFrom;
-  notes?: string;
-};
-
-const CHARGES: CodaCharge[] = [
-  {
-    label: 'Loyer',
-    category: 'Logement',
-    amount: 740,
-    frequency: 'monthly',
-    dueMonth: 1,
-    paidFrom: 'principal',
-  },
-  {
-    label: 'Charges (immeuble)',
-    category: 'Logement',
-    amount: 120,
-    frequency: 'monthly',
-    dueMonth: 1,
-    paidFrom: 'principal',
-  },
-  {
-    label: 'MEGA',
-    category: 'Logement',
-    amount: 55,
-    frequency: 'monthly',
-    dueMonth: 1,
-    paidFrom: 'principal',
-  },
-  {
-    label: 'Pension alimentaire',
-    category: 'Famille',
-    amount: 120,
-    frequency: 'monthly',
-    dueMonth: 1,
-    paidFrom: 'principal',
-  },
-  {
-    label: 'Impôt',
-    category: 'Taxes',
-    amount: 220,
-    frequency: 'monthly',
-    dueMonth: 1,
-    paidFrom: 'principal',
-  },
-  {
-    label: 'Solidaris (1)',
-    category: 'Santé',
-    amount: 14,
-    frequency: 'monthly',
-    dueMonth: 1,
-    paidFrom: 'principal',
-  },
-  {
-    label: 'Solidaris (2)',
-    category: 'Santé',
-    amount: 22,
-    frequency: 'monthly',
-    dueMonth: 1,
-    paidFrom: 'principal',
-  },
-  {
-    label: 'FGTB',
-    category: 'Autres',
-    amount: 19,
-    frequency: 'monthly',
-    dueMonth: 1,
-    paidFrom: 'principal',
-  },
-  {
-    label: 'Apple One',
-    category: 'Abonnements',
-    amount: 3,
-    frequency: 'monthly',
-    dueMonth: 1,
-    paidFrom: 'principal',
-  },
-  {
-    label: 'Netflix',
-    category: 'Abonnements',
-    amount: 22,
-    frequency: 'monthly',
-    dueMonth: 1,
-    paidFrom: 'principal',
-  },
-  {
-    label: 'Voo',
-    category: 'Abonnements',
-    amount: 78,
-    frequency: 'monthly',
-    dueMonth: 1,
-    paidFrom: 'principal',
-  },
-  {
-    label: 'Proximus',
-    category: 'Abonnements',
-    amount: 55,
-    frequency: 'monthly',
-    dueMonth: 1,
-    paidFrom: 'principal',
-  },
-  {
-    label: 'PlayStation abo',
-    category: 'Abonnements',
-    amount: 9,
-    frequency: 'monthly',
-    dueMonth: 1,
-    paidFrom: 'principal',
-  },
-  {
-    label: 'Belfius',
-    category: 'Autres',
-    amount: 6,
-    frequency: 'monthly',
-    dueMonth: 1,
-    paidFrom: 'principal',
-  },
-  {
-    label: 'Assurance auto',
-    category: 'Assurances',
-    amount: 150,
-    frequency: 'monthly',
-    dueMonth: 1,
-    paidFrom: 'principal',
-  },
-  {
-    label: 'Crédit voiture',
-    category: 'Transport',
-    amount: 250,
-    frequency: 'monthly',
-    dueMonth: 1,
-    paidFrom: 'principal',
-  },
-  {
-    label: 'S.W.D.E (eaux)',
-    category: 'Logement',
-    amount: 45,
-    frequency: 'quarterly',
-    dueMonth: 1,
-    paidFrom: 'epargne',
-    notes: 'Cycle trimestriel — dueMonth à préciser',
-  },
-  {
-    label: 'Taxe voiture',
-    category: 'Taxes',
-    amount: 300,
-    frequency: 'annual',
-    dueMonth: 6,
-    paidFrom: 'epargne',
-    notes: 'Échéance 01/06/2026',
-  },
-  {
-    label: 'Taxe poubelle',
-    category: 'Taxes',
-    amount: 120,
-    frequency: 'annual',
-    dueMonth: 3,
-    paidFrom: 'epargne',
-    notes: 'Payée le 25/03/2026',
-  },
-  {
-    label: 'Taxe égout',
-    category: 'Taxes',
-    amount: 55,
-    frequency: 'annual',
-    dueMonth: 3,
-    paidFrom: 'epargne',
-    notes: 'Payée le 25/03/2026',
-  },
-  {
-    label: 'Dashlane',
-    category: 'Abonnements',
-    amount: 53,
-    frequency: 'annual',
-    dueMonth: 4,
-    paidFrom: 'epargne',
-    notes: 'Payée le 11/04/2026',
-  },
-];
+const allowFictional = args.get('allow-fictional') === 'true';
 
 // ---------- Main ----------
 async function main(): Promise<void> {
+  // Loaded first: an invalid local file must stop the run before any network
+  // call, let alone a write.
+  const dataset = loadCodaDataset();
+  const { categories, charges } = dataset;
+  log(`dataset source=${dataset.source} categories=${categories.length} charges=${charges.length}`);
+  assertWritableDataset(dataset.source, { dryRun, allowFictional });
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) {
@@ -286,9 +106,9 @@ async function main(): Promise<void> {
 
   if (dryRun) {
     log('DRY RUN — no writes.');
-    log(`Would seed ${CATEGORIES.length} categories and ${CHARGES.length} charges:`);
-    for (const c of CATEGORIES) log(`  cat ${c.name} (${c.kind})`);
-    for (const c of CHARGES) {
+    log(`Would seed ${categories.length} categories and ${charges.length} charges:`);
+    for (const c of categories) log(`  cat ${c.name} (${c.kind})`);
+    for (const c of charges) {
       log(
         `  charge ${c.label.padEnd(24)} ${String(c.amount).padStart(4)}€ ${c.frequency.padEnd(10)} month=${c.dueMonth} from=${c.paidFrom}`,
       );
@@ -311,7 +131,7 @@ async function main(): Promise<void> {
   const { data: catsInserted, error: catsErr } = await admin
     .from('categories')
     .insert(
-      CATEGORIES.map((c) => ({
+      categories.map((c) => ({
         workspace_id: workspaceId,
         created_by: user.id,
         name: c.name,
@@ -326,21 +146,30 @@ async function main(): Promise<void> {
   log(`inserted ${catsInserted?.length ?? 0} categories`);
 
   const { error: chargesErr } = await admin.from('charges').insert(
-    CHARGES.map((c) => ({
-      workspace_id: workspaceId,
-      created_by: user.id,
-      label: c.label,
-      amount: c.amount,
-      frequency: c.frequency,
-      due_month: c.dueMonth,
-      category_id: catByName.get(c.category) ?? null,
-      is_active: true,
-      paid_from: c.paidFrom,
-      notes: c.notes ?? null,
-    })),
+    charges.map((c, index) => {
+      const categoryId = catByName.get(c.category);
+      if (!categoryId) {
+        // The schema guarantees the category is declared, so reaching this
+        // means the insert above did not return it. Refuse rather than import
+        // an uncategorised charge. The label is not quoted: it is real data.
+        throw new Error(`No inserted category found for charge #${index}`);
+      }
+      return {
+        workspace_id: workspaceId,
+        created_by: user.id,
+        label: c.label,
+        amount: c.amount,
+        frequency: c.frequency,
+        due_month: c.dueMonth,
+        category_id: categoryId,
+        is_active: true,
+        paid_from: c.paidFrom,
+        notes: c.notes ?? null,
+      };
+    }),
   );
   if (chargesErr) throw chargesErr;
-  log(`inserted ${CHARGES.length} charges`);
+  log(`inserted ${charges.length} charges`);
   log('done');
 }
 
