@@ -199,7 +199,7 @@ Ces documents ont **priorité absolue** sur ce skill en cas de conflit. Ordre de
 
 Toute PR qui modifie une surface UI doit passer l'agent QA dédié AVANT merge :
 
-- **`dashboard-ux-auditor`** (`.claude/agents/dashboard-ux-auditor.md`) — toute modification de `src/app/[locale]/app/**` ou `src/components/dashboard/*`. Vérifie cohérence avec NORTH_STAR (Dashboard Excellence non négociable, niveau Monarch Money, 8 sections cockpit v3 obligatoires).
+- **`dashboard-ux-auditor`** (`.claude/agents/dashboard-ux-auditor.md`) — toute modification de `src/app/[locale]/app/**` ou `src/components/dashboard/*`. Vérifie la hiérarchie plafonnée du `CLAUDE.md` (une question par écran, trois surfaces au plus au-dessus du pli à 375 px, tout chiffre déclare sa source).
 - **`admin-dashboard-auditor`** (`.claude/agents/admin-dashboard-auditor.md`) — toute modification de `src/app/[locale]/admin/**`. Vérifie RBAC `requireAdmin()` côté serveur + 4 sections admin obligatoires.
 - **`ui-auditor`** — audit générique mobile-first WCAG 2.2 AA, viewport Chromium. Toute PR UI.
 - **`mobile-ios-auditor`** — toute modif layout / nav / forms / dashboard mobile / drawer / theme toggle. Procédure manuelle iPhone réelle : [`docs/runbooks/dev-on-iphone.md`](../../../docs/runbooks/dev-on-iphone.md).

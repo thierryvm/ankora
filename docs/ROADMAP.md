@@ -230,8 +230,9 @@ L2 §Agents QA et L3 §Agents QA).
 ### Vision produit
 
 Inchangée et hors de ce fichier : [`docs/NORTH_STAR.md`](./NORTH_STAR.md) (vision,
-jalons, piliers, contraintes non négociables). Les huit sections obligatoires du
-dashboard et le positionnement FSMA sont rappelés dans [`CLAUDE.md`](../CLAUDE.md).
+jalons, piliers, contraintes non négociables). La règle du tableau de bord
+(hiérarchie plafonnée, 12 septembre 2026) et le positionnement FSMA sont rappelés dans
+[`CLAUDE.md`](../CLAUDE.md).
 
 ---
 
