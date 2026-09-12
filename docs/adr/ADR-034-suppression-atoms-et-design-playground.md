@@ -89,6 +89,16 @@ Conditions d'exécution, non négociables :
 
 **`src/components/ui/{dialog,form,sheet,switch}.tsx`** ont 0 call-site de production, mais **restent**. `docs/superpowers/specs/2026-07-26-ankora-refonte-v2-plan.md:976` exige pour eux « une décision explicite en ADR-028, pas une suppression silencieuse — sans arbitrage : les garder ». @thierry n'a pas rendu cet arbitrage, et le brief du chantier 1 ne les mentionne pas. On les garde. (`src/components/ui/form.tsx:14` importe encore `react-hook-form`, gelé et non mort pour cette raison.)
 
+> **Amendement du 12 septembre 2026 — l'arbitrage est rendu.** @thierry décide la suppression
+> de `ui/dialog.tsx`, `ui/form.tsx` et `ui/switch.tsx` (`ui/sheet.tsx` était déjà supprimé, et
+> sa résurrection est bloquée par `sheet-is-the-only-modal.test.ts`), ainsi que de
+> `src/lib/utils/largestRemainderRound.ts`, testé mais importé par aucun fichier. Mesuré le
+> jour même : zéro import de ces fichiers dans `src/`, `e2e/`, `tests/` et `scripts/`. Leurs
+> dépendances partent avec eux : `react-hook-form`, `@hookform/resolvers`,
+> `@radix-ui/react-dialog`, `@radix-ui/react-switch`, et `date-fns`, importé par personne.
+> Le gel de `react-hook-form` n'avait plus de motif : son seul importateur était mort. Git garde
+> tout ; un besoin futur réinstalle, il ne ressuscite pas.
+
 ## Conséquences positives
 
 - ≈ **−5 150 lignes** de code non exécuté
