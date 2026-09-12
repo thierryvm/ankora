@@ -15,24 +15,28 @@ Résumé local :
 - **Gouvernance** : Cowork pilote A+B+contenus D/E, CC Ankora pilote C+tech D/E, Thierry valide + merge
 - **Contraintes clés** : FSMA non régulé, PSD2 exclu, GDPR renforcé, Budget 0 €
 
-### Dashboard Excellence — non négociable
+### Dashboard — une hiérarchie plafonnée (verrouillé le 12 septembre 2026)
 
-Le dashboard user EST le produit. Cible : niveau Monarch Money, pensé enveloppes (pas comptes agrégés).
+Le dashboard user EST le produit. Cible : niveau Monarch Money, pensé enveloppes, **pas
+d'agrégation bancaire automatique** : la vue par compte — soldes déduits des mouvements,
+virements entre comptes dans les deux sens (ADR-038) — en fait partie.
 
-Sections obligatoires user dashboard v3 :
+Trois règles, vérifiées en revue :
 
-1. Hero cashflow waterfall (salaire → enveloppes → sorties)
-2. Health score provisions (jauge + nudges)
-3. Timeline 6 mois prédictive
-4. Enveloppes actives (drag-to-rebalance)
-5. Prochaines factures 7/14/30j
-6. Goals épargne avec ETA
-7. Simulateur what-if en drawer
-8. Activité récente
+1. **Une question par écran.** Chaque écran nomme la question à laquelle il répond ; ce qui
+   n'y répond pas se replie ou part ailleurs.
+2. **Trois surfaces au plus au-dessus du pli**, mesurées à 375 px — la maquette mobile fait
+   foi.
+3. **Tout chiffre déclare sa source** : saisi, déduit des mouvements ou calculé — et s'ouvre
+   sur ce qui le compose (règle de code 10).
 
 Admin panel obligatoire : santé technique, santé produit, acquisition, recommandations rule-based.
 
-Tout dashboard minimaliste = refus de merge.
+**Aucun chiffre sans source ouvrable = refus de merge.**
+
+Les huit sections obligatoires du « dashboard v3 » (23 avril 2026) sont retirées le
+12 septembre 2026 sur décision de @thierry : elles décrivaient un catalogue, et le retour
+d'usage (« tout est mélangé », juillet ; « le foutoir », septembre) en était la conséquence.
 
 ### Agents QA (19 fichiers dans `.claude/agents/` au 2026-08-05)
 
@@ -170,6 +174,11 @@ c'est l'ordre qui compte, pas le secret.
 **Ne vont pas non plus dans le dépôt** : les chemins de fichiers hors dépôt (sauvegardes,
 exports, ressources locales), l'état des dispositifs de sauvegarde et de restauration de la
 production, et toute donnée nominative sur les personnes qui utilisent l'application.
+
+**`docs/retours/` n'est jamais commité** (ajouté le 12 septembre 2026). Ce dossier reçoit les
+rapports de test de @thierry, captures de l'application réelle comprises — donc ses montants
+et ses comptes. `.gitignore` le porte. Un point de rapport entre dans le dépôt reformulé, sans
+valeur réelle ni capture.
 
 Origine : un document de passation a été poussé le 2 août 2026 avec, réunis en une page,
 l'emplacement d'une copie complète des données, l'état des filets de la base et le détail d'un

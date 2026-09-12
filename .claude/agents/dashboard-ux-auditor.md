@@ -37,10 +37,10 @@ Verify that the user dashboard maintains **coherence in design tokens, micro-int
 - [ ] **Information hierarchy** — order is: (1) month status, (2) recommended
       action, (3) upcoming risk, (4) explorable detail. A bare KPI without
       "what it means + what to do" is a FAIL.
-- [ ] **Hero is the cashflow waterfall (NORTH_STAR #1)** — the hero shows the
-      narrative revenus → charges → provisions → **Budget du mois** → **Dépensé
-      ce mois** → **Il te reste** (ADR-035 §1) with a vert/orange/rouge state,
-      NOT a lone "Effort financier lissé" number.
+- [ ] **At most three surfaces above the fold, at 375 px** — measured in the DOM,
+      not judged from a screenshot. The hero answers the page's one question;
+      everything else folds or lives on another screen. (`CLAUDE.md` §Dashboard,
+      2026-09-12 — replaces the former "hero is the cashflow waterfall" check.)
 - [ ] **Lists never dominate** — a long itemised list (e.g. all recurring bills)
       must NOT be the visual center. Show a bucket SUMMARY (cette semaine / ce
       mois / mois prochain + nearest item), full list behind "Voir tout" or on
@@ -138,14 +138,17 @@ the auditable surface is `messages/` **plus** `.claude/agents/`, `.claude/skills
 
 ### Dashboard-Specific Elements
 
-- [ ] **Hero/waterfall section** — clearly shows income → envelopes → outflows
-- [ ] **Health score gauge** — visible, understandable provision status
-- [ ] **Timeline section** — 6-month cashflow prediction clearly laid out
-- [ ] **Envelope cards** — drag-to-rebalance ready (if implemented), interactive feedback
-- [ ] **Prochaines factures** — 7/14/30j buckets clearly separated
-- [ ] **Goals section** — ETA visible, progress bars present
-- [ ] **What-if simulator link** — accessible from dashboard (drawer or modal)
-- [ ] **Recent activity** — transactions or events listed with timestamps
+> The eight mandatory "dashboard v3" sections were withdrawn on 2026-09-12
+> (`CLAUDE.md` §Dashboard). Never FAIL a surface for lacking one of them.
+
+- [ ] **One question per screen** — the screen names the question it answers;
+      anything that does not answer it folds or lives elsewhere
+- [ ] **Three surfaces at most above the fold at 375 px** — measured with
+      `getBoundingClientRect`, not eyeballed
+- [ ] **Every figure declares its source** — entered by hand, derived from
+      movements, or computed — and opens onto its breakdown (`CLAUDE.md` code rule 10)
+- [ ] **Per-account view is in scope** — balances per account and transfers
+      between accounts in both directions; no automatic bank aggregation (ADR-038)
 
 ### What-if Simulator v2 (Track B, locked 2026-05-30)
 
