@@ -12,8 +12,8 @@ description: |
 
 Run this agent after modifications to:
 
-- `src/app/[locale]/app/admin/**` (admin pages and layouts)
-- `src/lib/admin/**` (admin utilities, services, hooks)
+- `src/app/[locale]/admin/**` (admin pages, layout and `_components`)
+- `src/lib/auth/is-admin.ts`, `src/lib/auth/require-admin.ts` (the admin access gate)
 - `supabase/migrations/*` (schema changes affecting admin tables or RLS)
 
 ## Mission
