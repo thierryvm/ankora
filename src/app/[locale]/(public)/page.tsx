@@ -3,6 +3,7 @@ import { getNonce } from '@/lib/security/nonce';
 import { getTranslations } from 'next-intl/server';
 
 import type { Locale } from '@/i18n/routing';
+import { redirectIfSignedIn } from '@/lib/auth/require-user';
 import { SITE } from '@/lib/site';
 import { FAQ, FAQ_KEYS } from '@/components/marketing/landing/sections/FAQ';
 import { Feature } from '@/components/marketing/landing/sections/Feature';
@@ -79,6 +80,13 @@ export async function generateMetadata(
 }
 
 export default async function HomePage({ params }: LocaleParams) {
+  // A signed-in visitor goes to the cockpit, before anything of this page is
+  // built. Same guard as /login and /signup: it keeps the locale, sends a
+  // session that still owes its second factor to the challenge, and during an
+  // auth outage degrades to "anonymous" — so the marketing page renders
+  // instead of looping. A visitor without a session is not affected.
+  await redirectIfSignedIn();
+
   const { locale } = await params;
   const nonce = await getNonce();
   const t = await getTranslations('landing');

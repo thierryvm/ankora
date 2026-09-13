@@ -48,6 +48,15 @@ export default function manifest(): MetadataRoute.Manifest {
      * vers `/login`, ce qui est le comportement attendu d'une application
      * installée. Et hors ligne, `public/sw.js` traite toute navigation par le
      * réseau avec `/offline` pour seul repli — inchangé par cette valeur.
+     *
+     * Complété le 13 septembre 2026 : la page d'accueil a désormais une garde
+     * (`redirectIfSignedIn()` dans `[locale]/(public)/page.tsx`), qui envoie une
+     * session vers `/app`. Cette valeur reste la bonne — elle épargne une
+     * redirection à chaque ouverture —, mais elle n'est plus le seul chemin : un
+     * raccourci iOS resté sur l'ancienne configuration, qui ouvrirait encore `/`,
+     * arrive lui aussi au cockpit, par la redirection. Non mesuré sur un iPhone.
+     * `id` et `start_url` n'ont pas bougé, donc aucune installation existante
+     * ne change d'identité.
      */
     start_url: '/app',
     /**
