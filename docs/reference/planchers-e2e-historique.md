@@ -27,7 +27,8 @@ ininterprétable au premier conflit, donc ignoré :
 > **Authentifié : 62 → 63 → 64, mesuré le 2026-09-13.**
 >
 > **63** : relevé sur la CI de [#468](https://github.com/thierryvm/ankora/pull/468)
-> (runs push et pull_request, 63 passed / 5 skipped, 0 failed, 0 flaky), la première
+> (runs 34762075578 et 34762085411, 63 passed / 5 skipped, 0 failed, 0 flaky dans
+> les journaux des deux jobs authentifiés), la première
 > après la fusion de [#462](https://github.com/thierryvm/ankora/pull/462), qui avait
 > sorti deux specs de quarantaine et en avait remis une. Que le +1 vienne de là est
 > une déduction par la date : le nombre, lui, est mesuré.
@@ -38,6 +39,10 @@ ininterprétable au premier conflit, donc ignoré :
 > rendu 63 passed / 1 failed (run 34764409654), le commit du correctif 64 passed /
 > 0 failed / 0 flaky (runs 34764886228 et 34764934820). Le job public reste à
 > **268 passed** ; ses skipped passent de 218 à 221, la nouvelle spec y sautant.
+> Un cas mais trois sauts : `npx playwright test --list` la liste sur trois
+> projets, `chromium-desktop`, `mobile-safari` et `mobile-chrome` ; les projets
+> iPhone ne prennent que `mobile-ios/**`. Pour la même raison, le job authentifié,
+> qui tourne sur `chromium-desktop` et `iPhone 14`, ne l'exécute qu'une fois.
 > Le même PR déplace `bottom-tab-bar-client-navigation.spec.ts` de `/` vers
 > `/offline` sans retirer de cas.
 >
