@@ -85,6 +85,12 @@ tmp/
 
 # outputs temporaires (scripts locaux)
 /outputs/
+# Test reports with screenshots of the real app (real figures): never commit — see CLAUDE.md
+/docs/retours/
+# Real Coda budget data for scripts/import-coda-charges.ts — personal data, never commit.
+# Broad on purpose: a copy elsewhere or a backup suffix must not slip through.
+*.local.json
+*.local.json.*
 
 # local design mockups
 design-mockup-*.html

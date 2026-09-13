@@ -12,7 +12,11 @@ const nextConfig: NextConfig = {
   productionBrowserSourceMaps: false,
 
   images: {
-    formats: ['image/avif', 'image/webp'],
+    // WebP only. Next.js 16.3 (August 2026 security release, GHSA-2xp9-vwfh-vxw4)
+    // disables AVIF optimization by default; listing 'image/avif' here would opt
+    // back into the vulnerable libheif path for any AVIF served from an allowed
+    // remote pattern. Do not add it back until sharp ships a fixed libheif.
+    formats: ['image/webp'],
     remotePatterns: [
       {
         protocol: 'https',

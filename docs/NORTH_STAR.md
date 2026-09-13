@@ -24,7 +24,7 @@ Date de départ : 23 avril 2026. Cible : mi-juillet 2026. Enveloppe communicable
 | --- | ---------------- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | Alpha privé      | ~4 semaines                        | Thierry + 2-3 proches, FR seul, auth + onboarding + CRUD + dashboard v3 partiel + simulateur + MFA optionnel                                                                                                                                                                                          |
 | 2   | Beta privée      | ~8 semaines (cible 10 juin 2026)   | **MVP fonctionnel utilisable** — 5-10 testeurs externes, CGU/Privacy UE+BE 2026 rédigées, GDPR export/deletion live, bug reporting, Klaro! intégré, **3 sections cockpit v3 essentielles** : Health gauge provisions + Prochaines factures J-7/14/30 + Drawer simulateur what-if intégré au dashboard |
-| 3   | v1.0 publique    | ~12 semaines (cible fin juin 2026) | **Cible Monarch Money level** — signups libres sur ankora.be, FR + EN, schemas AEO complets, Lighthouse 100, /roadmap publique, admin panel v1, **8/8 sections cockpit v3 livrées** (Health + Timeline 6m + Bills + Goals + Drag-to-rebalance + Drawer simulator + Hero waterfall + Activité groupée) |
+| 3   | v1.0 publique    | ~12 semaines (cible fin juin 2026) | **Cible Monarch Money level** — signups libres sur ankora.be, FR + EN, schemas AEO complets, Lighthouse 100, /roadmap publique, admin panel v1, **cockpit conforme à la hiérarchie plafonnée** (`CLAUDE.md`, 12 septembre 2026 — remplace les 8 sections cockpit v3)                                  |
 | 4   | v1.1 post-launch | hors planning verrouillé           | **Parité Monarch complète** si gap résiduel après v1.0 — drag-to-rebalance optimisé mobile, polish UX, NL/DE/ES locales, notifications push PWA. Aucune pression deadline, livré "quand c'est prêt"                                                                                                   |
 
 ## Les 5 piliers parallélisables
@@ -52,8 +52,8 @@ Schemas JSON-LD fintech avancés (FinancialProduct, SoftwareApplication, Organiz
 ## Règles d'or (non négociables)
 
 1. **Aucune fausse promesse** publique ou interne. 12 semaines = plafond, pas cible.
-2. **Budget 0 €** strict — Thierry sur mutuelle Solidaris, aucun revenu autorisé Phase 1. Toute dépendance payante = validation explicite requise.
-3. **Dashboard Excellence** — minimaliste inacceptable. Niveau Monarch obligatoire.
+2. **Budget 0 €** strict — aucun revenu en phase 1. Toute dépendance payante = validation explicite requise.
+3. **Dashboard : une hiérarchie plafonnée** — une question par écran, trois surfaces au plus au-dessus du pli à 375 px, tout chiffre déclare sa source. Aucun chiffre sans source ouvrable (`CLAUDE.md`, 12 septembre 2026).
 4. **Tests + agents QA** avant chaque merge. CI verte + Sourcery silent + DONE-5 appliqué.
 5. **GDPR by design** + langue utilisateur par défaut (sanctions APD belge 2026+).
 6. **Push done ≠ task done**.

@@ -6,21 +6,57 @@ publique fin juin ») qui n'a plus cours : le programme actif est la **refonte v
 17 étapes**. Un document que personne ne peut suivre ne guide personne. L'historique
 reste intégralement dans git (`git log -- docs/ROADMAP.md`).
 
+**Remis à l'heure le 12 septembre 2026.** Ce fichier désignait comme source de vérité
+un plan remplacé depuis le 8 août, citait #443 comme dernière PR quand `main` en était
+à #460, et ne portait ni le chantier cockpit ni les étapes livrées par un autre chemin.
+Chaque état ci-dessous a été re-mesuré ce jour-là dans le dépôt.
+
 ---
 
-## Programme actif — refonte v2
+## Où en est le projet — 12 septembre 2026
 
-**Source de vérité** : [`docs/superpowers/specs/2026-07-26-ankora-refonte-v2-plan.md`](./superpowers/specs/2026-07-26-ankora-refonte-v2-plan.md)
-(17 étapes, périmètre et critères de sortie vérifiables par étape).
+**Dernière PR mergée sur `main`** : #460, le 25 août 2026.
 
-**Règle** : une étape n'est pas commencée tant que la précédente n'est pas terminée.
+**Travail en cours** : le lot 0, « hygiène avant refonte » (branche
+`chore/hygiene-avant-refonte`). **Ensuite, dans l'ordre décidé par @thierry le
+12 septembre** : la saisie ⊕ (lot 1), puis le tableau de bord (lot 2). On refait
+**page par page sur les fondations existantes**, mobile d'abord (375 px) ; chaque
+livraison supprime le code qu'elle remplace.
 
-| Étape | Objet                                                                            | État            |
-| ----- | -------------------------------------------------------------------------------- | --------------- |
-| 1     | Dépenses — affordance d'édition, suppression confirmée, 3 bugs de date/frontière | ✅ #270         |
-| 2     | Filet e2e réel en CI — les parcours connectés s'exécutent enfin                  | ✅ #271         |
-| 3     | **RGPD P0 — la suppression de compte doit réellement supprimer**                 | 🔄 **en cours** |
-| 4-17  | cf. spec                                                                         | 📋              |
+**Les documents qui pilotent, et ce qu'ils valent aujourd'hui :**
+
+| Document                                                                                                           | Statut réel                                                                                                                                                  |
+| ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`docs/plans/cockpit-refonte-e-plan.md`](./plans/cockpit-refonte-e-plan.md)                                        | Dernier plan exécuté (v6, 25 août). PR 0 et PR 1 livrées, PR 2a, 2b et 3 non commencées. **Son articulation avec les lots du 12 septembre reste à trancher** |
+| [`ADR-038`](./adr/ADR-038-journal-des-mouvements.md) + [`ADR-040`](./adr/ADR-040-ordre-execution-du-journal.md)    | Acceptés. Le modèle de comptes du lot 2 : cf. « le journal des mouvements » plus bas                                                                         |
+| [`2026-07-26-ankora-refonte-v2-plan.md`](./superpowers/specs/2026-07-26-ankora-refonte-v2-plan.md)                 | **Remplacé le 8 août 2026** (en-tête du fichier). Utile pour ses critères de sortie, plus une source de vérité                                               |
+| [`2026-08-08-refonte-app-architecture-cible.md`](./superpowers/specs/2026-08-08-refonte-app-architecture-cible.md) | **Proposition jamais validée** (en-tête du fichier)                                                                                                          |
+
+### La refonte v2 en 17 étapes — ce qui a réellement été livré
+
+Mesuré le 12 septembre 2026. « Par un autre chemin » : le résultat existe, sans être
+passé par l'étape prévue.
+
+| Étape | Objet                                                   | État                                                                                                                                                                                                               |
+| ----- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1     | Dépenses — édition, suppression confirmée, bugs de date | ✅ #270                                                                                                                                                                                                            |
+| 2     | Filet e2e réel en CI                                    | ✅ #271                                                                                                                                                                                                            |
+| 3     | RGPD P0 — la suppression de compte supprime réellement  | ✅ armée le 11 août (détail ci-dessous) ; reste [#278](https://github.com/thierryvm/ankora/issues/278)                                                                                                             |
+| 4a    | Hygiène de l'outillage                                  | 🔄 lot 0 : `date-fns` (aucun import) retiré. Restent `scripts/commit-i18n-tooling.ps1`, `scripts/apply-migrations.mjs` (importe `pg`, absent de `package.json`), `eslint.config.mjs:49` (ignore un dossier absent) |
+| 4b    | Gouvernance et agents                                   | 🔄 lot 0 : nom de modèle périmé et chemins d'`admin-dashboard-auditor` corrigés                                                                                                                                    |
+| 5     | Bloc ADR-022 → 033                                      | ❌ ADR-025 à 033 n'existent pas, et 023 / 024 portent d'autres décisions : la numérotation du plan ne peut plus servir                                                                                             |
+| 6     | Catégories dans les dépenses                            | ✅ par un autre chemin — `src/lib/domain/categories/`, ADR-043 (#444, #446)                                                                                                                                        |
+| 7     | Catégories sur les charges + contrat d'agrégat          | ❌ `getMonthSummary` n'existe pas dans `src/`, ni `src/lib/data/expenses.ts`                                                                                                                                       |
+| 8     | Premier jour — onboarding, budget proposé               | ⚠️ non vérifié                                                                                                                                                                                                     |
+| 9     | Navigation — couverture, repérage, flags                | ⚠️ partiel, non re-mesuré le 12 septembre                                                                                                                                                                          |
+| 10    | Navigation — 5 entrées + ⊕                              | ✅ `app-destinations.ts` ; la page `/app/simulator` n'existe plus                                                                                                                                                  |
+| 11    | Formulaire unifié + primitive modale unique             | ⚠️ partiel — ADR-037 et `Sheet.tsx` ; les panneaux restants sont listés par `PENDING_MIGRATION` (`sheet-is-the-only-modal.test.ts:38`)                                                                             |
+| 12    | Suppression réversible                                  | ❌ aucune migration ne porte `deleted_at`                                                                                                                                                                          |
+| 13    | Cockpit — prévu et réel réconciliés                     | ✅ par un autre chemin — `src/lib/domain/cockpit/` et le test `pas-de-double-comptage` (ADR-035)                                                                                                                   |
+| 14    | Historique — navigation par mois                        | ❌ `/app/expenses` ne lit aucun paramètre de mois                                                                                                                                                                  |
+| 15    | Performance et cache                                    | ❌ aucun `unstable_cache`, `revalidateTag` ni `revalidate` dans `src/`                                                                                                                                             |
+| 16    | Lexique FR-BE, slug i18n                                | ❌ pas de colonne `slug` sur `categories`, pas de route d'accessibilité                                                                                                                                            |
+| 17    | Polish visuel — la grammaire                            | ❌ inexécutable telle qu'écrite : son outil de validation, `design-playground`, a été supprimé par ADR-034                                                                                                         |
 
 ### Étape 3 — détail (27 juillet 2026)
 
@@ -127,16 +163,20 @@ la refonte v2. **Cette section a été créée le 23 août** : les cinq PR ci-de
 mergées et le ROADMAP n'en portait aucune trace — le delta que la §« Synchronisation
 ROADMAP ↔ repo » du `CLAUDE.md` demande de corriger en priorité absolue.
 
-| Chantier                                                                    | État                               |
-| --------------------------------------------------------------------------- | ---------------------------------- |
-| Les tiroirs suivaient la barre d'URL de Safari — `dvh` → `svh`              | ✅ #439                            |
-| Le pli du cockpit : le hero ne tenait pas dans la fenêtre (554 px pour 550) | ✅ #440                            |
-| La feuille ⊕ : cadre du montant, catégories hors écran, vide sur bureau     | ✅ #441                            |
-| La palette « papier » descend du site vitrine dans l'application            | ✅ #442 — inverse la Q1 d'ADR-039  |
-| Le brief de refonte du cockpit envoyé à Fable                               | ✅ #443                            |
-| **ADR-043** — les catégories que l'utilisateur crée lui-même                | 🔄 en cours, décision seule        |
-| **PR catégories 1** — créer sa catégorie depuis la feuille ⊕                | 📋 session suivante (cooldown ADR) |
-| **PR catégories 2** — renommer, recolorer, retirer depuis `/app/settings`   | 📋 après un ADR d'archivage        |
+| Chantier                                                                    | État                              |
+| --------------------------------------------------------------------------- | --------------------------------- |
+| Les tiroirs suivaient la barre d'URL de Safari — `dvh` → `svh`              | ✅ #439                           |
+| Le pli du cockpit : le hero ne tenait pas dans la fenêtre (554 px pour 550) | ✅ #440                           |
+| La feuille ⊕ : cadre du montant, catégories hors écran, vide sur bureau     | ✅ #441                           |
+| La palette « papier » descend du site vitrine dans l'application            | ✅ #442 — inverse la Q1 d'ADR-039 |
+| Le brief de refonte du cockpit envoyé à Fable                               | ✅ #443                           |
+| **ADR-043** — les catégories que l'utilisateur crée lui-même                | ✅ accepté le 23 août (#444)      |
+| **PR catégories 1** — créer sa catégorie depuis la feuille ⊕                | ✅ #446                           |
+| **PR catégories 2** — renommer, recolorer, retirer depuis `/app/settings`   | 📋 après un ADR d'archivage       |
+| **Cockpit, direction E — PR 0** : la grammaire visuelle                     | ✅ #449                           |
+| **Cockpit, direction E — PR 1** : le pli du mois, une courbe                | ✅ #451, correctif #454           |
+| Plan cockpit amendé : PR 2 scindée en 2a / 2b                               | ✅ #460                           |
+| **Cockpit, direction E — PR 2a, 2b, 3**                                     | 📋 non commencées                 |
 
 **Pourquoi la PR de code n'est pas dans la même session que l'ADR.** ADR-022 avait
 explicitement **reporté** les catégories libres. Les rouvrir est un amendement à un ADR
@@ -144,8 +184,9 @@ explicitement **reporté** les catégories libres. Les rouvrir est un amendement
 en session N, exécution en session N+1. La carte blanche de @thierry ne lève pas cette
 règle — elle dit l'inverse.
 
-**En attente** : les directions du cockpit dessinées par Fable 5, sur le brief #443.
-À réception → branche `feat/cc-design-cockpit`, agents QA, jamais de merge direct.
+**Les directions du cockpit sont arrivées** (brief #443) : la direction E a été retenue
+et s'exécute selon [`docs/plans/cockpit-refonte-e-plan.md`](./plans/cockpit-refonte-e-plan.md),
+approuvé après six tours de `plan-reviewer`.
 
 ## Programme parallèle — refonte landing « Le relevé corrigé »
 
@@ -189,8 +230,9 @@ L2 §Agents QA et L3 §Agents QA).
 ### Vision produit
 
 Inchangée et hors de ce fichier : [`docs/NORTH_STAR.md`](./NORTH_STAR.md) (vision,
-jalons, piliers, contraintes non négociables). Les huit sections obligatoires du
-dashboard et le positionnement FSMA sont rappelés dans [`CLAUDE.md`](../CLAUDE.md).
+jalons, piliers, contraintes non négociables). La règle du tableau de bord
+(hiérarchie plafonnée, 12 septembre 2026) et le positionnement FSMA sont rappelés dans
+[`CLAUDE.md`](../CLAUDE.md).
 
 ---
 
@@ -213,12 +255,16 @@ décision qu'on ne peut pas trouver n'existe pas.
 | —   | ADR-040 — inversion de l'ordre, corrections de schéma, D10/D11/D12                 | ✅ accepté le 2026-08-10            |
 | —   | ADR-041 — provisionner n'est pas payer : la capacité de régler devient une donnée  | ✅ accepté le 2026-08-10 (#367)     |
 | J1  | D3 — attribution figée sur les deux tables de paiement + `commitments.paid_from`   | ✅ livré le 2026-08-10 (#363)       |
-| J1b | La migration `contract` — `set not null` sur les deux colonnes                     | ⏳ **en cours**, cf. ci-dessous     |
+| J1b | La migration `contract` — `set not null` sur les deux colonnes                     | ✅ mergée le 2026-08-10 (#368) ¹    |
 | J2  | D1 — table de mouvements, RLS, export art. 20 (+ 4 tables absentes), **+ ADR-041** | 📋 périmètre élargi, cf. ci-dessous |
 | J3  | D2 — rentrées datées, suppression de `monthly_income`, sémantique d'`incomplet`    | 📋                                  |
 | J4  | D6 — dérivation des soldes, suppression de `savings_balance`, ancienneté           | 📋                                  |
 | J5  | D4 + D8 — ventilation contrôlée et arbitrage mensuel                               | 📋                                  |
 | J6  | D0 — clé de substitution `accounts.id` + backfill                                  | 📋 **en dernier**, cf. ADR-040 E1   |
+
+¹ Mergée, donc présente dans l'arbre. Sa poussée en production n'a **pas** été re-vérifiée
+le 12 septembre : aucune commande ne vise la base de production pendant une remise à
+l'heure documentaire.
 
 **L'ordre a changé le 10 août** : ADR-038 plaçait D0 en tête. ADR-040 le renvoie en fin de
 programme, parce que D0 sert le découplage des rôles de comptes — qu'ADR-038 met lui-même
@@ -325,10 +371,12 @@ ouvert le journal d'audit en écriture à tout utilisateur connecté.
 
 Convention : [`docs/CONVENTIONS.md`](./CONVENTIONS.md).
 
-### Six specs e2e décrivent un dashboard supprimé
+### Des specs e2e en quarantaine — quatre au 12 septembre 2026
 
 En quarantaine motivée dans `e2e/authenticated-specs.json`, imprimée à chaque run.
-Elles visent le cockpit d'avant THI-327. La liste ne doit que **rétrécir**.
+Elles étaient six ; la liste en compte **quatre** sur `main`. La PR #462 en libère deux
+et en remet une ; elle était bloquée par deux checks rouges le 12 septembre. La liste ne
+doit que **rétrécir**.
 
 ### `CardTitle` rend une `<div>`
 
@@ -352,5 +400,6 @@ hors ligne.
 - Ordre d'exécution, gouvernance et Definition of DONE : [`CLAUDE.md`](../CLAUDE.md)
 - Décisions d'architecture : [`docs/adr/`](./adr/)
 - Rapports de PR : [`docs/prs/`](./prs/)
-- Handoffs de session : [`docs/handoffs/`](./handoffs/)
+- Handoffs de session : dans le dépôt privé `claude-config` depuis le 24 août 2026 (#452) ;
+  [`docs/handoffs/`](./handoffs/) garde les passations antérieures
 - Runbooks (e2e, migrations, Upstash, iPhone) : [`docs/runbooks/`](./runbooks/)
