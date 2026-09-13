@@ -2,6 +2,18 @@
 
 > **Note** : ticket Linear effectif = **[THI-243](https://linear.app/thierryvm/issue/THI-243/perf-investigation-lenteur-1sec-navigation-prod-145-mb-fonts-ttf-non)**. Le préfixe `thi-225` dans le nom du fichier était la prédiction du prompt @cowork — Linear auto-numérote séquentiellement et a attribué THI-243. Filename gardé tel quel (le date-stamp `2026-05-19-...` est l'identifiant canonique du document).
 
+> **Note de relecture (13 septembre 2026, à la reprise du document dans `main`)** — ce
+> document est l'audit du 19 mai 2026 tel qu'il a été écrit ; il n'a pas été rejoué.
+> Trois de ses affirmations sont à lire avec réserve, relevées par Sourcery à la
+> reprise : (1) `next/font/google` télécharge et auto-héberge Inter au build, le
+> navigateur ne contacte donc pas Google Fonts par visiteur — le doublon est deux
+> assets Inter servis par l'application ; (2) avec `max-age=0, must-revalidate`, une
+> navigation répétée reçoit un 304 sans corps, le coût de 1,45 Mo vaut pour le premier
+> chargement, pas pour chaque navigation, et le TTF est compressible (WOFF2 est
+> surtout plus petit) ; (3) `Cache-Control: immutable` sur des noms de fichiers stables
+> (`/fonts/*.ttf`) figerait une police remplacée pendant un an — il faut des noms
+> empreintés avant `immutable`, ou une durée courte avec revalidation.
+
 | Champ          | Valeur                                                                   |
 | -------------- | ------------------------------------------------------------------------ |
 | Date audit     | 2026-05-19                                                               |
