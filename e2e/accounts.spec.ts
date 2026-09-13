@@ -66,14 +66,35 @@ test.describe('Accounts — 3-comptes saisie + Plan du mois', () => {
       await page.goto('/app');
       await expect(page.getByRole('heading', { name: /plan du mois/i })).toBeVisible();
       await expect(page.getByText(/principal → vie courante/i)).toBeVisible();
-      await expect(page.getByText(/principal → épargne/i)).toBeVisible();
-      await expect(page.getByText(/restant principal/i)).toBeVisible();
+      // Two labels were RENAMED and this spec still named the old ones — measured
+      // 2026-08-25 on its first execution since 2026-07-26. Not a weakened
+      // assertion: it proves the same two lines are on the card, at the words the
+      // card actually shows (`messages/fr-BE.json:684,687`).
+      //
+      // The épargne line is BIDIRECTIONAL — `transferPrincipalToEpargne` (« À virer
+      // vers l'épargne ») or `transferEpargneToPrincipal` (« À reprendre sur
+      // l'épargne ») depending on sign. Here the direction is deterministic by
+      // construction: the quarterly charge is seeded on `nextMonth`, so nothing is
+      // withdrawn in the current one. Asserting the exact direction is therefore
+      // legitimate, and it keeps the check a wildcard would have lost.
+      //
+      // The apostrophe is TYPOGRAPHIC (U+2019) in the messages file; a straight `'`
+      // matches nothing. Same trap class as a missing accent in a French selector.
+      await expect(page.getByText(/à virer vers l['’]épargne/i)).toBeVisible();
+      await expect(page.getByText(/après tes sorties/i)).toBeVisible();
 
       const planCard = page
         .getByRole('heading', { name: /plan du mois/i })
         .locator('xpath=ancestor::section');
-      await expect(planCard.getByText(/500,00|500\.00/).first()).toBeVisible();
-      await expect(planCard.getByText(/30,00|30\.00/).first()).toBeVisible();
+      // Round euros render WITHOUT decimals since 2026-06-02: formatters.ts sets
+      // `trailingZeroDisplay: 'stripIfInteger'` and formatters.test.ts:47 asserts
+      // « 500 € ». This spec still expected « 500,00 » and could never match —
+      // the 2026-08-25 run already died on this line, after the two label fixes
+      // above, and the red was misread as a stale branch. Anchored so the hint
+      // sentences (« provision 30 € … ») cannot stand in for the headline amount;
+      // `\s` covers the no-break space Intl puts before the euro sign.
+      await expect(planCard.getByText(/^500\s€$/).first()).toBeVisible();
+      await expect(planCard.getByText(/^30\s€$/).first()).toBeVisible();
     } finally {
       await deleteSeededUser(admin, user.userId);
     }
