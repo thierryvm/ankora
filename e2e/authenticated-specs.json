@@ -15,6 +15,7 @@
     "e2e/auth.spec.ts",
     "e2e/charges/charges-list-desktop.spec.ts",
     "e2e/charges/charges-list-mobile.spec.ts",
+    "e2e/connected-landing-redirect.spec.ts",
     "e2e/dashboard-account-rename.spec.ts",
     "e2e/dashboard-capacite-tryptique.spec.ts",
     "e2e/dashboard-cockpit-bloc2.spec.ts",

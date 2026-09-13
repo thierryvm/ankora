@@ -19,11 +19,33 @@ les plus sensibles de l'app.
 Deux jobs, donc **deux planchers distincts** — un chiffre global agrégé serait
 ininterprétable au premier conflit, donc ignoré :
 
-| Job                              | Plancher au 24 août 2026                                                                                              |
+| Job                              | Plancher au 13 septembre 2026                                                                                         |
 | -------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | `Playwright E2E`                 | **268 passed** (259 au 22/08, 253 plus tôt le 22/08, 247 au 11/08, 241 plus tôt le 11/08, 231 au 09/08, 228 au 06/08) |
-| `Playwright E2E (authenticated)` | **62 passed** (50 au 23/08, 45 avant — +5 `gdpr-deletion-queue`, PR-C)                                                |
+| `Playwright E2E (authenticated)` | **64 passed** (63 le 13/09 plus tôt, 62 au 24/08, 50 au 23/08, 45 avant — +5 `gdpr-deletion-queue`, PR-C)             |
 
+> **Authentifié : 62 → 63 → 64, mesuré le 2026-09-13.**
+>
+> **63** : relevé sur la CI de [#468](https://github.com/thierryvm/ankora/pull/468)
+> (runs 34762075578 et 34762085411, 63 passed / 5 skipped, 0 failed, 0 flaky dans
+> les journaux des deux jobs authentifiés), la première
+> après la fusion de [#462](https://github.com/thierryvm/ankora/pull/462), qui avait
+> sorti deux specs de quarantaine et en avait remis une. Que le +1 vienne de là est
+> une déduction par la date : le nombre, lui, est mesuré.
+>
+> **64** : [#469](https://github.com/thierryvm/ankora/pull/469) ajoute
+> `connected-landing-redirect.spec.ts` (un cas, `chromium-desktop` seulement).
+> Mesuré dans les deux sens sur la CI : le commit qui ne portait que la spec a
+> rendu 63 passed / 1 failed (run 34764409654), le commit du correctif 64 passed /
+> 0 failed / 0 flaky (runs 34764886228 et 34764934820). Le job public reste à
+> **268 passed** ; ses skipped passent de 218 à 221, la nouvelle spec y sautant.
+> Un cas mais trois sauts : `npx playwright test --list` la liste sur trois
+> projets, `chromium-desktop`, `mobile-safari` et `mobile-chrome` ; les projets
+> iPhone ne prennent que `mobile-ios/**`. Pour la même raison, le job authentifié,
+> qui tourne sur `chromium-desktop` et `iPhone 14`, ne l'exécute qu'une fois.
+> Le même PR déplace `bottom-tab-bar-client-navigation.spec.ts` de `/` vers
+> `/offline` sans retirer de cas.
+>
 > **Authentifié : 50 → 62, mesuré le 2026-08-24** ([#448](https://github.com/thierryvm/ankora/pull/448)).
 > **+12 cas qui ne tournaient nulle part**, et c'est le point : aucun n'est neuf.
 >

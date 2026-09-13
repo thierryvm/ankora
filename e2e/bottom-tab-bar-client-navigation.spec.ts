@@ -24,6 +24,21 @@ const admin = adminClientOrNull();
  * `goto('/app')` sous prétexte que la PWA y démarre désormais supprimerait la
  * preuve sans faire baisser aucun chiffre.
  *
+ * ## Pourquoi elle part de `/offline`, et plus de `/` (13 septembre 2026)
+ *
+ * Elle partait de `/`. Depuis que la page d'accueil envoie une session vers
+ * `/app` (`redirectIfSignedIn()`), un connecté ne peut plus s'y trouver : la
+ * scène n'existe plus, et la spec aurait échoué sur une application saine.
+ *
+ * Il fallait une autre route EXCLUE (la barre y est absente) qu'un connecté
+ * peut encore atteindre. `/login`, `/signup` et `/` le renvoient vers `/app` ;
+ * `/reset-password` exige une session de récupération ; `/onboarding` renvoie
+ * un compte déjà configuré. Reste `/offline`, la page de repli de la PWA, dont
+ * le seul lien mène à `/`. Le parcours est donc : `/offline` → clic sur ce lien
+ * → la redirection de `/` → `/app`, en navigation client. Il prouve la même
+ * chose qu'avant, et il éprouve en plus la redirection pendant une navigation
+ * client — le chemin qu'emprunte la PWA quand le réseau revient.
+ *
  * Aucune spec ne pouvait le voir : `navigation-reachable.spec.ts` fait
  * `page.goto()` avant de mesurer, et un `goto` charge un document — ce qui
  * recalcule précisément la valeur qui était en cause. Un harnais qui recharge
@@ -33,7 +48,7 @@ const admin = adminClientOrNull();
  *
  * Trois affirmations, dans cet ordre, et la troisième est celle qui compte :
  *
- *   1. sur `/` — route exclue — la barre est ABSENTE. Sans ce point de départ,
+ *   1. sur `/offline` — route exclue — la barre est ABSENTE. Sans ce point de départ,
  *      une barre déjà montée rendrait le reste sans objet ;
  *   2. après le clic, elle est visible ET posée au bas du viewport. La
  *      GÉOMÉTRIE, pas le compte : un élément en `display:none` compte 1 ;
@@ -50,12 +65,14 @@ const admin = adminClientOrNull();
 test.describe("barre d'onglets — atteinte de /app par navigation client", () => {
   test.skip(!admin, 'Needs real Supabase (NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY).');
 
-  // Trois chargements de document (login, /app, /) plus une navigation client.
+  // Trois chargements de document (login, /app, /offline) plus une navigation client.
   // Le budget par défaut suffit en build de production, pas en `next dev` où la
   // première compilation de chaque route se paie une fois.
   test.setTimeout(120_000);
 
-  test('la barre apparaît en arrivant sur /app par clic, sans rechargement', async ({ page }) => {
+  test('la barre apparaît en arrivant sur /app par clic depuis /offline, sans rechargement', async ({
+    page,
+  }) => {
     if (!admin) return;
     const user = await seedOnboardedUser(admin);
 
@@ -68,11 +85,10 @@ test.describe("barre d'onglets — atteinte de /app par navigation client", () =
       await page.getByRole('button', { name: /^se connecter$/i }).click();
       await page.waitForURL(/\/app\b/, { timeout: 15_000 });
 
-      // Chargement de DOCUMENT sur `/`. C'est le point de départ réel de
-      // l'application installée : le manifeste y envoie à chaque ouverture, et
-      // `/` est une route exclue — donc la décision de montage est figée sur
-      // « pas de barre » pour toute la vie de ce document.
-      await page.goto('/');
+      // Chargement de DOCUMENT sur `/offline`, route exclue : la décision de
+      // montage est figée sur « pas de barre » pour toute la vie de ce document.
+      // (Cf. l'en-tête pour la raison de ce point de départ.)
+      await page.goto('/offline');
       await page.waitForLoadState('domcontentloaded');
       await expect(page.getByTestId('bottom-tab-bar')).toHaveCount(0);
 
@@ -80,19 +96,13 @@ test.describe("barre d'onglets — atteinte de /app par navigation client", () =
         () => performance.getEntriesByType('navigation').length,
       );
 
-      // À cette largeur, le header de la vitrine se replie sur un bouton
-      // « Menu » : le CTA « Mon cockpit » du header ne s'affiche qu'au-delà.
-      // Le seul chemin vers le cockpit est donc le tiroir — et c'est
-      // précisément le parcours du défaut, celui d'un téléphone.
-      //
-      // Mesuré, pas déduit : une première version cliquait le CTA du header et
-      // ne le trouvait jamais. La capture de Playwright ne montrait, dans la
-      // bannière, que le logo et le bouton « Menu ».
-      await page.getByRole('button', { name: /^menu$/i }).click();
-
-      // C'est un `<Link>`, donc une navigation CLIENT — celle que le layout
-      // partagé ne re-rend pas, et donc celle qui figeait la décision.
-      await page.getByTestId('drawer-cockpit-link').click();
+      // Le seul lien de la page de repli mène à `/`. C'est un `<Link>`, donc une
+      // navigation CLIENT — celle que le layout partagé ne re-rend pas, et donc
+      // celle qui figeait la décision. Le connecté y est redirigé vers `/app`.
+      await page
+        .getByRole('main')
+        .getByRole('link', { name: /^réessayer$/i })
+        .click();
       await page.waitForURL(/\/app\b/, { timeout: 15_000 });
 
       const barre = page.getByTestId('bottom-tab-bar');
