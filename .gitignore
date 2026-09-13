@@ -39,6 +39,12 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files (NEVER commit secrets)
+# The glob covers every variant, including .env.production and any future
+# .env.<name>: a list of exact names silently misses the next one. Recovered
+# from the branch fix/auth-outage-not-logout (the only line of it not in main).
+.env*
+# The example template is the one .env file meant to be committed.
+!.env.example
 .env
 .env.local
 .env.development.local
