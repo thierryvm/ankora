@@ -59,7 +59,7 @@ Ces licences exigent que le paquet soit nommé, et non seulement son texte de li
 
 | Paquet | Version | Licence |
 | --- | --- | --- |
-| `caniuse-lite` | 1.0.30001806 | CC-BY-4.0 |
+| `caniuse-lite` | 1.0.30001810 | CC-BY-4.0 |
 
 ## Conformité
 
@@ -92,7 +92,7 @@ Elles se déclenchent quand une COPIE du logiciel est remise à quelqu'un. Ankor
 | `@types/node` | 24.13.3 | MIT |
 | `@types/react` | 19.2.18 | MIT |
 | `@types/react-dom` | 19.2.4 | MIT |
-| `@vitest/coverage-v8` | 4.1.10 | MIT |
+| `@vitest/coverage-v8` | 4.1.11 | MIT |
 | `cspell` | 10.0.1 | MIT |
 | `eslint` | 9.39.5 | MIT |
 | `eslint-config-next` | 16.2.6 | MIT |
@@ -107,7 +107,7 @@ Elles se déclenchent quand une COPIE du logiciel est remise à quelqu'un. Ankor
 | `tailwindcss` | 4.3.3 | MIT |
 | `tsx` | 4.23.12 | MIT |
 | `typescript` | 5.9.3 | Apache-2.0 |
-| `vitest` | 4.1.10 | MIT |
+| `vitest` | 4.1.11 | MIT |
 
 <!-- NOTICE:END GENERATED -->
 

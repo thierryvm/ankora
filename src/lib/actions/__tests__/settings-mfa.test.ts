@@ -1,5 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+// Imported once, statically — `vi.mock` and `vi.hoisted` are hoisted above it.
+// Each case used to `await import()` this module in its own body, so the cold
+// load was paid inside the FIRST case's 5 s timeout: 147 ms alone, over 5 s
+// under a loaded full run. The timed-out case was reported failed while its
+// action kept running and consumed the shared spies of the next case, which
+// then failed too. Loading at collection time takes it out of any test timeout.
+import { enrollMfaAction, unenrollMfaAction } from '@/lib/actions/settings';
+
 /**
  * Enabling 2FA was permanently impossible for anyone who had ever abandoned an
  * enrolment.
@@ -112,7 +120,16 @@ const actif: FakeFactor = { id: 'factor-live', factor_type: 'totp', status: 'ver
 
 describe('enrollMfaAction — abandoned enrolments', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    // `resetAllMocks`, not `clearAllMocks`: clearing empties the recorded calls
+    // but keeps the `mockResolvedValueOnce` queue, so a case that failed before
+    // consuming its queued answers handed them to the next case.
+    //
+    // Measured with a forced timeout on this file alone. At 10 ms, the version
+    // that imported inside each case failed eight cases — seven timeouts, and
+    // one call count left wrong by an orphan; this one passes them all. At 1 ms the
+    // cases that expire fail on the timeout alone, and every case after them
+    // stays green: a timeout no longer spills into the next case.
+    vi.resetAllMocks();
     rateLimitSpy.mockResolvedValue({ success: true, limit: 60, remaining: 59 });
     unenrollSpy.mockResolvedValue({ error: null });
     listFactorsSpy.mockResolvedValue({ data: { all: [], totp: [], phone: [] }, error: null });
@@ -128,8 +145,6 @@ describe('enrollMfaAction — abandoned enrolments', () => {
    */
   it('deletes nothing when the enrolment simply succeeds', async () => {
     factorsAre(abandonne);
-    const { enrollMfaAction } = await import('@/lib/actions/settings');
-
     const res = await enrollMfaAction();
 
     expect(res.ok).toBe(true);
@@ -147,8 +162,6 @@ describe('enrollMfaAction — abandoned enrolments', () => {
   it('discards the abandoned factor and retries, in that order', async () => {
     factorsAre(abandonne);
     enrollSpy.mockResolvedValueOnce(CONFLIT).mockResolvedValueOnce(ENROLMENT_OK);
-    const { enrollMfaAction } = await import('@/lib/actions/settings');
-
     const res = await enrollMfaAction();
 
     expect(res.ok).toBe(true);
@@ -167,8 +180,6 @@ describe('enrollMfaAction — abandoned enrolments', () => {
   it('never touches a verified factor', async () => {
     factorsAre(actif);
     enrollSpy.mockResolvedValue(CONFLIT);
-    const { enrollMfaAction } = await import('@/lib/actions/settings');
-
     const res = await enrollMfaAction();
 
     expect(unenrollSpy).not.toHaveBeenCalled();
@@ -183,8 +194,6 @@ describe('enrollMfaAction — abandoned enrolments', () => {
   it('discards only the abandoned one when both exist', async () => {
     factorsAre(actif, abandonne);
     enrollSpy.mockResolvedValueOnce(CONFLIT).mockResolvedValueOnce(ENROLMENT_OK);
-    const { enrollMfaAction } = await import('@/lib/actions/settings');
-
     await enrollMfaAction();
 
     expect(unenrollSpy).toHaveBeenCalledTimes(1);
@@ -201,8 +210,6 @@ describe('enrollMfaAction — abandoned enrolments', () => {
   it('discards an abandoned factor of another type too', async () => {
     factorsAre({ id: 'factor-phone', factor_type: 'phone', status: 'unverified' });
     enrollSpy.mockResolvedValueOnce(CONFLIT).mockResolvedValueOnce(ENROLMENT_OK);
-    const { enrollMfaAction } = await import('@/lib/actions/settings');
-
     const res = await enrollMfaAction();
 
     expect(unenrollSpy).toHaveBeenCalledWith({ factorId: 'factor-phone' });
@@ -218,8 +225,6 @@ describe('enrollMfaAction — abandoned enrolments', () => {
     factorsAre(abandonne);
     enrollSpy.mockResolvedValue(CONFLIT);
     unenrollSpy.mockResolvedValue({ error: { code: 'insufficient_aal' } });
-    const { enrollMfaAction } = await import('@/lib/actions/settings');
-
     const res = await enrollMfaAction();
 
     expect(auditSpy).not.toHaveBeenCalled();
@@ -235,8 +240,6 @@ describe('enrollMfaAction — abandoned enrolments', () => {
   it('discards nothing when the factor list cannot be read', async () => {
     listFactorsSpy.mockResolvedValue({ data: null, error: { code: 'unexpected_failure' } });
     enrollSpy.mockResolvedValue(CONFLIT);
-    const { enrollMfaAction } = await import('@/lib/actions/settings');
-
     const res = await enrollMfaAction();
 
     expect(unenrollSpy).not.toHaveBeenCalled();
@@ -252,8 +255,6 @@ describe('enrollMfaAction — abandoned enrolments', () => {
   it('records the discard under its own event, never as a disablement', async () => {
     factorsAre(abandonne);
     enrollSpy.mockResolvedValueOnce(CONFLIT).mockResolvedValueOnce(ENROLMENT_OK);
-    const { enrollMfaAction } = await import('@/lib/actions/settings');
-
     await enrollMfaAction();
 
     expect(auditSpy).toHaveBeenCalledTimes(1);
@@ -266,8 +267,6 @@ describe('enrollMfaAction — abandoned enrolments', () => {
   it('does nothing at all when rate limited', async () => {
     factorsAre(abandonne);
     rateLimitSpy.mockResolvedValue({ success: false, limit: 60, remaining: 0 });
-    const { enrollMfaAction } = await import('@/lib/actions/settings');
-
     const res = await enrollMfaAction();
 
     expect(res).toEqual({ ok: false, errorCode: 'errors.session.rateLimited' });
@@ -282,14 +281,12 @@ describe('unenrollMfaAction — the trail names what was removed', () => {
   const ID_ABANDONNE = '22222222-2222-4222-8222-222222222222';
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     unenrollSpy.mockResolvedValue({ error: null });
   });
 
   it('records a real disablement when the factor was protecting the account', async () => {
     factorsAre({ ...actif, id: ID_ACTIF });
-    const { unenrollMfaAction } = await import('@/lib/actions/settings');
-
     const res = await unenrollMfaAction(ID_ACTIF);
 
     expect(res.ok).toBe(true);
@@ -303,8 +300,6 @@ describe('unenrollMfaAction — the trail names what was removed', () => {
    */
   it('records a discard when the factor had never been verified', async () => {
     factorsAre({ ...abandonne, id: ID_ABANDONNE });
-    const { unenrollMfaAction } = await import('@/lib/actions/settings');
-
     const res = await unenrollMfaAction(ID_ABANDONNE);
 
     expect(res.ok).toBe(true);
