@@ -76,7 +76,16 @@
     "someone a wasted rewrite: it claimed the expenses card had been relabelled",
     "'Dépensé ce mois' by ADR-035 and that the regex would need updating. ADR-035",
     "renamed dashboard.situation.flow.depense — the hero cascade — a DIFFERENT",
-    "surface. expensesTitle never moved, and that selector already matched."
+    "surface. expensesTitle never moved, and that selector already matched.",
+    "",
+    "2026-09-13. The 2026-08-25 paragraph above stopped one line too early: with",
+    "the two labels corrected, accounts.spec.ts still went red — at :89, not at the",
+    "labels — and the red was filed as 'branch behind main'. Rerun on main today,",
+    "same line: the spec expected « 500,00 » but round euros have rendered as",
+    "« 500 € » since 2026-06-02 (formatters.ts `trailingZeroDisplay`, asserted by",
+    "formatters.test.ts:47). Amount regexes corrected to the product's own tested",
+    "format. Lesson for the next release: read the failing LINE of a red run before",
+    "explaining the red by the branch's age."
   ],
   "quarantine": {
     "e2e/dashboard-expenses.spec.ts": "NEEDS A REWRITE — measured 2026-08-25, first execution since 2026-07-26. Its READY TO VERIFY label was wrong: the heading assertions (:35, :36) DO pass, but :44-:45 fill `#label` and `#amount` on an inline form that no longer exists. /app/expenses now opens the ⊕ sheet instead (ExpensesClient.tsx:196 `expenses-open-add-sheet`, :244 AddExpenseSheet). Rewrite the add-expense interaction against the sheet — best done by whoever next touches AddExpenseSheet, i.e. the categories chantier (rename/delete + graph ramp), which reworks that sheet anyway.",

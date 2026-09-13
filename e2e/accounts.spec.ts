@@ -86,8 +86,15 @@ test.describe('Accounts — 3-comptes saisie + Plan du mois', () => {
       const planCard = page
         .getByRole('heading', { name: /plan du mois/i })
         .locator('xpath=ancestor::section');
-      await expect(planCard.getByText(/500,00|500\.00/).first()).toBeVisible();
-      await expect(planCard.getByText(/30,00|30\.00/).first()).toBeVisible();
+      // Round euros render WITHOUT decimals since 2026-06-02: formatters.ts sets
+      // `trailingZeroDisplay: 'stripIfInteger'` and formatters.test.ts:47 asserts
+      // « 500 € ». This spec still expected « 500,00 » and could never match —
+      // the 2026-08-25 run already died on this line, after the two label fixes
+      // above, and the red was misread as a stale branch. Anchored so the hint
+      // sentences (« provision 30 € … ») cannot stand in for the headline amount;
+      // `\s` covers the no-break space Intl puts before the euro sign.
+      await expect(planCard.getByText(/^500\s€$/).first()).toBeVisible();
+      await expect(planCard.getByText(/^30\s€$/).first()).toBeVisible();
     } finally {
       await deleteSeededUser(admin, user.userId);
     }
