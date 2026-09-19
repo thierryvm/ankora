@@ -283,7 +283,7 @@
     "footerCta": {
       "h2Lead": "Start with what's",
       "h2Highlight": "already committed.",
-      "description": "Free during Phase 1, no card, GDPR export anytime. We keep it simple because it's already complicated enough.",
+      "description": "Free, with no paid offering — it's written in the terms. No card, GDPR export anytime. We keep it simple because it's already complicated enough.",
       "ctaPrimary": "Create my account"
     },
     "footer": {
@@ -408,7 +408,7 @@
       },
       "s8": {
         "heading": "8. Free of charge",
-        "body": "Ankora is free. There is no paid offering, and no feature is reserved for a higher tier. Should a paid offering ever be introduced, accounts created before its launch keep full access to the core cockpit free of charge — the commitment announced on the Pricing page, restated here so that it binds us contractually and not merely commercially.",
+        "body": "Ankora is free. There is no paid offering, and no feature is reserved for a higher tier. Should a paid offering ever be introduced, accounts created before its launch keep full access to the core cockpit free of charge. This commitment is stated here so that it binds us contractually and not merely commercially.",
         "donations": "If voluntary donations are ever offered, they will grant no counterpart: no feature, no early access, no support priority. A donation changes nothing in the relationship described by these terms."
       },
       "s9": {

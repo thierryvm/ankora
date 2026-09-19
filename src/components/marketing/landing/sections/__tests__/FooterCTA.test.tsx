@@ -58,9 +58,15 @@ describe('<FooterCTA />', () => {
   // commerciale l'apparence d'un garde-fou réglementaire. Et la formule
   // contredisait QUATRE affirmations de la section Tarifs, qui promettent
   // « sans date limite », « pas de limite de temps » et « à vie ».
-  it('annonce la gratuité de la Phase 1, sans promettre un essai limité', async () => {
+  //
+  // 19 septembre 2026 : « Gratuit pendant la Phase 1 » contredisait la FAQ
+  // (« Rien. … aucune offre payante … dans les conditions générales »). Une
+  // « Phase 1 » laisse entendre une phase 2 payante ; la page ne dit plus
+  // qu'une chose sur le prix, celle que les CGU engagent.
+  it('annonce la gratuité comme la FAQ et les CGU, sans phase ni essai limité', async () => {
     await renderFooterCTA();
-    expect(screen.getByText(/Gratuit pendant la Phase 1/i)).toBeInTheDocument();
+    expect(screen.getByText(/Gratuit, sans offre payante/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Phase 1/i)).not.toBeInTheDocument();
     // Garde-fou contre le retour de la contradiction, pas seulement contre son absence.
     expect(screen.queryByText(/30 jours/i)).not.toBeInTheDocument();
   });

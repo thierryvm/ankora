@@ -9,8 +9,8 @@ import { buildCanonicalUrl } from '@/lib/glossary';
 // Bumped with §8 « Gratuité du service ». A CGU whose text changes while its
 // version line stays put is a version line that lies — and this file is the
 // only place that number lives, so nothing else moves it.
-const LAST_UPDATED = '5 août 2026';
-const VERSION = '1.1.0';
+const LAST_UPDATED = '19 septembre 2026';
+const VERSION = '1.1.1';
 
 export async function generateMetadata({
   params,

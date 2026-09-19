@@ -283,7 +283,7 @@
     "footerCta": {
       "h2Lead": "Commence par ce qui est",
       "h2Highlight": "déjà engagé.",
-      "description": "Gratuit pendant la Phase 1, pas de carte, export RGPD à tout moment. On fait simple parce que c'est déjà assez compliqué comme ça.",
+      "description": "Gratuit, sans offre payante — c'est écrit dans les CGU. Pas de carte, export RGPD à tout moment. On fait simple parce que c'est déjà assez compliqué comme ça.",
       "ctaPrimary": "Créer mon compte"
     },
     "footer": {
@@ -408,7 +408,7 @@
       },
       "s8": {
         "heading": "8. Gratuité du service",
-        "body": "Ankora est gratuit. Aucune offre payante n'existe et aucune fonctionnalité n'est réservée à un plan supérieur. Si une offre payante devait un jour être introduite, les comptes créés avant son lancement conservent gratuitement l'accès complet au cockpit — c'est l'engagement annoncé sur la page Tarifs, repris ici pour qu'il nous lie contractuellement et pas seulement commercialement.",
+        "body": "Ankora est gratuit. Aucune offre payante n'existe et aucune fonctionnalité n'est réservée à un plan supérieur. Si une offre payante devait un jour être introduite, les comptes créés avant son lancement conservent gratuitement l'accès complet au cockpit. Cet engagement figure ici pour qu'il nous lie contractuellement et pas seulement commercialement.",
         "donations": "Si des dons volontaires sont un jour proposés, ils ne donneront droit à aucune contrepartie : aucune fonctionnalité, aucun accès anticipé, aucune priorité de support. Un don ne modifie en rien la relation décrite par ces conditions."
       },
       "s9": {
