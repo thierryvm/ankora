@@ -283,7 +283,7 @@
     "footerCta": {
       "h2Lead": "Commence par ce qui est",
       "h2Highlight": "déjà engagé.",
-      "description": "Gratuit pendant la Phase 1, pas de carte, export RGPD à tout moment. On fait simple parce que c'est déjà assez compliqué comme ça.",
+      "description": "Gratuit, sans offre payante — c'est écrit dans les CGU. Pas de carte, export RGPD à tout moment. On fait simple parce que c'est déjà assez compliqué comme ça.",
       "ctaPrimary": "Konto erstellen"
     },
     "footer": {
@@ -291,10 +291,13 @@
         "terms": "Conditions",
         "privacy": "Confidentialité",
         "cookies": "Cookies",
+        "faq": "Questions",
+        "glossary": "Glossaire",
+        "code": "Code public",
         "contact": "Contact"
       },
       "copyright": "Ankora · éditeur ancré à Bruxelles · 2026",
-      "navLabel": "Rechtliche Links"
+      "navLabel": "Informationen und rechtliche Links"
     },
     "faqHeading": "Häufige Fragen",
     "faq": {
@@ -408,7 +411,7 @@
       },
       "s8": {
         "heading": "8. Kostenlosigkeit des Dienstes",
-        "body": "Ankora ist kostenlos. Es gibt kein kostenpflichtiges Angebot, und keine Funktion ist einem höheren Tarif vorbehalten. Sollte jemals ein kostenpflichtiges Angebot eingeführt werden, behalten Konten, die vor dessen Start erstellt wurden, den vollständigen Zugang zum Kern-Cockpit kostenlos — die auf der Preisseite angekündigte Zusage, hier wiederholt, damit sie uns vertraglich und nicht nur werblich bindet.",
+        "body": "Ankora ist kostenlos. Es gibt kein kostenpflichtiges Angebot, und keine Funktion ist einem höheren Tarif vorbehalten. Sollte jemals ein kostenpflichtiges Angebot eingeführt werden, behalten Konten, die vor dessen Start erstellt wurden, den vollständigen Zugang zum Kern-Cockpit kostenlos. Diese Zusage steht hier, damit sie uns vertraglich und nicht nur werblich bindet.",
         "donations": "Sollten jemals freiwillige Spenden angeboten werden, begründen sie keinerlei Gegenleistung: keine Funktion, keinen vorzeitigen Zugang, keinen Supportvorrang. Eine Spende ändert nichts an dem in diesen Bedingungen beschriebenen Verhältnis."
       },
       "s9": {
@@ -419,68 +422,137 @@
       "backHome": "Zurück zur Startseite"
     },
     "privacy": {
-      "metaTitle": "Datenschutzerklärung",
-      "metaDescription": "Datenschutzerklärung von Ankora — EU-Hosting, DSGVO, Rechte der Nutzer.",
-      "title": "Datenschutzerklärung",
-      "s1": {
-        "heading": "1. Verantwortlicher",
-        "body": "Ankora, herausgegeben von Thierry Vanmeeteren (Belgien). Kontakt: <mail>{email}</mail>."
+      "metaTitle": "Privacy policy",
+      "metaDescription": "Ankora's privacy policy: data controller, data collected, services used, transfers and rights.",
+      "title": "Privacy policy",
+      "languageNotice": "Diese Richtlinie ist vorerst nur auf Französisch und Englisch verfügbar.",
+      "contentLang": "en",
+      "intro": "The text below is made of sourced legal sentences, which we have not rewritten: that is why it is more formal than the rest of Ankora.",
+      "controller": {
+        "heading": "Data controller",
+        "p1": "The data controller is Ankora, published by Thierry Vanmeeteren.",
+        "p2": "You can write to <mail>{email}</mail>.",
+        "p3": "Requests you send to this address about your personal data are processed there in order to answer you.",
+        "p4": "This processing is necessary for compliance with a legal obligation: the regulation requires the controller to facilitate the exercise of your rights and to answer your requests.",
+        "p5": "These messages are kept for as long as necessary to handle your request."
       },
-      "s2": {
-        "heading": "2. Erhobene Daten",
-        "intro": "Ankora erhebt nur die für die Bereitstellung des Dienstes unbedingt erforderlichen Daten:",
-        "item1": "<b>Identität</b>: E-Mail-Adresse, Anzeigename (optional).",
-        "item2": "<b>Von dir eingegebene Finanzdaten</b>: Fixkosten, Ausgaben, Kategorien, deklariertes Einkommen, Sparguthaben.",
-        "item3": "<b>Technische Daten</b>: IP-Adresse, User-Agent (nur für Sicherheitslogs).",
-        "item4": "<b>Einwilligungen</b>: Zeitstempel, Version, Umfang (AGB, Datenschutz, Cookies).",
-        "outro": "Ankora verbindet sich mit keiner Bank (keine PSD2-Aggregation). Du gibst deine Fixkosten und Ausgaben selbst ein."
+      "data": {
+        "heading": "Data collected",
+        "p1": "Hosting this site produces technical logs, which contain in particular the IP address from which the pages are viewed.",
+        "p2": "The publisher consults these logs for the security of the service: detecting abuse and intrusion attempts, and diagnosing incidents.",
+        "p3": "This processing is necessary for the purposes of the legitimate interests pursued by the publisher, namely the security of the service: detecting abuse and intrusion attempts, and diagnosing incidents (Article 6(1)(f)).",
+        "p4": "These logs are kept for twelve months at most, and pseudonymised as soon as the account is deleted.",
+        "account": {
+          "heading": "user account",
+          "p1": "This data is used to create and manage your account, and to give you access to it.",
+          "p2": "This processing is necessary for the performance of the contract to which you are party, or for steps taken at your request prior to entering into it (Article 6(1)(b)).",
+          "p3": "This data is kept for as long as the account exists.",
+          "p4": "Providing this data is a condition for creating the account: without it, the account cannot be opened."
+        },
+        "content": {
+          "heading": "content uploaded by the user",
+          "p1": "This data is used to host the content you upload and to return it to you.",
+          "p2": "This processing is necessary for the performance of the contract to which you are party, or for steps taken at your request prior to entering into it (Article 6(1)(b)).",
+          "p3": "This data is kept until you delete it."
+        },
+        "audience": {
+          "heading": "audience measurement",
+          "p1": "This data is used to measure how the application is used.",
+          "p2": "This processing is based on your consent (Article 6(1)(a) GDPR).",
+          "p3": "This data is kept for six months."
+        },
+        "supabase": {
+          "heading": "Supabase — database",
+          "p1": "Supabase Pte. Ltd",
+          "p2": "Storing the application’s data and serving the requests that read, modify or delete it, for the development and operation of the application.",
+          "p3": "(DPA, Schedule 3: nature of the processing “Storage, deletion, rectification, analysis, transfer, aggregation”; purpose “The performance of the Services, namely the provision of database and tooling services for the development and operation of web and mobile applications”.)",
+          "p4": "Data transmitted: The data the application records, as it sends it, as well as the login credentials of the accounts the application opens for its users.",
+          "p5": "(DPA, definition of “Covered Data” (a): the data provided by the customer.)",
+          "p6": "Sub-processors: Amazon Web Services, Inc; Cloudflare, Inc; Google, LLC; Fly.io, Inc; Vercel, Inc; Upstash, Inc",
+          "p7": "The provider declares other providers — support, technical monitoring, feature enablement, error tracking, data analysis, security, artificial intelligence — without specifying which of them receive this data.",
+          "p8": "It declares others whose purpose relates to its own operations — status page, customer knowledge, marketplace.",
+          "p9": "The data is stored and mainly processed in the region chosen by the customer, which does not remove the transfer described below.",
+          "p10": "The data is transferred outside the European Union, on the basis of: standard contractual clauses (Decision 2021/914).",
+          "p11": "Where to see these safeguards — <url>https://supabase.com/legal/customer-resources/data-processing-addendum</url>",
+          "p12": "List published by the provider — <url>https://supabase.com/legal/customer-resources/subprocessor-list</url>, updated on 2026-06-01",
+          "p13": "Checked on 2026-08-17 — <url>https://supabase.com/privacy</url>"
+        },
+        "vercel": {
+          "heading": "Vercel — hosting",
+          "p1": "Vercel Inc.",
+          "p2": "Hosting the application and serving its pages, including building, deployment and distribution over the edge network.",
+          "p3": "(Privacy Notice, “About Vercel Products and Services”: “a frontend cloud for deploying and scaling frontend applications”.)",
+          "p4": "Data transmitted: IP address and system configuration information, as well as any content the deployment transmits.",
+          "p5": "(DPA, Schedule 1 §5: “such as IP address and system configuration information”, the scope being “exclusively determined and controlled by the Customer”.)",
+          "p6": "Sub-processors: Amazon Web Services (AWS); Google; Microsoft",
+          "p7": "The provider declares other providers — technical monitoring, security, debugging, logging, search, notification, data analysis, data storage, artificial intelligence — without specifying which of them receive this data.",
+          "p8": "The data is transferred outside the European Union, on the basis of: EU–US Data Privacy Framework.",
+          "p9": "The provider is not only a processor of this data. It also processes it for purposes of its own, in particular: providing the service and administering the account; customer support; platform security; legal compliance and trust. For this processing, it acts as a controller.",
+          "p10": "List published by the provider — <url>https://security.vercel.com</url>, updated on 2026-01-28",
+          "p11": "Checked on 2026-08-17 — <url>https://vercel.com/legal/privacy-notice</url> dated 2026-06-01"
+        },
+        "upstash": {
+          "heading": "Upstash — security",
+          "p1": "Data transmitted: your IP address",
+          "p2": "Declared by the site publisher; Publiable has not checked this service’s documentation."
+        },
+        "analytics": {
+          "heading": "Vercel Web Analytics — audience measurement",
+          "p1": "Data transmitted: your IP address, the technical characteristics of your device and browser, the pages you view and the page you came from",
+          "p2": "Declared by the site publisher; Publiable has not checked this service’s documentation."
+        },
+        "google": {
+          "heading": "Google (sign in with a Google account) — authentication",
+          "p1": "Data transmitted: your email address, your name",
+          "p2": "Declared by the site publisher; Publiable has not checked this service’s documentation."
+        }
       },
-      "s3": {
-        "heading": "3. Rechtsgrundlagen (DSGVO Art. 6)",
-        "item1": "<b>Vertrag</b>: Bereitstellung des Dienstes (Konto, Finanzdaten).",
-        "item2": "<b>Einwilligung</b>: Analytics-/Marketing-Cookies, Newsletter.",
-        "item3": "<b>Berechtigtes Interesse</b>: Aktivitätsprotokoll und Sicherheitslogs (Aufbewahrung 12 Monate), um Missbrauch zu erkennen und die ordnungsgemäße Funktion nachzuweisen.",
-        "item4": "<b>Berechtigtes Interesse</b>: Betrugsprävention, Aufrechterhaltung der Sicherheit."
+      "rights": {
+        "heading": "Your rights",
+        "p1": "You can obtain confirmation as to whether data concerning you is being processed and, where that is the case, access it. A copy of this data is provided to you; a reasonable fee based on administrative costs may be charged for any further copies. This right to obtain a copy must not adversely affect the rights and freedoms of others.",
+        "p2": "You can obtain the rectification of inaccurate data concerning you. Taking into account the purposes of the processing, you can also have incomplete data completed, including by providing a supplementary statement.",
+        "p3": "You can obtain the erasure of data concerning you where one of the grounds provided for in Article 17 applies, in particular where the data is no longer necessary for the purposes for which it was collected, or where you withdraw your consent and there is no other legal ground. This right does not apply to the extent that the processing remains necessary, in particular for compliance with a legal obligation or for the establishment, exercise or defence of legal claims.",
+        "p4": "You can obtain the restriction of processing in the situations provided for in Article 18, in particular where you contest the accuracy of the data, for the period needed to verify it, or where you have objected to the processing, pending the examination of your objection.",
+        "p5": "You can receive the data you have provided in a structured, commonly used and machine-readable format, and transmit it to another controller.",
+        "p6": "Where data concerning you is rectified or erased, or its processing restricted, each recipient to whom this data has been disclosed is informed, unless this proves impossible or involves disproportionate effort. You can ask to be told who these recipients are.",
+        "p7": "Where processing is based on your consent, you can withdraw it at any time. This withdrawal does not affect the lawfulness of processing based on consent before its withdrawal.",
+        "p8": "Where there are reasonable doubts about the identity of the person making the request, additional information necessary to confirm that identity may be requested.",
+        "p9": "An answer is sent to you without undue delay and in any event within one month of receipt of your request. This period may be extended by two further months, taking into account the complexity and number of requests; you are then informed of the extension and the reasons for the delay within one month.",
+        "p10": "Exercising these rights is free of charge. Where a request is manifestly unfounded or excessive, in particular because of its repetitive character, a reasonable fee may be charged or the request may be refused; it is then for the controller to demonstrate its manifestly unfounded or excessive character.",
+        "p11": "If no action is taken on your request, you are informed without delay and at the latest within one month of its receipt, of the reasons for not taking action and of the possibility of lodging a complaint with a supervisory authority and seeking a judicial remedy."
       },
-      "s4": {
-        "heading": "4. Hosting und Auftragsverarbeiter",
-        "item1": "<b>Supabase</b> (Datenbank, Auth) — EU-Region (Frankfurt oder Paris).",
-        "item2": "<b>Vercel</b> (Frontend-Hosting) — EU-Region (Dublin).",
-        "item3": "<b>Upstash</b> (Rate Limiting) — EU-Region.",
-        "outro": "Es werden keine Daten außerhalb der EU/EWR übertragen."
+      "objection": {
+        "heading": "Your right to object",
+        "p1": "You can object at any time, on grounds relating to your particular situation, to the processing of data concerning you that is based on legitimate interest."
       },
-      "s5": {
-        "heading": "5. Aufbewahrungsdauer",
-        "item1": "Aktives Konto: solange du den Dienst nutzt.",
-        "item2": "Gelöschtes Konto: Löschung wirksam 14 Tage nach deinem Antrag (widerrufbare Frist).",
-        "item3": "Sicherheitslogs: maximal 12 Monate, nach Kontolöschung pseudonymisiert."
+      "complaint": {
+        "heading": "Complaint",
+        "p1": "Without prejudice to any other administrative or judicial remedy, you can lodge a complaint with a supervisory authority if you consider that the processing of data concerning you infringes the regulation. You can in particular contact the authority of the Member State of your habitual residence, your place of work, or the place of the alleged infringement.",
+        "p2": "The publisher’s supervisory authority — Autorité de protection des données (APD), Rue de la Presse 35, 1000 Brussels — <url>https://www.autoriteprotectiondonnees.be/citoyen/agir/introduire-une-plainte</url>",
+        "p3": "Checked on 2026-08-18 — <url>https://www.autoriteprotectiondonnees.be/citoyen/contact</url>"
       },
-      "s6": {
-        "heading": "6. Deine Rechte (DSGVO Art. 15-22)",
-        "item1": "<b>Auskunft</b>: Sieh deine Daten jederzeit in deinem Bereich ein.",
-        "item2": "<b>Berichtigung</b>: Ändere Profil und Daten auf den entsprechenden Seiten.",
-        "item3": "<b>Löschung</b>: Schaltfläche „Mein Konto löschen“ unter Einstellungen → Datenschutz.",
-        "item4": "<b>Datenübertragbarkeit</b>: Schaltfläche „Meine Daten herunterladen“ — JSON-Export deiner Budgetdaten.",
-        "item5": "<b>Widerspruch / Einschränkung</b>: Lehne nicht-essenzielle Cookies jederzeit ab oder widerrufe sie.",
-        "item6": "<b>Beschwerde</b>: bei der <apd>Datenschutzbehörde</apd> (Belgien)."
+      "extras": {
+        "heading": "Additional information from the publisher",
+        "p1": "Ankora does not connect to any bank (no PSD2 aggregation). You enter your bills and expenses yourself.",
+        "p2": "Deleted account: effective deletion 14 days after your request (cancellable grace period).",
+        "security": {
+          "heading": "Security",
+          "p1": "Encryption in transit (TLS 1.3) and at rest.",
+          "p2": "Supabase Row Level Security on every table.",
+          "p3": "Rate limiting, strict CSP, append-only audit log.",
+          "p4": "Authentication with a strong password + MFA available."
+        },
+        "cookies": {
+          "heading": "Cookies",
+          "p1": "See the <link>cookie policy</link>."
+        },
+        "changes": {
+          "heading": "Changes",
+          "p1": "Any significant change to this policy is announced on this page, with its date, and by email to people who have an account."
+        }
       },
-      "s7": {
-        "heading": "7. Sicherheit",
-        "item1": "Verschlüsselung im Transit (TLS 1.3) und im Ruhezustand.",
-        "item2": "Row Level Security Supabase auf allen Tabellen.",
-        "item3": "Rate Limiting, strikte CSP, Append-only-Audit-Log.",
-        "item4": "Authentifizierung per starkem Passwort + MFA verfügbar."
-      },
-      "s8": {
-        "heading": "8. Cookies",
-        "body": "Siehe die <link>Cookie-Richtlinie</link>."
-      },
-      "s9": {
-        "heading": "9. Änderungen",
-        "body": "Jede wesentliche Änderung dieser Richtlinie wird per E-Mail mitgeteilt und erfordert deine erneute Einwilligung, um den Dienst weiterhin zu nutzen."
-      },
-      "draft": "Unsere Datenschutzerklärung wird derzeit erstellt.",
-      "backHome": "Zurück zur Startseite"
+      "draft": "Our privacy policy is being written.",
+      "backHome": "Back to home"
     },
     "cookies": {
       "metaTitle": "Cookie-Richtlinie",

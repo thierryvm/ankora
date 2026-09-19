@@ -28,7 +28,11 @@ test.describe('GDPR — marketing surface', () => {
   test('privacy policy lists RGPD rights art. 15-22', async ({ page }) => {
     await page.goto('/legal/privacy', { waitUntil: 'domcontentloaded' });
     await expect(page.getByText(/droit/i).first()).toBeVisible();
-    await expect(page.getByText(/portabilité/i).first()).toBeVisible();
+    // Portability (art. 20). The policy is composed on publiable.dev from the
+    // regulation's own wording, which describes the right without naming it.
+    await expect(
+      page.getByText(/format structuré, couramment utilisé et lisible par machine/i).first(),
+    ).toBeVisible();
     await expect(page.getByText(/effacement/i).first()).toBeVisible();
     await expect(page.getByText(/rectification/i).first()).toBeVisible();
   });

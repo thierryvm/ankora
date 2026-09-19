@@ -283,7 +283,7 @@
     "footerCta": {
       "h2Lead": "Commence par ce qui est",
       "h2Highlight": "déjà engagé.",
-      "description": "Gratuit pendant la Phase 1, pas de carte, export RGPD à tout moment. On fait simple parce que c'est déjà assez compliqué comme ça.",
+      "description": "Gratuit, sans offre payante — c'est écrit dans les CGU. Pas de carte, export RGPD à tout moment. On fait simple parce que c'est déjà assez compliqué comme ça.",
       "ctaPrimary": "Mijn account aanmaken"
     },
     "footer": {
@@ -291,10 +291,13 @@
         "terms": "Conditions",
         "privacy": "Confidentialité",
         "cookies": "Cookies",
+        "faq": "Questions",
+        "glossary": "Glossaire",
+        "code": "Code public",
         "contact": "Contact"
       },
       "copyright": "Ankora · éditeur ancré à Bruxelles · 2026",
-      "navLabel": "Juridische links"
+      "navLabel": "Informatie en juridische links"
     },
     "faqHeading": "Veelgestelde vragen",
     "faq": {
@@ -408,7 +411,7 @@
       },
       "s8": {
         "heading": "8. Gratis dienst",
-        "body": "Ankora is gratis. Er bestaat geen betaald aanbod en geen enkele functie is voorbehouden aan een hoger plan. Mocht er ooit een betaald aanbod worden ingevoerd, dan behouden accounts die vóór de lancering ervan zijn aangemaakt gratis volledige toegang tot de kern van het cockpit — de toezegging die op de Tarieven-pagina staat, hier herhaald zodat ze ons contractueel bindt en niet alleen commercieel.",
+        "body": "Ankora is gratis. Er bestaat geen betaald aanbod en geen enkele functie is voorbehouden aan een hoger plan. Mocht er ooit een betaald aanbod worden ingevoerd, dan behouden accounts die vóór de lancering ervan zijn aangemaakt gratis volledige toegang tot de kern van het cockpit. Deze toezegging staat hier zodat ze ons contractueel bindt en niet alleen commercieel.",
         "donations": "Als er ooit vrijwillige giften worden aangeboden, geven die recht op geen enkele tegenprestatie: geen functie, geen vervroegde toegang, geen voorrang bij ondersteuning. Een gift verandert niets aan de relatie die in deze voorwaarden wordt beschreven."
       },
       "s9": {
@@ -419,68 +422,137 @@
       "backHome": "Terug naar de startpagina"
     },
     "privacy": {
-      "metaTitle": "Privacybeleid",
-      "metaDescription": "Privacybeleid van Ankora — EU-hosting, AVG, gebruikersrechten.",
-      "title": "Privacybeleid",
-      "s1": {
-        "heading": "1. Verwerkingsverantwoordelijke",
-        "body": "Ankora, uitgegeven door Thierry Vanmeeteren (België). Contact: <mail>{email}</mail>."
+      "metaTitle": "Politique de confidentialité",
+      "metaDescription": "Politique de confidentialité d'Ankora : responsable du traitement, données collectées, services utilisés, transferts et droits.",
+      "title": "Politique de confidentialité",
+      "languageNotice": "Dit beleid is voorlopig alleen beschikbaar in het Frans en het Engels.",
+      "contentLang": "fr",
+      "intro": "Le texte qui suit est composé de phrases juridiques sourcées, on ne les a pas réécrites : c'est pour ça qu'il te vouvoie.",
+      "controller": {
+        "heading": "Responsable du traitement",
+        "p1": "Le responsable du traitement est Ankora, édité par Thierry Vanmeeteren.",
+        "p2": "Vous pouvez écrire à <mail>{email}</mail>.",
+        "p3": "Les demandes que vous adressez à cette adresse au sujet de vos données à caractère personnel y sont traitées pour vous répondre.",
+        "p4": "Ce traitement est nécessaire au respect d'une obligation légale : le règlement impose au responsable du traitement de faciliter l'exercice de vos droits et de répondre à vos demandes.",
+        "p5": "Ces messages sont conservés le temps nécessaire au traitement de votre demande."
       },
-      "s2": {
-        "heading": "2. Verzamelde gegevens",
-        "intro": "Ankora verzamelt enkel de gegevens die strikt noodzakelijk zijn voor het leveren van de dienst:",
-        "item1": "<b>Identiteit</b>: e-mailadres, weergavenaam (optioneel).",
-        "item2": "<b>Financiële gegevens die jij ingeeft</b>: vaste kosten, uitgaven, categorieën, opgegeven inkomens, spaarsaldo.",
-        "item3": "<b>Technische gegevens</b>: IP-adres, user-agent (enkel voor beveiligingslogs).",
-        "item4": "<b>Toestemmingen</b>: tijdstempel, versie, reikwijdte (gebruiksvoorwaarden, privacy, cookies).",
-        "outro": "Ankora maakt geen verbinding met een bank (geen PSD2-aggregatie). Je geeft zelf je vaste kosten en uitgaven in."
+      "data": {
+        "heading": "Données collectées",
+        "p1": "L'hébergement de ce site produit des journaux techniques, qui contiennent notamment l'adresse IP depuis laquelle les pages sont consultées.",
+        "p2": "L'éditeur consulte ces journaux pour la sécurité du service : détecter les abus et les tentatives d'intrusion, et diagnostiquer les incidents.",
+        "p3": "Ce traitement est nécessaire aux fins des intérêts légitimes poursuivis par l'éditeur, à savoir la sécurité du service : détecter les abus et les tentatives d'intrusion, et diagnostiquer les incidents (article 6(1)(f)).",
+        "p4": "Ces journaux sont conservés douze mois au plus, et pseudonymisés dès la suppression du compte.",
+        "account": {
+          "heading": "compte utilisateur",
+          "p1": "Ces données servent à créer et gérer votre compte, et à vous y donner accès.",
+          "p2": "Ce traitement est nécessaire à l'exécution du contrat auquel vous êtes partie, ou à des mesures précontractuelles prises à votre demande (article 6(1)(b)).",
+          "p3": "Ces données sont conservées aussi longtemps que le compte existe.",
+          "p4": "La fourniture de ces données conditionne la création du compte : sans elles, le compte ne peut pas être ouvert."
+        },
+        "content": {
+          "heading": "contenu déposé par l'utilisateur",
+          "p1": "Ces données servent à héberger le contenu que vous déposez et à vous le restituer.",
+          "p2": "Ce traitement est nécessaire à l'exécution du contrat auquel vous êtes partie, ou à des mesures précontractuelles prises à votre demande (article 6(1)(b)).",
+          "p3": "Ces données sont conservées jusqu'à ce que vous les supprimiez."
+        },
+        "audience": {
+          "heading": "mesure d'audience",
+          "p1": "Ces données servent à mesurer la fréquentation de l'application.",
+          "p2": "Ce traitement repose sur votre consentement (article 6(1)(a) du RGPD).",
+          "p3": "Ces données sont conservées six mois."
+        },
+        "supabase": {
+          "heading": "Supabase — base de données",
+          "p1": "Supabase Pte. Ltd",
+          "p2": "Stocker les données de l'application et servir les requêtes qui les lisent, les modifient ou les suppriment, pour le développement et l'exploitation de l'application.",
+          "p3": "(DPA, Schedule 3 : nature du traitement « Storage, deletion, rectification, analysis, transfer, aggregation » ; finalité « The performance of the Services, namely the provision of database and tooling services for the development and operation of web and mobile applications ».)",
+          "p4": "Données transmises : Les données que l'application enregistre, telles qu'elle les envoie, ainsi que les identifiants de connexion des comptes que l'application ouvre à ses utilisateurs.",
+          "p5": "(DPA, définition de « Covered Data » (a) : les données fournies par le client.)",
+          "p6": "Sous-traitants : Amazon Web Services, Inc ; Cloudflare, Inc ; Google, LLC ; Fly.io, Inc ; Vercel, Inc ; Upstash, Inc",
+          "p7": "Le fournisseur déclare d'autres prestataires — assistance, supervision technique, activation de fonctionnalités, suivi des erreurs, analyse de données, sécurité, intelligence artificielle — sans préciser lesquels reçoivent ces données.",
+          "p8": "Le fournisseur en déclare d'autres, dont la finalité renvoie à son exploitation propre — page de statut, connaissance client, place de marché.",
+          "p9": "Les données sont stockées et principalement traitées dans la région choisie par le client, ce qui ne supprime pas le transfert décrit ci-dessous.",
+          "p10": "Les données sont transférées hors de l'Union européenne, sur la base de : clauses contractuelles types (décision 2021/914).",
+          "p11": "Où voir ces garanties — <url>https://supabase.com/legal/customer-resources/data-processing-addendum</url>",
+          "p12": "Liste publiée par le fournisseur — <url>https://supabase.com/legal/customer-resources/subprocessor-list</url>, modifiée le 2026-06-01",
+          "p13": "Vérifié le 2026-08-17 — <url>https://supabase.com/privacy</url>"
+        },
+        "vercel": {
+          "heading": "Vercel — hébergement",
+          "p1": "Vercel Inc.",
+          "p2": "Héberger l'application et en servir les pages, avec la construction, le déploiement et la distribution sur le réseau périphérique.",
+          "p3": "(Privacy Notice, « About Vercel Products and Services » : « a frontend cloud for deploying and scaling frontend applications ».)",
+          "p4": "Données transmises : Adresse IP et informations de configuration du système, ainsi que tout contenu que le déploiement transmet.",
+          "p5": "(DPA, Schedule 1 §5 : « such as IP address and system configuration information », le périmètre étant « exclusively determined and controlled by the Customer ».)",
+          "p6": "Sous-traitants : Amazon Web Services (AWS) ; Google ; Microsoft",
+          "p7": "Le fournisseur déclare d'autres prestataires — supervision technique, sécurité, débogage, journalisation, recherche, notification, analyse de données, stockage de données, intelligence artificielle — sans préciser lesquels reçoivent ces données.",
+          "p8": "Les données sont transférées hors de l'Union européenne, sur la base de : Data Privacy Framework UE–États-Unis.",
+          "p9": "Le fournisseur n'est pas seulement sous-traitant de ces données. Il les traite aussi pour des finalités qui lui sont propres, notamment : fourniture du service et administration du compte ; assistance à la clientèle ; sécurité de la plateforme ; conformité légale et confiance. Pour ces traitements, il agit en responsable de traitement.",
+          "p10": "Liste publiée par le fournisseur — <url>https://security.vercel.com</url>, modifiée le 2026-01-28",
+          "p11": "Vérifié le 2026-08-17 — <url>https://vercel.com/legal/privacy-notice</url> datée du 2026-06-01"
+        },
+        "upstash": {
+          "heading": "Upstash — sécurité",
+          "p1": "Données transmises : votre adresse IP",
+          "p2": "Déclaré par l’éditeur du site ; Publiable n’a pas vérifié la documentation de ce service."
+        },
+        "analytics": {
+          "heading": "Vercel Web Analytics — mesure d'audience",
+          "p1": "Données transmises : votre adresse IP, les caractéristiques techniques de votre appareil et de votre navigateur, les pages que vous consultez et celle d'où vous arrivez",
+          "p2": "Déclaré par l’éditeur du site ; Publiable n’a pas vérifié la documentation de ce service."
+        },
+        "google": {
+          "heading": "Google (connexion avec un compte Google) — authentification",
+          "p1": "Données transmises : votre adresse e-mail, votre nom",
+          "p2": "Déclaré par l’éditeur du site ; Publiable n’a pas vérifié la documentation de ce service."
+        }
       },
-      "s3": {
-        "heading": "3. Rechtsgronden (AVG art. 6)",
-        "item1": "<b>Contract</b>: levering van de dienst (account, financiële gegevens).",
-        "item2": "<b>Toestemming</b>: analytics/marketing-cookies, nieuwsbrief.",
-        "item3": "<b>Gerechtvaardigd belang</b>: activiteitenlogboek en beveiligingslogs (bewaring 12 maanden), om misbruik op te sporen en de goede werking aan te tonen.",
-        "item4": "<b>Gerechtvaardigd belang</b>: fraudepreventie, behoud van de beveiliging."
+      "rights": {
+        "heading": "Vos droits",
+        "p1": "Vous pouvez obtenir la confirmation que des données vous concernant sont traitées et, lorsque c'est le cas, y accéder. Une copie de ces données vous est fournie ; des frais raisonnables, fondés sur les coûts administratifs, peuvent être demandés pour toute copie supplémentaire. Ce droit d'obtenir une copie ne peut pas porter atteinte aux droits et libertés d'autrui.",
+        "p2": "Vous pouvez obtenir la rectification des données inexactes vous concernant. Compte tenu des finalités du traitement, vous pouvez également obtenir que des données incomplètes soient complétées, y compris en fournissant une déclaration complémentaire.",
+        "p3": "Vous pouvez obtenir l'effacement des données vous concernant lorsque l'un des motifs prévus par l'article 17 s'applique, notamment lorsque ces données ne sont plus nécessaires au regard des finalités pour lesquelles elles ont été collectées, ou lorsque vous retirez votre consentement et qu'aucun autre fondement juridique n'existe. Ce droit ne s'applique pas dans la mesure où le traitement reste nécessaire, notamment pour respecter une obligation légale ou pour la constatation, l'exercice ou la défense de droits en justice.",
+        "p4": "Vous pouvez obtenir la limitation du traitement dans les situations prévues par l'article 18, notamment lorsque vous contestez l'exactitude des données pendant le temps nécessaire à sa vérification, ou lorsque vous vous êtes opposé au traitement pendant l'examen de votre opposition.",
+        "p5": "Vous pouvez recevoir les données que vous avez fournies dans un format structuré, couramment utilisé et lisible par machine, et les transmettre à un autre responsable du traitement.",
+        "p6": "Lorsque des données vous concernant sont rectifiées ou effacées, ou que leur traitement est limité, chaque destinataire auquel ces données ont été communiquées en est informé, à moins que cette communication se révèle impossible ou exige des efforts disproportionnés. Vous pouvez demander à connaître ces destinataires.",
+        "p7": "Lorsqu'un traitement repose sur votre consentement, vous pouvez le retirer à tout moment. Ce retrait ne remet pas en cause la licéité du traitement fondé sur le consentement effectué avant celui-ci.",
+        "p8": "En cas de doute raisonnable sur l'identité de la personne qui présente la demande, des informations supplémentaires nécessaires pour confirmer cette identité peuvent être demandées.",
+        "p9": "Une réponse vous est adressée dans les meilleurs délais et, en tout état de cause, dans un délai d'un mois à compter de la réception de votre demande. Ce délai peut être prolongé de deux mois compte tenu de la complexité ou du nombre de demandes ; vous êtes alors informé de cette prolongation et des motifs du report dans le délai d'un mois.",
+        "p10": "L'exercice de ces droits ne donne lieu à aucun paiement. Lorsqu'une demande est manifestement infondée ou excessive, notamment en raison de son caractère répétitif, des frais raisonnables peuvent être demandés ou la demande peut être refusée ; il revient alors au responsable du traitement d'en démontrer le caractère infondé ou excessif.",
+        "p11": "Si votre demande n'est pas suivie d'effet, vous en êtes informé sans tarder et au plus tard dans un délai d'un mois à compter de sa réception, avec les motifs de cette inaction, ainsi que la possibilité d'introduire une réclamation auprès d'une autorité de contrôle et de former un recours juridictionnel."
       },
-      "s4": {
-        "heading": "4. Hosting en onderaannemers",
-        "item1": "<b>Supabase</b> (database, auth) — EU-regio (Frankfurt of Parijs).",
-        "item2": "<b>Vercel</b> (frontend hosting) — EU-regio (Dublin).",
-        "item3": "<b>Upstash</b> (rate limiting) — EU-regio.",
-        "outro": "Geen enkele gegevens worden buiten de EU/EER overgedragen."
+      "objection": {
+        "heading": "Votre droit d'opposition",
+        "p1": "Vous pouvez vous opposer à tout moment, pour des raisons tenant à votre situation particulière, au traitement des données vous concernant fondé sur l'intérêt légitime."
       },
-      "s5": {
-        "heading": "5. Bewaartermijn",
-        "item1": "Actief account: zolang je de dienst gebruikt.",
-        "item2": "Verwijderd account: verwijdering effectief 14 dagen na je aanvraag (annuleerbare grace period).",
-        "item3": "Beveiligingslogs: maximum 12 maanden, gepseudonimiseerd na accountverwijdering."
+      "complaint": {
+        "heading": "Réclamation",
+        "p1": "Sans préjudice de tout autre recours administratif ou juridictionnel, vous pouvez introduire une réclamation auprès d'une autorité de contrôle si vous estimez que le traitement des données vous concernant constitue une violation du règlement. Vous pouvez notamment saisir l'autorité de l'État membre où se trouve votre résidence habituelle, votre lieu de travail, ou le lieu où la violation aurait été commise.",
+        "p2": "Autorité de contrôle de l'éditeur — Autorité de protection des données (APD), Rue de la Presse 35, 1000 Bruxelles — <url>https://www.autoriteprotectiondonnees.be/citoyen/agir/introduire-une-plainte</url>",
+        "p3": "Vérifié le 2026-08-18 — <url>https://www.autoriteprotectiondonnees.be/citoyen/contact</url>"
       },
-      "s6": {
-        "heading": "6. Je rechten (AVG art. 15-22)",
-        "item1": "<b>Inzage</b>: raadpleeg je gegevens op elk moment in je ruimte.",
-        "item2": "<b>Rectificatie</b>: wijzig profiel en gegevens in de voorziene pagina's.",
-        "item3": "<b>Verwijdering</b>: knop « Mijn account verwijderen » in Instellingen → Privacy.",
-        "item4": "<b>Portabiliteit</b>: knop « Mijn gegevens downloaden » — JSON-export van je budgetgegevens.",
-        "item5": "<b>Bezwaar / Beperking</b>: weiger of trek niet-essentiële cookies op elk moment in.",
-        "item6": "<b>Klacht</b>: bij de <apd>Gegevensbeschermingsautoriteit</apd> (België)."
+      "extras": {
+        "heading": "Compléments de l'éditeur",
+        "p1": "Ankora ne se connecte à aucune banque (pas d'agrégation PSD2). Tu saisis toi-même tes charges et dépenses.",
+        "p2": "Compte supprimé : suppression effective 14 jours après ta demande (grace period annulable).",
+        "security": {
+          "heading": "Sécurité",
+          "p1": "Chiffrement en transit (TLS 1.3) et au repos.",
+          "p2": "Row Level Security Supabase sur toutes les tables.",
+          "p3": "Rate limiting, CSP stricte, audit log append-only.",
+          "p4": "Authentification par mot de passe fort + MFA disponible."
+        },
+        "cookies": {
+          "heading": "Cookies",
+          "p1": "Voir la <link>politique cookies</link>."
+        },
+        "changes": {
+          "heading": "Modifications",
+          "p1": "Toute modification importante de cette politique est annoncée sur cette page, avec sa date, et par e-mail aux personnes qui ont un compte."
+        }
       },
-      "s7": {
-        "heading": "7. Veiligheid",
-        "item1": "Versleuteling in transit (TLS 1.3) en at rest.",
-        "item2": "Row Level Security Supabase op alle tabellen.",
-        "item3": "Rate limiting, strikte CSP, append-only audit log.",
-        "item4": "Authenticatie met sterk wachtwoord + MFA beschikbaar."
-      },
-      "s8": {
-        "heading": "8. Cookies",
-        "body": "Zie het <link>cookiebeleid</link>."
-      },
-      "s9": {
-        "heading": "9. Wijzigingen",
-        "body": "Elke materiële wijziging van dit beleid wordt per e-mail gemeld en vereist je vernieuwde toestemming om de dienst te blijven gebruiken."
-      },
-      "draft": "Ons privacybeleid wordt momenteel opgesteld.",
-      "backHome": "Terug naar de startpagina"
+      "draft": "Notre politique de confidentialité est en cours de rédaction.",
+      "backHome": "Retour à l'accueil"
     },
     "cookies": {
       "metaTitle": "Cookiebeleid",
