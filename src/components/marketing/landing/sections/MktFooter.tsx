@@ -5,6 +5,8 @@ import { CookiePreferencesLink } from '@/components/layout/CookiePreferencesLink
 import { Link } from '@/i18n/navigation';
 import { SITE } from '@/lib/site';
 
+const SITE_REPOSITORY_URL = 'https://github.com/thierryvm/ankora';
+
 /**
  * `inline-flex min-h-11 items-center` : ces liens mesuraient 16 px de haut,
  * sous les 24 x 24 px qu'exige WCAG 2.2 AA (2.5.8 Target Size Minimum).
@@ -56,10 +58,18 @@ const LINK_CLASS =
 export async function MktFooter() {
   const t = await getTranslations('landing.footer');
 
+  // `faq`, `glossary` and `code` added on 19 September 2026: the sitemap
+  // submits /faq and /glossaire, and the landing linked to neither — no
+  // internal path led a crawler (or a visitor) there. The repository is
+  // public but its licence is proprietary: the label says "public code",
+  // never "open" or "open source".
   const links = [
     { key: 'terms', href: '/legal/cgu' },
     { key: 'privacy', href: '/legal/privacy' },
     { key: 'cookies', href: '/legal/cookies' },
+    { key: 'faq', href: '/faq' },
+    { key: 'glossary', href: '/glossaire' },
+    { key: 'code', href: SITE_REPOSITORY_URL, external: true as const, rel: 'noopener' },
     { key: 'contact', href: `mailto:${SITE.contactEmail}`, external: true as const },
   ] as const;
 
@@ -79,9 +89,14 @@ export async function MktFooter() {
         <nav aria-label={t('navLabel')} className="flex flex-wrap items-center gap-5">
           {links.map((link) =>
             'external' in link && link.external ? (
-              // Plain <a>: `mailto:` is not a route, so the localised Link
-              // would try to prefix it with the locale segment.
-              <a key={link.key} href={link.href} className={LINK_CLASS}>
+              // Plain <a>: `mailto:` and the repository are not routes, so the
+              // localised Link would try to prefix them with the locale segment.
+              <a
+                key={link.key}
+                href={link.href}
+                rel={'rel' in link ? link.rel : undefined}
+                className={LINK_CLASS}
+              >
                 {t(`links.${link.key}`)}
               </a>
             ) : (

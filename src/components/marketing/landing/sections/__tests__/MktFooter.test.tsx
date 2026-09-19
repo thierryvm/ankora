@@ -78,6 +78,17 @@ describe('<MktFooter />', () => {
     expect(screen.getByRole('link', { name: 'Cookies' })).toHaveAttribute('href', '/legal/cookies');
   });
 
+  it('links what the sitemap submits — FAQ, glossary — and the public repository', async () => {
+    await renderMktFooter();
+    expect(screen.getByRole('link', { name: 'Questions' })).toHaveAttribute('href', '/faq');
+    expect(screen.getByRole('link', { name: 'Glossaire' })).toHaveAttribute('href', '/glossaire');
+    const code = screen.getByRole('link', { name: 'Code public' });
+    expect(code).toHaveAttribute('href', 'https://github.com/thierryvm/ankora');
+    expect(code.getAttribute('rel') ?? '').toMatch(/\bnoopener\b/);
+    // The licence is proprietary: a public repository is not an open one.
+    expect(screen.queryByText(/ouvert|open source/i)).not.toBeInTheDocument();
+  });
+
   // Ce repère portait pour nom le texte de copyright : un lecteur d'écran
   // annonçait les liens légaux sous « Ankora · éditeur ancré à Bruxelles ·
   // 2026 », qui ne dit rien de l'endroit où ils mènent.
@@ -88,7 +99,9 @@ describe('<MktFooter />', () => {
   // ce dépôt s'interdit.
   it('names the legal navigation for what it is, not with the copyright line', async () => {
     await renderMktFooter();
-    const nav = screen.getByRole('navigation', { name: 'Liens légaux' });
+    // « Liens légaux » until 19 September 2026: the navigation now also holds
+    // the FAQ, the glossary and the repository, so its name says so.
+    const nav = screen.getByRole('navigation', { name: 'Informations et liens légaux' });
     expect(nav).toBeInTheDocument();
     expect(nav.getAttribute('aria-label')).not.toMatch(/éditeur ancré à Bruxelles/i);
   });

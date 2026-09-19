@@ -291,10 +291,13 @@
         "terms": "Conditions",
         "privacy": "Confidentialité",
         "cookies": "Cookies",
+        "faq": "Questions",
+        "glossary": "Glossaire",
+        "code": "Code public",
         "contact": "Contact"
       },
       "copyright": "Ankora · éditeur ancré à Bruxelles · 2026",
-      "navLabel": "Rechtliche Links"
+      "navLabel": "Informationen und rechtliche Links"
     },
     "faqHeading": "Häufige Fragen",
     "faq": {
