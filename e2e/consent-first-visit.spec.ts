@@ -316,7 +316,7 @@ test.describe('Consentement — première visite, sans état pré-rempli', () =>
     }
   });
 
-  test('« Essentiels uniquement » ferme la bannière et libère la page', async ({ page }) => {
+  test('« Refuser » ferme la bannière et libère la page', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 664 });
     await page.goto('/login');
     await page.evaluate(() => window.localStorage.clear());
@@ -324,7 +324,7 @@ test.describe('Consentement — première visite, sans état pré-rempli', () =>
 
     const banniere = page.locator('[role="dialog"][aria-labelledby="consent-title"]');
     await expect(banniere).toBeVisible();
-    await banniere.getByRole('button', { name: /essentiels uniquement/i }).click();
+    await banniere.getByRole('button', { name: /^refuser$/i }).click();
     await expect(banniere).toBeHidden();
 
     // L'espace réservé doit être rendu : plus de bannière, plus de réserve.

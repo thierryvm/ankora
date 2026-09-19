@@ -219,6 +219,9 @@ export type ConsentBannerProps = {
   /**
    * La `BottomTabBar` est-elle montée pour cette requête ?
    *
+   * Quand elle l'est, la barre de consentement se pose sur elle au lieu du bord
+   * de l'écran.
+   *
    * Même contrat que `ScrollToTop.liftedForBottomBar`, et pour la même raison :
    * la barre est `position: fixed`, donc la réserve `--consent-height` posée en
    * `padding-bottom` sur `body` ne la déplace PAS — un élément hors flux ignore
@@ -238,9 +241,6 @@ export function ConsentBanner({ liftedForBottomBar = false }: ConsentBannerProps
   const t = useTranslations('consent');
   const snap = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const [dismissed, setDismissed] = useState(false);
-  const [customizing, setCustomizing] = useState(false);
-  const [analytics, setAnalytics] = useState(false);
-  const [marketing, setMarketing] = useState(false);
   const [, startTransition] = useTransition();
 
   // Post-hydration refresh: the module-level snapshot cache survives
@@ -298,22 +298,25 @@ export function ConsentBanner({ liftedForBottomBar = false }: ConsentBannerProps
   const hasDecided = snap.stored !== null;
   const shouldShow = !dismissed && (!hasDecided || snap.reopen);
 
-  /**
-   * Réserve, dans le flux, la hauteur que la bannière occupe en `fixed`.
+  /*
+   * The reserve: while the bar is open, `body` gets a bottom padding equal to
+   * the distance from the viewport's bottom edge to the bar's top edge
+   * (globals.css reads `--consent-height`). Without it the fixed bar would sit
+   * on the last lines of every page — on 31 July 2026 it made « Se connecter »
+   * unreachable on every iPhone preset.
    *
-   * Sans cela la bannière recouvre le contenu et **intercepte les clics** : sur
-   * `/login`, le bouton « Se connecter » finit à `y = 498` alors que la bannière
-   * commence à `hauteurViewport − 16 − hauteurBannière`. Mesuré le 2026-07-31 :
-   * bloqué sur TOUS les presets iPhone (SE 320×568, 12/14 390×664, 15 Pro Max
-   * 430×739) et sur Galaxy S9+ ; à 390 px de large, bloqué jusqu'à 780 px de
-   * haut, cliquable à partir de 790. Les conteneurs d'auth sont `min-h-dvh`,
-   * donc la page n'avait **aucune marge de défilement** : le bouton était
-   * visible, activé, stable — et hors d'atteinte.
+   * Measured, never guessed: the distance includes the lift above the bottom
+   * tab bar and the safe-area inset, and it follows wrapping and rotation.
+   * Written through the CSSOM (`style.setProperty`), which a nonce-based CSP
+   * does not govern — only style attributes in markup are.
    *
-   * La hauteur est mesurée plutôt que devinée : la bannière va de 272 à 378 px
-   * selon le retour à la ligne, et elle est d'autant plus haute que l'écran est
-   * étroit — le pire cas est le plus petit écran. `globals.css` consomme la
-   * variable en `padding-bottom` sur `body`.
+   * Padding added at the BOTTOM of the page moves nothing above it. On a page
+   * shorter than the screen, what is anchored to the bottom (the footer) does
+   * move up by the reserve when the bar closes.
+   *
+   * `liftedForBottomBar` is a dependency: it flips on client navigation
+   * (public page ↔ /app) and moves the bar by the tab bar's height WITHOUT
+   * resizing it, so neither the ResizeObserver nor `resize` would fire.
    */
   const ref = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -323,48 +326,25 @@ export function ConsentBanner({ liftedForBottomBar = false }: ConsentBannerProps
       root.style.removeProperty('--consent-height');
       return;
     }
-    // La réserve est la distance du BAS du viewport au HAUT de la bannière —
-    // pas `offsetHeight + 16`. Cette dernière forme codait en dur le décalage
-    // `bottom-4` et devenait fausse dès que la bannière se relevait au-dessus de
-    // la BottomTabBar (`liftedForBottomBar`). Mesurer la position réelle rend la
-    // réserve juste quel que soit le décalage appliqué, aujourd'hui et après le
-    // prochain changement de classe. La bannière étant `fixed`, son `top` ne
-    // dépend pas du padding de `body` : pas de boucle avec le ResizeObserver.
     const apply = () =>
       root.style.setProperty(
         '--consent-height',
         `${Math.round(window.innerHeight - el.getBoundingClientRect().top)}px`,
       );
     apply();
-    // La mesure dépend désormais de `window.innerHeight`, que le ResizeObserver
-    // de la bannière ne voit pas : une rotation d'écran, ou la barre d'URL
-    // mobile qui se replie, change la hauteur du viewport sans changer celle de
-    // la bannière. Sans cet écouteur la réserve resterait figée sur l'ancienne
-    // hauteur — précisément le genre de décalage silencieux que ce bloc existe
-    // pour empêcher.
+    // `innerHeight` changes on rotation and when the mobile URL bar folds,
+    // without the bar itself resizing: the ResizeObserver alone would miss it.
     window.addEventListener('resize', apply);
     window.addEventListener('orientationchange', apply);
-    const detachViewport = () => {
+    const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(apply);
+    ro?.observe(el);
+    return () => {
       window.removeEventListener('resize', apply);
       window.removeEventListener('orientationchange', apply);
-    };
-    // jsdom (Vitest) n'implémente pas ResizeObserver : la réserve est posée une
-    // fois, elle ne suit simplement pas les changements de hauteur. Suffisant
-    // pour les tests unitaires, et le comportement navigateur reste complet.
-    if (typeof ResizeObserver === 'undefined') {
-      return () => {
-        detachViewport();
-        root.style.removeProperty('--consent-height');
-      };
-    }
-    const ro = new ResizeObserver(apply);
-    ro.observe(el);
-    return () => {
-      detachViewport();
-      ro.disconnect();
+      ro?.disconnect();
       root.style.removeProperty('--consent-height');
     };
-  }, [shouldShow, customizing]);
+  }, [shouldShow, liftedForBottomBar]);
 
   if (!shouldShow) return null;
 
@@ -402,6 +382,27 @@ export function ConsentBanner({ liftedForBottomBar = false }: ConsentBannerProps
     });
   };
 
+  /*
+   * A THIN bar fixed at the bottom of the screen (decided by @thierry on
+   * 19 September 2026), replacing the 294 px card.
+   *
+   * An in-flow bar at the top was tried first and measured at 375 × 812 on a
+   * production build: the consent lives in localStorage, so the server cannot
+   * know whether to render it. Rendered by the server, it was removed after
+   * hydration for every returning visitor (layout shift 0.2155); on a first
+   * visit, the web font swap made its text wrap one more line and pushed the
+   * whole page down (0.1399). A fixed bar moves nothing: its contribution to
+   * layout shift is nil by construction, and the reserve above keeps it from
+   * covering the end of the page.
+   *
+   * Refuser coûte exactement autant qu'accepter : deux boutons de même taille,
+   * côte à côte, au même niveau. L'écran « Personnaliser » est retiré : il ne
+   * portait qu'une case analyse et une case marketing, et aucun traceur
+   * marketing n'existe (les seules dépendances de mesure sont
+   * `@vercel/analytics` et `@vercel/speed-insights`). Accepter n'accorde que
+   * la mesure d'audience ; `marketing` reste écrit à `false` pour que le
+   * format stocké et la base ne changent pas.
+   */
   return (
     <div
       ref={ref}
@@ -411,138 +412,49 @@ export function ConsentBanner({ liftedForBottomBar = false }: ConsentBannerProps
       data-testid="consent-banner"
       data-lifted-for-bottom-bar={String(liftedForBottomBar)}
       /*
-       * Décalage bas — même arithmétique que `ScrollToTop`, et pour le même
-       * motif : la barre d'onglets mesure `h-12` (3 rem) plus
-       * `env(safe-area-inset-bottom)`. On lève donc la bannière de 4 rem au-dessus
-       * de l'inset, ce qui laisse 1 rem d'air entre le bas de la bannière et le
-       * haut de la barre (mesuré : 15 px avec un inset de 34 px, 16 px sans).
-       *
-       * Le décalage se relâche à `xl:`, EN MÊME TEMPS que la barre se cache
-       * (`xl:hidden` sur `BottomTabBar`). Le relâcher plus tôt reposerait la
-       * bannière sur une barre encore affichée — c'est exactement la faute que
-       * la PR #293 a dû corriger sur les autres compensations d'espace.
+       * Bottom offset. Above the tab bar, the bar rests exactly on it: the tab
+       * bar is 3 rem plus the safe-area inset, and it hides at `xl:` — so the
+       * lift is released at `xl:` too, never earlier (the fault PR #293 fixed
+       * on the other space compensations). Without the tab bar, the bar sits
+       * on the screen edge and pads itself by the safe-area inset.
        */
       className={[
-        'border-border bg-card fixed inset-x-4 z-50 mx-auto max-w-3xl rounded-xl border p-5 shadow-lg md:inset-x-auto md:left-1/2 md:-translate-x-1/2',
+        'border-border bg-card fixed inset-x-0 z-50 border-t shadow-lg',
         liftedForBottomBar
-          ? 'bottom-[calc(env(safe-area-inset-bottom)+4rem)] xl:bottom-4'
-          : 'bottom-4',
+          ? 'bottom-[calc(env(safe-area-inset-bottom)+3rem)] xl:bottom-0 xl:pb-[env(safe-area-inset-bottom)]'
+          : 'bottom-0 pb-[env(safe-area-inset-bottom)]',
       ].join(' ')}
     >
-      <h2 id="consent-title" className="text-base font-semibold">
-        {t('title')}
-      </h2>
-      <p id="consent-body" className="text-muted-foreground mt-2 text-sm">
-        {t.rich('body', {
-          link: (chunks) => (
-            <Link href="/legal/cookies" className="underline">
-              {chunks}
-            </Link>
-          ),
-        })}
-      </p>
-
-      {customizing ? (
-        <div className="mt-4 flex flex-col gap-3">
-          <fieldset className="flex flex-col gap-3">
-            <legend className="sr-only">{t('customize.legend')}</legend>
-
-            <label className="border-border flex items-start gap-3 rounded-md border p-3">
-              <input
-                type="checkbox"
-                checked
-                disabled
-                aria-label={t('customize.essentialLabel')}
-                className="text-brand-700 mt-0.5 h-4 w-4"
-              />
-              <span className="flex-1">
-                <span className="block text-sm font-medium">
-                  {t('customize.essentialLabel')}{' '}
-                  <span className="text-muted-foreground text-xs font-normal">
-                    {t('customize.essentialBadge')}
-                  </span>
-                </span>
-                <span className="text-muted-foreground mt-1 block text-xs">
-                  {t('customize.essentialDescription')}
-                </span>
-              </span>
-            </label>
-
-            <label className="border-border flex items-start gap-3 rounded-md border p-3">
-              <input
-                type="checkbox"
-                checked={analytics}
-                onChange={(e) => setAnalytics(e.target.checked)}
-                aria-label={t('customize.analyticsLabel')}
-                className="text-brand-700 focus-visible:ring-brand-600 mt-0.5 h-4 w-4 focus-visible:ring-2 focus-visible:outline-none"
-              />
-              <span className="flex-1">
-                <span className="block text-sm font-medium">{t('customize.analyticsLabel')}</span>
-                <span className="text-muted-foreground mt-1 block text-xs">
-                  {t('customize.analyticsDescription')}
-                </span>
-              </span>
-            </label>
-
-            <label className="border-border flex items-start gap-3 rounded-md border p-3">
-              <input
-                type="checkbox"
-                checked={marketing}
-                onChange={(e) => setMarketing(e.target.checked)}
-                aria-label={t('customize.marketingLabel')}
-                className="text-brand-700 focus-visible:ring-brand-600 mt-0.5 h-4 w-4 focus-visible:ring-2 focus-visible:outline-none"
-              />
-              <span className="flex-1">
-                <span className="block text-sm font-medium">{t('customize.marketingLabel')}</span>
-                <span className="text-muted-foreground mt-1 block text-xs">
-                  {t('customize.marketingDescription')}
-                </span>
-              </span>
-            </label>
-          </fieldset>
-
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => accept(analytics, marketing)}
-              className="bg-brand-700 hover:bg-brand-800 focus-visible:ring-brand-600 rounded-md px-4 py-2 text-sm font-medium text-white focus-visible:ring-2 focus-visible:outline-none"
-            >
-              {t('customize.save')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setCustomizing(false)}
-              className="border-border hover:bg-brand-100 focus-visible:ring-brand-600 rounded-md border px-4 py-2 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
-            >
-              {t('customize.cancel')}
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-2.5 sm:flex-row sm:items-center sm:gap-3 sm:py-3 md:px-6">
+        <h2 id="consent-title" className="sr-only">
+          {t('title')}
+        </h2>
+        <p id="consent-body" className="text-muted-foreground flex-1 text-sm">
+          {t.rich('body', {
+            link: (chunks) => (
+              <Link href="/legal/cookies" className="underline">
+                {chunks}
+              </Link>
+            ),
+          })}
+        </p>
+        <div className="grid grid-cols-2 gap-2 sm:w-auto sm:shrink-0">
           <button
             type="button"
             onClick={() => accept(false, false)}
-            className="border-border hover:bg-brand-100 focus-visible:ring-brand-600 rounded-md border px-4 py-2 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
+            className="border-border hover:bg-brand-100 focus-visible:ring-brand-600 min-h-11 rounded-md border px-3 py-1.5 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
           >
-            {t('essentialOnly')}
+            {t('refuse')}
           </button>
           <button
             type="button"
-            onClick={() => setCustomizing(true)}
-            className="border-border hover:bg-brand-100 focus-visible:ring-brand-600 rounded-md border px-4 py-2 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
+            onClick={() => accept(true, false)}
+            className="border-border hover:bg-brand-100 focus-visible:ring-brand-600 min-h-11 rounded-md border px-3 py-1.5 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
           >
-            {t('customize.button')}
-          </button>
-          <button
-            type="button"
-            onClick={() => accept(true, true)}
-            className="bg-brand-700 hover:bg-brand-800 focus-visible:ring-brand-600 rounded-md px-4 py-2 text-sm font-medium text-white focus-visible:ring-2 focus-visible:outline-none"
-          >
-            {t('acceptAll')}
+            {t('accept')}
           </button>
         </div>
-      )}
+      </div>
     </div>
   );
 }

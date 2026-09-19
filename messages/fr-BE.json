@@ -556,31 +556,34 @@
     },
     "cookies": {
       "metaTitle": "Politique cookies",
-      "metaDescription": "Politique cookies de Ankora — granularité totale, tout refusable sauf essentiels.",
+      "metaDescription": "Politique cookies d'Ankora : cookies essentiels, mesure d'audience sur consentement, comment changer d'avis.",
       "title": "Politique cookies",
+      "languageNotice": "",
       "categoriesHeading": "Catégories",
       "essentialHeading": "Essentiels (toujours actifs)",
-      "essentialBody": "Indispensables au fonctionnement : session d'authentification, préférence de thème, anti-CSRF.",
-      "essentialItem1": "<code>sb-*</code> — session Supabase (auth)",
-      "essentialItem2": "<code>ankora-theme</code> — préférence claire/sombre",
-      "analyticsHeading": "Analytics (désactivés par défaut)",
-      "analyticsBody1": "Uniquement si tu donnes ton consentement. Mesure d'usage agrégée, sans identifiant personnel.",
-      "analyticsBody2": "Ankora n'utilise pas Google Analytics. Les métriques Vercel sont agrégées et anonymisées.",
-      "marketingHeading": "Marketing (désactivés par défaut)",
-      "marketingBody": "Ankora n'utilise actuellement aucun cookie marketing.",
-      "manageHeading": "Gérer tes préférences",
-      "manageBody1": "Tu peux modifier tes consentements à tout moment dans <b>Paramètres → Confidentialité</b> ou en cliquant sur « Gérer les cookies » dans le pied de page.",
-      "manageBody2": "Refuser les cookies non essentiels ne dégrade pas l'expérience : Ankora reste entièrement fonctionnel.",
-      "manageMethodsHeading": "Comment gérer mes cookies",
-      "manageMethod1": "À la première visite, le bandeau te propose trois choix : essentiels uniquement, personnaliser, ou tout accepter.",
-      "manageMethod2": "Connecté, dans Paramètres → Cookies & confidentialité, tu peux activer/désactiver chaque catégorie.",
-      "manageMethod3": "Depuis n'importe quelle page, le lien « Modifier mes préférences cookies » dans le pied de page rouvre le bandeau.",
+      "essentialBody": "Indispensables au fonctionnement : ta session de connexion, ta langue et ton thème. Ils ne demandent pas de consentement.",
+      "essentialItem1": "<code>sb-…-auth-token</code> — ta session de connexion Supabase, posée seulement quand tu te connectes.",
+      "essentialItem2": "<code>theme</code> — ta préférence claire ou sombre.",
+      "essentialItem3": "<code>NEXT_LOCALE</code> — la langue que tu as choisie.",
+      "essentialItem4": "Sur ton appareil (stockage local, pas un cookie) : <code>ankora.consent.v1</code> garde ton choix sur la mesure d'audience, <code>theme</code> ta préférence d'affichage.",
+      "analyticsHeading": "Mesure d'audience (désactivée par défaut)",
+      "analyticsBody1": "Uniquement si tu l'acceptes : Vercel Web Analytics (pages consultées) et Vercel Speed Insights (temps de chargement des pages). Vercel annonce qu'aucun des deux ne dépose de cookie.",
+      "analyticsBody2": "Ankora n'utilise pas Google Analytics.",
+      "marketingHeading": "Marketing",
+      "marketingBody": "Ankora n'utilise aucun cookie ni traceur marketing.",
+      "manageHeading": "Changer ton choix",
+      "manageBody1": "Tu peux changer d'avis à tout moment dans <b>Paramètres → Cookies & confidentialité</b>, ou avec le lien « Modifier mes préférences cookies » en pied de page.",
+      "manageBody2": "Refuser la mesure d'audience ne change rien à l'application : Ankora reste entièrement fonctionnel.",
+      "manageMethodsHeading": "Comment changer mon choix",
+      "manageMethod1": "À la première visite, une barre en haut de page te propose deux choix de même poids : refuser, ou accepter la mesure d'audience.",
+      "manageMethod2": "Connecté, dans Paramètres → Cookies & confidentialité, tu peux activer ou désactiver la mesure d'audience.",
+      "manageMethod3": "Depuis n'importe quelle page, le lien « Modifier mes préférences cookies » dans le pied de page rouvre la barre.",
       "withdrawalHeading": "Retrait du consentement",
       "withdrawalBody": "Conformément au RGPD (art. 7(3)), retirer ton consentement est aussi simple que de le donner. Trois méthodes équivalentes : 1) Paramètres → Cookies & confidentialité → bouton « Réinitialiser mon choix ». 2) Pied de page → « Modifier mes préférences cookies ». 3) Email à {email} avec l'objet « Retrait consentement cookies ».",
       "lifetimeHeading": "Durée de vie",
-      "lifetimeItem1": "Session : fin de navigation",
-      "lifetimeItem2": "Préférences : 12 mois",
-      "lifetimeItem3": "Analytics : 6 mois (si acceptés)",
+      "lifetimeItem1": "Session de connexion : 400 jours au plus (durée par défaut de la bibliothèque Supabase).",
+      "lifetimeItem2": "Langue et thème : 12 mois.",
+      "lifetimeItem3": "Mesure d'audience : aucun cookie ; les données de mesure sont conservées six mois (voir la politique de confidentialité).",
       "backHome": "Retour à l'accueil"
     }
   },
@@ -592,23 +595,10 @@
     "retry": "Réessayer"
   },
   "consent": {
-    "title": "Cookies et vie privée",
-    "body": "On utilise uniquement les cookies essentiels pour te connecter. Les cookies d'analyse et marketing sont désactivés par défaut — tu peux les activer si tu veux nous aider à améliorer Ankora. Tu peux changer d'avis à tout moment via <link>la politique cookies</link>.",
-    "essentialOnly": "Essentiels uniquement",
-    "acceptAll": "Tout accepter",
-    "customize": {
-      "button": "Personnaliser",
-      "save": "Enregistrer mes préférences",
-      "cancel": "Annuler",
-      "legend": "Catégories de cookies",
-      "essentialLabel": "Essentiels",
-      "essentialBadge": "(toujours actifs)",
-      "essentialDescription": "Session, sécurité, préférence de langue et de thème. Indispensables au fonctionnement d'Ankora.",
-      "analyticsLabel": "Analyse d'usage",
-      "analyticsDescription": "Statistiques anonymisées pour comprendre quelles pages aident le plus. Aucune donnée personnelle.",
-      "marketingLabel": "Marketing",
-      "marketingDescription": "Réservés à de futures campagnes. Phase 1 d'Ankora : aucun cookie marketing actif."
-    }
+    "title": "Mesure d'audience",
+    "body": "Ankora ne mesure l'audience (Vercel) qu'avec ton accord. <link>Politique cookies</link>",
+    "refuse": "Refuser",
+    "accept": "Accepter la mesure d'audience"
   },
   "footer": {
     "copyright": "© {year} — Tous droits réservés",
@@ -1648,7 +1638,7 @@
   "opengraphImage": {
     "trustHosting": "🇧🇪 Belgique · Hébergé UE",
     "trustNoBank": "Sans agrégation bancaire",
-    "trustFree": "0 € Phase 1"
+    "trustFree": "Gratuit"
   },
   "pwa": {
     "update": {

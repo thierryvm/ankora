@@ -555,33 +555,36 @@
       "backHome": "Retour à l'accueil"
     },
     "cookies": {
-      "metaTitle": "Cookiebeleid",
-      "metaDescription": "Cookiebeleid van Ankora — volledige granulariteit, alles weigerbaar behalve essentiële.",
-      "title": "Cookiebeleid",
-      "categoriesHeading": "Categorieën",
-      "essentialHeading": "Essentieel (altijd actief)",
-      "essentialBody": "Onmisbaar voor de werking: authenticatiesessie, themavoorkeur, anti-CSRF.",
-      "essentialItem1": "<code>sb-*</code> — Supabase-sessie (auth)",
-      "essentialItem2": "<code>ankora-theme</code> — voorkeur licht/donker",
-      "analyticsHeading": "Analytics (standaard uitgeschakeld)",
-      "analyticsBody1": "Enkel als je toestemming geeft. Geaggregeerde gebruiksmeting, zonder persoonlijke identificator.",
-      "analyticsBody2": "Ankora gebruikt geen Google Analytics. De Vercel-metrics zijn geaggregeerd en anoniem.",
-      "marketingHeading": "Marketing (standaard uitgeschakeld)",
-      "marketingBody": "Ankora gebruikt momenteel geen enkele marketing-cookie.",
-      "manageHeading": "Je voorkeuren beheren",
-      "manageBody1": "Je kunt je toestemmingen op elk moment wijzigen in <b>Instellingen → Privacy</b> of door op « Cookies beheren » te klikken in de voettekst.",
-      "manageBody2": "Niet-essentiële cookies weigeren heeft geen invloed op de ervaring: Ankora blijft volledig functioneel.",
-      "manageMethodsHeading": "Hoe mijn cookies beheren",
-      "manageMethod1": "Bij het eerste bezoek biedt het banner drie keuzes: enkel essentiële, aanpassen of alles aanvaarden.",
-      "manageMethod2": "Aangemeld kun je in Instellingen → Cookies & privacy elke categorie in- of uitschakelen.",
-      "manageMethod3": "Op elke pagina opent de link \"Cookievoorkeuren beheren\" in de voettekst het banner opnieuw.",
-      "withdrawalHeading": "Toestemming intrekken",
-      "withdrawalBody": "Volgens de AVG (art. 7(3)) is toestemming intrekken even eenvoudig als ze geven. Drie gelijkwaardige methoden: 1) Instellingen → Cookies & privacy → \"Mijn keuze opnieuw instellen\". 2) Voettekst → \"Cookievoorkeuren beheren\". 3) E-mail naar {email} met onderwerp \"Cookietoestemming intrekken\".",
-      "lifetimeHeading": "Levensduur",
-      "lifetimeItem1": "Sessie: einde van de navigatie",
-      "lifetimeItem2": "Voorkeuren: 12 maanden",
-      "lifetimeItem3": "Analytics: 6 maanden (indien aanvaard)",
-      "backHome": "Terug naar de startpagina"
+      "metaTitle": "Politique cookies",
+      "metaDescription": "Politique cookies d'Ankora : cookies essentiels, mesure d'audience sur consentement, comment changer d'avis.",
+      "title": "Politique cookies",
+      "languageNotice": "Dit beleid is voorlopig alleen beschikbaar in het Frans en het Engels.",
+      "categoriesHeading": "Catégories",
+      "essentialHeading": "Essentiels (toujours actifs)",
+      "essentialBody": "Indispensables au fonctionnement : ta session de connexion, ta langue et ton thème. Ils ne demandent pas de consentement.",
+      "essentialItem1": "<code>sb-…-auth-token</code> — ta session de connexion Supabase, posée seulement quand tu te connectes.",
+      "essentialItem2": "<code>theme</code> — ta préférence claire ou sombre.",
+      "essentialItem3": "<code>NEXT_LOCALE</code> — la langue que tu as choisie.",
+      "essentialItem4": "Sur ton appareil (stockage local, pas un cookie) : <code>ankora.consent.v1</code> garde ton choix sur la mesure d'audience, <code>theme</code> ta préférence d'affichage.",
+      "analyticsHeading": "Mesure d'audience (désactivée par défaut)",
+      "analyticsBody1": "Uniquement si tu l'acceptes : Vercel Web Analytics (pages consultées) et Vercel Speed Insights (temps de chargement des pages). Vercel annonce qu'aucun des deux ne dépose de cookie.",
+      "analyticsBody2": "Ankora n'utilise pas Google Analytics.",
+      "marketingHeading": "Marketing",
+      "marketingBody": "Ankora n'utilise aucun cookie ni traceur marketing.",
+      "manageHeading": "Changer ton choix",
+      "manageBody1": "Tu peux changer d'avis à tout moment dans <b>Paramètres → Cookies & confidentialité</b>, ou avec le lien « Modifier mes préférences cookies » en pied de page.",
+      "manageBody2": "Refuser la mesure d'audience ne change rien à l'application : Ankora reste entièrement fonctionnel.",
+      "manageMethodsHeading": "Comment changer mon choix",
+      "manageMethod1": "À la première visite, une barre en haut de page te propose deux choix de même poids : refuser, ou accepter la mesure d'audience.",
+      "manageMethod2": "Connecté, dans Paramètres → Cookies & confidentialité, tu peux activer ou désactiver la mesure d'audience.",
+      "manageMethod3": "Depuis n'importe quelle page, le lien « Modifier mes préférences cookies » dans le pied de page rouvre la barre.",
+      "withdrawalHeading": "Retrait du consentement",
+      "withdrawalBody": "Conformément au RGPD (art. 7(3)), retirer ton consentement est aussi simple que de le donner. Trois méthodes équivalentes : 1) Paramètres → Cookies & confidentialité → bouton « Réinitialiser mon choix ». 2) Pied de page → « Modifier mes préférences cookies ». 3) Email à {email} avec l'objet « Retrait consentement cookies ».",
+      "lifetimeHeading": "Durée de vie",
+      "lifetimeItem1": "Session de connexion : 400 jours au plus (durée par défaut de la bibliothèque Supabase).",
+      "lifetimeItem2": "Langue et thème : 12 mois.",
+      "lifetimeItem3": "Mesure d'audience : aucun cookie ; les données de mesure sont conservées six mois (voir la politique de confidentialité).",
+      "backHome": "Retour à l'accueil"
     }
   },
   "offline": {
@@ -592,23 +595,10 @@
     "retry": "Opnieuw proberen"
   },
   "consent": {
-    "title": "Cookies en privacy",
-    "body": "We gebruiken enkel essentiële cookies om je te laten inloggen. Analytische en marketingcookies zijn standaard uitgeschakeld — je kunt ze activeren als je ons wil helpen Ankora te verbeteren. Je kunt op elk moment van gedacht veranderen via <link>het cookiebeleid</link>.",
-    "essentialOnly": "Enkel essentiële",
-    "acceptAll": "Alles aanvaarden",
-    "customize": {
-      "button": "Aanpassen",
-      "save": "Mijn voorkeuren opslaan",
-      "cancel": "Annuleren",
-      "legend": "Cookie-categorieën",
-      "essentialLabel": "Essentiële",
-      "essentialBadge": "(altijd actief)",
-      "essentialDescription": "Sessie, beveiliging, taal- en thema-voorkeuren. Vereist om Ankora te laten werken.",
-      "analyticsLabel": "Gebruiksanalyse",
-      "analyticsDescription": "Anonieme statistieken om te begrijpen welke pagina's het meest helpen. Geen persoonsgegevens.",
-      "marketingLabel": "Marketing",
-      "marketingDescription": "Voorbehouden voor toekomstige campagnes. Fase 1 van Ankora: geen marketingcookies actief."
-    }
+    "title": "Bezoekersmeting",
+    "body": "Ankora meet bezoekers (Vercel) alleen met je toestemming. <link>Cookiebeleid</link>",
+    "refuse": "Weigeren",
+    "accept": "Bezoekersmeting aanvaarden"
   },
   "footer": {
     "copyright": "© {year} — Alle rechten voorbehouden",
@@ -1648,7 +1638,7 @@
   "opengraphImage": {
     "trustHosting": "🇧🇪 België · EU-gehost",
     "trustNoBank": "Geen bankaggregatie",
-    "trustFree": "0 € Fase 1"
+    "trustFree": "Gratis"
   },
   "pwa": {
     "update": {

@@ -556,31 +556,34 @@
     },
     "cookies": {
       "metaTitle": "Cookie policy",
-      "metaDescription": "Ankora's cookie policy — full granularity, everything refusable except essentials.",
+      "metaDescription": "Ankora's cookie policy: essential cookies, audience measurement on consent, how to change your mind.",
       "title": "Cookie policy",
+      "languageNotice": "",
       "categoriesHeading": "Categories",
-      "essentialHeading": "Essential (always active)",
-      "essentialBody": "Required for the service to work: authentication session, theme preference, anti-CSRF.",
-      "essentialItem1": "<code>sb-*</code> — Supabase session (auth)",
-      "essentialItem2": "<code>ankora-theme</code> — light/dark preference",
-      "analyticsHeading": "Analytics (off by default)",
-      "analyticsBody1": "Only if you give your consent. Aggregated usage measurement, with no personal identifier.",
-      "analyticsBody2": "Ankora does not use Google Analytics. Vercel metrics are aggregated and anonymised.",
-      "marketingHeading": "Marketing (off by default)",
-      "marketingBody": "Ankora currently uses no marketing cookies.",
-      "manageHeading": "Manage your preferences",
-      "manageBody1": "You can change your consents at any time in <b>Settings → Privacy</b> or by clicking \"Manage cookies\" in the footer.",
-      "manageBody2": "Declining non-essential cookies does not degrade the experience: Ankora remains fully functional.",
-      "manageMethodsHeading": "How to manage my cookies",
-      "manageMethod1": "On first visit, the banner offers three choices: essential only, customize, or accept all.",
-      "manageMethod2": "When logged in, Settings → Cookies & privacy lets you toggle each category.",
-      "manageMethod3": "From any page, the \"Manage cookie preferences\" link in the footer reopens the banner.",
+      "essentialHeading": "Essential (always on)",
+      "essentialBody": "Required for the app to work: your sign-in session, your language and your theme. They need no consent.",
+      "essentialItem1": "<code>sb-…-auth-token</code> — your Supabase sign-in session, set only when you sign in.",
+      "essentialItem2": "<code>theme</code> — your light or dark preference.",
+      "essentialItem3": "<code>NEXT_LOCALE</code> — the language you chose.",
+      "essentialItem4": "On your device (local storage, not a cookie): <code>ankora.consent.v1</code> keeps your audience measurement choice, <code>theme</code> your display preference.",
+      "analyticsHeading": "Audience measurement (off by default)",
+      "analyticsBody1": "Only if you accept: Vercel Web Analytics (pages viewed) and Vercel Speed Insights (page load times). Vercel states that neither sets a cookie.",
+      "analyticsBody2": "Ankora does not use Google Analytics.",
+      "marketingHeading": "Marketing",
+      "marketingBody": "Ankora uses no marketing cookie or tracker.",
+      "manageHeading": "Changing your choice",
+      "manageBody1": "You can change your mind at any time in <b>Settings → Cookies & privacy</b>, or with the “Manage cookie preferences” link in the footer.",
+      "manageBody2": "Refusing audience measurement changes nothing in the app: Ankora stays fully functional.",
+      "manageMethodsHeading": "How to change my choice",
+      "manageMethod1": "On your first visit, a bar at the top of the page offers two choices of equal weight: refuse, or accept audience measurement.",
+      "manageMethod2": "Signed in, in Settings → Cookies & privacy, you can turn audience measurement on or off.",
+      "manageMethod3": "From any page, the “Manage cookie preferences” link in the footer reopens the bar.",
       "withdrawalHeading": "Withdrawing consent",
-      "withdrawalBody": "Under GDPR (art. 7(3)), withdrawing consent is as easy as giving it. Three equivalent methods: 1) Settings → Cookies & privacy → \"Reset my choice\". 2) Footer → \"Manage cookie preferences\". 3) Email {email} with subject \"Cookies consent withdrawal\".",
+      "withdrawalBody": "Under the GDPR (Art. 7(3)), withdrawing your consent is as easy as giving it. Three equivalent ways: 1) Settings → Cookies & privacy → “Reset my choice”. 2) Footer → “Manage cookie preferences”. 3) Email {email} with the subject “Cookie consent withdrawal”.",
       "lifetimeHeading": "Lifetime",
-      "lifetimeItem1": "Session: end of browsing",
-      "lifetimeItem2": "Preferences: 12 months",
-      "lifetimeItem3": "Analytics: 6 months (if accepted)",
+      "lifetimeItem1": "Sign-in session: 400 days at most (the Supabase library default).",
+      "lifetimeItem2": "Language and theme: 12 months.",
+      "lifetimeItem3": "Audience measurement: no cookie; measurement data is kept for six months (see the privacy policy).",
       "backHome": "Back to home"
     }
   },
@@ -592,23 +595,10 @@
     "retry": "Retry"
   },
   "consent": {
-    "title": "Cookies and privacy",
-    "body": "We only use essential cookies to log you in. Analytics and marketing cookies are off by default — you can turn them on if you want to help us improve Ankora. You can change your mind at any time via <link>the cookie policy</link>.",
-    "essentialOnly": "Essential only",
-    "acceptAll": "Accept all",
-    "customize": {
-      "button": "Customize",
-      "save": "Save my preferences",
-      "cancel": "Cancel",
-      "legend": "Cookie categories",
-      "essentialLabel": "Essential",
-      "essentialBadge": "(always on)",
-      "essentialDescription": "Session, security, language and theme preferences. Required for Ankora to work.",
-      "analyticsLabel": "Usage analytics",
-      "analyticsDescription": "Anonymous stats to understand which pages help most. No personal data.",
-      "marketingLabel": "Marketing",
-      "marketingDescription": "Reserved for future campaigns. Phase 1 of Ankora: no marketing cookies active."
-    }
+    "title": "Audience measurement",
+    "body": "Ankora measures audience (Vercel) only with your consent. <link>Cookie policy</link>",
+    "refuse": "Refuse",
+    "accept": "Accept audience measurement"
   },
   "footer": {
     "copyright": "© {year} — All rights reserved",
@@ -1648,7 +1638,7 @@
   "opengraphImage": {
     "trustHosting": "🇧🇪 Belgium · EU hosted",
     "trustNoBank": "No bank aggregation",
-    "trustFree": "0 € Phase 1"
+    "trustFree": "Free"
   },
   "pwa": {
     "update": {

@@ -15,7 +15,7 @@ test.describe('GDPR — marketing surface', () => {
     const banner = page.getByRole('dialog').filter({ hasText: /cookies/i });
     await expect(banner).toBeVisible();
 
-    await banner.getByRole('button', { name: /essentiels uniquement/i }).click();
+    await banner.getByRole('button', { name: /^refuser$/i }).click();
 
     await expect
       .poll(() => page.evaluate(() => window.localStorage.getItem('ankora.consent.v1')))

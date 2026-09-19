@@ -38,9 +38,9 @@ import { COOKIE_CONSENT_VERSION } from '@/lib/actions/consent-types';
 const STORAGE_KEY = 'ankora.consent.v1';
 const REOPEN_KEY = 'ankora.consent.reopen';
 
-const wrapped = () => (
+const wrapped = (liftedForBottomBar = false) => (
   <NextIntlClientProvider locale="fr-BE" messages={messages}>
-    <ConsentBanner />
+    <ConsentBanner liftedForBottomBar={liftedForBottomBar} />
   </NextIntlClientProvider>
 );
 
@@ -56,68 +56,78 @@ describe('<ConsentBanner /> — extended (PR-LEGAL-1)', () => {
     __resetConsentCacheForTests();
   });
 
-  it('renders the three primary actions on first visit', () => {
+  // 19 September 2026: the banner is a thin bar fixed to the bottom, with two actions of
+  // equal weight. « Essentiels uniquement / Personnaliser / Tout accepter »
+  // become « Refuser / Accepter la mesure d'audience »: the customise panel
+  // only carried an analytics box and a marketing box, and no marketing
+  // tracker exists. Accepting grants audience measurement only.
+  it('renders two actions on first visit: refuse and accept audience measurement', () => {
     render(wrapped());
-    expect(
-      screen.getByRole('button', { name: messages.consent.essentialOnly }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: messages.consent.customize.button }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: messages.consent.acceptAll })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: messages.consent.refuse })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: messages.consent.accept })).toBeInTheDocument();
+    expect(screen.getAllByRole('button')).toHaveLength(2);
   });
 
-  it('Accept all → analytics + marketing both true and banner dismissed', async () => {
+  it('Accept → analytics true, marketing stays false, and banner dismissed', async () => {
     render(wrapped());
-    fireEvent.click(screen.getByRole('button', { name: messages.consent.acceptAll }));
+    fireEvent.click(screen.getByRole('button', { name: messages.consent.accept }));
     await waitFor(() => {
       const stored = readStored();
       expect(stored).toMatchObject({
         version: COOKIE_CONSENT_VERSION,
         analytics: true,
-        marketing: true,
+        marketing: false,
       });
     });
-    expect(recordCookieConsentMock).toHaveBeenCalledWith({ analytics: true, marketing: true });
-    expect(
-      screen.queryByRole('button', { name: messages.consent.essentialOnly }),
-    ).not.toBeInTheDocument();
+    expect(recordCookieConsentMock).toHaveBeenCalledWith({ analytics: true, marketing: false });
+    expect(screen.queryByRole('button', { name: messages.consent.refuse })).not.toBeInTheDocument();
   });
 
-  it('Essential only → both analytics and marketing false', async () => {
+  it('Refuse → both analytics and marketing false', async () => {
     render(wrapped());
-    fireEvent.click(screen.getByRole('button', { name: messages.consent.essentialOnly }));
+    fireEvent.click(screen.getByRole('button', { name: messages.consent.refuse }));
     await waitFor(() => {
       expect(readStored()).toMatchObject({ analytics: false, marketing: false });
     });
     expect(recordCookieConsentMock).toHaveBeenCalledWith({ analytics: false, marketing: false });
   });
 
-  it('Customize opens an inline panel with the three category toggles', () => {
+  it('keeps reading a decision stored with marketing granted (before the bar existed)', () => {
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        version: COOKIE_CONSENT_VERSION,
+        analytics: true,
+        marketing: true,
+        decidedAt: new Date().toISOString(),
+      }),
+    );
     render(wrapped());
-    fireEvent.click(screen.getByRole('button', { name: messages.consent.customize.button }));
-    expect(
-      screen.getByRole('checkbox', { name: messages.consent.customize.essentialLabel }),
-    ).toBeDisabled();
-    expect(
-      screen.getByRole('checkbox', { name: messages.consent.customize.analyticsLabel }),
-    ).toBeEnabled();
-    expect(
-      screen.getByRole('checkbox', { name: messages.consent.customize.marketingLabel }),
-    ).toBeEnabled();
+    expect(screen.queryByTestId('consent-banner')).not.toBeInTheDocument();
   });
 
-  it('Customize → toggle analytics only → save persists analytics=true marketing=false', async () => {
+  // A fixed bar moves nothing on the page, but it covers the end of it unless
+  // `body` reserves its height: the reserve must exist while the bar is open
+  // and vanish with it, or every page keeps an empty band at the bottom.
+  it('is a fixed bar that reserves its height while open, and releases it once decided', async () => {
     render(wrapped());
-    fireEvent.click(screen.getByRole('button', { name: messages.consent.customize.button }));
-    fireEvent.click(
-      screen.getByRole('checkbox', { name: messages.consent.customize.analyticsLabel }),
-    );
-    fireEvent.click(screen.getByRole('button', { name: messages.consent.customize.save }));
+    expect(screen.getByTestId('consent-banner').className.split(/\s+/)).toContain('fixed');
+    expect(document.documentElement.style.getPropertyValue('--consent-height')).toMatch(/^\d+px$/);
+    fireEvent.click(screen.getByRole('button', { name: messages.consent.refuse }));
     await waitFor(() => {
-      expect(readStored()).toMatchObject({ analytics: true, marketing: false });
+      expect(screen.queryByTestId('consent-banner')).not.toBeInTheDocument();
     });
-    expect(recordCookieConsentMock).toHaveBeenCalledWith({ analytics: true, marketing: false });
+    expect(document.documentElement.style.getPropertyValue('--consent-height')).toBe('');
+  });
+
+  // The lift above the tab bar changes on client navigation and moves the bar
+  // without resizing it: the reserve must be measured again.
+  it('re-measures the reserve when the bar is lifted above the tab bar', () => {
+    const { rerender } = render(wrapped(false));
+    const bar = screen.getByTestId('consent-banner');
+    bar.getBoundingClientRect = () => ({ top: window.innerHeight - 170 }) as DOMRect;
+    rerender(wrapped(true));
+    expect(document.documentElement.style.getPropertyValue('--consent-height')).toBe('170px');
   });
 
   it('does not render once a fresh decision is already in localStorage', () => {
@@ -131,9 +141,7 @@ describe('<ConsentBanner /> — extended (PR-LEGAL-1)', () => {
       }),
     );
     render(wrapped());
-    expect(
-      screen.queryByRole('button', { name: messages.consent.acceptAll }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: messages.consent.accept })).not.toBeInTheDocument();
   });
 
   it('reopens when the reopen flag is set even if a decision exists', () => {
@@ -148,7 +156,7 @@ describe('<ConsentBanner /> — extended (PR-LEGAL-1)', () => {
     );
     window.localStorage.setItem(REOPEN_KEY, '1');
     render(wrapped());
-    expect(screen.getByRole('button', { name: messages.consent.acceptAll })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: messages.consent.accept })).toBeInTheDocument();
   });
 
   it('reopenConsentBanner() clears the decision and sets the reopen flag', () => {
@@ -194,13 +202,11 @@ describe('<ConsentBanner /> — extended (PR-LEGAL-1)', () => {
     render(wrapped());
 
     // 1. L'utilisateur décide — la bannière disparaît.
-    fireEvent.click(screen.getByRole('button', { name: messages.consent.acceptAll }));
+    fireEvent.click(screen.getByRole('button', { name: messages.consent.accept }));
     await waitFor(() => {
-      expect(readStored()).toMatchObject({ analytics: true, marketing: true });
+      expect(readStored()).toMatchObject({ analytics: true, marketing: false });
     });
-    expect(
-      screen.queryByRole('button', { name: messages.consent.acceptAll }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: messages.consent.accept })).not.toBeInTheDocument();
 
     // 2. Il clique « Modifier mes préférences cookies » dans le pied de page.
     //    Aucun démontage, aucun rechargement : exactement ce que fait le lien.
@@ -211,7 +217,7 @@ describe('<ConsentBanner /> — extended (PR-LEGAL-1)', () => {
     // 3. La bannière doit revenir. Sans le correctif, `dismissed` reste à true
     //    et l'annule, alors même que le store a bien été mis à jour.
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: messages.consent.acceptAll })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: messages.consent.accept })).toBeInTheDocument();
     });
   });
 
@@ -230,7 +236,7 @@ describe('<ConsentBanner /> — extended (PR-LEGAL-1)', () => {
     // call also primes the module-level snapshot cache with
     // {stored: null, reopen: false} (the bug scenario from issue #126).
     const first = render(wrapped());
-    expect(screen.getByRole('button', { name: messages.consent.acceptAll })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: messages.consent.accept })).toBeInTheDocument();
     first.unmount();
 
     // Simulate a multi-tab race: another tab persists a decision while
@@ -251,7 +257,7 @@ describe('<ConsentBanner /> — extended (PR-LEGAL-1)', () => {
     render(wrapped());
     await waitFor(() => {
       expect(
-        screen.queryByRole('button', { name: messages.consent.acceptAll }),
+        screen.queryByRole('button', { name: messages.consent.accept }),
       ).not.toBeInTheDocument();
     });
   });
