@@ -192,7 +192,7 @@ test.describe('navigation utilisable en première visite (état PWA installée)'
       await page.goto('/login');
       await page
         .locator('[role="dialog"][aria-labelledby="consent-title"]')
-        .getByRole('button', { name: /essentiels uniquement/i })
+        .getByRole('button', { name: /^refuser$/i })
         .click();
       await page.getByLabel('Email').fill(user.email);
       await page.getByLabel('Mot de passe').fill(user.password);
