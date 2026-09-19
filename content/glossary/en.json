@@ -3,9 +3,17 @@
     "slug": "budget-de-lissage",
     "term": "Smoothed budget",
     "shortDefinition": "A budgeting method that converts irregular annual charges (insurance, taxes, gifts, car maintenance) into predictable monthly contributions. Rather than absorbing spending spikes, you set aside a proportional share each month so that your current account is never caught off guard.",
-    "whyItMatters": "Without smoothing, a yearly 600 € insurance bill lands like a rock. With smoothing, it becomes an invisible 50 €/month. Ankora auto-calculates the smoothing amount per category and parks it in a dedicated account.",
+    "whyItMatters": "Without smoothing, a yearly 600 € insurance bill lands like a rock. With smoothing, it becomes an invisible 50 €/month. Ankora auto-calculates the smoothing amount per category and tells you how much to set aside each month.",
     "example": "Belgian property tax = 1 200 €/year. Smoothed budget = 100 €/month routed to a \"Taxes\" bucket. When the bill arrives in November, the money is already there.",
     "relatedTerms": ["compte-bucket", "fonds-de-roulement-personnel", "charges-fixes"]
+  },
+  {
+    "slug": "effort-lisse",
+    "term": "Smoothed effort",
+    "shortDefinition": "The same amount every month, instead of light months and heavy ones: what your bills and loan repayments cost you on average per month. A bill paid once a year counts for its amount divided by 12, a bill paid every 3 months for its amount divided by 3.",
+    "whyItMatters": "If you count on this amount every month, big bills stop catching you by surprise. Ankora calculates from what you entered; it never makes a transfer.",
+    "example": "A 708 € insurance paid once a year counts for 59 € a month (708 ÷ 12). Add 800 € of rent and a loan repaid at 250 € a month: 59 + 800 + 250 = 1,109 €. In reality you pay 1,050 € most months and 1,758 € in the insurance month; 1,109 € is the average over the year.",
+    "relatedTerms": ["budget-de-lissage", "charges-fixes"]
   },
   {
     "slug": "compte-bucket",

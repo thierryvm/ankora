@@ -23,10 +23,10 @@ describe('Glossary Data Layer', () => {
   });
 
   describe('getGlossaryTerms', () => {
-    it('should return 15 terms for each locale', () => {
+    it('should return 16 terms for each locale', () => {
       for (const locale of GLOSSARY_LOCALES) {
         const terms = getGlossaryTerms(locale);
-        expect(terms).toHaveLength(15);
+        expect(terms).toHaveLength(16);
       }
     });
 
@@ -103,9 +103,9 @@ describe('Glossary Data Layer', () => {
   });
 
   describe('getAllGlossarySlugs', () => {
-    it('should return all 15 slugs', () => {
+    it('should return all 16 slugs', () => {
       const slugs = getAllGlossarySlugs();
-      expect(slugs).toHaveLength(15);
+      expect(slugs).toHaveLength(16);
     });
 
     it('should return unique slugs', () => {
