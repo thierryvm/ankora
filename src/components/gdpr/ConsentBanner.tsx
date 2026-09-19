@@ -326,14 +326,24 @@ export function ConsentBanner({ liftedForBottomBar = false }: ConsentBannerProps
       root.style.removeProperty('--consent-height');
       return;
     }
-    const apply = () =>
-      root.style.setProperty(
-        '--consent-height',
-        `${Math.round(window.innerHeight - el.getBoundingClientRect().top)}px`,
-      );
+    const apply = () => {
+      // A bar without a box reserves nothing. Brave and the « cookie notice »
+      // filter lists hide it with `display: none`: it is still rendered, but
+      // its rect is all zeros, so `innerHeight - top` used to reserve the whole
+      // screen height under the footer (1 180 px measured on 19 Sept. 2026).
+      const rect = el.getBoundingClientRect();
+      if (el.getClientRects().length === 0 || rect.height <= 0) {
+        root.style.removeProperty('--consent-height');
+        return;
+      }
+      root.style.setProperty('--consent-height', `${Math.round(window.innerHeight - rect.top)}px`);
+    };
     apply();
     // `innerHeight` changes on rotation and when the mobile URL bar folds,
     // without the bar itself resizing: the ResizeObserver alone would miss it.
+    // The ResizeObserver, in turn, is what catches a blocker's stylesheet
+    // arriving after the first render: `display: none` resizes the observed
+    // element to 0×0, which fires it (e2e `consent-bar.spec.ts` measures it).
     window.addEventListener('resize', apply);
     window.addEventListener('orientationchange', apply);
     const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(apply);

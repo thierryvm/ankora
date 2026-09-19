@@ -53,7 +53,6 @@ type Props = {
 export function CookiesPreferencesSection({ initialServerSnapshot }: Props) {
   const t = useTranslations('app.settings.cookies');
   const [analytics, setAnalytics] = useState<boolean>(initialServerSnapshot?.analytics ?? false);
-  const [marketing, setMarketing] = useState<boolean>(initialServerSnapshot?.marketing ?? false);
   const [hasDecided, setHasDecided] = useState<boolean>(initialServerSnapshot !== null);
   const [pending, startTransition] = useTransition();
 
@@ -72,27 +71,27 @@ export function CookiesPreferencesSection({ initialServerSnapshot }: Props) {
     if (!initialServerSnapshot || local.decidedAt > (initialServerSnapshot.decidedAt ?? '')) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setAnalytics(local.analytics);
-
-      setMarketing(local.marketing);
-
       setHasDecided(true);
     }
   }, [initialServerSnapshot]);
 
-  const save = (nextAnalytics: boolean, nextMarketing: boolean) => {
+  // No marketing tracker exists, and neither the bar (#471) nor this screen
+  // asks about one any more. The stored shape keeps its `marketing` key (no
+  // migration) and it is always written false, including over an older
+  // decision that had granted it.
+  const save = (nextAnalytics: boolean) => {
     writeLocal({
       version: COOKIE_CONSENT_VERSION,
       analytics: nextAnalytics,
-      marketing: nextMarketing,
+      marketing: false,
       decidedAt: new Date().toISOString(),
     });
     setAnalytics(nextAnalytics);
-    setMarketing(nextMarketing);
     setHasDecided(true);
     startTransition(async () => {
       const res = await recordCookieConsentAction({
         analytics: nextAnalytics,
-        marketing: nextMarketing,
+        marketing: false,
       }).catch(() => null);
       if (!res?.ok) {
         // Pas de reveil : le serveur n'a rien enregistre, et le toast doit avoir
@@ -117,7 +116,6 @@ export function CookiesPreferencesSection({ initialServerSnapshot }: Props) {
   const reset = () => {
     clearLocal();
     setAnalytics(false);
-    setMarketing(false);
     setHasDecided(false);
     startTransition(async () => {
       const res = await recordCookieConsentAction({ analytics: false, marketing: false }).catch(
@@ -179,7 +177,7 @@ export function CookiesPreferencesSection({ initialServerSnapshot }: Props) {
             id="analytics-toggle"
             type="checkbox"
             checked={analytics}
-            onChange={(e) => save(e.target.checked, marketing)}
+            onChange={(e) => save(e.target.checked)}
             disabled={pending}
             // PR-D5 a11y: aria-label removed — the <label htmlFor> below
             // already provides the accessible name; aria-label would
@@ -192,25 +190,6 @@ export function CookiesPreferencesSection({ initialServerSnapshot }: Props) {
               {t('analyticsLabel')}
             </label>
             <p className="text-muted-foreground mt-1 text-xs">{t('analyticsDescription')}</p>
-          </div>
-        </div>
-
-        <div className="border-border flex items-start gap-3 rounded-md border p-4">
-          <input
-            id="marketing-toggle"
-            type="checkbox"
-            checked={marketing}
-            onChange={(e) => save(analytics, e.target.checked)}
-            disabled={pending}
-            // PR-D5 a11y: same as analytics — drop aria-label, the
-            // <label htmlFor="marketing-toggle"> provides the name.
-            className="text-brand-700 focus-visible:ring-brand-600 mt-0.5 h-4 w-4 focus-visible:ring-2 focus-visible:outline-none"
-          />
-          <div className="flex-1">
-            <label htmlFor="marketing-toggle" className="text-sm font-medium">
-              {t('marketingLabel')}
-            </label>
-            <p className="text-muted-foreground mt-1 text-xs">{t('marketingDescription')}</p>
           </div>
         </div>
 
