@@ -8,6 +8,7 @@ import { getMessages, setRequestLocale, getTranslations } from 'next-intl/server
 import { SITE } from '@/lib/site';
 import { routing, type Locale } from '@/i18n/routing';
 import { isIndexableLocale, indexableLanguageAlternates } from '@/lib/seo/indexable-locales';
+import { buildOrganizationJsonLd } from '@/lib/seo/organization-json-ld';
 import { ConsentGatedAnalytics } from '@/components/gdpr/ConsentGatedAnalytics';
 import { Toaster } from '@/components/ui/toast';
 import { JsonLd } from '@/components/seo/JsonLd';
@@ -142,14 +143,7 @@ export default async function LocaleLayout({
   const messages = await getMessages();
   const t = await getTranslations('common');
 
-  const organizationJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: SITE.name,
-    url: SITE.url,
-    logo: `${SITE.url}/brand/logo.svg`,
-    description: t('description'),
-  };
+  const organizationJsonLd = buildOrganizationJsonLd(t('description'));
 
   const cookieStore = await cookies();
   const themeCookie = cookieStore.get('theme')?.value;
