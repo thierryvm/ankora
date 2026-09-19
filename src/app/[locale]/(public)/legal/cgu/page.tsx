@@ -1,15 +1,15 @@
 import type { Metadata } from 'next';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Prose, ProseMeta } from '@/components/layout/Prose';
 import { buildCanonicalUrl } from '@/lib/glossary';
+import { formatLegalDate, LEGAL_UPDATED } from '@/lib/legal/dates';
 
 // Bumped with §8 « Gratuité du service ». A CGU whose text changes while its
 // version line stays put is a version line that lies — and this file is the
 // only place that number lives, so nothing else moves it.
-const LAST_UPDATED = '19 septembre 2026';
 const VERSION = '1.1.1';
 
 export async function generateMetadata({
@@ -41,7 +41,12 @@ export default async function CguPage() {
       <main id="main" className="mx-auto w-full max-w-3xl px-4 py-12 md:px-6 md:py-16">
         <Prose>
           <h1>{t('title')}</h1>
-          <ProseMeta>{tLegal('versionLine', { version: VERSION, date: LAST_UPDATED })}</ProseMeta>
+          <ProseMeta>
+            {tLegal('versionLine', {
+              version: VERSION,
+              date: formatLegalDate(LEGAL_UPDATED.cgu, await getLocale()),
+            })}
+          </ProseMeta>
 
           <h2>{t('s1.heading')}</h2>
           <p>{t('s1.body')}</p>

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 
 import { Link } from '@/i18n/navigation';
 import { brand } from '@/lib/brand';
@@ -8,8 +8,8 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Prose, ProseMeta } from '@/components/layout/Prose';
 import { buildCanonicalUrl } from '@/lib/glossary';
+import { formatLegalDate, LEGAL_UPDATED } from '@/lib/legal/dates';
 
-const LAST_UPDATED = '19 septembre 2026';
 const VERSION = '2.0.0';
 
 /**
@@ -62,6 +62,7 @@ export async function generateMetadata({
 export default async function PrivacyPage() {
   const t = (await getTranslations('legal.privacy')) as unknown as WalkingTranslator;
   const tLegal = await getTranslations('legal');
+  const lastUpdated = formatLegalDate(LEGAL_UPDATED.privacy, await getLocale());
 
   const tags = {
     email: brand.privacyEmail,
@@ -125,7 +126,7 @@ export default async function PrivacyPage() {
       <main id="main" className="mx-auto w-full max-w-3xl px-4 py-12 md:px-6 md:py-16">
         <Prose>
           <h1 lang={contentLang}>{t('title')}</h1>
-          <ProseMeta>{tLegal('versionLine', { version: VERSION, date: LAST_UPDATED })}</ProseMeta>
+          <ProseMeta>{tLegal('versionLine', { version: VERSION, date: lastUpdated })}</ProseMeta>
           {/* Empty in fr-BE and en; nl-BE, de-DE and es-ES carry a copy of the
               policy in another language and say so in their own. */}
           {languageNotice ? <p>{languageNotice}</p> : null}

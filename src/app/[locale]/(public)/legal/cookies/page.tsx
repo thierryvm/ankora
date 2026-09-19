@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 
 import { brand } from '@/lib/brand';
 
@@ -7,8 +7,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Prose, ProseMeta } from '@/components/layout/Prose';
 import { buildCanonicalUrl } from '@/lib/glossary';
-
-const LAST_UPDATED = '16 avril 2026';
+import { formatLegalDate, LEGAL_UPDATED } from '@/lib/legal/dates';
 
 export async function generateMetadata({
   params,
@@ -32,6 +31,9 @@ export async function generateMetadata({
 export default async function CookiesPage() {
   const t = await getTranslations('legal.cookies');
   const tLegal = await getTranslations('legal');
+  const lastUpdated = formatLegalDate(LEGAL_UPDATED.cookies, await getLocale());
+  // Empty in fr-BE and en; nl-BE, de-DE and es-ES carry a French or English copy.
+  const languageNotice = t('languageNotice');
 
   const code = (c: React.ReactNode) => <code>{c}</code>;
   const strong = (c: React.ReactNode) => <strong>{c}</strong>;
@@ -42,7 +44,8 @@ export default async function CookiesPage() {
       <main id="main" className="mx-auto w-full max-w-3xl px-4 py-12 md:px-6 md:py-16">
         <Prose>
           <h1>{t('title')}</h1>
-          <ProseMeta>{tLegal('lastUpdatedLine', { date: LAST_UPDATED })}</ProseMeta>
+          <ProseMeta>{tLegal('lastUpdatedLine', { date: lastUpdated })}</ProseMeta>
+          {languageNotice ? <p>{languageNotice}</p> : null}
 
           <h2>{t('categoriesHeading')}</h2>
 
@@ -51,6 +54,8 @@ export default async function CookiesPage() {
           <ul>
             <li>{t.rich('essentialItem1', { code })}</li>
             <li>{t.rich('essentialItem2', { code })}</li>
+            <li>{t.rich('essentialItem3', { code })}</li>
+            <li>{t.rich('essentialItem4', { code })}</li>
           </ul>
 
           <h3>{t('analyticsHeading')}</h3>

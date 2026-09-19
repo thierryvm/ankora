@@ -28,6 +28,7 @@ const ALL: Record<string, typeof frBE> = {
 };
 
 vi.mock('next-intl/server', () => ({
+  getLocale: async () => locale.current,
   getTranslations: async (namespace: string) =>
     createTranslator({
       locale: locale.current as 'fr-BE',
