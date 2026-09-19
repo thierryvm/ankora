@@ -33,9 +33,15 @@ characteristics of your device and browser".
 
 - Consent remains the legal basis for audience measurement. The privacy policy (version 2.0.0)
   already says so, and stays true.
-- The banner stays, reshaped: a thin bar **in the page flow**, above the content, so it can
-  never cover a call to action (a bar fixed to the bottom covers whatever scrolls to the bottom
-  edge). Refusing and accepting are two buttons of the same size.
+- The banner stays, reshaped: a thin bar **fixed to the bottom** of the screen (decided by
+  @thierry on 19 September 2026), resting on the tab bar when it is shown. While it is open,
+  `body` reserves its measured height as bottom padding, so the end of every page can be
+  scrolled clear of it. Refusing and accepting are two buttons of the same size.
+- A bar in the page flow, at the top, was built first and measured at 375 × 812 on a production
+  build, then dropped. The consent lives in `localStorage`, so the server cannot know whether to
+  render it: rendered by the server, it was removed after hydration for every returning visitor
+  (layout shift 0.2155); on a first visit, the web font swap made its text wrap one more line
+  and pushed the whole page down (0.1399). A fixed bar moves nothing.
 - The "customise" panel and the marketing box are removed: no marketing tracker exists. The
   stored format and the server records keep a `marketing: false` field, unchanged.
 
@@ -47,6 +53,14 @@ Art. 5(3). To be designed in a dedicated round, with its own review.
 
 ## Consequences
 
-- The traffic figures remain those of people who accept. Funnel events (`signup_started`,
-  `signup_completed`) can only be sent for them.
+- The traffic figures remain those of people who accept.
+- The sign-up funnel waits for either the Pro plan or the server-side count, which could count
+  these two moments without reading anything on the device. Custom events (`track()`) are not
+  collected on the Hobby plan (Vercel, "Pricing for Web Analytics", updated 25 August 2026:
+  <https://vercel.com/docs/analytics/limits-and-pricing>), so `signup_started` and
+  `signup_completed` are not sent: code that sends events nobody collects reads as a measurement
+  that works.
+- Known and left as is: a visitor who already decided still gets the bar in the server HTML,
+  removed at hydration. Fixed, it shifts nothing; a hint read before first paint would remove
+  that flash, and is not part of this decision.
 - `CLAUDE.md` ("Cookie consent: bannière maison") does not change.

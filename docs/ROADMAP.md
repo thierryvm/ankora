@@ -176,6 +176,7 @@ ROADMAP ↔ repo » du `CLAUDE.md` demande de corriger en priorité absolue.
 | **Cockpit, direction E — PR 0** : la grammaire visuelle                     | ✅ #449                           |
 | **Cockpit, direction E — PR 1** : le pli du mois, une courbe                | ✅ #451, correctif #454           |
 | Plan cockpit amendé : PR 2 scindée en 2a / 2b                               | ✅ #460                           |
+| **ADR-044** — la mesure d'audience reste sur consentement, barre fine       | 📋 accepté le 19 sept. (#471)     |
 | **Cockpit, direction E — PR 2a, 2b, 3**                                     | 📋 non commencées                 |
 
 **Pourquoi la PR de code n'est pas dans la même session que l'ADR.** ADR-022 avait
