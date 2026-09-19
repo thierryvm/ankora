@@ -1595,7 +1595,8 @@
       "deletionAlreadyFailed": "Ta demande précédente est en échec. Ouvre son statut pour l'annuler ou la relancer.",
       "deletionRetryFailed": "Impossible de relancer la suppression.",
       "deletionRetryNothing": "Cette demande n'est plus en échec — recharge la page pour voir son état actuel.",
-      "exportLimited": "Export limité à une fois toutes les 5 minutes."
+      "exportLimited": "Export limité à une fois toutes les 5 minutes.",
+      "exportFailed": "L'export n'a pas pu être préparé. Réessaie dans quelques minutes."
     },
     "onboarding": {
       "workspaceNotFound": "Workspace introuvable. Contacte le support.",

@@ -1595,7 +1595,8 @@
       "deletionAlreadyFailed": "Dein vorheriger Antrag ist fehlgeschlagen. Öffne den Status, um ihn zu widerrufen oder erneut zu starten.",
       "deletionRetryFailed": "Die Löschung konnte nicht erneut gestartet werden.",
       "deletionRetryNothing": "Dieser Antrag ist nicht mehr fehlgeschlagen — lade die Seite neu, um den aktuellen Stand zu sehen.",
-      "exportLimited": "Export auf einmal alle 5 Minuten begrenzt."
+      "exportLimited": "Export auf einmal alle 5 Minuten begrenzt.",
+      "exportFailed": "Der Export konnte nicht vorbereitet werden. Versuche es in ein paar Minuten erneut."
     },
     "onboarding": {
       "workspaceNotFound": "Workspace nicht gefunden. Kontaktiere den Support.",

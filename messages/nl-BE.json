@@ -1595,7 +1595,8 @@
       "deletionAlreadyFailed": "Je vorige aanvraag is mislukt. Open de status om ze te annuleren of opnieuw te starten.",
       "deletionRetryFailed": "Kan de verwijdering niet opnieuw starten.",
       "deletionRetryNothing": "Deze aanvraag is niet meer mislukt — herlaad de pagina om de huidige staat te zien.",
-      "exportLimited": "Export beperkt tot één keer per 5 minuten."
+      "exportLimited": "Export beperkt tot één keer per 5 minuten.",
+      "exportFailed": "De export kon niet worden voorbereid. Probeer het over enkele minuten opnieuw."
     },
     "onboarding": {
       "workspaceNotFound": "Workspace niet gevonden. Contacteer de support.",

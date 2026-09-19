@@ -1595,7 +1595,8 @@
       "deletionAlreadyFailed": "Your previous request failed. Open its status to cancel or relaunch it.",
       "deletionRetryFailed": "Could not relaunch the deletion.",
       "deletionRetryNothing": "This request is no longer failed — reload the page to see its current state.",
-      "exportLimited": "Export limited to once every 5 minutes."
+      "exportLimited": "Export limited to once every 5 minutes.",
+      "exportFailed": "The export could not be prepared. Try again in a few minutes."
     },
     "onboarding": {
       "workspaceNotFound": "Workspace not found. Contact support.",

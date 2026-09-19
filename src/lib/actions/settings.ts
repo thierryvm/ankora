@@ -296,7 +296,19 @@ export async function exportMyDataAction(): Promise<
     userAgent,
   });
 
-  const bundle = await exportUserData(user.id);
+  // `exportUserData` throws when a read fails rather than handing out a file
+  // with a table silently empty. The throw stops here: the person gets a
+  // message, not an error boundary, and the log keeps the table name only.
+  let bundle: Awaited<ReturnType<typeof exportUserData>>;
+  try {
+    bundle = await exportUserData(user.id);
+  } catch (error) {
+    log.error('GDPR export failed', {
+      user_id: user.id,
+      reason: error instanceof Error ? error.message : 'unknown',
+    });
+    return { ok: false, errorCode: 'errors.settings.exportFailed' };
+  }
   const filename = `ankora-export-${user.id.slice(0, 8)}-${Date.now()}.json`;
 
   return {
