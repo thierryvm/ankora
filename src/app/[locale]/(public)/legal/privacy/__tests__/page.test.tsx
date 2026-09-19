@@ -50,6 +50,16 @@ async function renderFor(l: string) {
   return render(await PrivacyPage());
 }
 
+const SOURCES = [
+  'https://supabase.com/legal/customer-resources/data-processing-addendum',
+  'https://supabase.com/legal/customer-resources/subprocessor-list',
+  'https://supabase.com/privacy',
+  'https://security.vercel.com',
+  'https://vercel.com/legal/privacy-notice',
+  'https://www.autoriteprotectiondonnees.be/citoyen/agir/introduire-une-plainte',
+  'https://www.autoriteprotectiondonnees.be/citoyen/contact',
+];
+
 describe('privacy policy page — the Publiable document, as published', () => {
   it('renders the five sections of the document, then the publisher complements', async () => {
     await renderFor('fr-BE');
@@ -68,23 +78,21 @@ describe('privacy policy page — the Publiable document, as published', () => {
     expect(h3).toContain('Google (connexion avec un compte Google) — authentification');
   });
 
-  it('turns every cited source into a real https link', async () => {
-    const { container } = await renderFor('fr-BE');
-    const hrefs = [...container.querySelectorAll('a[rel~="noopener"]')].map((a) =>
-      a.getAttribute('href'),
-    );
-    expect(hrefs).toEqual([
-      'https://supabase.com/legal/customer-resources/data-processing-addendum',
-      'https://supabase.com/legal/customer-resources/subprocessor-list',
-      'https://supabase.com/privacy',
-      'https://security.vercel.com',
-      'https://vercel.com/legal/privacy-notice',
-      'https://www.autoriteprotectiondonnees.be/citoyen/agir/introduire-une-plainte',
-      'https://www.autoriteprotectiondonnees.be/citoyen/contact',
-    ]);
-    // The link text is the address itself: nothing between the tag and the URL.
-    for (const a of container.querySelectorAll('a[rel~="noopener"]')) {
-      expect(a.textContent).toBe(a.getAttribute('href'));
+  it('names only the top-level sections as regions', async () => {
+    await renderFor('fr-BE');
+    expect(screen.getAllByRole('region')).toHaveLength(6);
+  });
+
+  it('turns every cited source into a real https link, in every locale', async () => {
+    for (const l of Object.keys(ALL)) {
+      const { container, unmount } = await renderFor(l);
+      const links = [...container.querySelectorAll('a[href^="https://"]')];
+      expect(links.map((a) => a.getAttribute('href'))).toEqual(SOURCES);
+      // The link text is the address itself: nothing between the tag and the URL.
+      for (const a of links) expect(a.textContent).toBe(a.getAttribute('href'));
+      // And the cookie policy is reachable from the complements.
+      expect(container.querySelector('a[href="/legal/cookies"]')).not.toBeNull();
+      unmount();
     }
   });
 
@@ -104,19 +112,33 @@ describe('privacy policy page — the Publiable document, as published', () => {
     }
   });
 
-  it('says so, in their own language, where the policy is a copy', async () => {
-    const expected: Record<string, RegExp | null> = {
-      'fr-BE': null,
-      en: null,
-      'nl-BE': /alleen beschikbaar in het Frans en het Engels/,
-      'de-DE': /nur auf Französisch und Englisch verfügbar/,
-      'es-ES': /solo está disponible en francés y en inglés/,
+  it('says so, in its own language, where the locale carries a copy — and marks the copy', async () => {
+    const expected: Record<string, { notice: RegExp | null; lang: string | null }> = {
+      'fr-BE': { notice: null, lang: null },
+      en: { notice: null, lang: null },
+      'nl-BE': { notice: /^Dit beleid is voorlopig alleen beschikbaar/, lang: 'fr' },
+      'de-DE': { notice: /^Diese Richtlinie ist vorerst nur/, lang: 'en' },
+      'es-ES': { notice: /^Por ahora, esta política solo está disponible/, lang: 'en' },
     };
-    for (const [l, re] of Object.entries(expected)) {
+    for (const [l, { notice, lang }] of Object.entries(expected)) {
       const { container, unmount } = await renderFor(l);
-      const notice = container.querySelector('h1 ~ p:not([class])');
-      if (re) expect(container.textContent).toMatch(re);
-      else expect(notice?.textContent ?? '').not.toMatch(/Frans|Englisch|inglés/);
+      // The paragraphs between the title and the first section: the notice
+      // (when there is one) then the intro. `ProseMeta` carries a class.
+      const lead = [...container.querySelectorAll('h1 ~ p:not([class])')].filter(
+        (p) => !p.closest('section'),
+      );
+      if (notice) {
+        expect(lead).toHaveLength(2);
+        expect(lead[0]!.textContent).toMatch(notice);
+        expect(lead[0]!.getAttribute('lang')).toBeNull();
+      } else {
+        expect(lead).toHaveLength(1);
+      }
+      const h1 = container.querySelector('h1');
+      expect(h1?.getAttribute('lang')).toBe(lang);
+      for (const section of container.querySelectorAll('section')) {
+        expect(section.getAttribute('lang')).toBe(lang);
+      }
       unmount();
     }
   });

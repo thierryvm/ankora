@@ -26,12 +26,11 @@ describe('Organization JSON-LD', () => {
     expect(() => readFileSync(join(process.cwd(), 'public/brand/logo.svg'))).not.toThrow();
   });
 
-  it('survives the JSON round trip the script tag relies on', () => {
-    expect(JSON.parse(JSON.stringify(ld))).toEqual(ld);
-  });
-
-  it('is declared once: the landing page does not add a second Organization', () => {
+  it('is the one the layout renders, and the only Organization in the app', () => {
+    const layout = readFileSync(join(process.cwd(), 'src/app/[locale]/layout.tsx'), 'utf8');
+    expect(layout).toContain('buildOrganizationJsonLd(');
     const landing = readFileSync(join(process.cwd(), 'src/app/[locale]/(public)/page.tsx'), 'utf8');
-    expect(landing).not.toMatch(/'@type':\s*'Organization'/);
+    expect(landing).not.toMatch(/['"]Organization['"]/);
+    expect(landing).not.toContain('buildOrganizationJsonLd');
   });
 });

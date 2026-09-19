@@ -23,7 +23,7 @@ const VERSION = '2.0.0';
  */
 const SECTIONS = ['controller', 'data', 'rights', 'objection', 'complaint', 'extras'] as const;
 
-type Node = { [key: string]: string | Node };
+type MessageNode = { [key: string]: string | MessageNode };
 
 /**
  * The keys are walked from the messages themselves, so they are plain strings
@@ -68,27 +68,51 @@ export default async function PrivacyPage() {
     mail: (c: ReactNode) => <a href={`mailto:${brand.privacyEmail}`}>{c}</a>,
     // The sources Publiable cites (DPA, published lists, the APD) are real
     // links: a date of verification is only useful if the page can be opened.
-    url: (c: ReactNode) => (
-      <a href={textOf(c)} rel="noopener noreferrer" className="break-all">
-        {c}
-      </a>
-    ),
+    // Only an https address becomes a link: the href is read from a message,
+    // and a message is not the place to slip another scheme in.
+    url: (c: ReactNode) => {
+      const href = textOf(c);
+      if (!/^https:\/\/[^\s<>"]+$/.test(href)) return c;
+      return (
+        <a href={href} rel="noopener noreferrer" className="break-all">
+          {c}
+        </a>
+      );
+    },
     link: (c: ReactNode) => <Link href="/legal/cookies">{c}</Link>,
   };
 
+  // Language of the policy text itself. Empty where it matches the page
+  // (fr-BE, en); `fr` or `en` where the locale carries a copy, so assistive
+  // technology reads it with the right voice (WCAG 2.2, 3.1.2).
+  const contentLang = t('contentLang') || undefined;
+
+  const renderBody = (path: string, node: MessageNode): ReactNode =>
+    Object.entries(node).map(([key, value]) => {
+      if (key === 'heading') return null;
+      if (typeof value === 'string') {
+        return <p key={key}>{t.rich(`${path}.${key}`, tags)}</p>;
+      }
+      return renderSection(`${path}.${key}`, 3);
+    });
+
   const renderSection = (path: string, depth: 2 | 3): ReactNode => {
-    const node = t.raw(path) as Node;
-    const Heading = depth === 2 ? 'h2' : 'h3';
+    const node = t.raw(path) as MessageNode;
+    const id = `privacy-${path.replace(/\./g, '-')}`;
+    // Only the top-level sections are named regions: seventeen landmarks for
+    // one page of text would drown the ones that help navigate it.
+    if (depth === 3) {
+      return (
+        <div key={path}>
+          <h3 id={id}>{t(`${path}.heading`)}</h3>
+          {renderBody(path, node)}
+        </div>
+      );
+    }
     return (
-      <section key={path} aria-labelledby={`privacy-${path.replace(/\./g, '-')}`}>
-        <Heading id={`privacy-${path.replace(/\./g, '-')}`}>{t(`${path}.heading`)}</Heading>
-        {Object.entries(node).map(([key, value]) => {
-          if (key === 'heading') return null;
-          if (typeof value === 'string') {
-            return <p key={key}>{t.rich(`${path}.${key}`, tags)}</p>;
-          }
-          return renderSection(`${path}.${key}`, 3);
-        })}
+      <section key={path} aria-labelledby={id} lang={contentLang}>
+        <h2 id={id}>{t(`${path}.heading`)}</h2>
+        {renderBody(path, node)}
       </section>
     );
   };
@@ -100,12 +124,12 @@ export default async function PrivacyPage() {
       <Header variant="marketing" />
       <main id="main" className="mx-auto w-full max-w-3xl px-4 py-12 md:px-6 md:py-16">
         <Prose>
-          <h1>{t('title')}</h1>
+          <h1 lang={contentLang}>{t('title')}</h1>
           <ProseMeta>{tLegal('versionLine', { version: VERSION, date: LAST_UPDATED })}</ProseMeta>
           {/* Empty in fr-BE and en; nl-BE, de-DE and es-ES carry a copy of the
               policy in another language and say so in their own. */}
           {languageNotice ? <p>{languageNotice}</p> : null}
-          <p>{t('intro')}</p>
+          <p lang={contentLang}>{t('intro')}</p>
           {SECTIONS.map((section) => renderSection(section, 2))}
         </Prose>
       </main>
