@@ -303,6 +303,48 @@ test.describe('Consent bar — first visit, no pre-seeded state', () => {
     await expect.poll(() => trackers.length, { timeout: 15_000 }).toBeGreaterThan(0);
     expect(errors, 'page errors').toEqual([]);
   });
+
+  // 19 September 2026: Brave and the « cookie notice » filter lists hide the
+  // bar with `display: none`, and their stylesheet lands AFTER the first
+  // render. The bar kept its reserve at the full screen height (1 180 px
+  // measured): an empty screen under the footer, on every page. Injecting the
+  // rule after load is the blocker's order; it also proves the reserve is
+  // released by an observer, not only by the first measurement.
+  for (const [label, viewport] of [
+    ['375×812', MOBILE],
+    ['1440×900', DESKTOP],
+  ] as const) {
+    test(`${label}: a bar hidden by a blocker after load reserves nothing`, async ({ page }) => {
+      await page.setViewportSize(viewport);
+      await freshVisit(page);
+      await waitForHydration(page);
+      await expect(page.locator(BAR)).toBeVisible();
+      const paddingBottom = () =>
+        page.evaluate(() => parseFloat(getComputedStyle(document.body).paddingBottom));
+      expect(await paddingBottom(), 'the open bar reserves its height').toBeGreaterThan(0);
+
+      // A blocker's cosmetic filter is a user-origin stylesheet that the page's
+      // CSP does not govern; `addStyleTag` is an inline <style> the nonce CSP
+      // refuses. A constructed sheet goes through the CSSOM, like the blocker,
+      // without weakening the CSP for the whole test.
+      await page.evaluate((selector) => {
+        const sheet = new CSSStyleSheet();
+        sheet.replaceSync(`${selector}{display:none!important}`);
+        document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
+      }, BAR);
+
+      await expect.poll(paddingBottom, { message: 'body padding-bottom' }).toBe(0);
+      const gap = await page.evaluate(() => {
+        const footers = [...document.querySelectorAll('footer')];
+        const footer = footers[footers.length - 1];
+        if (!footer) return null;
+        const bottom = footer.getBoundingClientRect().bottom + window.scrollY;
+        return document.documentElement.scrollHeight - bottom;
+      });
+      expect(gap, 'no footer on the page').not.toBeNull();
+      expect(gap!, 'space between the footer and the end of the document').toBeLessThan(2);
+    });
+  }
 });
 
 test.describe('Consent bar — it never makes the page jump', () => {

@@ -54,12 +54,37 @@ describe('<CookiesPreferencesSection />', () => {
     reloadMock.mockClear();
   });
 
-  it('renders the title, description and the three categories', () => {
+  // 19 September 2026: no marketing tracker exists and the bar no longer asks
+  // about one (#471). A box that grants nothing is a promise the product does
+  // not keep, so Settings shows the two categories that do something.
+  it('renders the title, description and two categories, with no marketing box', () => {
     render(wrapped(null));
     // CardTitle renders as a <div>, not a heading — assert by visible text.
     expect(screen.getByText(messages.app.settings.cookies.title)).toBeInTheDocument();
-    expect(screen.getAllByRole('checkbox')).toHaveLength(3);
+    expect(screen.getAllByRole('checkbox')).toHaveLength(2);
     expect(screen.getByLabelText(messages.app.settings.cookies.essentialLabel)).toBeDisabled();
+    expect(screen.queryByLabelText(/marketing/i)).not.toBeInTheDocument();
+  });
+
+  // The stored shape is unchanged (no migration): `marketing` is still
+  // written, always false — including over a decision that had granted it.
+  it('toggling analytics writes marketing: false, even over a stored marketing: true', async () => {
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        version: COOKIE_CONSENT_VERSION,
+        analytics: false,
+        marketing: true,
+        decidedAt: '2026-12-31T23:59:59.000Z',
+      }),
+    );
+    render(wrapped(null));
+    fireEvent.click(screen.getByLabelText(messages.app.settings.cookies.analyticsLabel));
+    await waitFor(() => {
+      expect(recordCookieConsentMock).toHaveBeenCalledWith({ analytics: true, marketing: false });
+      const stored = JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? 'null');
+      expect(stored).toMatchObject({ analytics: true, marketing: false });
+    });
   });
 
   it('reflects the server-fetched snapshot when one is provided', () => {
@@ -74,11 +99,7 @@ describe('<CookiesPreferencesSection />', () => {
     const analyticsCheckbox = screen.getByLabelText(
       messages.app.settings.cookies.analyticsLabel,
     ) as HTMLInputElement;
-    const marketingCheckbox = screen.getByLabelText(
-      messages.app.settings.cookies.marketingLabel,
-    ) as HTMLInputElement;
     expect(analyticsCheckbox.checked).toBe(true);
-    expect(marketingCheckbox.checked).toBe(false);
   });
 
   it('toggling analytics persists localStorage and calls the server action', async () => {
@@ -189,10 +210,6 @@ describe('<CookiesPreferencesSection />', () => {
     const analytics = screen.getByLabelText(
       messages.app.settings.cookies.analyticsLabel,
     ) as HTMLInputElement;
-    const marketing = screen.getByLabelText(
-      messages.app.settings.cookies.marketingLabel,
-    ) as HTMLInputElement;
     expect(analytics.checked).toBe(false);
-    expect(marketing.checked).toBe(true);
   });
 });

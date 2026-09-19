@@ -44,6 +44,22 @@ const wrapped = (liftedForBottomBar = false) => (
   </NextIntlClientProvider>
 );
 
+/** Gives every element a box of `height` px sitting on the viewport's bottom edge. */
+const stubBarBox = (height: number) => {
+  const rects = vi
+    .spyOn(Element.prototype, 'getClientRects')
+    .mockImplementation(() => [{}] as unknown as DOMRectList);
+  const box = vi
+    .spyOn(Element.prototype, 'getBoundingClientRect')
+    .mockImplementation(
+      () => ({ top: window.innerHeight - height, height, bottom: window.innerHeight }) as DOMRect,
+    );
+  return () => {
+    rects.mockRestore();
+    box.mockRestore();
+  };
+};
+
 const readStored = () => {
   const raw = window.localStorage.getItem(STORAGE_KEY);
   return raw ? JSON.parse(raw) : null;
@@ -110,14 +126,61 @@ describe('<ConsentBanner /> — extended (PR-LEGAL-1)', () => {
   // `body` reserves its height: the reserve must exist while the bar is open
   // and vanish with it, or every page keeps an empty band at the bottom.
   it('is a fixed bar that reserves its height while open, and releases it once decided', async () => {
+    // jsdom lays nothing out: without a stubbed box the bar has none, which is
+    // exactly the "hidden by a blocker" case below. Give it a 120 px box.
+    const restore = stubBarBox(120);
+    try {
+      render(wrapped());
+      expect(screen.getByTestId('consent-banner').className.split(/\s+/)).toContain('fixed');
+      expect(document.documentElement.style.getPropertyValue('--consent-height')).toBe('120px');
+      fireEvent.click(screen.getByRole('button', { name: messages.consent.refuse }));
+      await waitFor(() => {
+        expect(screen.queryByTestId('consent-banner')).not.toBeInTheDocument();
+      });
+      expect(document.documentElement.style.getPropertyValue('--consent-height')).toBe('');
+    } finally {
+      restore();
+    }
+  });
+
+  // 19 September 2026: Brave and the « cookie notice » filter lists hide the
+  // bar with `display: none`. It is still rendered, but it has no box, so its
+  // top reads 0 and the reserve became the whole screen height (1 180 px
+  // measured): an empty screen under the footer on every page.
+  it('reserves nothing when the bar is rendered but has no box (hidden by a blocker)', () => {
     render(wrapped());
-    expect(screen.getByTestId('consent-banner').className.split(/\s+/)).toContain('fixed');
-    expect(document.documentElement.style.getPropertyValue('--consent-height')).toMatch(/^\d+px$/);
-    fireEvent.click(screen.getByRole('button', { name: messages.consent.refuse }));
-    await waitFor(() => {
-      expect(screen.queryByTestId('consent-banner')).not.toBeInTheDocument();
-    });
-    expect(document.documentElement.style.getPropertyValue('--consent-height')).toBe('');
+    const bar = screen.getByTestId('consent-banner');
+    expect(bar.getClientRects()).toHaveLength(0);
+    expect(document.documentElement.style.getPropertyValue('--consent-height')).toMatch(/^(0px)?$/);
+  });
+
+  // The blocker's stylesheet arrives AFTER the first render: the bar had a
+  // box, then loses it. `display: none` resizes the observed element to 0×0,
+  // so the ResizeObserver is what must release the reserve.
+  it('releases the reserve when the bar loses its box after the first render', () => {
+    let notify: (() => void) | null = null;
+    const original = globalThis.ResizeObserver;
+    globalThis.ResizeObserver = class {
+      constructor(cb: () => void) {
+        notify = cb;
+      }
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    } as unknown as typeof ResizeObserver;
+    const restore = stubBarBox(120);
+    try {
+      render(wrapped());
+      expect(document.documentElement.style.getPropertyValue('--consent-height')).toBe('120px');
+      restore();
+      act(() => notify?.());
+      expect(document.documentElement.style.getPropertyValue('--consent-height')).toMatch(
+        /^(0px)?$/,
+      );
+    } finally {
+      restore();
+      globalThis.ResizeObserver = original;
+    }
   });
 
   // The lift above the tab bar changes on client navigation and moves the bar
@@ -125,7 +188,8 @@ describe('<ConsentBanner /> — extended (PR-LEGAL-1)', () => {
   it('re-measures the reserve when the bar is lifted above the tab bar', () => {
     const { rerender } = render(wrapped(false));
     const bar = screen.getByTestId('consent-banner');
-    bar.getBoundingClientRect = () => ({ top: window.innerHeight - 170 }) as DOMRect;
+    bar.getClientRects = () => [{}] as unknown as DOMRectList;
+    bar.getBoundingClientRect = () => ({ top: window.innerHeight - 170, height: 120 }) as DOMRect;
     rerender(wrapped(true));
     expect(document.documentElement.style.getPropertyValue('--consent-height')).toBe('170px');
   });
