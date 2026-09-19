@@ -592,23 +592,10 @@
     "retry": "Erneut versuchen"
   },
   "consent": {
-    "title": "Cookies und Datenschutz",
-    "body": "Wir verwenden nur essenzielle Cookies, um dich anzumelden. Analyse- und Marketing-Cookies sind standardmäßig deaktiviert — du kannst sie aktivieren, wenn du uns helfen möchtest, Ankora zu verbessern. Du kannst deine Meinung jederzeit über <link>die Cookie-Richtlinie</link> ändern.",
-    "essentialOnly": "Nur essenziell",
-    "acceptAll": "Alle akzeptieren",
-    "customize": {
-      "button": "Anpassen",
-      "save": "Meine Einstellungen speichern",
-      "cancel": "Abbrechen",
-      "legend": "Cookie-Kategorien",
-      "essentialLabel": "Essenziell",
-      "essentialBadge": "(immer aktiv)",
-      "essentialDescription": "Sitzung, Sicherheit, Sprach- und Theme-Einstellungen. Für die Funktion von Ankora notwendig.",
-      "analyticsLabel": "Nutzungsanalyse",
-      "analyticsDescription": "Anonyme Statistiken, um zu verstehen, welche Seiten am meisten helfen. Keine personenbezogenen Daten.",
-      "marketingLabel": "Marketing",
-      "marketingDescription": "Reserviert für zukünftige Kampagnen. Phase 1 von Ankora: keine Marketing-Cookies aktiv."
-    }
+    "title": "Reichweitenmessung",
+    "body": "Ankora misst die Nutzung (Vercel Web Analytics und Speed Insights) nur, wenn du zustimmst. Ablehnen ändert nichts an der App. <link>Cookie-Richtlinie</link>",
+    "refuse": "Ablehnen",
+    "accept": "Reichweitenmessung akzeptieren"
   },
   "footer": {
     "copyright": "© {year} — Alle Rechte vorbehalten",

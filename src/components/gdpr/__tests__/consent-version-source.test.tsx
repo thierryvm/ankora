@@ -57,8 +57,7 @@ const wrapped = () => (
   </NextIntlClientProvider>
 );
 
-const banniereVisible = () =>
-  screen.queryByRole('button', { name: messages.consent.essentialOnly });
+const banniereVisible = () => screen.queryByRole('button', { name: messages.consent.refuse });
 
 describe('la bannière lit sa version dans le module qui la persiste', () => {
   beforeEach(() => {
@@ -69,7 +68,7 @@ describe('la bannière lit sa version dans le module qui la persiste', () => {
 
   it('écrit le numéro du module serveur, et non un littéral qui lui serait propre', async () => {
     render(wrapped());
-    fireEvent.click(screen.getByRole('button', { name: messages.consent.acceptAll }));
+    fireEvent.click(screen.getByRole('button', { name: messages.consent.accept }));
 
     await waitFor(() => {
       const brut = window.localStorage.getItem(STORAGE_KEY);

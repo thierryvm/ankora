@@ -592,23 +592,10 @@
     "retry": "Réessayer"
   },
   "consent": {
-    "title": "Cookies et vie privée",
-    "body": "On utilise uniquement les cookies essentiels pour te connecter. Les cookies d'analyse et marketing sont désactivés par défaut — tu peux les activer si tu veux nous aider à améliorer Ankora. Tu peux changer d'avis à tout moment via <link>la politique cookies</link>.",
-    "essentialOnly": "Essentiels uniquement",
-    "acceptAll": "Tout accepter",
-    "customize": {
-      "button": "Personnaliser",
-      "save": "Enregistrer mes préférences",
-      "cancel": "Annuler",
-      "legend": "Catégories de cookies",
-      "essentialLabel": "Essentiels",
-      "essentialBadge": "(toujours actifs)",
-      "essentialDescription": "Session, sécurité, préférence de langue et de thème. Indispensables au fonctionnement d'Ankora.",
-      "analyticsLabel": "Analyse d'usage",
-      "analyticsDescription": "Statistiques anonymisées pour comprendre quelles pages aident le plus. Aucune donnée personnelle.",
-      "marketingLabel": "Marketing",
-      "marketingDescription": "Réservés à de futures campagnes. Phase 1 d'Ankora : aucun cookie marketing actif."
-    }
+    "title": "Mesure d'audience",
+    "body": "Ankora ne mesure la fréquentation (Vercel Web Analytics et Speed Insights) que si tu l'acceptes. Refuser ne change rien à l'application. <link>Politique cookies</link>",
+    "refuse": "Refuser",
+    "accept": "Accepter la mesure d'audience"
   },
   "footer": {
     "copyright": "© {year} — Tous droits réservés",
