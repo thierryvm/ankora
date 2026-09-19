@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useSyncExternalStore, useTransition } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { Link } from '@/i18n/navigation';
@@ -219,11 +219,8 @@ export type ConsentBannerProps = {
   /**
    * La `BottomTabBar` est-elle montée pour cette requête ?
    *
-   * Depuis le 19 septembre 2026, la bannière est dans le flux, en tête de page :
-   * elle ne se superpose plus à la barre d'onglets, et cette prop ne décale plus
-   * rien. Elle est gardée, exposée en `data-lifted-for-bottom-bar`, parce que des
-   * tests de visibilité la lisent ; l'historique ci-dessous explique pourquoi
-   * elle a existé.
+   * Quand elle l'est, la barre de consentement se pose sur elle au lieu du bord
+   * de l'écran.
    *
    * Même contrat que `ScrollToTop.liftedForBottomBar`, et pour la même raison :
    * la barre est `position: fixed`, donc la réserve `--consent-height` posée en
@@ -301,6 +298,49 @@ export function ConsentBanner({ liftedForBottomBar = false }: ConsentBannerProps
   const hasDecided = snap.stored !== null;
   const shouldShow = !dismissed && (!hasDecided || snap.reopen);
 
+  /*
+   * The reserve: while the bar is open, `body` gets a bottom padding equal to
+   * the distance from the viewport's bottom edge to the bar's top edge
+   * (globals.css reads `--consent-height`). Without it the fixed bar would sit
+   * on the last lines of every page — on 31 July 2026 it made « Se connecter »
+   * unreachable on every iPhone preset.
+   *
+   * Measured, never guessed: the distance includes the lift above the bottom
+   * tab bar and the safe-area inset, and it follows wrapping and rotation.
+   * Written through the CSSOM (`style.setProperty`), which a nonce-based CSP
+   * does not govern — only style attributes in markup are.
+   *
+   * Padding added at the BOTTOM of the page moves nothing above it: the
+   * reserve cannot shift the content a visitor is reading.
+   */
+  const ref = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const root = document.documentElement;
+    const el = ref.current;
+    if (!shouldShow || !el) {
+      root.style.removeProperty('--consent-height');
+      return;
+    }
+    const apply = () =>
+      root.style.setProperty(
+        '--consent-height',
+        `${Math.round(window.innerHeight - el.getBoundingClientRect().top)}px`,
+      );
+    apply();
+    // `innerHeight` changes on rotation and when the mobile URL bar folds,
+    // without the bar itself resizing: the ResizeObserver alone would miss it.
+    window.addEventListener('resize', apply);
+    window.addEventListener('orientationchange', apply);
+    const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(apply);
+    ro?.observe(el);
+    return () => {
+      window.removeEventListener('resize', apply);
+      window.removeEventListener('orientationchange', apply);
+      ro?.disconnect();
+      root.style.removeProperty('--consent-height');
+    };
+  }, [shouldShow]);
+
   if (!shouldShow) return null;
 
   const accept = (analyticsValue: boolean, marketingValue: boolean) => {
@@ -338,15 +378,17 @@ export function ConsentBanner({ liftedForBottomBar = false }: ConsentBannerProps
   };
 
   /*
-   * Une barre DANS LE FLUX, en tête de page, et non plus une carte `fixed` en
-   * bas d'écran (19 septembre 2026).
+   * A THIN bar fixed at the bottom of the screen (decided by @thierry on
+   * 19 September 2026), replacing the 294 px card.
    *
-   * Mesuré à 375 × 812, première visite : la carte faisait 294 px et couvrait
-   * l'écran de y = 502 à 796. Surtout, toute surface fixée en bas couvre ce qui
-   * défile jusqu'au bord bas — le CTA de tête compris, dès qu'on le fait venir.
-   * Seule une barre dans le flux ne recouvre jamais rien : elle pousse le
-   * contenu au lieu de s'y superposer. La réserve `--consent-height` qu'il
-   * fallait publier sur `<html>` (et que la CSP refusait) disparaît avec elle.
+   * An in-flow bar at the top was tried first and measured at 375 × 812 on a
+   * production build: the consent lives in localStorage, so the server cannot
+   * know whether to render it. Rendered by the server, it was removed after
+   * hydration for every returning visitor (layout shift 0.2155); on a first
+   * visit, the web font swap made its text wrap one more line and pushed the
+   * whole page down (0.1399). A fixed bar moves nothing: its contribution to
+   * layout shift is nil by construction, and the reserve above keeps it from
+   * covering the end of the page.
    *
    * Refuser coûte exactement autant qu'accepter : deux boutons de même taille,
    * côte à côte, au même niveau. L'écran « Personnaliser » est retiré : il ne
@@ -358,14 +400,27 @@ export function ConsentBanner({ liftedForBottomBar = false }: ConsentBannerProps
    */
   return (
     <div
+      ref={ref}
       role="dialog"
       aria-labelledby="consent-title"
       aria-describedby="consent-body"
       data-testid="consent-banner"
       data-lifted-for-bottom-bar={String(liftedForBottomBar)}
-      className="border-border bg-card border-b"
+      /*
+       * Bottom offset. Above the tab bar, the bar rests exactly on it: the tab
+       * bar is 3 rem plus the safe-area inset, and it hides at `xl:` — so the
+       * lift is released at `xl:` too, never earlier (the fault PR #293 fixed
+       * on the other space compensations). Without the tab bar, the bar sits
+       * on the screen edge and pads itself by the safe-area inset.
+       */
+      className={[
+        'border-border bg-card fixed inset-x-0 z-50 border-t shadow-lg',
+        liftedForBottomBar
+          ? 'bottom-[calc(env(safe-area-inset-bottom)+3rem)] xl:bottom-0 xl:pb-[env(safe-area-inset-bottom)]'
+          : 'bottom-0 pb-[env(safe-area-inset-bottom)]',
+      ].join(' ')}
     >
-      <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center md:px-6">
+      <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-2.5 sm:flex-row sm:items-center sm:gap-3 sm:py-3 md:px-6">
         <h2 id="consent-title" className="sr-only">
           {t('title')}
         </h2>
@@ -382,14 +437,14 @@ export function ConsentBanner({ liftedForBottomBar = false }: ConsentBannerProps
           <button
             type="button"
             onClick={() => accept(false, false)}
-            className="border-border hover:bg-brand-100 focus-visible:ring-brand-600 min-h-11 rounded-md border px-3 py-2 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
+            className="border-border hover:bg-brand-100 focus-visible:ring-brand-600 min-h-11 rounded-md border px-3 py-1.5 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
           >
             {t('refuse')}
           </button>
           <button
             type="button"
             onClick={() => accept(true, false)}
-            className="border-border hover:bg-brand-100 focus-visible:ring-brand-600 min-h-11 rounded-md border px-3 py-2 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
+            className="border-border hover:bg-brand-100 focus-visible:ring-brand-600 min-h-11 rounded-md border px-3 py-1.5 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
           >
             {t('accept')}
           </button>

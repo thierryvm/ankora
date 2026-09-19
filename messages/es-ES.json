@@ -596,7 +596,7 @@
   },
   "consent": {
     "title": "Medición de audiencia",
-    "body": "Ankora solo mide el uso (Vercel Web Analytics y Speed Insights) si lo aceptas. Rechazar no cambia nada en la aplicación. <link>Política de cookies</link>",
+    "body": "Ankora solo mide la audiencia (Vercel) con tu consentimiento. <link>Política de cookies</link>",
     "refuse": "Rechazar",
     "accept": "Aceptar la medición de audiencia"
   },

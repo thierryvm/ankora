@@ -106,9 +106,17 @@ describe('<ConsentBanner /> — extended (PR-LEGAL-1)', () => {
     expect(screen.queryByTestId('consent-banner')).not.toBeInTheDocument();
   });
 
-  it('is part of the page flow, never an overlay', () => {
+  // A fixed bar moves nothing on the page, but it covers the end of it unless
+  // `body` reserves its height: the reserve must exist while the bar is open
+  // and vanish with it, or every page keeps an empty band at the bottom.
+  it('is a fixed bar that reserves its height while open, and releases it once decided', async () => {
     render(wrapped());
-    expect(screen.getByTestId('consent-banner').className).not.toMatch(/fixed/);
+    expect(screen.getByTestId('consent-banner').className.split(/\s+/)).toContain('fixed');
+    expect(document.documentElement.style.getPropertyValue('--consent-height')).toMatch(/^\d+px$/);
+    fireEvent.click(screen.getByRole('button', { name: messages.consent.refuse }));
+    await waitFor(() => {
+      expect(screen.queryByTestId('consent-banner')).not.toBeInTheDocument();
+    });
     expect(document.documentElement.style.getPropertyValue('--consent-height')).toBe('');
   });
 

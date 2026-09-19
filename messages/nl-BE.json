@@ -596,7 +596,7 @@
   },
   "consent": {
     "title": "Bezoekersmeting",
-    "body": "Ankora meet het gebruik (Vercel Web Analytics en Speed Insights) alleen als je dat aanvaardt. Weigeren verandert niets aan de app. <link>Cookiebeleid</link>",
+    "body": "Ankora meet bezoekers (Vercel) alleen met je toestemming. <link>Cookiebeleid</link>",
     "refuse": "Weigeren",
     "accept": "Bezoekersmeting aanvaarden"
   },

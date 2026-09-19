@@ -228,10 +228,13 @@ export default async function LocaleLayout({
               plutôt qu'un parent commun qui déplacerait `Toaster` et
               `ServiceWorkerRegister` par rapport à eux. */}
           <BottomTabBarVisibilityProvider isAuthenticated={isAuthenticated}>
-            {/* La barre de consentement est DANS LE FLUX, avant le contenu : elle
-                ne se superpose à rien, donc ne peut rien intercepter. */}
-            <ConsentBannerSlot />
             {children}
+            {/* `liftedForBottomBar` : la bannière est `fixed z-50`, la barre
+                d'onglets `fixed z-40`. La réserve `--consent-height` posée en
+                `padding-bottom` sur `body` ne protège que le contenu DANS le flux ;
+                elle n'a jamais déplacé la barre, que la bannière recouvrait donc
+                intégralement. Même valeur, même raison que pour la `ScrollToTop`. */}
+            <ConsentBannerSlot />
             <Toaster />
             <BottomTabBarSlot isAdmin={showAdminEntry} />
             <ServiceWorkerRegister />

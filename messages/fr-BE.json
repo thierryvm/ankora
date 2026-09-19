@@ -596,7 +596,7 @@
   },
   "consent": {
     "title": "Mesure d'audience",
-    "body": "Ankora ne mesure la fréquentation (Vercel Web Analytics et Speed Insights) que si tu l'acceptes. Refuser ne change rien à l'application. <link>Politique cookies</link>",
+    "body": "Ankora ne mesure l'audience (Vercel) qu'avec ton accord. <link>Politique cookies</link>",
     "refuse": "Refuser",
     "accept": "Accepter la mesure d'audience"
   },

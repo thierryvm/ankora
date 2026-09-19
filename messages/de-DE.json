@@ -596,7 +596,7 @@
   },
   "consent": {
     "title": "Reichweitenmessung",
-    "body": "Ankora misst die Nutzung (Vercel Web Analytics und Speed Insights) nur, wenn du zustimmst. Ablehnen ändert nichts an der App. <link>Cookie-Richtlinie</link>",
+    "body": "Ankora misst die Reichweite (Vercel) nur mit deiner Zustimmung. <link>Cookie-Richtlinie</link>",
     "refuse": "Ablehnen",
     "accept": "Reichweitenmessung akzeptieren"
   },
