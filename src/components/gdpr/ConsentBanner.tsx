@@ -310,8 +310,13 @@ export function ConsentBanner({ liftedForBottomBar = false }: ConsentBannerProps
    * Written through the CSSOM (`style.setProperty`), which a nonce-based CSP
    * does not govern — only style attributes in markup are.
    *
-   * Padding added at the BOTTOM of the page moves nothing above it: the
-   * reserve cannot shift the content a visitor is reading.
+   * Padding added at the BOTTOM of the page moves nothing above it. On a page
+   * shorter than the screen, what is anchored to the bottom (the footer) does
+   * move up by the reserve when the bar closes.
+   *
+   * `liftedForBottomBar` is a dependency: it flips on client navigation
+   * (public page ↔ /app) and moves the bar by the tab bar's height WITHOUT
+   * resizing it, so neither the ResizeObserver nor `resize` would fire.
    */
   const ref = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -339,7 +344,7 @@ export function ConsentBanner({ liftedForBottomBar = false }: ConsentBannerProps
       ro?.disconnect();
       root.style.removeProperty('--consent-height');
     };
-  }, [shouldShow]);
+  }, [shouldShow, liftedForBottomBar]);
 
   if (!shouldShow) return null;
 

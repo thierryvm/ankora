@@ -38,9 +38,9 @@ import { COOKIE_CONSENT_VERSION } from '@/lib/actions/consent-types';
 const STORAGE_KEY = 'ankora.consent.v1';
 const REOPEN_KEY = 'ankora.consent.reopen';
 
-const wrapped = () => (
+const wrapped = (liftedForBottomBar = false) => (
   <NextIntlClientProvider locale="fr-BE" messages={messages}>
-    <ConsentBanner />
+    <ConsentBanner liftedForBottomBar={liftedForBottomBar} />
   </NextIntlClientProvider>
 );
 
@@ -56,7 +56,7 @@ describe('<ConsentBanner /> — extended (PR-LEGAL-1)', () => {
     __resetConsentCacheForTests();
   });
 
-  // 19 September 2026: the banner is a thin in-flow bar with two actions of
+  // 19 September 2026: the banner is a thin bar fixed to the bottom, with two actions of
   // equal weight. « Essentiels uniquement / Personnaliser / Tout accepter »
   // become « Refuser / Accepter la mesure d'audience »: the customise panel
   // only carried an analytics box and a marketing box, and no marketing
@@ -118,6 +118,16 @@ describe('<ConsentBanner /> — extended (PR-LEGAL-1)', () => {
       expect(screen.queryByTestId('consent-banner')).not.toBeInTheDocument();
     });
     expect(document.documentElement.style.getPropertyValue('--consent-height')).toBe('');
+  });
+
+  // The lift above the tab bar changes on client navigation and moves the bar
+  // without resizing it: the reserve must be measured again.
+  it('re-measures the reserve when the bar is lifted above the tab bar', () => {
+    const { rerender } = render(wrapped(false));
+    const bar = screen.getByTestId('consent-banner');
+    bar.getBoundingClientRect = () => ({ top: window.innerHeight - 170 }) as DOMRect;
+    rerender(wrapped(true));
+    expect(document.documentElement.style.getPropertyValue('--consent-height')).toBe('170px');
   });
 
   it('does not render once a fresh decision is already in localStorage', () => {

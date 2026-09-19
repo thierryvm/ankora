@@ -212,6 +212,9 @@ test.describe('Consent bar — first visit, no pre-seeded state', () => {
       .getByRole('button', { name: /^accepter la mesure d.audience$/i })
       .boundingBox();
     expect(Math.abs(r!.height - a!.height)).toBeLessThanOrEqual(1);
+    expect(Math.abs(r!.width - a!.width), `widths ${r!.width} vs ${a!.width}`).toBeLessThanOrEqual(
+      1,
+    );
     // One line of text plus the buttons: a bar, not a card.
     expect(box!.height, `bar height at 1440: ${box!.height}`).toBeLessThanOrEqual(72);
     test.info().annotations.push({
