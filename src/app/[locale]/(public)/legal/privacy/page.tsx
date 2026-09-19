@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
 import { getTranslations } from 'next-intl/server';
 
 import { Link } from '@/i18n/navigation';
@@ -8,8 +9,36 @@ import { Footer } from '@/components/layout/Footer';
 import { Prose, ProseMeta } from '@/components/layout/Prose';
 import { buildCanonicalUrl } from '@/lib/glossary';
 
-const LAST_UPDATED = '16 avril 2026';
-const VERSION = '1.0.0';
+const LAST_UPDATED = '19 septembre 2026';
+const VERSION = '2.0.0';
+
+/**
+ * The policy is composed on publiable.dev: sourced, dated legal sentences,
+ * carried word for word into `legal.privacy.*`. Rewording one would detach it
+ * from its source, so the page renders whatever the messages hold, in their
+ * order, instead of naming each sentence here.
+ *
+ * Shape of a section: `heading`, then `p1…pN` (paragraphs), then nested
+ * objects (sub-sections, rendered as h3 with the same shape).
+ */
+const SECTIONS = ['controller', 'data', 'rights', 'objection', 'complaint', 'extras'] as const;
+
+type Node = { [key: string]: string | Node };
+
+/**
+ * The keys are walked from the messages themselves, so they are plain strings
+ * rather than the literal union next-intl infers. Every key rendered here was
+ * read from `t.raw()` one line earlier: it exists by construction.
+ */
+type WalkingTranslator = {
+  (key: string): string;
+  rich: (key: string, values: Record<string, unknown>) => ReactNode;
+  raw: (key: string) => unknown;
+};
+
+function textOf(chunks: ReactNode): string {
+  return Array.isArray(chunks) ? chunks.join('') : String(chunks);
+}
 
 export async function generateMetadata({
   params,
@@ -31,17 +60,40 @@ export async function generateMetadata({
 }
 
 export default async function PrivacyPage() {
-  const t = await getTranslations('legal.privacy');
+  const t = (await getTranslations('legal.privacy')) as unknown as WalkingTranslator;
   const tLegal = await getTranslations('legal');
 
-  const strong = (c: React.ReactNode) => <strong>{c}</strong>;
-  const mail = (c: React.ReactNode) => <a href={`mailto:${brand.privacyEmail}`}>{c}</a>;
-  const apd = (c: React.ReactNode) => (
-    <a href="https://www.autoriteprotectiondonnees.be/" rel="noopener">
-      {c}
-    </a>
-  );
-  const link = (c: React.ReactNode) => <Link href="/legal/cookies">{c}</Link>;
+  const tags = {
+    email: brand.privacyEmail,
+    mail: (c: ReactNode) => <a href={`mailto:${brand.privacyEmail}`}>{c}</a>,
+    // The sources Publiable cites (DPA, published lists, the APD) are real
+    // links: a date of verification is only useful if the page can be opened.
+    url: (c: ReactNode) => (
+      <a href={textOf(c)} rel="noopener noreferrer" className="break-all">
+        {c}
+      </a>
+    ),
+    link: (c: ReactNode) => <Link href="/legal/cookies">{c}</Link>,
+  };
+
+  const renderSection = (path: string, depth: 2 | 3): ReactNode => {
+    const node = t.raw(path) as Node;
+    const Heading = depth === 2 ? 'h2' : 'h3';
+    return (
+      <section key={path} aria-labelledby={`privacy-${path.replace(/\./g, '-')}`}>
+        <Heading id={`privacy-${path.replace(/\./g, '-')}`}>{t(`${path}.heading`)}</Heading>
+        {Object.entries(node).map(([key, value]) => {
+          if (key === 'heading') return null;
+          if (typeof value === 'string') {
+            return <p key={key}>{t.rich(`${path}.${key}`, tags)}</p>;
+          }
+          return renderSection(`${path}.${key}`, 3);
+        })}
+      </section>
+    );
+  };
+
+  const languageNotice = t('languageNotice');
 
   return (
     <>
@@ -50,68 +102,11 @@ export default async function PrivacyPage() {
         <Prose>
           <h1>{t('title')}</h1>
           <ProseMeta>{tLegal('versionLine', { version: VERSION, date: LAST_UPDATED })}</ProseMeta>
-
-          <h2>{t('s1.heading')}</h2>
-          {/* `email` remplace l'adresse jadis écrite en dur dans les cinq
-              locales ; `mail` reste la balise qui l'entoure d'un lien. */}
-          <p>{t.rich('s1.body', { mail, email: brand.privacyEmail })}</p>
-
-          <h2>{t('s2.heading')}</h2>
-          <p>{t('s2.intro')}</p>
-          <ul>
-            <li>{t.rich('s2.item1', { b: strong })}</li>
-            <li>{t.rich('s2.item2', { b: strong })}</li>
-            <li>{t.rich('s2.item3', { b: strong })}</li>
-            <li>{t.rich('s2.item4', { b: strong })}</li>
-          </ul>
-          <p>{t('s2.outro')}</p>
-
-          <h2>{t('s3.heading')}</h2>
-          <ul>
-            <li>{t.rich('s3.item1', { b: strong })}</li>
-            <li>{t.rich('s3.item2', { b: strong })}</li>
-            <li>{t.rich('s3.item3', { b: strong })}</li>
-            <li>{t.rich('s3.item4', { b: strong })}</li>
-          </ul>
-
-          <h2>{t('s4.heading')}</h2>
-          <ul>
-            <li>{t.rich('s4.item1', { b: strong })}</li>
-            <li>{t.rich('s4.item2', { b: strong })}</li>
-            <li>{t.rich('s4.item3', { b: strong })}</li>
-          </ul>
-          <p>{t('s4.outro')}</p>
-
-          <h2>{t('s5.heading')}</h2>
-          <ul>
-            <li>{t('s5.item1')}</li>
-            <li>{t('s5.item2')}</li>
-            <li>{t('s5.item3')}</li>
-          </ul>
-
-          <h2>{t('s6.heading')}</h2>
-          <ul>
-            <li>{t.rich('s6.item1', { b: strong })}</li>
-            <li>{t.rich('s6.item2', { b: strong })}</li>
-            <li>{t.rich('s6.item3', { b: strong })}</li>
-            <li>{t.rich('s6.item4', { b: strong })}</li>
-            <li>{t.rich('s6.item5', { b: strong })}</li>
-            <li>{t.rich('s6.item6', { b: strong, apd })}</li>
-          </ul>
-
-          <h2>{t('s7.heading')}</h2>
-          <ul>
-            <li>{t('s7.item1')}</li>
-            <li>{t('s7.item2')}</li>
-            <li>{t('s7.item3')}</li>
-            <li>{t('s7.item4')}</li>
-          </ul>
-
-          <h2>{t('s8.heading')}</h2>
-          <p>{t.rich('s8.body', { link })}</p>
-
-          <h2>{t('s9.heading')}</h2>
-          <p>{t('s9.body')}</p>
+          {/* Empty in fr-BE and en; nl-BE, de-DE and es-ES carry a copy of the
+              policy in another language and say so in their own. */}
+          {languageNotice ? <p>{languageNotice}</p> : null}
+          <p>{t('intro')}</p>
+          {SECTIONS.map((section) => renderSection(section, 2))}
         </Prose>
       </main>
       <Footer />
