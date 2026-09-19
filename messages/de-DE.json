@@ -1136,6 +1136,7 @@
         "resetButton": "Meine Wahl zurücksetzen",
         "resetHint": "Dies löscht deine Entscheidung und zeigt das Banner beim nächsten Laden erneut an.",
         "noDecisionHint": "Du hast auf diesem Gerät noch keine Wahl getroffen. Das Banner erscheint bei deinem nächsten Besuch.",
+        "decisionMeta": "Auswahl vom {date} · Cookie-Richtlinie, Version {version}",
         "toastSaved": "Cookie-Einstellungen gespeichert.",
         "toastError": "Deine Wahl konnte nicht gespeichert werden. Versuche es erneut."
       }

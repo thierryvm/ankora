@@ -1136,6 +1136,7 @@
         "resetButton": "Reset my choice",
         "resetHint": "This clears your decision and re-prompts the banner on the next page load.",
         "noDecisionHint": "You haven't made a choice on this device yet. The banner will show on your next visit.",
+        "decisionMeta": "Choice made on {date} · cookie policy, version {version}",
         "toastSaved": "Cookie preferences saved.",
         "toastError": "Could not save your choice. Try again."
       }

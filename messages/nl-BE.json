@@ -1136,6 +1136,7 @@
         "resetButton": "Mijn keuze opnieuw instellen",
         "resetHint": "Dit verwijdert je beslissing en toont het banner opnieuw bij de volgende laadbeurt.",
         "noDecisionHint": "Je hebt op dit apparaat nog geen keuze gemaakt. Het banner verschijnt bij je volgende bezoek.",
+        "decisionMeta": "Keuze van {date} · cookiebeleid, versie {version}",
         "toastSaved": "Cookievoorkeuren opgeslagen.",
         "toastError": "Kon je keuze niet opslaan. Probeer opnieuw."
       }

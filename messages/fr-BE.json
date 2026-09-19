@@ -1136,6 +1136,7 @@
         "resetButton": "Réinitialiser mon choix",
         "resetHint": "Le bouton supprime ta décision et te repropose le bandeau au prochain chargement.",
         "noDecisionHint": "Tu n'as pas encore choisi sur cet appareil. Le bandeau s'affichera à ta prochaine visite.",
+        "decisionMeta": "Choix du {date} · politique cookies, version {version}",
         "toastSaved": "Préférences cookies enregistrées.",
         "toastError": "Impossible d'enregistrer ton choix. Réessaie."
       }
