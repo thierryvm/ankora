@@ -12,6 +12,43 @@ En participant à ce projet, tu acceptes [notre code de conduite](CODE_OF_CONDUC
 2. Attends un `approved` sur l'issue avant d'écrire du code — ça évite de travailler sur un angle qu'on n'accepterait pas.
 3. Un PR qui ferme une issue sans discussion préalable sera fermé.
 
+## La CLI Supabase du poste doit être celle de la CI — `npx supabase@2.84.2`
+
+**La version est épinglée dans [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+Utilise la même en local, explicitement, à chaque commande** :
+
+```bash
+npx supabase@2.84.2 start
+npx supabase@2.84.2 db reset --db-url "postgresql://postgres:postgres@127.0.0.1:54422/postgres"
+```
+
+Une CLI plus récente ne change pas seulement des messages : elle applique les
+migrations sous un **rôle différent**, dont les privilèges par défaut du schéma
+`public` ne dépendent pas. Les rôles `authenticated` et `service_role` se
+retrouvent alors sans aucun droit sur les tables créées.
+
+**Symptôme exact, pour qui tombera dessus** (mesuré le 19 septembre 2026 avec la
+CLI 2.109) : `db reset` réussit, la base a l'air normale, et **toute** spec
+authentifiée meurt sur
+
+```
+permission denied for table users
+```
+
+Ce n'est ni une RLS, ni un défaut du code, ni un seed manquant : c'est la
+version de la CLI. Vérifier avant de chercher ailleurs :
+
+```sql
+select grantee, string_agg(privilege_type, ',' order by privilege_type)
+  from information_schema.role_table_grants
+ where table_schema = 'public' and table_name = 'expenses'
+ group by grantee;
+```
+
+Un `authenticated` absent de cette sortie confirme le diagnostic. Les migrations
+récentes portent leurs `GRANT` explicites pour ne plus dépendre de l'outil, mais
+les tables antérieures, elles, restent à la merci de la version utilisée.
+
 ## Branches
 
 - `main` — production (protégée, merge via PR uniquement, 1 reviewer requis)

@@ -339,6 +339,13 @@ export function measureStatementGap(input: StatementGapInput): StatementGap {
   assertRealDate(anchor.statedOn, 'anchor.statedOn');
   assertRealDate(anchor.recordedAt, 'anchor.recordedAt');
 
+  // Same boundary as `deriveAccountBalance`, and for the same reason: a gap
+  // measured against a balance finer than a cent is an artefact of the
+  // measurement, not a fact to show — no line could ever explain it, and the
+  // columns behind both balances are `numeric(14,2)` anyway (ADR-045 D19).
+  assertWritableAmount(statement.balance, `statement ${statement.id}: balance`);
+  assertWritableAmount(anchor.balance, `anchor ${anchor.id}: balance`);
+
   if (anchor.accountType !== statement.accountType) {
     throw new RangeError('anchor must belong to the same account as the statement it measures');
   }

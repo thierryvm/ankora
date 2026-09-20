@@ -564,4 +564,44 @@ describe('la frontière du domaine refuse le sous-centime (ADR-045 D19)', () => 
     });
     expect(derived.balance.toString()).toBe('1170.04');
   });
+
+  /**
+   * `measureStatementGap` est l'autre porte du même domaine, et elle laissait
+   * passer ce que `deriveAccountBalance` refuse : un écart calculé contre un
+   * solde au dix-millième rendrait un « il manque 0,004 € » que personne n'a
+   * tapé et qu'aucune ligne n'explique — l'écart deviendrait un artefact de la
+   * mesure au lieu d'un fait à montrer.
+   */
+  it('refuses a statement balance carrying more than two decimals', () => {
+    expect(() =>
+      measureStatementGap({
+        statement: statement({ id: 'b', statedOn: day('2026-03-10'), balance: money('1250.005') }),
+        anchor: statement({ id: 'a', statedOn: day('2026-03-01') }),
+        flows: [],
+      }),
+    ).toThrow(/two decimals/);
+  });
+
+  it('refuses an anchor balance carrying more than two decimals, and names it', () => {
+    expect(() =>
+      measureStatementGap({
+        statement: statement({ id: 'b', statedOn: day('2026-03-10') }),
+        anchor: statement({
+          id: 'anchor-7',
+          statedOn: day('2026-03-01'),
+          balance: money('90.001'),
+        }),
+        flows: [],
+      }),
+    ).toThrow(/anchor-7/);
+  });
+
+  it('accepts a gap measured between two balances at exactly two decimals', () => {
+    const mesure = measureStatementGap({
+      statement: statement({ id: 'b', statedOn: day('2026-03-10'), balance: money('1000.05') }),
+      anchor: statement({ id: 'a', statedOn: day('2026-03-01'), balance: money('1000.00') }),
+      flows: [],
+    });
+    expect(mesure.gap.toString()).toBe('-0.05');
+  });
 });

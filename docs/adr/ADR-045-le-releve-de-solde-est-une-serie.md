@@ -216,6 +216,31 @@ choisit n'en est pas une. Mesuré le 2026-09-20 sur la base locale : avec la
 version précédente du trigger, un `cancelled_at` forgé à 2020 était stocké tel
 quel.
 
+**Ce que la ré-ouverture coûte, et qui est assumé (@thierry, 2026-09-20).**
+Remettre les deux colonnes à NULL **efface la trace de l'annulation** : après
+ré-ouverture, plus rien dans la ligne ne dit qu'elle a été annulée le 3 août
+par X. Un historique exhaustif aurait demandé une table d'événements par
+opération — c'est-à-dire le modèle que D15 a écarté.
+
+Le pilote tranche : **Ankora garantit la cohérence, pas l'exhaustivité**
+(ADR-040 D11). Ce qui doit être vrai à tout instant, c'est que l'état affiché
+soit celui de la base et qu'aucun chiffre ne se recalcule dans le dos ; pas que
+chaque geste défait reste lisible pour toujours. Conséquences acceptées, écrites
+pour que personne n'ait à les redécouvrir :
+
+- une annulation puis ré-ouverture est **indiscernable** d'une ligne jamais
+  annulée, dans l'application comme dans l'export art. 20 ;
+- `updated_at` bouge, donc quelque chose s'est passé — mais quoi, ça ne se
+  déduit pas de la ligne ;
+- seul `audit_log` pourrait porter cette mémoire, et **il ne le fait pas
+  aujourd'hui** : aucun chemin de J2 n'appelle `logAuditEvent()` (vérifié sur
+  `src/lib/domain/accounts/` et la migration ; le seul appel du périmètre est
+  celui de l'export art. 20, qui journalise l'export, pas l'annulation), parce
+  que l'annulation est une écriture ordinaire du client, sans Server Action. Si
+  l'exhaustivité
+  devient un besoin (litige, obligation), c'est là qu'elle se posera, pas dans
+  la table.
+
 ## D19 — l'argent reçu sur les provisions, le vocabulaire, et le sous-centime
 
 1. **De l'argent reçu directement sur le compte de provisions ne se ventile
@@ -234,8 +259,11 @@ quel.
    visible du seul côté où il peut encore se corriger. Contrôlé aussi sur chaque
    **part** : 200,005 + 75,445 = 275,45 exactement, donc une vérification par la
    somme seule laisserait passer deux parts inécrivables.
-   _Reste à faire, écrit plutôt que tu_ : `measureStatementGap` est la seule
-   entrée du domaine qui ne porte pas encore ce contrôle.
+   `measureStatementGap` porte le même refus depuis le 2026-09-20, sur le solde
+   relevé **et** sur celui de son ancre : un écart mesuré contre un solde au
+   dix-millième rendrait un « il manque 0,004 € » qu'aucune ligne ne peut
+   expliquer — l'écart deviendrait un artefact de la mesure. Test d'abord
+   (rouge le 2026-09-20, `solde.test.ts`), correctif ensuite.
 4. **L'export art. 20 vérifie le CONTENU** des deux tables neuves, et elles
    entrent dans le `it.each` de pagination : une table exportée vide passerait
    sinon pour une table exportée.

@@ -464,6 +464,92 @@ create policy "account_balance_statements_author_update" on public.account_balan
   );
 
 -- -------------------------------------------------------------------------
+-- 6bis. Les privilèges, écrits ici et non hérités de l'outil
+-- -------------------------------------------------------------------------
+-- MESURE du 20 septembre 2026, pile locale sous la CLI épinglée par la CI
+-- (2.84.2), `information_schema.role_table_grants` : les tables voisines
+-- (`expenses`, `charge_payments`, `accounts`) portent, pour `anon`,
+-- `authenticated` et `service_role`, l'ensemble complet DELETE, INSERT,
+-- REFERENCES, SELECT, TRIGGER, TRUNCATE, UPDATE. Aucune migration ne les a
+-- accordés : ils viennent des `alter default privileges` du schéma `public`
+-- posés par l'image Supabase, donc du RÔLE qui applique le DDL.
+--
+-- C'est précisément ce qui rend l'héritage inacceptable ici : sous une CLI
+-- plus récente (2.109 testée le 19 septembre), le même `db reset` crée les
+-- tables sous un rôle dont ces privilèges par défaut ne dépendent pas, et
+-- `authenticated` se retrouve SANS AUCUN droit — toute requête meurt sur
+-- « permission denied ». Le même fichier produirait alors deux bases
+-- différentes selon l'outil qui l'applique. On écrit donc les privilèges.
+--
+-- Ce qu'on accorde, et l'écart assumé avec les voisines :
+--   * `authenticated` : SELECT, INSERT, UPDATE — les trois verbes que les
+--     policies ci-dessus autorisent, et les seuls que ce fichier accorde.
+--     Il n'accorde ni DELETE ni TRUNCATE : aucune policy DELETE n'existe
+--     (D7, « rien ne se supprime : on annule »).
+--     ⚠️ Ce que ce GRANT ne fait PAS, et qui se mesure : là où les
+--     privilèges par défaut de l'image Supabase s'appliquent (la pile locale
+--     en 2.84.2, et la production qui a reçu les voisines de la même façon),
+--     `authenticated` porte DÉJÀ l'ensemble complet, DELETE et TRUNCATE
+--     compris — vérifié après ce fichier, la sonde ci-dessous rend les sept
+--     verbes. Un GRANT n'enlève rien. On reste donc au niveau EXACT des
+--     voisines, ni plus ni moins, et on n'ouvre rien : DELETE est refusé par
+--     RLS faute de policy, et TRUNCATE — le seul verbe que RLS ne filtre pas
+--     — n'est atteignable par aucun chemin applicatif (PostgREST ne l'émet
+--     pas). Le resserrer ici et nulle part ailleurs créerait un écart
+--     invisible entre deux tables du même schéma ; c'est une décision de
+--     sécurité globale, qui se prend pour TOUTES les tables à la fois.
+--   * `service_role` : SELECT, INSERT, UPDATE, DELETE — il contourne RLS et
+--     porte l'effacement de compte (art. 17) comme l'export (art. 20).
+--   * `anon` : RIEN. Les voisines le lui accordent, et ce droit est vide de
+--     tout effet : leurs policies passent par `auth.uid()`, qui est NULL
+--     hors session, donc zéro ligne dans les deux sens. On ne reconduit pas
+--     un privilège dont la mesure montre qu'il ne sert à rien.
+--
+-- Sonde rejouable, sur n'importe quelle base (locale ou production) :
+--   select grantee, string_agg(privilege_type, ',' order by privilege_type)
+--   from information_schema.role_table_grants
+--   where table_schema = 'public'
+--     and table_name in ('movements', 'account_balance_statements')
+--   group by grantee order by grantee;
+revoke all on public.movements                  from anon;
+revoke all on public.account_balance_statements from anon;
+
+grant select, insert, update on public.movements                  to authenticated;
+grant select, insert, update on public.account_balance_statements to authenticated;
+
+grant select, insert, update, delete on public.movements                  to service_role;
+grant select, insert, update, delete on public.account_balance_statements to service_role;
+
+-- Le garde-fou qui va avec. Il interroge le CATALOGUE (`has_table_privilege`),
+-- jamais un comptage de lignes : une table en `force row level security` rend
+-- zéro ligne à qui n'a pas BYPASSRLS, et un garde-fou par comptage y est
+-- aveugle au seul échec qu'il surveille (leçon de la migration D3 d'août).
+do $$
+declare
+  manque text;
+begin
+  select string_agg(format('%s.%s', t.nom, v.verbe), ', ')
+    into manque
+    from (values ('public.movements'), ('public.account_balance_statements')) as t(nom)
+   cross join (values ('select'), ('insert'), ('update')) as v(verbe)
+   where not has_table_privilege('authenticated', t.nom, v.verbe);
+
+  if manque is not null then
+    raise exception
+      'J2 : le role authenticated n''a pas les privileges attendus (%). Les GRANT de cette migration n''ont pas pris : toute requete applicative rendrait « permission denied ».',
+      manque;
+  end if;
+
+  if has_table_privilege('anon', 'public.movements', 'select')
+     or has_table_privilege('anon', 'public.account_balance_statements', 'select')
+  then
+    raise exception
+      'J2 : le role anon conserve un privilege sur le journal. Les REVOKE de cette migration n''ont pas pris.';
+  end if;
+end;
+$$;
+
+-- -------------------------------------------------------------------------
 -- 7. Ce qu'un UPDATE ne peut pas toucher
 -- -------------------------------------------------------------------------
 -- Une policy `with check` ne suffit pas : elle laisse passer un déplacement

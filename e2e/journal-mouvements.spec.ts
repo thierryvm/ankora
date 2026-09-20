@@ -314,6 +314,153 @@ test.describe('J2 — le journal des opérations, ses garde-fous et son isolatio
     }
   });
 
+  /**
+   * Le même trigger porte les deux tables, mais rien ne le prouvait côté
+   * relevés : `account_balance_statements_protege` n'était exercé par aucun
+   * cas. Le supprimer laissait la suite verte — c'est-à-dire qu'un relevé
+   * pouvait changer de compte après coup, et faire bouger un solde dérivé
+   * sans trace.
+   */
+  test('un relevé de solde se corrige, se figent son compte et son heure, et son annulation est écrite par la base', async () => {
+    if (!admin) return;
+    const alice = await seedOnboardedUser(admin);
+    try {
+      const client = await clientDe(alice.email, alice.password);
+
+      const { data: releve, error } = await client
+        .from('account_balance_statements')
+        .insert({
+          workspace_id: alice.workspaceId,
+          created_by: alice.userId,
+          account_type: 'daily_card',
+          balance: 210.4,
+          stated_on: '2026-09-05',
+          recorded_at: '2020-01-01T00:00:00.000Z',
+        })
+        .select()
+        .single();
+      expect(error).toBeNull();
+      expect(
+        new Date(releve!.recorded_at).getUTCFullYear(),
+        "l'instant d'écriture d'un relevé est celui de la base",
+      ).toBeGreaterThan(2020);
+
+      // Le compte d'un relevé est le même fait que le compte d'une opération :
+      // figé. On nomme la colonne attendue, pas seulement « une erreur ».
+      const deplace = await client
+        .from('account_balance_statements')
+        .update({ account_type: 'provisions' })
+        .eq('id', releve!.id);
+      expect(deplace.error?.message ?? '', 'account_type est figé').toContain('account_type');
+
+      const redate = await client
+        .from('account_balance_statements')
+        .update({ recorded_at: '2020-01-01T00:00:00.000Z' })
+        .eq('id', releve!.id);
+      expect(redate.error?.message ?? '', 'recorded_at est figé').toContain('recorded_at');
+
+      // Ce qui se corrige : le solde relevé et le jour du relevé.
+      const correction = await client
+        .from('account_balance_statements')
+        .update({ balance: 215.9, stated_on: '2026-09-06' })
+        .eq('id', releve!.id)
+        .select()
+        .single();
+      expect(correction.error, 'corriger le solde relevé et son jour').toBeNull();
+      expect(Number(correction.data!.balance), 'le solde corrigé').toBe(215.9);
+
+      // L'annulation : demandée par le client, HORODATÉE par la base, et
+      // attribuée à la personne connectée même quand le client forge les deux.
+      const annulation = await client
+        .from('account_balance_statements')
+        .update({ cancelled_at: '2020-01-01T00:00:00.000Z', cancelled_by: null })
+        .eq('id', releve!.id)
+        .select()
+        .single();
+      expect(annulation.error).toBeNull();
+      expect(
+        new Date(annulation.data!.cancelled_at!).getUTCFullYear(),
+        "l'instant d'annulation est celui de la base",
+      ).toBeGreaterThan(2020);
+      expect(annulation.data!.cancelled_by, "l'auteur de l'annulation est imposé").toBe(
+        alice.userId,
+      );
+
+      const gele = await client
+        .from('account_balance_statements')
+        .update({ balance: 9999 })
+        .eq('id', releve!.id);
+      expect(gele.error, 'modifier un relevé annulé').not.toBeNull();
+
+      // Ré-ouverture : les deux colonnes repartent ensemble. ADR-045 D18 —
+      // elle EFFACE la trace de l'annulation, conséquence assumée.
+      const reouverture = await client
+        .from('account_balance_statements')
+        .update({ cancelled_at: null })
+        .eq('id', releve!.id)
+        .select()
+        .single();
+      expect(reouverture.error, 'ré-ouvrir un relevé annulé').toBeNull();
+      expect(reouverture.data!.cancelled_at, 'ré-ouvert : plus d’annulation').toBeNull();
+      expect(reouverture.data!.cancelled_by, 'ré-ouvert : plus d’annulateur').toBeNull();
+    } finally {
+      await deleteSeededUser(admin, alice.userId);
+    }
+  });
+
+  /**
+   * Les privilèges de table, mesurés par l'usage.
+   *
+   * La migration les accorde explicitement et refuse de s'appliquer s'ils
+   * manquent (bloc `do $$` de la section 6bis). Ce cas-ci vérifie l'autre
+   * bout de la chaîne : que le rôle `authenticated` peut RÉELLEMENT lire,
+   * écrire et corriger sur la base déployée. Un `permission denied` ici, et
+   * toute l'application est morte — c'est le symptôme rencontré le
+   * 19 septembre sous une CLI Supabase non épinglée.
+   */
+  test('le rôle authenticated peut lire, écrire et corriger les deux tables', async () => {
+    if (!admin) return;
+    const alice = await seedOnboardedUser(admin);
+    try {
+      const client = await clientDe(alice.email, alice.password);
+      const base = { workspace_id: alice.workspaceId, created_by: alice.userId };
+
+      for (const [table, ligne] of [
+        [
+          'movements',
+          {
+            ...base,
+            kind: 'income',
+            to_account_type: 'income_bills',
+            amount: 30,
+            occurred_on: '2026-09-07',
+            income_nature: 'regular',
+            description: 'Revenu',
+          },
+        ],
+        [
+          'account_balance_statements',
+          { ...base, account_type: 'income_bills', balance: 100, stated_on: '2026-09-07' },
+        ],
+      ] as const) {
+        const ecriture = await client.from(table).insert(ligne).select().single();
+        expect(ecriture.error, `${table} — INSERT accordé à authenticated`).toBeNull();
+
+        const lecture = await client.from(table).select('id').eq('id', ecriture.data!.id);
+        expect(lecture.error, `${table} — SELECT accordé à authenticated`).toBeNull();
+        expect(lecture.data ?? [], `${table} — la ligne se relit`).toHaveLength(1);
+
+        const correction = await client
+          .from(table)
+          .update({ updated_at: new Date().toISOString() })
+          .eq('id', ecriture.data!.id);
+        expect(correction.error, `${table} — UPDATE accordé à authenticated`).toBeNull();
+      }
+    } finally {
+      await deleteSeededUser(admin, alice.userId);
+    }
+  });
+
   test("une personne ne voit ni n'écrit les opérations d'une autre", async () => {
     if (!admin) return;
     const alice = await seedOnboardedUser(admin);
