@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import manifest from '../manifest';
+import { SITE } from '@/lib/site';
 
 /**
  * Le manifeste décide de ce que voit quelqu'un qui touche l'icône Ankora.
@@ -68,5 +69,30 @@ describe('manifeste de l’application installée', () => {
    */
   it('ne déclare pas encore de raccourcis — ils ne serviraient qu’Android', () => {
     expect(m.shortcuts).toBeUndefined();
+  });
+});
+
+/**
+ * Le `background_color` du manifeste et le fond de l'application sont la même
+ * décision, écrite à deux endroits.
+ *
+ * Ce cas existe parce que les deux avaient divergé sans bruit : `site.ts`
+ * portait `#F8FAFC`, le slate de Tailwind, quand `globals.css` peignait un
+ * papier chaud depuis le 23 août 2026. Personne ne voit l'écart en
+ * développement — il ne se montre qu'à l'installation de la PWA, le temps d'un
+ * écran de démarrage bleu avant une application beige. Un écart d'une seconde,
+ * une fois, chez quelqu'un d'autre : exactement le genre de défaut qu'aucune
+ * relecture ne trouve et qu'un test trouve toujours.
+ */
+describe('manifest — le fond de l’écran de démarrage suit le jeton CSS', () => {
+  it('SITE.background vaut le --color-background du mode clair', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const css = readFileSync(join(process.cwd(), 'src/app/globals.css'), 'utf8');
+    const theme = css.slice(css.indexOf('@theme'));
+    const token = /--color-background:\s*(#[0-9a-fA-F]{6})/.exec(theme)?.[1];
+
+    expect(token, 'aucun --color-background lisible dans @theme').toBeDefined();
+    expect(SITE.background.toLowerCase()).toBe(token?.toLowerCase());
   });
 });

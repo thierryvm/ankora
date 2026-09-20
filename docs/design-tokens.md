@@ -108,28 +108,117 @@ Used for:
 
 ### Neutral Palette (Semantic tokens)
 
-#### Background & Surface
+> **Updated 2026-09-20 — v3 socle (refonte, lot 1).** The values below were
+> stale: they described the Tailwind slate that stopped being the app's palette
+> on 23 August 2026. They now record what `globals.css` actually declares.
+> `src/app/__tests__/contrast-ratios.test.ts` is the authority — every ratio
+> quoted here is recomputed there, and this file is a reading aid, never a
+> source.
 
-- `--color-background` → #f8fafc (light) / #0b1120 (dark) — Page background
-- `--color-card` → #ffffff (light) / #111a2e (dark) — Card / elevated surface
-- `--color-surface-soft` → #fbfcfe (light) / #0f172a (dark) — Subtle background (forms, code blocks)
-- `--color-surface-muted` → #f1f5f9 (light) / #0f172a (dark) — Muted background (disabled states)
+#### Background & Surface — four steps, same order in both themes
+
+The order is load-bearing: `surface-muted` is a **track** (the groove under
+`progress`, `AllocationBar`, the rail of `LocaleSwitcher`). A track lighter than
+its thumb reads inverted, so elevation climbs the same way in the dark even
+though the intuition says otherwise.
+
+- `--color-background` → #f3f1ea (light) / #131416 (dark) — page
+- `--color-card` → #ffffff (light) / #282a2d (dark) — card, elevated surface
+- `--color-surface-soft` → #fbfaf7 (light) / #1d1e21 (dark) — subtle surface
+- `--color-surface-muted` → #eceae2 (light) / #0a0b0c (dark) — **track**, never a card
+
+#### Control surfaces — a third role, not a fourth shade
+
+A control at rest inside a card (input, secondary button, unselected chip,
+segment) sits on neither the card nor the track. In the dark it is **lighter**
+than the card, where the track is darker — that divergence is the whole reason
+these are separate tokens.
+
+- `--color-control` → #eceae2 (light) / #34363a (dark) — control at rest
+- `--color-control-pressed` → #e1ddd2 (light) / #42444a (dark) — pressed
+- `--color-control-hover` → `color-mix(control, pressed)` — hover, pointer only
 
 #### Text & Foreground
 
-- `--color-foreground` → #0f172a (light) / #e2e8f0 (dark) — Primary text
-- `--color-muted` → #64748b (light) / #94a3b8 (dark) — Secondary text (labels, hints)
-- `--color-muted-foreground` → #475569 (light) / #cbd5e1 (dark) — Tertiary text (placeholders, captions)
+- `--color-foreground` → #171d26 (light) / #eceae4 (dark) — primary text
+- `--color-muted-foreground` → #3d4a5c (light) / #a8a69f (dark) — secondary text (7.97:1 on the light page)
+- `--color-muted` → #6b7280 (light) / #7d7b75 (dark) — **decorative only**, deliberately sub-AA, never a surface
 
-#### Borders & Dividers
+#### Borders & Dividers — three roles, three tokens
 
-- `--color-border` → #e2e8f0 (light) / #1e293b (dark) — Default border color
+- `--color-border` → #e7e4dc (light) / #3a3c40 (dark) — the rule INSIDE a card
+- `--color-border-card` → #dcd8ce (light) / white 7 % (dark) — the OUTLINE of a level-1 surface
+- `--color-border-bar` → card outline (light) / `--color-border` (dark) — top bar, tab bar, rail
+- `--color-border-control` → #7f7c75 (light) / #8a8882 (dark) — the edge of an input at rest, ≥ 3:1 (WCAG 1.4.11)
+
+`--color-border` does **not** hold 3:1 against a white card. That is why an
+input's edge has its own token rather than borrowing the rule.
+
+#### On an accent fill
+
+- `--color-on-accent` → #ffffff (light) / #131416 (dark)
+
+In the dark the accent fill is `--color-brand-500` (#14b8a6); white on it is
+**2.49:1**, a plain AA failure. The token exists so no call-site has to
+rediscover that.
+
+#### Figures — the role of a number (v3 rule 8)
+
+- `--color-figure-good` → `var(--color-brand-text)` — a margin, good news
+- `--color-figure-danger` → #b4410b (light) / #f08a5d (dark) — a number in alert
+
+Distinct from `--color-danger`, which is the error **message**. A number in
+alert is not an error.
 
 ### Semantic Status Colors
 
-- `--color-success` → #059669 — Healthy status, successful actions, positive balance
-- `--color-warning` → #d97706 — Warning states, caution alerts
-- `--color-danger` → #dc2626 — Error states, critical balance, delete actions
+- `--color-success` → #047857 (light) / #34d399 (dark)
+- `--color-warning` → #9a3412 (light) / #fbbf24 (dark)
+- `--color-danger` → #b91c1c (light) / #f87171 (dark) — v3 value; contrast **rises** (5.72:1 on the light page)
+- `--color-info` → #0369a1 (light) / #38bdf8 (dark)
+
+### Category and series ramps (v3, lot 1 — no consumer yet)
+
+Eight `--color-cat-*` (courses, carburant, energie, restos, loisirs, sante,
+logement, autres) and three `--color-serie-*` (factures, depenses, provisions),
+plus `--color-graph-{grid,area,hatch}`. They are **data surfaces**: an arc, a
+segment, a bar, a dot. Never text, never a status, and never text laid on top
+(white holds only 3.14–4.30:1 on them).
+
+Each is measured at ≥ 3:1 against all four surfaces in both themes. Their
+**mutual separation is not guarded**, and that absence is deliberate: the
+OKLCH criterion of DESIGN-v3 rule 25 fails on ten pairs of this very palette,
+because `cat-autres` is near-achromatic (C = 0.011) and a criterion reading only
+hue and lightness cannot separate a grey from a colour of the same lightness.
+The criterion is missing a chroma term. Open with @thierry; declared rather than
+papered over.
+
+### Structure
+
+- `--size-topbar` → 56px · `--size-tabbar` → 64px
+
+Three floating surfaces lift themselves above the tab bar (consent bar, update
+banner, scroll-to-top). They each carried a hardcoded offset; they now read
+`var(--size-tabbar)`, so a bar height can no longer drift away from its
+clearances in silence.
+
+### Motion — three durations, one curve
+
+- `--dur-micro` 100ms — the press; it must answer before the finger lifts
+- `--dur-state` 150ms — colour, border, shadow (the four states animate nothing else)
+- `--dur-default` 200ms — transform and opacity (what moves or appears)
+- `--dur-structural` 300ms — bars growing in when a view arrives
+- `--ease-spring` `cubic-bezier(0.2, 0, 0, 1)` — the only curve
+- `--transition-state` — the four-state transition in one token; never `all`, never `outline`
+
+### The laiton, left alone (and why it is worth knowing)
+
+`--color-accent-text` #8b6914 on the new light page measures **4.5007:1**. It
+passes AA by 0.0007 — a coincidence, not a margin. The v3 mockup darkens it to
+#7a5c10 for exactly that reason, and lot 1 does **not** adopt it: #7a5c10 falls
+to 1.17 of luminance separation against `--color-warning`, under the 1.30 floor
+ADR-036 set. Adopting one demands moving the other. That is ADR-040, not a
+styling gesture.
 
 ---
 

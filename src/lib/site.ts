@@ -18,7 +18,19 @@ export const SITE = {
     'Belgique',
   ],
   themeColor: '#0F766E',
-  background: '#F8FAFC',
+  /**
+   * `background_color` of the PWA manifest — the splash screen of the
+   * installed app, and the only place a colour value lives outside
+   * `globals.css`.
+   *
+   * It MUST equal the light `--color-background` token. It did not: this held
+   * `#F8FAFC`, the Tailwind slate that stopped being the app's background on
+   * 23 August 2026, so every install since then flashed a cold blue before
+   * painting a warm paper. Nothing caught it, because nothing compared the two.
+   * `manifest.test.ts` now does — see the case that reads the token out of
+   * `globals.css`.
+   */
+  background: '#f3f1ea',
   authors: [{ name: 'thierryvm' }],
   twitter: '@ankora_app',
   /**
