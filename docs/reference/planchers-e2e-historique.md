@@ -19,10 +19,32 @@ les plus sensibles de l'app.
 Deux jobs, donc **deux planchers distincts** — un chiffre global agrégé serait
 ininterprétable au premier conflit, donc ignoré :
 
-| Job                              | Plancher au 13 septembre 2026                                                                                         |
-| -------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `Playwright E2E`                 | **268 passed** (259 au 22/08, 253 plus tôt le 22/08, 247 au 11/08, 241 plus tôt le 11/08, 231 au 09/08, 228 au 06/08) |
-| `Playwright E2E (authenticated)` | **64 passed** (63 le 13/09 plus tôt, 62 au 24/08, 50 au 23/08, 45 avant — +5 `gdpr-deletion-queue`, PR-C)             |
+| Job                              | Plancher au 20 septembre 2026                                                                                                       |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `Playwright E2E`                 | **294 passed** (268 au 13/09, 259 au 22/08, 253 plus tôt le 22/08, 247 au 11/08, 241 plus tôt le 11/08, 231 au 09/08, 228 au 06/08) |
+| `Playwright E2E (authenticated)` | **80 passed** (74 plus tôt dans la PR C, 64 au 13/09, 63 le 13/09 plus tôt, 62 au 24/08, 50 au 23/08, 45 avant)                     |
+
+> **20 septembre 2026, PR C ([#476](https://github.com/thierryvm/ankora/pull/476)) — public 294, authentifié 74 → 80.**
+>
+> Source : les deux runs CI du commit `09b19ca`, **35534223637** et **35534221076**,
+> tous deux `success`. Lignes du reporter relevées dans les journaux des deux runs :
+> `294 passed` / `270 skipped` (job public) et `80 passed` / `5 skipped` (job
+> authentifié). Aucune ligne `failed` ni `flaky` dans aucun des deux — l'absence est
+> elle-même relevée, un zéro absent étant une information. Unitaires du même run :
+> `2719 passed` sur `187` fichiers.
+>
+> **Le +6 authentifié** vient des cas ajoutés par cette PR à
+> `e2e/journal-mouvements.spec.ts`, qui tourne sur `chromium-desktop` **et**
+> `iPhone 14` : chaque cas y compte donc deux fois. Le job public ne bouge pas —
+> le `describe` entier y saute faute de clé de service (`test.skip(!admin, …)`),
+> et ses sauts sont comptés dans les 270.
+>
+> **Ce que cette entrée ne prouve pas, et il faut le dire** : le journal n'a pas
+> été tenu entre le 13 et le 20 septembre. Le public est passé de 268 à 294 et
+> l'authentifié de 64 à 74 pendant les lots antérieurs de la PR C, sans qu'aucune
+> ligne ne soit écrite ici — ces deux paliers intermédiaires sont **rapportés**,
+> pas re-mesurés. Les seuls nombres mesurés par cette entrée sont ceux de
+> `09b19ca`, et ce sont eux qui font plancher.
 
 > **Authentifié : 62 → 63 → 64, mesuré le 2026-09-13.**
 >

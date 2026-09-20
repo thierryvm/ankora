@@ -54,6 +54,22 @@ drop trigger if exists account_balance_statements_touch           on public.acco
 drop function if exists public.j2_protege_operation();
 drop function if exists public.j2_impose_ecriture();
 
+-- Le SEPTIÈME trigger, et il ne vit pas sur les tables que l'étape 2 supprime :
+-- `accounts_ancre_releve` est posé sur `public.accounts`, que ce fichier ne
+-- touche pas. Un corps PL/pgSQL n'est pas une dépendance suivie — PostgreSQL
+-- résout les noms de tables à l'exécution —, donc `drop table` le laisse ARMÉ,
+-- sans rien signaler, sur une table qui n'existe plus.
+--
+-- MESURÉ le 2026-09-20 sur la pile locale, ce fichier rejoué dans une
+-- transaction annulée : sans les deux lignes ci-dessous, la première
+-- inscription qui suit meurt en 42P01 depuis
+-- `handle_new_user` → `seed_default_accounts` → `j2_ancre_nouveau_compte`.
+-- Toutes les inscriptions, à chaque tentative, jusqu'à intervention manuelle —
+-- et le symptôme accuse l'authentification, pas le journal qu'on vient de
+-- retirer. L'ordre compte : le trigger d'abord, la fonction ensuite.
+drop trigger  if exists accounts_ancre_releve on public.accounts;
+drop function if exists public.j2_ancre_nouveau_compte();
+
 -- -------------------------------------------------------------------------
 -- 2. Les deux tables
 -- -------------------------------------------------------------------------
@@ -71,8 +87,18 @@ drop table if exists public.account_balance_statements;
 delete from supabase_migrations.schema_migrations where version = '20260920000001';
 
 -- -------------------------------------------------------------------------
--- 4. Vérifier que le retour arrière a eu lieu (0 attendu)
+-- 4. Vérifier que le retour arrière a eu lieu (0 partout)
 -- -------------------------------------------------------------------------
-select count(*) as tables_restantes
-  from pg_class
- where relname in ('movements', 'account_balance_statements');
+-- Les trois colonnes, pas la première seule : un contrôle qui ne mesure que
+-- les tables déclarait vert l'état où le trigger d'ancrage survivait aux
+-- tables — c'est-à-dire l'état qui casse les inscriptions.
+select
+  (select count(*) from pg_class
+    where relname in ('movements', 'account_balance_statements')) as tables_restantes,
+  (select count(*) from pg_trigger
+    where tgname = 'accounts_ancre_releve' and not tgisinternal) as trigger_ancre_restant,
+  (select count(*) from pg_proc p
+     join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public'
+      and p.proname in ('j2_protege_operation', 'j2_impose_ecriture',
+                        'j2_ancre_nouveau_compte')) as fonctions_restantes;
