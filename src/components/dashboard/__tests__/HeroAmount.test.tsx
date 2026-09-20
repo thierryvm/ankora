@@ -54,7 +54,18 @@ afterEach(() => {
   settleSpend();
 });
 
-const digits = () => screen.getByTestId('hero').textContent ?? '';
+/**
+ * Le texte VISIBLE, et lui seul.
+ *
+ * Depuis le 20 septembre 2026, le composant porte deux textes : la figure en
+ * mouvement (masquée aux lecteurs d'écran) et la valeur arrivée, dans une
+ * région live visuellement cachée. Lire le `textContent` du parent renverrait
+ * les deux collés — « 441,20 €429,89 € » — et toute mesure chiffrée en
+ * sortirait fausse. Cf. `HeroAmount.tsx` pour les deux défauts que cette
+ * seconde région ferme.
+ */
+const digits = () =>
+  screen.getByTestId('hero').querySelector('[aria-hidden="true"]')?.textContent ?? '';
 /** Strip the currency chrome and the non-breaking spaces fr-BE inserts. */
 const numeric = () =>
   Number(
@@ -227,27 +238,45 @@ describe('HeroAmount — the optimistic figure (ADR-010)', () => {
 });
 
 describe('HeroAmount — accessibility', () => {
+  /**
+   * ATTENDU CORRIGÉ le 20 septembre 2026, sur mesure axe. Ces trois cas
+   * asseyaient un `aria-label` posé sur un `<p>` : un attribut ARIA INTERDIT
+   * sur un élément sans rôle nommable (`aria-prohibited-attr`, gravité
+   * `serious`, relevé par `e2e/cockpit-v3.spec.ts`). Ils passaient au vert sur
+   * un chiffre qui n'avait, en pratique, aucun nom accessible — et le « once »
+   * du titre était faux par-dessus : une région live dont tout le contenu est
+   * `aria-hidden` n'annonce rien.
+   */
+  const annonce = () => screen.getByTestId('hero').querySelector('[role="status"]');
+
   it('announces the settled value once, not the twelve frames in between', () => {
     render(<HeroAmount value={448.39} locale="fr-BE" testId="hero" />);
-    const node = screen.getByTestId('hero');
 
-    // The visible text is hidden from the a11y tree; `aria-label` carries the
-    // target. Otherwise a screen reader would read every interpolated amount.
-    expect(node).toHaveAttribute('aria-label', expect.stringContaining('448,39'));
-    expect(node.querySelector('[aria-hidden="true"]')).not.toBeNull();
+    // La figure en mouvement est hors de l'arbre d'accessibilité ; la valeur
+    // arrivée est du VRAI TEXTE dans une région live, donc elle s'annonce.
+    expect(annonce()?.textContent).toContain('448,39');
+    expect(annonce()).toHaveClass('sr-only');
+    expect(screen.getByTestId('hero').querySelector('[aria-hidden="true"]')).not.toBeNull();
   });
 
   it('is polite — the figure changes because the user acted', () => {
     render(<HeroAmount value={448.39} locale="fr-BE" testId="hero" />);
-    expect(screen.getByTestId('hero')).toHaveAttribute('aria-live', 'polite');
+
+    // `role="status"` EST une région live polie et atomique : pas d'attribut
+    // en plus, et un rôle qui, lui, accepte d'être nommé.
+    expect(annonce()).not.toBeNull();
+    expect(screen.getByTestId('hero')).not.toHaveAttribute('aria-label');
   });
 
-  it('labels the target, not the intermediate frame', () => {
+  it('announces the target, not the intermediate frame', () => {
     const { rerender } = render(<HeroAmount value={448.39} locale="fr-BE" testId="hero" />);
     rerender(<HeroAmount value={429.89} locale="fr-BE" testId="hero" />);
     advanceFrame(0);
     advanceFrame(100);
 
-    expect(screen.getByTestId('hero').getAttribute('aria-label')).toContain('429,89');
+    expect(annonce()?.textContent).toContain('429,89');
+    // La figure visible, elle, est encore en route : c'est bien deux textes
+    // différents au même instant, et c'est voulu.
+    expect(digits()).not.toContain('429,89');
   });
 });

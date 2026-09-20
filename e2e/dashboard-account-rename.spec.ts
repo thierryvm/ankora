@@ -1,5 +1,14 @@
 import { test, expect } from './helpers/test';
 import { adminClientOrNull, deleteSeededUser, seedOnboardedUser } from './helpers/seed';
+import { ouvrirRepli } from './helpers/cockpit';
+
+/**
+ * ATTENDU MODIFIÉ par la refonte B (cockpit v3, 20 septembre 2026) : les cartes
+ * de comptes ne sont plus posées à plat sur /app, elles vivent dans le repli
+ * « Mes comptes », FERMÉ au chargement. Chaque parcours l'ouvre donc avant
+ * d'atteindre une carte — y compris après un `reload()`, qui le referme.
+ * Le comportement testé (renommage en place, persistance, Esc) est inchangé.
+ */
 
 const admin = adminClientOrNull();
 
@@ -27,6 +36,9 @@ test.describe('Dashboard — typed account cards + inline rename (PR-D2)', () =>
       await page.getByLabel('Mot de passe').fill(user.password);
       await page.getByRole('button', { name: /^se connecter$/i }).click();
       await page.waitForURL(/\/app\b/, { timeout: 15_000 });
+
+      // The account cards live inside the « Mes comptes » fold, closed on load.
+      await ouvrirRepli(page, 'repli-comptes');
 
       // Locate the income_bills card via the data attribute that AccountCard exposes.
       const card = page.locator('[data-account-type="income_bills"]');
@@ -74,8 +86,9 @@ test.describe('Dashboard — typed account cards + inline rename (PR-D2)', () =>
         card.getByRole('button', { name: /Renommer le compte « Belfius »/i }),
       ).toBeVisible();
 
-      // Refresh and assert persistence.
+      // Refresh and assert persistence. The fold is closed again after a reload.
       await page.reload();
+      await ouvrirRepli(page, 'repli-comptes');
       await expect(
         page.locator('[data-account-type="income_bills"]').getByRole('button', {
           name: /Renommer le compte « Belfius »/i,
@@ -121,6 +134,7 @@ test.describe('Dashboard — typed account cards + inline rename (PR-D2)', () =>
         paid_from: 'principal',
       });
       await page.reload();
+      await ouvrirRepli(page, 'repli-comptes');
 
       const card = page.locator('[data-account-type="provisions"]');
       await expect(card).toBeVisible();

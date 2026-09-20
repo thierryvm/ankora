@@ -1,34 +1,61 @@
 import type { Metadata } from 'next';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { ArrowDownLeft, ArrowRightLeft, ArrowUpRight, Landmark } from 'lucide-react';
 
 import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AccountCard } from '@/components/features/AccountCard';
-import { SituationDuMoisHero } from '@/components/dashboard/SituationDuMoisHero';
 import { CascadeDuMois, type PartAffichee } from '@/components/dashboard/CascadeDuMois';
 import { ProvisionHealthGaugeCard } from '@/components/dashboard/ProvisionHealthGaugeCard';
-import { ProchainesFacturesCard } from '@/components/dashboard/ProchainesFacturesCard';
 import { EngagementsCard } from '@/components/dashboard/EngagementsCard';
+import { MonthCurveLive } from '@/components/dashboard/MonthCurveLive';
 import { SimulatorDrawer } from '@/components/dashboard/SimulatorDrawer';
+import { Repli } from '@/components/cockpit/Repli';
+import { IlTeResteCard } from '@/components/cockpit/IlTeResteCard';
+import { EncoreAPayerCard, type LigneAPayer } from '@/components/cockpit/EncoreAPayerCard';
 import { Expenses, Transfer, money } from '@/lib/domain';
-import { unpaidChargesForPeriod } from '@/lib/domain/charges';
 import * as Obligations from '@/lib/domain/obligations';
+import { currentPeriodDueDate } from '@/lib/domain/charges';
 import { depensesParJour, type Poste } from '@/lib/domain/cockpit';
+import { facturesBientot } from '@/lib/domain/cockpit/bientot';
+import { paymentKey } from '@/lib/domain/cockpit/types';
 import type { NamedCommitment } from '@/lib/domain/obligations';
 import { loadMonthSituation } from '@/lib/data/month-situation';
 import { commitmentRowToDomain, hasLiveCommitments } from '@/lib/data/commitment-row';
 import type { AccountType } from '@/lib/schemas/account';
 import type { Locale } from '@/i18n/routing';
-import { formatCurrency, formatDate, formatMonth } from '@/lib/i18n/formatters';
+import { formatCurrency, formatMonth } from '@/lib/i18n/formatters';
 
 /**
- * Render order for the typed account cards in the cockpit Bloc 1.
- * Matches the canonical spec dashboard-cockpit-vraie-vision-2026-05-03.md:
- *   1. income_bills (where salary lands)
- *   2. provisions (savings buffer)
- *   3. daily_card (daily-spending pot)
+ * LE COCKPIT — refonte v3, lot B.
+ *
+ * ## Ce qui change, et pourquoi
+ *
+ * L'écran d'avant posait douze cartes ouvertes les unes sous les autres :
+ * un hero, sa cascade, une jauge de provisions, les engagements, les prochaines
+ * factures, trois cartes de comptes, trois cartes de plan de virement, la liste
+ * des dépenses, trois boutons. Chacune était défendable ; ensemble, elles
+ * donnaient « tout est mélangé » (juillet 2026) puis « le foutoir » (septembre).
+ * Le défaut n'était pas dans les cartes, il était dans leur nombre au repos.
+ *
+ * La v3 ne supprime rien. Elle **replie** : une carte de tête qui répond, une
+ * carte qui dit ce qui sort encore, et le reste sous des replis fermés dont le
+ * TITRE PORTE SON CHIFFRE. « Mes comptes · 3 » répond déjà ; on ouvre pour le
+ * détail, pas pour savoir s'il y a quelque chose.
+ *
+ * ## Ce qui ne change PAS
+ *
+ * Aucun calcul, aucune donnée, aucune écriture. `loadMonthSituation()` est lu
+ * exactement comme avant, les mêmes fonctions de domaine reçoivent les mêmes
+ * entrées, et les six cartes repliées sont les composants d'aujourd'hui, tels
+ * quels. La seule lecture qui change est celle de « Bientôt », qui cesse
+ * d'attendre un marqueur manuel — cf. `domain/cockpit/bientot.ts`.
+ *
+ * ## Le budget de page (mesuré par `e2e/cockpit-v3.spec.ts`, jamais à l'œil)
+ *
+ * À 375 px : douze montants au plus visibles sans geste, deux écrans et demi au
+ * plus. Un repli fermé ne montre que la clé de son titre, et c'est ce qui rend
+ * le budget tenable sans rien retirer de l'application.
  */
 const ACCOUNT_TYPE_ORDER: readonly AccountType[] = ['income_bills', 'provisions', 'daily_card'];
 
@@ -39,11 +66,6 @@ const ACCOUNT_TYPE_ORDER: readonly AccountType[] = ['income_bills', 'provisions'
  * nu côté client et toute méthode appelée dessus lève. La conversion se fait
  * donc ICI, au passage, et jamais dans le composant — qui n'aurait alors plus
  * de raison de recevoir des nombres plutôt que des objets.
- *
- * `toNumber()` perd la précision arbitraire de `Decimal`. C'est sans effet :
- * ces valeurs ne servent qu'à être formatées en euros, et le total affiché vient
- * du même `Poste`, calculé en `Decimal` de bout en bout. On n'additionne jamais
- * ces `number` entre eux.
  */
 function partsAffichees(poste: Poste): PartAffichee[] {
   return poste.parts.map((part) => ({
@@ -66,10 +88,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function DashboardPage() {
   const t = await getTranslations('app.dashboard');
+  const tc = await getTranslations('cockpit');
   const locale = (await getLocale()) as Locale;
-  // One assembly of the month's four figures, shared with the ⊕ sheet's context
-  // action so the cockpit and the entry sheet can never quote different
-  // amounts. Also carries the same commitment read as /app/commitments.
+
   const {
     snapshot,
     commitments,
@@ -85,6 +106,7 @@ export default async function DashboardPage() {
     joursDuMois: daysInMonth,
     todayIso,
   } = await loadMonthSituation();
+
   const namedCommitments: NamedCommitment[] = commitments.map((c) => ({
     ...commitmentRowToDomain(c),
     label: c.label,
@@ -92,46 +114,35 @@ export default async function DashboardPage() {
   const commitmentLedger = new Map(
     Object.entries(paidKeysByCommitment).map(([id, keys]) => [id, new Set(keys)] as const),
   );
-  const currentMonth = new Date().getMonth() + 1;
+  const period = snapshot.currentPeriod;
+  // Le mois vient de la PÉRIODE du domaine (Europe/Brussels), jamais du fuseau
+  // du serveur : sur Vercel (UTC), le 1er du mois entre 00 h et 02 h heure
+  // belge, `new Date().getMonth()` rend encore le mois précédent — le titre et
+  // « hors de <mois> » auraient nommé septembre au-dessus de chiffres
+  // d'octobre. Relevé à la relecture du 20 sept. 2026.
+  const currentMonth = period.month;
   const monthLabel = formatMonth(currentMonth, locale);
   const fmtMoney = (value: Parameters<typeof formatCurrency>[0]) => formatCurrency(value, locale);
 
   const hasCharges = snapshot.charges.length > 0;
 
-  // La série que trace la courbe du mois. Calculée depuis les MÊMES dépenses que
-  // `situation.depensesDuMois` : un invariant du domaine lie le dernier cumulé
-  // au chiffre du hero, et il ne tient que si les deux lisent la même source.
-  const serieDuMois = depensesParJour(
-    snapshot.monthlyExpenses,
-    snapshot.currentPeriod,
-    daysInMonth,
-  );
-
+  const serieDuMois = depensesParJour(snapshot.monthlyExpenses, period, daysInMonth);
   const monthlyExpenseTotal = Expenses.totalAmount(snapshot.monthlyExpenses);
   const latestMonthlyExpenses = Expenses.latestExpenses(snapshot.monthlyExpenses, 5);
   const monthlyExpenseCount = snapshot.monthlyExpenses.length;
 
   const monthlyIncome = money(snapshot.monthlyIncome ?? 0);
   const vieCouranteTransferAmount = money(snapshot.vieCouranteMonthlyTransfer ?? 0);
-  // « Restant Principal » used to ignore the commitment instalments that
-  // « Budget du mois » deducts — two "remainings" on one screen, two
-  // perimeters, and no label saying so. Both now belong to the CASH view, and
-  // the block is named « Après tes sorties de <mois> » to say which one it is.
-  // Built ONCE and kept whole: the cockpit needs both halves. The filtered
-  // total below feeds the transfer plan; the full list feeds the bills card,
-  // which used to sum charges on its own and so could never see an instalment
-  // (#349). One list, so the two figures cannot drift.
+
+  // UNE liste d'obligations, gardée entière : le total et les lignes viennent
+  // de la même source, donc les deux chiffres ne peuvent pas diverger (#349).
   const obligationsDuMoisToutes = Obligations.obligationsDuMois({
     charges: cockpitCharges,
     chargePayments: paymentsLedger,
     commitments: namedCommitments,
     paidKeysByCommitment: commitmentLedger,
-    ref: snapshot.currentPeriod,
+    ref: period,
   });
-  // `aPayerCeMois` (GROSS — ticked instalments included), never
-  // `resteAPayerCeMois` (net): the transfer plan provisions the month's whole
-  // commitment load, not the part still unticked. Swapping them would silently
-  // change what « Budget du mois » means.
   const commitmentsDueThisMonth = Obligations.aPayerCeMois(
     obligationsDuMoisToutes.filter((o) => o.source === 'commitment'),
   );
@@ -148,175 +159,125 @@ export default async function DashboardPage() {
     snapshot.monthlyIncome === null || snapshot.vieCouranteMonthlyTransfer === null;
   const accountByType = new Map(snapshot.accounts.map((a) => [a.accountType, a]));
 
-  // Daily allowance not yet configured: surface the inline CTA on the
-  // daily_card row so the user can complete the cockpit setup without
-  // hunting through Settings.
   const dailyPlafondMissing =
     snapshot.vieCouranteMonthlyTransfer === null || snapshot.vieCouranteMonthlyTransfer === 0;
   const tDaily = await getTranslations('dashboard.daily');
-
-  // Does « Mes engagements » have anything to show? Drives the desktop layout:
-  // Gauge + Engagements share a 2-col row only when the card renders, otherwise
-  // the Gauge takes the full width (no empty half-column). Same predicate the
-  // card self-hides on, so layout and card never disagree.
+  const tSituation = await getTranslations('dashboard.situation');
   const showCommitments = hasLiveCommitments(commitments, paidKeysByCommitment);
 
-  return (
-    <div className="flex flex-col gap-8">
-      {/*
-        Chantier 6 — le pli est le budget de conception.
+  // ---------------------------------------------------------------------------
+  // « Encore à payer » — les échéances du mois encore ouvertes, et « Bientôt ».
+  // ---------------------------------------------------------------------------
+  const resteAPayer = Obligations.resteAPayerCeMois(obligationsDuMoisToutes);
+  const obligationsPayees = obligationsDuMoisToutes.filter((o) => o.isPaid).length;
 
-        Ce bloc de titre coûtait 88 px sur les 550 px utiles d'un iPhone 14
-        (mesuré le 2026-08-23), pour deux informations : le nom de l'espace de
-        travail — « Mon espace », la valeur par défaut, qu'aucun écran ne permet
-        de changer aujourd'hui — et le mois. Le nom part ; le mois reste, parce
-        qu'il dit de QUEL mois parlent tous les chiffres en dessous, et il
-        descend de `text-3xl` à `text-2xl`. Le `h1` demeure un `h1` : c'est sa
-        taille qui change, pas son rang.
-      */}
+  const isPaidThisPeriod = (id: string) =>
+    paymentsLedger.get(paymentKey(id, period.year, period.month)) === true;
+
+  const lignesAPayer: LigneAPayer[] = snapshot.charges
+    .filter((c) => c.isActive && c.paymentMonths.includes(period.month) && !isPaidThisPeriod(c.id))
+    .flatMap((charge) => {
+      const due = currentPeriodDueDate(charge, period, todayIso, false);
+      if (!due) return [];
+      return [
+        {
+          id: charge.id,
+          label: charge.label,
+          montant: charge.amount.toNumber(),
+          dueDateIso: due.dueDateIso,
+          isOverdue: due.status === 'overdue',
+        },
+      ];
+    })
+    .sort((a, b) => (a.dueDateIso < b.dueDateIso ? -1 : a.dueDateIso > b.dueDateIso ? 1 : 0));
+
+  // « Bientôt » : calculé à la lecture sur 60 jours, en union avec la coche
+  // « à surveiller » tant que /app/charges permet de la poser.
+  const bientot = facturesBientot({
+    charges: snapshot.charges.map((c) => ({
+      id: c.id,
+      label: c.label,
+      amount: c.amount,
+      frequency: c.frequency,
+      paymentMonths: c.paymentMonths,
+      paymentDay: c.paymentDay,
+      isActive: c.isActive,
+      isWatched: c.isWatched,
+    })),
+    payments: paymentsLedger,
+    todayIso,
+    period,
+  });
+
+  // ---------------------------------------------------------------------------
+  // Les clés des replis — chaque titre répond AVANT qu'on l'ouvre.
+  // ---------------------------------------------------------------------------
+  const comptesVisibles = ACCOUNT_TYPE_ORDER.filter((tp) => accountByType.has(tp));
+  const cleComptes = String(comptesVisibles.length);
+  const cleDepenses = tc('replis.cleDepenses', { count: monthlyExpenseCount });
+  const cleVirements = missingSetup
+    ? tc('replis.cleVirementsIncomplet')
+    : tc('replis.cleVirements', { montant: fmtMoney(plan.vieCouranteTransfer) });
+  const cleEngagements = String(commitments.length);
+  const cleRythme = tc('replis.cleRythme', { jours: joursRestants });
+
+  const cascade =
+    situation.statut === 'incomplet' ? null : (
+      <CascadeDuMois
+        revenus={situation.revenus.toNumber()}
+        chargesFixes={situation.chargesFixes.toNumber()}
+        provisionsLissees={situation.provisionsLissees.toNumber()}
+        engagementsMensuels={situation.engagementsMensuels.toNumber()}
+        chargesFixesParts={partsAffichees(decomposition.chargesFixes)}
+        lissageParts={partsAffichees(decomposition.lissage)}
+        engagementsParts={partsAffichees(decomposition.engagements)}
+        resteDisponible={situation.resteDisponible.toNumber()}
+        depensesDuMois={situation.depensesDuMois.toNumber()}
+        ilTeReste={situation.ilTeReste.toNumber()}
+        epargneEstimee={situation.epargneEstimee?.toNumber() ?? null}
+        locale={locale}
+      />
+    );
+
+  return (
+    <div className="flex flex-col gap-4">
       <header>
-        <h1 id="dashboard-heading" className="text-2xl font-bold tracking-tight md:text-3xl">
+        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
           {t('headerTitle', { month: monthLabel })}
         </h1>
       </header>
 
-      {/*
-        THI-327 Phase 0 — "Situation du mois" hero (NORTH_STAR #1), ramené au
-        pli par le chantier 6 : un statut en mots, UN montant dominant, une
-        ligne d'ancrage, le rythme du mois. Sa cascade est partie juste dessous
-        (`CascadeDuMois`) — la carte mesurait 554 px pour 550 px de fenêtre
-        utile sur iPhone 14, donc elle se coupait en plein milieu de sa liste.
-        L'état incomplet garde le cas sans revenu (THI-335).
-      */}
-      <section aria-labelledby="dashboard-heading">
-        <SituationDuMoisHero
-          statut={situation.statut}
+      {/* La carte de tête : une question, un chiffre, sa formule, une action. */}
+      <section aria-labelledby="cockpit-heading">
+        <IlTeResteCard
+          ilTeReste={situation.ilTeReste.toNumber()}
+          resteDisponible={situation.resteDisponible.toNumber()}
           revenus={situation.revenus.toNumber()}
+          depensesDuMois={situation.depensesDuMois.toNumber()}
           chargesFixes={situation.chargesFixes.toNumber()}
           provisionsLissees={situation.provisionsLissees.toNumber()}
           engagementsMensuels={situation.engagementsMensuels.toNumber()}
-          resteDisponible={situation.resteDisponible.toNumber()}
-          depensesDuMois={situation.depensesDuMois.toNumber()}
-          ilTeReste={situation.ilTeReste.toNumber()}
-          deficitEpargne={situation.deficitEpargne.toNumber()}
-          rattrapageMensuel={situation.rattrapageMensuel.toNumber()}
-          joursRestants={joursRestants}
-          joursEcoules={joursEcoules}
-          joursDuMois={daysInMonth}
-          serieDuMois={serieDuMois}
-          depensesProjetees={situation.depensesProjetees?.toNumber() ?? null}
+          monthLabel={monthLabel}
+          incomplet={situation.statut === 'incomplet'}
           locale={locale}
+          cascade={cascade}
         />
       </section>
 
-      {/*
-        Chantier 6 / §3.2 — « la cascade est l'explication, pas la réponse ».
-
-        Elle suit immédiatement le hero, jamais ailleurs : c'est le lien
-        « D'où vient ce chiffre » du hero qui y mène, et un lecteur qui défile
-        d'un cran doit tomber dessus sans l'avoir cherchée. L'état incomplet du
-        hero (revenu absent) n'a rien à expliquer — il n'y a pas de cascade
-        d'un revenu qu'on ne connaît pas.
-      */}
-      {situation.statut !== 'incomplet' && (
-        <section aria-labelledby="cascade-heading">
-          <CascadeDuMois
-            revenus={situation.revenus.toNumber()}
-            chargesFixes={situation.chargesFixes.toNumber()}
-            provisionsLissees={situation.provisionsLissees.toNumber()}
-            engagementsMensuels={situation.engagementsMensuels.toNumber()}
-            chargesFixesParts={partsAffichees(decomposition.chargesFixes)}
-            lissageParts={partsAffichees(decomposition.lissage)}
-            engagementsParts={partsAffichees(decomposition.engagements)}
-            resteDisponible={situation.resteDisponible.toNumber()}
-            depensesDuMois={situation.depensesDuMois.toNumber()}
-            ilTeReste={situation.ilTeReste.toNumber()}
-            epargneEstimee={situation.epargneEstimee?.toNumber() ?? null}
+      {/* Ce qui sort encore ce mois-ci, et ce qui arrive juste après. */}
+      {hasCharges ? (
+        <section aria-labelledby="cockpit-encore-a-payer-heading">
+          <EncoreAPayerCard
+            resteAPayer={resteAPayer.toNumber()}
+            payees={obligationsPayees}
+            total={obligationsDuMoisToutes.length}
+            lignes={lignesAPayer}
+            bientot={bientot}
+            monthLabel={monthLabel}
             locale={locale}
           />
         </section>
-      )}
-
-      {/*
-        THI-190 — Santé des Provisions (cockpit v3 section #2 of 8).
-        Answers "am I saving the right amount each month so periodic
-        bills never catch me short?" — complements the hero radar which
-        answers "what is my real monthly burden?". Always visible (even
-        on an empty workspace) so the user sees the canonical narrative.
-        On desktop it shares a 2-col row with « Mes engagements » when that
-        card has content (see `showCommitments`), else it spans full width.
-      */}
-      {/*
-        Provisions health + « Mes engagements » share a 2-col row on desktop
-        (both dense but narrow). `lg:items-start` keeps each card at its natural
-        height. When there is nothing to show, the whole grid collapses to the
-        gauge at full width — `showCommitments` gates the 2nd column so it never
-        leaves an empty half.
-      */}
-      <div className={showCommitments ? 'grid gap-4 lg:grid-cols-2 lg:items-start' : ''}>
-        <section aria-labelledby="provision-health-heading" className="flex flex-col gap-4">
-          <h2 id="provision-health-heading" className="sr-only">
-            {t('provisionHealthSectionHeading')}
-          </h2>
-          <ProvisionHealthGaugeCard
-            charges={cockpitCharges}
-            payments={paymentsLedger}
-            soldeEpargneActuel={soldeEpargneActuel}
-            period={snapshot.currentPeriod}
-            locale={locale}
-          />
-        </section>
-
-        {/*
-          Épic « Dettes & échéanciers » PR-3 — « Mes engagements ». Paired with
-          the provisions gauge on desktop. `EngagementsCard` self-hides when
-          empty; `showCommitments` (same predicate) gates the section so the
-          grid reserves the 2nd column only when the card actually renders.
-        */}
-        {showCommitments && (
-          <section aria-labelledby="commitments-heading" className="flex flex-col gap-4">
-            <h2 id="commitments-heading" className="sr-only">
-              {t('commitmentsSectionHeading')}
-            </h2>
-            <EngagementsCard
-              commitments={commitments}
-              paidKeysByCommitment={paidKeysByCommitment}
-              currentPeriod={snapshot.currentPeriod}
-              locale={locale}
-            />
-          </section>
-        )}
-      </div>
-
-      {/*
-        THI-192 — Prochaines factures (cockpit v3 section #5 of 8). Full width
-        (row-heavy: J-7 / J-14 / J-30 windows + a separate overdue bucket).
-        Reuses `snapshot.charges` + the same `paymentsLedger` Map as the gauge
-        so a settled bill for the current cycle never appears as overdue.
-      */}
-      <section aria-labelledby="upcoming-bills-heading" className="flex flex-col gap-4">
-        <h2 id="upcoming-bills-heading" className="sr-only">
-          {t('upcomingBillsSectionHeading')}
-        </h2>
-        <ProchainesFacturesCard
-          charges={snapshot.charges}
-          payments={paymentsLedger}
-          obligations={obligationsDuMoisToutes}
-          todayIso={todayIso}
-          locale={locale}
-          forgotten={{
-            labels: unpaidChargesForPeriod(
-              snapshot.charges,
-              new Set(snapshot.previousMonthPaidChargeIds),
-              snapshot.previousPeriod,
-            ).map((c) => c.label),
-            monthLabel: formatMonth(snapshot.previousPeriod.month, locale),
-            periodParam: `${snapshot.previousPeriod.year}-${String(snapshot.previousPeriod.month).padStart(2, '0')}`,
-          }}
-        />
-      </section>
-
-      {!hasCharges && (
+      ) : (
         <Card>
           <CardHeader>
             <CardTitle>{t('emptyTitle')}</CardTitle>
@@ -330,30 +291,22 @@ export default async function DashboardPage() {
         </Card>
       )}
 
-      {/*
-        PR-D3-bis layout — RÉALITÉ d'abord ("combien j'ai sur chaque compte"),
-        plan ensuite ("combien je dois déplacer"). The 4 legacy KPI cards
-        (provisions/health/suggestedTransfer/bills) shipped before Voie D
-        are removed: they duplicate the Bloc 2 hero radar (Effort = same
-        provisionsMonthly + billsMonth, Capacité = same suggestedTransfer
-        intent) and Santé Provisions will be re-introduced enriched in
-        PR-D5 (déficit + plan rattrapage 3 mois). Cf. handoff
-        Athenaeum/.../2026-05-06-2230-feedback-post-pr-d3-dette-ux.md.
-      */}
-      {hasCharges && (
-        <section aria-labelledby="accounts-heading" className="flex flex-col gap-4">
-          <h2 id="accounts-heading" className="sr-only">
-            {t('accountsHeading')}
-          </h2>
+      {/* ---------------------------------------------------------------------
+          Les replis. Fermés au chargement, sans exception : c'est ce qui tient
+          le budget de page. Chaque titre porte son chiffre, donc aucun ne se
+          ouvre « pour voir ».
+          --------------------------------------------------------------------- */}
+
+      {comptesVisibles.length > 0 && (
+        <Repli titre={tc('replis.comptes')} cle={cleComptes} testId="repli-comptes">
           <div className="grid gap-4 md:grid-cols-3">
-            {ACCOUNT_TYPE_ORDER.map((accountType) => {
+            {comptesVisibles.map((accountType) => {
               const account = accountByType.get(accountType);
               if (!account) return null;
               const extraHint =
                 accountType === 'daily_card' && dailyPlafondMissing ? (
                   <Link
                     href="/app/accounts"
-                    // PR-D5 a11y: underline permanent (was hover-only — invisible on iOS touch).
                     className="text-muted-foreground hover:text-brand-700 -my-1.5 inline-flex min-h-11 items-center text-xs underline underline-offset-2"
                   >
                     {tDaily('cta_set_plafond')}
@@ -371,182 +324,152 @@ export default async function DashboardPage() {
               );
             })}
           </div>
-        </section>
+        </Repli>
       )}
 
       {hasCharges && (
-        <section aria-labelledby="plan-heading" className="flex flex-col gap-4">
-          <div className="flex items-end justify-between gap-2">
-            <div>
-              {/* Même défaut que la cascade, et il précédait ce chantier : le
-                  nudge du hero pointe `/app#plan-heading`, et l'en-tête collant
-                  de 65 px recouvrait ce titre à l'arrivée. `scroll-mt-24`
-                  corrige les deux liens de la même façon. */}
-              <h2 id="plan-heading" className="scroll-mt-24 text-xl font-semibold">
-                {t('planTitle', { month: monthLabel })}
-              </h2>
-              <p className="text-muted-foreground text-sm">{t('planDescription')}</p>
-            </div>
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/app/accounts">{t('planAdjustAccounts')}</Link>
-            </Button>
-          </div>
-
-          {missingSetup ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('missingSetupTitle')}</CardTitle>
-                <CardDescription>{t('missingSetupDescription')}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button asChild>
-                  <Link href="/app/accounts">{t('missingSetupCta')}</Link>
-                </Button>
-              </CardContent>
-            </Card>
+        <Repli titre={tc('replis.depenses')} cle={cleDepenses} testId="repli-depenses">
+          {monthlyExpenseCount === 0 ? (
+            <p className="text-muted-foreground text-sm">{t('expensesEmpty')}</p>
           ) : (
-            <div className="grid gap-4 md:grid-cols-3">
-              <Card>
-                <CardHeader className="pb-2">
-                  <div className="text-brand-700 flex items-center gap-2">
-                    <ArrowRightLeft className="h-5 w-5" aria-hidden />
-                    <CardTitle className="text-sm font-medium">
-                      {t('transferPrincipalToVieCourante')}
-                    </CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold tabular-nums">
-                    {fmtMoney(plan.vieCouranteTransfer)}
-                  </p>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    {t('transferVieCouranteHint')}
-                  </p>
-                </CardContent>
-              </Card>
+            <>
+              <div className="flex items-baseline justify-between gap-4">
+                <p className="text-muted-foreground text-sm">
+                  {t('expensesCount', { count: monthlyExpenseCount })}
+                </p>
+                <p className="text-lg font-semibold tabular-nums">
+                  {fmtMoney(monthlyExpenseTotal)}
+                </p>
+              </div>
+              <ul className="divide-border mt-2 divide-y">
+                {latestMonthlyExpenses.map((expense) => (
+                  <li key={expense.id} className="flex items-center justify-between gap-4 py-2">
+                    <p className="min-w-0 flex-1 truncate text-sm font-medium">{expense.label}</p>
+                    <p className="text-muted-foreground shrink-0 font-mono text-sm tabular-nums">
+                      {fmtMoney(expense.amount)}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-3">
+                <Button asChild variant="ghost" size="sm">
+                  <Link href="/app/expenses">{t('expensesViewAll')}</Link>
+                </Button>
+              </div>
+            </>
+          )}
+        </Repli>
+      )}
 
-              <Card>
-                <CardHeader className="pb-2">
-                  <div className="text-brand-700 flex items-center gap-2">
-                    {epargneGoesToEpargne ? (
-                      <ArrowUpRight className="h-5 w-5" aria-hidden />
-                    ) : (
-                      <ArrowDownLeft className="h-5 w-5" aria-hidden />
-                    )}
-                    <CardTitle className="text-sm font-medium">
-                      {epargneGoesToEpargne
-                        ? t('transferPrincipalToEpargne')
-                        : t('transferEpargneToPrincipal')}
-                    </CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold tabular-nums">{fmtMoney(epargneNetAbs)}</p>
-                  <p className="text-muted-foreground mt-1 text-xs">
+      {situation.statut !== 'incomplet' && (
+        <Repli titre={tc('replis.rythme')} cle={cleRythme} testId="repli-rythme">
+          {/* Les libellés de la courbe sont ceux du hero d'avant (`dashboard.
+              situation.courbe.*`) : le tracé n'a pas changé, seul l'endroit où
+              il se lit a changé. Les recopier ailleurs aurait créé deux jeux de
+              mots pour un seul dessin. */}
+          <MonthCurveLive
+            serie={serieDuMois}
+            budgetDuMois={situation.resteDisponible.toNumber()}
+            depensesDuMois={situation.depensesDuMois.toNumber()}
+            projection={situation.depensesProjetees?.toNumber() ?? null}
+            joursEcoules={joursEcoules}
+            joursDuMois={daysInMonth}
+            labels={{
+              aria: tSituation('pace.barAria', {
+                depense: fmtMoney(situation.depensesDuMois),
+                budget: fmtMoney(situation.resteDisponible),
+              }),
+              reel: tSituation('courbe.reel'),
+              rythme: tSituation('courbe.rythme'),
+              projection: tSituation('courbe.projection'),
+              verdict: null,
+            }}
+          />
+        </Repli>
+      )}
+
+      {hasCharges && (
+        <Repli titre={tc('replis.virements')} cle={cleVirements} testId="repli-virements">
+          {missingSetup ? (
+            <div>
+              <p className="font-medium">{t('missingSetupTitle')}</p>
+              <p className="text-muted-foreground mt-1 text-sm">{t('missingSetupDescription')}</p>
+              <Button asChild className="mt-3">
+                <Link href="/app/accounts">{t('missingSetupCta')}</Link>
+              </Button>
+            </div>
+          ) : (
+            <ul className="divide-border divide-y">
+              <li className="flex items-center justify-between gap-4 py-2">
+                <p className="min-w-0 text-sm font-medium">
+                  {tc('virements.versQuotidien')}
+                  <span className="text-muted-foreground block text-xs font-normal">
+                    {t('transferVieCouranteHint')}
+                  </span>
+                </p>
+                <p className="shrink-0 font-mono text-sm tabular-nums">
+                  {fmtMoney(plan.vieCouranteTransfer)}
+                </p>
+              </li>
+              <li className="flex items-center justify-between gap-4 py-2">
+                <p className="min-w-0 text-sm font-medium">
+                  {epargneGoesToEpargne
+                    ? tc('virements.versProvisions')
+                    : tc('virements.depuisProvisions')}
+                  <span className="text-muted-foreground block text-xs font-normal">
                     {t('transferEpargneHint', {
                       provision: fmtMoney(plan.epargneProvisionTarget),
                       bills: fmtMoney(plan.epargneBillsDue),
                     })}
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2">
-                  <div
-                    className={`flex items-center gap-2 ${
-                      plan.netPrincipalAfterPlan.gte(0) ? 'text-success' : 'text-danger'
-                    }`}
-                  >
-                    <Landmark className="h-5 w-5" aria-hidden />
-                    <CardTitle className="text-sm font-medium">
-                      {t('transferPrincipalRemaining', { month: monthLabel })}
-                    </CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p
-                    className={`text-2xl font-bold tabular-nums ${
-                      plan.netPrincipalAfterPlan.gte(0) ? 'text-success' : 'text-danger'
-                    }`}
-                  >
-                    {fmtMoney(plan.netPrincipalAfterPlan)}
-                  </p>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    {t('transferPrincipalRemainingHint', {
-                      bills: fmtMoney(plan.principalBillsDue),
-                      commitments: fmtMoney(plan.commitmentsDue),
-                    })}
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </section>
-      )}
-
-      {hasCharges && (
-        <section aria-labelledby="expenses-heading" className="flex flex-col gap-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <CardTitle id="expenses-heading" className="text-xl">
-                    {t('expensesTitle', { month: monthLabel })}
-                  </CardTitle>
-                  <CardDescription>
-                    {t('expensesCount', { count: monthlyExpenseCount })}
-                  </CardDescription>
-                </div>
-                <p className="shrink-0 text-2xl font-bold tabular-nums">
-                  {fmtMoney(monthlyExpenseTotal)}
+                  </span>
                 </p>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {monthlyExpenseCount === 0 ? (
-                <p className="text-muted-foreground text-sm">{t('expensesEmpty')}</p>
-              ) : (
-                <>
-                  <ul className="divide-border divide-y">
-                    {latestMonthlyExpenses.map((expense) => (
-                      <li key={expense.id} className="flex items-center justify-between gap-4 py-3">
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate font-medium">{expense.label}</p>
-                          <p className="text-muted-foreground text-xs">
-                            {formatDate(expense.occurredOn, locale, 'short')}
-                          </p>
-                        </div>
-                        <p className="text-muted-foreground shrink-0 font-mono text-sm tabular-nums">
-                          {fmtMoney(expense.amount)}
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-4">
-                    <Button asChild variant="ghost" size="sm">
-                      <Link href="/app/expenses">{t('expensesViewAll')}</Link>
-                    </Button>
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </section>
+                <p className="shrink-0 font-mono text-sm tabular-nums">{fmtMoney(epargneNetAbs)}</p>
+              </li>
+              <li className="flex items-center justify-between gap-4 py-2">
+                <p className="min-w-0 text-sm font-medium">
+                  {t('transferPrincipalRemaining', { month: monthLabel })}
+                </p>
+                <p
+                  className={`shrink-0 font-mono text-sm tabular-nums ${
+                    plan.netPrincipalAfterPlan.gte(0) ? 'text-success' : 'text-danger'
+                  }`}
+                >
+                  {fmtMoney(plan.netPrincipalAfterPlan)}
+                </p>
+              </li>
+            </ul>
+          )}
+        </Repli>
       )}
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <Repli titre={tc('replis.reserve')} cle={tc('replis.cleReserve')} testId="repli-reserve">
+        <ProvisionHealthGaugeCard
+          charges={cockpitCharges}
+          payments={paymentsLedger}
+          soldeEpargneActuel={soldeEpargneActuel}
+          period={period}
+          locale={locale}
+        />
+      </Repli>
+
+      {showCommitments && (
+        <Repli titre={tc('replis.engagements')} cle={cleEngagements} testId="repli-engagements">
+          <EngagementsCard
+            commitments={commitments}
+            paidKeysByCommitment={paidKeysByCommitment}
+            currentPeriod={period}
+            locale={locale}
+          />
+        </Repli>
+      )}
+
+      {/* Le seul geste principal de la page, et il est en bas : ouvrir le
+          simulateur ne répond pas à « où en est l'argent », il prolonge la
+          réponse. */}
+      <div className="grid gap-3 md:grid-cols-2">
         <Button asChild variant="outline" size="lg">
           <Link href="/app/charges">{t('ctaCharges')}</Link>
         </Button>
-        <Button asChild variant="outline" size="lg">
-          <Link href="/app/expenses">{t('ctaExpenses')}</Link>
-        </Button>
-        {/* THI-195 : ouvre le simulateur en place, dans un tiroir.
-            La route `/app/simulator` a été supprimée le 2026-08-08 — le tiroir
-            est désormais le seul accès, et l'ancienne URL redirige ici. */}
-        {/* Pass income as a raw number — a Decimal can't cross the RSC
-            boundary into the client drawer (it loses its prototype). */}
         <SimulatorDrawer
           charges={snapshot.rawCharges}
           revenus={snapshot.monthlyIncome ?? 0}

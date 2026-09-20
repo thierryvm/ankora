@@ -1648,5 +1648,56 @@
       "reload": "Recharger",
       "later": "Plus tard"
     }
+  },
+  "cockpit": {
+    "ilTeReste": {
+      "etiquette": "Situation",
+      "titre": "Il te reste",
+      "base": "sur ton budget de {month}",
+      "termeRevenus": "Argent reçu",
+      "termeRetenu": "Déjà compté pour tes factures",
+      "termeDepense": "Dépensé",
+      "retenuDetail": "Déjà compté pour tes factures : tes factures du mois ({factures}) + la part mensuelle de tes grosses factures ({parts}) + tes échéances ({echeances}).",
+      "jaugeAria": "{depense} dépensés sur un budget de {budget}.",
+      "ouvrirCascade": "D'où vient ce chiffre",
+      "incompletTitre": "Complète ta situation",
+      "incompletPhrase": "Aucun argent reçu en {month} et aucun revenu mensuel écrit : « Il te reste » ne se calcule pas sans lui.",
+      "incompletCta": "Ajouter de l’argent reçu"
+    },
+    "encoreAPayer": {
+      "etiquette": "À payer ce mois",
+      "titre": "Encore à payer",
+      "sousLigne": "{payees} payées sur {total}",
+      "dejaRetire": "Déjà retiré de ce qu’il te reste.",
+      "toutPaye": "✓ Tout est payé pour {month}.",
+      "enRetard": "{date}, en retard",
+      "autres": "{count} autres à payer dans le détail",
+      "bientot": "Bientôt",
+      "bientotHorsDe": "hors de {month}",
+      "bientotAutres": "+ {count} autres dans Mes factures",
+      "voirFactures": "Mes factures",
+      "resteEngagements": "Le reste à payer de ce mois vient de tes échéances : elles se cochent dans Mes engagements."
+    },
+    "partMensuelle": {
+      "phrase": "{facture} tous les {cycle} mois → {part} par mois"
+    },
+    "replis": {
+      "comptes": "Mes comptes",
+      "depenses": "Ce qui a bougé",
+      "cleDepenses": "{count, plural, =0 {aucune dépense} one {# dépense} other {# dépenses}}",
+      "rythme": "Rythme du mois",
+      "cleRythme": "{jours, plural, =0 {dernier jour} one {# jour restant} other {# jours restants}}",
+      "virements": "Virements du mois",
+      "cleVirements": "{montant} à virer",
+      "cleVirementsIncomplet": "à compléter",
+      "reserve": "Provisions pour tes factures",
+      "cleReserve": "ta réserve",
+      "engagements": "Engagements"
+    },
+    "virements": {
+      "versQuotidien": "Virement à faire vers Dépenses du quotidien",
+      "versProvisions": "Virement à faire vers Provisions pour tes factures",
+      "depuisProvisions": "À reprendre sur Provisions pour tes factures"
+    }
   }
 }

@@ -1,5 +1,6 @@
 import { test, expect } from './helpers/test';
 import { adminClientOrNull, deleteSeededUser, seedOnboardedUser } from './helpers/seed';
+import { ouvrirRepli } from './helpers/cockpit';
 
 const admin = adminClientOrNull();
 
@@ -69,9 +70,14 @@ test.describe('PR-D3 — Bloc 2 hero radar (Effort Lissé + Capacité Réelle)',
       await page.getByRole('button', { name: /^se connecter$/i }).click();
       await page.waitForURL(/\/app\b/, { timeout: 15_000 });
 
-      // Both sections must exist…
-      const accountsSection = page.locator('section[aria-labelledby="accounts-heading"]');
-      const planSection = page.locator('section[aria-labelledby="plan-heading"]');
+      // ATTENDUS MODIFIÉS PAR LE LOT B, et pourquoi. Les deux `section` ancrées
+      // sur `accounts-heading` et `plan-heading` n'existent plus : la réalité
+      // (les comptes) et l'action (les virements) sont devenues deux replis,
+      // `repli-comptes` et `repli-virements`. Ce que ce cas prouve — la réalité
+      // se lit AVANT l'action, handoff F3 — est inchangé, et se mesure au même
+      // endroit : l'ordre vertical des deux blocs.
+      const accountsSection = page.getByTestId('repli-comptes');
+      const planSection = page.getByTestId('repli-virements');
       await expect(accountsSection).toBeVisible();
       await expect(planSection).toBeVisible();
 
@@ -183,6 +189,11 @@ test.describe('PR-D3 — Bloc 2 hero radar (Effort Lissé + Capacité Réelle)',
 
       // The CTA links to /app/accounts so the user can finish the cockpit
       // setup. Anchored to the daily_card row via the AccountCard data-attr.
+      // ATTENDU MODIFIÉ PAR LE LOT B : la carte du compte du quotidien vit dans
+      // le repli « Mes comptes », fermé au chargement et masqué par `hidden`.
+      // L'ouvrir est la condition pour que l'assertion mesure quelque chose ;
+      // elle n'est ni retirée ni élargie.
+      await ouvrirRepli(page, 'repli-comptes');
       const dailyCard = page.locator('[data-account-type="daily_card"]');
       await expect(dailyCard).toBeVisible();
       const cta = dailyCard.getByRole('link', { name: /régler le plafond quotidien/i });

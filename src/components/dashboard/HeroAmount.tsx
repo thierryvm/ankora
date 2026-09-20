@@ -141,16 +141,34 @@ export function HeroAmount({ value, locale, className, testId }: HeroAmountProps
     <p
       className={`tabular-nums ${className ?? ''}`}
       data-testid={testId}
-      // The travelling figure is noise to a screen reader — it would announce
-      // a dozen intermediate amounts. The settled value is announced once, via
-      // aria-label, and the visible text is hidden from the a11y tree.
-      aria-label={formatCurrency(target, locale)}
-      // `polite` and not `assertive`: this number changes because the user just
-      // recorded a spend, so it is a confirmation, never an interruption.
-      aria-live="polite"
-      aria-atomic="true"
+      // Ce composant EST un montant : les sondes de budget de page comptent
+      // les `[data-montant]` sans geste associé, et un chiffre de tête qui en
+      // sortirait ferait mentir la mesure sur la surface la plus lue.
+      data-montant
     >
+      {/* The travelling figure is noise to a screen reader — it would announce
+          a dozen intermediate amounts — so it is hidden from the a11y tree. */}
       <span aria-hidden="true">{formatCurrency(displayed, locale)}</span>
+      {/* The settled value, announced ONCE, as text inside a live region.
+
+          Two defects were closed here on 2026-09-20, both found by
+          `e2e/cockpit-v3.spec.ts` (axe, [serious] aria-prohibited-attr):
+
+          - `aria-label` on a `<p>` is a PROHIBITED attribute — the element has
+            no role that can carry a name, so assistive technology is free to
+            drop it. The figure had no accessible name at all.
+          - and even had it been allowed, a live region whose whole content is
+            `aria-hidden` announces NOTHING when it changes: a live region
+            announces its text, never its label. The « announced once » promise
+            in the comment above was therefore false in both directions.
+
+          A visually hidden span carrying the target, with `role="status"`
+          (implicitly polite and atomic — a confirmation, never an
+          interruption), says it for real: it holds real text, and that text
+          changes exactly once per spend. */}
+      <span className="sr-only" role="status">
+        {formatCurrency(target, locale)}
+      </span>
     </p>
   );
 }
