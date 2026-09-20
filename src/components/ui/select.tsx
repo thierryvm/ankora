@@ -21,7 +21,10 @@ const SelectTrigger = React.forwardRef<
       // See `Input.tsx` + `globals.css` for the full triage.
       // PR-UI-1 (THI-298) — `transition-colors` added for parity with Input so
       // the border/ring change animates smoothly on hover/focus.
-      'ankora-form-control-16 border-border bg-card flex h-10 w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 shadow-sm transition-colors',
+      // Socle v3, lot 1 — miroir exact d'`input.tsx` (le contrat 1:1 que la JSDoc
+      // de ce fichier promet) : bord `--color-border-control`, fond de contrôle,
+      // rayon de contrôle, transition d'état.
+      'ankora-form-control-16 border-border-control bg-control flex h-10 w-full items-center justify-between gap-2 rounded-md border px-3 py-2 transition-[background-color,border-color,color,box-shadow] duration-[var(--dur-state)] ease-[var(--ease-spring)]',
       // PR-UI-1 — subtle brand hint on hover, before focus engages.
       'hover:border-brand-500/40',
       // PR-UI-1 (THI-298) — mirrors Input.tsx 1:1: focus = a single thin emerald
@@ -30,7 +33,7 @@ const SelectTrigger = React.forwardRef<
       // (`.ankora-form-control-16:focus-visible`); these two classes are
       // cosmetic colour and are superseded there — see globals.css.
       'focus-visible:border-brand-600 focus-visible:outline-none',
-      'disabled:cursor-not-allowed disabled:opacity-50',
+      'disabled:bg-surface-muted disabled:text-muted-foreground disabled:cursor-not-allowed',
       'data-placeholder:text-muted',
       // PR-UI-1 — invalid stays loud (see Input.tsx): the danger ring is
       // re-anchored here (own `ring-2`) so an invalid + focused trigger keeps
@@ -85,7 +88,7 @@ const SelectContent = React.forwardRef<
       ref={ref}
       position={position}
       className={cn(
-        'border-border bg-card text-foreground relative z-50 max-h-(--radix-select-content-available-height) min-w-32 overflow-hidden rounded-lg border shadow-lg',
+        'border-border-card bg-card text-foreground relative z-50 max-h-(--radix-select-content-available-height) min-w-32 overflow-hidden rounded-xl border shadow-lg',
         position === 'popper' && 'data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1',
         className,
       )}

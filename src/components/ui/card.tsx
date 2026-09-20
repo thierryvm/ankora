@@ -28,7 +28,17 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn('border-border bg-card text-foreground rounded-xl border shadow-md', className)}
+      // Socle v3, lot 1 — le couple bord/ombre, et il se lit ensemble.
+      // L'ombre descend de `shadow-md` à `shadow-sm` (deux couches, flou 2px,
+      // opacité 0,06) PARCE QUE le contour passe de `--color-border` à
+      // `--color-border-card`, qui tient 1,42 contre la carte là où le filet
+      // ne donnait que 1,271. Descendre l'ombre sans monter le bord
+      // reproduirait exactement la platitude que la JSDoc ci-dessus décrit :
+      // les deux ne se séparent pas.
+      className={cn(
+        'border-border-card bg-card text-foreground rounded-xl border shadow-sm',
+        className,
+      )}
       {...props}
     />
   ),

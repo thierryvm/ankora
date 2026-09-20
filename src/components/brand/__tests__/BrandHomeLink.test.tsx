@@ -42,12 +42,25 @@ describe('<BrandHomeLink />', () => {
     expect(svg?.className.baseVal ?? '').toContain('h-7');
   });
 
-  it('applies the canonical focus + press animation classes', () => {
+  it('applies the canonical focus + press classes', () => {
     render(<BrandHomeLink ariaLabel="Home" />);
     const link = screen.getByRole('link', { name: 'Home' });
     expect(link.className).toContain('focus-visible:ring-brand-600');
-    expect(link.className).toContain('motion-safe:active:scale-95');
-    expect(link.className).toContain('transition-transform');
+    expect(link.className).toContain('active:opacity-70');
+  });
+
+  // Socle v3 (lot 1) — l'attendu a change de SENS, et c'est voulu : il
+  // interdisait l'absence de l'animation d'appui, il interdit maintenant sa
+  // presence. Un controle sur lequel on vient d'appuyer ne bouge jamais ; un
+  // lien qui retrecit sous le doigt deplace sa cible pendant qu'on la vise.
+  // Ecrit en interdiction plutot qu'en oubli : sans ce cas, la classe
+  // reviendrait au premier copier-coller depuis un autre projet.
+  it('ne deplace RIEN a l appui — ni echelle, ni translation', () => {
+    render(<BrandHomeLink ariaLabel="Home" />);
+    const classes = screen.getByRole('link', { name: 'Home' }).className;
+    for (const interdit of ['scale-95', 'scale-', 'translate-', 'transition-transform']) {
+      expect(classes, `le lien porte encore ${interdit}`).not.toContain(interdit);
+    }
   });
 
   it('merges an optional className without losing the canonical pattern', () => {

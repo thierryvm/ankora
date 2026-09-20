@@ -49,7 +49,13 @@ const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLI
         // outside `@layer`) enforces `font-size: 16px !important` so Safari
         // iOS does not auto-zoom on focus. Every other channel was attempted
         // and failed — see globals.css for the full triage.
-        'ankora-form-control-16 border-border bg-card text-foreground flex h-10 w-full rounded-lg border px-3 py-2 shadow-sm transition-colors',
+        // Socle v3, lot 1 : bord `--color-border-control` et fond `--color-control`.
+        // Le correctif, pas le raffinement — `border-border` (#e7e4dc) ne tient PAS
+        // 3:1 sur une carte blanche, donc la limite d'un champ au repos n'était pas
+        // perceptible au sens de WCAG 1.4.11. Le commentaire ci-dessus défendait le
+        // filet plein par l'affordance sur le shell sombre ; le nouveau jeton règle
+        // les deux à la fois : 4,16:1 en clair, 4,05:1 en sombre sur la carte.
+        'ankora-form-control-16 border-border-control bg-control text-foreground flex h-10 w-full rounded-md border px-3 py-2 transition-[background-color,border-color,color,box-shadow] duration-[var(--dur-state)] ease-[var(--ease-spring)]',
         'file:text-foreground file:border-0 file:bg-transparent file:text-sm file:font-medium',
         'placeholder:text-muted',
         // PR-UI-1 — subtle brand hint on hover, before focus engages.
@@ -63,7 +69,10 @@ const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLI
         // border colour (cosmetic, matches the central rule) and are otherwise
         // superseded there — see globals.css for the full mechanism.
         'focus-visible:border-brand-600 focus-visible:outline-none',
-        'disabled:cursor-not-allowed disabled:opacity-50',
+        // Éteint par la TEINTE, jamais par une opacité : une opacité dilue le texte
+        // et son fond ensemble, donc elle casse un contraste mesuré, et de façon
+        // imprévisible puisqu'elle dépend de ce qu'il y a derrière.
+        'disabled:bg-surface-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:[-webkit-text-fill-color:currentColor]',
         // PR-UI-1 — invalid stays loud: `border-danger` at rest AND on focus
         // (`aria-invalid:focus-visible:border-danger` comes after the plain
         // focus border so source-order wins). Since valid focus no longer

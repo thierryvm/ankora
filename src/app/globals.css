@@ -32,6 +32,31 @@
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
+/* ---------- Le survol n'existe qu'au pointeur fin (socle v3, lot 1) ----------
+   Mesuré le 20 septembre 2026 dans la feuille compilée, AVANT ce changement :
+   50 règles `:hover`, dont 6 seulement sous `@media (hover: hover)`. La
+   variante `hover:` de Tailwind n'est donc pas gardée ici — contrairement à ce
+   qu'on peut lire un peu partout sur la v4.
+
+   Ce que ça produit sur un téléphone : après un tap, le navigateur laisse
+   l'élément en `:hover` jusqu'au tap suivant. Un bouton reste donc allumé
+   comme s'il était survolé, et une liste garde une ligne en surbrillance qui
+   ne correspond plus à rien. Ce n'est pas une nuance esthétique : c'est un
+   état faux, affiché à quelqu'un qui n'a pas de curseur.
+
+   La v3 tranche — « survol au pointeur fin seulement ». La redéclaration
+   ci-dessous le rend vrai POUR TOUTES les règles d'un coup, plutôt que
+   composant par composant : un `hover:` oublié quelque part ne peut plus
+   rouvrir le défaut. Un effet qui doit exister au doigt s'écrit `active:`,
+   qui est le bon mot pour ça. */
+@custom-variant hover {
+  @media (hover: hover) {
+    &:hover {
+      @slot;
+    }
+  }
+}
+
 /* ---------- Variable fonts — self-hosted (WOFF2 only) ----------
    Inter wght 100..900 · Fraunces wght 100..900 · JetBrains Mono wght 100..800.
    Source: cc-design Design System v1 (2026-04-25).

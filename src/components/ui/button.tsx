@@ -28,26 +28,51 @@ import { cn } from '@/lib/utils';
 // `src/components/ui/input.tsx` for the F2 origin and the dark-theme
 // rationale.
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-[transform,background-color,box-shadow,color] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/30 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+  // ---------------------------------------------------------------------
+  // Les QUATRE états du socle v3 (lot 1, 20 septembre 2026)
+  //
+  // Ce qui a été RETIRÉ, et pourquoi c'est le cœur du changement :
+  // `motion-safe:active:scale-[0.98]` et `motion-safe:hover:-translate-y-px`.
+  // La règle de la maquette est nette — « un contrôle sur lequel on vient
+  // d'appuyer ne bouge jamais ». Un bouton qui rétrécit sous le doigt déplace
+  // sa propre cible au moment précis où le doigt la vise, et il fait bouger ce
+  // qui l'entoure quand il est dans une liste. L'appui se dit maintenant par
+  // la TEINTE (`--color-control-pressed` et les crans de la rampe), qui ne
+  // déplace rien et qui reste visible quand `prefers-reduced-motion` met les
+  // durées à zéro.
+  //
+  // `disabled:opacity-50` part pour la même famille de raison : une opacité
+  // dilue le texte ET son fond, donc elle casse un contraste qu'on a mesuré,
+  // et de façon imprévisible puisqu'elle dépend de ce qu'il y a derrière. Un
+  // bouton éteint prend une teinte éteinte — mesurée, elle.
+  //
+  // Le survol n'est pas gardé ici, et il n'a pas à l'être : `globals.css`
+  // redéclare la variante `hover:` de Tailwind sous `@media (hover: hover)`
+  // pour tout le projet. La mesure qui a motivé cette redéclaration est écrite
+  // là-bas — la variante n'était PAS gardée par défaut, contrairement à ce
+  // qu'on lit sur Tailwind v4.
+  //
+  // `rounded-lg` (12px) → `rounded-md` (8px) : le rayon d'un CONTRÔLE dans le
+  // socle v3. 16px reste celui d'une carte.
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-[background-color,border-color,color,box-shadow] duration-[var(--dur-state)] ease-[var(--ease-spring)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/30 disabled:pointer-events-none disabled:bg-control disabled:text-muted-foreground disabled:shadow-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
   {
     variants: {
       variant: {
         default:
-          'bg-brand-700 text-white shadow-sm motion-safe:hover:-translate-y-px hover:bg-brand-600 hover:shadow-md motion-safe:active:scale-[0.98] active:shadow-sm',
+          'bg-brand-700 text-on-accent shadow-sm hover:bg-brand-600 active:bg-brand-800 active:shadow-none',
         destructive:
-          'bg-danger text-white shadow-sm motion-safe:hover:-translate-y-px hover:bg-danger/90 hover:shadow-md motion-safe:active:scale-[0.98]',
+          'bg-danger text-on-accent shadow-sm hover:bg-danger/90 active:bg-danger active:shadow-none',
         outline:
-          'border border-border bg-card text-foreground hover:border-brand-500 hover:text-brand-700 motion-safe:hover:-translate-y-px hover:shadow-sm motion-safe:active:scale-[0.98]',
+          'border border-border-control bg-control text-foreground hover:bg-control-hover hover:border-brand-500 active:bg-control-pressed',
         secondary:
-          'bg-brand-100 text-brand-900 hover:bg-brand-200 motion-safe:hover:-translate-y-px hover:shadow-sm motion-safe:active:scale-[0.98]',
-        ghost:
-          'text-foreground hover:bg-brand-100 hover:text-brand-900 motion-safe:hover:-translate-y-px motion-safe:active:scale-[0.98]',
+          'bg-brand-100 text-brand-900 hover:bg-brand-200 active:bg-brand-300 active:shadow-none',
+        ghost: 'text-foreground hover:bg-control-hover active:bg-control-pressed',
         link: 'text-brand-700 underline-offset-4 hover:underline',
       },
       size: {
         default: 'h-10 px-4 py-2',
         sm: 'h-9 rounded-md px-3',
-        lg: 'h-12 rounded-lg px-6 text-base',
+        lg: 'h-12 rounded-md px-6 text-base',
         // PR-D5 mobile-iOS: 40×40 → 44×44 to meet Apple HIG + WCAG 2.5.5
         // touch target recommendation. Affects all icon buttons (Trash2 in
         // Charges/Expenses, drawer close button, etc.).

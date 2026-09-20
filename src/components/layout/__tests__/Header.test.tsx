@@ -255,11 +255,16 @@ describe('<Header />', () => {
     });
   });
 
-  it('home link has the tactile press animation, gated on motion-safe (issue #95)', async () => {
+  it('home link answers a press without moving (socle v3, lot 1)', async () => {
     await renderHeader({ variant: 'app', isAuthenticated: true });
     const link = screen.getByLabelText('Accueil Ankora');
-    // The full animation set: transition-transform + duration-150 +
-    // motion-safe:active:scale-95 (the latter respects prefers-reduced-motion).
-    expect(link).toHaveClass('transition-transform', 'duration-150', 'motion-safe:active:scale-95');
+    // Issue #95 asked for tactile feedback and got `motion-safe:active:scale-95`.
+    // The feedback stays; the MOVEMENT goes. The v3 rule is that a control you
+    // just pressed never moves — a link shrinking under the thumb displaces the
+    // very target the thumb is aiming at. Opacity answers as clearly and
+    // changes no geometry, so it also needs no `motion-safe` gate.
+    expect(link).toHaveClass('active:opacity-70');
+    expect(link.className).not.toContain('scale-');
+    expect(link.className).not.toContain('transition-transform');
   });
 });

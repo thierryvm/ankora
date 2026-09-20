@@ -96,7 +96,12 @@ import { useIsClient } from '@/lib/hooks/useIsClient';
  */
 
 /** Slide duration. Mirrors `--dur-structural` (320ms) in `globals.css`. */
-const TRANSITION_MS = 320;
+// Socle v3, lot 1 : 320 → 300, la valeur de `--dur-structural`. Ce nombre
+// DOIT suivre le jeton CSS — c'est lui qui décide quand le panneau est démonté
+// du DOM. Trop court, on démonte pendant que ça bouge ; trop long, le focus
+// reste piégé après la fin du mouvement. Le couple n'a aucun garde-fou
+// automatique : il se tient à la main, ici et dans `globals.css`.
+const TRANSITION_MS = 300;
 
 /** Past this many pixels of downward drag, releasing dismisses the sheet. */
 const DRAG_DISMISS_PX = 96;
@@ -387,12 +392,15 @@ export function Sheet({
           'inset-x-0 bottom-0 max-h-[92svh] rounded-t-3xl border-t',
           // ≥ md, `panel` : colonne ancrée à droite, pleine hauteur.
           desktop === 'panel' &&
-            'md:inset-y-0 md:right-0 md:left-auto md:max-h-none md:w-[26rem] md:rounded-t-none md:rounded-l-3xl md:border-t-0 md:border-l',
+            // 26rem (416px) → 440px, la largeur du panneau de bureau dans la maquette v3.
+            'md:inset-y-0 md:right-0 md:left-auto md:max-h-none md:w-110 md:rounded-t-none md:rounded-l-3xl md:border-t-0 md:border-l',
           // ≥ md, `dialog` : boîte centrée, HAUTEUR AJUSTÉE AU CONTENU.
           // `md:h-fit` est la clé — sans lui, `inset-0` étire la boîte et on
           // retrouve le vide que cette variante existe pour supprimer.
           desktop === 'dialog' &&
-            'md:inset-0 md:m-auto md:h-fit md:max-h-[85vh] md:w-md md:rounded-3xl md:border',
+            // `svh` et non `vh`, pour la même raison que la ligne 387 : sur iOS, `vh`
+            // ignore la barre d'adresse et la feuille dépasse par le haut.
+            'md:inset-0 md:m-auto md:h-fit md:max-h-[85svh] md:w-md md:rounded-3xl md:border',
           // `opacity` fait partie de la transition pour `dialog` SEULEMENT.
           // Une boîte centrée n'a aucun bord vers lequel sortir : sans le fondu,
           // elle resterait entièrement visible, décalée de 16 px, pendant toute
