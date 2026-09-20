@@ -478,7 +478,14 @@ create policy "account_balance_statements_author_update" on public.account_balan
 -- lui-même le piège à un clic que la règle 11 combat —, mais le contenu d'une
 -- ligne annulée ne dérive pas en silence.
 --
--- La comparaison passe par `to_jsonb(...) - 'cancelled_at' - 'cancelled_by'`
+-- Deux gels, deux mecaniques, et la difference compte. Le gel du CONTENU
+-- d'une ligne annulee est SOUSTRACTIF (to_jsonb(new) moins les colonnes
+-- d'annulation) : une colonne ajoutee demain y est couverte sans qu'on y
+-- pense. Le gel d'IDENTITE, lui, EST une liste (figees) -- et une liste se
+-- perime en silence : un nom mal orthographie y serait inerte sans rien
+-- signaler, et trois colonnes y manquaient au premier jet. Toute colonne
+-- ajoutee a ces tables se pose donc la question << figee ou corrigeable ? >>,
+-- et la reponse s'ecrit ici.
 -- plutôt que par une liste de colonnes : une colonne ajoutée demain est
 -- protégée sans qu'on ait à y penser. Une liste, elle, se périme en silence.
 --
@@ -520,7 +527,12 @@ declare
   -- `account_type` est le même fait pour un relevé.
   figees   constant text[] := array[
     'id', 'workspace_id', 'created_by', 'recorded_at',
-    'kind', 'from_account_type', 'to_account_type', 'account_type'
+    'kind', 'from_account_type', 'to_account_type', 'account_type',
+    -- Les trois chiffres du plan sont une COPIE d'un etat passe : les laisser
+    -- modifiables rouvrirait cote copie la retroactivite que D3 ferme cote
+    -- reference, et le message ci-dessous ne les nomme deja pas parmi ce qui
+    -- se corrige. Trouve par la relecture Securite du 2026-09-20 sur ce diff.
+    'plan_year', 'plan_month', 'plan_suggested_amount'
   ];
   avant    jsonb := to_jsonb(old);
   apres    jsonb := to_jsonb(new);

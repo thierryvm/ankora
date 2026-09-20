@@ -250,6 +250,16 @@ test.describe('J2 — le journal des opérations, ses garde-fous et son isolatio
         expect(deplace.error?.message ?? '', `${colonne} est figé`).toContain(colonne);
       }
 
+      // Les trois chiffres du plan sont une COPIE de ce que le plan proposait
+      // ce jour-la : les reecrire rendrait l'historique retroactif, ce que D3
+      // ferme par ailleurs. Envoyes ENSEMBLE, ils passeraient `plan_complet`
+      // sans le trigger -- le refus vient donc bien de lui.
+      const replan = await client
+        .from('movements')
+        .update({ plan_year: 2026, plan_month: 9, plan_suggested_amount: 500 })
+        .eq('id', ecrite!.id);
+      expect(replan.error?.message ?? '', 'les chiffres du plan sont figes').toMatch(/plan_/);
+
       // Corriger ce que « Modifier » propose EST permis (ADR-045 D17) : le
       // montant, la date, la description, la note, la nature.
       const correction = await client
