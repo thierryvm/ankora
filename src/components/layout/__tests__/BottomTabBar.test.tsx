@@ -211,11 +211,17 @@ describe('<BottomTabBar /> — the ⊕ at the centre', () => {
   it('keeps a ≥44 px touch target despite the 33 px paint', () => {
     // Q7 specifies the VISUAL size; the HIG specifies the HIT AREA. Shrinking
     // the target to match the paint would have been the wrong reading — the
-    // button is h-12 (48 px) and flex-1 like every other slot.
+    // button fills the row height and is flex-1 like every other slot.
+    //
+    // Socle v3 (lot 1) : la hauteur de la rangee vient du jeton
+    // `--size-tabbar` (64px, contre 48 avant) au lieu d'etre ecrite en dur.
+    // L'attendu suit le jeton plutot qu'un nombre : c'est le meme verrou —
+    // « la cible fait toute la hauteur de la barre » — et il cesse de
+    // dependre d'une valeur que le CSS connait deja.
     render(<BottomTabBar />);
     const button = screen.getByTestId('bottom-tab-add-expense');
     expect(button.className).toContain('flex-1');
-    expect(button.parentElement?.className).toContain('h-12');
+    expect(button.parentElement?.className).toContain('h-[var(--size-tabbar)]');
   });
 });
 

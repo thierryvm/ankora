@@ -38,8 +38,15 @@ describe('<ScrollToTop /> — PR-BETA-6 hotfix #4 lift-for-bottom-bar', () => {
     });
     const button = screen.getByTestId('scroll-to-top');
     expect(button).toHaveAttribute('data-lifted-for-bottom-bar', 'true');
-    // Lifted: 4.5rem (bar h-12 + ~1rem air) + safe-area inset.
-    expect(button.className).toContain('bottom-[calc(env(safe-area-inset-bottom)+4.5rem)]');
+    // Souleve : la hauteur de la barre, lue dans le JETON, plus 1rem d'air.
+    // L'attendu portait 4.5rem, un nombre cale a la main sur une barre de
+    // 48px. La barre passe a 64 : ecrit ainsi, le decalage suivait la barre
+    // sans que personne y pense, et rien n'aurait signale l'ecart. Ce que le
+    // cas verrouille n'a pas change — il verrouille toujours QU'IL Y A un
+    // decalage quand la barre est la, et lequel.
+    expect(button.className).toContain(
+      'bottom-[calc(env(safe-area-inset-bottom)+var(--size-tabbar)+1rem)]',
+    );
     // The desktop offset returns exactly where the bar goes away — `xl`.
     // Restoring it any earlier parks the FAB behind the bar: the same
     // off-by-one-breakpoint mistake that hid every navigation surface between

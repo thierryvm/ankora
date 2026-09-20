@@ -10,12 +10,13 @@
   "specs": [
     "e2e/accounts.spec.ts",
     "e2e/attribution-paiements.spec.ts",
-    "e2e/bottom-tab-bar-client-navigation.spec.ts",
     "e2e/audit-log.spec.ts",
     "e2e/auth.spec.ts",
+    "e2e/bottom-tab-bar-client-navigation.spec.ts",
     "e2e/charges/charges-list-desktop.spec.ts",
     "e2e/charges/charges-list-mobile.spec.ts",
     "e2e/connected-landing-redirect.spec.ts",
+    "e2e/coquille-v3.spec.ts",
     "e2e/dashboard-account-rename.spec.ts",
     "e2e/dashboard-capacite-tryptique.spec.ts",
     "e2e/dashboard-cockpit-bloc2.spec.ts",
@@ -24,15 +25,14 @@
     "e2e/dashboard-simulator-drawer.spec.ts",
     "e2e/gdpr-deletion-queue.spec.ts",
     "e2e/gdpr-export.spec.ts",
+    "e2e/mobile-ios/auth-flow.spec.ts",
     "e2e/mobile-ios/bottom-tab-bar.spec.ts",
-    "e2e/navigation-reachable.spec.ts",
-    "e2e/navigation-usable-first-visit.spec.ts",
+    "e2e/mobile-ios/dashboard.spec.ts",
     "e2e/mobile-ios/expenses-crud.spec.ts",
     "e2e/mobile-ios/settings-locale-field.spec.ts",
-    "e2e/mobile-ios/auth-flow.spec.ts",
-    "e2e/mobile-ios/dashboard.spec.ts"
+    "e2e/navigation-reachable.spec.ts",
+    "e2e/navigation-usable-first-visit.spec.ts"
   ],
-
   "$quarantine_comment": [
     "Specs that DESCRIBE A DASHBOARD THAT NO LONGER EXISTS. They were merged, the",
     "cockpit was rebuilt (THI-327 Situation Hero, #217 / #236), and nothing objected",
@@ -94,7 +94,6 @@
     "e2e/dashboard-data-flow.spec.ts": "PARTIALLY FIXED (2026-07-29). The heading-role cause is gone (CardTitle is <h3>), but getByText(/^Factures /i) still targets a surface the cockpit rebuild replaced. Needs a rewrite, not just a re-run.",
     "e2e/dashboard-capacite-tryptique.spec.ts": "STILL INVALID, and now permanently. Asserts testids substat-reste-disponible / substat-reste-a-vivre / capacite-epargne-card / capacite-epargne-substats. ADR-035 removed the « capacité d'épargne » and « reste à vivre » concepts outright, so these surfaces will never come back. Candidate for deletion rather than rewrite."
   },
-
   "$quarantine_is_keyed_by_spec_path": [
     "Toute clé de `quarantine` est lue comme un chemin de spec. Ne rien y écrire",
     "d'autre : une note ajoutée dans cet objet le 2026-07-31 a fait compter 16",

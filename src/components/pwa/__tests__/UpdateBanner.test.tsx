@@ -74,7 +74,7 @@ describe('<UpdateBanner />', () => {
     signalerMiseAJour(registration());
     render(<UpdateBanner liftedForBottomBar />);
     expect(screen.getByTestId('pwa-update-banner').className).toContain(
-      'safe-area-inset-bottom)+4rem',
+      'safe-area-inset-bottom)+var(--size-tabbar)+0.5rem',
     );
   });
 
