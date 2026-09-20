@@ -138,7 +138,7 @@ describe('globals.css — WCAG AA contrast of semantic status colours (ADR-035)'
 
   it('the two card surfaces are the ones the ratios are computed against', () => {
     expect(lightSurface).toBe('#ffffff');
-    expect(darkSurface).toBe('#111a2e');
+    expect(darkSurface).toBe('#282a2d');
   });
 
   describe.each(STATUS_TOKENS)('--%s', (token) => {
@@ -259,7 +259,7 @@ describe('blockAfter() — the hardened helper still resolves the historical blo
   });
 
   it("[data-theme='dark'] is the dark set, not the sentence naming it inside @theme", () => {
-    expect(tokenIn(DARK_BLOCK, 'color-card')).toBe('#111a2e');
+    expect(tokenIn(DARK_BLOCK, 'color-card')).toBe('#282a2d');
     expect(tokenIn(DARK_BLOCK, 'color-accent-text')).toBe('#d4a017');
   });
 
@@ -295,12 +295,12 @@ describe('globals.css — le mode clair porte la direction « Le relevé corrig�
    * pas parce qu'elle est illisible.
    */
   const DIRECTION_A = {
-    'color-background': '#faf9f6',
+    'color-background': '#f3f1ea',
     'color-foreground': '#171d26',
     'color-muted-foreground': '#3d4a5c',
     'color-border': '#e7e4dc',
     'color-surface-soft': '#fbfaf7',
-    'color-surface-muted': '#f3f1ea',
+    'color-surface-muted': '#eceae2',
   } as const;
 
   describe('les valeurs de la direction, telles quelles', () => {
@@ -323,7 +323,7 @@ describe('globals.css — le mode clair porte la direction « Le relevé corrig�
   it('le mode sombre garde son navy et n’emprunte rien au papier', () => {
     // « Pas de papier la nuit » : la maquette appelle ce fond « Nuit — navy
     // existant », donc le sombre parlait déjà la direction B avant tout ceci.
-    expect(tokenIn(DARK_BLOCK, 'color-background')).toBe('#0b1120');
+    expect(tokenIn(DARK_BLOCK, 'color-background')).toBe('#131416');
     for (const valeur of Object.values(DIRECTION_A)) {
       expect(DARK_BLOCK, `la valeur claire ${valeur} apparaît dans le bloc sombre`).not.toContain(
         valeur,
@@ -377,7 +377,7 @@ describe('globals.css — le mode clair porte la direction « Le relevé corrig�
 
     it('le texte secondaire gagne au change plutôt qu’il ne perd', () => {
       // Le seul argument chiffré de la descente : sur le slate, le secondaire
-      // valait 7,24:1 ; sur le papier il vaut 8,55. Un chiffre PLANCHER, pas la
+      // valait 7,24:1 ; sur le papier v3 il vaut 7,97 (8,55 avant le lot 1). Un chiffre PLANCHER, pas la
       // valeur exacte — cette assertion doit survivre à un ajustement de teinte,
       // et échouer si quelqu'un redescend sous l'état d'avant.
       const ratio = contrastRatio(
@@ -649,5 +649,155 @@ describe('globals.css — la rampe graphique et l’échelle d’élévation (PR
         );
       }
     }
+  });
+});
+
+/**
+ * La rampe v3 des catégories et des séries — le gardien qu'elle n'avait pas.
+ *
+ * Onze teintes sont entrées dans `@theme` au lot 1 de la refonte **sans
+ * consommateur** : les écrans qui les emploient viennent aux lots suivants.
+ * Un jeu de couleurs posé sans mesure est un piège à retardement — le premier
+ * écran qui s'en sert hérite d'un contraste que personne n'a vérifié, et le
+ * défaut n'apparaît qu'en production. Ces cas mesurent maintenant ce que le
+ * lot 1 pose, pour que le lot qui les branche n'ait rien à remesurer.
+ *
+ * 1.4.11 (3:1) et non 1.4.3 (4,5:1) : ce sont des SURFACES de donnée — un arc,
+ * un segment, une barre, une pastille — jamais un texte. Aucun texte ne se
+ * pose dessus non plus : le blanc n'y tient que 3,14 à 4,30:1 selon la série
+ * et le thème (mesuré sur la maquette).
+ *
+ * **Ce que ces cas NE vérifient PAS, et pourquoi c'est écrit** : la séparation
+ * mutuelle des teintes. Le critère de la règle 25 de DESIGN-v3 (> 25° de
+ * teinte OU > 0,08 de clarté en OKLCH) est tenu en échec par dix paires de
+ * cette palette, et le critère de séparation `MIN_GRAPH_SEPARATION` de la
+ * rampe voisine par trente-six. La cause est structurelle : `cat-autres` est
+ * quasi achromatique (C = 0,011), et un critère qui ne regarde que teinte et
+ * clarté ne peut pas séparer un gris d'une couleur de même clarté — alors que
+ * l'œil les sépare sans peine. Poser ici un plancher qu'on sait incomplet
+ * reviendrait à figer une mesure fausse. La question est remontée à @thierry ;
+ * tant qu'elle n'est pas tranchée, l'absence est DÉCLARÉE plutôt que comblée.
+ */
+const CATEGORY_TOKENS = [
+  'color-cat-courses',
+  'color-cat-carburant',
+  'color-cat-energie',
+  'color-cat-restos',
+  'color-cat-loisirs',
+  'color-cat-sante',
+  'color-cat-logement',
+  'color-cat-autres',
+] as const;
+
+const SERIES_TOKENS = [
+  'color-serie-factures',
+  'color-serie-depenses',
+  'color-serie-provisions',
+] as const;
+
+describe('globals.css — la rampe v3 des catégories et des séries (lot 1)', () => {
+  describe.each(THEMES)('mode %s', (_theme, block) => {
+    it.each([...CATEGORY_TOKENS, ...SERIES_TOKENS])(
+      '--%s tient 3:1 sur les QUATRE surfaces',
+      (token) => {
+        const value = tokenIn(block, token);
+        for (const surface of SURFACE_TOKENS) {
+          const ratio = contrastRatio(value, tokenIn(block, surface));
+          expect(
+            ratio,
+            `--${token} sur --${surface} : ${ratio.toFixed(2)}:1`,
+          ).toBeGreaterThanOrEqual(AA_GRAPHIC_OBJECT);
+        }
+      },
+    );
+
+    it('chaque teinte change de valeur d’un thème à l’autre', () => {
+      // Une catégorie garde son IDENTITÉ d'un thème à l'autre, seule sa valeur
+      // change. Un jeton oublié dans le bloc sombre garderait sa valeur claire
+      // sur un fond de nuit — c'est silencieux, et c'est exactement le défaut
+      // que la redéclaration complète existe pour rendre impossible.
+      for (const token of [...CATEGORY_TOKENS, ...SERIES_TOKENS]) {
+        expect(tokenIn(THEME_BLOCK, token)).toMatch(/^#[0-9a-f]{6}$/i);
+        expect(tokenIn(DARK_BLOCK, token)).not.toBe(tokenIn(THEME_BLOCK, token));
+      }
+    });
+  });
+});
+
+/**
+ * Les jetons d'INTERFACE du socle v3 : la limite d'un champ, et ce qui s'écrit
+ * sur un aplat d'accent.
+ *
+ * `--color-border-control` existe parce que `--color-border` (#e7e4dc) ne tient
+ * PAS 3:1 sur une carte blanche : le champ au repos n'avait donc pas de limite
+ * perceptible, au sens de WCAG 1.4.11. Ce n'est pas un raffinement, c'est le
+ * correctif.
+ *
+ * `--color-on-accent` existe parce qu'en sombre, l'aplat d'accent v3 est
+ * `--color-brand-500` (#14b8a6), sur lequel le blanc ne donne que 2,49:1. Tant
+ * qu'un bouton plein écrivait `text-white` en dur sur le teal profond, le
+ * défaut n'existait pas ; il naît le jour où l'aplat s'éclaircit. Le jeton le
+ * devance.
+ */
+describe('globals.css — les jetons d’interface du socle v3 (lot 1)', () => {
+  describe.each(THEMES)('mode %s', (_theme, block) => {
+    it.each(['color-card', 'color-background', 'color-control'] as const)(
+      'la limite d’un champ tient 3:1 sur --%s (WCAG 1.4.11)',
+      (surface) => {
+        const ratio = contrastRatio(
+          tokenIn(block, 'color-border-control'),
+          tokenIn(block, surface),
+        );
+        expect(
+          ratio,
+          `--color-border-control sur --${surface} : ${ratio.toFixed(2)}:1`,
+        ).toBeGreaterThanOrEqual(AA_GRAPHIC_OBJECT);
+      },
+    );
+  });
+
+  /**
+   * Les paires RENDUES, et rien d'autre. La version précédente de ce cas
+   * mesurait `--color-on-accent` du sombre contre `--color-brand-500`, un aplat
+   * que RIEN ne peint : `button.tsx` écrit `bg-brand-700`, dont la valeur est
+   * la même dans les deux thèmes. Le cas était donc vert pendant que le rendu
+   * réel donnait 3,37:1 — mesuré au DOM sur six écrans le 20 septembre 2026,
+   * sur l'action principale de chaque écran en thème sombre.
+   *
+   * La leçon tient en une règle : un jeton « ce qui s'écrit sur » se mesure
+   * contre l'aplat que le code lui donne, jamais contre celui qu'on prévoit de
+   * lui donner. Et un aplat qui ne change pas de thème n'autorise pas son
+   * premier plan à changer.
+   *
+   * Conséquence de conception : il faut DEUX jetons. En sombre, l'aplat de
+   * marque reste sombre (#0f766e) et l'aplat d'alerte devient clair (#f87171) —
+   * un premier plan unique échoue nécessairement sur l'un des deux.
+   */
+  describe.each(THEMES)('mode %s — ce qui s’écrit sur un aplat', (_theme, block) => {
+    /**
+     * La valeur EFFECTIVE d'un jeton dans un thème : celle du bloc du thème
+     * s'il la redéclare, sinon celle de `@theme`. C'est la cascade que le
+     * navigateur calcule — `--color-brand-700` n'est PAS redéclaré en sombre,
+     * donc l'aplat de marque y vaut la valeur claire. Mesurer autre chose
+     * refait exactement l'erreur que ce cas corrige.
+     */
+    const effectif = (name: string): string => {
+      try {
+        return tokenIn(block, name);
+      } catch {
+        return tokenIn(THEME_BLOCK, name);
+      }
+    };
+
+    it.each([
+      ['color-on-accent', 'color-brand-700'],
+      ['color-on-danger', 'color-danger'],
+    ] as const)('--%s passe AA sur --%s', (premierPlan, aplat) => {
+      const ratio = contrastRatio(effectif(premierPlan), effectif(aplat));
+      expect(
+        ratio,
+        `--${premierPlan} sur --${aplat} : ${ratio.toFixed(2)}:1`,
+      ).toBeGreaterThanOrEqual(AA_NORMAL_TEXT);
+    });
   });
 });

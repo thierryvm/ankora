@@ -431,7 +431,7 @@ export function ConsentBanner({ liftedForBottomBar = false }: ConsentBannerProps
       className={[
         'border-border bg-card fixed inset-x-0 z-50 border-t shadow-lg',
         liftedForBottomBar
-          ? 'bottom-[calc(env(safe-area-inset-bottom)+3rem)] xl:bottom-0 xl:pb-[env(safe-area-inset-bottom)]'
+          ? 'bottom-[calc(env(safe-area-inset-bottom)+var(--size-tabbar))] lg:bottom-0 lg:pb-[env(safe-area-inset-bottom)]'
           : 'bottom-0 pb-[env(safe-area-inset-bottom)]',
       ].join(' ')}
     >

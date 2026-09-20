@@ -7,7 +7,6 @@ import { getOptionalUser } from '@/lib/auth/require-user';
 import { shouldMountBottomTabBar } from '@/lib/layout/bottom-tab-bar-state';
 
 import { AccountButton } from './AccountButton';
-import { APP_DESTINATIONS, type AppDestinationId } from './app-destinations';
 import { HeaderNav } from './HeaderNav';
 
 type HeaderProps = {
@@ -33,22 +32,6 @@ type HeaderProps = {
  * key would have silently rewritten it. Keyed by `AppDestinationId` so a new
  * destination without a label fails to compile.
  */
-const HEADER_NAV_LABELS: Record<
-  AppDestinationId,
-  | 'nav.dashboard'
-  | 'nav.accounts'
-  | 'nav.charges'
-  | 'nav.commitments'
-  | 'nav.expenses'
-  | 'nav.settings'
-> = {
-  cockpit: 'nav.dashboard',
-  accounts: 'nav.accounts',
-  bills: 'nav.charges',
-  commitments: 'nav.commitments',
-  expenses: 'nav.expenses',
-  settings: 'nav.settings',
-};
 
 export async function Header({ variant = 'marketing', isAuthenticated, userEmail }: HeaderProps) {
   const t = await getTranslations('common');
@@ -92,8 +75,12 @@ export async function Header({ variant = 'marketing', isAuthenticated, userEmail
     // safe-area env vars; `pt-[env(safe-area-inset-top)]` pushes the content
     // row below the status bar without disturbing browser layout (where the
     // inset reports 0).
-    <header className="surface-overlay border-border sticky top-0 z-40 border-b pt-[env(safe-area-inset-top)]">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-4 md:px-6">
+    <header className="surface-overlay border-border-bar sticky top-0 z-40 border-b pt-[env(safe-area-inset-top)] shadow-sm">
+      {/* Socle v3 : la hauteur vient du jeton `--size-topbar` (56px), la meme
+          valeur que trois surfaces flottantes lisent pour se poser au-dessus
+          de la barre basse. `max-w-6xl` disparait au bureau : le rail occupe
+          la gauche, donc la barre va d un bord a l autre au-dessus de lui. */}
+      <div className="mx-auto flex h-[var(--size-topbar)] max-w-6xl items-center justify-between gap-2 px-4 md:px-6 lg:max-w-none">
         {/*
          * The logo always points to the public landing (`/`), aligned with
          * MktNav.tsx — clicking it from `/app` is now a deliberate
@@ -124,7 +111,7 @@ export async function Header({ variant = 'marketing', isAuthenticated, userEmail
             </Link>
           </nav>
         ) : (
-          <nav aria-label={t('nav.appLabel')} className="hidden items-center gap-1 xl:flex">
+          <nav aria-label={t('nav.appLabel')} className="hidden items-center gap-1 lg:flex">
             {/*
               Renders the FULL registry, deliberately ignoring `mobilePlacement`
               — that field governs the mobile split (bottom tab vs "more"
@@ -132,11 +119,20 @@ export async function Header({ variant = 'marketing', isAuthenticated, userEmail
               destinations disappear from desktop, which is the bug class the
               registry exists to prevent.
             */}
-            {APP_DESTINATIONS.map((destination) => (
-              <Button key={destination.id} asChild variant="ghost" size="sm">
-                <Link href={destination.href}>{t(HEADER_NAV_LABELS[destination.id])}</Link>
-              </Button>
-            ))}
+            {/*
+              Les DESTINATIONS ne sont plus ici : elles vivent dans `AppRail`,
+              a gauche, a partir de 1024. C'est ce demenagement qui rend le
+              seuil 1024 possible — cette rangee mesurait 808px avec le lien
+              admin, et entre 1024 et 1279 le bloc compte/theme/langue sortait
+              de l'ecran, ampute en silence par `overflow-x: clip`. La barre
+              basse devait donc tenir jusqu'a 1280, c'est-a-dire servir une
+              barre de telephone sur 256px de largeurs de bureau.
+
+              Ce qui reste ici : le lien admin, et lui seul. Il n'est pas une
+              destination de `APP_DESTINATIONS` (il n'a pas de route sous
+              `/app`), donc le rail ne le porte pas — et sans cette ligne il
+              n'aurait plus aucun acces visible.
+            */}
             {showAdminLink && (
               <Button asChild variant="ghost" size="sm" aria-label={t('nav.adminAriaLabel')}>
                 <Link href="/admin" className="flex items-center gap-1.5">

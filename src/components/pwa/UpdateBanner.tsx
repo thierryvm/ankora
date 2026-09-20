@@ -49,7 +49,7 @@ export function UpdateBanner({ liftedForBottomBar = false }: UpdateBannerProps =
       className={[
         'bg-card border-border fixed right-4 left-4 z-40 rounded-lg border p-3 shadow-lg',
         liftedForBottomBar
-          ? 'bottom-[calc(env(safe-area-inset-bottom)+4rem)] xl:bottom-4'
+          ? 'bottom-[calc(env(safe-area-inset-bottom)+var(--size-tabbar)+0.5rem)] lg:bottom-4'
           : 'bottom-[calc(env(safe-area-inset-bottom)+1rem)]',
       ].join(' ')}
     >

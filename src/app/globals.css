@@ -32,6 +32,31 @@
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
+/* ---------- Le survol n'existe qu'au pointeur fin (socle v3, lot 1) ----------
+   Mesuré le 20 septembre 2026 dans la feuille compilée, AVANT ce changement :
+   50 règles `:hover`, dont 6 seulement sous `@media (hover: hover)`. La
+   variante `hover:` de Tailwind n'est donc pas gardée ici — contrairement à ce
+   qu'on peut lire un peu partout sur la v4.
+
+   Ce que ça produit sur un téléphone : après un tap, le navigateur laisse
+   l'élément en `:hover` jusqu'au tap suivant. Un bouton reste donc allumé
+   comme s'il était survolé, et une liste garde une ligne en surbrillance qui
+   ne correspond plus à rien. Ce n'est pas une nuance esthétique : c'est un
+   état faux, affiché à quelqu'un qui n'a pas de curseur.
+
+   La v3 tranche — « survol au pointeur fin seulement ». La redéclaration
+   ci-dessous le rend vrai POUR TOUTES les règles d'un coup, plutôt que
+   composant par composant : un `hover:` oublié quelque part ne peut plus
+   rouvrir le défaut. Un effet qui doit exister au doigt s'écrit `active:`,
+   qui est le bon mot pour ça. */
+@custom-variant hover {
+  @media (hover: hover) {
+    &:hover {
+      @slot;
+    }
+  }
+}
+
 /* ---------- Variable fonts — self-hosted (WOFF2 only) ----------
    Inter wght 100..900 · Fraunces wght 100..900 · JetBrains Mono wght 100..800.
    Source: cc-design Design System v1 (2026-04-25).
@@ -120,16 +145,67 @@
      Les valeurs ne sont pas nouvelles : ce sont exactement celles que la
      vitrine peint en production depuis le 11 août. Aucune couleur n'est
      inventée ici, une portée est supprimée. */
-  --color-background: #faf9f6; /* papier — fond, à peine chaud */
+  /* Maquette v3, validée par @thierry le 19 septembre 2026 (lot 1 de la
+     refonte). Les quatre surfaces descendent d'un cran : le fond prend la
+     valeur qui était celle de `surface-muted`, et `surface-muted` prend la
+     « brume » v3. Motif mesuré au tour 14 bis de la maquette : fond/carte
+     valait 1,053, trop peu pour que l'œil sépare une carte de sa page — il
+     vaut 1,13 ici. Ce n'est PAS un changement de direction : c'est la même
+     direction « Le relevé corrigé », avec le contraste qui lui manquait. */
+  --color-background: #f3f1ea; /* papier — fond, à peine chaud (v3 `--fond`) */
   --color-foreground: #171d26; /* encre — texte, bleutée */
-  --color-muted: #64748b; /* décoratif — hors palette papier, cf. convention ci-dessus */
-  --color-muted-foreground: #3d4a5c; /* encre atténuée — 8,55:1 sur papier, contre 7,24 en slate */
-  --color-border: #e7e4dc; /* filet — les règles du relevé */
+  --color-muted: #6b7280; /* décoratif — cf. convention ci-dessus (v3 `--texte-3`) */
+  --color-muted-foreground: #3d4a5c; /* encre atténuée — 7,97:1 sur le papier v3, contre 7,24 en slate */
+  --color-border: #e7e4dc; /* filet — les règles du relevé, et les séparateurs INTERNES d'une carte */
   --color-card: #ffffff; /* la carte reste blanche SUR le papier : c'est ce contraste
                             tiède/blanc qui fait lire « relevé posé sur une table »,
                             et c'est déjà ce que peint la vitrine (mesuré). */
   --color-surface-soft: #fbfaf7;
-  --color-surface-muted: #f3f1ea;
+  --color-surface-muted: #eceae2; /* la PISTE (rainure de `progress`, `AllocationBar`) — v3 `--brume` */
+
+  /* ---------- Surfaces de CONTRÔLE (v3, lot 1) ----------
+     Un contrôle au repos posé dans une carte ou un tiroir — champ, bouton
+     secondaire, puce non choisie, segment — ne se pose ni sur la carte (il
+     disparaîtrait) ni sur la piste (elle dit autre chose). D'où un troisième
+     rôle, et trois jetons plutôt qu'un.
+
+     `--color-control` PARTAGE sa valeur avec `--color-surface-muted` en clair
+     et en diffère en sombre (#34363a est PLUS CLAIR que la carte #282a2d : un
+     contrôle monte, une piste descend). Les fondre en un seul jeton casserait
+     l'ordre d'élévation que `contrast-ratios.test.ts` vérifie. */
+  --color-control: #eceae2;
+  --color-control-pressed: #e1ddd2;
+  --color-control-hover: color-mix(in oklab, var(--color-control), var(--color-control-pressed));
+
+  /* ---------- Bords (v3, lot 1) ----------
+     `--color-border` est le filet INTERNE. `--color-border-card` est le
+     CONTOUR d'une surface de niveau 1 : il tient 1,42 contre la carte, là où
+     le filet ne donnait que 1,271 — c'est lui qui remplace l'ombre que la v3
+     rend volontairement discrète (consigne de @thierry : « le bord et le fond
+     teinté font la séparation, l'ombre ne fait que la confirmer »).
+     `--color-border-bar` vaut le contour en clair et le filet en sombre : un
+     alias unique mentirait. `--color-border-control` est la limite d'un champ
+     au repos, et elle seule — elle doit tenir 3:1 (WCAG 1.4.11), ce que
+     `--color-border` ne fait pas. */
+  --color-border-card: #dcd8ce;
+  --color-border-bar: var(--color-border-card);
+  --color-border-control: #7f7c75;
+
+  /* Ce qui s'écrit SUR un aplat plein. DEUX jetons, parce que les deux aplats
+     que le code peint ne vont pas dans le même sens d'un thème à l'autre :
+     l'aplat de marque reste `--color-brand-700` (#0f766e) en sombre, tandis que
+     `--color-danger` y devient clair (#f87171). Un premier plan unique échoue
+     donc forcément sur l'un des deux — mesuré, pas supposé : un seul jeton a
+     donné 3,37:1 sur le bouton principal en sombre, sur six écrans. Les paires
+     rendues sont gardées par contrast-ratios.test.ts. */
+  --color-on-accent: #ffffff;
+  --color-on-danger: #ffffff;
+
+  /* Le RÔLE d'un chiffre (v3 règle 8) : teal pour une marge ou une bonne
+     nouvelle, terracotta pour une alerte. Distinct de `--color-danger`, qui
+     est le MESSAGE d'erreur : un chiffre en alerte n'est pas une erreur. */
+  --color-figure-danger: #b4410b;
+  --color-figure-good: var(--color-brand-text);
 
   /* ---------- Graph ramp (Light mode) ----------
      Categorical hues for DATA SURFACES — donut arcs, stacked segments, bars.
@@ -157,9 +233,68 @@
   --color-graph-6: #9b2a68; /* framboise */
   --color-graph-rest: #475569; /* « Autres » — neutre, jamais une teinte */
 
+  /* ---------- Rampe des CATÉGORIES et des SÉRIES (maquette v3, lot 1) ----------
+     Deux vocabulaires distincts, et ni l'un ni l'autre n'est la rampe
+     `--color-graph-1..rest` ci-dessus.
+
+     `--color-cat-*` : la teinte d'une catégorie de dépense. Elle dit QUELLE
+     catégorie, jamais un état. Les huit valeurs viennent du tour 23 de la
+     maquette, où elles ont été écartées des teintes d'état (alerte, chiffre
+     d'alerte, accent, laiton) par un calcul OKLCH à la main.
+
+     `--color-serie-*` : les trois séries d'un graphique — le fixe contracté
+     (teal), le variable du quotidien (terracotta), le virement de provisions
+     (violet). Jamais un texte, jamais un état, jamais une action, et jamais de
+     texte POSÉ dessus (le blanc n'y tient que 3,14 à 4,30:1).
+
+     `--color-graph-grid|area|hatch` : les repères d'un tracé, l'aire sous un
+     cumul, ce qui manque.
+
+     AUCUN CONSOMMATEUR AUJOURD'HUI, et c'est délibéré : le lot 1 pose le
+     socle, les écrans qui les consomment viennent après. Le gardien de
+     contraste de `contrast-ratios.test.ts` les tient dès maintenant, pour que
+     le premier écran qui s'en sert n'ait pas à les remesurer.
+
+     MESURÉ ET OUVERT — la séparation. Le critère de la règle 25 de DESIGN-v3
+     (> 25° de teinte OU > 0,08 de clarté, en OKLCH) est tenu en échec par 10
+     paires de cette palette, dont `cat-courses`/`cat-autres` (4,3° et 0,020 en
+     sombre). `cat-autres` est quasi achromatique (C = 0,011) : un critère qui
+     ne regarde que la teinte et la clarté ne peut STRUCTURELLEMENT pas séparer
+     un gris d'une couleur de même clarté, alors que l'œil les sépare sans
+     peine. Le critère manque un terme de chroma. Ce n'est donc pas forcément
+     la palette qui est fautive — c'est peut-être la règle, et cela s'arbitre
+     avec @thierry. Aucun gardien de séparation n'est posé ici : en poser un
+     reviendrait à figer un critère qu'on sait incomplet. */
+  --color-cat-courses: #3f8a63;
+  --color-cat-carburant: #b27536;
+  --color-cat-energie: #9c7a12;
+  --color-cat-restos: #b44f7e;
+  --color-cat-loisirs: #5a6cc0;
+  --color-cat-sante: #2f8fa8;
+  --color-cat-logement: #7c6ea6;
+  --color-cat-autres: #6f756f;
+
+  --color-serie-factures: #0f8f84;
+  --color-serie-depenses: #d9480f;
+  --color-serie-provisions: #8b5cf6;
+
+  --color-graph-grid: #e7e4dc;
+  --color-graph-area: rgb(15 143 132 / 0.12);
+  --color-graph-hatch: rgb(23 29 38 / 0.18);
+
   /* ---------- Semantic text colors (Light mode) ---------- */
   --color-brand-text: #0f766e;
   --color-brand-text-strong: #115e59;
+  /* ⚠ LAITON — laissé tel quel au lot 1, et il tient sur le fil.
+     Mesuré le 20 septembre 2026, avec l'arithmétique du test rejouée dans un
+     navigateur : #8b6914 sur le NOUVEAU fond #f3f1ea vaut 4,5007:1. Il passe
+     AA de 0,0007. Ce n'est pas une marge, c'est une coïncidence, et toute
+     retouche du papier le fait rougir.
+     La maquette v3 fonce le laiton à #7a5c10 exactement pour cette raison.
+     On ne l'adopte PAS ici : #7a5c10 tombe à 1,17 de séparation de luminance
+     contre `--color-warning` #9a3412, sous le plancher 1,30 posé par ADR-036
+     et recalculé par `contrast-ratios.test.ts`. Adopter l'un exige de déplacer
+     l'autre — c'est un ADR (040), pas un geste d'habillage. */
   --color-accent-text: #8b6914; /* laiton patiné — AA 5.09:1 on white */
   --color-accent-text-strong: #713f12;
 
@@ -189,7 +324,7 @@
   --color-success: #047857;
   --color-success-300: #34d399; /* lighter emerald — illustrative decorative use only (cf. cc-design Landing.jsx KPIs, intentionally sub-AA on light) */
   --color-warning: #9a3412;
-  --color-danger: #dc2626;
+  --color-danger: #b91c1c; /* v3 `--alerte` — le contraste MONTE : 5,72:1 sur le fond v3 (#dc2626 : 4,86) */
   --color-info: #0369a1;
 
   /* ---------- Typography (with system fallbacks to avoid FOUT) ---------- */
@@ -231,28 +366,117 @@
 
   /* ---------- Elevation (Light mode) ---------- */
   --shadow-xs: 0 1px 2px rgb(15 23 42 / 0.04);
-  --shadow-sm: 0 1px 2px rgb(15 23 42 / 0.06), 0 1px 3px rgb(15 23 42 / 0.04);
+  /* v3 `--ombre-repos` : deux couches, flou ≤ 2 px, opacité ≤ 0,06. Discrète
+     PAR CONSIGNE (@thierry) — c'est `--color-border-card` qui sépare, l'ombre
+     ne fait que confirmer. Descendre l'ombre SANS poser le bord reproduirait
+     la platitude que `card.tsx` documente : les deux vont ensemble. */
+  --shadow-sm: 0 1px 2px rgb(23 29 38 / 0.06), 0 1px 1px rgb(23 29 38 / 0.04);
   --shadow-md: 0 4px 12px rgb(15 23 42 / 0.06), 0 2px 4px rgb(15 23 42 / 0.04);
   --shadow-lg: 0 12px 32px rgb(15 23 42 / 0.08), 0 4px 12px rgb(15 23 42 / 0.06);
+  /* L'anneau intérieur d'un contrôle au repos (puce non choisie, segment,
+     bouton secondaire) : en box-shadow inset, donc il ne prend aucune place et
+     ne déplace rien. Né d'une relecture en aveugle de la maquette : en sombre,
+     ces contrôles se confondaient avec leur surface (1,19) avec le fond seul. */
+  --shadow-control-ring: inset 0 0 0 1px rgb(23 29 38 / 0.06);
 
   /* ---------- Motion (durations + easings) ----------
-     Apple spring is the default — never linear, never ease. */
-  --dur-micro: 120ms;
+     TROIS durées et UNE courbe (maquette v3, § États du tour 19 bis) :
+       --dur-micro 100 ms  : l'APPUI. Il doit répondre avant que le doigt se lève.
+       --dur-state 150 ms  : COULEUR, BORD, OMBRE — les quatre états n'ont jamais
+                             rien d'autre à animer, puisque l'appui se dit par la
+                             teinte et non par une mise à l'échelle.
+       --dur-default 200 ms: TRANSFORMATION et OPACITÉ — ce qui se déplace ou paraît.
+       --dur-structural 300 ms : la montée des barres à l'arrivée d'une vue.
+     Une seule courbe : deux courbes pour deux animations n'était pas un système.
+     `--ease-out` n'est PAS notre jeton — c'est une surcharge de celui que
+     Tailwind v4 déclare. La ligne reste : la retirer rendrait l'utilitaire
+     `ease-out` à la courbe de Tailwind, ce qui n'est pas « supprimer un jeton ». */
+  --dur-micro: 100ms;
+  --dur-state: 150ms;
   --dur-default: 200ms;
-  --dur-structural: 320ms;
-  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur-structural: 300ms;
+  --ease-spring: cubic-bezier(0.2, 0, 0, 1);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* La transition des quatre états, en UN jeton : elle se pose sur chaque
+     contrôle, et nulle part deux fois. Jamais `all` — elle animerait la
+     hauteur d'une feuille qu'on fige. Jamais `outline` — un anneau de focus
+     en fondu arrive trop tard. */
+  --transition-state:
+    background-color var(--dur-state) var(--ease-spring),
+    border-color var(--dur-state) var(--ease-spring), color var(--dur-state) var(--ease-spring),
+    box-shadow var(--dur-state) var(--ease-spring);
+
+  /* ---------- Structure de la coquille (v3) ----------
+     Déclarées ici parce que TROIS surfaces flottantes s'en servent pour se
+     poser au-dessus de la barre basse (bandeau de consentement, bandeau de
+     mise à jour, retour en haut). Elles portaient chacune une constante en
+     dur calée sur l'ancienne hauteur : changer la barre les périmait en
+     silence. Un jeton rend cette décorrélation impossible. */
+  --size-topbar: 56px;
+  --size-tabbar: 64px;
 }
 
 [data-theme='dark'] {
   /* Neutral tokens (Dark mode) */
-  --color-background: #0b1120;
-  --color-foreground: #e2e8f0;
-  --color-muted: #94a3b8;
-  --color-muted-foreground: #cbd5e1;
-  --color-border: #1e293b;
-  --color-card: #111a2e;
-  --color-surface-soft: #0f172a;
+  /* Maquette v3, lot 1 — le sombre quitte le navy pour un neutre.
+     Le navy #0b1120 était la « direction B » de la session Fable ; la v3 pose
+     un gris neutre, et la raison est mesurable : sur la carte navy #111a2e,
+     le bord du logo teal tombait à 2,63:1. Les quatre surfaces gardent leur
+     ORDRE d'élévation (muted < background < soft < card), vérifié par
+     `contrast-ratios.test.ts` — c'est lui, pas l'œil, qui a accepté les deux
+     valeurs intermédiaires ci-dessous. */
+  --color-background: #131416;
+  --color-foreground: #eceae4;
+  --color-muted: #7d7b75;
+  --color-muted-foreground: #a8a69f;
+  --color-border: #3a3c40;
+  --color-card: #282a2d;
+  --color-surface-soft: #1d1e21;
+
+  /* Surfaces de contrôle (v3). En sombre, `--color-control` est PLUS CLAIR que
+     la carte : un contrôle posé sur une carte monte. C'est l'inverse de
+     `--color-surface-muted`, qui est une piste et descend — la raison pour
+     laquelle ce sont deux jetons et non un. */
+  --color-control: #34363a;
+  --color-control-pressed: #42444a;
+  --color-control-hover: color-mix(in oklab, var(--color-control), var(--color-control-pressed));
+
+  /* Bords. Ici `--color-border-bar` DIFFÈRE de `--color-border-card` : le
+     contour d'une carte est un blanc à 7 %, celui d'une barre est le filet. */
+  --color-border-card: rgb(255 255 255 / 0.07);
+  --color-border-bar: var(--color-border);
+  --color-border-control: #8a8882;
+
+  /* L'aplat de marque ne change PAS en sombre (`--color-brand-700` n'est pas
+     redéclaré ici) : son premier plan ne peut donc pas changer non plus. Seul
+     l'aplat d'alerte s'éclaircit, et lui seul prend un premier plan sombre. */
+  --color-on-accent: #ffffff;
+  --color-on-danger: #131416;
+  --color-figure-danger: #f08a5d;
+
+  /* Rampe des catégories et des séries — mêmes teintes qu'en clair, plus
+     claires : une catégorie garde son identité d'un thème à l'autre, seule sa
+     valeur change. Redéclarées plutôt qu'héritées : un jeton oublié ici
+     garderait sa valeur claire sur un fond de nuit. */
+  --color-cat-courses: #74a87e;
+  --color-cat-carburant: #bc7e3f;
+  --color-cat-energie: #d6c665;
+  --color-cat-restos: #c8739b;
+  --color-cat-loisirs: #7f8fd0;
+  --color-cat-sante: #5fb3c9;
+  --color-cat-logement: #9a8fb8;
+  --color-cat-autres: #8f958f;
+
+  --color-serie-factures: #14a394;
+  --color-serie-depenses: #ea580c;
+  --color-serie-provisions: #9f7aea;
+
+  --color-graph-grid: #3a3c40;
+  --color-graph-area: rgb(20 163 148 / 0.16);
+  --color-graph-hatch: rgb(236 234 228 / 0.18);
+
+  --shadow-control-ring: inset 0 0 0 1px rgb(255 255 255 / 0.12);
   /* Was #0f172a until 2026-08-24 — the SAME value as surface-soft, so this
      theme had three elevation steps for four tokens. That is the measurable
      cause of the cockpit reading flat in the dark: a shadow is invisible here,
@@ -269,7 +493,7 @@
      thumb-over-track relation (1.127 here, 1.130 there). That relation is 1.030
      today, which `LocaleSwitcher` already compensates with a ring — the
      compensation stays, the defect it compensates shrinks. */
-  --color-surface-muted: #070c18;
+  --color-surface-muted: #0a0b0c;
 
   /* Semantic status colors (Dark mode — lighter for contrast on #111a2e cards).
      Before 2026-07-29 these four had no dark override at all: a single value
@@ -307,9 +531,13 @@
   --color-accent-surface: rgb(212 160 23 / 0.1);
   --color-accent-surface-border: rgb(212 160 23 / 0.24);
 
-  /* Elevation (Dark mode — inset highlights instead of drop shadows) */
+  /* Elevation (Dark mode — inset highlights instead of drop shadows).
+     `--shadow-sm` prend la valeur v3 : une ombre noire courte, pas une
+     inversion du clair. Le reflet intérieur est retiré de ce cran-là parce
+     que `--color-border-card` (blanc à 7 %) le porte maintenant, et que deux
+     lignes claires sur le même bord haut se lisent comme un défaut. */
   --shadow-xs: inset 0 1px 0 rgb(255 255 255 / 0.04);
-  --shadow-sm: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.45), 0 1px 1px rgb(0 0 0 / 0.3);
   --shadow-md: inset 0 1px 0 rgb(255 255 255 / 0.07), 0 6px 16px rgb(0 0 0 / 0.45);
   --shadow-lg: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 20px 40px rgb(0 0 0 / 0.55);
 }
@@ -405,14 +633,18 @@ body > .mkt-paper > main {
   flex: 1 1 auto;
 }
 
-/* ---------- Atmospheric body (dark mode only) ----------
-   Subtle radial gradient to give depth to the navy background. */
-.ankora-atmosphere {
-  background:
-    radial-gradient(60% 45% at 0% 0%, rgb(20 184 166 / 0.08), transparent 60%),
-    radial-gradient(55% 40% at 100% 100%, rgb(212 160 23 / 0.05), transparent 65%),
-    var(--color-background);
-}
+/* ---------- `.ankora-atmosphere` a été SUPPRIMÉE (lot 1, 20 septembre 2026) ----------
+   Deux dégradés radiaux, teal 8 % et laiton 5 %, posés sur le fond pour
+   « donner de la profondeur au navy ». Le navy part avec la palette v3, donc
+   l'argument part avec lui — mais ce n'est pas la raison du retrait.
+
+   La raison, mesurée : la règle ne rendait NULLE PART. `grep ankora-atmosphere`
+   sur `src/` et `e2e/` ne rend que sa propre définition ; `grep atmosphere` sur
+   tout le TypeScript du dépôt ne rend rien du tout. Aucun `className` ne la
+   porte, sans doute depuis la suppression de la portée `.mkt-paper` en août.
+   La supprimer ne change donc aucun pixel — et la garder aurait laissé une
+   règle qui promet un effet que personne ne voit, sur un fond qui n'existe
+   plus. */
 
 /* The Landing Hero radial glow is now inline-styled in
    `src/components/marketing/landing/sections/Hero.tsx` (15% opacity, single

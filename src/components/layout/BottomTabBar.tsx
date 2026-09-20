@@ -186,9 +186,12 @@ export function BottomTabBar({ isAdmin = false }: BottomTabBarProps) {
       <nav
         aria-label={t('label')}
         data-testid="bottom-tab-bar"
-        className="surface-overlay border-border/40 fixed right-0 bottom-0 left-0 z-40 border-t pb-[env(safe-area-inset-bottom)] xl:hidden"
+        className="surface-overlay border-border-bar fixed right-0 bottom-0 left-0 z-40 border-t pb-[env(safe-area-inset-bottom)] lg:hidden"
       >
-        <div className="flex h-12 items-stretch">
+        {/* Socle v3 : 48 -> 64px, par le jeton. Trois surfaces flottantes lisent
+            le meme jeton pour se poser au-dessus : une hauteur de barre ne peut
+            plus se decorreler de ses reserves. */}
+        <div className="flex h-[var(--size-tabbar)] items-stretch">
           {MOBILE_TAB_ITEMS.map((item) => {
             /*
              * The ⊕ (décision Q7). Visual spec, and what it deliberately is NOT:

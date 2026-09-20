@@ -50,7 +50,7 @@ export function ScrollToTop({ liftedForBottomBar = false }: ScrollToTopProps) {
   // across 768–1023. The horizontal inset stays at `md:`: it never depended
   // on the bar.
   const mobileBottom = liftedForBottomBar
-    ? 'bottom-[calc(env(safe-area-inset-bottom)+4.5rem)]'
+    ? 'bottom-[calc(env(safe-area-inset-bottom)+var(--size-tabbar)+1rem)]'
     : 'bottom-[max(1rem,env(safe-area-inset-bottom))]';
 
   return (

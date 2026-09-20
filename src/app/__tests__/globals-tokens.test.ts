@@ -63,7 +63,7 @@ describe('globals.css — Design System tokens (PR-3a, cc-design v1)', () => {
     it('exposes the four status tokens with their light-mode values', () => {
       expect(css).toMatch(/--color-success:\s*#047857/);
       expect(css).toMatch(/--color-warning:\s*#9a3412/);
-      expect(css).toMatch(/--color-danger:\s*#dc2626/);
+      expect(css).toMatch(/--color-danger:\s*#b91c1c/);
       expect(css).toMatch(/--color-info:\s*#0369a1/);
     });
 
@@ -129,9 +129,9 @@ describe('globals.css — Design System tokens (PR-3a, cc-design v1)', () => {
 
   describe('Motion tokens', () => {
     it('exposes durations (--dur-micro, --dur-default, --dur-structural)', () => {
-      expect(css).toMatch(/--dur-micro:\s*120ms/);
+      expect(css).toMatch(/--dur-micro:\s*100ms/);
       expect(css).toMatch(/--dur-default:\s*200ms/);
-      expect(css).toMatch(/--dur-structural:\s*320ms/);
+      expect(css).toMatch(/--dur-structural:\s*300ms/);
     });
 
     it('exposes easings (--ease-spring, --ease-out)', () => {

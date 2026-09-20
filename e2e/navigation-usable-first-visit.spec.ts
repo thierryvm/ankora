@@ -133,11 +133,19 @@ async function mesurer(page: Page): Promise<Omit<Constat, 'ecran'>> {
       return { ok: false, devant: nom };
     };
 
+    // `sticky` AUTANT que `fixed` (20 septembre 2026, même correction que dans
+    // navigation-reachable.spec.ts) : le rail du bureau est un `nav` collant.
+    // Ce filtre ne le voyait pas et rendait « 0 navigation utilisable » à 1279
+    // et 1280 px sur une app qui en affichait une. Ce qui compte pour la
+    // personne qui navigue n'est pas la technique de placement, c'est que la
+    // surface reste là quand la page défile.
+    const persistant = (el: Element) => {
+      const p = getComputedStyle(el).position;
+      return p === 'fixed' || p === 'sticky';
+    };
     const chrome = [
       ...document.querySelectorAll('header'),
-      ...[...document.querySelectorAll('nav, div')].filter(
-        (el) => getComputedStyle(el).position === 'fixed',
-      ),
+      ...[...document.querySelectorAll('nav, div')].filter(persistant),
     ];
 
     const atteignables = new Set<string>();

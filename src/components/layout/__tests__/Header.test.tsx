@@ -156,13 +156,27 @@ describe('<Header />', () => {
     expect(screen.getByRole('link', { name: 'Mon cockpit' })).toBeInTheDocument();
   });
 
-  it('app variant shows the in-app navigation (dashboard, accounts, charges, expenses, settings)', async () => {
+  /**
+   * Socle v3 (lot 1) — ce cas a changé de SENS, et la couverture qu'il portait
+   * n'a pas disparu : elle a déménagé dans `AppRail.test.tsx`, qui vérifie que
+   * les six destinations y sont, avec leurs routes.
+   *
+   * Pourquoi elles quittent la barre haute : cette rangée mesurait 808 px avec
+   * le lien admin, si bien qu'entre 1024 et 1279 le bloc compte/thème/langue
+   * sortait de l'écran, amputé en silence. La barre basse devait donc tenir
+   * jusqu'à 1280 — une barre de téléphone sur 256 px de largeurs de bureau.
+   *
+   * Écrit en interdiction : sans ce cas, les remettre ici rouvrirait le
+   * débordement sans que rien ne le dise.
+   */
+  it('app variant ne porte PLUS les destinations — elles vivent dans le rail', async () => {
     await renderHeader({ variant: 'app', isAuthenticated: true });
-    expect(screen.getByRole('link', { name: 'Tableau de bord' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Comptes' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Factures' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Dépenses' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Paramètres' })).toBeInTheDocument();
+    for (const nom of ['Tableau de bord', 'Comptes', 'Factures', 'Dépenses', 'Paramètres']) {
+      expect(
+        screen.queryByRole('link', { name: nom }),
+        `« ${nom} » est revenu dans la barre haute`,
+      ).not.toBeInTheDocument();
+    }
   });
 
   /**
@@ -177,10 +191,13 @@ describe('<Header />', () => {
     expect(screen.queryByRole('link', { name: 'Simulateur' })).not.toBeInTheDocument();
   });
 
-  it('app variant links point to the correct routes', async () => {
+  it('le lien admin, lui, RESTE dans la barre haute', async () => {
+    // Il n'est pas une destination de `APP_DESTINATIONS` — il n'a pas de route
+    // sous `/app` — donc le rail ne le porte pas. Sans cette ligne, la zone
+    // privée n'aurait plus aucun accès visible.
+    setIsAdmin(true);
     await renderHeader({ variant: 'app', isAuthenticated: true });
-    expect(screen.getByRole('link', { name: 'Dépenses' })).toHaveAttribute('href', '/app/expenses');
-    expect(screen.getByRole('link', { name: 'Factures' })).toHaveAttribute('href', '/app/charges');
+    expect(screen.getByRole('link', { name: /admin/i })).toBeInTheDocument();
   });
 
   it('marketing variant does not show the app-only links (Dépenses)', async () => {
@@ -255,11 +272,16 @@ describe('<Header />', () => {
     });
   });
 
-  it('home link has the tactile press animation, gated on motion-safe (issue #95)', async () => {
+  it('home link answers a press without moving (socle v3, lot 1)', async () => {
     await renderHeader({ variant: 'app', isAuthenticated: true });
     const link = screen.getByLabelText('Accueil Ankora');
-    // The full animation set: transition-transform + duration-150 +
-    // motion-safe:active:scale-95 (the latter respects prefers-reduced-motion).
-    expect(link).toHaveClass('transition-transform', 'duration-150', 'motion-safe:active:scale-95');
+    // Issue #95 asked for tactile feedback and got `motion-safe:active:scale-95`.
+    // The feedback stays; the MOVEMENT goes. The v3 rule is that a control you
+    // just pressed never moves — a link shrinking under the thumb displaces the
+    // very target the thumb is aiming at. Opacity answers as clearly and
+    // changes no geometry, so it also needs no `motion-safe` gate.
+    expect(link).toHaveClass('active:opacity-70');
+    expect(link.className).not.toContain('scale-');
+    expect(link.className).not.toContain('transition-transform');
   });
 });

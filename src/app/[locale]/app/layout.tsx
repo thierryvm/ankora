@@ -1,5 +1,6 @@
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { AppRail } from '@/components/layout/AppRail';
 import { requireUser } from '@/lib/auth/require-user';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -23,12 +24,20 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           confusing "double menu" on every app page. The public glossary keeps
           its own breadcrumb (deep SEO pages, different context). */}
       <Header variant="app" isAuthenticated userEmail={user.email ?? null} />
-      <main
-        id="main"
-        className="mx-auto w-full max-w-6xl px-4 pt-8 pb-24 md:px-6 md:pt-12 xl:py-12"
-      >
-        {children}
-      </main>
+      {/* Socle v3 (lot 1) : le rail a gauche a partir de 1024, la barre basse
+          en dessous. Les deux ne coexistent jamais — la spec de coquille
+          mesure « exactement une surface de navigation » a chaque largeur,
+          parce que l'ancienne spec n'assertait qu'« au moins une » et
+          n'aurait donc pas vu la superposition. */}
+      <div className="flex w-full">
+        <AppRail />
+        <main
+          id="main"
+          className="mx-auto w-full max-w-6xl px-4 pt-8 pb-24 md:px-6 md:pt-12 lg:pb-12"
+        >
+          {children}
+        </main>
+      </div>
       <Footer />
     </>
   );
