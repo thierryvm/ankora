@@ -106,14 +106,26 @@ test.describe('navigation atteignable à toute largeur', () => {
             };
 
             // Un chemin de navigation = un lien vers une AUTRE page de l'app,
-            // situé dans un conteneur persistant (le header ou un élément fixé).
-            // Le corps de page ne compte pas : le cockpit a des CTA, pas
-            // `/app/settings`, et les compter masquerait le défaut.
+            // situé dans un conteneur persistant (le header, ou un élément qui
+            // reste à l'écran quand la page défile). Le corps de page ne compte
+            // pas : le cockpit a des CTA, pas `/app/settings`, et les compter
+            // masquerait le défaut.
+            //
+            // `sticky` AUTANT que `fixed` (20 septembre 2026) : le rail du
+            // bureau est un `nav` collant, donc persistant au même titre qu'une
+            // barre fixée, et ce filtre-là ne le voyait pas. Il a rendu « 0
+            // navigation utilisable » à 1279 et 1280 px sur une app qui en
+            // affichait une — l'instrument regardait à côté, il ne mesurait pas
+            // un trou. Restreindre à `fixed` revenait à décrire une technique
+            // de placement plutôt que la propriété qui compte pour la personne
+            // qui navigue : est-ce que ça reste là.
+            const persistant = (el: Element) => {
+              const p = getComputedStyle(el).position;
+              return p === 'fixed' || p === 'sticky';
+            };
             const chrome = [
               ...document.querySelectorAll('header'),
-              ...[...document.querySelectorAll('nav, div')].filter(
-                (el) => getComputedStyle(el).position === 'fixed',
-              ),
+              ...[...document.querySelectorAll('nav, div')].filter(persistant),
             ];
             const destinations = new Set<string>();
             for (const c of chrome) {
