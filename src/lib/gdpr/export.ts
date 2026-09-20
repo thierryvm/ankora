@@ -97,10 +97,28 @@ function rowsOf(table: string, res: Result): Rows {
  * PostgREST cuts every response at `max_rows` (1000 in `supabase/config.toml`)
  * WITHOUT an error. A user with 1 200 expenses would receive 1 000 of them, in
  * no guaranteed order, in a file called complete. So the per-person tables are
- * read page by page, ordered by `id`, advancing by the rows actually received
- * and stopping on an empty page — correct whatever the server's cap is.
+ * read page by page under a total order, advancing by the rows actually
+ * received and stopping on an empty page — correct whatever the server's cap
+ * is. No table of this export carries a limit: none may be truncated.
  */
 const PAGE_SIZE = 1000;
+
+/**
+ * Walks one table page by page until a page comes back empty. The caller gives
+ * the query for a given offset; every page must carry the SAME total order, or
+ * rows shift between pages and the walk skips or repeats them.
+ */
+async function readAllPages(page: (from: number) => PromiseLike<Result>): Promise<Result> {
+  const all: Rows = [];
+  for (let from = 0; ;) {
+    const res = await page(from);
+    if (res.error) return res;
+    const received = (res.data ?? []) as Rows;
+    if (received.length === 0) return { data: all, error: null };
+    all.push(...received);
+    from += received.length;
+  }
+}
 
 export async function exportUserData(userId: string): Promise<UserDataExport> {
   const supabase = createServiceRoleClient();
@@ -113,22 +131,36 @@ export async function exportUserData(userId: string): Promise<UserDataExport> {
     | 'commitment_payments'
     | 'charge_payments';
 
-  const readAllCreatedBy = async (table: PagedTable): Promise<Result> => {
-    const all: Rows = [];
-    for (let from = 0; ;) {
-      const res = await supabase
+  const readAllCreatedBy = (table: PagedTable): Promise<Result> =>
+    readAllPages((from) =>
+      supabase
         .from(table)
         .select('*')
         .eq('created_by', userId)
         .order('id', { ascending: true })
-        .range(from, from + PAGE_SIZE - 1);
-      if (res.error) return res;
-      const page = (res.data ?? []) as Rows;
-      if (page.length === 0) return { data: all, error: null };
-      all.push(...page);
-      from += page.length;
-    }
-  };
+        .range(from, from + PAGE_SIZE - 1),
+    );
+
+  /**
+   * The audit trail used to stop at 1 000 rows. Every financial gesture writes
+   * one, so an active person crosses that in under a year and would receive a
+   * truncated trail inside a file art. 20 presents as complete — the same
+   * silent cut the six tables above were fixed for.
+   *
+   * Newest first, because that is the order the trail is read in; `id` after
+   * it because `occurred_at` alone is not a total order (two events in the
+   * same instant could straddle a page boundary and be skipped or doubled).
+   */
+  const readAllAudit = (): Promise<Result> =>
+    readAllPages((from) =>
+      supabase
+        .from('audit_log')
+        .select('*')
+        .eq('user_id', userId)
+        .order('occurred_at', { ascending: false })
+        .order('id', { ascending: true })
+        .range(from, from + PAGE_SIZE - 1),
+    );
 
   const workspacesRes = await supabase.from('workspaces').select('*').eq('owner_id', userId);
   const workspaces = rowsOf('workspaces', workspacesRes);
@@ -161,15 +193,7 @@ export async function exportUserData(userId: string): Promise<UserDataExport> {
     readAllCreatedBy('expenses'),
     readAllCreatedBy('categories'),
     supabase.from('user_consents').select('*').eq('user_id', userId),
-    // `order` before `limit` is not cosmetic: without it PostgREST returns
-    // rows in physical order, so a user past 1000 events would receive an
-    // arbitrary subset of their audit trail with no indication of it.
-    supabase
-      .from('audit_log')
-      .select('*')
-      .eq('user_id', userId)
-      .order('occurred_at', { ascending: false })
-      .limit(1000),
+    readAllAudit(),
     byOwnedWorkspace('accounts'),
     byOwnedWorkspace('workspace_settings'),
     readAllCreatedBy('commitments'),

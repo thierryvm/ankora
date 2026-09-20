@@ -15,6 +15,7 @@ const WS_A = 'aaaaaaaa-0000-0000-0000-000000000001';
 const WS_B = 'bbbbbbbb-0000-0000-0000-000000000002';
 
 type Filter = { table: string; op: 'eq' | 'in'; column: string; value: unknown };
+type Row = Record<string, unknown>;
 
 const filters: Filter[] = [];
 const selects: Array<{ table: string; columns: string }> = [];
@@ -122,15 +123,27 @@ describe('exportUserData — the seven original tables', () => {
     ]);
   });
 
-  it('takes the NEWEST audit rows when it truncates, not an arbitrary page', async () => {
-    await exportUserData(USER_ID);
+  it('reads the WHOLE audit trail, newest first, past the server cap', async () => {
+    // A cap BELOW the page size: advancing by the page size would skip rows.
+    serverMaxRows = 700;
+    rows.audit_log = Array.from({ length: 1001 }, (_, i) => ({
+      id: 1001 - i,
+      occurred_at: new Date(Date.UTC(2026, 0, 1) - i * 60_000).toISOString(),
+    }));
 
-    // `audit_log` is the only capped table. Without an explicit order PostgREST
-    // returns rows in physical order, so a user past the cap would receive an
-    // arbitrary subset — inside a file the UI calls a complete export.
-    expect(limits).toEqual([{ table: 'audit_log', count: 1000 }]);
-    expect(orders.filter((o) => o.table === 'audit_log')).toEqual([
+    const bundle = await exportUserData(USER_ID);
+
+    // No cap at all. Since every financial gesture writes an audit row, an
+    // active person passes 1 000 rows inside a year; the former `.limit(1000)`
+    // dropped the oldest of them silently, in a file the UI calls complete.
+    expect(limits).toEqual([]);
+    expect(bundle.auditLog).toHaveLength(1001);
+    expect(bundle.auditLog.map((r) => r.id)).toEqual(rows.audit_log.map((r) => (r as Row).id));
+    // `occurred_at` alone is not a total order: two events in the same instant
+    // would make paging skip or repeat rows. `id` closes it.
+    expect(orders.filter((o) => o.table === 'audit_log').slice(0, 2)).toEqual([
       { table: 'audit_log', column: 'occurred_at', ascending: false },
+      { table: 'audit_log', column: 'id', ascending: true },
     ]);
   });
 
