@@ -21,20 +21,22 @@ test.describe('GDPR export — art. 20, every table, one person', () => {
   }) => {
     if (!admin) return;
 
-    const alice = await seedOnboardedUser(admin, [
-      { label: 'Loyer', amount: 800, frequency: 'monthly', dueMonth: 1, paidFrom: 'principal' },
-    ]);
-    const bob = await seedOnboardedUser(admin, [
-      {
-        label: 'Charge de Bob E2E',
-        amount: 123,
-        frequency: 'monthly',
-        dueMonth: 1,
-        paidFrom: 'principal',
-      },
-    ]);
+    // Seeded inside the guarded block, each id tracked the moment it exists:
+    // a failure on the SECOND creation used to leak the first person's account
+    // in the database the next run seeds into.
+    const seededUserIds: string[] = [];
 
     try {
+      const seed = async (label: string, amount: number) => {
+        const user = await seedOnboardedUser(admin, [
+          { label, amount, frequency: 'monthly', dueMonth: 1, paidFrom: 'principal' },
+        ]);
+        seededUserIds.push(user.userId);
+        return user;
+      };
+      const alice = await seed('Loyer', 800);
+      const bob = await seed('Charge de Bob E2E', 123);
+
       const commitment = (label: string, user: typeof alice) => ({
         workspace_id: user.workspaceId,
         created_by: user.userId,
@@ -124,8 +126,14 @@ test.describe('GDPR export — art. 20, every table, one person', () => {
       expect(raw).not.toContain('Dette de Bob E2E');
       expect(raw).not.toContain('Charge de Bob E2E');
     } finally {
-      await deleteSeededUser(admin, alice.userId);
-      await deleteSeededUser(admin, bob.userId);
+      // Best effort, and every id gets its turn: a cleanup that throws on the
+      // first account would leave the second one behind for good.
+      for (const userId of seededUserIds) {
+        await deleteSeededUser(admin, userId).catch((error: unknown) => {
+          // A leaked account must be visible in the run log, not swallowed.
+          console.warn(`gdpr-export cleanup: deleting ${userId} failed — ${String(error)}`);
+        });
+      }
     }
   });
 });
