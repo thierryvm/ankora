@@ -295,7 +295,9 @@ test.describe('J2 — le journal des opérations, ses garde-fous et son isolatio
 
       // Une ligne annulée ne se modifie plus.
       const modif = await client.from('movements').update({ amount: 9999 }).eq('id', ecrite!.id);
-      expect(modif.error, "modifier le contenu d'une ligne annulée").not.toBeNull();
+      expect(modif.error?.message ?? '', "modifier le contenu d'une ligne annulée").toContain(
+        'annulee ne se modifie plus',
+      );
 
       // Mais elle se ré-ouvre : annuler par erreur doit se réparer, sinon le
       // « défaire » devient lui-même le piège à un clic. La ré-ouverture efface
@@ -390,7 +392,13 @@ test.describe('J2 — le journal des opérations, ses garde-fous et son isolatio
         .from('account_balance_statements')
         .update({ balance: 9999 })
         .eq('id', releve!.id);
-      expect(gele.error, 'modifier un relevé annulé').not.toBeNull();
+      // On nomme la CAUSE du refus, pas seulement « une erreur » : plusieurs
+      // choses refusent cet UPDATE (un privilège manquant, une policy, une
+      // contrainte), et `.not.toBeNull()` resterait vert si le gel des lignes
+      // annulées disparaissait pendant qu'autre chose casse à sa place.
+      expect(gele.error?.message ?? '', 'modifier un relevé annulé').toContain(
+        'annulee ne se modifie plus',
+      );
 
       // Ré-ouverture : les deux colonnes repartent ensemble. ADR-045 D18 —
       // elle EFFACE la trace de l'annulation, conséquence assumée.
