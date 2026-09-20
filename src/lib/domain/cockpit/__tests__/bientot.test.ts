@@ -332,3 +332,82 @@ describe('partMensuelle — une part ne se montre jamais sans sa facture', () =>
     }
   });
 });
+
+/**
+ * Les cas limites relevés en relecture le 20 septembre 2026. Chacun est un
+ * endroit où une date se fabrique à partir de trois nombres — année, mois,
+ * jour — et où la fabrication peut produire une date qui n'existe pas.
+ */
+describe('facturesBientot — les bords du calendrier', () => {
+  it('franchit l’année : une échéance de janvier est vue depuis décembre', () => {
+    // 1er décembre → 15 janvier = 45 jours, donc DANS la fenêtre. Le mois 1
+    // est « avant » le mois 12 en numérotation ; seule l'addition d'offsets
+    // sur (année, mois) le voit correctement.
+    const taxe = charge({ id: 'taxe', paymentMonths: [1], paymentDay: 15, frequency: 'annual' });
+
+    const lignes = facturesBientot({
+      charges: [taxe],
+      payments: AUCUN_PAIEMENT,
+      todayIso: '2026-12-01',
+      period: { year: 2026, month: 12 },
+    });
+
+    expect(lignes.map((l) => l.dueDateIso)).toEqual(['2027-01-15']);
+    expect(lignes[0]!.joursAvant).toBe(45);
+  });
+
+  it('jour 31 dans un mois de 30 jours : l’échéance tombe le 30, jamais le 31', () => {
+    // Novembre a 30 jours. Une date « 2026-11-31 » n'existe pas : elle serait
+    // lue comme le 1er décembre par tout parseur indulgent, décalant l'échéance
+    // d'un mois entier.
+    const assurance = charge({
+      id: 'assurance',
+      paymentMonths: [11],
+      paymentDay: 31,
+      frequency: 'annual',
+    });
+
+    const lignes = facturesBientot({
+      charges: [assurance],
+      payments: AUCUN_PAIEMENT,
+      todayIso: '2026-10-05',
+      period: { year: 2026, month: 10 },
+    });
+
+    expect(lignes.map((l) => l.dueDateIso)).toEqual(['2026-11-30']);
+  });
+
+  it('jour de paiement invalide : aucune ligne, et surtout aucune date impossible', () => {
+    // 0, 99 et NaN ne viennent pas de l'interface (Zod borne 1..31) mais d'une
+    // donnée : import, migration, écriture directe. Le domaine doit refuser de
+    // fabriquer « 2026-11-00 » ou « 2026-11-NaN » — une date invalide ne casse
+    // rien tout de suite, elle ressort trois écrans plus loin.
+    const zero = charge({ id: 'zero', paymentMonths: [11], paymentDay: 0, frequency: 'annual' });
+    const trop = charge({ id: 'trop', paymentMonths: [11], paymentDay: 99, frequency: 'annual' });
+    const pasUnNombre = charge({
+      id: 'nan',
+      paymentMonths: [11],
+      paymentDay: Number.NaN,
+      frequency: 'annual',
+    });
+
+    const lignes = facturesBientot({
+      charges: [zero, trop, pasUnNombre],
+      payments: AUCUN_PAIEMENT,
+      todayIso: '2026-10-05',
+      period: { year: 2026, month: 10 },
+    });
+
+    // Attendu EXACT, jamais « aucune ligne ne doit être invalide » — une
+    // boucle sur une liste vide passe toujours, et ne prouve rien.
+    // 99 est borné au dernier jour du mois (30 novembre) : la ligne existe.
+    // 0 et NaN ne produisent AUCUNE ligne — la date fabriquée en amont
+    // (« 2026-11-00 », « 2026-11-NaN ») n'est pas analysable, donc l'écart en
+    // jours ne l'est pas non plus, et le filtre la rejette.
+    expect(lignes.map((l) => l.charge.id)).toEqual(['trop']);
+    expect(lignes[0]!.dueDateIso).toBe('2026-11-30');
+    for (const ligne of lignes) {
+      expect(Number.isNaN(Date.parse(`${ligne.dueDateIso}T00:00:00Z`))).toBe(false);
+    }
+  });
+});

@@ -1668,6 +1668,7 @@
       "etiquette": "Due this month",
       "titre": "Still to pay",
       "sousLigne": "{payees} paid out of {total}",
+      "dejaRetire": "Already taken out of what you have left.",
       "toutPaye": "✓ Everything is paid for {month}.",
       "enRetard": "{date}, overdue",
       "autres": "{count} more to pay in the detail",

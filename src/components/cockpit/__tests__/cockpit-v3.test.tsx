@@ -212,6 +212,24 @@ describe('EncoreAPayerCard — « Bientôt »', () => {
     locale: 'fr-BE' as const,
   };
 
+  it('dit que cet argent est DÉJÀ retiré de « Il te reste »', async () => {
+    // Deux relectures indépendantes du 20 septembre 2026 ont lu « Il te reste »
+    // puis « Encore à payer » comme une soustraction restant à faire. Les deux
+    // chiffres sont justes ; c'est leur voisinage qui induit en erreur. La
+    // ligne est donc là, sous le montant, et dans les deux cas — qu'il reste
+    // des factures ou non.
+    const { container } = render(await EncoreAPayerCard({ ...base, bientot: [] }));
+    const ligne = container.querySelector('[data-testid="encore-a-payer-deja-retire"]');
+    expect(ligne?.textContent).toBe('Déjà retiré de ce qu’il te reste.');
+
+    const toutPaye = render(
+      await EncoreAPayerCard({ ...base, resteAPayer: 0, lignes: [], bientot: [] }),
+    );
+    expect(
+      toutPaye.container.querySelector('[data-testid="encore-a-payer-deja-retire"]')?.textContent,
+    ).toBe('Déjà retiré de ce qu’il te reste.');
+  });
+
   it('montre TOUJOURS la part mensuelle avec sa facture', async () => {
     // « 15 € par mois » ne se vérifie pas ; « 45 € tous les 3 mois → 15,00 €
     // par mois » se vérifie de tête. Les deux moitiés ne se séparent jamais.
@@ -426,5 +444,29 @@ describe.each(['fr-BE', 'en', 'nl-BE'] as const)('IlTeResteCard — l’unité e
     const texte = screen.getByTestId('cockpit-formule').textContent ?? '';
     expect(texte.match(/€/gu) ?? []).toHaveLength(1);
     expect(texte).toContain(formatCurrency(base.ilTeReste, locale));
+  });
+});
+
+describe('Repli « Rythme du mois » — la clé au bord du mois', () => {
+  it('dit « dernier jour » quand il ne reste plus un jour entier', async () => {
+    // `joursRestants` ne vaut 0 que dans UN cas : la période affichée n'est
+    // pas le mois courant (`month-situation.ts`). La clé dit alors « dernier
+    // jour », ce qui serait faux pour un mois révolu. Le cas est aujourd'hui
+    // inatteignable — `currentPeriod` dérive de `new Date()` — et ce test le
+    // FIGE : le jour où le cockpit affichera un mois passé, il rougira, et la
+    // phrase sera changée sciemment plutôt que découverte à l'écran.
+    const { createTranslator } = await import('next-intl');
+    // Le cast : `createTranslator` typé sur le namespace réduit ses clés à
+    // `never` hors d'un composant. Ce qui est prouvé ici, c'est la phrase que
+    // le fichier de messages produit, pas la typographie de son API.
+    const tc = createTranslator({
+      locale: 'fr-BE',
+      messages: messages as never,
+      namespace: 'cockpit' as never,
+    }) as unknown as (cle: string, valeurs?: Record<string, unknown>) => string;
+
+    expect(tc('replis.cleRythme', { jours: 0 })).toBe('dernier jour');
+    expect(tc('replis.cleRythme', { jours: 1 })).toBe('1 jour restant');
+    expect(tc('replis.cleRythme', { jours: 12 })).toBe('12 jours restants');
   });
 });

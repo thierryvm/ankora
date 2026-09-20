@@ -1668,6 +1668,7 @@
       "etiquette": "À payer ce mois",
       "titre": "Encore à payer",
       "sousLigne": "{payees} payées sur {total}",
+      "dejaRetire": "Déjà retiré de ce qu’il te reste.",
       "toutPaye": "✓ Tout est payé pour {month}.",
       "enRetard": "{date}, en retard",
       "autres": "{count} autres à payer dans le détail",

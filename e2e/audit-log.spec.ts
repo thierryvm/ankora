@@ -1,5 +1,6 @@
 import { test, expect } from './helpers/test';
 import { adminClientOrNull, deleteSeededUser, seedOnboardedUser } from './helpers/seed';
+import { ouvrirRepli } from './helpers/cockpit';
 
 const admin = adminClientOrNull();
 
@@ -59,6 +60,13 @@ test.describe('Audit trail — service_role writes actually land (H3 / #192)', (
 
       // A Server Action mutation, using the same interaction the rename spec
       // exercises: the income_bills card title is an inline-editable button.
+      // ATTENDU MODIFIÉ PAR LE LOT B : les cartes de comptes vivent dans le
+      // repli « Mes comptes », fermé au chargement. Le corps n'est pas démonté
+      // (il porte `hidden`), donc la carte existe dans le DOM avec une boîte de
+      // 0 × 0 : sans cette ouverture, `toBeVisible()` échoue sur « hidden » et
+      // une mesure géométrique rendrait, elle, une fausse certitude.
+      // L'assertion elle-même est intacte.
+      await ouvrirRepli(page, 'repli-comptes');
       const card = page.locator('[data-account-type="income_bills"]');
       await expect(card).toBeVisible();
       await card.getByRole('button', { name: /Renommer le compte/i }).click();

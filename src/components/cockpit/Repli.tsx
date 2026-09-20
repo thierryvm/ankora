@@ -29,8 +29,13 @@ import { ChevronDown } from 'lucide-react';
  *   jamais démonté : un `aria-controls` qui pointe vers rien est un mensonge
  *   pour un lecteur d'écran ;
  * - 44 px de haut au moins (`min-h-11`), la cible tactile ;
- * - le titre tient sur UNE ligne (`truncate`) : un repli qui passe à trois
- *   lignes coûte plus cher que la carte qu'il replie ;
+ * - le titre tient sur DEUX lignes au plus (`line-clamp-2`), et n'est jamais
+ *   coupé : un repli qui passe à trois lignes coûte plus cher que la carte
+ *   qu'il replie, mais un titre amputé fait ouvrir pour lire ce qu'on aurait
+ *   dû pouvoir lire. Mesuré le 20 septembre 2026 : sur `truncate`, « Provisions
+ *   pour tes factures · ta réserve » occupait 267,4 px dans une boîte de 277 à
+ *   375 px — 9,6 px de marge, contre plus de 50 pour tous les autres. Il ne
+ *   tenait que par chance, et la CI (Chromium/Linux) le coupait à chaque run ;
  * - le chevron tourne, et sa rotation vaut 0 s sous `prefers-reduced-motion`
  *   (`motion-reduce:transition-none`).
  *
@@ -71,7 +76,7 @@ export function Repli({ titre, cle, testId, children }: RepliProps) {
         className="focus-visible:ring-brand-600 flex min-h-11 w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
         data-repli-tete
       >
-        <span className="min-w-0 flex-1 truncate text-sm font-semibold">
+        <span className="line-clamp-2 min-w-0 flex-1 text-sm font-semibold">
           {titre}
           {/* Le séparateur est décoratif : un lecteur d'écran lit « Mes comptes 3 »,
               le point médian n'apporte rien à l'oral. */}

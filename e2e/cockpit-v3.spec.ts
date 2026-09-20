@@ -54,6 +54,14 @@ async function seConnecter(page: Page, user: Seme): Promise<void> {
   await page.getByRole('button', { name: /^se connecter$/i }).click();
   await page.waitForURL(/\/app\b/, { timeout: 20_000 });
   await expect(page.getByTestId('cockpit-il-te-reste')).toBeVisible();
+  // Tant qu'Inter n'est pas appliquée, la page est rendue dans la police de
+  // secours du système (`font-display: swap`) : ses métriques ne sont pas
+  // celles qu'un humain verra, et TOUTE mesure de largeur ou de hauteur porte
+  // alors sur une page intermédiaire. Sous Windows la substitution est plus
+  // étroite qu'Inter, sous Linux plus large — c'est-à-dire que le même code
+  // rendait deux verdicts sur deux machines. L'attente supprime la loterie
+  // sans rien adoucir : ce qui est mesuré ensuite est la page installée.
+  await page.evaluate(() => document.fonts.ready.then(() => undefined));
 }
 
 test.use({ viewport: VUE });
@@ -81,7 +89,7 @@ test.describe.serial('Cockpit v3 — le budget de page à 375 px', () => {
     if (admin && user) await deleteSeededUser(admin, user.userId);
   });
 
-  test('les replis naissent fermés, et leur titre tient sur une ligne', async ({ page }) => {
+  test('les replis naissent fermés, et aucun titre n’est coupé', async ({ page }) => {
     if (!admin || !user) return;
     await seConnecter(page, user);
 
@@ -91,9 +99,12 @@ test.describe.serial('Cockpit v3 — le budget de page à 375 px', () => {
         return {
           texte: (el.textContent ?? '').trim().slice(0, 40),
           ouvert: el.getAttribute('aria-expanded') === 'true',
-          // Un titre tronqué (`truncate`) rend le repli illisible : on compare
-          // la largeur du contenu à celle de la boîte.
-          tronque: titre ? titre.scrollWidth > titre.clientWidth + 1 : false,
+          // Un titre coupé rend le repli illisible. Depuis le 20 septembre 2026
+          // le titre passe à la ligne (`line-clamp-2`) au lieu d'être rogné sur
+          // une seule : la coupe se mesure donc en HAUTEUR, pas en largeur.
+          // Même sévérité, bon axe — un titre qui déborde de deux lignes est
+          // amputé exactement comme il l'était en débordant de sa largeur.
+          tronque: titre ? titre.scrollHeight > titre.clientHeight + 1 : false,
         };
       }),
     );
@@ -182,5 +193,49 @@ test.describe.serial('Cockpit v3 — le budget de page à 375 px', () => {
     await seConnecter(page, user);
 
     await expectA11yPass(page);
+  });
+
+  test('en fin de défilement, le dernier élément reste atteignable au-dessus de la barre', async ({
+    page,
+  }) => {
+    if (!admin || !user) return;
+    await seConnecter(page, user);
+
+    // La relecture du 20 septembre 2026 a cru voir la barre d'onglets recouvrir
+    // « Bientôt » à 375 px. C'était un artefact de capture PLEINE PAGE : la
+    // barre est fixe en bas de la FENÊTRE, donc une image qui déroule tout la
+    // recopie au milieu du document. Rien n'est corrigé ; ce cas mesure la
+    // seule chose qui compte vraiment — en bas de page, le dernier élément
+    // reste visible ET cliquable, c'est-à-dire que le point où le doigt
+    // tomberait lui appartient encore.
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await page.waitForTimeout(300);
+
+    const verdict = await page.evaluate(() => {
+      const cibles = [...document.querySelectorAll('main a, main button')].filter(
+        (el) => el.getBoundingClientRect().height > 0,
+      );
+      const dernier = cibles.at(-1);
+      if (!dernier) return { erreur: 'aucune cible dans <main>' as const };
+      const r = dernier.getBoundingClientRect();
+      // `elementFromPoint` rend `null` hors de la fenêtre : on vérifie d'abord
+      // que la boîte y est, sinon la sonde regarderait ailleurs.
+      const x = Math.round(r.left + r.width / 2);
+      const y = Math.round(r.top + r.height / 2);
+      const dansLaVue = r.top >= 0 && r.bottom <= window.innerHeight;
+      const auPoint = dansLaVue ? document.elementFromPoint(x, y) : null;
+      return {
+        erreur: null,
+        texte: (dernier.textContent ?? '').trim().slice(0, 40),
+        dansLaVue,
+        recouvert: !(auPoint && (auPoint === dernier || dernier.contains(auPoint))),
+      };
+    });
+
+    expect(verdict.erreur, 'sonde sans cible').toBeNull();
+    expect(
+      verdict,
+      `le dernier élément sort de la fenêtre: ${JSON.stringify(verdict)}`,
+    ).toMatchObject({ dansLaVue: true, recouvert: false });
   });
 });

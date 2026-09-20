@@ -112,6 +112,15 @@ export async function EncoreAPayerCard({
         </div>
 
         <p className="text-muted-foreground mt-1 text-xs">{t('sousLigne', { payees, total })}</p>
+        {/* Les deux relectures du 20 septembre 2026 ont lu la même chose : « Il
+            te reste » au-dessus et « Encore à payer » en dessous se lisent comme
+            une soustraction qui resterait à faire. Elle est déjà faite — ces
+            échéances sont retenues dans « Il te reste » (cf. « Déjà compté pour
+            tes factures » dans sa décomposition). Une ligne le dit, plutôt que
+            de laisser deux chiffres justes produire une conclusion fausse. */}
+        <p className="text-muted-foreground mt-1 text-xs" data-testid="encore-a-payer-deja-retire">
+          {t('dejaRetire')}
+        </p>
 
         {toutPaye ? (
           <p className="text-success mt-3 text-sm">{t('toutPaye', { month: monthLabel })}</p>
