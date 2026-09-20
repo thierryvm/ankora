@@ -1136,6 +1136,7 @@
         "resetButton": "Réinitialiser mon choix",
         "resetHint": "Le bouton supprime ta décision et te repropose le bandeau au prochain chargement.",
         "noDecisionHint": "Tu n'as pas encore choisi sur cet appareil. Le bandeau s'affichera à ta prochaine visite.",
+        "decisionMeta": "Choix du {date} · politique cookies, version {version}",
         "toastSaved": "Préférences cookies enregistrées.",
         "toastError": "Impossible d'enregistrer ton choix. Réessaie."
       }
@@ -1370,9 +1371,9 @@
   },
   "glossary": {
     "title": "Glossaire",
-    "subtitle": "15 termes essentiels pour comprendre ta gestion budgétaire et tes finances personnelles.",
+    "subtitle": "16 termes essentiels pour comprendre ta gestion budgétaire et tes finances personnelles.",
     "metaTitle": "Glossaire — Termes financiers",
-    "metaDescription": "Glossaire des 15 termes essentiels de la gestion budgétaire : budget de lissage, compte bucket, épargne de précaution, et plus.",
+    "metaDescription": "Glossaire des 16 termes essentiels de la gestion budgétaire : budget de lissage, compte bucket, épargne de précaution, et plus.",
     "breadcrumb": {
       "home": "Accueil",
       "glossary": "Glossaire"
@@ -1595,7 +1596,8 @@
       "deletionAlreadyFailed": "Ta demande précédente est en échec. Ouvre son statut pour l'annuler ou la relancer.",
       "deletionRetryFailed": "Impossible de relancer la suppression.",
       "deletionRetryNothing": "Cette demande n'est plus en échec — recharge la page pour voir son état actuel.",
-      "exportLimited": "Export limité à une fois toutes les 5 minutes."
+      "exportLimited": "Export limité à une fois toutes les 5 minutes.",
+      "exportFailed": "L'export n'a pas pu être préparé. Réessaie dans quelques minutes."
     },
     "onboarding": {
       "workspaceNotFound": "Workspace introuvable. Contacte le support.",

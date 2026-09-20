@@ -1136,6 +1136,7 @@
         "resetButton": "Reset my choice",
         "resetHint": "This clears your decision and re-prompts the banner on the next page load.",
         "noDecisionHint": "You haven't made a choice on this device yet. The banner will show on your next visit.",
+        "decisionMeta": "Choice made on {date} · cookie policy, version {version}",
         "toastSaved": "Cookie preferences saved.",
         "toastError": "Could not save your choice. Try again."
       }
@@ -1370,9 +1371,9 @@
   },
   "glossary": {
     "title": "Glossary",
-    "subtitle": "15 essential terms for understanding your budgeting and personal finances.",
+    "subtitle": "16 essential terms for understanding your budgeting and personal finances.",
     "metaTitle": "Glossary — Financial Terms",
-    "metaDescription": "Glossary of 15 essential budgeting terms: smoothed budget, bucket account, emergency fund, and more.",
+    "metaDescription": "Glossary of 16 essential budgeting terms: smoothed budget, bucket account, emergency fund, and more.",
     "breadcrumb": {
       "home": "Home",
       "glossary": "Glossary"
@@ -1595,7 +1596,8 @@
       "deletionAlreadyFailed": "Your previous request failed. Open its status to cancel or relaunch it.",
       "deletionRetryFailed": "Could not relaunch the deletion.",
       "deletionRetryNothing": "This request is no longer failed — reload the page to see its current state.",
-      "exportLimited": "Export limited to once every 5 minutes."
+      "exportLimited": "Export limited to once every 5 minutes.",
+      "exportFailed": "The export could not be prepared. Try again in a few minutes."
     },
     "onboarding": {
       "workspaceNotFound": "Workspace not found. Contact support.",

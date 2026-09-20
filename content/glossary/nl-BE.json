@@ -3,9 +3,17 @@
     "slug": "budget-de-lissage",
     "term": "Uitvlakkingsbudget",
     "shortDefinition": "Budgetteringsmethode die onregelmatige jaarlijkse kosten (verzekeringen, belastingen, cadeaus, auto-onderhoud) omzet in voorspelbare maandelijkse stortingen. In plaats van grote uitgavenpieken op te vangen, zet je elke maand een evenredig deel opzij zodat je zichtrekening nooit verrast wordt.",
-    "whyItMatters": "Zonder uitvlakking valt een jaarlijkse verzekering van 600 € als een steen op je rekening. Met uitvlakking wordt het 50 €/maand, onzichtbaar. Ankora berekent automatisch het uit te vlakken bedrag per post en reserveert het in een speciale rekening.",
+    "whyItMatters": "Zonder uitvlakking valt een jaarlijkse verzekering van 600 € als een steen op je rekening. Met uitvlakking wordt het 50 €/maand, onzichtbaar. Ankora berekent automatisch het uit te vlakken bedrag per post en vertelt je hoeveel je elke maand opzij moet zetten.",
     "example": "Jaarlijkse onroerende voorheffing = 1 200 €. Uitvlakkingsbudget = 100 €/maand op een \"Belastingen\"-bucket. In november staat het geld klaar voor de factuur.",
     "relatedTerms": ["compte-bucket", "fonds-de-roulement-personnel", "charges-fixes"]
+  },
+  {
+    "slug": "effort-lisse",
+    "term": "Gespreide inspanning",
+    "shortDefinition": "Elke maand hetzelfde bedrag, in plaats van lichte en zware maanden: wat je facturen en de aflossingen van je leningen je gemiddeld per maand kosten. Een factuur die je één keer per jaar betaalt, telt voor haar bedrag gedeeld door 12, een factuur die je om de 3 maanden betaalt voor haar bedrag gedeeld door 3.",
+    "whyItMatters": "Als je elke maand op dit bedrag rekent, verrassen grote facturen je niet meer. Ankora rekent met wat je hebt ingevoerd; het doet geen enkele overschrijving.",
+    "example": "Een verzekering van 708 € die je één keer per jaar betaalt, telt voor 59 € per maand (708 ÷ 12). Tel daar 800 € huur en een lening van 250 € per maand bij: 59 + 800 + 250 = 1 109 €. In werkelijkheid betaal je de meeste maanden 1 050 € en 1 758 € in de maand van de verzekering; 1 109 € is het gemiddelde over het jaar.",
+    "relatedTerms": ["budget-de-lissage", "charges-fixes"]
   },
   {
     "slug": "compte-bucket",

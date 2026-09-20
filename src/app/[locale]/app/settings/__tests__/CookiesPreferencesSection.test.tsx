@@ -212,4 +212,68 @@ describe('<CookiesPreferencesSection />', () => {
     ) as HTMLInputElement;
     expect(analytics.checked).toBe(false);
   });
+
+  // F-11: the proof of consent names WHICH version was accepted, and when.
+  // `user_consents.version` already carries it; the screen did not say it.
+  describe('the date of the choice and the policy version', () => {
+    it('shows both from the server snapshot', () => {
+      render(
+        wrapped({
+          analytics: true,
+          marketing: false,
+          version: '1.0.0',
+          decidedAt: '2026-09-03T10:00:00.000Z',
+        }),
+      );
+      const meta = screen.getByTestId('cookies-decision-meta');
+      expect(meta).toHaveTextContent('3 septembre 2026');
+      expect(meta).toHaveTextContent('version 1.0.0');
+    });
+
+    it('shows the version the SERVER recorded, not the current constant', () => {
+      render(
+        wrapped({
+          analytics: false,
+          marketing: false,
+          version: '0.9.0',
+          decidedAt: '2026-08-01T10:00:00.000Z',
+        }),
+      );
+      expect(screen.getByTestId('cookies-decision-meta')).toHaveTextContent('version 0.9.0');
+    });
+
+    it('falls back to the local decision when there is no server record', async () => {
+      window.localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          version: COOKIE_CONSENT_VERSION,
+          analytics: false,
+          marketing: false,
+          decidedAt: '2026-09-10T08:00:00.000Z',
+        }),
+      );
+      render(wrapped(null));
+      await waitFor(() =>
+        expect(screen.getByTestId('cookies-decision-meta')).toHaveTextContent('10 septembre 2026'),
+      );
+      expect(screen.getByTestId('cookies-decision-meta')).toHaveTextContent(
+        `version ${COOKIE_CONSENT_VERSION}`,
+      );
+    });
+
+    it('shows nothing when no choice exists anywhere', () => {
+      render(wrapped(null));
+      expect(screen.queryByTestId('cookies-decision-meta')).not.toBeInTheDocument();
+    });
+
+    it('dates a fresh choice made on this screen', async () => {
+      render(wrapped(null));
+      fireEvent.click(screen.getByLabelText(messages.app.settings.cookies.analyticsLabel));
+      await waitFor(() =>
+        expect(screen.getByTestId('cookies-decision-meta')).toHaveTextContent(
+          `version ${COOKIE_CONSENT_VERSION}`,
+        ),
+      );
+    });
+  });
 });

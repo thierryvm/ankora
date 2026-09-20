@@ -3,9 +3,17 @@
     "slug": "budget-de-lissage",
     "term": "Budget de lissage",
     "shortDefinition": "Méthode budgétaire qui répartit les charges annuelles irrégulières (assurances, taxes, cadeaux, entretien auto) en versements mensuels prévisibles. Plutôt que d'encaisser des pics de dépenses ponctuels, on met de côté chaque mois la part proportionnelle, pour que le compte courant ne soit jamais pris de court.",
-    "whyItMatters": "Sans lissage, une facture d'assurance annuelle de 600 € tombe comme un rocher. Avec lissage, c'est 50 €/mois invisibles. Ankora calcule automatiquement le montant à lisser par poste et le réserve dans un compte dédié.",
+    "whyItMatters": "Sans lissage, une facture d'assurance annuelle de 600 € tombe comme un rocher. Avec lissage, c'est 50 €/mois invisibles. Ankora calcule automatiquement le montant à lisser par poste et te dit combien mettre de côté chaque mois.",
     "example": "Précompte immobilier annuel = 1 200 €. Budget de lissage = 100 €/mois versés sur un bucket \"Taxes\". En novembre, quand la facture tombe, l'argent est là.",
     "relatedTerms": ["compte-bucket", "fonds-de-roulement-personnel", "charges-fixes"]
+  },
+  {
+    "slug": "effort-lisse",
+    "term": "Effort lissé",
+    "shortDefinition": "Un même montant chaque mois, au lieu de mois légers et de mois lourds : ce que tes factures et les remboursements de tes prêts te coûtent en moyenne par mois. Une facture payée une fois par an y compte pour son montant divisé par 12, une facture payée tous les 3 mois pour son montant divisé par 3.",
+    "whyItMatters": "Si tu comptes sur ce montant chaque mois, les grosses factures ne te prennent plus par surprise. Ankora calcule avec ce que tu as encodé ; il ne fait aucun virement.",
+    "example": "Une assurance de 708 € payée une fois par an compte pour 59 € par mois (708 ÷ 12). Ajoute un loyer de 800 € et un prêt remboursé 250 € par mois : 59 + 800 + 250 = 1 109 €. En vrai, tu paies 1 050 € la plupart des mois et 1 758 € le mois de l'assurance ; 1 109 €, c'est la moyenne sur l'année.",
+    "relatedTerms": ["budget-de-lissage", "charges-fixes"]
   },
   {
     "slug": "compte-bucket",

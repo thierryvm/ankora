@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useTransition } from 'react';
-import { useTranslations } from 'next-intl';
+import { useFormatter, useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -50,8 +50,26 @@ type Props = {
   initialServerSnapshot: CookieConsentSnapshot | null;
 };
 
+/**
+ * WHICH version of the cookie policy the choice answered, and WHEN (F-11).
+ * `user_consents.version` is the art. 7(1) proof; a screen that shows the
+ * choice without it shows a checkbox, not a consent. Source: the server
+ * record, or the local decision (`ankora.consent.v1`) when it is fresher;
+ * nothing at all when neither exists.
+ */
+type Decision = { version: string; decidedAt: string };
+
+function serverDecision(snapshot: CookieConsentSnapshot | null): Decision | null {
+  if (!snapshot?.version || !snapshot.decidedAt) return null;
+  return { version: snapshot.version, decidedAt: snapshot.decidedAt };
+}
+
 export function CookiesPreferencesSection({ initialServerSnapshot }: Props) {
   const t = useTranslations('app.settings.cookies');
+  const format = useFormatter();
+  const [decision, setDecision] = useState<Decision | null>(() =>
+    serverDecision(initialServerSnapshot),
+  );
   const [analytics, setAnalytics] = useState<boolean>(initialServerSnapshot?.analytics ?? false);
   const [hasDecided, setHasDecided] = useState<boolean>(initialServerSnapshot !== null);
   const [pending, startTransition] = useTransition();
@@ -72,6 +90,7 @@ export function CookiesPreferencesSection({ initialServerSnapshot }: Props) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setAnalytics(local.analytics);
       setHasDecided(true);
+      setDecision({ version: local.version, decidedAt: local.decidedAt });
     }
   }, [initialServerSnapshot]);
 
@@ -80,14 +99,16 @@ export function CookiesPreferencesSection({ initialServerSnapshot }: Props) {
   // migration) and it is always written false, including over an older
   // decision that had granted it.
   const save = (nextAnalytics: boolean) => {
+    const decidedAt = new Date().toISOString();
     writeLocal({
       version: COOKIE_CONSENT_VERSION,
       analytics: nextAnalytics,
       marketing: false,
-      decidedAt: new Date().toISOString(),
+      decidedAt,
     });
     setAnalytics(nextAnalytics);
     setHasDecided(true);
+    setDecision({ version: COOKIE_CONSENT_VERSION, decidedAt });
     startTransition(async () => {
       const res = await recordCookieConsentAction({
         analytics: nextAnalytics,
@@ -117,6 +138,7 @@ export function CookiesPreferencesSection({ initialServerSnapshot }: Props) {
     clearLocal();
     setAnalytics(false);
     setHasDecided(false);
+    setDecision(null);
     startTransition(async () => {
       const res = await recordCookieConsentAction({ analytics: false, marketing: false }).catch(
         () => null,
@@ -200,6 +222,17 @@ export function CookiesPreferencesSection({ initialServerSnapshot }: Props) {
           <p className="text-muted-foreground mt-2 text-xs">
             {hasDecided ? t('resetHint') : t('noDecisionHint')}
           </p>
+          {decision ? (
+            <p data-testid="cookies-decision-meta" className="text-muted-foreground mt-1 text-xs">
+              {t('decisionMeta', {
+                date: format.dateTime(new Date(decision.decidedAt), {
+                  dateStyle: 'long',
+                  timeZone: 'Europe/Brussels',
+                }),
+                version: decision.version,
+              })}
+            </p>
+          ) : null}
         </div>
       </CardContent>
     </Card>

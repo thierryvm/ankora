@@ -1136,6 +1136,7 @@
         "resetButton": "Mijn keuze opnieuw instellen",
         "resetHint": "Dit verwijdert je beslissing en toont het banner opnieuw bij de volgende laadbeurt.",
         "noDecisionHint": "Je hebt op dit apparaat nog geen keuze gemaakt. Het banner verschijnt bij je volgende bezoek.",
+        "decisionMeta": "Keuze van {date} · cookiebeleid, versie {version}",
         "toastSaved": "Cookievoorkeuren opgeslagen.",
         "toastError": "Kon je keuze niet opslaan. Probeer opnieuw."
       }
@@ -1370,9 +1371,9 @@
   },
   "glossary": {
     "title": "Woordenboek",
-    "subtitle": "15 essentiële termen voor het begrijpen van je budgetbeheer en persoonlijke financiën.",
+    "subtitle": "16 essentiële termen voor het begrijpen van je budgetbeheer en persoonlijke financiën.",
     "metaTitle": "Woordenboek — Financiële termen",
-    "metaDescription": "Woordenboek van 15 essentiële termen voor budgetbeheer: uitvlakkingsbudget, bucket-rekening, noodspaargeld, en meer.",
+    "metaDescription": "Woordenboek van 16 essentiële termen voor budgetbeheer: uitvlakkingsbudget, bucket-rekening, noodspaargeld, en meer.",
     "breadcrumb": {
       "home": "Startpagina",
       "glossary": "Woordenboek"
@@ -1595,7 +1596,8 @@
       "deletionAlreadyFailed": "Je vorige aanvraag is mislukt. Open de status om ze te annuleren of opnieuw te starten.",
       "deletionRetryFailed": "Kan de verwijdering niet opnieuw starten.",
       "deletionRetryNothing": "Deze aanvraag is niet meer mislukt — herlaad de pagina om de huidige staat te zien.",
-      "exportLimited": "Export beperkt tot één keer per 5 minuten."
+      "exportLimited": "Export beperkt tot één keer per 5 minuten.",
+      "exportFailed": "De export kon niet worden voorbereid. Probeer het over enkele minuten opnieuw."
     },
     "onboarding": {
       "workspaceNotFound": "Workspace niet gevonden. Contacteer de support.",
