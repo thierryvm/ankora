@@ -185,11 +185,11 @@ describe('exportUserData — the seven original tables', () => {
     expect(metadata).toEqual({ resource_type: 'data_export', count: 3 });
   });
 
-  it('announces the additive change through schemaVersion 1.1', async () => {
+  it('announces the additive change through schemaVersion 1.2', async () => {
     const bundle = await exportUserData(USER_ID);
     // 1.0 → 1.1: keys were added, none renamed or reshaped. A reader of a 1.0
     // file reads a 1.1 file unchanged.
-    expect(bundle.schemaVersion).toBe('1.1');
+    expect(bundle.schemaVersion).toBe('1.2');
   });
 });
 

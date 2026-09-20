@@ -1,13 +1,104 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: '14.5';
+  graphql_public: {
+    Tables: {
+      [_ in never]: never;
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json;
+          operationName?: string;
+          query?: string;
+          variables?: Json;
+        };
+        Returns: Json;
+      };
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
   };
   public: {
     Tables: {
+      account_balance_statements: {
+        Row: {
+          account_type: string;
+          balance: number;
+          cancelled_at: string | null;
+          cancelled_by: string | null;
+          created_by: string;
+          derived_balance: number | null;
+          id: string;
+          recorded_at: string;
+          stated_on: string;
+          updated_at: string;
+          workspace_id: string;
+        };
+        Insert: {
+          account_type: string;
+          balance: number;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          created_by: string;
+          derived_balance?: number | null;
+          id?: string;
+          recorded_at?: string;
+          stated_on: string;
+          updated_at?: string;
+          workspace_id: string;
+        };
+        Update: {
+          account_type?: string;
+          balance?: number;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          created_by?: string;
+          derived_balance?: number | null;
+          id?: string;
+          recorded_at?: string;
+          stated_on?: string;
+          updated_at?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'account_balance_statements_account_fkey';
+            columns: ['workspace_id', 'account_type'];
+            isOneToOne: false;
+            referencedRelation: 'accounts';
+            referencedColumns: ['workspace_id', 'account_type'];
+          },
+          {
+            foreignKeyName: 'account_balance_statements_cancelled_by_fkey';
+            columns: ['cancelled_by'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'account_balance_statements_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'account_balance_statements_workspace_id_fkey';
+            columns: ['workspace_id'];
+            isOneToOne: false;
+            referencedRelation: 'workspaces';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       accounts: {
         Row: {
           account_type: string;
@@ -96,6 +187,7 @@ export type Database = {
       };
       categories: {
         Row: {
+          category_group: string | null;
           color: string | null;
           color_token: string;
           created_at: string;
@@ -108,6 +200,7 @@ export type Database = {
           workspace_id: string;
         };
         Insert: {
+          category_group?: string | null;
           color?: string | null;
           color_token?: string;
           created_at?: string;
@@ -120,6 +213,7 @@ export type Database = {
           workspace_id: string;
         };
         Update: {
+          category_group?: string | null;
           color?: string | null;
           color_token?: string;
           created_at?: string;
@@ -580,6 +674,111 @@ export type Database = {
           },
         ];
       };
+      movements: {
+        Row: {
+          amount: number;
+          cancelled_at: string | null;
+          cancelled_by: string | null;
+          created_by: string;
+          description: string | null;
+          free_savings_part: number | null;
+          from_account_type: string | null;
+          id: string;
+          income_nature: string | null;
+          kind: string;
+          note: string | null;
+          occurred_on: string;
+          plan_month: number | null;
+          plan_suggested_amount: number | null;
+          plan_year: number | null;
+          provision_part: number | null;
+          recorded_at: string;
+          to_account_type: string | null;
+          updated_at: string;
+          workspace_id: string;
+        };
+        Insert: {
+          amount: number;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          created_by: string;
+          description?: string | null;
+          free_savings_part?: number | null;
+          from_account_type?: string | null;
+          id?: string;
+          income_nature?: string | null;
+          kind: string;
+          note?: string | null;
+          occurred_on: string;
+          plan_month?: number | null;
+          plan_suggested_amount?: number | null;
+          plan_year?: number | null;
+          provision_part?: number | null;
+          recorded_at?: string;
+          to_account_type?: string | null;
+          updated_at?: string;
+          workspace_id: string;
+        };
+        Update: {
+          amount?: number;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          created_by?: string;
+          description?: string | null;
+          free_savings_part?: number | null;
+          from_account_type?: string | null;
+          id?: string;
+          income_nature?: string | null;
+          kind?: string;
+          note?: string | null;
+          occurred_on?: string;
+          plan_month?: number | null;
+          plan_suggested_amount?: number | null;
+          plan_year?: number | null;
+          provision_part?: number | null;
+          recorded_at?: string;
+          to_account_type?: string | null;
+          updated_at?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'movements_cancelled_by_fkey';
+            columns: ['cancelled_by'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'movements_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'movements_from_account_fkey';
+            columns: ['workspace_id', 'from_account_type'];
+            isOneToOne: false;
+            referencedRelation: 'accounts';
+            referencedColumns: ['workspace_id', 'account_type'];
+          },
+          {
+            foreignKeyName: 'movements_to_account_fkey';
+            columns: ['workspace_id', 'to_account_type'];
+            isOneToOne: false;
+            referencedRelation: 'accounts';
+            referencedColumns: ['workspace_id', 'account_type'];
+          },
+          {
+            foreignKeyName: 'movements_workspace_id_fkey';
+            columns: ['workspace_id'];
+            isOneToOne: false;
+            referencedRelation: 'workspaces';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       user_consents: {
         Row: {
           granted: boolean;
@@ -694,7 +893,7 @@ export type Database = {
         Row: {
           months_tracked: number | null;
           provision_target: number | null;
-          reste_a_vivre_default: number;
+          reste_a_vivre_default: number | null;
           reste_a_vivre_overrides: Json;
           savings_balance: number | null;
           updated_at: string;
@@ -703,7 +902,7 @@ export type Database = {
         Insert: {
           months_tracked?: number | null;
           provision_target?: number | null;
-          reste_a_vivre_default?: number;
+          reste_a_vivre_default?: number | null;
           reste_a_vivre_overrides?: Json;
           savings_balance?: number | null;
           updated_at?: string;
@@ -712,7 +911,7 @@ export type Database = {
         Update: {
           months_tracked?: number | null;
           provision_target?: number | null;
-          reste_a_vivre_default?: number;
+          reste_a_vivre_default?: number | null;
           reste_a_vivre_overrides?: Json;
           savings_balance?: number | null;
           updated_at?: string;
@@ -798,6 +997,10 @@ export type Database = {
       purge_audit_log_older_than_12_months: { Args: never; Returns: number };
       seed_default_accounts: { Args: { ws_id: string }; Returns: undefined };
       seed_default_categories: {
+        Args: { owner_id: string; ws_id: string };
+        Returns: undefined;
+      };
+      seed_expense_categories: {
         Args: { owner_id: string; ws_id: string };
         Returns: undefined;
       };
@@ -923,6 +1126,9 @@ export type CompositeTypes<
     : never;
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },
