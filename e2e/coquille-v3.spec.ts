@@ -88,19 +88,50 @@ async function debordements(page: import('@playwright/test').Page): Promise<stri
     const vw = document.documentElement.clientWidth;
     const dehors: string[] = [];
 
-    for (const el of Array.from(document.body.querySelectorAll('*'))) {
+    // Le defilement horizontal de la PAGE : c'est le symptome que quelqu'un
+    // voit. Il se mesure en un chiffre, et il ne se confond pas avec un
+    // debordement d'element.
+    if (document.documentElement.scrollWidth > vw + 1) {
+      dehors.push(
+        `la page defile horizontalement : scrollWidth ${document.documentElement.scrollWidth} > ${vw}`,
+      );
+    }
+
+    // Puis les elements, mais seulement ceux avec lesquels on INTERAGIT.
+    //
+    // La premiere version de ce cas balayait tout le DOM, et elle a trouve un
+    // `div.pointer-events-none.absolute.-right-16.-bottom-16` : un halo
+    // decoratif, pose exprès en dehors de sa carte, anterieur a ce lot. Il
+    // deborde du viewport sans rien deplacer, sans rien masquer, et sans
+    // rendre la page defilante (le corps le rogne). Le signaler etait mesurer
+    // plus strict que le critere, et un cas qui rougit sur une decoration
+    // finit ignore — donc inutile le jour ou il a raison.
+    //
+    // Ce qui compte est intact, et c'est la classe de defaut du 31 juillet :
+    // un CONTROLE pousse hors de l'ecran est un controle inaccessible.
+    const interactifs = 'a[href], button, input, select, textarea, [role="button"], [tabindex]';
+    for (const el of Array.from(document.body.querySelectorAll(interactifs))) {
       const s = getComputedStyle(el);
       if (s.display === 'none' || s.visibility === 'hidden') continue;
+      if (s.pointerEvents === 'none') continue;
       const r = el.getBoundingClientRect();
       if (r.width <= 0 || r.height <= 0) continue;
       // 1 px de tolérance : les bords sub-pixel d'un zoom de rendu ne sont pas
       // un débordement, et les traiter comme tel rendrait la spec instable —
       // c'est-à-dire ignorée.
       if (r.right > vw + 1 || r.left < -1) {
+        // Le nom SEUL ne suffit pas à retrouver le coupable : « div » ne dit
+        // rien à qui lit le rapport, et il faut alors refaire la mesure à la
+        // main. Le message porte donc la chaîne de classes et la position
+        // calculée — de quoi ouvrir le bon fichier du premier coup.
         const nom = el.tagName.toLowerCase();
         const marque = el.getAttribute('data-testid') ?? el.getAttribute('aria-label') ?? '';
+        const classes =
+          typeof el.className === 'string'
+            ? el.className.trim().split(/\s+/).slice(0, 6).join('.')
+            : '';
         dehors.push(
-          `${nom}${marque ? `[${marque}]` : ''} → ${Math.round(r.left)}…${Math.round(r.right)} / ${vw}`,
+          `${nom}${marque ? `[${marque}]` : ''}${classes ? `.${classes}` : ''} (${s.position}) → ${Math.round(r.left)}…${Math.round(r.right)} / ${vw}`,
         );
       }
     }
