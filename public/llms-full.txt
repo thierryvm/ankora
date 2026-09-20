@@ -1,6 +1,6 @@
 # ankora.be — Full content export for LLMs
 
-Last generated: 2026-08-18
+Last generated: 2026-09-20
 Canonical URL: https://ankora.be
 License: content available for citation with attribution. Code is proprietary.
 
@@ -8,7 +8,7 @@ License: content available for citation with attribution. Code is proprietary.
 
 1. About Ankora
 2. Methodology: smoothed budgets and bucket accounts
-3. Glossary (15 terms)
+3. Glossary (16 terms)
 4. FAQ
 5. Legal and data handling
 
@@ -70,6 +70,10 @@ Converting irregular annual charges into monthly contributions.
 ### Budget de lissage
 
 Méthode budgétaire qui répartit les charges annuelles irrégulières (assurances, taxes, cadeaux, entretien auto) en versements mensuels prévisibles. Plutôt que d'encaisser des pics de dépenses ponctuels, on met de côté chaque mois la part proportionnelle, pour que le compte courant ne soit jamais pris de court.
+
+### Effort lissé
+
+Un même montant chaque mois, au lieu de mois légers et de mois lourds : ce que tes factures et les remboursements de tes prêts te coûtent en moyenne par mois. Une facture payée une fois par an y compte pour son montant divisé par 12, une facture payée tous les 3 mois pour son montant divisé par 3.
 
 ### Compte bucket (compte thématique)
 
