@@ -8,6 +8,7 @@ import { Link } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
 import { formatCurrency } from '@/lib/i18n/formatters';
 
+import { IlTeResteChiffres } from './IlTeResteChiffres';
 import { Repli } from './Repli';
 
 /**
@@ -135,38 +136,24 @@ export async function IlTeResteCard({
           {t('titre')}
         </h2>
 
-        {/* 28 px sur 32 de ligne — la taille du chiffre de tête dans
-            l'application, tranchée au tour 17 bis. Les 32 px sont une exception
-            écrite, réservée à l'accueil et à l'écran d'entrée. */}
-        <p
-          className={`mt-1 text-[28px] leading-8 font-bold tabular-nums ${
-            depasse ? 'text-danger' : 'text-brand-text-strong'
-          }`}
-          data-montant
-          data-testid="cockpit-chiffre"
-        >
-          {fmt(ilTeReste)}
-        </p>
-
-        <p className="text-muted-foreground mt-1 text-sm" data-base>
-          {t('base', { month: monthLabel })}
-        </p>
-
-        {/* La formule, en toutes lettres. Les nombres sont écrits sans « € » :
-            la ligne en porte quatre, et quatre symboles répétés la rendent
-            illisible sans rien ajouter — l'unité est dite par le chiffre de
-            tête, juste au-dessus. */}
-        <p className="mt-3 text-sm" data-decomposition data-testid="cockpit-formule">
-          <span className="tabular-nums">
-            {t('termeRevenus')} {fmt(revenus).replace(/\s*€$/u, '')}
-          </span>{' '}
-          <span className="tabular-nums">
-            − {t('termeRetenu')} {fmt(dejaCompte).replace(/\s*€$/u, '')}
-          </span>{' '}
-          <span className="tabular-nums">
-            − {t('termeDepense')} {fmt(depensesDuMois).replace(/\s*€$/u, '')} = {fmt(ilTeReste)}
-          </span>
-        </p>
+        {/* Le chiffre, sa base et la ligne de formule passent par un composant
+            client : le chiffre de tête doit descendre à l'annonce d'une
+            dépense, avant la réponse du serveur (ADR-010), et la ligne doit
+            descendre avec lui — sinon la soustraction affichée devient fausse
+            le temps d'un aller-retour. Cf. `IlTeResteChiffres`. */}
+        <IlTeResteChiffres
+          ilTeReste={ilTeReste}
+          depensesDuMois={depensesDuMois}
+          revenus={revenus}
+          dejaCompte={dejaCompte}
+          locale={locale}
+          base={t('base', { month: monthLabel })}
+          termes={{
+            revenus: t('termeRevenus'),
+            retenu: t('termeRetenu'),
+            depense: t('termeDepense'),
+          }}
+        />
 
         {/* La décomposition de la retenue — règle 10 : un total s'ouvre sur ses
             parts, et celles-ci descendent avec lui plutôt que d'être

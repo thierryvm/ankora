@@ -5,13 +5,37 @@
  * Vecteurs FICTIFS de bout en bout (dépôt public) : une famille dont le revenu
  * couvre 505 € de factures mensuelles et 705 € de charges au total.
  */
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, within, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import messages from '../../../../messages/fr-BE.json';
 import { money } from '@/lib/domain/types';
 import type { LigneBientot } from '@/lib/domain/cockpit/bientot';
+import { formatCurrency } from '@/lib/i18n/formatters';
+
+/**
+ * Le compteur d'appels à `settleSpend`, posé AVANT le module mocké (vi.hoisted)
+ * parce que `vi.mock` remonte en tête de fichier.
+ *
+ * Le mock garde le comportement réel et se contente de compter : ce qui doit
+ * être prouvé, c'est qu'une vérité serveur fraîche PURGE la figure optimiste —
+ * pas qu'une fonction au bon nom existe quelque part.
+ */
+const sonde = vi.hoisted(() => ({ settle: 0 }));
+
+vi.mock('@/lib/expenses/optimistic-spend', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/expenses/optimistic-spend')>();
+  return {
+    ...actual,
+    settleSpend: () => {
+      sonde.settle += 1;
+      actual.settleSpend();
+    },
+  };
+});
+
+import { announceOptimisticSpend, settleSpend } from '@/lib/expenses/optimistic-spend';
 
 vi.mock('@/i18n/navigation', () => ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -262,5 +286,145 @@ describe('EncoreAPayerCard — « Bientôt »', () => {
     // 2 lignes du mois + 1 ligne de « Bientôt »
     expect(avecBientot.container.querySelectorAll('[data-bientot]')).toHaveLength(1);
     expect(avecBientot.container.querySelectorAll('ul')[0]!.querySelectorAll('li')).toHaveLength(2);
+  });
+});
+
+/**
+ * B1 — la régression du tour 27 : la carte de tête a remplacé
+ * `SituationDuMoisHero` sans reprendre son fil optimiste, donc « Il te reste »
+ * ne bougeait plus à l'annonce d'une dépense (ADR-010, < 100 ms) et plus
+ * personne n'appelait `settleSpend()` : une figure optimiste posée par la
+ * feuille ⊕ y serait restée jusqu'au prochain démontage.
+ *
+ * Les images d'animation sont pilotées à la main, comme dans
+ * `HeroAmount.test.tsx` : « ça bouge » se constate, il ne se suppose pas.
+ */
+describe('IlTeResteCard — le chiffre optimiste (ADR-010)', () => {
+  const base = {
+    ilTeReste: 495,
+    resteDisponible: 1295,
+    revenus: 2000,
+    depensesDuMois: 800,
+    chargesFixes: 505,
+    provisionsLissees: 130,
+    engagementsMensuels: 70,
+    monthLabel: 'septembre',
+    incomplet: false,
+    locale: 'fr-BE' as const,
+    cascade: <p>La cascade</p>,
+  };
+
+  let frames: FrameRequestCallback[] = [];
+  const avance = (now: number) => {
+    const enAttente = frames;
+    frames = [];
+    act(() => {
+      for (const cb of enAttente) cb(now);
+    });
+  };
+
+  beforeEach(() => {
+    settleSpend();
+    sonde.settle = 0;
+    frames = [];
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+      frames.push(cb);
+      return frames.length;
+    });
+    vi.stubGlobal('cancelAnimationFrame', () => {});
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    settleSpend();
+  });
+
+  // Le texte VISIBLE seulement : le chiffre porte aussi une région live
+  // visuellement cachée avec la valeur arrivée, et lire les deux d'un coup
+  // rendrait « 450 €450 € ».
+  const chiffre = () =>
+    Number(
+      (
+        screen.getByTestId('cockpit-chiffre').querySelector('[aria-hidden="true"]')?.textContent ??
+        ''
+      )
+        .replace(/[^\d,-]/gu, '')
+        .replace(',', '.'),
+    );
+
+  it('descend dès l’annonce d’une dépense, avant la réponse du serveur', async () => {
+    render(await IlTeResteCard(base));
+    expect(chiffre()).toBeCloseTo(495, 2);
+
+    // 45 € annoncés : le couple publié par la feuille ⊕ porte les DEUX
+    // résultats, « Il te reste » et « Dépensé ce mois ».
+    act(() => announceOptimisticSpend({ ilTeReste: 450, depensesDuMois: 845 }));
+    avance(0);
+    avance(1000);
+
+    expect(chiffre()).toBeCloseTo(450, 2);
+  });
+
+  it('emmène la ligne de formule avec lui — l’écran ne se contredit pas', async () => {
+    render(await IlTeResteCard(base));
+
+    act(() => announceOptimisticSpend({ ilTeReste: 450, depensesDuMois: 845 }));
+    avance(0);
+    avance(1000);
+
+    const texte = (screen.getByTestId('cockpit-formule').textContent ?? '').replace(/ | /gu, '');
+    expect(texte).toMatch(/845/u);
+    expect(texte).toMatch(/450/u);
+  });
+
+  it('purge la figure optimiste quand la vérité serveur arrive (settleSpend)', async () => {
+    const vue = render(await IlTeResteCard(base));
+    sonde.settle = 0;
+
+    act(() => announceOptimisticSpend({ ilTeReste: 450, depensesDuMois: 845 }));
+    avance(0);
+    avance(1000);
+    expect(chiffre()).toBeCloseTo(450, 2);
+
+    // La page revalidée rend la carte avec la nouvelle vérité serveur.
+    vue.rerender(await IlTeResteCard({ ...base, ilTeReste: 450, depensesDuMois: 845 }));
+    avance(1001);
+    avance(2000);
+
+    expect(sonde.settle).toBeGreaterThan(0);
+    expect(chiffre()).toBeCloseTo(450, 2);
+  });
+});
+
+/**
+ * I2 — le « € » en tête. `Intl` place l'unité AVANT le nombre en `en`
+ * (`€1,234.50`) et en `nl-BE` (`€ 1.234,50`) : une ligne composée en retirant
+ * un « € » de fin par expression régulière en gardait quatre dans ces deux
+ * langues. Mesuré le 20 septembre 2026 avec `Intl.NumberFormat`.
+ *
+ * La composition correcte ne touche pas à une chaîne déjà formatée : elle
+ * formate des NOMBRES et pose l'unité une seule fois, à la place que la locale
+ * lui donne.
+ */
+describe.each(['fr-BE', 'en', 'nl-BE'] as const)('IlTeResteCard — l’unité en %s', (locale) => {
+  const base = {
+    ilTeReste: 495,
+    resteDisponible: 1295,
+    revenus: 2000,
+    depensesDuMois: 800,
+    chargesFixes: 505,
+    provisionsLissees: 130,
+    engagementsMensuels: 70,
+    monthLabel: 'septembre',
+    incomplet: false,
+    cascade: <p>La cascade</p>,
+  };
+
+  it('ne porte le « € » qu’une fois dans la ligne de formule', async () => {
+    render(await IlTeResteCard({ ...base, locale }));
+
+    const texte = screen.getByTestId('cockpit-formule').textContent ?? '';
+    expect(texte.match(/€/gu) ?? []).toHaveLength(1);
+    expect(texte).toContain(formatCurrency(base.ilTeReste, locale));
   });
 });

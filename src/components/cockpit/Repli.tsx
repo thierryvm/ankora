@@ -21,7 +21,7 @@ import { ChevronDown } from 'lucide-react';
  * le plus serré : nov., 40 € » répondent DÉJÀ. On ouvre pour le détail, pas
  * pour l'existence. C'est la raison pour laquelle `cle` est obligatoire.
  *
- * ## Ce que le composant garantit, et que la spec e2e mesure
+ * ## Ce que le composant garantit, et que `e2e/cockpit-v3.spec.ts` mesure
  *
  * - un `button`, jamais un `div` cliquable ;
  * - `aria-expanded`, et `aria-controls` visant un `id` RÉELLEMENT présent dans
