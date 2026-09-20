@@ -1648,5 +1648,55 @@
       "reload": "Reload",
       "later": "Later"
     }
+  },
+  "cockpit": {
+    "ilTeReste": {
+      "etiquette": "Situation",
+      "titre": "You have left",
+      "base": "on your {month} budget",
+      "termeRevenus": "Money in",
+      "termeRetenu": "Already set aside for your bills",
+      "termeDepense": "Spent",
+      "retenuDetail": "Already set aside for your bills: this month’s bills ({factures}) + the monthly share of your large bills ({parts}) + your instalments ({echeances}).",
+      "jaugeAria": "{depense} spent out of a {budget} budget.",
+      "ouvrirCascade": "Where this figure comes from",
+      "incompletTitre": "Complete your setup",
+      "incompletPhrase": "No money in for {month} and no monthly income on file: “You have left” cannot be worked out without it.",
+      "incompletCta": "Add money in"
+    },
+    "encoreAPayer": {
+      "etiquette": "Due this month",
+      "titre": "Still to pay",
+      "sousLigne": "{payees} paid out of {total}",
+      "toutPaye": "✓ Everything is paid for {month}.",
+      "enRetard": "{date}, overdue",
+      "autres": "{count} more to pay in the detail",
+      "bientot": "Coming up",
+      "bientotHorsDe": "outside {month}",
+      "bientotAutres": "+ {count} more in My bills",
+      "voirFactures": "My bills",
+      "resteEngagements": "What is left to pay this month comes from your instalments: tick them in My commitments."
+    },
+    "partMensuelle": {
+      "phrase": "{facture} every {cycle} months → {part} a month"
+    },
+    "replis": {
+      "comptes": "My accounts",
+      "depenses": "What moved",
+      "cleDepenses": "{count, plural, =0 {no expense} one {# expense} other {# expenses}}",
+      "rythme": "This month’s pace",
+      "cleRythme": "{jours, plural, =0 {last day} one {# day left} other {# days left}}",
+      "virements": "This month’s transfers",
+      "cleVirements": "{montant} to transfer",
+      "cleVirementsIncomplet": "to complete",
+      "reserve": "Provisions for your bills",
+      "cleReserve": "your buffer",
+      "engagements": "Commitments"
+    },
+    "virements": {
+      "versQuotidien": "Transfer to make to Everyday spending",
+      "versProvisions": "Transfer to make to Provisions for your bills",
+      "depuisProvisions": "To take back from Provisions for your bills"
+    }
   }
 }

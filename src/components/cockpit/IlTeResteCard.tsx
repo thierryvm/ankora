@@ -1,0 +1,214 @@
+import type { ReactNode } from 'react';
+import { getTranslations } from 'next-intl/server';
+
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { AllocationBar } from '@/components/dashboard/AllocationBar';
+import { Link } from '@/i18n/navigation';
+import type { Locale } from '@/i18n/routing';
+import { formatCurrency } from '@/lib/i18n/formatters';
+
+import { Repli } from './Repli';
+
+/**
+ * C2 — « Il te reste ». La carte de tête du cockpit v3.
+ *
+ * ## Une seule question, un seul chiffre
+ *
+ * La page répond à « où en est l'argent ». Cette carte porte la réponse ; tout
+ * le reste de l'écran l'explique ou la prolonge. Elle est la première surface
+ * sous l'en-tête, et le seul chiffre de cette taille sur la page.
+ *
+ * ## La ligne de formule est celle de la PRODUCTION D'AUJOURD'HUI
+ *
+ * `situation-mois.ts` calcule :
+ *
+ *     resteDisponible = revenus − effortFinancierLissé − engagementsMensuels
+ *     ilTeReste       = resteDisponible − dépensesDuMois
+ *
+ * La ligne affichée la dit mot pour mot, en trois termes :
+ *
+ *     Revenus  − Déjà compté pour tes factures  − Dépensé  =  Il te reste
+ *
+ * où « Déjà compté pour tes factures » vaut exactement `revenus −
+ * resteDisponible`, c'est-à-dire la somme des trois retenues que la production
+ * applique déjà. AUCUN calcul n'est introduit ici : le terme est dérivé de deux
+ * chiffres que la page reçoit, et il est vérifiable de tête sur les nombres
+ * affichés. La formule de la maquette v3 (avec « Mis de côté », qui suppose des
+ * virements enregistrés) est le travail de la PR D, pas de celle-ci.
+ *
+ * ## Pourquoi la retenue se décompose sous la ligne
+ *
+ * Règle 10 du CLAUDE.md : un montant issu d'une somme s'ouvre sur ce qui le
+ * compose. « Déjà compté pour tes factures » en est une — trois postes, chacun
+ * avec son nom et sa part. Le détail facture par facture reste derrière « D'où
+ * vient ce chiffre », qui ouvre la cascade.
+ *
+ * `Decimal` ne traverse pas la frontière RSC : ce composant reçoit des
+ * `number`, déjà convertis par la page.
+ */
+export type IlTeResteCardProps = Readonly<{
+  /** Le chiffre de tête. */
+  ilTeReste: number;
+  /** Le budget du mois, avant dépenses — la base de la jauge. */
+  resteDisponible: number;
+  revenus: number;
+  depensesDuMois: number;
+  /** Les trois postes de la retenue, tels que la production les calcule. */
+  chargesFixes: number;
+  provisionsLissees: number;
+  engagementsMensuels: number;
+  /** Le mois, déjà formaté par la page. */
+  monthLabel: string;
+  /** Vrai quand aucun revenu n'est connu : rien ne se calcule sans lui. */
+  incomplet: boolean;
+  locale: Locale;
+  /**
+   * Ce qui compose le chiffre, rendu par la page (la cascade). Passé en
+   * `children` plutôt qu'importé ici : la cascade est un Server Component, le
+   * repli est un composant client, et c'est la page qui les marie.
+   */
+  cascade: ReactNode;
+}>;
+
+export async function IlTeResteCard({
+  ilTeReste,
+  resteDisponible,
+  revenus,
+  depensesDuMois,
+  chargesFixes,
+  provisionsLissees,
+  engagementsMensuels,
+  monthLabel,
+  incomplet,
+  locale,
+  cascade,
+}: IlTeResteCardProps) {
+  const t = await getTranslations('cockpit.ilTeReste');
+  const fmt = (v: number) => formatCurrency(v, locale);
+
+  if (incomplet) {
+    return (
+      <Card data-surface="C2" data-testid="cockpit-il-te-reste">
+        <CardContent className="pt-6">
+          <p className="text-muted-foreground font-mono text-xs tracking-wide uppercase">
+            {t('etiquette')}
+          </p>
+          {/* Le même id que la branche complète : les deux sont exclusives, et
+              la région `aria-labelledby` doit garder un nom dans l'état qu'un
+              nouvel utilisateur voit en premier. */}
+          <h2 id="cockpit-heading" className="mt-2 text-xl font-semibold">
+            {t('incompletTitre')}
+          </h2>
+          <p className="text-muted-foreground mt-2 text-sm">
+            {t('incompletPhrase', { month: monthLabel })}
+          </p>
+          <Button asChild className="mt-4">
+            <Link href="/app/accounts">{t('incompletCta')}</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // La retenue, dérivée et non recalculée : deux calculs d'une même quantité
+  // finissent toujours par diverger, et celui-ci s'afficherait à côté de l'autre.
+  const dejaCompte = revenus - resteDisponible;
+
+  // La jauge : ce qui est dépensé sur ce que le mois laissait. Bornée à 0-100 —
+  // au-delà, c'est la teinte qui dit le dépassement, pas une barre qui sort de
+  // sa piste.
+  const pct =
+    resteDisponible > 0
+      ? Math.min(100, Math.max(0, Math.round((depensesDuMois / resteDisponible) * 100)))
+      : 0;
+  const depasse = ilTeReste < 0;
+
+  return (
+    <Card data-surface="C2" data-testid="cockpit-il-te-reste">
+      <CardContent className="pt-6">
+        <p className="text-muted-foreground font-mono text-xs tracking-wide uppercase">
+          {t('etiquette')}
+        </p>
+
+        <h2 id="cockpit-heading" className="mt-2 text-base font-medium">
+          {t('titre')}
+        </h2>
+
+        {/* 28 px sur 32 de ligne — la taille du chiffre de tête dans
+            l'application, tranchée au tour 17 bis. Les 32 px sont une exception
+            écrite, réservée à l'accueil et à l'écran d'entrée. */}
+        <p
+          className={`mt-1 text-[28px] leading-8 font-bold tabular-nums ${
+            depasse ? 'text-danger' : 'text-brand-text-strong'
+          }`}
+          data-montant
+          data-testid="cockpit-chiffre"
+        >
+          {fmt(ilTeReste)}
+        </p>
+
+        <p className="text-muted-foreground mt-1 text-sm" data-base>
+          {t('base', { month: monthLabel })}
+        </p>
+
+        {/* La formule, en toutes lettres. Les nombres sont écrits sans « € » :
+            la ligne en porte quatre, et quatre symboles répétés la rendent
+            illisible sans rien ajouter — l'unité est dite par le chiffre de
+            tête, juste au-dessus. */}
+        <p className="mt-3 text-sm" data-decomposition data-testid="cockpit-formule">
+          <span className="tabular-nums">
+            {t('termeRevenus')} {fmt(revenus).replace(/\s*€$/u, '')}
+          </span>{' '}
+          <span className="tabular-nums">
+            − {t('termeRetenu')} {fmt(dejaCompte).replace(/\s*€$/u, '')}
+          </span>{' '}
+          <span className="tabular-nums">
+            − {t('termeDepense')} {fmt(depensesDuMois).replace(/\s*€$/u, '')} = {fmt(ilTeReste)}
+          </span>
+        </p>
+
+        {/* La décomposition de la retenue — règle 10 : un total s'ouvre sur ses
+            parts, et celles-ci descendent avec lui plutôt que d'être
+            recalculées à l'affichage. */}
+        <p className="text-muted-foreground mt-2 text-xs" data-retenu>
+          {t('retenuDetail', {
+            factures: fmt(chargesFixes),
+            parts: fmt(provisionsLissees),
+            echeances: fmt(engagementsMensuels),
+          })}
+        </p>
+
+        {/* La jauge passe par `AllocationBar` : un `style={{width}}` inline est
+            bloqué par la CSP stricte `style-src 'self' 'nonce-…'` (THI-322).
+            Le SVG pose sa largeur en attribut, pas en style. */}
+        {resteDisponible > 0 && (
+          <div className="mt-4" data-jauge>
+            <AllocationBar
+              ariaLabel={t('jaugeAria', {
+                depense: fmt(depensesDuMois),
+                budget: fmt(resteDisponible),
+              })}
+              segments={[
+                {
+                  key: 'depense',
+                  ratio: pct / 100,
+                  fill: depasse ? 'var(--color-danger)' : 'var(--color-brand-600)',
+                },
+              ]}
+            />
+          </div>
+        )}
+
+        {/* L'action de la carte, et la seule (règle 5) : ce qui compose le
+            chiffre. Le détail facture par facture vit ici, replié — la carte
+            de tête reste une réponse, pas un tableau. */}
+        <div className="mt-4">
+          <Repli titre={t('ouvrirCascade')} cle={fmt(ilTeReste)} testId="cockpit-repli-cascade">
+            {cascade}
+          </Repli>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
