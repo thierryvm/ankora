@@ -180,3 +180,62 @@ conditionnels à maintenir. Une clé par rôle, dont le coût de sortie est chif
 dans J2. ADR-041 `:190-199` fixe l'ordre — « F2 seul d'un côté, l'écriture à deux
 mouvements de l'autre, dans cet ordre, jamais l'inverse » —, et J2 ne livre aucune
 écriture. Le report ne contrarie donc rien.
+
+## D17 — ce qu'un UPDATE peut changer sur une opération vivante
+
+Décidé par @thierry le 2026-09-20, en réponse aux points laissés ouverts par la
+première version de ce document.
+
+Son auteur **corrige** : le montant, la date, la description, la note, la nature
+d'argent reçu et la ventilation. C'est le « Modifier » de la maquette, et rien
+d'autre n'a besoin d'exister pour lui — Ankora garantit la **cohérence**, pas
+l'exhaustivité (ADR-040 D11).
+
+Restent **figés** : `id`, `workspace_id`, `created_by`, `recorded_at`, `kind`,
+et les comptes source et cible. Changer de compte n'est pas une correction :
+c'est une autre opération, et la corriger en place déplacerait deux soldes
+dérivés sans qu'aucune trace ne le dise. On annule, et on réécrit.
+
+Conséquence sur le message du trigger : il cesse de dire que « corriger passe
+par une annulation » — c'était faux pour cinq colonnes sur sept. Il **nomme la
+colonne figée** qu'on vient de toucher, et liste ce qui se corrige. Pour un
+relevé de solde, `account_type` est figé au même titre : l'identité de la ligne.
+
+## D18 — `cancelled_at` et `cancelled_by` sont imposés par la base
+
+Le client **demande** l'annulation ; il ne la déclare pas. Le trigger pose
+l'instant (`now()`) et l'auteur (`auth.uid()`), quoi que le client ait envoyé.
+La ré-ouverture, confirmée comme un droit (annuler par erreur doit se réparer,
+sinon « défaire » devient lui-même le piège à un clic que la règle 11 combat),
+remet les **deux** colonnes à NULL ensemble.
+
+Raison : l'anon key est publique, PostgREST est joignable avec le JWT de la
+personne, donc « annulé le 3 août par X » serait sinon une déclaration du
+client. La règle 11 veut une date qui se **vérifie** ; une date que l'écrivain
+choisit n'en est pas une. Mesuré le 2026-09-20 sur la base locale : avec la
+version précédente du trigger, un `cancelled_at` forgé à 2020 était stocké tel
+quel.
+
+## D19 — l'argent reçu sur les provisions, le vocabulaire, et le sous-centime
+
+1. **De l'argent reçu directement sur le compte de provisions ne se ventile
+   pas.** De l'argent reçu n'est pas un versement de provisions : la ventilation
+   (part lissée / part libre) décrit le partage d'un **virement** interne, et
+   elle reste interdite partout ailleurs. Le CHECK `movements_ventilation` la
+   conditionne donc à `kind = 'transfer' and to_account_type = 'provisions'`.
+2. **`regular` / `extra` restent les valeurs en base** ; les libellés visibles
+   sont ceux de la maquette (« mon revenu du mois », « en plus de mon revenu »).
+   Le vocabulaire d'écran change sans migration.
+3. **Le domaine refuse plus de deux décimales à sa frontière**, il ne les
+   arrondit pas en silence : `validateTransferAllocation` rend le motif
+   `sub-cent-precision`, `deriveAccountBalance` lève. Les colonnes sont
+   `numeric(12,2)` et `numeric(14,2)` — PostgreSQL arrondirait de toute façon,
+   mais **après** que l'écran a montré autre chose. Le refus rend le désaccord
+   visible du seul côté où il peut encore se corriger. Contrôlé aussi sur chaque
+   **part** : 200,005 + 75,445 = 275,45 exactement, donc une vérification par la
+   somme seule laisserait passer deux parts inécrivables.
+   _Reste à faire, écrit plutôt que tu_ : `measureStatementGap` est la seule
+   entrée du domaine qui ne porte pas encore ce contrôle.
+4. **L'export art. 20 vérifie le CONTENU** des deux tables neuves, et elles
+   entrent dans le `it.each` de pagination : une table exportée vide passerait
+   sinon pour une table exportée.

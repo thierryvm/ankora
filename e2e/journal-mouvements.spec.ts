@@ -99,11 +99,34 @@ test.describe('J2 — le journal des opérations, ses garde-fous et son isolatio
       });
       attendRefus(sommeFausse.error, 'movements_ventilation', '50 + 100 ≠ 200');
 
-      // Aucun compte de part ni d'autre.
+      // Aucun compte de part ni d'autre. Cette ligne viole `compte_present`
+      // ET `forme_selon_nature` : PostgreSQL ne nomme que la PREMIÈRE, et
+      // c'est ce qui a rendu ce cas rouge en CI. Il vise donc `compte_present`,
+      // et le cas suivant vise `forme_selon_nature` avec une ligne qui ne
+      // viole que lui. Un cas qui violerait deux contraintes ne prouverait
+      // aucune des deux : l'ordre des noms n'est pas un contrat.
       const sansCompte = await client
         .from('movements')
         .insert({ ...base, kind: 'transfer', amount: 10, occurred_on: '2026-09-01' });
-      attendRefus(sansCompte.error, 'movements_forme_selon_nature', 'from et to nuls ensemble');
+      attendRefus(sansCompte.error, 'movements_compte_present', 'from et to nuls ensemble');
+
+      // Un virement avec un seul compte : `compte_present` est satisfait (`to`
+      // est là), `comptes_distincts` aussi (une comparaison avec NULL ne
+      // refuse rien), `ventilation` aussi (la cible n'est pas les provisions).
+      // Seule la forme selon la nature est violée — un virement vient de
+      // quelque part.
+      const virementSansSource = await client.from('movements').insert({
+        ...base,
+        kind: 'transfer',
+        to_account_type: 'daily_card',
+        amount: 10,
+        occurred_on: '2026-09-01',
+      });
+      attendRefus(
+        virementSansSource.error,
+        'movements_forme_selon_nature',
+        'un virement sans compte source',
+      );
 
       // Un virement d'un compte vers lui-même.
       const versLuiMeme = await client.from('movements').insert({
@@ -213,19 +236,69 @@ test.describe('J2 — le journal des opérations, ses garde-fous et son isolatio
         .eq('id', ecrite!.id);
       expect(redate.error, 'redater une écriture').not.toBeNull();
 
-      // Annuler est permis, et laisse une trace datée (règle 11).
+      // Changer de compte n'est pas une correction, c'est une autre
+      // opération : les deux comptes sont figés, comme `kind`.
+      for (const [colonne, valeur] of [
+        ['kind', 'transfer'],
+        ['to_account_type', 'daily_card'],
+        ['from_account_type', 'income_bills'],
+      ] as const) {
+        const deplace = await client
+          .from('movements')
+          .update({ [colonne]: valeur })
+          .eq('id', ecrite!.id);
+        expect(deplace.error?.message ?? '', `${colonne} est figé`).toContain(colonne);
+      }
+
+      // Corriger ce que « Modifier » propose EST permis (ADR-045 D17) : le
+      // montant, la date, la description, la note, la nature.
+      const correction = await client
+        .from('movements')
+        .update({ amount: 95, occurred_on: '2026-09-04', description: 'Revenu du mois (corrigé)' })
+        .eq('id', ecrite!.id)
+        .select()
+        .single();
+      expect(correction.error, 'corriger le montant et la date').toBeNull();
+      expect(Number(correction.data!.amount), 'le montant corrigé').toBe(95);
+
+      // Annuler est permis, et laisse une trace datée (règle 11). L'instant et
+      // l'auteur de l'annulation sont IMPOSÉS par la base : ici le client les
+      // forge tous les deux — un instant de 2020, et personne comme auteur —,
+      // et la base écrit quand même l'heure vraie et la personne connectée.
+      // Sans cela, « annulé le 3 août par X » serait une déclaration du
+      // client, c'est-à-dire l'inverse d'une trace (règle 11 : une date se
+      // vérifie, une coche se croit).
       const annulation = await client
         .from('movements')
-        .update({ cancelled_at: new Date().toISOString(), cancelled_by: alice.userId })
+        .update({ cancelled_at: '2020-01-01T00:00:00.000Z', cancelled_by: null })
         .eq('id', ecrite!.id)
         .select()
         .single();
       expect(annulation.error).toBeNull();
-      expect(annulation.data!.cancelled_at).not.toBeNull();
+      expect(
+        new Date(annulation.data!.cancelled_at!).getUTCFullYear(),
+        "l'instant d'annulation est celui de la base",
+      ).toBeGreaterThan(2020);
+      expect(annulation.data!.cancelled_by, "l'auteur de l'annulation est imposé").toBe(
+        alice.userId,
+      );
 
       // Une ligne annulée ne se modifie plus.
       const modif = await client.from('movements').update({ amount: 9999 }).eq('id', ecrite!.id);
       expect(modif.error, "modifier le contenu d'une ligne annulée").not.toBeNull();
+
+      // Mais elle se ré-ouvre : annuler par erreur doit se réparer, sinon le
+      // « défaire » devient lui-même le piège à un clic. La ré-ouverture efface
+      // les deux colonnes ensemble — un annulateur sans annulation n'existe pas.
+      const reouverture = await client
+        .from('movements')
+        .update({ cancelled_at: null })
+        .eq('id', ecrite!.id)
+        .select()
+        .single();
+      expect(reouverture.error, 'ré-ouvrir une opération annulée').toBeNull();
+      expect(reouverture.data!.cancelled_at, 'ré-ouverte : plus d’annulation').toBeNull();
+      expect(reouverture.data!.cancelled_by, 'ré-ouverte : plus d’annulateur').toBeNull();
     } finally {
       await deleteSeededUser(admin, alice.userId);
     }
@@ -283,9 +356,30 @@ test.describe('J2 — le journal des opérations, ses garde-fous et son isolatio
       });
       expect(releveIntrus.error?.code, 'relever un solde chez autrui').toBe('42501');
 
-      // Et le relevé d'Alice lui reste invisible.
-      const relevesVusParBob = await clientBob.from('account_balance_statements').select('id');
-      expect(relevesVusParBob.data ?? [], "Bob ne voit aucun relevé d'Alice").toHaveLength(0);
+      // Et le relevé d'Alice lui reste invisible. Attention à la forme de
+      // cette preuve : Bob VOIT des relevés — les trois ancres de ses propres
+      // comptes, posées par `accounts_ancre_releve` à son inscription. Un
+      // `toHaveLength(0)` global rougirait donc sur un système SAIN, et
+      // l'ajuster à « 3 » aurait été pire : ce nombre passerait tout aussi
+      // bien avec trois relevés d'Alice.
+      //
+      // La question est donc posée dans les deux sens : combien de lignes
+      // d'ALICE, et à qui appartient tout ce que Bob voit.
+      const relevesVusParBob = await clientBob
+        .from('account_balance_statements')
+        .select('id, workspace_id');
+      const lignes = relevesVusParBob.data ?? [];
+      expect(
+        lignes.filter((r) => r.workspace_id === alice.workspaceId),
+        "Bob ne voit aucun relevé d'Alice",
+      ).toHaveLength(0);
+      expect(
+        [...new Set(lignes.map((r) => r.workspace_id))],
+        'tout ce que Bob voit est à Bob',
+      ).toEqual([bob.workspaceId]);
+      // Et il voit bien quelque chose : sans cette ligne, une table vide ou
+      // une policy qui refuse tout passerait les deux contrôles ci-dessus.
+      expect(lignes.length, 'Bob voit les ancres de ses trois comptes').toBe(3);
     } finally {
       await deleteSeededUser(admin, alice.userId);
       await deleteSeededUser(admin, bob.userId);

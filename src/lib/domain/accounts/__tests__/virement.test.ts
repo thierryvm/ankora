@@ -162,3 +162,64 @@ describe('validateTransferAllocation — le montant lui-même', () => {
     expect(result.reason).toBe('non-positive-amount');
   });
 });
+
+describe('validateTransferAllocation — la frontière du domaine (ADR-045 D19)', () => {
+  // @thierry, 2026-09-20 : plus de deux décimales est REFUSÉ, jamais arrondi.
+  // Un arrondi silencieux ici écrirait un montant que personne n'a tapé, et
+  // `movements.amount` étant `numeric(12,2)`, PostgreSQL arrondirait de toute
+  // façon — mais APRÈS que l'écran a montré autre chose. Le refus rend le
+  // désaccord visible du seul côté où il peut encore se corriger.
+  it('refuses an amount carrying more than two decimals, instead of rounding it', () => {
+    const result = validateTransferAllocation(
+      allocation({
+        amount: money('275.456'),
+        provisionPart: money(200),
+        freeSavingsPart: money('75.456'),
+      }),
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('unreachable');
+    expect(result.reason).toBe('sub-cent-precision');
+  });
+
+  it('refuses a PART carrying more than two decimals, even when the sum is exact', () => {
+    // 200,005 + 75,445 = 275,45 exactement : une vérification par la somme
+    // seule laisserait passer deux parts inécrivables.
+    const result = validateTransferAllocation(
+      allocation({
+        amount: money('275.45'),
+        provisionPart: money('200.005'),
+        freeSavingsPart: money('75.445'),
+      }),
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('unreachable');
+    expect(result.reason).toBe('sub-cent-precision');
+  });
+
+  it('refuses sub-cent precision outside the provisions account too', () => {
+    const result = validateTransferAllocation(
+      allocation({
+        toAccountType: 'daily_card',
+        amount: money('40.001'),
+        provisionPart: null,
+        freeSavingsPart: null,
+      }),
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('unreachable');
+    expect(result.reason).toBe('sub-cent-precision');
+  });
+
+  it('still accepts exactly two decimals, and fewer', () => {
+    expect(
+      validateTransferAllocation(
+        allocation({
+          amount: money('275.40'),
+          provisionPart: money('200.15'),
+          freeSavingsPart: money('75.25'),
+        }),
+      ).ok,
+    ).toBe(true);
+  });
+});

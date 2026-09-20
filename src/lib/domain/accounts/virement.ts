@@ -22,6 +22,7 @@ export type TransferAllocationInput = {
  */
 export type TransferAllocationRefusalReason =
   | 'non-positive-amount'
+  | 'sub-cent-precision'
   | 'allocation-required'
   | 'allocation-forbidden'
   | 'negative-part'
@@ -55,6 +56,15 @@ export type TransferAllocationRefused = {
 };
 
 export type TransferAllocationResult = TransferAllocationAccepted | TransferAllocationRefused;
+
+/**
+ * A figure no bank line can carry: more than two decimals (ADR-045 D19).
+ * `null` is not sub-cent — an absent part is the business of the two
+ * allocation rules, which answer with the field to go and fill.
+ */
+function isSubCent(value: Money | null): boolean {
+  return value !== null && value.decimalPlaces() > 2;
+}
 
 function refuse(
   reason: TransferAllocationRefusalReason,
@@ -102,6 +112,19 @@ export function validateTransferAllocation(
 
   if (!amount.gt(0)) {
     return refuse('non-positive-amount', input);
+  }
+
+  // Plus de deux décimales est REFUSÉ, jamais arrondi (@thierry, 2026-09-20,
+  // ADR-045 D19). `movements.amount` est `numeric(12,2)` : PostgreSQL
+  // arrondirait de toute façon, mais APRÈS que l'écran a montré autre chose,
+  // et la ligne écrite ne serait alors plus celle qui a été validée. Le refus
+  // rend le désaccord visible du seul côté où il peut encore se corriger.
+  //
+  // Contrôlé sur les parts AUSSI, et pas seulement sur leur somme : 200,005 +
+  // 75,445 fait exactement 275,45, donc une vérification par la somme laisse
+  // passer deux parts inécrivables.
+  if ([amount, provisionPart, freeSavingsPart].some(isSubCent)) {
+    return refuse('sub-cent-precision', input);
   }
 
   // Outside the provisions account there is nothing to smooth: a split here

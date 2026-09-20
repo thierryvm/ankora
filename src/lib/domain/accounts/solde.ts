@@ -108,6 +108,22 @@ function assertRealDate(value: Date, label: string): Date {
   return value;
 }
 
+/**
+ * A figure with more than two decimals is REFUSED here, never rounded
+ * (@thierry, 2026-09-20 — ADR-045 D19).
+ *
+ * The columns behind these values are `numeric(12,2)` and `numeric(14,2)`:
+ * PostgreSQL would round on write anyway. Rounding here as well would make the
+ * domain agree with a number nobody typed, and the difference would surface as
+ * a derived balance that is off by a cent with no line to blame. The boundary
+ * is the last place where the disagreement can still be shown to someone.
+ */
+function assertWritableAmount(value: Money, label: string): void {
+  if (value.decimalPlaces() > 2) {
+    throw new RangeError(`${label} carries more than two decimals — cents are the smallest unit`);
+  }
+}
+
 /** Byte order on ids, matching the SQL tiebreaker. Returns exactly 0 on a tie. */
 function compareIds(a: string, b: string): number {
   if (a < b) return -1;
@@ -228,6 +244,8 @@ function collectContributions(
       );
     }
 
+    assertWritableAmount(flow.amount, `flow ${flow.id}: amount`);
+
     contributions.push({
       flow,
       signedAmount: flow.direction === 'in' ? flow.amount : flow.amount.negated(),
@@ -271,6 +289,7 @@ export function deriveAccountBalance(input: DeriveAccountBalanceInput): DerivedA
   assertRealDate(statement.statedOn, 'statement.statedOn');
   assertRealDate(statement.recordedAt, 'statement.recordedAt');
   assertRealDate(asOf, 'asOf');
+  assertWritableAmount(statement.balance, `statement ${statement.id}: balance`);
 
   if (asOf.getTime() < statement.statedOn.getTime()) {
     throw new RangeError(

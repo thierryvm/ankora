@@ -482,39 +482,84 @@ create policy "account_balance_statements_author_update" on public.account_balan
 -- plutôt que par une liste de colonnes : une colonne ajoutée demain est
 -- protégée sans qu'on ait à y penser. Une liste, elle, se périme en silence.
 --
--- `security invoker` : le corps ne lit ni n'écrit aucun objet, donc
--- `security definer` n'ajouterait qu'une surface d'escalade. Corollaire — ce
--- corps ne doit JAMAIS référencer d'objet : `check_function_bodies` ne résout
--- pas les noms d'un corps PL/pgSQL à la création, une lecture ajoutée ici
--- échouerait à l'exécution, pas au déploiement.
+-- `security invoker` : le corps ne lit ni n'écrit aucune TABLE, donc
+-- `security definer` n'ajouterait qu'une surface d'escalade — et il rendrait
+-- de surcroît `auth.uid()` inutilisable pour ce qu'on lui demande ici, qui est
+-- justement de nommer la personne connectée. Corollaire — ce corps ne lit
+-- aucune table : `check_function_bodies` ne résout pas les noms d'un corps
+-- PL/pgSQL à la création, une lecture ajoutée ici échouerait à l'exécution et
+-- non au déploiement. `auth.uid()` fait exception en connaissance de cause :
+-- c'est une fonction du schéma `auth`, appelée qualifiée (search_path vide),
+-- et elle rend NULL hors session — auquel cas `cancelled_by` reste NULL, ce
+-- que le CHECK autorise explicitement.
 -- `set search_path = ''` : sans lui, advisor `function_search_path_mutable`.
+-- Troisième rôle, décidé par @thierry le 2026-09-20 (ADR-045 D18) :
+-- `cancelled_at` et `cancelled_by` sont IMPOSÉS par la base, jamais déclarés
+-- par le client. Celui-ci DEMANDE l'annulation (il pose n'importe quoi de non
+-- nul dans `cancelled_at`), la base écrit l'instant vrai et la personne
+-- connectée ; la ré-ouverture remet les deux à NULL ensemble. Sans cela,
+-- « annulé le 3 août par X » serait une déclaration du client — l'inverse
+-- d'une trace, alors que la règle 11 de CLAUDE.md la veut vérifiable.
+--
+-- La liste des colonnes figées est parcourue plutôt qu'écrite en `new.<col>` :
+-- cette fonction sert les DEUX tables, et `new.kind` échouerait à l'exécution
+-- sur `account_balance_statements`, qui n'a pas cette colonne. Le passage par
+-- `to_jsonb` teste la présence avant de comparer, et NOMME la colonne fautive
+-- dans le message — ce qu'une liste de `or` ne sait pas faire.
 create or replace function public.j2_protege_operation()
 returns trigger
 language plpgsql
 security invoker
 set search_path = ''
 as $$
+declare
+  -- Ce qui IDENTIFIE la ligne, et ce dont l'heure dépend. `kind` et les deux
+  -- comptes en font partie (ADR-045 D17) : changer de compte n'est pas une
+  -- correction, c'est une autre opération — et la corriger en place ferait
+  -- bouger deux soldes dérivés sans qu'aucune trace ne le dise.
+  -- `account_type` est le même fait pour un relevé.
+  figees   constant text[] := array[
+    'id', 'workspace_id', 'created_by', 'recorded_at',
+    'kind', 'from_account_type', 'to_account_type', 'account_type'
+  ];
+  avant    jsonb := to_jsonb(old);
+  apres    jsonb := to_jsonb(new);
+  colonne  text;
 begin
-  if new.id is distinct from old.id
-     or new.workspace_id is distinct from old.workspace_id
-     or new.created_by is distinct from old.created_by
-     or new.recorded_at is distinct from old.recorded_at then
-    raise exception
-      'J2 : id, workspace_id, created_by et recorded_at sont figes a l''ecriture (ADR-045 D15). Corriger passe par une annulation, pas par un UPDATE.';
-  end if;
+  foreach colonne in array figees loop
+    if avant ? colonne and (apres -> colonne) is distinct from (avant -> colonne) then
+      raise exception
+        'J2 : « % » est fige a l''ecriture (ADR-045 D17). Se corrigent : le montant, la date, la description, la note, la nature et la ventilation. Sont figes : id, workspace_id, created_by, recorded_at, kind et les comptes — changer de compte, c''est annuler et reecrire.',
+        colonne;
+    end if;
+  end loop;
 
   if old.cancelled_at is not null
-     and (to_jsonb(new) - 'cancelled_at' - 'cancelled_by' - 'updated_at')
-         is distinct from (to_jsonb(old) - 'cancelled_at' - 'cancelled_by' - 'updated_at') then
+     and (apres - 'cancelled_at' - 'cancelled_by' - 'updated_at')
+         is distinct from (avant - 'cancelled_at' - 'cancelled_by' - 'updated_at') then
     raise exception
       'J2 : une operation annulee ne se modifie plus (ADR-045 D15). Seule la reouverture est permise.';
+  end if;
+
+  -- ADR-045 D18 — l'annulation est demandee par le client, ECRITE par la base.
+  if new.cancelled_at is null then
+    -- Reouverture : les deux colonnes partent ensemble. Un annulateur sans
+    -- annulation est l'etat que le CHECK interdit.
+    new.cancelled_by := null;
+  elsif old.cancelled_at is null then
+    new.cancelled_at := now();
+    new.cancelled_by := auth.uid();
+  else
+    -- Deja annulee : ni l'instant ni l'auteur ne se reecrivent.
+    new.cancelled_at := old.cancelled_at;
+    new.cancelled_by := old.cancelled_by;
   end if;
 
   return new;
 end $$;
 
 comment on function public.j2_protege_operation() is
-  'ADR-045 D15 — fige workspace_id / created_by / recorded_at, et gele le contenu d''une ligne annulee (la reouverture reste permise).';
+  'ADR-045 D15/D17/D18 — fige ce qui identifie la ligne (id, workspace_id, created_by, recorded_at, kind, comptes), gele le contenu d''une ligne annulee, et IMPOSE cancelled_at / cancelled_by au lieu de les croire. La reouverture reste permise.';
 
 -- Une fonction neuve naît avec `proacl IS NULL`, donc EXECUTE pour anon,
 -- authenticated et service_role. L'impact réel est nul (un appel direct rend

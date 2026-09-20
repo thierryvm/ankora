@@ -524,3 +524,44 @@ describe('measureStatementGap — mesurer ce qui MANQUE (ADR-040 D11)', () => {
     ).toThrow(/anchor/i);
   });
 });
+
+describe('la frontière du domaine refuse le sous-centime (ADR-045 D19)', () => {
+  it('refuses a statement balance carrying more than two decimals', () => {
+    expect(() =>
+      deriveAccountBalance({
+        statement: statement({ balance: money('1250.005') }),
+        flows: [],
+        asOf: day('2026-03-31'),
+      }),
+    ).toThrow(/two decimals/);
+  });
+
+  it('refuses a flow amount carrying more than two decimals', () => {
+    expect(() =>
+      deriveAccountBalance({
+        statement: statement(),
+        flows: [flow({ amount: money('80.001') })],
+        asOf: day('2026-03-31'),
+      }),
+    ).toThrow(/two decimals/);
+  });
+
+  it('names the flow that cannot be written, not just the fact', () => {
+    expect(() =>
+      deriveAccountBalance({
+        statement: statement(),
+        flows: [flow({ id: 'flow-42', amount: money('80.001') })],
+        asOf: day('2026-03-31'),
+      }),
+    ).toThrow(/flow-42/);
+  });
+
+  it('accepts a balance and a flow at exactly two decimals', () => {
+    const derived = deriveAccountBalance({
+      statement: statement({ balance: money('1250.05') }),
+      flows: [flow({ amount: money('80.01') })],
+      asOf: day('2026-03-31'),
+    });
+    expect(derived.balance.toString()).toBe('1170.04');
+  });
+});
