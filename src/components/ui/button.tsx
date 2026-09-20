@@ -61,7 +61,7 @@ const buttonVariants = cva(
         default:
           'bg-brand-700 text-on-accent shadow-sm hover:bg-brand-600 active:bg-brand-800 active:shadow-none',
         destructive:
-          'bg-danger text-on-accent shadow-sm hover:bg-danger/90 active:bg-danger active:shadow-none',
+          'bg-danger text-on-danger shadow-sm hover:bg-danger/90 active:bg-danger active:shadow-none',
         outline:
           'border border-border-control bg-control text-foreground hover:bg-control-hover hover:border-brand-500 active:bg-control-pressed',
         secondary:

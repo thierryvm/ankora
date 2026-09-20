@@ -756,18 +756,48 @@ describe('globals.css — les jetons d’interface du socle v3 (lot 1)', () => {
     );
   });
 
-  it('ce qui s’écrit sur l’aplat d’accent passe AA dans les deux thèmes', () => {
-    // Le clair peint l'aplat en brand-700, le sombre en brand-500 : deux pas
-    // différents de la même rampe, donc deux mesures, pas une.
-    const clair = contrastRatio(
-      tokenIn(THEME_BLOCK, 'color-on-accent'),
-      tokenIn(THEME_BLOCK, 'color-brand-700'),
-    );
-    const sombre = contrastRatio(
-      tokenIn(DARK_BLOCK, 'color-on-accent'),
-      tokenIn(THEME_BLOCK, 'color-brand-500'),
-    );
-    expect(clair, `sur brand-700 : ${clair.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA_NORMAL_TEXT);
-    expect(sombre, `sur brand-500 : ${sombre.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA_NORMAL_TEXT);
+  /**
+   * Les paires RENDUES, et rien d'autre. La version précédente de ce cas
+   * mesurait `--color-on-accent` du sombre contre `--color-brand-500`, un aplat
+   * que RIEN ne peint : `button.tsx` écrit `bg-brand-700`, dont la valeur est
+   * la même dans les deux thèmes. Le cas était donc vert pendant que le rendu
+   * réel donnait 3,37:1 — mesuré au DOM sur six écrans le 20 septembre 2026,
+   * sur l'action principale de chaque écran en thème sombre.
+   *
+   * La leçon tient en une règle : un jeton « ce qui s'écrit sur » se mesure
+   * contre l'aplat que le code lui donne, jamais contre celui qu'on prévoit de
+   * lui donner. Et un aplat qui ne change pas de thème n'autorise pas son
+   * premier plan à changer.
+   *
+   * Conséquence de conception : il faut DEUX jetons. En sombre, l'aplat de
+   * marque reste sombre (#0f766e) et l'aplat d'alerte devient clair (#f87171) —
+   * un premier plan unique échoue nécessairement sur l'un des deux.
+   */
+  describe.each(THEMES)('mode %s — ce qui s’écrit sur un aplat', (_theme, block) => {
+    /**
+     * La valeur EFFECTIVE d'un jeton dans un thème : celle du bloc du thème
+     * s'il la redéclare, sinon celle de `@theme`. C'est la cascade que le
+     * navigateur calcule — `--color-brand-700` n'est PAS redéclaré en sombre,
+     * donc l'aplat de marque y vaut la valeur claire. Mesurer autre chose
+     * refait exactement l'erreur que ce cas corrige.
+     */
+    const effectif = (name: string): string => {
+      try {
+        return tokenIn(block, name);
+      } catch {
+        return tokenIn(THEME_BLOCK, name);
+      }
+    };
+
+    it.each([
+      ['color-on-accent', 'color-brand-700'],
+      ['color-on-danger', 'color-danger'],
+    ] as const)('--%s passe AA sur --%s', (premierPlan, aplat) => {
+      const ratio = contrastRatio(effectif(premierPlan), effectif(aplat));
+      expect(
+        ratio,
+        `--${premierPlan} sur --${aplat} : ${ratio.toFixed(2)}:1`,
+      ).toBeGreaterThanOrEqual(AA_NORMAL_TEXT);
+    });
   });
 });

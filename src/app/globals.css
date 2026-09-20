@@ -191,10 +191,15 @@
   --color-border-bar: var(--color-border-card);
   --color-border-control: #7f7c75;
 
-  /* Ce qui s'écrit SUR un aplat d'accent. En sombre, `--color-brand-500`
-     #14b8a6 ne porte le blanc qu'à 2,49:1 — un échec AA franc. Le jeton
-     existe pour que l'aplat sombre soit possible sans l'inventer au call-site. */
+  /* Ce qui s'écrit SUR un aplat plein. DEUX jetons, parce que les deux aplats
+     que le code peint ne vont pas dans le même sens d'un thème à l'autre :
+     l'aplat de marque reste `--color-brand-700` (#0f766e) en sombre, tandis que
+     `--color-danger` y devient clair (#f87171). Un premier plan unique échoue
+     donc forcément sur l'un des deux — mesuré, pas supposé : un seul jeton a
+     donné 3,37:1 sur le bouton principal en sombre, sur six écrans. Les paires
+     rendues sont gardées par contrast-ratios.test.ts. */
   --color-on-accent: #ffffff;
+  --color-on-danger: #ffffff;
 
   /* Le RÔLE d'un chiffre (v3 règle 8) : teal pour une marge ou une bonne
      nouvelle, terracotta pour une alerte. Distinct de `--color-danger`, qui
@@ -443,7 +448,11 @@
   --color-border-bar: var(--color-border);
   --color-border-control: #8a8882;
 
-  --color-on-accent: #131416;
+  /* L'aplat de marque ne change PAS en sombre (`--color-brand-700` n'est pas
+     redéclaré ici) : son premier plan ne peut donc pas changer non plus. Seul
+     l'aplat d'alerte s'éclaircit, et lui seul prend un premier plan sombre. */
+  --color-on-accent: #ffffff;
+  --color-on-danger: #131416;
   --color-figure-danger: #f08a5d;
 
   /* Rampe des catégories et des séries — mêmes teintes qu'en clair, plus
