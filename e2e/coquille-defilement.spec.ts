@@ -55,19 +55,26 @@ async function seConnecter(page: Page, user: Seme): Promise<void> {
 }
 
 async function enBas(page: Page): Promise<void> {
-  // Instantané, et relu jusqu'à ce que la position ne bouge plus : la feuille de
-  // style pose un défilement lissé, et une lecture prise en cours de route
-  // mesure le défilement, pas la page. Un premier essai l'a fait : il lisait le
-  // rail à mi-course, à 8 px au lieu de -69, et concluait autre chose.
-  let precedent = -1;
-  for (let i = 0; i < 20; i += 1) {
-    const y = await page.evaluate(() => {
+  // On attend l'ETAT, pas un delai : la page est en bas quand la position ET la
+  // hauteur du document sont restees les memes sur trois lectures de suite, et que
+  // la fenetre touche le bas. Un premier essai ne comparait que la position : sur
+  // une page encore courte (le cockpit n'a pas fini de se charger) elle vaut 0 deux
+  // fois de suite, la fonction rendait la main, puis la page s'allongeait — en CI,
+  // le pied de page mesure 707 px sous la barre. La feuille de style pose aussi un
+  // defilement lisse : une lecture en cours de route mesure le defilement.
+  let precedent = '';
+  let stables = 0;
+  for (let i = 0; i < 40; i += 1) {
+    const etat = await page.evaluate(() => {
       window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' });
-      return Math.round(window.scrollY);
+      const hauteur = document.documentElement.scrollHeight;
+      const auBas = Math.round(window.scrollY + window.innerHeight) >= hauteur - 1;
+      return `${Math.round(window.scrollY)}/${hauteur}/${auBas}`;
     });
-    await page.waitForTimeout(120);
-    if (y === precedent) return;
-    precedent = y;
+    stables = etat === precedent && etat.endsWith('/true') ? stables + 1 : 0;
+    if (stables >= 3) return;
+    precedent = etat;
+    await page.waitForTimeout(150);
   }
   throw new Error('la page ne cesse pas de défiler ou de grandir');
 }

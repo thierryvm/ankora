@@ -45,12 +45,17 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <main> ni dans le pied de page : c'est la derniere chose de la page qui
           doit rester atteignable. Sa hauteur est celle de la barre — sa hauteur
           de jeton, la bordure haute de 1 px, la zone de securite — et elle
-          disparait des 1024, la ou la barre disparait. */}
+          disparait des 1024, la ou la barre disparait.
+
+          La colonne porte min-w-0 : un enfant flex ne descend jamais sous la
+          largeur minimale de son contenu, donc sans elle une liste large (les
+          factures) elargissait la colonne au-dela de l'ecran (470 px dans 375),
+          et le corps, qui rogne, coupait le texte sans qu'aucune barre ne le dise. */}
       <div className="flex min-h-svh flex-col">
         <Header variant="app" isAuthenticated userEmail={user.email ?? null} />
         <div className="flex w-full flex-1">
           <AppRail />
-          <div className="flex flex-1 flex-col pb-[calc(var(--size-tabbar)+1px+env(safe-area-inset-bottom))] lg:pb-[env(safe-area-inset-bottom)]">
+          <div className="flex min-w-0 flex-1 flex-col pb-[calc(var(--size-tabbar)+1px+env(safe-area-inset-bottom))] lg:pb-[env(safe-area-inset-bottom)]">
             <main
               id="main"
               className="mx-auto w-full max-w-6xl flex-1 px-4 pt-8 pb-12 md:px-6 md:pt-12"

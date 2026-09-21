@@ -97,6 +97,18 @@ async function debordements(page: import('@playwright/test').Page): Promise<stri
       );
     }
 
+    // Le CORPS aussi. Il porte un rognage horizontal : une colonne plus large que
+    // l'ecran ne fait donc pas defiler la page (le cas ci-dessus reste muet), elle
+    // COUPE ce qui depasse. Le 21 septembre 2026, la colonne de la coquille est
+    // montee a 470 px dans 375 sur la liste des factures, et cette spec est restee
+    // verte : elle ne regardait que la page, et un compte sans facture n'a rien de
+    // large a montrer. scrollWidth du corps est la mesure qui voit le rognage.
+    if (document.body.scrollWidth > vw + 1) {
+      dehors.push(
+        `le corps rogne ce qui depasse : body.scrollWidth ${document.body.scrollWidth} > ${vw}`,
+      );
+    }
+
     // Puis les elements, mais seulement ceux avec lesquels on INTERAGIT.
     //
     // La premiere version de ce cas balayait tout le DOM, et elle a trouve un
@@ -265,7 +277,25 @@ test.describe('coquille v3 — une seule surface de navigation par largeur', () 
 
   test('aucune route de /app ne déborde horizontalement, à 375 ni à 1440', async ({ page }) => {
     if (!admin) return;
-    const user = await seedOnboardedUser(admin);
+    // Un compte AVEC des factures (les deux de la spec de la liste, celles qui ont
+    // deja fait deborder la colonne) : sur un compte vide la liste est vide, et une
+    // colonne trop large n'a rien a elargir.
+    const user = await seedOnboardedUser(admin, [
+      {
+        label: 'Loyer appartement',
+        amount: 1200,
+        frequency: 'monthly',
+        dueMonth: 1,
+        paidFrom: 'principal',
+      },
+      {
+        label: 'Taxe voiture',
+        amount: 300,
+        frequency: 'annual',
+        dueMonth: 6,
+        paidFrom: 'principal',
+      },
+    ]);
 
     try {
       await page.setViewportSize({ width: 1440, height: 900 });
@@ -282,6 +312,9 @@ test.describe('coquille v3 — une seule surface de navigation par largeur', () 
         for (const route of ROUTES_APP) {
           await page.goto(route);
           await page.waitForLoadState('domcontentloaded');
+          // La mesure porte sur du contenu RENDU : sur la liste des factures, lire
+          // avant qu'elle soit affichee mesure une page vide et rend toujours vert.
+          if (route === '/app/charges') await page.getByTestId('charges-list').waitFor();
           await page.waitForTimeout(150);
           for (const faute of await debordements(page)) {
             fautes.push(`${route} @ ${largeur} : ${faute}`);
