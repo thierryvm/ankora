@@ -251,21 +251,35 @@ quoi et quand**. `grep ADR-038 docs/ROADMAP.md` ne rendait rien. Résultat mesur
 session entière du 10 août a re-dérivé une décision déjà prise cinq jours plus tôt. Une
 décision qu'on ne peut pas trouver n'existe pas.
 
-| PR  | Objet                                                                              | État                                |
-| --- | ---------------------------------------------------------------------------------- | ----------------------------------- |
-| —   | ADR-040 — inversion de l'ordre, corrections de schéma, D10/D11/D12                 | ✅ accepté le 2026-08-10            |
-| —   | ADR-041 — provisionner n'est pas payer : la capacité de régler devient une donnée  | ✅ accepté le 2026-08-10 (#367)     |
-| J1  | D3 — attribution figée sur les deux tables de paiement + `commitments.paid_from`   | ✅ livré le 2026-08-10 (#363)       |
-| J1b | La migration `contract` — `set not null` sur les deux colonnes                     | ✅ mergée le 2026-08-10 (#368) ¹    |
-| J2  | D1 — table de mouvements, RLS, export art. 20 (+ 4 tables absentes), **+ ADR-041** | 📋 périmètre élargi, cf. ci-dessous |
-| J3  | D2 — rentrées datées, suppression de `monthly_income`, sémantique d'`incomplet`    | 📋                                  |
-| J4  | D6 — dérivation des soldes, suppression de `savings_balance`, ancienneté           | 📋                                  |
-| J5  | D4 + D8 — ventilation contrôlée et arbitrage mensuel                               | 📋                                  |
-| J6  | D0 — clé de substitution `accounts.id` + backfill                                  | 📋 **en dernier**, cf. ADR-040 E1   |
+| PR  | Objet                                                                             | État                              |
+| --- | --------------------------------------------------------------------------------- | --------------------------------- |
+| —   | ADR-040 — inversion de l'ordre, corrections de schéma, D10/D11/D12                | ✅ accepté le 2026-08-10          |
+| —   | ADR-041 — provisionner n'est pas payer : la capacité de régler devient une donnée | ✅ accepté le 2026-08-10 (#367)   |
+| J1  | D3 — attribution figée sur les deux tables de paiement + `commitments.paid_from`  | ✅ livré le 2026-08-10 (#363)     |
+| J1b | La migration `contract` — `set not null` sur les deux colonnes                    | ✅ mergée le 2026-08-10 (#368) ¹  |
+| J2  | D1 — table de mouvements, RLS, export art. 20 (+ 4 tables absentes)               | 🚧 PR C (#476), en brouillon ²    |
+| J2b | ADR-041 F2 — `settles_directly`, compte de règlement, réattribution des paiements | 📋 **reporté**, cf. ² ci-dessous  |
+| J3  | D2 — rentrées datées, suppression de `monthly_income`, sémantique d'`incomplet`   | 📋                                |
+| J4  | D6 — dérivation des soldes, suppression de `savings_balance`, ancienneté          | 📋                                |
+| J5  | D4 + D8 — ventilation contrôlée et arbitrage mensuel                              | 📋                                |
+| J6  | D0 — clé de substitution `accounts.id` + backfill                                 | 📋 **en dernier**, cf. ADR-040 E1 |
 
 ¹ Mergée, donc présente dans l'arbre. Sa poussée en production n'a **pas** été re-vérifiée
 le 12 septembre : aucune commande ne vise la base de production pendant une remise à
 l'heure documentaire.
+
+² **Le périmètre de J2 a été COUPÉ le 20 septembre 2026, au point de coupe que cette
+section désignait elle-même** (« le schéma et le réglage d'un côté, l'écriture à deux
+mouvements de l'autre »). La PR C livre le journal : `movements`,
+`account_balance_statements`, leurs RLS et triggers, la dérivation des soldes en domaine
+pur, et l'export art. 20 étendu aux deux tables neuves. Elle ne livre **rien** d'ADR-041
+F2 — `settles_directly`, le compte de règlement, le renommage `paid_from` →
+`provisioned_from` et la réattribution des lignes écrites par J1 restent entiers, et
+`grep -rn "settles_directly" src supabase` ne rend rien sur la branche (vérifié le
+2026-09-20). Motif du report : F2 touche `accounts` et réécrit des lignes de paiement
+existantes, deux risques d'une autre nature que la création de tables vides — et rien ne
+lit encore cette colonne (J4 le ferait). Ce report ne change pas l'ordre : J2b reste avant
+J4.
 
 **L'ordre a changé le 10 août** : ADR-038 plaçait D0 en tête. ADR-040 le renvoie en fin de
 programme, parce que D0 sert le découplage des rôles de comptes — qu'ADR-038 met lui-même

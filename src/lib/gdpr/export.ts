@@ -30,7 +30,7 @@ import { logAuditEvent, AuditEvent } from '@/lib/security/audit-log';
  * reads a 1.1 file unchanged.
  */
 export type UserDataExport = {
-  schemaVersion: '1.1';
+  schemaVersion: '1.2';
   exportedAt: string;
   user: Record<string, unknown>;
   workspaces: Array<Record<string, unknown>>;
@@ -47,6 +47,10 @@ export type UserDataExport = {
   chargePayments: Array<Record<string, unknown>>;
   workspaceMemberships: Array<Record<string, unknown>>;
   deletionRequests: Array<Record<string, unknown>>;
+  // 1.2 — le journal J2. Une opération ANNULÉE reste exportée : elle est une
+  // donnée de la personne, et son annulation en fait partie (ADR-045 D15).
+  movements: Array<Record<string, unknown>>;
+  accountBalanceStatements: Array<Record<string, unknown>>;
 };
 
 /** Every `public` table this export reads. */
@@ -65,6 +69,8 @@ export const EXPORTED_TABLES = [
   'charge_payments',
   'workspace_members',
   'deletion_requests',
+  'movements',
+  'account_balance_statements',
 ] as const;
 
 /**
@@ -129,7 +135,9 @@ export async function exportUserData(userId: string): Promise<UserDataExport> {
     | 'categories'
     | 'commitments'
     | 'commitment_payments'
-    | 'charge_payments';
+    | 'charge_payments'
+    | 'movements'
+    | 'account_balance_statements';
 
   const readAllCreatedBy = (table: PagedTable): Promise<Result> =>
     readAllPages((from) =>
@@ -187,6 +195,8 @@ export async function exportUserData(userId: string): Promise<UserDataExport> {
     chargePaymentsRes,
     membershipsRes,
     deletionRes,
+    movementsRes,
+    statementsRes,
   ] = await Promise.all([
     supabase.from('users').select('*').eq('id', userId).single(),
     readAllCreatedBy('charges'),
@@ -201,12 +211,14 @@ export async function exportUserData(userId: string): Promise<UserDataExport> {
     readAllCreatedBy('charge_payments'),
     supabase.from('workspace_members').select(WORKSPACE_MEMBER_COLUMNS).eq('user_id', userId),
     supabase.from('deletion_requests').select(DELETION_REQUEST_COLUMNS).eq('user_id', userId),
+    readAllCreatedBy('movements'),
+    readAllCreatedBy('account_balance_statements'),
   ]);
 
   if (userRes.error) throw new Error('GDPR export: reading users failed', { cause: userRes.error });
 
   const bundle: UserDataExport = {
-    schemaVersion: '1.1',
+    schemaVersion: '1.2',
     exportedAt: new Date().toISOString(),
     user: (userRes.data ?? {}) as Record<string, unknown>,
     workspaces,
@@ -222,6 +234,8 @@ export async function exportUserData(userId: string): Promise<UserDataExport> {
     chargePayments: rowsOf('charge_payments', chargePaymentsRes),
     workspaceMemberships: rowsOf('workspace_members', membershipsRes),
     deletionRequests: rowsOf('deletion_requests', deletionRes),
+    movements: rowsOf('movements', movementsRes),
+    accountBalanceStatements: rowsOf('account_balance_statements', statementsRes),
   };
 
   await logAuditEvent(

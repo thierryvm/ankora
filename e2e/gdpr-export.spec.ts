@@ -86,7 +86,7 @@ test.describe('GDPR export — art. 20, every table, one person', () => {
       const bundle = JSON.parse(raw) as Record<string, unknown>;
 
       // Format: the nine 1.0 keys, plus the seven of 1.1.
-      expect(bundle.schemaVersion).toBe('1.1');
+      expect(bundle.schemaVersion).toBe('1.2');
       for (const key of [
         'user',
         'workspaces',

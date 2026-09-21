@@ -185,11 +185,11 @@ describe('exportUserData — the seven original tables', () => {
     expect(metadata).toEqual({ resource_type: 'data_export', count: 3 });
   });
 
-  it('announces the additive change through schemaVersion 1.1', async () => {
+  it('announces the additive change through schemaVersion 1.2', async () => {
     const bundle = await exportUserData(USER_ID);
     // 1.0 → 1.1: keys were added, none renamed or reshaped. A reader of a 1.0
     // file reads a 1.1 file unchanged.
-    expect(bundle.schemaVersion).toBe('1.1');
+    expect(bundle.schemaVersion).toBe('1.2');
   });
 });
 
@@ -319,6 +319,27 @@ describe('exportUserData — the tables art. 20 was missing', () => {
     },
   );
 
+  // Le CONTENU, pas seulement la clé (ADR-045 D19.4) : une table exportée vide
+  // passerait sinon pour une table exportée, et c'est exactement ce qu'une
+  // personne découvrirait le jour où elle ouvre son fichier.
+  it('exports the operations and the balance statements the user recorded', async () => {
+    rows.workspaces = [{ id: WS_A }];
+    rows.movements = [{ id: 'mv-1', amount: '95.00', cancelled_at: '2026-09-04T10:00:00.000Z' }];
+    rows.account_balance_statements = [{ id: 'st-1', balance: '1250.05' }];
+
+    const bundle = await exportUserData(USER_ID);
+
+    // Une opération ANNULÉE reste exportée : elle est une donnée de la
+    // personne, et son annulation en fait partie (ADR-045 D15).
+    expect(bundle.movements).toEqual(rows.movements);
+    expect(bundle.accountBalanceStatements).toEqual(rows.account_balance_statements);
+    expect(filtersOn('movements').length, 'movements has no filter').toBeGreaterThan(0);
+    expect(
+      filtersOn('account_balance_statements').length,
+      'account_balance_statements has no filter',
+    ).toBeGreaterThan(0);
+  });
+
   it.each([
     'charges',
     'expenses',
@@ -326,6 +347,8 @@ describe('exportUserData — the tables art. 20 was missing', () => {
     'commitments',
     'commitment_payments',
     'charge_payments',
+    'movements',
+    'account_balance_statements',
   ])('reads every %s row past the server cap, ordered by id', async (table) => {
     // A cap BELOW the page size: advancing by the page size would skip rows.
     serverMaxRows = 700;
@@ -340,6 +363,8 @@ describe('exportUserData — the tables art. 20 was missing', () => {
         commitments: 'commitments',
         commitment_payments: 'commitmentPayments',
         charge_payments: 'chargePayments',
+        movements: 'movements',
+        account_balance_statements: 'accountBalanceStatements',
       } as const
     )[table as 'charges'];
     const got = bundle[key] as Array<{ id: string }>;
