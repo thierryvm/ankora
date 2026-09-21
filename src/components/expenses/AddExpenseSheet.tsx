@@ -183,14 +183,27 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
   const [context, setContext] = useState<ExpenseEntryContext | null>(null);
   const [contextFailed, setContextFailed] = useState(false);
 
-  // Fetched on first open and kept — the taxonomy does not change between two
-  // entries, and re-reading it would put a round-trip in front of every ⊕.
-  // `ilTeReste` inside it goes stale after a submit; `pendingLocal` below is
-  // what keeps the projection truthful without another round-trip.
+  // Read again on EVERY opening (PR D). The figures inside the context are not
+  // this sheet's to keep: a transfer with a free share or money received moves
+  // « Il te reste » from another screen, and a context kept from the first open
+  // would compute « Il te restera » on the old figure. The chips of the last
+  // read stay on screen while the new one lands; the FIGURES do not —
+  // `figuresFresh` is false from the moment the sheet closes until the new read
+  // arrives, and the projection shows its skeleton in between.
+  //
+  // `pendingLocal` covers spends made in this same opening, which the read
+  // predates. Every opening starts with a new read, so it goes back to zero on
+  // close — never on arrival, which could land after a submit of this opening.
   const [pendingLocal, setPendingLocal] = useState(0);
+  const [figuresFresh, setFiguresFresh] = useState(false);
 
   useEffect(() => {
-    if (!open || context !== null || contextFailed) return;
+    if (!open) {
+      setFiguresFresh(false);
+      setPendingLocal(0);
+      return;
+    }
+    if (figuresFresh || contextFailed) return;
     let cancelled = false;
     void (async () => {
       try {
@@ -201,6 +214,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
           return;
         }
         setContext(result.data);
+        setFiguresFresh(true);
         setCategoryId((current) => current ?? result.data.preselectedId);
       } catch (err) {
         if (isNextControlFlowError(err)) throw err;
@@ -210,7 +224,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
     return () => {
       cancelled = true;
     };
-  }, [open, context, contextFailed]);
+  }, [open, figuresFresh, contextFailed]);
 
   // Reset the volatile fields between two entries, keep the fetched taxonomy.
   // Amount and label MUST clear: re-opening the sheet on the previous amount
@@ -251,7 +265,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
   // them — it is added to one and subtracted from the other, which is the same
   // statement said twice.
   const optimiste =
-    context && !context.incomplet
+    context && figuresFresh && !context.incomplet
       ? {
           ilTeReste: context.ilTeReste - pendingLocal - (parsed ?? 0),
           depensesDuMois: context.depensesDuMois + pendingLocal + (parsed ?? 0),
@@ -559,7 +573,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
           </div>
 
           {/* The consequence, before the commit. */}
-          {context === null && !contextFailed ? (
+          {!figuresFresh && !contextFailed ? (
             <span
               aria-hidden="true"
               data-testid="add-expense-projection-skeleton"

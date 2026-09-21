@@ -98,6 +98,34 @@ async function lire(page: Page): Promise<Lecture> {
   return l;
 }
 
+/**
+ * The ⊕ sheet's starting figure, read WITHOUT navigating: the sheet lives in
+ * the layout's tab bar, and a `page.goto` would remount it — which is exactly
+ * what hid the stale figure (it was kept from the FIRST open, for the life of
+ * the component). Waits for the headline to rest on `attendu`, opens ⊕, reads
+ * « Il te reste X » in cents, closes. Returns [headline, sheet].
+ */
+async function lireFeuilleAjout(page: Page, attendu: number): Promise<[number, number]> {
+  const enCentimes = (s: string) => {
+    const n = s.match(/[-−]?[\d  .]*\d(?:,\d{1,2})?/u)?.[0] ?? 'NaN';
+    const t = n.replace(/[\s  ]/gu, '').replace('−', '-');
+    return Math.round(Number(t.replace(/\./gu, '').replace(',', '.')) * 100);
+  };
+  const tete = page.getByTestId('cockpit-chiffre');
+  await expect
+    .poll(async () => enCentimes((await tete.textContent()) ?? ''), { timeout: ECRITURE_MS })
+    .toBe(attendu);
+  const valeurTete = enCentimes((await tete.textContent()) ?? '');
+
+  await page.getByTestId('bottom-tab-add-expense').click();
+  const projection = page.getByTestId('add-expense-projection');
+  await expect(projection).toBeVisible({ timeout: ECRITURE_MS });
+  const valeurFeuille = enCentimes((await projection.textContent()) ?? '');
+  await page.keyboard.press('Escape');
+  await expect(projection).toBeHidden();
+  return [valeurTete, valeurFeuille];
+}
+
 test.describe.serial('« Il te reste » — la formule de la PR D, geste par geste', () => {
   test.skip(!admin, 'Needs a local Supabase (E2E_SUPABASE_READY=1).');
 
@@ -145,6 +173,13 @@ test.describe.serial('« Il te reste » — la formule de la PR D, geste par ges
     const avant = await lire(page);
     expect(avant.misDeCote, 'aucun « Mis de côté » sans virement').toBe(false);
 
+    // The ⊕ sheet is opened ONCE before any gesture: that first read is the
+    // one it used to keep.
+    expect(await lireFeuilleAjout(page, avant.resultat), '⊕ lit le chiffre de tête').toEqual([
+      avant.resultat,
+      avant.resultat,
+    ]);
+
     // 1. The transfer to provisions, from the cockpit, 50 € above the proposal.
     await ouvrirRepli(page, 'repli-virements');
     await ouvrirFeuille(
@@ -169,6 +204,13 @@ test.describe.serial('« Il te reste » — la formule de la PR D, geste par ges
       timeout: ECRITURE_MS,
     });
 
+    // Same page, no navigation: the headline refreshes in place, and the ⊕
+    // sheet reopened now must start from the NEW figure, to the cent.
+    expect(
+      await lireFeuilleAjout(page, avant.resultat - 5_000),
+      '⊕ après le virement : le chiffre de tête, pas celui de la première ouverture',
+    ).toEqual([avant.resultat - 5_000, avant.resultat - 5_000]);
+
     const apresVirement = await lire(page);
     expect(apresVirement.misDeCote, '« Mis de côté » paraît').toBe(true);
     expect(apresVirement.resultat, 'baisse exacte de la part libre').toBe(avant.resultat - 5_000);
@@ -183,7 +225,10 @@ test.describe.serial('« Il te reste » — la formule de la PR D, geste par ges
     expect(Number(virements![0]!.free_savings_part)).toBe(50);
     expect(Number(virements![0]!.amount)).toBeCloseTo(propose + 50, 2);
 
-    // 2. Cancel it, at the place it was made (rule 11).
+    // 2. Cancel it, at the place it was made (rule 11). `lire` navigated to
+    // /app, which remounted ⊕: open it once on this mount BEFORE cancelling,
+    // so that the reading after the cancellation is a reopening.
+    await lireFeuilleAjout(page, avant.resultat - 5_000);
     await ouvrirRepli(page, 'repli-virements');
     const fait = page
       .getByTestId('virement-fait')
@@ -192,6 +237,13 @@ test.describe.serial('« Il te reste » — la formule de la PR D, geste par ges
       await fait.first().getByRole('button', { name: 'Annuler' }).click();
       await expect(page.getByText('Virement annulé').first()).toBeVisible({ timeout: 3_000 });
     }).toPass({ timeout: ECRITURE_MS });
+
+    // Read again after the cancellation, still without navigating (⊕ was
+    // opened on this mount before cancelling, see above).
+    expect(
+      await lireFeuilleAjout(page, avant.resultat),
+      '⊕ après l’annulation : le chiffre de tête, au centime',
+    ).toEqual([avant.resultat, avant.resultat]);
 
     const apresAnnulation = await lire(page);
     expect(apresAnnulation.misDeCote).toBe(false);
