@@ -2,11 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidateAppPath, revalidateDashboard } from '@/lib/actions/revalidate';
-import {
-  accountBalanceSchema,
-  accountLabelSchema,
-  accountRenameByTypeSchema,
-} from '@/lib/schemas/account';
+import { accountLabelSchema, accountRenameByTypeSchema } from '@/lib/schemas/account';
 import { monthlyIncomeSchema, vieCouranteTransferSchema } from '@/lib/schemas/workspace';
 import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
 import { rateLimit } from '@/lib/security/rate-limit';
@@ -50,42 +46,10 @@ function revalidateAccountPaths() {
   revalidateAppPath('accounts');
 }
 
-// =========================================================================
-// Update balance on one of the 3 accounts
-// =========================================================================
-export async function updateAccountBalanceAction(input: unknown): Promise<ActionResult> {
-  const ctx = await resolveSessionWorkspace();
-  if (!ctx.ok) return { ok: false, errorCode: ctx.errorCode };
-
-  const rl = await rateLimit('mutation', `user:${ctx.user.id}`);
-  if (!rl.success) return { ok: false, errorCode: 'errors.session.rateLimited' };
-
-  const parsed = accountBalanceSchema.safeParse(input);
-  if (!parsed.success) {
-    return {
-      ok: false,
-      errorCode: 'errors.validation.generic',
-      fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
-    };
-  }
-
-  const { error } = await ctx.supabase
-    .from('accounts')
-    .update({ balance: parsed.data.balance })
-    .eq('workspace_id', ctx.workspaceId)
-    .eq('kind', parsed.data.kind);
-
-  if (error) return { ok: false, errorCode: 'errors.accounts.balanceUpdateFailed' };
-
-  await logAuditEvent(
-    AuditEvent.ACCOUNT_BALANCE_UPDATED,
-    { userId: ctx.user.id, workspaceId: ctx.workspaceId },
-    { resource_type: 'account', resource_id: parsed.data.kind },
-  );
-
-  revalidateAccountPaths();
-  return { ok: true };
-}
+// The « edit the balance » gesture moved to `recordBalanceStatementAction`
+// (src/lib/actions/operations.ts, PR C bis): a balance is now a dated
+// statement, and the statement keeps `accounts.balance` in step. A second path
+// writing the column without a statement would let the two disagree.
 
 // =========================================================================
 // Rename an account (purely cosmetic, keeps the fixed kind enum)

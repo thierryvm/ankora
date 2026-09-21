@@ -55,17 +55,6 @@ beforeEach(() => {
 });
 
 describe('accounts Server Actions — revalidatePath uses [locale] dynamic segment', () => {
-  it('updateAccountBalanceAction revalidates dashboard and accounts page with the [locale] pattern', async () => {
-    const { updateAccountBalanceAction } = await import('@/lib/actions/accounts');
-
-    const result = await updateAccountBalanceAction({ kind: 'principal', balance: 1000 });
-
-    expect(result.ok).toBe(true);
-    expect(revalidatePathSpy).toHaveBeenCalledTimes(2);
-    expect(revalidatePathSpy).toHaveBeenCalledWith('/[locale]/app', 'page');
-    expect(revalidatePathSpy).toHaveBeenCalledWith('/[locale]/app/accounts', 'page');
-  });
-
   it('renameAccountAction revalidates dashboard and accounts page with the [locale] pattern', async () => {
     const { renameAccountAction } = await import('@/lib/actions/accounts');
 
@@ -97,14 +86,5 @@ describe('accounts Server Actions — revalidatePath uses [locale] dynamic segme
     expect(revalidatePathSpy).toHaveBeenCalledTimes(2);
     expect(revalidatePathSpy).toHaveBeenCalledWith('/[locale]/app', 'page');
     expect(revalidatePathSpy).toHaveBeenCalledWith('/[locale]/app/accounts', 'page');
-  });
-
-  it('updateAccountBalanceAction skips revalidation on Zod validation error', async () => {
-    const { updateAccountBalanceAction } = await import('@/lib/actions/accounts');
-
-    const result = await updateAccountBalanceAction({ kind: 'invalid-kind', balance: 'NaN' });
-
-    expect(result.ok).toBe(false);
-    expect(revalidatePathSpy).not.toHaveBeenCalled();
   });
 });
