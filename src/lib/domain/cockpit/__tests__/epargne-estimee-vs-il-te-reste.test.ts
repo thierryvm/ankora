@@ -1,3 +1,4 @@
+import { AUCUNE_OPERATION } from '@/lib/domain/cockpit/operations-du-mois';
 /**
  * « Épargne estimée » et « Il te reste » sont-ils deux libellés pour un seul
  * calcul ?
@@ -44,6 +45,7 @@ const charge = (over: Partial<CockpitCharge>): CockpitCharge => ({
 /** Les chiffres réels du profil de test du 2026-07-31. */
 const profil = (joursEcoules: number) =>
   calculerSituationDuMois({
+    operations: AUCUNE_OPERATION,
     revenus: new Decimal(2637),
     charges: [charge({ amount: new Decimal('1804.21'), frequency: 'monthly' })],
     soldeEpargneActuel: new Decimal(430),

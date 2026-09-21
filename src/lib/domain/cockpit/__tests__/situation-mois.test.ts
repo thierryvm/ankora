@@ -1,3 +1,4 @@
+import { AUCUNE_OPERATION } from '@/lib/domain/cockpit/operations-du-mois';
 import { describe, it, expect } from 'vitest';
 import Decimal from 'decimal.js';
 
@@ -35,7 +36,11 @@ describe('calculerSituationDuMois — les deux chiffres de la projection', () =>
     // désormais. Les deux modules le testent chacun de leur côté ; rien ne le
     // vérifiait à l'AGRÉGAT, c'est-à-dire à l'endroit où l'écran les lit. Le
     // champ neuf de `SituationDuMois` n'avait aucune assertion propre.
-    const out = calculerSituationDuMois({ ...base, joursEcoules: 15 });
+    const out = calculerSituationDuMois({
+      operations: AUCUNE_OPERATION,
+      ...base,
+      joursEcoules: 15,
+    });
     expect(out.depensesProjetees).not.toBeNull();
     expect(out.epargneEstimee).not.toBeNull();
     expect(out.resteDisponible.minus(out.depensesProjetees!).toFixed(6)).toBe(
@@ -47,7 +52,11 @@ describe('calculerSituationDuMois — les deux chiffres de la projection', () =>
     // L'état « la courbe s'arrête mais la cascade affiche encore une
     // estimation » n'a pas de sens à l'écran. Les deux sortent de la même
     // fonction ; ce cas le tient là où la page les lit.
-    const out = calculerSituationDuMois({ ...base, joursEcoules: 6 });
+    const out = calculerSituationDuMois({
+      operations: AUCUNE_OPERATION,
+      ...base,
+      joursEcoules: 6,
+    });
     expect(out.depensesProjetees).toBeNull();
     expect(out.epargneEstimee).toBeNull();
   });
@@ -56,6 +65,7 @@ describe('calculerSituationDuMois — les deux chiffres de la projection', () =>
 describe('calculerSituationDuMois', () => {
   it('statut vert when capacité ≥ 0 and provisions à jour (no periodic charge)', () => {
     const out = calculerSituationDuMois({
+      operations: AUCUNE_OPERATION,
       revenus: new Decimal(2500),
       charges: [charge({ amount: new Decimal(1838), frequency: 'monthly' })],
       soldeEpargneActuel: new Decimal(0),
@@ -77,6 +87,7 @@ describe('calculerSituationDuMois', () => {
   // going below zero: spending more this month than the month actually had.
   it('statut orange when ilTeReste < 0 but resteDisponible ≥ 0', () => {
     const out = calculerSituationDuMois({
+      operations: AUCUNE_OPERATION,
       revenus: new Decimal(2000),
       charges: [charge({ amount: new Decimal(1500), frequency: 'monthly' })],
       soldeEpargneActuel: new Decimal(0),
@@ -97,6 +108,7 @@ describe('calculerSituationDuMois', () => {
     // over was less than the 800 € the user had told the app they wanted to
     // spend. Nothing about their month was wrong; only the guess was.
     const out = calculerSituationDuMois({
+      operations: AUCUNE_OPERATION,
       revenus: new Decimal(2000),
       charges: [charge({ amount: new Decimal(1500), frequency: 'monthly' })],
       soldeEpargneActuel: new Decimal(0),
@@ -115,6 +127,7 @@ describe('calculerSituationDuMois', () => {
     // Annual 1200 due in March (paymentMonths [3]); ref month 6 → 9 months
     // until next due → épargne requise 300 > solde 0 → déficit.
     const out = calculerSituationDuMois({
+      operations: AUCUNE_OPERATION,
       revenus: new Decimal(3000),
       charges: [charge({ amount: new Decimal(1200), frequency: 'annual', paymentMonths: [3] })],
       soldeEpargneActuel: new Decimal(0),
@@ -132,6 +145,7 @@ describe('calculerSituationDuMois', () => {
 
   it('statut rouge when charges + provisions exceed revenus (resteDisponible < 0)', () => {
     const out = calculerSituationDuMois({
+      operations: AUCUNE_OPERATION,
       revenus: new Decimal(1000),
       charges: [charge({ amount: new Decimal(1500), frequency: 'monthly' })],
       soldeEpargneActuel: new Decimal(0),
@@ -148,6 +162,7 @@ describe('calculerSituationDuMois', () => {
 
   it('statut incomplet when revenus is null (THI-335) — no negative propagated to statut', () => {
     const out = calculerSituationDuMois({
+      operations: AUCUNE_OPERATION,
       revenus: null,
       charges: [charge({ amount: new Decimal(900), frequency: 'monthly' })],
       soldeEpargneActuel: new Decimal(0),
@@ -165,6 +180,7 @@ describe('calculerSituationDuMois', () => {
 
   it('exposes chargesFixes and provisionsLissees split separately', () => {
     const out = calculerSituationDuMois({
+      operations: AUCUNE_OPERATION,
       revenus: new Decimal(3000),
       charges: [
         charge({ amount: new Decimal(1500), frequency: 'monthly' }),
@@ -185,6 +201,7 @@ describe('calculerSituationDuMois', () => {
 
   it('ignores inactive charges', () => {
     const out = calculerSituationDuMois({
+      operations: AUCUNE_OPERATION,
       revenus: new Decimal(2000),
       charges: [
         charge({ amount: new Decimal(900), frequency: 'monthly' }),
@@ -205,6 +222,7 @@ describe('calculerSituationDuMois', () => {
 
   it('statut vert on an empty workspace', () => {
     const out = calculerSituationDuMois({
+      operations: AUCUNE_OPERATION,
       revenus: new Decimal(2500),
       charges: [],
       soldeEpargneActuel: new Decimal(0),
@@ -221,6 +239,7 @@ describe('calculerSituationDuMois', () => {
 
   it('ADR-021: engagements lower resteDisponible and capacité by their amount', () => {
     const out = calculerSituationDuMois({
+      operations: AUCUNE_OPERATION,
       revenus: new Decimal(3000),
       charges: [charge({ amount: new Decimal(1000), frequency: 'monthly' })],
       soldeEpargneActuel: new Decimal(0),
@@ -238,6 +257,7 @@ describe('calculerSituationDuMois', () => {
 
   it('ADR-021 + ADR-035: engagements shrink what is left, and spending can tip it orange', () => {
     const out = calculerSituationDuMois({
+      operations: AUCUNE_OPERATION,
       revenus: new Decimal(2500),
       charges: [charge({ amount: new Decimal(1838), frequency: 'monthly' })],
       soldeEpargneActuel: new Decimal(0),
@@ -255,6 +275,7 @@ describe('calculerSituationDuMois', () => {
 
   it('ADR-021: engagements can tip statut into rouge (resteDisponible < 0)', () => {
     const out = calculerSituationDuMois({
+      operations: AUCUNE_OPERATION,
       revenus: new Decimal(1000),
       charges: [charge({ amount: new Decimal(800), frequency: 'monthly' })],
       soldeEpargneActuel: new Decimal(0),

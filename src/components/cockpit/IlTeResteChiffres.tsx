@@ -55,13 +55,15 @@ export type IlTeResteChiffresProps = Readonly<{
   /** Vérité serveur pour « Dépensé ce mois ». */
   depensesDuMois: number;
   revenus: number;
-  /** `revenus − resteDisponible`, dérivé par la carte, jamais recalculé ici. */
+  /** « Déjà compté pour tes factures » (`situation.retenu`), jamais recalculé ici. */
   dejaCompte: number;
+  /** « Mis de côté » : 0 = le terme n'apparaît pas (maquette, règle 20). */
+  misDeCote: number;
   locale: Locale;
   /** La phrase de base (« sur ton budget de septembre »), déjà traduite. */
   base: string;
-  /** Les trois intitulés de la formule, déjà traduits. */
-  termes: Readonly<{ revenus: string; retenu: string; depense: string }>;
+  /** Les intitulés de la formule, déjà traduits. */
+  termes: Readonly<{ revenus: string; retenu: string; depense: string; misDeCote: string }>;
 }>;
 
 /**
@@ -82,6 +84,7 @@ export function IlTeResteChiffres({
   depensesDuMois,
   revenus,
   dejaCompte,
+  misDeCote,
   locale,
   base,
   termes,
@@ -119,6 +122,13 @@ export function IlTeResteChiffres({
         <span className="tabular-nums">
           − {termes.retenu} {nombre(dejaCompte, locale)}
         </span>{' '}
+        {misDeCote !== 0 && (
+          <>
+            <span className="tabular-nums" data-terme-mis-de-cote>
+              − {termes.misDeCote} {nombre(misDeCote, locale)}
+            </span>{' '}
+          </>
+        )}
         <span className="tabular-nums">
           − {termes.depense} {nombre(depense, locale)} = {formatCurrency(reste, locale)}
         </span>

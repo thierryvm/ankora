@@ -6,6 +6,7 @@ import {
   totalChargesMensuelles,
 } from './effort-financier-lisse';
 import { depensesProjetees, epargneEstimee } from './epargne-estimee';
+import type { OperationsDuMois } from './operations-du-mois';
 import { calculerSanteProvisions } from './sante-provisions';
 import type { CockpitCharge, PaymentLedger, ReferencePeriod } from './types';
 
@@ -16,7 +17,9 @@ import type { CockpitCharge, PaymentLedger, ReferencePeriod } from './types';
  *  - vert      : capacité ≥ 0 ET provisions à jour
  *  - orange    : capacité < 0 OU provisions en déficit (mais revenus couvrent
  *                les obligations charges + provisions)
- *  - rouge     : charges + provisions + engagements > revenus (resteDisponible < 0)
+ *  - rouge     : charges + provisions + engagements > revenus
+ *                (budgetAvantMiseDeCote < 0 ; une mise de côté qui fait passer
+ *                le budget sous zéro donne orange, pas rouge — PR D)
  *  - incomplet : revenus non configurés (monthlyIncome === null) → fix THI-335
  *                (aucun chiffre négatif anxiogène n'est exposé à l'UI)
  */
@@ -42,6 +45,14 @@ export type SituationDuMoisInput = Readonly<{
    * pas rendre un héros silencieusement faux (ADR-035).
    */
   depensesDuMois: Decimal;
+  /**
+   * Ce que le journal des opérations fait au mois (PR D), calculé par
+   * `operationsDuMois()`. Requis pour la même raison que les deux champs
+   * au-dessus : un oubli de câblage doit casser à la compilation, pas rendre un
+   * « Il te reste » qui ignore les virements. `AUCUNE_OPERATION` pour un
+   * journal vide.
+   */
+  operations: OperationsDuMois;
   /** Jours écoulés dans le mois de référence, aujourd'hui inclus. */
   joursEcoules: number;
   /** Nombre de jours du mois de référence. */
@@ -51,15 +62,44 @@ export type SituationDuMoisInput = Readonly<{
 export type SituationDuMois = Readonly<{
   statut: SituationStatut;
   hasRevenus: boolean;
-  /** 0 quand incomplet. */
+  /**
+   * Revenus du mois (PR D) = revenu de base + argent reçu « en plus ». 0 quand
+   * incomplet.
+   */
   revenus: Decimal;
+  /** Le revenu écrit dans les réglages, tel quel. `null` = non configuré. */
+  revenuEcrit: Decimal | null;
+  /**
+   * La somme des argents reçus `regular` du mois, `null` s'il n'y en a aucun.
+   * Quand elle existe, elle REMPLACE le revenu écrit (règle de la maquette) :
+   * la cascade dit alors « reçu X, prévu Y » si les deux diffèrent.
+   */
+  revenuRecu: Decimal | null;
+  /** L'argent reçu « en plus du revenu » (`extra`) du mois. */
+  recuEnPlus: Decimal;
+  /**
+   * « Déjà compté pour tes factures » = factures mensuelles + effort lissé +
+   * échéances. Porté ici plutôt que dérivé à l'affichage : `revenus −
+   * resteDisponible` avalerait le mis de côté depuis la PR D.
+   */
+  retenu: Decimal;
+  /** `revenus − retenu` : ce que le revenu laisse avant toute mise de côté. */
+  budgetAvantMiseDeCote: Decimal;
+  /** « Mis de côté » : la part d'épargne libre des virements faits du mois. */
+  misDeCote: Decimal;
+  /**
+   * Ce que les virements faits depuis le compte principal ont sorti AU-DELÀ de
+   * `budgetAvantMiseDeCote` ; 0 sinon. Lu par la phrase neutre de la
+   * cascade, n'entre dans aucun calcul.
+   */
+  auDelaDuRevenu: Decimal;
   chargesFixes: Decimal;
   provisionsLissees: Decimal;
   /** Mensualités lissées des engagements actifs (ADR-021). 0 si aucun. */
   engagementsMensuels: Decimal;
   /**
-   * « Budget du mois » (ADR-035) = revenus − chargesFixes − provisionsLissees
-   * − engagementsMensuels. Nom de code délibérément inchangé : le renommer
+   * « Budget du mois » (ADR-035, PR D) = revenus − chargesFixes −
+   * provisionsLissees − engagementsMensuels − misDeCote. Nom de code délibérément inchangé : le renommer
    * dans le domaine était le risque le plus cher du chantier vocabulaire, pour
    * un gain nul côté utilisateur. Ce n'est plus le chiffre-héros, c'est l'ancre
    * affichée sous lui.
@@ -92,8 +132,14 @@ export type SituationDuMois = Readonly<{
 }>;
 
 export function calculerSituationDuMois(input: SituationDuMoisInput): SituationDuMois {
-  const hasRevenus = input.revenus !== null;
-  const revenus = input.revenus ?? new Decimal(0);
+  const { operations } = input;
+  // PR D — le revenu de base : l'argent reçu `regular` du mois quand il y en a
+  // (c'est l'arrivée du revenu, il remplace l'écrit), sinon le revenu écrit.
+  // Sans l'un ni l'autre, l'argent reçu « en plus » est tout ce qu'il y a, et
+  // la maquette calcule sur lui. Sans rien du tout : incomplet (THI-335).
+  const revenuBase = operations.revenuRecu ?? input.revenus;
+  const hasRevenus = revenuBase !== null || operations.recuEnPlus.gt(0);
+  const revenus = (revenuBase ?? new Decimal(0)).plus(operations.recuEnPlus);
 
   // ADR-035 — l'enveloppe « vie courante » a disparu, et avec elle
   // `capaciteEpargneReelle()` : privée de son `resteAVivre`, elle ne calculait
@@ -117,7 +163,20 @@ export function calculerSituationDuMois(input: SituationDuMoisInput): SituationD
   // mensuelle réelle — on retire leur mensualité lissée pour que le hero et la
   // carte « Mes engagements » cessent de se contredire.
   const { engagementsMensuels, depensesDuMois } = input;
-  const resteDisponible = resteAvantEngagements.minus(engagementsMensuels);
+  const budgetAvantMiseDeCote = resteAvantEngagements.minus(engagementsMensuels);
+  const retenu = effort.plus(engagementsMensuels);
+
+  // PR D — la part d'épargne libre des virements faits sort du budget. La part
+  // « provisions » n'y est pas : elle est déjà dans `effort` (lissage).
+  const misDeCote = operations.misDeCote;
+  const resteDisponible = budgetAvantMiseDeCote.minus(misDeCote);
+  // Ce que le revenu laissait ne descend pas sous zéro dans cette phrase : la
+  // maquette soustrait le budget brut, et un budget négatif SANS aucun virement
+  // y faisait dire « tu as mis de côté 0,01 € de plus » — trouvé par la
+  // propriété « zéro opération ». Écart déclaré dans la PR D.
+  const laisse = Decimal.max(budgetAvantMiseDeCote, 0);
+  const depasse = operations.sortiesDuPrincipal.minus(laisse);
+  const auDelaDuRevenu = hasRevenus && depasse.gt(0) ? depasse : new Decimal(0);
 
   // ADR-035 — le chiffre-héros passe en temps réel. Aucun double comptage :
   // `resteDisponible` ne contient que des charges et engagements lissés, et
@@ -140,7 +199,10 @@ export function calculerSituationDuMois(input: SituationDuMoisInput): SituationD
   let statut: SituationStatut;
   if (!hasRevenus) {
     statut = 'incomplet';
-  } else if (resteDisponible.lt(0)) {
+  } else if (budgetAvantMiseDeCote.lt(0)) {
+    // Les obligations dépassent les revenus. Une mise de côté qui fait passer
+    // le budget sous zéro n'est pas ce cas-là : c'est « Il te reste » négatif,
+    // donc orange ci-dessous.
     statut = 'rouge';
   } else if (ilTeReste.lt(0) || !provisionsAJour) {
     // ADR-035 — la branche « capacité < 0 » disparaît avec l'enveloppe. Ce qui
@@ -156,6 +218,13 @@ export function calculerSituationDuMois(input: SituationDuMoisInput): SituationD
     statut,
     hasRevenus,
     revenus,
+    revenuEcrit: input.revenus,
+    revenuRecu: operations.revenuRecu,
+    recuEnPlus: operations.recuEnPlus,
+    retenu,
+    budgetAvantMiseDeCote,
+    misDeCote,
+    auDelaDuRevenu,
     chargesFixes,
     provisionsLissees,
     engagementsMensuels,

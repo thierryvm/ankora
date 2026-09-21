@@ -121,6 +121,9 @@ beforeEach(() => {
   });
   vi.stubGlobal('cancelAnimationFrame', () => {});
   window.scrollTo = vi.fn();
+  // `clearAllMocks` keeps queued `…Once` values: a pending read left by one
+  // test would otherwise become the first open of the next.
+  getExpenseEntryContextAction.mockReset();
   getExpenseEntryContextAction.mockResolvedValue(context());
   createExpenseAction.mockResolvedValue({ ok: true });
 });
@@ -276,6 +279,64 @@ describe('« Il te restera X € » — the consequence, before the commit', () 
 
     // 448,39 − 18,50 = 429,89 — the figure on the approved mockup.
     expect(screen.getByTestId('add-expense-projection')).toHaveTextContent('429,89');
+  });
+
+  /*
+    PR D — a transfer with a free share, or money received, moves « Il te
+    reste » without going through this sheet. The sheet used to keep the
+    figures read at its FIRST open for the life of the component, so reopening
+    it after such a gesture computed « Il te restera » on the old figure until
+    the next server render. Reopening must read the figure again, and must not
+    show the old one while it does.
+  */
+  it('reads « Il te reste » again on every reopening, never the one from the first open', async () => {
+    const onClose = vi.fn();
+    const { rerender } = render(<AddExpenseSheet open onClose={onClose} />);
+    await waitFor(() =>
+      expect(screen.getByTestId('add-expense-projection')).toHaveTextContent('448,39'),
+    );
+
+    rerender(<AddExpenseSheet open={false} onClose={onClose} />);
+    // Elsewhere, a free share of 143,27 € leaves the month: 448,39 → 305,12.
+    let resolveSecond!: (value: ReturnType<typeof context>) => void;
+    getExpenseEntryContextAction.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveSecond = resolve;
+      }),
+    );
+    rerender(<AddExpenseSheet open onClose={onClose} />);
+
+    // While the second read is in flight, the old figure is not on screen.
+    expect(screen.queryByText(/448,39/)).not.toBeInTheDocument();
+    expect(getExpenseEntryContextAction).toHaveBeenCalledTimes(2);
+
+    resolveSecond(context({ ilTeReste: 305.12, depensesDuMois: 431.67 }));
+    await waitFor(() =>
+      expect(screen.getByTestId('add-expense-projection')).toHaveTextContent('305,12'),
+    );
+  });
+
+  it('does not count twice a spend made in the sheet once the reread includes it', async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    const { rerender } = render(<AddExpenseSheet open onClose={onClose} />);
+    await waitFor(() => expect(screen.getByTestId('add-expense-projection')).toBeInTheDocument());
+
+    await user.type(screen.getByTestId('add-expense-amount'), '18,50');
+    await user.click(screen.getByTestId('add-expense-submit'));
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    rerender(<AddExpenseSheet open={false} onClose={onClose} />);
+
+    // The server now counts the 18,50 € itself: 448,39 − 18,50 = 429,89.
+    getExpenseEntryContextAction.mockResolvedValue(
+      context({ ilTeReste: 429.89, depensesDuMois: 306.9 }),
+    );
+    rerender(<AddExpenseSheet open onClose={onClose} />);
+
+    await waitFor(() =>
+      expect(screen.getByTestId('add-expense-projection')).toHaveTextContent('429,89'),
+    );
+    expect(screen.getByTestId('add-expense-projection')).not.toHaveTextContent('411,39');
   });
 
   it('shows no figure at all when income is not configured (THI-335)', async () => {

@@ -1296,7 +1296,11 @@
         "epargneEstimee": "Geschätzte Ersparnis",
         "parJour": "≈ {amount}/Tag",
         "detailToggle": "Breakdown: {poste}",
-        "detailOrigine": "{montant} {cycleMois, plural, =3 {every 3 months} =6 {every 6 months} =12 {once a year} other {every # months}}"
+        "detailOrigine": "{montant} {cycleMois, plural, =3 {every 3 months} =6 {every 6 months} =12 {once a year} other {every # months}}",
+        "recuEnPlus": "Zusätzlich erhalten",
+        "misDeCote": "Zurückgelegt",
+        "revenuRecuDiffere": "Diesen Monat erhalten {recu}, geplant {prevu}",
+        "auDela": "Diesen Monat hast du {montant} mehr zurückgelegt, als dein Einkommen übrig ließ: Die Differenz kommt von deinem Hauptkonto."
       },
       "barAria": "Aufteilung deiner Einnahmen: {charges} Rechnungen, {provisions} Rücklagen, {depense} ausgegeben, {reste} übrig.",
       "barAriaEngagements": "Davon {engagements} an Verpflichtungen.",
@@ -1689,7 +1693,10 @@
       "ouvrirCascade": "Where this figure comes from",
       "incompletTitre": "Complete your setup",
       "incompletPhrase": "No money in for {month} and no monthly income on file: “You have left” cannot be worked out without it.",
-      "incompletCta": "Add money in"
+      "incompletCta": "Add money in",
+      "termeMisDeCote": "Zurückgelegt",
+      "quotidien": "Auf deinem Alltagskonto: {montant} · aus deinen Buchungen berechnet",
+      "quotidienAria": "Auf deinem Alltagskonto: {montant}, aus deinen Buchungen berechnet, woher dieser Saldo kommt"
     },
     "encoreAPayer": {
       "etiquette": "Due this month",

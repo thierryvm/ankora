@@ -121,6 +121,9 @@ describe('IlTeResteCard — la ligne de formule', () => {
     resteDisponible: 1295,
     revenus: 2000,
     depensesDuMois: 800,
+    retenu: 705,
+    misDeCote: 0,
+    soldeQuotidien: null as number | null,
     chargesFixes: 505,
     provisionsLissees: 130,
     engagementsMensuels: 70,
@@ -323,6 +326,9 @@ describe('IlTeResteCard — le chiffre optimiste (ADR-010)', () => {
     resteDisponible: 1295,
     revenus: 2000,
     depensesDuMois: 800,
+    retenu: 705,
+    misDeCote: 0,
+    soldeQuotidien: null as number | null,
     chargesFixes: 505,
     provisionsLissees: 130,
     engagementsMensuels: 70,
@@ -430,6 +436,9 @@ describe.each(['fr-BE', 'en', 'nl-BE'] as const)('IlTeResteCard — l’unité e
     resteDisponible: 1295,
     revenus: 2000,
     depensesDuMois: 800,
+    retenu: 705,
+    misDeCote: 0,
+    soldeQuotidien: null as number | null,
     chargesFixes: 505,
     provisionsLissees: 130,
     engagementsMensuels: 70,
@@ -468,5 +477,76 @@ describe('Repli « Rythme du mois » — la clé au bord du mois', () => {
     expect(tc('replis.cleRythme', { jours: 0 })).toBe('dernier jour');
     expect(tc('replis.cleRythme', { jours: 1 })).toBe('1 jour restant');
     expect(tc('replis.cleRythme', { jours: 12 })).toBe('12 jours restants');
+  });
+});
+
+/**
+ * PR D — « Mis de côté » enters the formula line only when it is not zero, and
+ * the line still rebuilds the headline figure to the cent. Fictitious amounts.
+ */
+describe('IlTeResteCard — PR D, the set-aside term and the daily account', () => {
+  // 2 000 − 705 − 200 − 800 = 295
+  const base = {
+    ilTeReste: 295,
+    resteDisponible: 1095,
+    revenus: 2000,
+    depensesDuMois: 800,
+    retenu: 705,
+    misDeCote: 200,
+    soldeQuotidien: null as number | null,
+    chargesFixes: 505,
+    provisionsLissees: 130,
+    engagementsMensuels: 70,
+    monthLabel: 'septembre',
+    incomplet: false,
+    locale: 'fr-BE' as const,
+    cascade: <p>La cascade</p>,
+  };
+
+  const nombresDe = (el: HTMLElement) =>
+    (el.textContent ?? '')
+      .replace(/[   ]/gu, '')
+      .match(/-?\d+(?:[.,]\d+)?/gu)!
+      .map((n) => Number(n.replace(',', '.')));
+
+  it('writes five numbers, and the subtraction lands on the headline figure', async () => {
+    render(await IlTeResteCard(base));
+    const formule = screen.getByTestId('cockpit-formule');
+    expect(formule).toHaveTextContent('Mis de côté');
+    const nombres = nombresDe(formule);
+    expect(nombres).toHaveLength(5);
+    const [revenus, retenu, mis, depense, reste] = nombres as [
+      number,
+      number,
+      number,
+      number,
+      number,
+    ];
+    expect(Math.round((revenus - retenu - mis - depense) * 100)).toBe(Math.round(reste * 100));
+    expect(reste).toBe(base.ilTeReste);
+    // « Déjà compté » is the retained amount, never revenus − resteDisponible
+    // (which would swallow the set-aside term a second time).
+    expect(retenu).toBe(705);
+  });
+
+  it('leaves « Mis de côté » out when it is zero', async () => {
+    render(await IlTeResteCard({ ...base, misDeCote: 0, ilTeReste: 495, resteDisponible: 1295 }));
+    const formule = screen.getByTestId('cockpit-formule');
+    expect(formule).not.toHaveTextContent('Mis de côté');
+    expect(nombresDe(formule)).toHaveLength(4);
+  });
+
+  it('shows the daily account balance with its source, and opens the Accounts page', async () => {
+    render(await IlTeResteCard({ ...base, soldeQuotidien: 460 }));
+    const lien = screen.getByTestId('cockpit-solde-quotidien');
+    expect(lien).toHaveTextContent('Sur ton compte du quotidien');
+    expect(lien).toHaveTextContent('calculé depuis tes opérations');
+    expect(lien.textContent).toMatch(/460/u);
+    expect(lien.getAttribute('href')).toMatch(/\/app\/accounts$/u);
+  });
+
+  it('does not show the daily account line at all without a balance', async () => {
+    render(await IlTeResteCard(base));
+    expect(screen.queryByTestId('cockpit-solde-quotidien')).toBeNull();
   });
 });

@@ -1296,7 +1296,11 @@
         "epargneEstimee": "Geschat spaarbedrag",
         "parJour": "≈ {amount}/dag",
         "detailToggle": "Breakdown: {poste}",
-        "detailOrigine": "{montant} {cycleMois, plural, =3 {every 3 months} =6 {every 6 months} =12 {once a year} other {every # months}}"
+        "detailOrigine": "{montant} {cycleMois, plural, =3 {every 3 months} =6 {every 6 months} =12 {once a year} other {every # months}}",
+        "recuEnPlus": "Extra ontvangen",
+        "misDeCote": "Opzijgezet",
+        "revenuRecuDiffere": "Deze maand ontvangen {recu}, verwacht {prevu}",
+        "auDela": "Deze maand heb je {montant} meer opzijgezet dan je inkomen overliet: het verschil komt van je hoofdrekening."
       },
       "barAria": "Verdeling van je inkomen: {charges} facturen, {provisions} voorzieningen, {depense} uitgegeven, {reste} over.",
       "barAriaEngagements": "Waarvan {engagements} aan verbintenissen.",
@@ -1689,7 +1693,10 @@
       "ouvrirCascade": "Where this figure comes from",
       "incompletTitre": "Complete your setup",
       "incompletPhrase": "No money in for {month} and no monthly income on file: “You have left” cannot be worked out without it.",
-      "incompletCta": "Add money in"
+      "incompletCta": "Add money in",
+      "termeMisDeCote": "Opzijgezet",
+      "quotidien": "Op je rekening voor elke dag: {montant} · berekend uit je verrichtingen",
+      "quotidienAria": "Op je rekening voor elke dag: {montant}, berekend uit je verrichtingen, waar dit saldo vandaan komt"
     },
     "encoreAPayer": {
       "etiquette": "Due this month",
