@@ -61,13 +61,13 @@ async function lire(page: Page): Promise<Lecture> {
   const lireDansLaPage = () =>
     page.evaluate(() => {
       const enCentimes = (s: string) => {
-        const t = s.replace(/[\s  €]/gu, '').replace('−', '-');
+        const t = s.replace(/[\s\u00a0\u202f€]/gu, '').replace('−', '-');
         return Math.round(Number(t.replace(/\./gu, '').replace(',', '.')) * 100);
       };
       const ligne = document.querySelector('[data-testid="cockpit-formule"]')!;
       const spans = Array.from(ligne.querySelectorAll('span'));
       const nombresDe = (texte: string) =>
-        Array.from(texte.matchAll(/[-−]?[\d  .]*\d(?:,\d{1,2})?/gu)).map((m) => m[0]);
+        Array.from(texte.matchAll(/[-−]?[\d\u00a0\u202f.]*\d(?:,\d{1,2})?/gu)).map((m) => m[0]);
       const nombres = spans.flatMap((s) => nombresDe(s.textContent ?? ''));
       const valeurs = nombres.map(enCentimes);
       // The headline may carry its value twice (the moving figure and its
@@ -107,8 +107,8 @@ async function lire(page: Page): Promise<Lecture> {
  */
 async function lireFeuilleAjout(page: Page, attendu: number): Promise<[number, number]> {
   const enCentimes = (s: string) => {
-    const n = s.match(/[-−]?[\d  .]*\d(?:,\d{1,2})?/u)?.[0] ?? 'NaN';
-    const t = n.replace(/[\s  ]/gu, '').replace('−', '-');
+    const n = s.match(/[-−]?[\d\u00a0\u202f.]*\d(?:,\d{1,2})?/u)?.[0] ?? 'NaN';
+    const t = n.replace(/[\s\u00a0\u202f]/gu, '').replace('−', '-');
     return Math.round(Number(t.replace(/\./gu, '').replace(',', '.')) * 100);
   };
   const tete = page.getByTestId('cockpit-chiffre');
