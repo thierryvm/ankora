@@ -933,12 +933,15 @@ body {
    because the danger is not either one — it is the unification someone will
    attempt on seeing two flex mechanisms for the same job.
 
-   1. The app (`/app/**`) DEPENDS on it. `[locale]/layout.tsx` renders providers
-      and five `fixed` siblings but no DOM element around `{children}`, and
-      `app/layout.tsx` returns a fragment — so `<main>` really is a direct child
-      of `<body>`. Combined with `body { display:flex; min-height:100svh }`
-      above, this line is what keeps the footer at the bottom of a short app
-      page. Verified in the cockpit review of ADR-039, 8 Aug 2026.
+   1. Pages whose `<main>` is a direct child of `<body>` DEPEND on it:
+      `[locale]/layout.tsx` renders providers and `fixed` siblings but no DOM
+      element around `{children}`. Combined with `body { display:flex;
+      min-height:100svh }` above, this line keeps the footer at the bottom of a
+      short page. `/app/**` NO LONGER does: since the rail (socle v3) its
+      `<main>` sits inside the shell of `app/layout.tsx`, which carries its own
+      screen-high minimum and its own growing `<main>` (corrected 21 Sept 2026,
+      after the footer floated mid-screen on a short page — this paragraph used
+      to say the opposite, and it had stopped being true when the rail landed).
 
    2. The landing BYPASSES it, from PR L2 onward. Wrapping nav + main + footer
       in the paper scope makes `<main>` a grandchild, so this selector stops

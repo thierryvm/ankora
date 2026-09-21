@@ -87,8 +87,11 @@ export function AppRail() {
         // navigation surface, and the shell spec asserts that exactly one of
         // the two is visible at every width.
         'hidden lg:block',
-        'border-border-bar sticky top-[calc(var(--size-topbar)+env(safe-area-inset-top))]',
-        'h-[calc(100svh-var(--size-topbar)-env(safe-area-inset-top))] w-60 shrink-0 border-r',
+        // The header is its 56 px token PLUS a 1 px bottom border. Without that pixel the
+        // rail sat 1 px under the header (hidden by it) and, being screen-high, made
+        // every page at 1024+ scroll by 1 px — even an empty one.
+        'border-border-bar sticky top-[calc(var(--size-topbar)+1px+env(safe-area-inset-top))]',
+        'h-[calc(100svh-var(--size-topbar)-1px-env(safe-area-inset-top))] w-60 shrink-0 border-r',
         'px-3 py-6',
       )}
     >

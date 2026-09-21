@@ -5,7 +5,16 @@ import { BrandHomeLink } from '@/components/brand/BrandHomeLink';
 import { CookiePreferencesLink } from '@/components/layout/CookiePreferencesLink';
 import { shouldMountBottomTabBar } from '@/lib/layout/bottom-tab-bar-state';
 
-export async function Footer() {
+/**
+ * @param reserveBottomBar `true` par defaut : le pied de page porte lui-meme la
+ *   place de la barre basse sous son contenu, ce qui convient aux pages qui ne
+ *   font pas de la barre une affaire de coquille (FAQ, mentions legales,
+ *   glossaire). La coquille de `/app` passe `false` : elle reserve cette place
+ *   SOUS le pied de page, dans sa propre colonne, pour que le pied de page se
+ *   pose au-dessus de la barre — et non dessous, ni tout juste au-dessus d'une
+ *   marge morte qui le laisserait flotter sur une page courte.
+ */
+export async function Footer({ reserveBottomBar = true }: { reserveBottomBar?: boolean } = {}) {
   const t = await getTranslations('footer');
   const tCommon = await getTranslations('common');
 
@@ -48,9 +57,13 @@ export async function Footer() {
           dépend pas de ce qu'il réserve ne prouve rien — il induit en erreur. */}
       <div
         className={
-          bottomTabBarMounted
-            ? 'mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-4 pt-10 pb-[calc(env(safe-area-inset-bottom)+3.5rem)] md:flex-row md:items-center md:px-6 xl:pb-10'
-            : 'mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-4 pt-10 pb-[calc(env(safe-area-inset-bottom)+2.5rem)] md:flex-row md:items-center md:px-6 xl:pb-10'
+          !reserveBottomBar
+            ? // The shell reserves the bar (and the safe area) BELOW the footer:
+              // adding either here would count it twice.
+              'mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-4 pt-10 pb-10 md:flex-row md:items-center md:px-6'
+            : bottomTabBarMounted
+              ? 'mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-4 pt-10 pb-[calc(env(safe-area-inset-bottom)+3.5rem)] md:flex-row md:items-center md:px-6 xl:pb-10'
+              : 'mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-4 pt-10 pb-[calc(env(safe-area-inset-bottom)+2.5rem)] md:flex-row md:items-center md:px-6 xl:pb-10'
         }
       >
         <div className="flex items-center gap-2">

@@ -72,8 +72,8 @@ function setBottomTabBarMounted(value: boolean): void {
 
 import { Footer } from '../Footer';
 
-async function renderFooter() {
-  const ui = await Footer();
+async function renderFooter(props: { reserveBottomBar?: boolean } = {}) {
+  const ui = await Footer(props);
   return render(ui);
 }
 
@@ -124,6 +124,34 @@ describe('<Footer />', () => {
     expect(
       screen.getByRole('button', { name: messages.footer.cookiePreferences }),
     ).toBeInTheDocument();
+  });
+
+  // 21 septembre 2026 : la coquille de `/app` reserve la place de la barre basse
+  // SOUS le pied de page, dans sa propre colonne. Si le pied de page la reservait
+  // AUSSI, le vide reviendrait (deux reserves l'une sur l'autre). Ce cas epingle
+  // la classe ; `e2e/coquille-defilement.spec.ts` mesure ce qu'on voit.
+  describe('reserveBottomBar', () => {
+    const classes = (container: HTMLElement) => {
+      const div = container.querySelector('footer > div');
+      // A missing element would make every "does not reserve" case pass on nothing.
+      expect(div).not.toBeNull();
+      return div?.className ?? '';
+    };
+    const reserve = (container: HTMLElement) => classes(container).includes('3.5rem');
+
+    it('reserves the bar by default when it is mounted (public pages)', async () => {
+      setBottomTabBarMounted(true);
+      const { container } = await renderFooter();
+      expect(reserve(container)).toBe(true);
+    });
+
+    it('does not reserve it when the shell already does (reserveBottomBar={false})', async () => {
+      setBottomTabBarMounted(true);
+      const { container } = await renderFooter({ reserveBottomBar: false });
+      expect(reserve(container)).toBe(false);
+      // Neither the bar nor the safe area: the shell owns both, below the footer.
+      expect(classes(container)).not.toContain('safe-area-inset-bottom');
+    });
   });
 
   // PR-BETA-6 hotfix #4 (THI-277, 2026-05-25, @thierry iPhone smoke): the
