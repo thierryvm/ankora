@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 
@@ -71,7 +71,11 @@ describe('IncomeButton — « Argent reçu »', () => {
     withIntl(<IncomeButton accounts={ACCOUNTS} today="2026-09-21" />);
     await userEvent.click(screen.getByRole('button', { name: 'Argent reçu' }));
     const sheet = screen.getByTestId('feuille-argent-recu');
-    await userEvent.type(within(sheet).getByLabelText('Combien as-tu reçu ?'), '505');
+    const amount = within(sheet).getByLabelText('Combien as-tu reçu ?');
+    // The sheet puts focus on the amount one frame after opening: wait for it,
+    // so that frame cannot land in the middle of the description.
+    await waitFor(() => expect(document.activeElement).toBe(amount));
+    await userEvent.type(amount, '505');
     await userEvent.type(within(sheet).getByLabelText('Description (facultatif)'), '  Prime  ');
     await userEvent.click(within(sheet).getByRole('button', { name: 'Enregistrer' }));
     expect(actions.income).toHaveBeenCalledWith({

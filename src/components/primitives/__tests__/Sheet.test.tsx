@@ -296,6 +296,7 @@ describe('Sheet — focus on open', () => {
    * second letter of a description landed in the amount field.
    */
   it('keeps focus and scroll lock while the parent re-renders with a new onClose', async () => {
+    const closedWith = vi.fn();
     function ParentOwnedField() {
       const [open, setOpen] = useState(false);
       const [note, setNote] = useState('');
@@ -307,7 +308,10 @@ describe('Sheet — focus on open', () => {
           </button>
           <Sheet
             open={open}
-            onClose={() => setOpen(false)}
+            onClose={() => {
+              closedWith(note);
+              setOpen(false);
+            }}
             title="Argent reçu"
             testId="test-sheet"
             initialFocusRef={amountRef}
@@ -333,6 +337,11 @@ describe('Sheet — focus on open', () => {
     expect(document.activeElement).toBe(screen.getByTestId('note'));
     expect(document.body.style.position).toBe('fixed');
     expect(vi.mocked(window.scrollTo).mock.calls.length).toBe(scrollCalls);
+
+    // The effect no longer re-runs, so it must still call the LATEST onClose,
+    // the one that sees « Prime » — not the one captured when the sheet opened.
+    await user.keyboard('{Escape}');
+    expect(closedWith).toHaveBeenCalledWith('Prime');
   });
 });
 

@@ -78,13 +78,22 @@ for (const theme of ['dark', 'light'] as const) {
     const html = page.locator('html');
     if (theme === 'dark') await expect(html).toHaveAttribute('data-theme', 'dark');
     else await expect(html).not.toHaveAttribute('data-theme', 'dark');
+    // Tailwind's hover variant only applies to a fine pointer: on a touch
+    // project there is no hover state to measure, and the case would pass empty.
+    test.skip(
+      !(await page.evaluate(() => matchMedia('(hover: hover)').matches)),
+      'Pas de survol sur un pointeur tactile.',
+    );
     for (const nom of BOUTONS) {
       const bouton = page.getByRole('button', { name: nom });
       await expect(bouton).toBeVisible();
+      const auRepos = await couleursSousLeTexte(page, nom);
       await bouton.hover();
       // Read the painted colours once the hover transition has finished.
       await expect.poll(() => bouton.evaluate((el) => el.getAnimations().length)).toBe(0);
       const { fg, bg } = await couleursSousLeTexte(page, nom);
+      // Proof the hover rule applied: otherwise this measures the resting state.
+      expect(bg, `${nom} : le survol doit changer le fond`).not.toEqual(auRepos.bg);
       const ratio = contraste(fg, bg);
       expect(ratio, `${nom} survolé : texte rgb(${fg}) sur rgb(${bg})`).toBeGreaterThanOrEqual(4.5);
     }
