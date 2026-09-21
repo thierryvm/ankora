@@ -1,28 +1,61 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useId, useState, useTransition } from 'react';
 import { Landmark, PiggyBank, Wallet } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/toast';
+import { updateMonthlyIncomeAction, updateVieCouranteTransferAction } from '@/lib/actions/accounts';
 import {
-  updateAccountBalanceAction,
-  updateMonthlyIncomeAction,
-  updateVieCouranteTransferAction,
-} from '@/lib/actions/accounts';
+  recordBalanceStatementAction,
+  setMovementCancelledAction,
+  setStatementCancelledAction,
+} from '@/lib/actions/operations';
+import { AmountSheet } from '@/components/operations/AmountSheet';
+import { IncomeButton } from '@/components/operations/IncomeButton';
+import { Repli } from '@/components/cockpit/Repli';
+import type { AccountType } from '@/lib/domain/cockpit/types';
 import { ACCOUNT_KIND_I18N_KEY, type AccountKind } from '@/lib/schemas/account';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
+import { formatCurrency } from '@/lib/i18n/formatters';
+import type { Locale } from '@/i18n/routing';
 
-type AccountRow = { kind: AccountKind; label: string; balance: number };
+/** One « argent reçu » of the month on this account, cancelled ones included. */
+export type IncomeLineProps = {
+  id: string;
+  amount: number;
+  occurredOn: string;
+  description: string | null;
+  cancelled: boolean;
+};
+
+/** Plain values only — computed by the server page, never a Decimal. */
+export type AccountBalanceProps = {
+  kind: AccountKind;
+  accountType: AccountType;
+  label: string;
+  view: {
+    readId: string;
+    readBalance: number;
+    readStatedOn: string;
+    readIsStartingBalance: boolean;
+    computed: number | null;
+    gap: { expected: number; read: number; amount: number } | null;
+    reopenable: { id: string; statedOn: string } | null;
+  } | null;
+  incomes?: IncomeLineProps[];
+};
 
 type Props = {
   monthlyIncome: number | null;
   vieCouranteMonthlyTransfer: number | null;
-  accounts: AccountRow[];
+  balances: AccountBalanceProps[];
+  today: string;
+  ledgerFailed?: boolean;
 };
 
 const ACCOUNT_ICONS: Record<AccountKind, typeof Landmark> = {
@@ -40,15 +73,35 @@ function parseAmount(raw: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-export function AccountsClient({ monthlyIncome, vieCouranteMonthlyTransfer, accounts }: Props) {
+export function AccountsClient({
+  monthlyIncome,
+  vieCouranteMonthlyTransfer,
+  balances,
+  today,
+  ledgerFailed = false,
+}: Props) {
   const t = useTranslations('app.accounts');
-  const accountByKind = new Map<AccountKind, AccountRow>(accounts.map((a) => [a.kind, a]));
+  const tOps = useTranslations('operations');
+  const accountByKind = new Map<AccountKind, AccountBalanceProps>(balances.map((a) => [a.kind, a]));
 
   return (
     <div className="flex flex-col gap-8">
-      <header>
-        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{t('title')}</h1>
-        <p className="text-muted-foreground mt-1">{t('subtitle')}</p>
+      <header className="flex flex-col gap-3">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{t('title')}</h1>
+          <p className="text-muted-foreground mt-1">{t('subtitle')}</p>
+        </div>
+        {ledgerFailed ? null : (
+          <div className="flex flex-wrap gap-2">
+            <IncomeButton
+              today={today}
+              accounts={ACCOUNT_ORDER.flatMap((kind) => {
+                const row = accountByKind.get(kind);
+                return row ? [{ accountType: row.accountType, label: row.label }] : [];
+              })}
+            />
+          </div>
+        )}
       </header>
 
       <MonthlyIncomeCard initialValue={monthlyIncome} />
@@ -58,11 +111,16 @@ export function AccountsClient({ monthlyIncome, vieCouranteMonthlyTransfer, acco
         <h2 id="soldes-heading" className="text-xl font-semibold">
           {t('balancesHeading')}
         </h2>
+        {ledgerFailed ? (
+          <p role="alert" className="text-sm">
+            {tOps('readFailed')}
+          </p>
+        ) : null}
         <div className="grid gap-4 md:grid-cols-3">
           {ACCOUNT_ORDER.map((kind) => {
             const row = accountByKind.get(kind);
             if (!row) return null;
-            return <AccountBalanceCard key={kind} row={row} />;
+            return ledgerFailed ? null : <AccountBalanceCard key={kind} row={row} today={today} />;
           })}
         </div>
       </section>
@@ -109,6 +167,7 @@ function MonthlyIncomeCard({ initialValue }: { initialValue: number | null }) {
             <Label htmlFor="monthly-income">{tIncome('amountLabel')}</Label>
             <Input
               id="monthly-income"
+              className="min-h-11"
               type="number"
               inputMode="decimal"
               min={0}
@@ -118,7 +177,7 @@ function MonthlyIncomeCard({ initialValue }: { initialValue: number | null }) {
               onChange={(e) => setValue(e.target.value)}
             />
           </div>
-          <Button type="submit" disabled={isPending}>
+          <Button type="submit" className="min-h-11" disabled={isPending}>
             {isPending ? t('saving') : t('saveButton')}
           </Button>
         </form>
@@ -157,6 +216,7 @@ function VieCouranteTransferCard({ initialValue }: { initialValue: number | null
             <Label htmlFor="vie-transfer">{tTransfer('amountLabel')}</Label>
             <Input
               id="vie-transfer"
+              className="min-h-11"
               type="number"
               inputMode="decimal"
               min={0}
@@ -166,7 +226,7 @@ function VieCouranteTransferCard({ initialValue }: { initialValue: number | null
               onChange={(e) => setValue(e.target.value)}
             />
           </div>
-          <Button type="submit" disabled={isPending}>
+          <Button type="submit" className="min-h-11" disabled={isPending}>
             {isPending ? t('saving') : t('saveButton')}
           </Button>
         </form>
@@ -175,31 +235,46 @@ function VieCouranteTransferCard({ initialValue }: { initialValue: number | null
   );
 }
 
-function AccountBalanceCard({ row }: { row: AccountRow }) {
-  const t = useTranslations('app.accounts');
-  const tBalance = useTranslations('app.accounts.balance');
+function formatDay(iso: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', timeZone: 'UTC' }).format(
+    new Date(`${iso}T00:00:00Z`),
+  );
+}
+
+/**
+ * One account: its READ balance, dated by the day it was read (`stated_on`,
+ * never the end of the month), and — only when operations were written since —
+ * the balance worked out from them. The two never share a label: a read
+ * balance does not say « calculé », a computed one does not say « relevé ».
+ *
+ * The first statement of an account is its « solde de départ »: seeded by the
+ * J2 migration or by sign-up, nobody read it on an extract.
+ *
+ * A negative balance is shown as it is, in the ordinary text colour: an
+ * overdraft is a fact, not a fault.
+ */
+function AccountBalanceCard({ row, today }: { row: AccountBalanceProps; today: string }) {
   const tKind = useTranslations('app.accounts.kind');
+  const tBalance = useTranslations('app.accounts.balance');
+  const tS = useTranslations('operations.statement');
+  const locale = useLocale() as Locale;
   const translateError = useActionErrorTranslator();
   const Icon = ACCOUNT_ICONS[row.kind];
-  const [value, setValue] = useState(String(row.balance));
+  const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const fmt = (n: number) => formatCurrency(n, locale);
+  const view = row.view;
 
-  function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const amount = parseAmount(value);
-    if (amount === null) {
-      toast.error(tBalance('invalidAmount'));
-      return;
-    }
+  function setCancelled(id: string, cancelled: boolean) {
     startTransition(async () => {
-      const result = await updateAccountBalanceAction({ kind: row.kind, balance: amount });
-      if (result.ok) toast.success(tBalance('toastSaved', { name: row.label }));
-      else toast.error(translateError(result.errorCode));
+      const r = await setStatementCancelledAction({ id, cancelled });
+      if (r.ok) toast.success(cancelled ? tS('cancelled') : tS('saved'));
+      else toast.error(translateError(r.errorCode));
     });
   }
 
   return (
-    <Card>
+    <Card data-account-balance={row.accountType}>
       <CardHeader className="pb-2">
         <div className="text-brand-700 flex items-center gap-2">
           <Icon className="h-5 w-5" aria-hidden />
@@ -209,52 +284,170 @@ function AccountBalanceCard({ row }: { row: AccountRow }) {
           {tKind(`${ACCOUNT_KIND_I18N_KEY[row.kind]}.description`)}
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        {/*
-          Le montant n'est rendu QU'UNE FOIS, par le champ.
-          Il y avait au-dessus un `<p>` qui reformatait `row.balance` en gros
-          chiffre. Les deux divergeaient dès la première frappe — l'un montrait
-          la valeur enregistrée, l'autre celle en cours de saisie — et un
-          lecteur d'écran annonçait donc deux soldes différents pour le même
-          compte. Un champ de formulaire relié à son label expose déjà son nom
-          accessible ET sa valeur : le second rendu n'apportait rien qu'une
-          contradiction.
-        */}
-        <form onSubmit={onSubmit} className="flex flex-col gap-2">
-          <Label htmlFor={`balance-${row.kind}`} className="sr-only">
-            {tBalance('srLabel', { label: row.label })}
-          </Label>
-          <Input
-            id={`balance-${row.kind}`}
-            type="number"
-            inputMode="decimal"
-            step="0.01"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            aria-describedby={`balance-notice-${row.kind}`}
-          />
-          <Button type="submit" size="sm" variant="outline" disabled={isPending}>
-            {isPending ? t('saving') : tBalance('saveLabel')}
-          </Button>
-        </form>
-        {/*
-          Deux phrases, deux fonctions distinctes, et aucune n'est décorative.
-          La première dit que le nombre est SAISI, donc qu'il ne se corrige pas
-          tout seul — règle 1 du modèle source : « si un montant semble faux,
-          c'est la donnée source qu'il faut corriger ». La seconde dit à quoi il
-          SERT, ce qui est aujourd'hui « à rien » pour deux comptes sur trois :
-          `computeMonthlyTransferPlan` ne prend aucun solde en entrée, et le
-          seul consommateur d'un solde dans un calcul est `month-situation.ts`,
-          filtré sur `accountType === 'provisions'`.
+      <CardContent className="flex flex-col gap-3">
+        {view ? (
+          <div data-testid="solde-lu">
+            <p className="text-muted-foreground text-xs">
+              {view.readIsStartingBalance
+                ? tS('start', { date: formatDay(view.readStatedOn, locale) })
+                : tS('read', { date: formatDay(view.readStatedOn, locale) })}
+            </p>
+            <p className="text-foreground font-mono text-xl tabular-nums">
+              {fmt(view.readBalance)}
+            </p>
+          </div>
+        ) : (
+          <p className="text-muted-foreground text-sm">{tS('none')}</p>
+        )}
 
-          Rendues hors du `<form>` : un second bouton dans ce formulaire rendrait
-          ambigu le locator de `e2e/accounts.spec.ts`, qui remonte au parent du
-          champ et y cherche `getByRole('button')`.
-        */}
-        <p id={`balance-notice-${row.kind}`} className="text-muted-foreground mt-3 text-xs">
+        {view?.computed !== null && view?.computed !== undefined ? (
+          <div data-testid="solde-calcule">
+            <p className="text-muted-foreground text-xs">{tS('computed')}</p>
+            <p className="text-foreground font-mono tabular-nums">{fmt(view.computed)}</p>
+            <p className="text-muted-foreground text-xs">{tS('computedHint')}</p>
+          </div>
+        ) : null}
+
+        {view?.gap ? (
+          <Repli
+            titre={tS('gapTitle')}
+            cle={fmt(view.gap.amount)}
+            testId={`ecart-${row.accountType}`}
+          >
+            <dl className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 text-sm">
+              <dt>{tS('gapExpected')}</dt>
+              <dd className="font-mono tabular-nums">{fmt(view.gap.expected)}</dd>
+              <dt>{tS('gapRead')}</dt>
+              <dd className="font-mono tabular-nums">{fmt(view.gap.read)}</dd>
+              <dt>{tS('gapAmount')}</dt>
+              <dd className="font-mono tabular-nums">{fmt(view.gap.amount)}</dd>
+            </dl>
+            <p className="text-muted-foreground mt-2 text-xs">{tS('gapExplain')}</p>
+          </Repli>
+        ) : null}
+
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="min-h-11"
+            aria-label={tS('openAria', { name: row.label })}
+            onClick={() => setOpen(true)}
+          >
+            {tS('open')}
+          </Button>
+          {view && !view.readIsStartingBalance ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="min-h-11"
+              disabled={isPending}
+              onClick={() => setCancelled(view.readId, true)}
+            >
+              {tS('cancel')}
+            </Button>
+          ) : null}
+          {view?.reopenable ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="min-h-11"
+              disabled={isPending}
+              onClick={() => setCancelled(view.reopenable!.id, false)}
+            >
+              {tS('reopen', { date: formatDay(view.reopenable.statedOn, locale) })}
+            </Button>
+          ) : null}
+        </div>
+
+        {row.incomes && row.incomes.length > 0 ? <IncomeLines lines={row.incomes} /> : null}
+
+        <p className="text-muted-foreground text-xs">
           {tBalance('manualNotice')} {tKind(`${ACCOUNT_KIND_I18N_KEY[row.kind]}.usage`)}
         </p>
+
+        {open ? (
+          <AmountSheet
+            open={open}
+            onClose={() => setOpen(false)}
+            testId="feuille-releve"
+            title={tS('title')}
+            question={tS('question')}
+            hint={tS('hint')}
+            dateLabel={tS('date')}
+            initialAmount={null}
+            initialDate={today}
+            allowNegative
+            successMessage={tS('saved')}
+            onSubmit={(balance, statedOn) =>
+              recordBalanceStatementAction({ accountType: row.accountType, balance, statedOn })
+            }
+          />
+        ) : null}
       </CardContent>
     </Card>
+  );
+}
+
+/**
+ * The month's « argent reçu » on one account, behind a fold (its count in the
+ * title): each line says when it was received, and offers « Annuler » — or,
+ * once cancelled, « Rétablir ». Nothing is deleted (rule 11).
+ */
+function IncomeLines({ lines }: { lines: IncomeLineProps[] }) {
+  const t = useTranslations('operations.income');
+  const locale = useLocale() as Locale;
+  const translateError = useActionErrorTranslator();
+  const ids = useId();
+  const [isPending, startTransition] = useTransition();
+
+  function setCancelled(id: string, cancelled: boolean) {
+    startTransition(async () => {
+      const r = await setMovementCancelledAction({ id, cancelled });
+      if (r.ok) toast.success(cancelled ? t('cancelled') : t('saved'));
+      else toast.error(translateError(r.errorCode));
+    });
+  }
+
+  return (
+    <Repli titre={t('heading')} cle={t('count', { count: lines.length })} testId="argent-recu">
+      <ul className="flex flex-col gap-3">
+        {lines.map((line) => {
+          const textId = `${ids}-${line.id}`;
+          return (
+            <li key={line.id} data-income-line={line.id} className="flex flex-col gap-1">
+              <div id={textId} className="flex items-baseline justify-between gap-3">
+                <span className="min-w-0 text-sm break-words">
+                  {line.description}
+                  <span className="text-muted-foreground block text-xs">
+                    {t('receivedOn', { date: formatDay(line.occurredOn, locale) })}
+                    {line.cancelled ? ` · ${t('cancelled')}` : ''}
+                  </span>
+                </span>
+                <span
+                  className={`font-mono text-sm tabular-nums ${line.cancelled ? 'text-muted-foreground line-through' : ''}`}
+                >
+                  {formatCurrency(line.amount, locale)}
+                </span>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="min-h-11 self-start"
+                disabled={isPending}
+                aria-describedby={textId}
+                onClick={() => setCancelled(line.id, !line.cancelled)}
+              >
+                {line.cancelled ? t('reopen') : t('cancel')}
+              </Button>
+            </li>
+          );
+        })}
+      </ul>
+    </Repli>
   );
 }

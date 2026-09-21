@@ -900,7 +900,7 @@
         "saveLabel": "Actualizar",
         "srLabel": "Saldo actual de {label}",
         "toastSaved": "{name} actualizado",
-        "manualNotice": "Entered by hand. This amount only changes when you change it here."
+        "manualNotice": "Este saldo solo cambia cuando anotas uno nuevo."
       },
       "kind": {
         "principal": {
@@ -1562,6 +1562,27 @@
             "range": "Mes entre 1 y 12."
           }
         }
+      },
+      "operations": {
+        "amount": {
+          "invalid": "Introduce un importe válido.",
+          "notPositive": "El importe debe ser mayor que cero.",
+          "outOfRange": "Este importe está fuera de rango.",
+          "subCent": "Dos decimales como máximo: el céntimo es la unidad más pequeña."
+        },
+        "date": {
+          "invalid": "Introduce una fecha válida.",
+          "future": "La fecha no puede ser futura."
+        },
+        "transfer": {
+          "sameAccount": "Una transferencia va de una cuenta a otra."
+        },
+        "description": {
+          "tooLong": "120 caracteres como máximo."
+        },
+        "id": {
+          "invalid": "Operación no encontrada."
+        }
       }
     },
     "charges": {
@@ -1635,6 +1656,12 @@
       "createFailed": "Impossible de créer la catégorie.",
       "duplicate": "Tu as déjà une catégorie qui porte ce nom.",
       "duplicateBill": "Ce nom est déjà pris par une catégorie de facture. Elle ne s’affiche pas ici parce qu’une facture n’est pas une dépense — elle est déjà déduite de ton budget."
+    },
+    "operations": {
+      "writeFailed": "No se pudo guardar la operación. Inténtalo de nuevo.",
+      "notFound": "Esta operación ya no existe o no es tuya.",
+      "alreadyDone": "Esta transferencia ya consta como hecha este mes.",
+      "startingBalance": "El saldo inicial no se anula: anota mejor el saldo de hoy."
     }
   },
   "opengraphImage": {
@@ -1688,7 +1715,7 @@
       "rythme": "This month’s pace",
       "cleRythme": "{jours, plural, =0 {last day} one {# day left} other {# days left}}",
       "virements": "This month’s transfers",
-      "cleVirements": "{montant} to transfer",
+      "cleVirements": "{montant} por transferir",
       "cleVirementsIncomplet": "to complete",
       "reserve": "Provisions for your bills",
       "cleReserve": "your buffer",
@@ -1699,5 +1726,70 @@
       "versProvisions": "Transfer to make to Provisions for your bills",
       "depuisProvisions": "To take back from Provisions for your bills"
     }
+  },
+  "operations": {
+    "close": "Cerrar",
+    "save": "Guardar",
+    "saving": "Guardando…",
+    "income": {
+      "open": "Dinero recibido",
+      "title": "Dinero recibido",
+      "amount": "¿Cuánto has recibido?",
+      "date": "Recibido el",
+      "account": "¿En qué cuenta?",
+      "nature": "¿En concepto de qué?",
+      "natureRegular": "Mis ingresos del mes",
+      "natureExtra": "Además de mis ingresos",
+      "description": "Descripción (opcional)",
+      "descriptionHint": "p. ej. salario, reembolso",
+      "defaultRegular": "Ingresos del mes",
+      "defaultExtra": "Además de los ingresos",
+      "saved": "Dinero recibido guardado",
+      "receivedOn": "Recibido el {date}",
+      "cancel": "Anular",
+      "cancelled": "Dinero recibido anulado",
+      "reopen": "Restablecer",
+      "heading": "Dinero recibido este mes",
+      "count": "{count, plural, one {# operación} other {# operaciones}}"
+    },
+    "statement": {
+      "open": "Anotar el saldo de hoy",
+      "openAria": "Anotar el saldo de hoy de {name}",
+      "title": "Saldo de hoy",
+      "question": "¿Cuál es el saldo de esta cuenta hoy?",
+      "hint": "El importe que muestra tu banco, aunque sea negativo.",
+      "date": "Leído el",
+      "saved": "Saldo guardado",
+      "read": "Saldo leído el {date}",
+      "start": "Saldo inicial, el {date}",
+      "computed": "Calculado a partir de tus operaciones",
+      "computedHint": "El último saldo conocido, más las transferencias y el dinero recibido anotados desde entonces. Tus gastos aún no están incluidos.",
+      "none": "No hay saldo para esta cuenta.",
+      "cancel": "Anular este saldo",
+      "cancelled": "Saldo anulado",
+      "reopen": "Restablecer el saldo del {date}",
+      "gapTitle": "Diferencia con tus operaciones",
+      "gapExpected": "Esperado según tus operaciones",
+      "gapRead": "Leído en tu cuenta",
+      "gapAmount": "Diferencia",
+      "gapExplain": "Una diferencia es normal: Ankora aún no sigue tus gastos ni tus domiciliaciones. No significa que hayas olvidado algo.",
+      "overdraft": "Esta cuenta está en descubierto"
+    },
+    "transfer": {
+      "done": "He hecho esta transferencia",
+      "doneAria": "He hecho esta transferencia: {line}",
+      "question": "¿Cuánto has transferido?",
+      "hint": "El importe total de la transferencia, tal como lo cargó tu banco.",
+      "date": "Transferido el",
+      "split": "{provisions} de provisiones + {libre} de ahorro libre",
+      "saved": "Transferencia guardada",
+      "doneOn": "Hecha el {date}",
+      "doneAmount": "Hecha el {date}: {montant}",
+      "cancel": "Anular",
+      "cancelled": "Transferencia anulada",
+      "reopen": "Restablecer la transferencia anulada",
+      "explain": "Ankora no mueve tu dinero: haz la transferencia en tu banco y márcala aquí."
+    },
+    "readFailed": "No se pudieron leer tus saldos. Recarga la página."
   }
 }

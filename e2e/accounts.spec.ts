@@ -52,17 +52,27 @@ test.describe('Accounts — 3-comptes saisie + Plan du mois', () => {
         .click();
       await expect(page.getByText(/virement mensuel mis à jour/i)).toBeVisible();
 
-      await page.locator('#balance-principal').fill('1000');
-      await page.locator('#balance-principal').locator('..').getByRole('button').click();
-      await expect(page.getByText(/compte principal mis à jour/i)).toBeVisible();
-
-      await page.locator('#balance-vie_courante').fill('300');
-      await page.locator('#balance-vie_courante').locator('..').getByRole('button').click();
-      await expect(page.getByText(/vie courante mis à jour/i)).toBeVisible();
-
-      await page.locator('#balance-epargne').fill('400');
-      await page.locator('#balance-epargne').locator('..').getByRole('button').click();
-      await expect(page.getByText(/épargne.+mis à jour/i)).toBeVisible();
+      // ATTENDUS MODIFIÉS PAR LA PR C bis, et pourquoi. Le champ modifiable du
+      // solde (#balance-*) n'existe plus : un solde est désormais un RELEVÉ
+      // daté, écrit dans une feuille qui pose « Quel est le solde de ce compte
+      // aujourd'hui ? ». Mêmes trois comptes, mêmes trois montants, même
+      // confirmation attendue — seul le geste change, et le toast dit
+      // « Solde enregistré » au lieu de « <compte> mis à jour ».
+      for (const [accountType, montant] of [
+        ['income_bills', '1000'],
+        ['daily_card', '300'],
+        ['provisions', '400'],
+      ] as const) {
+        await page
+          .locator(`[data-account-balance="${accountType}"]`)
+          .getByRole('button', { name: /écrire le solde du jour/i })
+          .click();
+        const feuille = page.getByTestId('feuille-releve');
+        await feuille.getByLabel(/quel est le solde de ce compte aujourd’hui/i).fill(montant);
+        await feuille.getByRole('button', { name: /^enregistrer$/i }).click();
+        await expect(page.getByText(/solde enregistré/i).first()).toBeVisible();
+        await expect(feuille).toBeHidden();
+      }
 
       await page.goto('/app');
       // ATTENDUS MODIFIÉS PAR LE LOT B, et pourquoi. La section « Plan du mois »

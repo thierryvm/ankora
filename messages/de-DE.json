@@ -900,7 +900,7 @@
         "saveLabel": "Aktualisieren",
         "srLabel": "Aktueller Saldo von {label}",
         "toastSaved": "{name} aktualisiert",
-        "manualNotice": "Entered by hand. This amount only changes when you change it here."
+        "manualNotice": "Dieser Kontostand ändert sich nur, wenn du einen neuen einträgst."
       },
       "kind": {
         "principal": {
@@ -1562,6 +1562,27 @@
             "range": "Monat zwischen 1 und 12."
           }
         }
+      },
+      "operations": {
+        "amount": {
+          "invalid": "Gib einen gültigen Betrag ein.",
+          "notPositive": "Der Betrag muss größer als null sein.",
+          "outOfRange": "Dieser Betrag liegt außerhalb des Bereichs.",
+          "subCent": "Höchstens zwei Nachkommastellen: der Cent ist die kleinste Einheit."
+        },
+        "date": {
+          "invalid": "Gib ein gültiges Datum ein.",
+          "future": "Das Datum darf nicht in der Zukunft liegen."
+        },
+        "transfer": {
+          "sameAccount": "Eine Überweisung geht von einem Konto auf ein anderes."
+        },
+        "description": {
+          "tooLong": "Höchstens 120 Zeichen."
+        },
+        "id": {
+          "invalid": "Vorgang nicht gefunden."
+        }
       }
     },
     "charges": {
@@ -1635,6 +1656,12 @@
       "createFailed": "Impossible de créer la catégorie.",
       "duplicate": "Tu as déjà une catégorie qui porte ce nom.",
       "duplicateBill": "Ce nom est déjà pris par une catégorie de facture. Elle ne s’affiche pas ici parce qu’une facture n’est pas une dépense — elle est déjà déduite de ton budget."
+    },
+    "operations": {
+      "writeFailed": "Der Vorgang konnte nicht gespeichert werden. Versuche es erneut.",
+      "notFound": "Dieser Vorgang existiert nicht mehr oder gehört nicht dir.",
+      "alreadyDone": "Diese Überweisung ist für diesen Monat bereits als erledigt vermerkt.",
+      "startingBalance": "Der Anfangssaldo lässt sich nicht stornieren: trag lieber den heutigen Kontostand ein."
     }
   },
   "opengraphImage": {
@@ -1688,7 +1715,7 @@
       "rythme": "This month’s pace",
       "cleRythme": "{jours, plural, =0 {last day} one {# day left} other {# days left}}",
       "virements": "This month’s transfers",
-      "cleVirements": "{montant} to transfer",
+      "cleVirements": "{montant} zu überweisen",
       "cleVirementsIncomplet": "to complete",
       "reserve": "Provisions for your bills",
       "cleReserve": "your buffer",
@@ -1699,5 +1726,70 @@
       "versProvisions": "Transfer to make to Provisions for your bills",
       "depuisProvisions": "To take back from Provisions for your bills"
     }
+  },
+  "operations": {
+    "close": "Schließen",
+    "save": "Speichern",
+    "saving": "Speichern…",
+    "income": {
+      "open": "Geld erhalten",
+      "title": "Geld erhalten",
+      "amount": "Wie viel hast du erhalten?",
+      "date": "Erhalten am",
+      "account": "Auf welches Konto?",
+      "nature": "Wofür?",
+      "natureRegular": "Mein Einkommen des Monats",
+      "natureExtra": "Zusätzlich zu meinem Einkommen",
+      "description": "Beschreibung (optional)",
+      "descriptionHint": "z. B. Gehalt, Erstattung",
+      "defaultRegular": "Einkommen des Monats",
+      "defaultExtra": "Zusätzlich zum Einkommen",
+      "saved": "Erhaltenes Geld gespeichert",
+      "receivedOn": "Erhalten am {date}",
+      "cancel": "Stornieren",
+      "cancelled": "Erhaltenes Geld storniert",
+      "reopen": "Wiederherstellen",
+      "heading": "Diesen Monat erhaltenes Geld",
+      "count": "{count, plural, one {# Vorgang} other {# Vorgänge}}"
+    },
+    "statement": {
+      "open": "Heutigen Kontostand eintragen",
+      "openAria": "Heutigen Kontostand von {name} eintragen",
+      "title": "Heutiger Kontostand",
+      "question": "Wie hoch ist der Kontostand heute?",
+      "hint": "Der Betrag, den deine Bank anzeigt, auch wenn er negativ ist.",
+      "date": "Gelesen am",
+      "saved": "Kontostand gespeichert",
+      "read": "Kontostand gelesen am {date}",
+      "start": "Anfangssaldo, am {date}",
+      "computed": "Aus deinen Vorgängen berechnet",
+      "computedHint": "Der letzte bekannte Kontostand plus die seitdem eingetragenen Überweisungen und Geldeingänge. Deine Ausgaben sind noch nicht enthalten.",
+      "none": "Kein Kontostand für dieses Konto.",
+      "cancel": "Diesen Kontostand stornieren",
+      "cancelled": "Kontostand storniert",
+      "reopen": "Kontostand vom {date} wiederherstellen",
+      "gapTitle": "Abweichung von deinen Vorgängen",
+      "gapExpected": "Erwartet laut deinen Vorgängen",
+      "gapRead": "Auf deinem Konto gelesen",
+      "gapAmount": "Abweichung",
+      "gapExplain": "Eine Abweichung ist normal: Ankora verfolgt deine Ausgaben und Lastschriften noch nicht. Sie bedeutet nicht, dass du etwas vergessen hast.",
+      "overdraft": "Dieses Konto ist überzogen"
+    },
+    "transfer": {
+      "done": "Ich habe diese Überweisung gemacht",
+      "doneAria": "Ich habe diese Überweisung gemacht: {line}",
+      "question": "Wie viel hast du überwiesen?",
+      "hint": "Der volle Überweisungsbetrag, wie deine Bank ihn abgebucht hat.",
+      "date": "Überwiesen am",
+      "split": "{provisions} Rücklagen + {libre} freies Sparen",
+      "saved": "Überweisung gespeichert",
+      "doneOn": "Erledigt am {date}",
+      "doneAmount": "Erledigt am {date}: {montant}",
+      "cancel": "Stornieren",
+      "cancelled": "Überweisung storniert",
+      "reopen": "Stornierte Überweisung wiederherstellen",
+      "explain": "Ankora bewegt dein Geld nicht: mach die Überweisung bei deiner Bank und hake sie dann hier ab."
+    },
+    "readFailed": "Deine Kontostände konnten nicht gelesen werden. Lade die Seite neu."
   }
 }

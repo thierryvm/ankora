@@ -900,7 +900,7 @@
         "saveLabel": "Bijwerken",
         "srLabel": "Huidig saldo van {label}",
         "toastSaved": "{name} bijgewerkt",
-        "manualNotice": "Entered by hand. This amount only changes when you change it here."
+        "manualNotice": "Dit saldo verandert pas als je een nieuw invult."
       },
       "kind": {
         "principal": {
@@ -1562,6 +1562,27 @@
             "range": "Maand tussen 1 en 12."
           }
         }
+      },
+      "operations": {
+        "amount": {
+          "invalid": "Voer een geldig bedrag in.",
+          "notPositive": "Het bedrag moet groter zijn dan nul.",
+          "outOfRange": "Dit bedrag valt buiten de grenzen.",
+          "subCent": "Hoogstens twee decimalen: de cent is de kleinste eenheid."
+        },
+        "date": {
+          "invalid": "Voer een geldige datum in.",
+          "future": "De datum kan niet in de toekomst liggen."
+        },
+        "transfer": {
+          "sameAccount": "Een overschrijving gaat van de ene rekening naar een andere."
+        },
+        "description": {
+          "tooLong": "Hoogstens 120 tekens."
+        },
+        "id": {
+          "invalid": "Verrichting niet gevonden."
+        }
       }
     },
     "charges": {
@@ -1635,6 +1656,12 @@
       "createFailed": "Impossible de créer la catégorie.",
       "duplicate": "Tu as déjà une catégorie qui porte ce nom.",
       "duplicateBill": "Ce nom est déjà pris par une catégorie de facture. Elle ne s’affiche pas ici parce qu’une facture n’est pas une dépense — elle est déjà déduite de ton budget."
+    },
+    "operations": {
+      "writeFailed": "De verrichting kon niet worden opgeslagen. Probeer opnieuw.",
+      "notFound": "Deze verrichting bestaat niet meer of is niet van jou.",
+      "alreadyDone": "Deze overschrijving staat al als gedaan voor deze maand.",
+      "startingBalance": "Het beginsaldo wordt niet geannuleerd: vul liever het saldo van vandaag in."
     }
   },
   "opengraphImage": {
@@ -1688,7 +1715,7 @@
       "rythme": "This month’s pace",
       "cleRythme": "{jours, plural, =0 {last day} one {# day left} other {# days left}}",
       "virements": "This month’s transfers",
-      "cleVirements": "{montant} to transfer",
+      "cleVirements": "{montant} over te schrijven",
       "cleVirementsIncomplet": "to complete",
       "reserve": "Provisions for your bills",
       "cleReserve": "your buffer",
@@ -1699,5 +1726,70 @@
       "versProvisions": "Transfer to make to Provisions for your bills",
       "depuisProvisions": "To take back from Provisions for your bills"
     }
+  },
+  "operations": {
+    "close": "Sluiten",
+    "save": "Opslaan",
+    "saving": "Opslaan…",
+    "income": {
+      "open": "Geld ontvangen",
+      "title": "Geld ontvangen",
+      "amount": "Hoeveel heb je ontvangen?",
+      "date": "Ontvangen op",
+      "account": "Op welke rekening?",
+      "nature": "Waarvoor?",
+      "natureRegular": "Mijn inkomen van de maand",
+      "natureExtra": "Bovenop mijn inkomen",
+      "description": "Beschrijving (optioneel)",
+      "descriptionHint": "bv. loon, terugbetaling",
+      "defaultRegular": "Inkomen van de maand",
+      "defaultExtra": "Bovenop het inkomen",
+      "saved": "Ontvangen geld opgeslagen",
+      "receivedOn": "Ontvangen op {date}",
+      "cancel": "Annuleren",
+      "cancelled": "Ontvangen geld geannuleerd",
+      "reopen": "Herstellen",
+      "heading": "Deze maand ontvangen geld",
+      "count": "{count, plural, one {# verrichting} other {# verrichtingen}}"
+    },
+    "statement": {
+      "open": "Saldo van vandaag invullen",
+      "openAria": "Saldo van vandaag invullen voor {name}",
+      "title": "Saldo van vandaag",
+      "question": "Wat is het saldo van deze rekening vandaag?",
+      "hint": "Het bedrag dat je bank toont, ook als het negatief is.",
+      "date": "Gelezen op",
+      "saved": "Saldo opgeslagen",
+      "read": "Saldo gelezen op {date}",
+      "start": "Beginsaldo, op {date}",
+      "computed": "Berekend uit je verrichtingen",
+      "computedHint": "Het laatst bekende saldo, plus de overschrijvingen en het ontvangen geld die sindsdien zijn ingevuld. Je uitgaven zitten er nog niet in.",
+      "none": "Geen saldo voor deze rekening.",
+      "cancel": "Dit saldo annuleren",
+      "cancelled": "Saldo geannuleerd",
+      "reopen": "Saldo van {date} herstellen",
+      "gapTitle": "Verschil met je verrichtingen",
+      "gapExpected": "Verwacht volgens je verrichtingen",
+      "gapRead": "Gelezen op je rekening",
+      "gapAmount": "Verschil",
+      "gapExplain": "Een verschil is normaal: Ankora volgt je uitgaven en domiciliëringen nog niet. Het betekent niet dat je iets vergeten bent.",
+      "overdraft": "Deze rekening staat in het rood"
+    },
+    "transfer": {
+      "done": "Ik heb deze overschrijving gedaan",
+      "doneAria": "Ik heb deze overschrijving gedaan: {line}",
+      "question": "Hoeveel heb je overgeschreven?",
+      "hint": "Het volledige bedrag van de overschrijving, zoals je bank het heeft afgeschreven.",
+      "date": "Overgeschreven op",
+      "split": "{provisions} voorzieningen + {libre} vrij spaargeld",
+      "saved": "Overschrijving opgeslagen",
+      "doneOn": "Gedaan op {date}",
+      "doneAmount": "Gedaan op {date}: {montant}",
+      "cancel": "Annuleren",
+      "cancelled": "Overschrijving geannuleerd",
+      "reopen": "Geannuleerde overschrijving herstellen",
+      "explain": "Ankora verplaatst je geld niet: doe de overschrijving bij je bank en vink ze hier aan."
+    },
+    "readFailed": "Je saldi konden niet worden gelezen. Laad de pagina opnieuw."
   }
 }

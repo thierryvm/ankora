@@ -452,14 +452,14 @@ export function ConsentBanner({ liftedForBottomBar = false }: ConsentBannerProps
           <button
             type="button"
             onClick={() => accept(false, false)}
-            className="border-border hover:bg-brand-100 focus-visible:ring-brand-600 min-h-11 rounded-md border px-3 py-1.5 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
+            className="border-border hover:bg-control-hover focus-visible:ring-brand-600 min-h-11 rounded-md border px-3 py-1.5 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
           >
             {t('refuse')}
           </button>
           <button
             type="button"
             onClick={() => accept(true, false)}
-            className="border-border hover:bg-brand-100 focus-visible:ring-brand-600 min-h-11 rounded-md border px-3 py-1.5 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
+            className="border-border hover:bg-control-hover focus-visible:ring-brand-600 min-h-11 rounded-md border px-3 py-1.5 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
           >
             {t('accept')}
           </button>

@@ -1,179 +1,224 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 
 import messages from '../../../../../../messages/fr-BE.json';
-import { formatCurrency } from '@/lib/i18n/formatters';
-
-/** Le solde de la carte Principal, tel qu'il apparaitrait s'il etait rendu en texte. */
-const MONTANT_EN_TEXTE = /2\s*637/;
 
 vi.mock('@/lib/actions/accounts', () => ({
-  updateAccountBalanceAction: vi.fn(),
   updateMonthlyIncomeAction: vi.fn(),
   updateVieCouranteTransferAction: vi.fn(),
 }));
-
+vi.mock('@/lib/actions/operations', () => ({
+  recordBalanceStatementAction: vi.fn(async () => ({ ok: true, data: { id: 'x' } })),
+  setStatementCancelledAction: vi.fn(async () => ({ ok: true })),
+  setMovementCancelledAction: vi.fn(async () => ({ ok: true })),
+  recordIncomeAction: vi.fn(async () => ({ ok: true, data: { id: 'y' } })),
+}));
 vi.mock('@/components/ui/toast', () => ({
   toast: { error: vi.fn(), success: vi.fn() },
 }));
 
-import { AccountsClient } from '../AccountsClient';
+import { AccountsClient, type AccountBalanceProps } from '../AccountsClient';
 
-const ACCOUNTS = [
-  { kind: 'principal' as const, label: 'Compte Principal', balance: 2637 },
-  { kind: 'vie_courante' as const, label: 'Vie Courante', balance: 300 },
-  { kind: 'epargne' as const, label: 'Compte Épargne', balance: 1460 },
-];
+/*
+ * PR C bis — the balance of an account is a dated statement, not a field.
+ * Each display rule set by the pilot on 2026-09-21 has its case here.
+ * Figures are fictitious (the 505 / 705 family of the e2e seed).
+ */
+
+const START: AccountBalanceProps = {
+  kind: 'principal',
+  accountType: 'income_bills',
+  label: 'Compte revenus',
+  view: {
+    readId: 's1',
+    readBalance: 705,
+    readStatedOn: '2026-09-21',
+    readIsStartingBalance: true,
+    computed: null,
+    gap: null,
+    reopenable: null,
+  },
+};
+const READ_NEGATIVE: AccountBalanceProps = {
+  kind: 'vie_courante',
+  accountType: 'daily_card',
+  label: 'Carte du quotidien',
+  view: {
+    readId: 's2',
+    readBalance: -42.5,
+    readStatedOn: '2026-09-17',
+    readIsStartingBalance: false,
+    computed: 462.5,
+    gap: { expected: 520, read: -42.5, amount: 562.5 },
+    reopenable: null,
+  },
+};
+const PROVISIONS: AccountBalanceProps = {
+  kind: 'epargne',
+  accountType: 'provisions',
+  label: 'Provisions pour tes factures',
+  view: null,
+};
 
 function renderClient() {
   return render(
     <NextIntlClientProvider locale="fr-BE" messages={messages} timeZone="Europe/Brussels">
-      <AccountsClient monthlyIncome={2693} vieCouranteMonthlyTransfer={500} accounts={ACCOUNTS} />
+      <AccountsClient
+        monthlyIncome={2000}
+        vieCouranteMonthlyTransfer={505}
+        balances={[START, READ_NEGATIVE, PROVISIONS]}
+        today="2026-09-21"
+      />
     </NextIntlClientProvider>,
   );
 }
 
-describe('AccountsClient — un solde, un seul rendu', () => {
-  /**
-   * Le test de non-régression du défaut signalé le 5 août 2026 : la carte
-   * rendait le solde DEUX fois — un gros chiffre formaté, puis le champ juste
-   * dessous. Les deux divergeaient dès la première frappe.
-   *
-   * L'assertion porte sur le nombre d'occurrences du montant dans le DOM, pas
-   * sur l'absence d'un sélecteur de style : une classe Tailwind peut changer
-   * sans que le doublon revienne, et le doublon peut revenir sous une autre
-   * classe. C'est la duplication qui est interdite, pas une mise en forme.
-   */
-  it('ne rend le solde qu’une fois, dans le champ', () => {
+const card = (type: string) =>
+  document.querySelector(`[data-account-balance="${type}"]`) as HTMLElement;
+
+describe('AccountsClient — un solde lu, daté, et nommé pour ce qu’il est', () => {
+  it('appelle le premier relevé « solde de départ », jamais « relevé » ni « lu »', () => {
     renderClient();
-
-    const champ = screen.getByLabelText(/solde actuel de Compte Principal/i);
-    expect(champ).toHaveValue(2637);
-
-    // Aucun autre nœud ne porte ce montant — ni « 2 637 € », ni « 2637 ».
-    const montantFormate = screen.queryAllByText(MONTANT_EN_TEXTE);
-    expect(
-      montantFormate,
-      'le solde ne doit apparaître que dans le champ, jamais en double',
-    ).toHaveLength(0);
+    const lu = within(card('income_bills')).getByTestId('solde-lu');
+    expect(lu).toHaveTextContent(/Solde de départ, le 21 septembre/);
+    expect(lu.textContent).not.toMatch(/relev|lu le/i);
   });
 
-  /**
-   * Le témoin de l'assertion précédente.
-   *
-   * `expect(...).toHaveLength(0)` passe aussi bien quand le doublon a disparu
-   * que quand le motif ne peut rien attraper — et la seconde raison est
-   * plausible ici : `formatCurrency` en fr-BE sépare les milliers par une
-   * espace fine insécable (U+202F), pas par un espace ordinaire. Un motif
-   * naïf rendrait le test vert pour toujours, quoi qu'on remette dans la carte.
-   *
-   * Ce cas rend le balisage exact que la carte portait avant correction et
-   * vérifie que le motif le trouve. Si l'un des deux cède, c'est celui-ci qui
-   * rougit, et il dit lequel.
-   */
-  it('le motif du test précédent attrape bien un solde rendu en texte', () => {
-    render(
+  it('date un solde lu par stated_on, pas par la fin du mois', () => {
+    renderClient();
+    const lu = within(card('daily_card')).getByTestId('solde-lu');
+    expect(lu).toHaveTextContent('Solde lu le 17 septembre');
+    expect(lu.textContent).not.toMatch(/30 septembre/);
+  });
+
+  it('ne dit jamais « calculé » d’un solde lu, ni « relevé » ou « lu » d’un solde calculé', () => {
+    renderClient();
+    const c = card('daily_card');
+    expect(within(c).getByTestId('solde-lu').textContent).not.toMatch(/calcul/i);
+    const calcule = within(c).getByTestId('solde-calcule');
+    expect(calcule).toHaveTextContent('Calculé depuis tes opérations');
+    expect(calcule.textContent).not.toMatch(/relev|\blu\b/i);
+  });
+
+  it('affiche un solde négatif tel quel, sans couleur d’alarme', () => {
+    renderClient();
+    const lu = within(card('daily_card')).getByTestId('solde-lu');
+    const montant = lu.querySelector('p.font-mono') as HTMLElement;
+    expect(montant.textContent).toMatch(/-\s*42,50|−\s*42,50/);
+    expect(montant.className).not.toMatch(/danger|destructive|red|warning/);
+  });
+
+  it('ne rend chaque solde qu’une fois', () => {
+    renderClient();
+    expect(within(card('income_bills')).getAllByText(/705/)).toHaveLength(1);
+  });
+
+  it('dit l’écart sans accuser : il nomme ce qu’Ankora ne suit pas encore', () => {
+    renderClient();
+    const repli = screen.getByTestId('ecart-daily_card');
+    expect(repli.textContent).toMatch(/Écart avec tes opérations/);
+    const explication = messages.operations.statement.gapExplain;
+    expect(explication).toMatch(/ne suit pas encore/);
+    expect(explication).not.toMatch(/tu as oublié(?! quelque chose\.)|erreur|faute/);
+  });
+
+  it('ne laisse pas annuler un solde de départ, mais bien un solde lu', () => {
+    renderClient();
+    expect(
+      within(card('income_bills')).queryByRole('button', { name: 'Annuler ce solde' }),
+    ).toBeNull();
+    expect(
+      within(card('daily_card')).getByRole('button', { name: 'Annuler ce solde' }),
+    ).toBeTruthy();
+  });
+
+  it('pose la question du jour dans une feuille sans champ de nom ni de rôle', async () => {
+    renderClient();
+    await userEvent.click(
+      within(card('provisions')).getByRole('button', {
+        name: 'Écrire le solde du jour de Provisions pour tes factures',
+      }),
+    );
+    const feuille = screen.getByTestId('feuille-releve');
+    const champs = within(feuille).getAllByRole('textbox');
+    expect(champs).toHaveLength(1);
+    expect(
+      within(feuille).getByLabelText('Quel est le solde de ce compte aujourd’hui ?'),
+    ).toBeTruthy();
+    expect(feuille.querySelectorAll('select, [role="combobox"]')).toHaveLength(0);
+    expect(within(feuille).queryByDisplayValue('Provisions pour tes factures')).toBeNull();
+  });
+
+  it('garde une phrase d’usage vraie : deux comptes n’entrent dans aucun calcul, les provisions servent la jauge', () => {
+    renderClient();
+    expect(card('income_bills')).toHaveTextContent("N'entre dans aucun calcul pour l'instant.");
+    expect(card('provisions')).toHaveTextContent(
+      'Sert à la jauge de provisions du tableau de bord.',
+    );
+    expect(document.body.textContent).not.toMatch(/Saisi à la main/);
+  });
+});
+
+describe('AccountsClient — « Argent reçu » on its account, cancelled then restored', () => {
+  function renderWithIncomes() {
+    const withIncomes: AccountBalanceProps = {
+      ...START,
+      incomes: [
+        {
+          id: 'i1',
+          amount: 705,
+          occurredOn: '2026-09-20',
+          description: 'Revenu du mois',
+          cancelled: false,
+        },
+        {
+          id: 'i2',
+          amount: 505,
+          occurredOn: '2026-09-02',
+          description: 'En plus du revenu',
+          cancelled: true,
+        },
+      ],
+    };
+    return render(
       <NextIntlClientProvider locale="fr-BE" messages={messages} timeZone="Europe/Brussels">
-        <p className="mb-3 text-2xl font-bold tabular-nums">{formatCurrency(2637, 'fr-BE')}</p>
+        <AccountsClient
+          monthlyIncome={2000}
+          vieCouranteMonthlyTransfer={505}
+          balances={[withIncomes, READ_NEGATIVE, PROVISIONS]}
+          today="2026-09-21"
+        />
       </NextIntlClientProvider>,
     );
+  }
 
-    expect(
-      screen.queryAllByText(MONTANT_EN_TEXTE),
-      "le motif doit attraper le doublon qu'il est censé interdire",
-    ).toHaveLength(1);
+  it('shows the button in the header, and the lines behind a fold that carries their count', async () => {
+    renderWithIncomes();
+    expect(screen.getByRole('button', { name: 'Argent reçu' })).toBeTruthy();
+    const fold = within(card('income_bills')).getByTestId('argent-recu');
+    expect(fold.textContent).toContain('2 opérations');
+    // Folded: the lines are in the body, and the body is hidden until a gesture.
+    const line = card('income_bills').querySelector('[data-income-line]') as HTMLElement;
+    expect(line.closest('[hidden]')).not.toBeNull();
   });
 
-  /**
-   * Deux champs, deux noms accessibles distincts.
-   *
-   * Les cartes « Revenu mensuel net » et « Virement mensuel vers Vie Courante »
-   * portaient toutes deux l'étiquette partagée `app.accounts.amountLabel`,
-   * « Montant (€) ». À l'écran, le titre de la carte les distingue ; dans
-   * l'arbre d'accessibilité, rien ne le fait — et c'est le seul arbre que lit
-   * une synthèse vocale.
-   *
-   * L'assertion est écrite en deux temps, et le premier compte autant que le
-   * second : on vérifie d'abord qu'AUCUN champ ne répond au libellé partagé,
-   * puis que chacun répond au sien. Sans le premier, remettre « Montant (€) »
-   * sur l'un des deux laisserait le test vert.
-   *
-   * `getByLabelText` lève dès qu'il trouve plusieurs correspondances : c'est
-   * donc `getBy`, jamais `queryAllBy`, qui porte ici la garantie d'unicité.
-   */
-  it('les deux champs de montant ont des noms accessibles distincts', () => {
-    renderClient();
+  it('offers « Annuler » on a standing line and « Rétablir » on a cancelled one', async () => {
+    const ops = await import('@/lib/actions/operations');
+    renderWithIncomes();
+    const fold = within(card('income_bills')).getByTestId('argent-recu');
+    await userEvent.click(within(fold).getByRole('button', { expanded: false }));
 
-    const partage = messages.app.accounts.amountLabel;
-    expect(
-      screen.queryAllByLabelText(partage),
-      `aucun champ ne doit s'appeler « ${partage} » — deux le faisaient`,
-    ).toHaveLength(0);
+    const standing = card('income_bills').querySelector('[data-income-line="i1"]') as HTMLElement;
+    const cancelled = card('income_bills').querySelector('[data-income-line="i2"]') as HTMLElement;
+    expect(standing.textContent).toContain('Reçu le 20 septembre');
+    expect(cancelled.textContent).toContain('Argent reçu annulé');
 
-    expect(screen.getByLabelText(messages.app.accounts.income.amountLabel)).toHaveValue(2693);
-    expect(screen.getByLabelText(messages.app.accounts.transfer.amountLabel)).toHaveValue(500);
-  });
-
-  /**
-   * `computeMonthlyTransferPlan` ne prend AUCUN solde en entrée (vérifié :
-   * `src/lib/domain/transfer.ts` reçoit charges / month / monthlyIncome /
-   * vieCouranteMonthlyTransfer / commitmentsDue). Le seul consommateur d'un
-   * solde dans un calcul est `month-situation.ts`, filtré sur
-   * `accountType === 'provisions'`.
-   *
-   * L'ancien sous-titre — « Saisis tes soldes réels pour qu'Ankora calcule
-   * précisément ton virement intelligent » — était donc faux pour les trois
-   * comptes. Ce test empêche qu'on le réintroduise sans réintroduire d'abord
-   * le calcul qu'il promet.
-   */
-  it('dit que le solde est saisi à la main, et à quoi il sert vraiment', () => {
-    renderClient();
-
-    const mentions = screen.getAllByText(/saisi à la main/i);
-    expect(mentions, 'les trois cartes portent la mention').toHaveLength(3);
-
-    expect(screen.getAllByText(/n.entre dans aucun calcul/i)).toHaveLength(2);
-    expect(screen.getByText(/jauge de provisions/i)).toBeInTheDocument();
-  });
-
-  /**
-   * La mention n'est utile que si un lecteur d'écran l'entend en atteignant le
-   * champ. Sans `aria-describedby`, c'est un paragraphe que la navigation au
-   * clavier peut franchir sans jamais l'annoncer.
-   */
-  it('rattache la mention au champ pour les lecteurs d’écran', () => {
-    renderClient();
-
-    const champ = screen.getByLabelText(/solde actuel de Compte Principal/i);
-    const decritPar = champ.getAttribute('aria-describedby');
-    expect(decritPar).toBe('balance-notice-principal');
-
-    const mention = document.getElementById(decritPar as string);
-    expect(mention).not.toBeNull();
-    expect(mention?.textContent).toMatch(/saisi à la main/i);
-  });
-
-  /**
-   * `e2e/accounts.spec.ts:55` remonte au parent du champ (`..`, soit le
-   * `<form>`) et y cherche `getByRole('button')` en mode strict. Un second
-   * élément interactif dans ce formulaire casserait la spec — d'où le
-   * paragraphe rendu HORS du formulaire.
-   */
-  it('ne laisse qu’un seul bouton dans le formulaire de solde', () => {
-    renderClient();
-
-    const champ = screen.getByLabelText(/solde actuel de Compte Principal/i);
-    const formulaire = champ.closest('form');
-    expect(formulaire).not.toBeNull();
-    expect(formulaire?.querySelectorAll('button')).toHaveLength(1);
-
-    // La contrainte dite explicitement, et pas seulement deduite du compte de
-    // boutons : c'est le PARAGRAPHE qui doit rester hors du formulaire. Un
-    // futur remaniement pourrait l'y remettre sans ajouter de bouton, et le
-    // compte ci-dessus ne verrait rien.
-    const mention = document.getElementById('balance-notice-principal');
-    expect(mention).not.toBeNull();
-    expect(formulaire?.contains(mention)).toBe(false);
+    await userEvent.click(within(standing).getByRole('button', { name: 'Annuler' }));
+    expect(ops.setMovementCancelledAction).toHaveBeenCalledWith({ id: 'i1', cancelled: true });
+    await userEvent.click(within(cancelled).getByRole('button', { name: 'Rétablir' }));
+    expect(ops.setMovementCancelledAction).toHaveBeenCalledWith({ id: 'i2', cancelled: false });
+    expect(document.body.textContent).not.toMatch(/reçue/i);
   });
 });

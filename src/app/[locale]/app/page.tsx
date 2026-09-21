@@ -81,6 +81,15 @@ function partsAffichees(poste: Poste): PartAffichee[] {
   }));
 }
 
+import { createClient } from '@/lib/supabase/server';
+import { loadAccountLedger } from '@/lib/data/operations';
+import { plannedTransferLine } from '@/lib/domain/accounts/operations-view';
+import {
+  TransferDoneControl,
+  type TransferLineState,
+} from '@/components/operations/TransferDoneControl';
+import type { AccountType as LedgerAccountType } from '@/lib/domain/cockpit/types';
+
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('app.dashboard');
   return { title: t('metaTitle') };
@@ -155,6 +164,34 @@ export default async function DashboardPage() {
   });
   const epargneNetAbs = plan.epargneTransferNet.abs();
   const epargneGoesToEpargne = plan.epargneTransferNet.gte(0);
+
+  // PR C bis — « J'ai fait ce virement ». The plan divides annual bills by
+  // 12, 6 or 3 without rounding; every figure handed to the gesture is rounded
+  // to the cent here, or the write would refuse a third decimal (ADR-045 D19).
+  // A failed read of the journal shows no gesture rather than « to do ».
+  // The journal is read here only to say
+  // whether each line of the plan is done; nothing below feeds the situation,
+  // so « Il te reste » is computed exactly as before (its formula is PR D).
+  const ledger = await loadAccountLedger(await createClient(), snapshot.workspaceId);
+  const lineState = (from: LedgerAccountType, to: LedgerAccountType): TransferLineState => {
+    const l = plannedTransferLine({
+      movements: ledger.movements,
+      fromAccountType: from,
+      toAccountType: to,
+      planYear: period.year,
+      planMonth: period.month,
+    });
+    if (l.state === 'todo') return { state: 'todo', cancelledId: l.cancelled?.id ?? null };
+    return {
+      state: 'done',
+      id: l.movement.id,
+      amount: l.movement.amount.toNumber(),
+      suggested: l.movement.planSuggestedAmount?.toNumber() ?? l.movement.amount.toNumber(),
+      occurredOn: l.movement.occurredOn.toISOString().slice(0, 10),
+    };
+  };
+  const epargneFrom: LedgerAccountType = epargneGoesToEpargne ? 'income_bills' : 'provisions';
+  const epargneTo: LedgerAccountType = epargneGoesToEpargne ? 'provisions' : 'income_bills';
   const missingSetup =
     snapshot.monthlyIncome === null || snapshot.vieCouranteMonthlyTransfer === null;
   const accountByType = new Map(snapshot.accounts.map((a) => [a.accountType, a]));
@@ -407,9 +444,24 @@ export default async function DashboardPage() {
                     {t('transferVieCouranteHint')}
                   </span>
                 </p>
-                <p className="shrink-0 font-mono text-sm tabular-nums">
-                  {fmtMoney(plan.vieCouranteTransfer)}
-                </p>
+                <div className="flex shrink-0 flex-col items-end">
+                  <p className="font-mono text-sm tabular-nums">
+                    {fmtMoney(plan.vieCouranteTransfer)}
+                  </p>
+                  {ledger.ok && plan.vieCouranteTransfer.gt(0) && (
+                    <TransferDoneControl
+                      lineLabel={tc('virements.versQuotidien')}
+                      fromAccountType="income_bills"
+                      toAccountType="daily_card"
+                      suggested={plan.vieCouranteTransfer.toDecimalPlaces(2).toNumber()}
+                      plannedProvisions={0}
+                      planYear={period.year}
+                      planMonth={period.month}
+                      today={todayIso}
+                      line={lineState('income_bills', 'daily_card')}
+                    />
+                  )}
+                </div>
               </li>
               <li className="flex items-center justify-between gap-4 py-2">
                 <p className="min-w-0 text-sm font-medium">
@@ -423,7 +475,26 @@ export default async function DashboardPage() {
                     })}
                   </span>
                 </p>
-                <p className="shrink-0 font-mono text-sm tabular-nums">{fmtMoney(epargneNetAbs)}</p>
+                <div className="flex shrink-0 flex-col items-end">
+                  <p className="font-mono text-sm tabular-nums">{fmtMoney(epargneNetAbs)}</p>
+                  {ledger.ok && epargneNetAbs.gt(0) && (
+                    <TransferDoneControl
+                      lineLabel={
+                        epargneGoesToEpargne
+                          ? tc('virements.versProvisions')
+                          : tc('virements.depuisProvisions')
+                      }
+                      fromAccountType={epargneFrom}
+                      toAccountType={epargneTo}
+                      suggested={epargneNetAbs.toDecimalPlaces(2).toNumber()}
+                      plannedProvisions={plan.epargneProvisionTarget.toDecimalPlaces(2).toNumber()}
+                      planYear={period.year}
+                      planMonth={period.month}
+                      today={todayIso}
+                      line={lineState(epargneFrom, epargneTo)}
+                    />
+                  )}
+                </div>
               </li>
               <li className="flex items-center justify-between gap-4 py-2">
                 <p className="min-w-0 text-sm font-medium">

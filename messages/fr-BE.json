@@ -900,7 +900,7 @@
         "saveLabel": "Mettre à jour",
         "srLabel": "Solde actuel de {label}",
         "toastSaved": "{name} mis à jour",
-        "manualNotice": "Saisi à la main. Ce montant ne bouge que si tu le modifies ici."
+        "manualNotice": "Ce solde ne change que quand tu en écris un nouveau."
       },
       "kind": {
         "principal": {
@@ -1562,6 +1562,27 @@
             "range": "Mois entre 1 et 12."
           }
         }
+      },
+      "operations": {
+        "amount": {
+          "invalid": "Entre un montant valide.",
+          "notPositive": "Le montant doit être supérieur à zéro.",
+          "outOfRange": "Ce montant est hors limites.",
+          "subCent": "Deux décimales au plus : le centime est la plus petite unité."
+        },
+        "date": {
+          "invalid": "Entre une date valide.",
+          "future": "La date ne peut pas être dans le futur."
+        },
+        "transfer": {
+          "sameAccount": "Un virement va d’un compte à un autre."
+        },
+        "description": {
+          "tooLong": "120 caractères au plus."
+        },
+        "id": {
+          "invalid": "Opération introuvable."
+        }
       }
     },
     "charges": {
@@ -1635,6 +1656,12 @@
       "createFailed": "Impossible de créer la catégorie.",
       "duplicate": "Tu as déjà une catégorie qui porte ce nom.",
       "duplicateBill": "Ce nom est déjà pris par une catégorie de facture. Elle ne s’affiche pas ici parce qu’une facture n’est pas une dépense — elle est déjà déduite de ton budget."
+    },
+    "operations": {
+      "writeFailed": "L’opération n’a pas pu être enregistrée. Réessaie.",
+      "notFound": "Cette opération n’existe plus ou ne t’appartient pas.",
+      "alreadyDone": "Ce virement est déjà noté comme fait pour ce mois.",
+      "startingBalance": "Le solde de départ ne s’annule pas : écris plutôt le solde du jour."
     }
   },
   "opengraphImage": {
@@ -1688,7 +1715,7 @@
       "rythme": "Rythme du mois",
       "cleRythme": "{jours, plural, =0 {dernier jour} one {# jour restant} other {# jours restants}}",
       "virements": "Virements du mois",
-      "cleVirements": "{montant} à virer",
+      "cleVirements": "{montant} de virement à faire",
       "cleVirementsIncomplet": "à compléter",
       "reserve": "Provisions pour tes factures",
       "cleReserve": "ta réserve",
@@ -1699,5 +1726,70 @@
       "versProvisions": "Virement à faire vers Provisions pour tes factures",
       "depuisProvisions": "À reprendre sur Provisions pour tes factures"
     }
+  },
+  "operations": {
+    "close": "Fermer",
+    "save": "Enregistrer",
+    "saving": "Enregistrement…",
+    "income": {
+      "open": "Argent reçu",
+      "title": "Argent reçu",
+      "amount": "Combien as-tu reçu ?",
+      "date": "Reçu le",
+      "account": "Sur quel compte ?",
+      "nature": "À quel titre ?",
+      "natureRegular": "Mon revenu du mois",
+      "natureExtra": "En plus de mon revenu",
+      "description": "Description (facultatif)",
+      "descriptionHint": "ex. salaire, remboursement",
+      "defaultRegular": "Revenu du mois",
+      "defaultExtra": "En plus du revenu",
+      "saved": "Argent reçu enregistré",
+      "receivedOn": "Reçu le {date}",
+      "cancel": "Annuler",
+      "cancelled": "Argent reçu annulé",
+      "reopen": "Rétablir",
+      "heading": "Argent reçu ce mois-ci",
+      "count": "{count, plural, one {# opération} other {# opérations}}"
+    },
+    "statement": {
+      "open": "Écrire le solde du jour",
+      "openAria": "Écrire le solde du jour de {name}",
+      "title": "Solde du jour",
+      "question": "Quel est le solde de ce compte aujourd’hui ?",
+      "hint": "Le montant que ta banque affiche, même négatif.",
+      "date": "Lu le",
+      "saved": "Solde enregistré",
+      "read": "Solde lu le {date}",
+      "start": "Solde de départ, le {date}",
+      "computed": "Calculé depuis tes opérations",
+      "computedHint": "Le dernier solde connu, plus les virements et l’argent reçu écrits depuis. Tes dépenses n’y sont pas encore.",
+      "none": "Aucun solde pour ce compte.",
+      "cancel": "Annuler ce solde",
+      "cancelled": "Solde annulé",
+      "reopen": "Rétablir le solde du {date}",
+      "gapTitle": "Écart avec tes opérations",
+      "gapExpected": "Attendu d’après tes opérations",
+      "gapRead": "Lu sur ton compte",
+      "gapAmount": "Écart",
+      "gapExplain": "Un écart est normal : Ankora ne suit pas encore tes dépenses ni tes prélèvements. Il ne dit pas que tu as oublié quelque chose.",
+      "overdraft": "Ce compte est à découvert"
+    },
+    "transfer": {
+      "done": "J’ai fait ce virement",
+      "doneAria": "J’ai fait ce virement : {line}",
+      "question": "Combien as-tu viré ?",
+      "hint": "Le montant total du virement, tel que ta banque l’a débité.",
+      "date": "Viré le",
+      "split": "{provisions} de provisions + {libre} d’épargne libre",
+      "saved": "Virement enregistré",
+      "doneOn": "Fait le {date}",
+      "doneAmount": "Fait le {date} : {montant}",
+      "cancel": "Annuler",
+      "cancelled": "Virement annulé",
+      "reopen": "Rétablir le virement annulé",
+      "explain": "Ankora ne déplace pas ton argent : fais le virement dans ta banque, puis coche-le ici."
+    },
+    "readFailed": "Tes soldes n’ont pas pu être lus. Recharge la page."
   }
 }

@@ -78,6 +78,12 @@ export const AuditEvent = {
   EXPENSE_DELETED: 'expense.deleted',
   ACCOUNT_BALANCE_UPDATED: 'account.balance_updated',
   ACCOUNT_RENAMED: 'account.renamed',
+  // J2 operations (PR C bis): a transfer done or money received, then its
+  // cancel / reopen. Metadata: `resource_type` (`movement_transfer` |
+  // `movement_income`), `resource_id`, and for a cancellation the two states.
+  // Never the amount nor the description (the log leaves in the art. 20 export).
+  MOVEMENT_RECORDED: 'movement.recorded',
+  MOVEMENT_CANCELLATION_SET: 'movement.cancellation_set',
 
   // GDPR
   GDPR_CONSENT_GIVEN: 'gdpr.consent_given',

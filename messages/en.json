@@ -900,7 +900,7 @@
         "saveLabel": "Update",
         "srLabel": "Current balance of {label}",
         "toastSaved": "{name} updated",
-        "manualNotice": "Entered by hand. This amount only changes when you change it here."
+        "manualNotice": "This balance only changes when you write a new one."
       },
       "kind": {
         "principal": {
@@ -1562,6 +1562,27 @@
             "range": "Month between 1 and 12."
           }
         }
+      },
+      "operations": {
+        "amount": {
+          "invalid": "Enter a valid amount.",
+          "notPositive": "The amount must be greater than zero.",
+          "outOfRange": "This amount is out of range.",
+          "subCent": "Two decimals at most: the cent is the smallest unit."
+        },
+        "date": {
+          "invalid": "Enter a valid date.",
+          "future": "The date cannot be in the future."
+        },
+        "transfer": {
+          "sameAccount": "A transfer goes from one account to another."
+        },
+        "description": {
+          "tooLong": "120 characters at most."
+        },
+        "id": {
+          "invalid": "Operation not found."
+        }
       }
     },
     "charges": {
@@ -1635,6 +1656,12 @@
       "createFailed": "Could not create the category.",
       "duplicate": "You already have a category with this name.",
       "duplicateBill": "That name is already taken by a bill category. It is not offered here because a bill is not an expense — it is already deducted from your budget."
+    },
+    "operations": {
+      "writeFailed": "The operation could not be saved. Try again.",
+      "notFound": "This operation no longer exists or is not yours.",
+      "alreadyDone": "This transfer is already marked as done for this month.",
+      "startingBalance": "The starting balance cannot be cancelled: write today’s balance instead."
     }
   },
   "opengraphImage": {
@@ -1688,7 +1715,7 @@
       "rythme": "This month’s pace",
       "cleRythme": "{jours, plural, =0 {last day} one {# day left} other {# days left}}",
       "virements": "This month’s transfers",
-      "cleVirements": "{montant} to transfer",
+      "cleVirements": "{montant} transfer to make",
       "cleVirementsIncomplet": "to complete",
       "reserve": "Provisions for your bills",
       "cleReserve": "your buffer",
@@ -1699,5 +1726,70 @@
       "versProvisions": "Transfer to make to Provisions for your bills",
       "depuisProvisions": "To take back from Provisions for your bills"
     }
+  },
+  "operations": {
+    "close": "Close",
+    "save": "Save",
+    "saving": "Saving…",
+    "income": {
+      "open": "Money received",
+      "title": "Money received",
+      "amount": "How much did you receive?",
+      "date": "Received on",
+      "account": "Into which account?",
+      "nature": "What is it?",
+      "natureRegular": "My income for the month",
+      "natureExtra": "On top of my income",
+      "description": "Description (optional)",
+      "descriptionHint": "e.g. salary, refund",
+      "defaultRegular": "Income for the month",
+      "defaultExtra": "On top of income",
+      "saved": "Money received saved",
+      "receivedOn": "Received on {date}",
+      "cancel": "Cancel",
+      "cancelled": "Money received cancelled",
+      "reopen": "Restore",
+      "heading": "Money received this month",
+      "count": "{count, plural, one {# operation} other {# operations}}"
+    },
+    "statement": {
+      "open": "Write today’s balance",
+      "openAria": "Write today’s balance of {name}",
+      "title": "Today’s balance",
+      "question": "What is this account’s balance today?",
+      "hint": "The amount your bank shows, even if negative.",
+      "date": "Read on",
+      "saved": "Balance saved",
+      "read": "Balance read on {date}",
+      "start": "Starting balance, on {date}",
+      "computed": "Worked out from your operations",
+      "computedHint": "The last known balance, plus the transfers and money received written since. Your spending is not in it yet.",
+      "none": "No balance for this account.",
+      "cancel": "Cancel this balance",
+      "cancelled": "Balance cancelled",
+      "reopen": "Restore the balance of {date}",
+      "gapTitle": "Difference with your operations",
+      "gapExpected": "Expected from your operations",
+      "gapRead": "Read on your account",
+      "gapAmount": "Difference",
+      "gapExplain": "A difference is normal: Ankora does not follow your spending or direct debits yet. It does not mean you forgot something.",
+      "overdraft": "This account is overdrawn"
+    },
+    "transfer": {
+      "done": "I made this transfer",
+      "doneAria": "I made this transfer: {line}",
+      "question": "How much did you transfer?",
+      "hint": "The full amount of the transfer, as your bank debited it.",
+      "date": "Transferred on",
+      "split": "{provisions} of provisions + {libre} of free savings",
+      "saved": "Transfer saved",
+      "doneOn": "Done on {date}",
+      "doneAmount": "Done on {date}: {montant}",
+      "cancel": "Cancel",
+      "cancelled": "Transfer cancelled",
+      "reopen": "Restore the cancelled transfer",
+      "explain": "Ankora does not move your money: make the transfer in your bank, then tick it here."
+    },
+    "readFailed": "Your balances could not be read. Reload the page."
   }
 }
