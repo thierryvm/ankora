@@ -118,7 +118,7 @@ test.describe.serial('Opérations de compte — trois gestes, un chiffre qui ne 
     if (admin && b) await deleteSeededUser(admin, b.userId);
   });
 
-  test('les trois gestes aboutissent, et « Il te reste » ne bouge pas au caractère près', async ({
+  test('les trois gestes aboutissent ; un virement sans part libre ne bouge pas « Il te reste »', async ({
     page,
   }) => {
     if (!admin || !a) return;
@@ -170,7 +170,12 @@ test.describe.serial('Opérations de compte — trois gestes, un chiffre qui ne 
     });
     await expect(feuilleRecu).toBeHidden();
 
-    expect(await lireIlTeReste(page), 'après un argent reçu').toBe(avant);
+    // PR D (declared in the PR): money received as « Mon revenu du mois » is the
+    // ARRIVAL of the income and REPLACES the written one (2 505) — the mock-up's
+    // rule. The figure therefore moves here, by design; before PR D it did not.
+    const apresRecu = await lireIlTeReste(page);
+    expect(apresRecu, 'après un argent reçu regular').not.toBe(avant);
+    expect(apresRecu, 'le revenu reçu remplace le revenu écrit').toMatch(/ 705 − Déjà compté/u);
 
     // 3. Un relevé à découvert, sans signe moins à taper.
     await page.goto('/app/accounts');

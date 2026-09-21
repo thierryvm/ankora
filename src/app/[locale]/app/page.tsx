@@ -81,8 +81,6 @@ function partsAffichees(poste: Poste): PartAffichee[] {
   }));
 }
 
-import { createClient } from '@/lib/supabase/server';
-import { loadAccountLedger } from '@/lib/data/operations';
 import { plannedTransferLine } from '@/lib/domain/accounts/operations-view';
 import {
   TransferDoneControl,
@@ -110,6 +108,8 @@ export default async function DashboardPage() {
     paymentsLedger,
     cockpitCharges,
     soldeEpargneActuel,
+    soldeQuotidien,
+    ledger,
     joursEcoules,
     joursRestants,
     joursDuMois: daysInMonth,
@@ -168,11 +168,9 @@ export default async function DashboardPage() {
   // PR C bis — « J'ai fait ce virement ». The plan divides annual bills by
   // 12, 6 or 3 without rounding; every figure handed to the gesture is rounded
   // to the cent here, or the write would refuse a third decimal (ADR-045 D19).
-  // A failed read of the journal shows no gesture rather than « to do ».
-  // The journal is read here only to say
-  // whether each line of the plan is done; nothing below feeds the situation,
-  // so « Il te reste » is computed exactly as before (its formula is PR D).
-  const ledger = await loadAccountLedger(await createClient(), snapshot.workspaceId);
+  // PR D — the journal is read ONCE, by `loadMonthSituation`, which feeds
+  // « Il te reste » with it and throws when it cannot be read: the gestures
+  // below and the figure above can no longer disagree on what was done.
   const lineState = (from: LedgerAccountType, to: LedgerAccountType): TransferLineState => {
     const l = plannedTransferLine({
       movements: ledger.movements,
@@ -262,6 +260,11 @@ export default async function DashboardPage() {
     situation.statut === 'incomplet' ? null : (
       <CascadeDuMois
         revenus={situation.revenus.toNumber()}
+        revenuRecu={situation.revenuRecu?.toNumber() ?? null}
+        revenuEcrit={situation.revenuEcrit?.toNumber() ?? null}
+        recuEnPlus={situation.recuEnPlus.toNumber()}
+        misDeCote={situation.misDeCote.toNumber()}
+        auDelaDuRevenu={situation.auDelaDuRevenu.toNumber()}
         chargesFixes={situation.chargesFixes.toNumber()}
         provisionsLissees={situation.provisionsLissees.toNumber()}
         engagementsMensuels={situation.engagementsMensuels.toNumber()}
@@ -291,6 +294,9 @@ export default async function DashboardPage() {
           resteDisponible={situation.resteDisponible.toNumber()}
           revenus={situation.revenus.toNumber()}
           depensesDuMois={situation.depensesDuMois.toNumber()}
+          retenu={situation.retenu.toNumber()}
+          misDeCote={situation.misDeCote.toNumber()}
+          soldeQuotidien={soldeQuotidien?.toNumber() ?? null}
           chargesFixes={situation.chargesFixes.toNumber()}
           provisionsLissees={situation.provisionsLissees.toNumber()}
           engagementsMensuels={situation.engagementsMensuels.toNumber()}
@@ -448,7 +454,7 @@ export default async function DashboardPage() {
                   <p className="font-mono text-sm tabular-nums">
                     {fmtMoney(plan.vieCouranteTransfer)}
                   </p>
-                  {ledger.ok && plan.vieCouranteTransfer.gt(0) && (
+                  {plan.vieCouranteTransfer.gt(0) && (
                     <TransferDoneControl
                       lineLabel={tc('virements.versQuotidien')}
                       fromAccountType="income_bills"
@@ -477,7 +483,7 @@ export default async function DashboardPage() {
                 </p>
                 <div className="flex shrink-0 flex-col items-end">
                   <p className="font-mono text-sm tabular-nums">{fmtMoney(epargneNetAbs)}</p>
-                  {ledger.ok && epargneNetAbs.gt(0) && (
+                  {epargneNetAbs.gt(0) && (
                     <TransferDoneControl
                       lineLabel={
                         epargneGoesToEpargne

@@ -1,3 +1,4 @@
+import { AUCUNE_OPERATION } from '@/lib/domain/cockpit/operations-du-mois';
 import { describe, expect, it } from 'vitest';
 import Decimal from 'decimal.js';
 
@@ -82,6 +83,7 @@ const expense = (over: Partial<Expense> = {}): Expense => ({
 /** Same inputs twice, once with the July occurrence ticked as paid. */
 function situation(payments: PaymentLedger, expenses: readonly Expense[]) {
   return calculerSituationDuMois({
+    operations: AUCUNE_OPERATION,
     revenus: new Decimal(2600),
     charges: [
       charge(),

@@ -1,3 +1,4 @@
+import { AUCUNE_OPERATION } from '@/lib/domain/cockpit/operations-du-mois';
 import { describe, it, expect } from 'vitest';
 import Decimal from 'decimal.js';
 
@@ -107,8 +108,16 @@ describe('invariant — a charge is never an expense', () => {
   });
 
   it('recording a 45 € expense lowers ilTeReste by exactly 45 €', () => {
-    const before = calculerSituationDuMois({ ...base, depensesDuMois: new Decimal(0) });
-    const after = calculerSituationDuMois({ ...base, depensesDuMois: new Decimal(45) });
+    const before = calculerSituationDuMois({
+      operations: AUCUNE_OPERATION,
+      ...base,
+      depensesDuMois: new Decimal(0),
+    });
+    const after = calculerSituationDuMois({
+      operations: AUCUNE_OPERATION,
+      ...base,
+      depensesDuMois: new Decimal(45),
+    });
 
     expect(before.ilTeReste.minus(after.ilTeReste).toNumber()).toBe(45);
   });
@@ -117,8 +126,16 @@ describe('invariant — a charge is never an expense', () => {
     // This is the whole point of the two-figure split: the hero is real-time,
     // the anchor is stable for the month. If both moved, the anchor would be
     // useless; if neither did, the feedback loop would stay open.
-    const before = calculerSituationDuMois({ ...base, depensesDuMois: new Decimal(0) });
-    const after = calculerSituationDuMois({ ...base, depensesDuMois: new Decimal(400) });
+    const before = calculerSituationDuMois({
+      operations: AUCUNE_OPERATION,
+      ...base,
+      depensesDuMois: new Decimal(0),
+    });
+    const after = calculerSituationDuMois({
+      operations: AUCUNE_OPERATION,
+      ...base,
+      depensesDuMois: new Decimal(400),
+    });
 
     expect(after.resteDisponible.toNumber()).toBe(before.resteDisponible.toNumber());
     expect(after.ilTeReste.toNumber()).toBe(before.resteDisponible.minus(400).toNumber());
@@ -127,19 +144,31 @@ describe('invariant — a charge is never an expense', () => {
   it('a charge already counted in resteDisponible is not deducted a second time', () => {
     // Same 1000 € charge, and the user records NO expense for it (the correct
     // modelling). ilTeReste must equal revenus − charge exactly, i.e. 1500.
-    const out = calculerSituationDuMois({ ...base, depensesDuMois: new Decimal(0) });
+    const out = calculerSituationDuMois({
+      operations: AUCUNE_OPERATION,
+      ...base,
+      depensesDuMois: new Decimal(0),
+    });
     expect(out.resteDisponible.toNumber()).toBe(1500);
     expect(out.ilTeReste.toNumber()).toBe(1500);
 
     // And if the same 1000 € were ALSO entered as an expense — the mistake the
     // invariant forbids — the figure would visibly halve. Pinning the arithmetic
     // documents the cost of breaking the rule.
-    const doubleCounted = calculerSituationDuMois({ ...base, depensesDuMois: new Decimal(1000) });
+    const doubleCounted = calculerSituationDuMois({
+      operations: AUCUNE_OPERATION,
+      ...base,
+      depensesDuMois: new Decimal(1000),
+    });
     expect(doubleCounted.ilTeReste.toNumber()).toBe(500);
   });
 
   it('ilTeReste can go negative — overspending is a real state, not clamped', () => {
-    const out = calculerSituationDuMois({ ...base, depensesDuMois: new Decimal(2000) });
+    const out = calculerSituationDuMois({
+      operations: AUCUNE_OPERATION,
+      ...base,
+      depensesDuMois: new Decimal(2000),
+    });
     expect(out.ilTeReste.toNumber()).toBe(-500);
   });
 });

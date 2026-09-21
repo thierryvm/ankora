@@ -12,6 +12,11 @@ import {
   type SituationDuMois,
 } from '@/lib/domain/cockpit';
 import { commitmentRowToDomain } from '@/lib/data/commitment-row';
+import { loadAccountLedger, type AccountLedger } from '@/lib/data/operations';
+import { DataReadUnavailableError } from '@/lib/data/read-failure';
+import { accountBalanceView } from '@/lib/domain/accounts/operations-view';
+import { operationsDuMois } from '@/lib/domain/cockpit/operations-du-mois';
+import { createClient } from '@/lib/supabase/server';
 import { getCommitmentsWithLedger } from '@/lib/data/commitments';
 import {
   getWorkspaceSnapshot,
@@ -66,6 +71,12 @@ export type MonthSituationInputs = {
   paidKeysByCommitment: Awaited<
     ReturnType<typeof getCommitmentsWithLedger>
   >['paidKeysByCommitment'];
+  /**
+   * The operations journal (ADR-045), read in full. PR D: « Il te reste »
+   * subtracts what was put aside and adds what was received on top of the
+   * income, so the figure is never computed without it.
+   */
+  ledger: AccountLedger;
 };
 
 /**
@@ -95,6 +106,14 @@ export type MonthSituationBundle = MonthSituation & {
   paymentsLedger: PaymentLedger;
   cockpitCharges: readonly CockpitCharge[];
   soldeEpargneActuel: ReturnType<typeof money>;
+  /**
+   * The balance of the account that pays for daily life (`daily_card`),
+   * computed from its latest statement and the operations since — the same
+   * function and the same day as the Accounts page, so the two show the same
+   * amount. `null` without that account or without any statement: the line
+   * then does not appear at all.
+   */
+  soldeQuotidien: ReturnType<typeof money> | null;
 };
 
 /**
@@ -168,6 +187,7 @@ export function computeMonthSituation(input: MonthSituationInputs): MonthSituati
     ref: snapshot.currentPeriod,
     engagementsMensuels,
     depensesDuMois: depenses,
+    operations: operationsDuMois(input.ledger.movements, snapshot.currentPeriod),
     joursEcoules,
     joursDuMois,
   });
@@ -187,7 +207,20 @@ export function computeMonthSituation(input: MonthSituationInputs): MonthSituati
     paymentsLedger,
     cockpitCharges,
     soldeEpargneActuel,
+    soldeQuotidien: soldeDuQuotidien(input, todayIso),
   };
+}
+
+function soldeDuQuotidien(input: MonthSituationInputs, todayIso: string) {
+  if (!input.snapshot.accounts.some((a) => a.accountType === 'daily_card')) return null;
+  const view = accountBalanceView({
+    accountType: 'daily_card',
+    statements: input.ledger.statements,
+    movements: input.ledger.movements,
+    today: new Date(`${todayIso}T00:00:00Z`),
+  });
+  if (view === null) return null;
+  return view.computed?.balance ?? view.read.balance;
 }
 
 /**
@@ -202,6 +235,16 @@ export async function loadMonthSituation(): Promise<MonthSituationBundle & Month
   const { commitments, paidKeysByCommitment } = await getCommitmentsWithLedger(
     snapshot.workspaceId,
   );
-  const inputs = { snapshot, commitments, paidKeysByCommitment };
+  const ledger = await loadAccountLedger(await createClient(), snapshot.workspaceId);
+  // PR D — a figure computed without its operations would silently ignore
+  // every transfer made: the worst lie the cockpit could tell. An unreadable
+  // journal is a read failure like any other one this figure depends on.
+  if (!ledger.ok) throw new DataReadUnavailableError('month-situation.ledger', null);
+  const inputs = {
+    snapshot,
+    commitments,
+    paidKeysByCommitment,
+    ledger: { statements: ledger.statements, movements: ledger.movements },
+  };
   return { ...inputs, ...computeMonthSituation(inputs) };
 }

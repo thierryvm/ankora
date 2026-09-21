@@ -20,23 +20,21 @@ import { Repli } from './Repli';
  * le reste de l'écran l'explique ou la prolonge. Elle est la première surface
  * sous l'en-tête, et le seul chiffre de cette taille sur la page.
  *
- * ## La ligne de formule est celle de la PRODUCTION D'AUJOURD'HUI
+ * ## La ligne de formule (PR D, option B)
  *
  * `situation-mois.ts` calcule :
  *
- *     resteDisponible = revenus − effortFinancierLissé − engagementsMensuels
+ *     resteDisponible = revenus − retenu − misDeCote
  *     ilTeReste       = resteDisponible − dépensesDuMois
  *
- * La ligne affichée la dit mot pour mot, en trois termes :
+ * La ligne affichée la dit mot pour mot :
  *
- *     Revenus  − Déjà compté pour tes factures  − Dépensé  =  Il te reste
+ *     Revenus − Déjà compté pour tes factures [− Mis de côté] − Dépensé = Il te reste
  *
- * où « Déjà compté pour tes factures » vaut exactement `revenus −
- * resteDisponible`, c'est-à-dire la somme des trois retenues que la production
- * applique déjà. AUCUN calcul n'est introduit ici : le terme est dérivé de deux
- * chiffres que la page reçoit, et il est vérifiable de tête sur les nombres
- * affichés. La formule de la maquette v3 (avec « Mis de côté », qui suppose des
- * virements enregistrés) est le travail de la PR D, pas de celle-ci.
+ * Chaque terme descend de la situation, AUCUN n'est recalculé ici. « Déjà
+ * compté » est `situation.retenu` : le dériver par `revenus −
+ * resteDisponible`, comme avant la PR D, y ferait entrer le mis de côté une
+ * seconde fois. « Mis de côté » n'apparaît que non nul (la maquette).
  *
  * ## Pourquoi la retenue se décompose sous la ligne
  *
@@ -55,6 +53,15 @@ export type IlTeResteCardProps = Readonly<{
   resteDisponible: number;
   revenus: number;
   depensesDuMois: number;
+  /** « Déjà compté pour tes factures » : la somme des trois postes ci-dessous. */
+  retenu: number;
+  /** La part d'épargne libre des virements faits du mois. 0 : le terme n'apparaît pas. */
+  misDeCote: number;
+  /**
+   * Le solde du compte qui paie le quotidien, déduit de ses opérations. `null`
+   * sans ce compte ou sans relevé : la ligne n'apparaît pas du tout.
+   */
+  soldeQuotidien: number | null;
   /** Les trois postes de la retenue, tels que la production les calcule. */
   chargesFixes: number;
   provisionsLissees: number;
@@ -77,6 +84,9 @@ export async function IlTeResteCard({
   resteDisponible,
   revenus,
   depensesDuMois,
+  retenu,
+  misDeCote,
+  soldeQuotidien,
   chargesFixes,
   provisionsLissees,
   engagementsMensuels,
@@ -112,10 +122,6 @@ export async function IlTeResteCard({
     );
   }
 
-  // La retenue, dérivée et non recalculée : deux calculs d'une même quantité
-  // finissent toujours par diverger, et celui-ci s'afficherait à côté de l'autre.
-  const dejaCompte = revenus - resteDisponible;
-
   // La jauge : ce qui est dépensé sur ce que le mois laissait. Bornée à 0-100 —
   // au-delà, c'est la teinte qui dit le dépassement, pas une barre qui sort de
   // sa piste.
@@ -145,13 +151,15 @@ export async function IlTeResteCard({
           ilTeReste={ilTeReste}
           depensesDuMois={depensesDuMois}
           revenus={revenus}
-          dejaCompte={dejaCompte}
+          dejaCompte={retenu}
+          misDeCote={misDeCote}
           locale={locale}
           base={t('base', { month: monthLabel })}
           termes={{
             revenus: t('termeRevenus'),
             retenu: t('termeRetenu'),
             depense: t('termeDepense'),
+            misDeCote: t('termeMisDeCote'),
           }}
         />
 
@@ -165,6 +173,24 @@ export async function IlTeResteCard({
             echeances: fmt(engagementsMensuels),
           })}
         </p>
+
+        {/* Le second chiffre de la carte, qui ne répond pas à la même question :
+            ce qu'il y a sur le compte du quotidien, déduit de ses opérations.
+            Il dit sa source et s'ouvre sur la page Comptes, où son tiroir le
+            décompose (règle 10). Absent sans solde déductible, jamais « 0 € ». */}
+        {soldeQuotidien !== null && (
+          <p className="mt-2 text-xs">
+            <Link
+              href="/app/accounts"
+              data-quotidien
+              data-testid="cockpit-solde-quotidien"
+              aria-label={t('quotidienAria', { montant: fmt(soldeQuotidien) })}
+              className="text-muted-foreground hover:text-foreground inline-flex min-h-11 items-center underline-offset-4 hover:underline"
+            >
+              {t('quotidien', { montant: fmt(soldeQuotidien) })}
+            </Link>
+          </p>
+        )}
 
         {/* La jauge passe par `AllocationBar` : un `style={{width}}` inline est
             bloqué par la CSP stricte `style-src 'self' 'nonce-…'` (THI-322).

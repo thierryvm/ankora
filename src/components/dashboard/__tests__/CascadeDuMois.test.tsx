@@ -40,6 +40,11 @@ vi.mock('next-intl/server', () => ({
  */
 const BASE: CascadeDuMoisProps = {
   revenus: 2500,
+  revenuRecu: null,
+  revenuEcrit: 2500,
+  recuEnPlus: 0,
+  misDeCote: 0,
+  auDelaDuRevenu: 0,
   chargesFixes: 1500,
   provisionsLissees: 338,
   engagementsMensuels: 0,
@@ -198,5 +203,83 @@ describe('<CascadeDuMois /> — décomposition des postes', () => {
       engagementsParts: [{ id: 'pret', libelle: 'Prêt auto', montantMensuel: 220, origine: null }],
     });
     expect(screen.getByTestId('flow-detail-engagements').textContent).toContain('Prêt auto');
+  });
+});
+
+/**
+ * PR D — the cascade must rebuild « Il te reste » to the cent with the two new
+ * terms: base income + received on top − the three items − set aside = budget.
+ * Fictitious amounts (505 € / 705 € family).
+ */
+describe('<CascadeDuMois /> — PR D, set aside and received on top', () => {
+  const flow = messages.dashboard.situation.flow;
+  // 2 120 (of which 120 on top) − 1 500 − 338 − 200 set aside = 82 ; − 200 spent = −118
+  const pr = {
+    revenus: 2620,
+    recuEnPlus: 120,
+    misDeCote: 200,
+    resteDisponible: 582,
+    ilTeReste: 382,
+  };
+
+  it('shows the base income, then what was received on top, then what was set aside', async () => {
+    const { container } = await renderCascade(pr);
+    expect(screen.getByText(flow.recuEnPlus)).toBeInTheDocument();
+    expect(screen.getByText(flow.misDeCote)).toBeInTheDocument();
+    const texte = container.textContent ?? '';
+    // Base income is the total minus what came on top: 2 500, not 2 620.
+    expect(texte).toMatch(/Revenus\s*2\s?500/u);
+    expect(texte).not.toMatch(/2\s?620/u);
+  });
+
+  it('the rows ON SCREEN rebuild the budget of the month to the cent', async () => {
+    const { container } = await renderCascade(pr);
+    // Every amount of the list, in reading order, signed as written.
+    const montants = Array.from(container.querySelectorAll('dd')).map((dd) => {
+      // The first amount only: a <dd> may also carry its folded detail.
+      const brut =
+        (dd.textContent ?? '').match(
+          /[−+]?[\s\u00a0\u202f]?[\d\u00a0\u202f.]*\d(?:,\d{1,2})?/u,
+        )?.[0] ?? 'NaN';
+      const t = brut.replace(/[\s\u00a0\u202f€]/gu, '');
+      const signe = t.startsWith('−') ? -1 : 1;
+      const n = Number(t.replace(/^[−+]/u, '').replace(/\./gu, '').replace(',', '.'));
+      return Math.round(signe * n * 100);
+    });
+    // base, + on top, − bills, − smoothing, − set aside = budget, − spent = reste
+    const [base, plus, factures, lissage, mis, budget, depense, reste] = montants as number[];
+    expect(base! + plus! + factures! + lissage! + mis!).toBe(budget);
+    expect(budget).toBe(pr.resteDisponible * 100);
+    expect(budget! + depense!).toBe(reste);
+    expect(reste).toBe(pr.ilTeReste * 100);
+  });
+
+  it('hides both rows at zero — nothing changes for a workspace without operations', async () => {
+    await renderCascade();
+    expect(screen.queryByText(flow.recuEnPlus)).toBeNull();
+    expect(screen.queryByText(flow.misDeCote)).toBeNull();
+    expect(document.querySelector('[data-revenu-recu-differe]')).toBeNull();
+    expect(document.querySelector('[data-au-dela]')).toBeNull();
+  });
+
+  it('says so when the regular income received differs from the written one, and only then', async () => {
+    const { container, unmount } = await renderCascade({
+      revenus: 2400,
+      revenuRecu: 2400,
+      revenuEcrit: 2500,
+    });
+    const ligne = container.querySelector('[data-revenu-recu-differe]');
+    expect(ligne?.textContent).toMatch(/2\s?400/u);
+    expect(ligne?.textContent).toMatch(/2\s?500/u);
+    unmount();
+    const egal = await renderCascade({ revenuRecu: 2500, revenuEcrit: 2500 });
+    expect(egal.container.querySelector('[data-revenu-recu-differe]')).toBeNull();
+  });
+
+  it('writes the neutral sentence when transfers went beyond what the income left', async () => {
+    const { container } = await renderCascade({ auDelaDuRevenu: 55 });
+    const phrase = container.querySelector('[data-au-dela]');
+    expect(phrase?.textContent).toContain('de plus que ce que ton revenu laissait');
+    expect(phrase?.textContent).toMatch(/55/u);
   });
 });

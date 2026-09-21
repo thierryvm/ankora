@@ -53,7 +53,25 @@ type FlowRowDetail = {
 export type CascadeDuMoisProps = Props;
 
 type Props = {
+  /** Revenus du mois, argent reçu « en plus » compris (PR D). */
   revenus: number;
+  /**
+   * La somme des argents reçus `regular` du mois (`null` : aucun) et le revenu
+   * écrit. Quand les deux existent et diffèrent, le reçu a remplacé l'écrit
+   * (règle de la maquette) : la ligne Revenus le dit, et seulement alors — un
+   * chiffre qui change sans le dire est un défaut.
+   */
+  revenuRecu: number | null;
+  revenuEcrit: number | null;
+  /** L'argent reçu « en plus du revenu ». 0 = la ligne n'apparaît pas. */
+  recuEnPlus: number;
+  /** La part d'épargne libre des virements faits. 0 = la ligne n'apparaît pas. */
+  misDeCote: number;
+  /**
+   * Ce que les virements faits ont sorti du compte principal au-delà de ce que
+   * le revenu laissait. > 0 = la phrase neutre ; n'entre dans aucune somme.
+   */
+  auDelaDuRevenu: number;
   chargesFixes: number;
   provisionsLissees: number;
   /** Mensualités lissées des engagements actifs (ADR-021). 0 = masqué. */
@@ -215,7 +233,14 @@ export async function CascadeDuMois(props: Props) {
         <AllocationBar segments={segments} ariaLabel={barAria} />
 
         <dl className="flex flex-col gap-2 text-sm">
-          <FlowRow label={t('flow.revenus')} value={fmt(props.revenus)} />
+          {/* PR D — la cascade refait « Il te reste » au centime : revenu de
+              base + reçu en plus − les trois postes − mis de côté = budget du
+              mois. Le revenu de base est le total moins son seul autre
+              composant, pour que les deux lignes refassent toujours le total. */}
+          <FlowRow label={t('flow.revenus')} value={fmt(props.revenus - props.recuEnPlus)} />
+          {props.recuEnPlus > 0 && (
+            <FlowRow label={t('flow.recuEnPlus')} value={`+ ${fmt(props.recuEnPlus)}`} />
+          )}
           <FlowRow
             label={t('flow.chargesFixes')}
             value={`− ${fmt(props.chargesFixes)}`}
@@ -241,6 +266,14 @@ export async function CascadeDuMois(props: Props) {
                 'flow-detail-engagements',
                 t('flow.engagements'),
               )}
+            />
+          )}
+          {props.misDeCote > 0 && (
+            <FlowRow
+              label={t('flow.misDeCote')}
+              value={`− ${fmt(props.misDeCote)}`}
+              muted
+              dotClass="bg-brand-500"
             />
           )}
           <div className="border-border mt-1 border-t pt-2">
@@ -271,6 +304,25 @@ export async function CascadeDuMois(props: Props) {
             </dd>
           </div>
         </dl>
+        {/* Outside the <dl>: a <p> is not a valid child of a definition list. */}
+        {props.revenuRecu !== null &&
+          props.revenuEcrit !== null &&
+          props.revenuRecu !== props.revenuEcrit && (
+            <p className="text-muted-foreground pl-3 text-xs" data-revenu-recu-differe>
+              {t('flow.revenuRecuDiffere', {
+                recu: fmt(props.revenuRecu),
+                prevu: fmt(props.revenuEcrit),
+              })}
+            </p>
+          )}
+        {/* La phrase neutre (texte validé par @thierry le 20 sept. 2026) :
+            elle DIT d'où vient la différence, elle n'alerte pas et ne change
+            aucun calcul. Seulement quand les virements dépassent. */}
+        {props.auDelaDuRevenu > 0 && (
+          <p className="text-muted-foreground mt-3 text-xs" data-au-dela>
+            {t('flow.auDela', { montant: fmt(props.auDelaDuRevenu) })}
+          </p>
+        )}
       </CardContent>
     </Card>
   );

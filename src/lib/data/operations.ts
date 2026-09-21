@@ -61,41 +61,64 @@ export type AccountLedger = {
  *
  * A read error returns EMPTY lists with `ok: false` rather than throwing; the
  * callers must then show NO gesture and no derived figure, never « nothing
- * done ». A read that reaches PostgREST's row cap is treated as failed too:
- * the ascending order would cut the MOST RECENT rows, silently.
+ * done ».
+ *
+ * PR D — the journal is read PAGE BY PAGE. The old guard read a page reaching
+ * PostgREST's row cap (1 000) as a failed read; since « Il te reste » depends
+ * on this read, a workspace that reached 1 000 lines by normal use (a
+ * cancellation never deletes a row) would have lost its cockpit for good. The
+ * order ends on `id` so that two pages can neither repeat nor skip a row.
  */
-const ROW_CAP = 1000;
+const PAGE = 1000;
+/** 50 000 lines: far beyond any use; past it, a loop would be a defect. */
+const MAX_PAGES = 50;
+
+async function readAllPages<T>(
+  page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>,
+): Promise<T[] | null> {
+  const rows: T[] = [];
+  for (let i = 0; i < MAX_PAGES; i += 1) {
+    const { data, error } = await page(i * PAGE, (i + 1) * PAGE - 1);
+    if (error || !data) return null;
+    rows.push(...data);
+    if (data.length < PAGE) return rows;
+  }
+  return null;
+}
 
 export async function loadAccountLedger(
   supabase: Client,
   workspaceId: string,
 ): Promise<AccountLedger & { ok: boolean }> {
-  const [statementsRes, movementsRes] = await Promise.all([
-    supabase
-      .from('account_balance_statements')
-      .select('*')
-      .eq('workspace_id', workspaceId)
-      .order('stated_on', { ascending: true })
-      .order('recorded_at', { ascending: true }),
-    supabase
-      .from('movements')
-      .select('*')
-      .eq('workspace_id', workspaceId)
-      .order('occurred_on', { ascending: true })
-      .order('recorded_at', { ascending: true }),
+  const [statements, movements] = await Promise.all([
+    readAllPages<StatementRow>((from, to) =>
+      supabase
+        .from('account_balance_statements')
+        .select('*')
+        .eq('workspace_id', workspaceId)
+        .order('stated_on', { ascending: true })
+        .order('recorded_at', { ascending: true })
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
+    readAllPages<MovementRow>((from, to) =>
+      supabase
+        .from('movements')
+        .select('*')
+        .eq('workspace_id', workspaceId)
+        .order('occurred_on', { ascending: true })
+        .order('recorded_at', { ascending: true })
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
   ]);
 
-  if (
-    statementsRes.error ||
-    movementsRes.error ||
-    (statementsRes.data?.length ?? 0) >= ROW_CAP ||
-    (movementsRes.data?.length ?? 0) >= ROW_CAP
-  ) {
+  if (statements === null || movements === null) {
     return { ok: false, statements: [], movements: [] };
   }
   return {
     ok: true,
-    statements: (statementsRes.data ?? []).map(statementRowToDomain),
-    movements: (movementsRes.data ?? []).map(movementRowToDomain),
+    statements: statements.map(statementRowToDomain),
+    movements: movements.map(movementRowToDomain),
   };
 }

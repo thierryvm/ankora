@@ -1296,7 +1296,11 @@
         "epargneEstimee": "Épargne estimée",
         "parJour": "≈ {amount}/jour",
         "detailToggle": "Détail : {poste}",
-        "detailOrigine": "{montant} {cycleMois, plural, =3 {tous les 3 mois} =6 {tous les 6 mois} =12 {une fois par an} other {tous les # mois}}"
+        "detailOrigine": "{montant} {cycleMois, plural, =3 {tous les 3 mois} =6 {tous les 6 mois} =12 {une fois par an} other {tous les # mois}}",
+        "recuEnPlus": "Reçus en plus",
+        "misDeCote": "Mis de côté",
+        "revenuRecuDiffere": "Reçu ce mois-ci {recu}, prévu {prevu}",
+        "auDela": "Ce mois-ci tu as mis de côté {montant} de plus que ce que ton revenu laissait : la différence vient de ton compte principal."
       },
       "barAria": "Répartition de tes revenus : {charges} de factures, {provisions} de provisions, {depense} dépensés, {reste} restants.",
       "barAriaEngagements": "Dont {engagements} d'engagements.",
@@ -1689,7 +1693,10 @@
       "ouvrirCascade": "D'où vient ce chiffre",
       "incompletTitre": "Complète ta situation",
       "incompletPhrase": "Aucun argent reçu en {month} et aucun revenu mensuel écrit : « Il te reste » ne se calcule pas sans lui.",
-      "incompletCta": "Ajouter de l’argent reçu"
+      "incompletCta": "Ajouter de l’argent reçu",
+      "termeMisDeCote": "Mis de côté",
+      "quotidien": "Sur ton compte du quotidien : {montant} · calculé depuis tes opérations",
+      "quotidienAria": "Sur ton compte du quotidien : {montant}, calculé depuis tes opérations, d'où vient ce solde"
     },
     "encoreAPayer": {
       "etiquette": "À payer ce mois",
