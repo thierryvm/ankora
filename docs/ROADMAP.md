@@ -257,7 +257,7 @@ décision qu'on ne peut pas trouver n'existe pas.
 | —   | ADR-041 — provisionner n'est pas payer : la capacité de régler devient une donnée | ✅ accepté le 2026-08-10 (#367)   |
 | J1  | D3 — attribution figée sur les deux tables de paiement + `commitments.paid_from`  | ✅ livré le 2026-08-10 (#363)     |
 | J1b | La migration `contract` — `set not null` sur les deux colonnes                    | ✅ mergée le 2026-08-10 (#368) ¹  |
-| J2  | D1 — table de mouvements, RLS, export art. 20 (+ 4 tables absentes)               | 🚧 PR C (#476), en brouillon ²    |
+| J2  | D1 — table de mouvements, RLS, export art. 20 (+ 4 tables absentes)               | ✅ #476, en production le 21/09 ² |
 | J2b | ADR-041 F2 — `settles_directly`, compte de règlement, réattribution des paiements | 📋 **reporté**, cf. ² ci-dessous  |
 | J3  | D2 — rentrées datées, suppression de `monthly_income`, sémantique d'`incomplet`   | 📋                                |
 | J4  | D6 — dérivation des soldes, suppression de `savings_balance`, ancienneté          | 📋                                |
@@ -280,6 +280,11 @@ F2 — `settles_directly`, le compte de règlement, le renommage `paid_from` →
 existantes, deux risques d'une autre nature que la création de tables vides — et rien ne
 lit encore cette colonne (J4 le ferait). Ce report ne change pas l'ordre : J2b reste avant
 J4.
+
+Migration J2 fusionnée le 21 septembre 2026 (#476) et appliquée en production par le
+pilote le même jour à 15 h 14, export art. 20 vérifié par lui — rapporté par le pilote,
+non re-mesuré par la session qui l'écrit ici. Les écrans qui écrivent dans ces tables
+sont la PR C bis.
 
 **L'ordre a changé le 10 août** : ADR-038 plaçait D0 en tête. ADR-040 le renvoie en fin de
 programme, parce que D0 sert le découplage des rôles de comptes — qu'ADR-038 met lui-même

@@ -19,10 +19,19 @@ les plus sensibles de l'app.
 Deux jobs, donc **deux planchers distincts** — un chiffre global agrégé serait
 ininterprétable au premier conflit, donc ignoré :
 
-| Job                              | Plancher au 20 septembre 2026                                                                                                       |
+| Job                              | Plancher au 21 septembre 2026                                                                                                       |
 | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | `Playwright E2E`                 | **294 passed** (268 au 13/09, 259 au 22/08, 253 plus tôt le 22/08, 247 au 11/08, 241 plus tôt le 11/08, 231 au 09/08, 228 au 06/08) |
-| `Playwright E2E (authenticated)` | **80 passed** (74 plus tôt dans la PR C, 64 au 13/09, 63 le 13/09 plus tôt, 62 au 24/08, 50 au 23/08, 45 avant)                     |
+| `Playwright E2E (authenticated)` | **81 passed** (80 plus tôt dans la PR C, 74 avant, 64 au 13/09, 63 le 13/09 plus tôt, 62 au 24/08, 50 au 23/08, 45 avant)           |
+
+> **21 septembre 2026, PR C ([#476](https://github.com/thierryvm/ankora/pull/476)), dernier commit — public 294, authentifié 80 → 81.**
+>
+> Source : les deux runs CI du commit `fafd915` (tête de la PR à la fusion),
+> **35602783046** et **35602778969**, tous deux `success`. Lignes du reporter
+> relevées dans les journaux : `294 passed` / `273 skipped` (job public) et
+> `81 passed` / `5 skipped` (job authentifié), identiques sur les deux runs.
+> Aucune ligne `failed` ni `flaky`. Le relevé est fait après coup, le 21
+> septembre, sur les journaux conservés par GitHub.
 
 > **20 septembre 2026, PR C ([#476](https://github.com/thierryvm/ankora/pull/476)) — public 294, authentifié 74 → 80.**
 >

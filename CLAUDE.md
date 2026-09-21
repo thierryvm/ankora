@@ -294,7 +294,7 @@ ininterprétable au premier conflit, donc ignoré :
 | Job                              | Plancher, OBSERVÉ |
 | -------------------------------- | ----------------- |
 | `Playwright E2E`                 | **294 passed**    |
-| `Playwright E2E (authenticated)` | **80 passed**     |
+| `Playwright E2E (authenticated)` | **81 passed**     |
 
 **Ces nombres sont mesurés, jamais déduits.** Un relèvement se mesure en local
 **avant le premier push**, dans les deux sens (avec et sans la spec) : c'est le
