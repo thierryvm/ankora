@@ -1749,7 +1749,8 @@
       "cancel": "Anular",
       "cancelled": "Dinero recibido anulado",
       "reopen": "Restablecer",
-      "heading": "Dinero recibido este mes"
+      "heading": "Dinero recibido este mes",
+      "count": "{count, plural, one {# operación} other {# operaciones}}"
     },
     "statement": {
       "open": "Anotar el saldo de hoy",
@@ -1771,7 +1772,8 @@
       "gapExpected": "Esperado según tus operaciones",
       "gapRead": "Leído en tu cuenta",
       "gapAmount": "Diferencia",
-      "gapExplain": "Una diferencia es normal: Ankora aún no sigue tus gastos ni tus domiciliaciones. No significa que hayas olvidado algo."
+      "gapExplain": "Una diferencia es normal: Ankora aún no sigue tus gastos ni tus domiciliaciones. No significa que hayas olvidado algo.",
+      "overdraft": "Esta cuenta está en descubierto"
     },
     "transfer": {
       "done": "He hecho esta transferencia",

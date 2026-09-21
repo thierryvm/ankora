@@ -22,6 +22,34 @@ export default async function AccountsPage() {
 
   // Everything the cards show is computed HERE and handed down as plain
   // numbers and ISO days: a Decimal never crosses the RSC boundary.
+  // The month's « argent reçu » per account (Brussels month), cancelled ones
+  // included so each line can offer its reopening.
+  const month = today.slice(0, 7);
+  // Written this month counts too: money received dated last month but written
+  // today must stay on screen, where it can be cancelled (rule 11).
+  const brusselsMonth = (d: Date) =>
+    new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Brussels' }).format(d).slice(0, 7);
+  const incomesOf = (accountType: string) =>
+    ledger.movements
+      .filter(
+        (m) =>
+          m.kind === 'income' &&
+          m.toAccountType === accountType &&
+          (day(m.occurredOn).slice(0, 7) === month || brusselsMonth(m.recordedAt) === month),
+      )
+      .sort(
+        (a, b) =>
+          b.occurredOn.getTime() - a.occurredOn.getTime() ||
+          b.recordedAt.getTime() - a.recordedAt.getTime(),
+      )
+      .map((m) => ({
+        id: m.id,
+        amount: m.amount.toNumber(),
+        occurredOn: day(m.occurredOn),
+        description: m.description,
+        cancelled: m.cancelledAt !== null,
+      }));
+
   const balances: AccountBalanceProps[] = snapshot.accounts.map((account) => {
     const view = accountBalanceView({
       accountType: account.accountType,
@@ -33,6 +61,7 @@ export default async function AccountsPage() {
       kind: account.kind,
       accountType: account.accountType,
       label: account.displayName ?? account.label,
+      incomes: incomesOf(account.accountType),
       view: view && {
         readId: view.read.id,
         readBalance: view.read.balance.toNumber(),

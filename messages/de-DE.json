@@ -1749,7 +1749,8 @@
       "cancel": "Stornieren",
       "cancelled": "Erhaltenes Geld storniert",
       "reopen": "Wiederherstellen",
-      "heading": "Diesen Monat erhaltenes Geld"
+      "heading": "Diesen Monat erhaltenes Geld",
+      "count": "{count, plural, one {# Vorgang} other {# Vorgänge}}"
     },
     "statement": {
       "open": "Heutigen Kontostand eintragen",
@@ -1771,7 +1772,8 @@
       "gapExpected": "Erwartet laut deinen Vorgängen",
       "gapRead": "Auf deinem Konto gelesen",
       "gapAmount": "Abweichung",
-      "gapExplain": "Eine Abweichung ist normal: Ankora verfolgt deine Ausgaben und Lastschriften noch nicht. Sie bedeutet nicht, dass du etwas vergessen hast."
+      "gapExplain": "Eine Abweichung ist normal: Ankora verfolgt deine Ausgaben und Lastschriften noch nicht. Sie bedeutet nicht, dass du etwas vergessen hast.",
+      "overdraft": "Dieses Konto ist überzogen"
     },
     "transfer": {
       "done": "Ich habe diese Überweisung gemacht",

@@ -35,6 +35,7 @@ const h = vi.hoisted(() => {
     auth: vi.fn(async () => ({ ok: true, userId: 'user-1', workspaceId: 'ws-1' }) as unknown),
     rate: vi.fn(async () => ({ success: true })),
     audit: vi.fn(async () => {}),
+    logError: vi.fn(),
     ledger: vi.fn(async () => ({ ok: true, statements: [] as unknown[], movements: [] })),
   };
 });
@@ -42,8 +43,15 @@ const h = vi.hoisted(() => {
 vi.mock('@/lib/actions/authorized-workspace', () => ({ authorizedWorkspace: h.auth }));
 vi.mock('@/lib/security/rate-limit', () => ({ rateLimit: h.rate }));
 vi.mock('@/lib/security/audit-log', () => ({
-  AuditEvent: { ACCOUNT_BALANCE_UPDATED: 'account.balance_updated' },
+  AuditEvent: {
+    ACCOUNT_BALANCE_UPDATED: 'account.balance_updated',
+    MOVEMENT_RECORDED: 'movement.recorded',
+    MOVEMENT_CANCELLATION_SET: 'movement.cancellation_set',
+  },
   logAuditEvent: h.audit,
+}));
+vi.mock('@/lib/log', () => ({
+  log: { error: h.logError, warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }));
 vi.mock('@/lib/supabase/server', () => ({ createClient: async () => h.client }));
 vi.mock('@/lib/data/operations', () => ({ loadAccountLedger: h.ledger }));
@@ -84,6 +92,7 @@ beforeEach(() => {
   h.auth.mockImplementation(async () => ({ ok: true, userId: 'user-1', workspaceId: 'ws-1' }));
   h.rate.mockImplementation(async () => ({ success: true }));
   h.audit.mockClear();
+  h.logError.mockClear();
   h.ledger.mockImplementation(async () => ({ ok: true, statements: [], movements: [] }));
 });
 
@@ -177,7 +186,7 @@ describe('recordBalanceStatementAction', () => {
     }));
     script('account_balance_statements', 'insert', { data: { id: 'new-1' }, error: null });
     script('accounts', 'update', { data: null, error: { message: 'boom' } });
-    script('account_balance_statements', 'update', { data: null, error: null });
+    script('account_balance_statements', 'update', { data: [{ id: 'new-1' }], error: null });
 
     const r = await recordBalanceStatementAction({
       accountType: 'provisions',
@@ -447,6 +456,198 @@ describe('setMovementCancelledAction', () => {
     expect(await setMovementCancelledAction({ id: ID, cancelled: true })).toEqual({
       ok: false,
       errorCode: 'errors.operations.writeFailed',
+    });
+  });
+});
+
+/*
+ * Every money gesture is audited (decision @thierry, 2026-09-21) — and the
+ * event carries WHAT happened to WHICH row, never the amount nor the
+ * description: the audit log leaves in the art. 20 export, it must not
+ * double the data.
+ */
+describe('audit — every money gesture writes one event, without its data', () => {
+  const lastAudit = () => h.audit.mock.calls.at(-1) as unknown as [string, unknown, object];
+
+  it('audits a planned transfer done', async () => {
+    script('movements', 'select', { data: [], error: null });
+    script('movements', 'insert', { data: { id: 'mv-1' }, error: null });
+    const r = await recordPlannedTransferAction({
+      fromAccountType: 'income_bills',
+      toAccountType: 'daily_card',
+      amount: 505,
+      occurredOn: '2026-09-21',
+      planYear: 2026,
+      planMonth: 9,
+      planSuggestedAmount: 505,
+      plannedProvisions: 0,
+    });
+    expect(r.ok).toBe(true);
+    expect(h.audit).toHaveBeenCalledTimes(1);
+    expect(lastAudit()).toEqual([
+      'movement.recorded',
+      { userId: 'user-1', workspaceId: 'ws-1' },
+      { resource_type: 'movement_transfer', resource_id: 'mv-1' },
+    ]);
+  });
+
+  it('audits money received, without the typed description nor the amount', async () => {
+    script('movements', 'insert', { data: { id: 'mv-2' }, error: null });
+    const r = await recordIncomeAction({
+      toAccountType: 'income_bills',
+      amount: 705,
+      occurredOn: '2026-09-21',
+      nature: 'extra',
+      description: 'Remboursement mutuelle',
+    });
+    expect(r.ok).toBe(true);
+    expect(lastAudit()).toEqual([
+      'movement.recorded',
+      { userId: 'user-1', workspaceId: 'ws-1' },
+      { resource_type: 'movement_income', resource_id: 'mv-2' },
+    ]);
+    expect(JSON.stringify(h.audit.mock.calls)).not.toMatch(/Remboursement|705/);
+  });
+
+  it('audits a cancellation then a reopening, with both states', async () => {
+    const row = (cancelled: boolean) => ({
+      id: ID,
+      kind: 'income',
+      from_account_type: null,
+      to_account_type: 'income_bills',
+      plan_year: null,
+      plan_month: null,
+      cancelled_at: cancelled ? '2026-09-20T10:00:00Z' : null,
+    });
+    script('movements', 'select', { data: row(false), error: null });
+    script('movements', 'update', { data: [{ id: ID }], error: null });
+    await setMovementCancelledAction({ id: ID, cancelled: true });
+    expect(lastAudit()).toEqual([
+      'movement.cancellation_set',
+      { userId: 'user-1', workspaceId: 'ws-1' },
+      {
+        resource_type: 'movement_income',
+        resource_id: ID,
+        previous_state: 'standing',
+        new_state: 'cancelled',
+      },
+    ]);
+    script('movements', 'select', { data: row(true), error: null });
+    script('movements', 'update', { data: [{ id: ID }], error: null });
+    await setMovementCancelledAction({ id: ID, cancelled: false });
+    expect(lastAudit()[2]).toMatchObject({ previous_state: 'cancelled', new_state: 'standing' });
+    expect(h.audit).toHaveBeenCalledTimes(2);
+  });
+
+  it('audits nothing when the write fails', async () => {
+    script('movements', 'insert', { data: null, error: { message: 'x' } });
+    await recordIncomeAction({
+      toAccountType: 'income_bills',
+      amount: 705,
+      occurredOn: '2026-09-21',
+      nature: 'regular',
+    });
+    expect(h.audit).not.toHaveBeenCalled();
+  });
+
+  it('carries the statement cancel state in whitelisted keys, as fixed strings', async () => {
+    h.ledger.mockImplementation(async () => ({
+      ok: true,
+      statements: [stmt(705, '2026-09-01'), { ...stmt(690, '2026-09-15'), id: ID }],
+      movements: [],
+    }));
+    script('account_balance_statements', 'update', { data: [{ id: ID }], error: null });
+    script('accounts', 'update', { data: [{ account_type: 'provisions' }], error: null });
+    await setStatementCancelledAction({ id: ID, cancelled: true });
+    expect(lastAudit()[2]).toEqual({
+      resource_type: 'account_balance_statement',
+      resource_id: ID,
+      previous_state: 'standing',
+      new_state: 'cancelled',
+    });
+  });
+});
+
+describe('compensation that fails itself', () => {
+  it('logs the statement id (no figure) and still returns an error, on a new statement', async () => {
+    h.ledger.mockImplementation(async () => ({
+      ok: true,
+      statements: [stmt(705, '2026-09-01')],
+      movements: [],
+    }));
+    script('account_balance_statements', 'insert', { data: { id: 'new-1' }, error: null });
+    script('accounts', 'update', { data: null, error: { message: 'boom' } });
+    script('account_balance_statements', 'update', { data: null, error: { message: 'down' } });
+
+    const r = await recordBalanceStatementAction({
+      accountType: 'provisions',
+      balance: 700,
+      statedOn: '2026-09-21',
+    });
+    expect(r).toEqual({ ok: false, errorCode: 'errors.accounts.balanceUpdateFailed' });
+    expect(h.logError).toHaveBeenCalledTimes(1);
+    expect((h.logError.mock.calls[0] as unknown[])[1]).toEqual({
+      statement_id: 'new-1',
+      gesture: 'record',
+      error_code: 'no_code',
+    });
+    expect(h.audit).toHaveBeenCalledWith(
+      'account.balance_updated',
+      { userId: 'user-1', workspaceId: 'ws-1' },
+      {
+        resource_type: 'account_balance_statement',
+        resource_id: 'new-1',
+        error_code: 'compensation_failed',
+      },
+    );
+    expect(JSON.stringify(h.logError.mock.calls)).not.toMatch(/700|705/);
+  });
+
+  it('logs on a failed cancel compensation, and not when the compensation works', async () => {
+    h.ledger.mockImplementation(async () => ({
+      ok: true,
+      statements: [stmt(705, '2026-09-01'), { ...stmt(690, '2026-09-15'), id: ID }],
+      movements: [],
+    }));
+    script('account_balance_statements', 'update', { data: [{ id: ID }], error: null });
+    script('accounts', 'update', { data: null, error: { message: 'boom' } });
+    script('account_balance_statements', 'update', { data: [{ id: ID }], error: null });
+    expect(await setStatementCancelledAction({ id: ID, cancelled: true })).toEqual({
+      ok: false,
+      errorCode: 'errors.accounts.balanceUpdateFailed',
+    });
+    expect(h.logError).not.toHaveBeenCalled();
+
+    script('account_balance_statements', 'update', { data: [{ id: ID }], error: null });
+    script('accounts', 'update', { data: null, error: { message: 'boom' } });
+    script('account_balance_statements', 'update', { data: null, error: { message: 'down' } });
+    await setStatementCancelledAction({ id: ID, cancelled: true });
+    expect(h.logError).toHaveBeenCalledTimes(1);
+    expect((h.logError.mock.calls[0] as unknown[])[1]).toEqual({
+      statement_id: ID,
+      gesture: 'cancel',
+      error_code: 'no_code',
+    });
+  });
+
+  it('logs when the compensation is refused silently (zero rows, no error: RLS)', async () => {
+    h.ledger.mockImplementation(async () => ({
+      ok: true,
+      statements: [stmt(705, '2026-09-01')],
+      movements: [],
+    }));
+    script('account_balance_statements', 'insert', { data: { id: 'new-2' }, error: null });
+    script('accounts', 'update', { data: null, error: { message: 'boom' } });
+    script('account_balance_statements', 'update', { data: [], error: null });
+    await recordBalanceStatementAction({
+      accountType: 'provisions',
+      balance: 700,
+      statedOn: '2026-09-21',
+    });
+    expect((h.logError.mock.calls[0] as unknown[])[1]).toEqual({
+      statement_id: 'new-2',
+      gesture: 'record',
+      error_code: 'no_row',
     });
   });
 });

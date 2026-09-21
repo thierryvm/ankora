@@ -12,6 +12,8 @@ vi.mock('@/lib/actions/accounts', () => ({
 vi.mock('@/lib/actions/operations', () => ({
   recordBalanceStatementAction: vi.fn(async () => ({ ok: true, data: { id: 'x' } })),
   setStatementCancelledAction: vi.fn(async () => ({ ok: true })),
+  setMovementCancelledAction: vi.fn(async () => ({ ok: true })),
+  recordIncomeAction: vi.fn(async () => ({ ok: true, data: { id: 'y' } })),
 }));
 vi.mock('@/components/ui/toast', () => ({
   toast: { error: vi.fn(), success: vi.fn() },
@@ -156,5 +158,67 @@ describe('AccountsClient — un solde lu, daté, et nommé pour ce qu’il est',
       'Sert à la jauge de provisions du tableau de bord.',
     );
     expect(document.body.textContent).not.toMatch(/Saisi à la main/);
+  });
+});
+
+describe('AccountsClient — « Argent reçu » on its account, cancelled then restored', () => {
+  function renderWithIncomes() {
+    const withIncomes: AccountBalanceProps = {
+      ...START,
+      incomes: [
+        {
+          id: 'i1',
+          amount: 705,
+          occurredOn: '2026-09-20',
+          description: 'Revenu du mois',
+          cancelled: false,
+        },
+        {
+          id: 'i2',
+          amount: 505,
+          occurredOn: '2026-09-02',
+          description: 'En plus du revenu',
+          cancelled: true,
+        },
+      ],
+    };
+    return render(
+      <NextIntlClientProvider locale="fr-BE" messages={messages} timeZone="Europe/Brussels">
+        <AccountsClient
+          monthlyIncome={2000}
+          vieCouranteMonthlyTransfer={505}
+          balances={[withIncomes, READ_NEGATIVE, PROVISIONS]}
+          today="2026-09-21"
+        />
+      </NextIntlClientProvider>,
+    );
+  }
+
+  it('shows the button in the header, and the lines behind a fold that carries their count', async () => {
+    renderWithIncomes();
+    expect(screen.getByRole('button', { name: 'Argent reçu' })).toBeTruthy();
+    const fold = within(card('income_bills')).getByTestId('argent-recu');
+    expect(fold.textContent).toContain('2 opérations');
+    // Folded: the lines are in the body, and the body is hidden until a gesture.
+    const line = card('income_bills').querySelector('[data-income-line]') as HTMLElement;
+    expect(line.closest('[hidden]')).not.toBeNull();
+  });
+
+  it('offers « Annuler » on a standing line and « Rétablir » on a cancelled one', async () => {
+    const ops = await import('@/lib/actions/operations');
+    renderWithIncomes();
+    const fold = within(card('income_bills')).getByTestId('argent-recu');
+    await userEvent.click(within(fold).getByRole('button', { expanded: false }));
+
+    const standing = card('income_bills').querySelector('[data-income-line="i1"]') as HTMLElement;
+    const cancelled = card('income_bills').querySelector('[data-income-line="i2"]') as HTMLElement;
+    expect(standing.textContent).toContain('Reçu le 20 septembre');
+    expect(cancelled.textContent).toContain('Argent reçu annulé');
+
+    await userEvent.click(within(standing).getByRole('button', { name: 'Annuler' }));
+    expect(ops.setMovementCancelledAction).toHaveBeenCalledWith({ id: 'i1', cancelled: true });
+    await userEvent.click(within(cancelled).getByRole('button', { name: 'Rétablir' }));
+    expect(ops.setMovementCancelledAction).toHaveBeenCalledWith({ id: 'i2', cancelled: false });
+    expect(document.body.textContent).not.toMatch(/reçue/i);
   });
 });

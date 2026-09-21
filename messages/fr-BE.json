@@ -1749,7 +1749,8 @@
       "cancel": "Annuler",
       "cancelled": "Argent reçu annulé",
       "reopen": "Rétablir",
-      "heading": "Argent reçu ce mois-ci"
+      "heading": "Argent reçu ce mois-ci",
+      "count": "{count, plural, one {# opération} other {# opérations}}"
     },
     "statement": {
       "open": "Écrire le solde du jour",
@@ -1771,7 +1772,8 @@
       "gapExpected": "Attendu d’après tes opérations",
       "gapRead": "Lu sur ton compte",
       "gapAmount": "Écart",
-      "gapExplain": "Un écart est normal : Ankora ne suit pas encore tes dépenses ni tes prélèvements. Il ne dit pas que tu as oublié quelque chose."
+      "gapExplain": "Un écart est normal : Ankora ne suit pas encore tes dépenses ni tes prélèvements. Il ne dit pas que tu as oublié quelque chose.",
+      "overdraft": "Ce compte est à découvert"
     },
     "transfer": {
       "done": "J’ai fait ce virement",

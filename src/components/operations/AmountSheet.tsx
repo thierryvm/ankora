@@ -23,12 +23,18 @@ export type AmountSheetProps = {
   testId: string;
   title: string;
   question: string;
-  hint: string;
+  hint?: string;
   dateLabel: string;
   initialAmount: number | null;
   initialDate: string;
-  /** A balance can be negative; an amount moved cannot. */
+  /**
+   * A balance can be negative; an amount moved cannot. A negative balance is
+   * given by an « overdrawn » switch rather than a typed minus: the iOS decimal
+   * pad has no minus key, and a full keyboard for a figure is a worse trade.
+   */
   allowNegative: boolean;
+  /** Fields the gesture needs beyond « how much, and when » (e.g. the account). */
+  extraFields?: ReactNode;
   /** Live line under the amount (e.g. the provisions / free savings split). */
   renderDetail?: (amount: number | null) => ReactNode;
   successMessage: string;
@@ -51,9 +57,12 @@ export function AmountSheet(props: AmountSheetProps) {
   const ids = useId();
   const [raw, setRaw] = useState(props.initialAmount === null ? '' : String(props.initialAmount));
   const [day, setDay] = useState(props.initialDate);
+  const [overdrawn, setOverdrawn] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const amount = parseAmount(raw);
+  const typed = parseAmount(raw);
+  // A typed minus still works (a keyboard has one); the switch only forces the sign.
+  const amount = typed !== null && props.allowNegative && overdrawn ? -Math.abs(typed) : typed;
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -90,17 +99,34 @@ export function AmountSheet(props: AmountSheetProps) {
           <Input
             ref={amountRef}
             id={`${ids}-amount`}
-            // The iOS decimal pad has no minus key: a balance can be negative.
-            inputMode={props.allowNegative ? 'text' : 'decimal'}
+            className="min-h-11"
+            inputMode="decimal"
             autoComplete="off"
             value={raw}
             onChange={(e) => setRaw(e.target.value)}
             aria-invalid={error !== null}
-            aria-describedby={`${ids}-hint${error ? ` ${ids}-error` : ''}`}
+            aria-describedby={
+              [props.hint ? `${ids}-hint` : null, error ? `${ids}-error` : null]
+                .filter(Boolean)
+                .join(' ') || undefined
+            }
           />
-          <p id={`${ids}-hint`} className="text-muted-foreground text-xs">
-            {props.hint}
-          </p>
+          {props.hint ? (
+            <p id={`${ids}-hint`} className="text-muted-foreground text-xs">
+              {props.hint}
+            </p>
+          ) : null}
+          {props.allowNegative ? (
+            <label className="flex min-h-11 items-center gap-3 text-sm">
+              <input
+                type="checkbox"
+                className="h-5 w-5"
+                checked={overdrawn}
+                onChange={(e) => setOverdrawn(e.target.checked)}
+              />
+              {t('statement.overdraft')}
+            </label>
+          ) : null}
           {props.renderDetail ? (
             <p className="text-sm" aria-live="polite">
               {props.renderDetail(amount)}
@@ -111,12 +137,14 @@ export function AmountSheet(props: AmountSheetProps) {
           <Label htmlFor={`${ids}-date`}>{props.dateLabel}</Label>
           <Input
             id={`${ids}-date`}
+            className="min-h-11"
             type="date"
             max={props.initialDate}
             value={day}
             onChange={(e) => setDay(e.target.value)}
           />
         </div>
+        {props.extraFields}
         {error ? (
           <p id={`${ids}-error`} role="alert" className="text-danger text-sm">
             {error}

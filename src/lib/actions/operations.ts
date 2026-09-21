@@ -22,6 +22,7 @@ import {
   operationCancellationSchema,
   plannedTransferSchema,
 } from '@/lib/schemas/operations';
+import { log } from '@/lib/log';
 import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
 import { rateLimit } from '@/lib/security/rate-limit';
 import { createClient } from '@/lib/supabase/server';
@@ -92,6 +93,73 @@ function isoDayToDate(value: string): Date {
 }
 
 type Ctx = Extract<Awaited<ReturnType<typeof gate>>, { ok: true }>;
+
+/*
+ * Every money gesture writes ONE audit event (decision @thierry, 2026-09-21):
+ * which row, which kind, which state change — never an amount, a balance or a
+ * description. The audit log leaves in the art. 20 export; it must not double
+ * the data it points to.
+ */
+function auditMovement(
+  ctx: Ctx,
+  kind: 'transfer' | 'income',
+  id: string,
+  change?: { cancelled: boolean },
+) {
+  return logAuditEvent(
+    change ? AuditEvent.MOVEMENT_CANCELLATION_SET : AuditEvent.MOVEMENT_RECORDED,
+    { userId: ctx.userId, workspaceId: ctx.workspaceId },
+    {
+      resource_type: `movement_${kind}`,
+      resource_id: id,
+      ...(change ? cancellationStates(change.cancelled) : {}),
+    },
+  );
+}
+
+function cancellationStates(cancelled: boolean) {
+  return cancelled
+    ? { previous_state: 'standing', new_state: 'cancelled' }
+    : { previous_state: 'cancelled', new_state: 'standing' };
+}
+
+/**
+ * Undoes a statement write after the balance column refused to follow. When
+ * this second write fails too, the statement and the column disagree and no
+ * screen says so: the error log carries the row id — never a figure — so the
+ * mismatch can be found and repaired by hand.
+ */
+async function compensateStatement(
+  ctx: Ctx,
+  id: string,
+  cancelledAt: string | null,
+  gesture: 'record' | 'cancel' | 'reopen',
+) {
+  const { data, error } = await ctx.supabase
+    .from('account_balance_statements')
+    .update({ cancelled_at: cancelledAt })
+    .eq('id', id)
+    .eq('workspace_id', ctx.workspaceId)
+    .select('id');
+  // A write refused by RLS returns no error and touches zero rows: count them.
+  if (error || (data?.length ?? 0) !== 1) {
+    log.error('Statement compensation failed: statement and balance column disagree', {
+      statement_id: id,
+      gesture,
+      error_code: error ? (error.code ?? 'no_code') : 'no_row',
+    });
+    // The write stands without its gesture's event: leave one that says so.
+    await logAuditEvent(
+      AuditEvent.ACCOUNT_BALANCE_UPDATED,
+      { userId: ctx.userId, workspaceId: ctx.workspaceId },
+      {
+        resource_type: 'account_balance_statement',
+        resource_id: id,
+        error_code: 'compensation_failed',
+      },
+    );
+  }
+}
 
 /**
  * One line of the monthly plan is done ONCE: a replay, a second tab or a stale
@@ -178,11 +246,7 @@ export async function recordBalanceStatementAction(
 
   if (!(await syncBalanceColumn(ctx, accountType))) {
     // Compensation: the statement must not stand while the column disagrees.
-    await ctx.supabase
-      .from('account_balance_statements')
-      .update({ cancelled_at: new Date().toISOString() })
-      .eq('id', data.id)
-      .eq('workspace_id', ctx.workspaceId);
+    await compensateStatement(ctx, data.id, new Date().toISOString(), 'record');
     return { ok: false, errorCode: 'errors.accounts.balanceUpdateFailed' };
   }
 
@@ -237,21 +301,24 @@ export async function setStatementCancelledAction(input: unknown): Promise<Actio
 
   if (!(await syncBalanceColumn(ctx, row.accountType))) {
     // Back to the state READ above — never a blind inversion.
-    await ctx.supabase
-      .from('account_balance_statements')
-      .update({ cancelled_at: cancelled ? null : new Date().toISOString() })
-      .eq('id', id)
-      .eq('workspace_id', ctx.workspaceId);
+    await compensateStatement(
+      ctx,
+      id,
+      cancelled ? null : new Date().toISOString(),
+      cancelled ? 'cancel' : 'reopen',
+    );
     return { ok: false, errorCode: 'errors.accounts.balanceUpdateFailed' };
   }
 
   await logAuditEvent(
     AuditEvent.ACCOUNT_BALANCE_UPDATED,
     { userId: ctx.userId, workspaceId: ctx.workspaceId },
+    // Whitelisted keys, fixed string values: the sanitizer filters key NAMES
+    // only, so a value placed under an allowed key would pass as it is.
     {
       resource_type: 'account_balance_statement',
       resource_id: id,
-      metadata: { cancelled },
+      ...cancellationStates(cancelled),
     },
   );
 
@@ -317,6 +384,7 @@ export async function recordPlannedTransferAction(
 
   if (error || !data) return { ok: false, errorCode: 'errors.operations.writeFailed' };
 
+  await auditMovement(ctx, 'transfer', data.id);
   revalidateOperationPaths();
   return { ok: true, data: { id: data.id } };
 }
@@ -359,6 +427,7 @@ export async function recordIncomeAction(input: unknown): Promise<ActionResult<{
 
   if (error || !data) return { ok: false, errorCode: 'errors.operations.writeFailed' };
 
+  await auditMovement(ctx, 'income', data.id);
   revalidateOperationPaths();
   return { ok: true, data: { id: data.id } };
 }
@@ -411,6 +480,7 @@ export async function setMovementCancelledAction(input: unknown): Promise<Action
   if (error) return { ok: false, errorCode: 'errors.operations.writeFailed' };
   if (!data || data.length === 0) return { ok: false, errorCode: 'errors.operations.notFound' };
 
+  await auditMovement(ctx, row.kind === 'transfer' ? 'transfer' : 'income', id, { cancelled });
   revalidateOperationPaths();
   return { ok: true };
 }

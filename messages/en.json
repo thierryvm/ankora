@@ -1749,7 +1749,8 @@
       "cancel": "Cancel",
       "cancelled": "Money received cancelled",
       "reopen": "Restore",
-      "heading": "Money received this month"
+      "heading": "Money received this month",
+      "count": "{count, plural, one {# operation} other {# operations}}"
     },
     "statement": {
       "open": "Write today’s balance",
@@ -1771,7 +1772,8 @@
       "gapExpected": "Expected from your operations",
       "gapRead": "Read on your account",
       "gapAmount": "Difference",
-      "gapExplain": "A difference is normal: Ankora does not follow your spending or direct debits yet. It does not mean you forgot something."
+      "gapExplain": "A difference is normal: Ankora does not follow your spending or direct debits yet. It does not mean you forgot something.",
+      "overdraft": "This account is overdrawn"
     },
     "transfer": {
       "done": "I made this transfer",

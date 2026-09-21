@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useId, useState, useTransition } from 'react';
 import { Landmark, PiggyBank, Wallet } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
@@ -12,15 +12,26 @@ import { toast } from '@/components/ui/toast';
 import { updateMonthlyIncomeAction, updateVieCouranteTransferAction } from '@/lib/actions/accounts';
 import {
   recordBalanceStatementAction,
+  setMovementCancelledAction,
   setStatementCancelledAction,
 } from '@/lib/actions/operations';
 import { AmountSheet } from '@/components/operations/AmountSheet';
+import { IncomeButton } from '@/components/operations/IncomeButton';
 import { Repli } from '@/components/cockpit/Repli';
 import type { AccountType } from '@/lib/domain/cockpit/types';
 import { ACCOUNT_KIND_I18N_KEY, type AccountKind } from '@/lib/schemas/account';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 import { formatCurrency } from '@/lib/i18n/formatters';
 import type { Locale } from '@/i18n/routing';
+
+/** One « argent reçu » of the month on this account, cancelled ones included. */
+export type IncomeLineProps = {
+  id: string;
+  amount: number;
+  occurredOn: string;
+  description: string | null;
+  cancelled: boolean;
+};
 
 /** Plain values only — computed by the server page, never a Decimal. */
 export type AccountBalanceProps = {
@@ -36,6 +47,7 @@ export type AccountBalanceProps = {
     gap: { expected: number; read: number; amount: number } | null;
     reopenable: { id: string; statedOn: string } | null;
   } | null;
+  incomes?: IncomeLineProps[];
 };
 
 type Props = {
@@ -74,9 +86,22 @@ export function AccountsClient({
 
   return (
     <div className="flex flex-col gap-8">
-      <header>
-        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{t('title')}</h1>
-        <p className="text-muted-foreground mt-1">{t('subtitle')}</p>
+      <header className="flex flex-col gap-3">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{t('title')}</h1>
+          <p className="text-muted-foreground mt-1">{t('subtitle')}</p>
+        </div>
+        {ledgerFailed ? null : (
+          <div className="flex flex-wrap gap-2">
+            <IncomeButton
+              today={today}
+              accounts={ACCOUNT_ORDER.flatMap((kind) => {
+                const row = accountByKind.get(kind);
+                return row ? [{ accountType: row.accountType, label: row.label }] : [];
+              })}
+            />
+          </div>
+        )}
       </header>
 
       <MonthlyIncomeCard initialValue={monthlyIncome} />
@@ -142,6 +167,7 @@ function MonthlyIncomeCard({ initialValue }: { initialValue: number | null }) {
             <Label htmlFor="monthly-income">{tIncome('amountLabel')}</Label>
             <Input
               id="monthly-income"
+              className="min-h-11"
               type="number"
               inputMode="decimal"
               min={0}
@@ -151,7 +177,7 @@ function MonthlyIncomeCard({ initialValue }: { initialValue: number | null }) {
               onChange={(e) => setValue(e.target.value)}
             />
           </div>
-          <Button type="submit" disabled={isPending}>
+          <Button type="submit" className="min-h-11" disabled={isPending}>
             {isPending ? t('saving') : t('saveButton')}
           </Button>
         </form>
@@ -190,6 +216,7 @@ function VieCouranteTransferCard({ initialValue }: { initialValue: number | null
             <Label htmlFor="vie-transfer">{tTransfer('amountLabel')}</Label>
             <Input
               id="vie-transfer"
+              className="min-h-11"
               type="number"
               inputMode="decimal"
               min={0}
@@ -199,7 +226,7 @@ function VieCouranteTransferCard({ initialValue }: { initialValue: number | null
               onChange={(e) => setValue(e.target.value)}
             />
           </div>
-          <Button type="submit" disabled={isPending}>
+          <Button type="submit" className="min-h-11" disabled={isPending}>
             {isPending ? t('saving') : t('saveButton')}
           </Button>
         </form>
@@ -336,6 +363,8 @@ function AccountBalanceCard({ row, today }: { row: AccountBalanceProps; today: s
           ) : null}
         </div>
 
+        {row.incomes && row.incomes.length > 0 ? <IncomeLines lines={row.incomes} /> : null}
+
         <p className="text-muted-foreground text-xs">
           {tBalance('manualNotice')} {tKind(`${ACCOUNT_KIND_I18N_KEY[row.kind]}.usage`)}
         </p>
@@ -360,5 +389,65 @@ function AccountBalanceCard({ row, today }: { row: AccountBalanceProps; today: s
         ) : null}
       </CardContent>
     </Card>
+  );
+}
+
+/**
+ * The month's « argent reçu » on one account, behind a fold (its count in the
+ * title): each line says when it was received, and offers « Annuler » — or,
+ * once cancelled, « Rétablir ». Nothing is deleted (rule 11).
+ */
+function IncomeLines({ lines }: { lines: IncomeLineProps[] }) {
+  const t = useTranslations('operations.income');
+  const locale = useLocale() as Locale;
+  const translateError = useActionErrorTranslator();
+  const ids = useId();
+  const [isPending, startTransition] = useTransition();
+
+  function setCancelled(id: string, cancelled: boolean) {
+    startTransition(async () => {
+      const r = await setMovementCancelledAction({ id, cancelled });
+      if (r.ok) toast.success(cancelled ? t('cancelled') : t('saved'));
+      else toast.error(translateError(r.errorCode));
+    });
+  }
+
+  return (
+    <Repli titre={t('heading')} cle={t('count', { count: lines.length })} testId="argent-recu">
+      <ul className="flex flex-col gap-3">
+        {lines.map((line) => {
+          const textId = `${ids}-${line.id}`;
+          return (
+            <li key={line.id} data-income-line={line.id} className="flex flex-col gap-1">
+              <div id={textId} className="flex items-baseline justify-between gap-3">
+                <span className="min-w-0 text-sm break-words">
+                  {line.description}
+                  <span className="text-muted-foreground block text-xs">
+                    {t('receivedOn', { date: formatDay(line.occurredOn, locale) })}
+                    {line.cancelled ? ` · ${t('cancelled')}` : ''}
+                  </span>
+                </span>
+                <span
+                  className={`font-mono text-sm tabular-nums ${line.cancelled ? 'text-muted-foreground line-through' : ''}`}
+                >
+                  {formatCurrency(line.amount, locale)}
+                </span>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="min-h-11 self-start"
+                disabled={isPending}
+                aria-describedby={textId}
+                onClick={() => setCancelled(line.id, !line.cancelled)}
+              >
+                {line.cancelled ? t('reopen') : t('cancel')}
+              </Button>
+            </li>
+          );
+        })}
+      </ul>
+    </Repli>
   );
 }

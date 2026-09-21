@@ -1749,7 +1749,8 @@
       "cancel": "Annuleren",
       "cancelled": "Ontvangen geld geannuleerd",
       "reopen": "Herstellen",
-      "heading": "Deze maand ontvangen geld"
+      "heading": "Deze maand ontvangen geld",
+      "count": "{count, plural, one {# verrichting} other {# verrichtingen}}"
     },
     "statement": {
       "open": "Saldo van vandaag invullen",
@@ -1771,7 +1772,8 @@
       "gapExpected": "Verwacht volgens je verrichtingen",
       "gapRead": "Gelezen op je rekening",
       "gapAmount": "Verschil",
-      "gapExplain": "Een verschil is normaal: Ankora volgt je uitgaven en domiciliëringen nog niet. Het betekent niet dat je iets vergeten bent."
+      "gapExplain": "Een verschil is normaal: Ankora volgt je uitgaven en domiciliëringen nog niet. Het betekent niet dat je iets vergeten bent.",
+      "overdraft": "Deze rekening staat in het rood"
     },
     "transfer": {
       "done": "Ik heb deze overschrijving gedaan",

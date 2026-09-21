@@ -42,6 +42,9 @@ export function TransferDoneControl(props: Props) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const fmt = (n: number) => formatCurrency(n, locale);
+  // The cent is the smallest unit (ADR-045 D19): a plan figure such as
+  // 280/12 + 70/3 would prefill 46.666… and be refused by the sheet itself.
+  const suggested = Math.round(props.suggested * 100) / 100;
 
   function setCancelled(id: string, cancelled: boolean) {
     startTransition(async () => {
@@ -108,7 +111,7 @@ export function TransferDoneControl(props: Props) {
           question={t('question')}
           hint={t('hint')}
           dateLabel={t('date')}
-          initialAmount={props.suggested}
+          initialAmount={suggested}
           initialDate={props.today}
           allowNegative={false}
           successMessage={t('saved')}
@@ -132,7 +135,7 @@ export function TransferDoneControl(props: Props) {
               occurredOn,
               planYear: props.planYear,
               planMonth: props.planMonth,
-              planSuggestedAmount: props.suggested,
+              planSuggestedAmount: suggested,
               plannedProvisions: props.plannedProvisions,
             })
           }
