@@ -208,7 +208,11 @@ test.describe.serial('Cockpit v3 — le budget de page à 375 px', () => {
     // seule chose qui compte vraiment — en bas de page, le dernier élément
     // reste visible ET cliquable, c'est-à-dire que le point où le doigt
     // tomberait lui appartient encore.
-    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    // Instantané : la feuille de style pose un défilement lissé, et une mesure
+    // prise en cours de route lit le défilement, pas la page.
+    await page.evaluate(() =>
+      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }),
+    );
     await page.waitForTimeout(300);
 
     const verdict = await page.evaluate(() => {
@@ -237,5 +241,31 @@ test.describe.serial('Cockpit v3 — le budget de page à 375 px', () => {
       verdict,
       `le dernier élément sort de la fenêtre: ${JSON.stringify(verdict)}`,
     ).toMatchObject({ dansLaVue: true, recouvert: false });
+
+    // Le dernier élément de la PAGE n'est pas celui de <main>. La sonde
+    // ci-dessus ne regarde que `main a, main button` : le pied de page vit hors
+    // de <main>, et sous la barre d'onglets ses liens sont masqués, donc il
+    // n'y a rien à cliquer dedans — la sonde était aveugle à lui par
+    // construction, et le pied de page pouvait passer à moitié sous la barre
+    // (relevé par @thierry sur la PWA, 21 septembre 2026) sans qu'elle rougisse.
+    // Ce qu'on mesure ici est sa BOÎTE : son bas doit être au-dessus de la barre.
+    // La mesure exacte (bas du pied = haut de la barre, page longue et courte,
+    // 375 et 500) vit dans `coquille-defilement.spec.ts`.
+    const pied = await page.evaluate(() => {
+      const f = document.querySelector('footer');
+      const barre = document.querySelector('[data-testid="bottom-tab-bar"]');
+      if (!f || !barre) return { erreur: 'pied de page ou barre introuvable' as const };
+      return {
+        erreur: null,
+        basPied: Math.round(f.getBoundingClientRect().bottom),
+        hautBarre: Math.round(barre.getBoundingClientRect().top),
+      };
+    });
+    expect(pied.erreur, 'sonde sans cible').toBeNull();
+    if (pied.erreur) return;
+    expect(
+      pied.basPied,
+      `le pied de page passe sous la barre : bas ${pied.basPied}, haut de la barre ${pied.hautBarre}`,
+    ).toBeLessThanOrEqual(pied.hautBarre + 1);
   });
 });
