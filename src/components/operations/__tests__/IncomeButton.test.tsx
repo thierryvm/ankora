@@ -67,6 +67,28 @@ describe('IncomeButton — « Argent reçu »', () => {
     });
   });
 
+  it('sends the description without its surrounding spaces, then clears the field', async () => {
+    withIntl(<IncomeButton accounts={ACCOUNTS} today="2026-09-21" />);
+    await userEvent.click(screen.getByRole('button', { name: 'Argent reçu' }));
+    const sheet = screen.getByTestId('feuille-argent-recu');
+    await userEvent.type(within(sheet).getByLabelText('Combien as-tu reçu ?'), '505');
+    await userEvent.type(within(sheet).getByLabelText('Description (facultatif)'), '  Prime  ');
+    await userEvent.click(within(sheet).getByRole('button', { name: 'Enregistrer' }));
+    expect(actions.income).toHaveBeenCalledWith({
+      toAccountType: 'income_bills',
+      amount: 505,
+      occurredOn: '2026-09-21',
+      nature: 'regular',
+      description: 'Prime',
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Argent reçu' }));
+    const again = screen.getByTestId('feuille-argent-recu');
+    expect(
+      (within(again).getByLabelText('Description (facultatif)') as HTMLInputElement).value,
+    ).toBe('');
+  });
+
   it('refuses a negative or empty amount before calling the server', async () => {
     withIntl(<IncomeButton accounts={ACCOUNTS} today="2026-09-21" />);
     await userEvent.click(screen.getByRole('button', { name: 'Argent reçu' }));

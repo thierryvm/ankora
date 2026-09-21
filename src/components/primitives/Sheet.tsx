@@ -255,10 +255,20 @@ export function Sheet({
     panel.style.transition = '';
   }, []);
 
+  // The latest `onClose`, read at call time. Callers pass an inline function,
+  // so its identity changes on every parent render; if the open effect below
+  // depended on it, each keystroke in a parent-owned field would tear the
+  // effect down and set it up again — focus handed back to the trigger, scroll
+  // lock dropped, focus put back on the first field.
+  const onCloseRef = useRef(onClose);
+  useLayoutEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
   const handleClose = useCallback(() => {
     clearDragTransform();
-    onClose();
-  }, [clearDragTransform, onClose]);
+    onCloseRef.current();
+  }, [clearDragTransform]);
 
   // --- Escape, focus trap, scroll lock, initial focus, focus restoration. ---
   useEffect(() => {

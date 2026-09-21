@@ -156,6 +156,14 @@ test.describe.serial('Opérations de compte — trois gestes, un chiffre qui ne 
     );
     const feuilleRecu = page.getByTestId('feuille-argent-recu');
     await feuilleRecu.getByLabel('Combien as-tu reçu ?').fill('705');
+    // Typed key by key, spaces around, as a finger would: `fill` sets the value
+    // in one event and could not see the defect of 21 Sept. 2026 — every
+    // keystroke in this parent-owned field sent focus back to the amount.
+    const description = feuilleRecu.getByLabel('Description (facultatif)');
+    await description.click();
+    await description.pressSequentially('  Prime de septembre  ');
+    await expect(description).toHaveValue('  Prime de septembre  ');
+    await expect(feuilleRecu.getByLabel('Combien as-tu reçu ?')).toHaveValue('705');
     await feuilleRecu.getByRole('button', { name: /^enregistrer$/i }).click();
     await expect(page.getByText('Argent reçu enregistré').first()).toBeVisible({
       timeout: ECRITURE_MS,
@@ -188,6 +196,13 @@ test.describe.serial('Opérations de compte — trois gestes, un chiffre qui ne 
     const ligne = carte.locator('[data-income-line]');
     await expect(ligne).toHaveCount(1);
     await expect(ligne).toContainText('Reçu le');
+    // The description as the screen reads it: its own text node, trimmed.
+    expect(
+      await ligne
+        .locator('span')
+        .first()
+        .evaluate((el) => el.firstChild?.textContent ?? null),
+    ).toBe('Prime de septembre');
     await ligne.getByRole('button', { name: 'Annuler' }).click();
     await expect(ligne).toContainText('Argent reçu annulé', { timeout: ECRITURE_MS });
     await ligne.getByRole('button', { name: 'Rétablir' }).click();
@@ -205,7 +220,7 @@ test.describe.serial('Opérations de compte — trois gestes, un chiffre qui ne 
     ]);
     const income = ops?.find((o) => o.kind === 'income');
     expect(income?.income_nature).toBe('regular');
-    expect(income?.description).toBe('Revenu du mois');
+    expect(income?.description).toBe('Prime de septembre');
 
     // L'audit : un événement par geste, sans montant ni description.
     const { data: audit } = await admin
@@ -224,7 +239,7 @@ test.describe.serial('Opérations de compte — trois gestes, un chiffre qui ne 
     for (const e of audit ?? []) {
       expect(Object.keys(e.metadata as object).filter((k) => !permises.includes(k))).toEqual([]);
     }
-    expect(JSON.stringify(audit)).not.toMatch(/Revenu du mois/);
+    expect(JSON.stringify(audit)).not.toMatch(/Prime de septembre/);
   });
 
   test('un second compte fictif ne lit ni n’écrit rien du premier (RLS réelle)', async () => {

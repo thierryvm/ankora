@@ -287,6 +287,53 @@ describe('Sheet — focus on open', () => {
     await open(user);
     expect(document.activeElement).toBe(screen.getByTestId('test-sheet-close'));
   });
+
+  /**
+   * « Argent reçu », 21 Sept. 2026: its description lives in the PARENT's
+   * state, and the parent passes a fresh `onClose` on every render. Each
+   * keystroke used to re-run the open effect — focus handed back to the
+   * trigger, scroll lock dropped, then focus put back on the amount — so the
+   * second letter of a description landed in the amount field.
+   */
+  it('keeps focus and scroll lock while the parent re-renders with a new onClose', async () => {
+    function ParentOwnedField() {
+      const [open, setOpen] = useState(false);
+      const [note, setNote] = useState('');
+      const amountRef = useRef<HTMLInputElement>(null);
+      return (
+        <div>
+          <button type="button" data-testid="trigger" onClick={() => setOpen(true)}>
+            Ouvrir
+          </button>
+          <Sheet
+            open={open}
+            onClose={() => setOpen(false)}
+            title="Argent reçu"
+            testId="test-sheet"
+            initialFocusRef={amountRef}
+          >
+            <input ref={amountRef} data-testid="amount" aria-label="Montant" />
+            <input
+              data-testid="note"
+              aria-label="Description"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+            />
+          </Sheet>
+        </div>
+      );
+    }
+    const user = userEvent.setup();
+    render(<ParentOwnedField />);
+    await open(user);
+    const scrollCalls = vi.mocked(window.scrollTo).mock.calls.length;
+    await user.type(screen.getByTestId('note'), 'Prime');
+    expect((screen.getByTestId('note') as HTMLInputElement).value).toBe('Prime');
+    expect((screen.getByTestId('amount') as HTMLInputElement).value).toBe('');
+    expect(document.activeElement).toBe(screen.getByTestId('note'));
+    expect(document.body.style.position).toBe('fixed');
+    expect(vi.mocked(window.scrollTo).mock.calls.length).toBe(scrollCalls);
+  });
 });
 
 describe('Sheet — anchoring', () => {
