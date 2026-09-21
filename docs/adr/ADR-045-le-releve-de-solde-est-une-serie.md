@@ -199,7 +199,8 @@ dérivés sans qu'aucune trace ne le dise. On annule, et on réécrit.
 Conséquence sur le message du trigger : il cesse de dire que « corriger passe
 par une annulation » — c'était faux pour cinq colonnes sur sept. Il **nomme la
 colonne figée** qu'on vient de toucher, et liste ce qui se corrige. Pour un
-relevé de solde, `account_type` est figé au même titre : l'identité de la ligne.
+relevé de solde, `account_type` est figé au même titre : l'identité de la ligne
+— et, depuis D20, ce que le relevé mesure.
 
 ## D18 — `cancelled_at` et `cancelled_by` sont imposés par la base
 
@@ -267,3 +268,47 @@ pour que personne n'ait à les redécouvrir :
 4. **L'export art. 20 vérifie le CONTENU** des deux tables neuves, et elles
    entrent dans le `it.each` de pagination : une table exportée vide passerait
    sinon pour une table exportée.
+
+## D20 — un relevé de solde est une mesure : il s'annule et se réécrit
+
+Décidé par @thierry le 2026-09-21, sur la relecture Sécurité du diff J2.
+
+D17 décrit ce qu'une **opération** laisse corriger. Un **relevé** n'est pas une
+opération : c'est ce que la banque affichait tel jour. Le corriger en place
+déplacerait l'ancre de chaque solde dérivé après lui, sans qu'aucune ligne ne
+garde ce qui était relevé auparavant — exactement l'effacement silencieux que
+D14 retourne en mesure.
+
+Sur `account_balance_statements`, `balance`, `stated_on` et `derived_balance`
+rejoignent donc les colonnes figées, avec un message qui **nomme la colonne**.
+Restent possibles l'annulation (écrite par la base, D18) et la ré-ouverture.
+Une saisie fausse se répare en annulant le relevé et en en écrivant un autre —
+deux relevés du même jour sont permis, l'ordre total (`stated_on`,
+`recorded_at`, `id`) les départage.
+
+Sur `movements`, rien ne change : D17 tient. Les trois noms n'existent pas dans
+cette table, et le trigger partagé ne compare que les colonnes présentes.
+
+Conséquence : sur un relevé, le gel des lignes **annulées** (D15) n'a plus de
+colonne à protéger — toutes celles qu'il couvrait sont figées d'emblée. Il reste
+prouvé côté opérations (`e2e/journal-mouvements.spec.ts`).
+
+## Constat — les privilèges hérités par `authenticated` (relecture Sécurité, 2026-09-21)
+
+Mesuré sur la pile locale (CLI 2.84.2), et vrai partout où les privilèges par
+défaut de l'image Supabase s'appliquent au rôle qui crée les tables :
+
+- `authenticated` hérite de **DELETE et TRUNCATE** sur `movements` et
+  `account_balance_statements`, comme sur toutes les tables du schéma `public`.
+  Les `grant select, insert, update` de J2 n'enlèvent rien : un GRANT ajoute.
+- **DELETE est sans effet** : les deux tables sont en `force row level
+security` et n'ont aucune policy DELETE, donc un DELETE du client ne voit
+  aucune ligne.
+- **TRUNCATE n'est pas filtré par RLS**, mais aucun chemin d'accès n'a été
+  trouvé par la relecture : PostgREST n'émet pas TRUNCATE, et aucune migration
+  ne définit de fonction qui l'exécute (recherche du mot dans `supabase/migrations/`).
+
+**Décision (@thierry, 2026-09-21) : aucun `revoke` dans J2.** Le resserrer sur
+ces deux tables seulement créerait un écart invisible entre tables d'un même
+schéma. C'est une décision globale — resserrer les privilèges par défaut du
+schéma `public`, toutes tables —, suivie par l'issue #478.

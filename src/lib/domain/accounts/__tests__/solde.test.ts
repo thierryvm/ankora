@@ -526,7 +526,7 @@ describe('measureStatementGap — mesurer ce qui MANQUE (ADR-040 D11)', () => {
 });
 
 describe('la frontière du domaine refuse le sous-centime (ADR-045 D19)', () => {
-  it('refuses a statement balance carrying more than two decimals', () => {
+  it('refuses to derive from a statement balance carrying more than two decimals', () => {
     expect(() =>
       deriveAccountBalance({
         statement: statement({ balance: money('1250.005') }),
@@ -572,7 +572,7 @@ describe('la frontière du domaine refuse le sous-centime (ADR-045 D19)', () => 
    * tapé et qu'aucune ligne n'explique — l'écart deviendrait un artefact de la
    * mesure au lieu d'un fait à montrer.
    */
-  it('refuses a statement balance carrying more than two decimals', () => {
+  it('refuses to measure a gap against a statement balance carrying more than two decimals', () => {
     expect(() =>
       measureStatementGap({
         statement: statement({ id: 'b', statedOn: day('2026-03-10'), balance: money('1250.005') }),

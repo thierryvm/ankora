@@ -15,8 +15,11 @@
 --     cette clé interdit, et ce que coûtera d'en sortir : ADR-045 §clé.
 --   · aucune suppression de `workspaces.monthly_income` (ADR-038 D2) ni de
 --     `workspace_settings.savings_balance` (D6) : ce serait destructif.
---   · aucune lecture de ces tables par l'application. J2 pose le fait, il ne
+--   · aucune lecture de ces tables par les ÉCRANS. J2 pose le fait, il ne
 --     l'exploite pas — les écrans et la dérivation sont les lots suivants.
+--     Un seul chemin les lit dès ce lot, et il le doit : l'export art. 20
+--     (`src/lib/gdpr/export.ts`), qui les rend en entier, lignes annulées
+--     comprises — ce sont des données de la personne dès leur écriture.
 --
 -- Pas de `begin;` / `commit;` : le contrôle transactionnel appartient à la CLI
 -- Supabase, et en poser un second produirait l'état à moitié migré que les
@@ -572,8 +575,12 @@ $$;
 -- signaler, et trois colonnes y manquaient au premier jet. Toute colonne
 -- ajoutee a ces tables se pose donc la question << figee ou corrigeable ? >>,
 -- et la reponse s'ecrit ici.
--- plutôt que par une liste de colonnes : une colonne ajoutée demain est
--- protégée sans qu'on ait à y penser. Une liste, elle, se périme en silence.
+--
+-- Quatrième rôle, décidé par @thierry le 2026-09-21 (ADR-045 D20) : un relevé
+-- de solde est une MESURE. `balance`, `stated_on` et `derived_balance` y sont
+-- figés — il ne se corrige pas, il s'annule et se réécrit. Sur `movements`,
+-- rien ne change (D17) : ces noms n'y existent pas, et le test de présence
+-- (`avant ? colonne`) les y rend inertes.
 --
 -- `security invoker` : le corps ne lit ni n'écrit aucune TABLE, donc
 -- `security definer` n'ajouterait qu'une surface d'escalade — et il rendrait
@@ -620,10 +627,20 @@ declare
     -- se corrige. Trouve par la relecture Securite du 2026-09-20 sur ce diff.
     'plan_year', 'plan_month', 'plan_suggested_amount'
   ];
+  -- ADR-045 D20 — ce qu'un relevé MESURE. Absent de `movements` : inerte là.
+  mesure   constant text[] := array['balance', 'stated_on', 'derived_balance'];
   avant    jsonb := to_jsonb(old);
   apres    jsonb := to_jsonb(new);
   colonne  text;
 begin
+  foreach colonne in array mesure loop
+    if avant ? colonne and (apres -> colonne) is distinct from (avant -> colonne) then
+      raise exception
+        'J2 : « % » est fige : un releve de solde est une mesure, il ne se corrige pas (ADR-045 D20). On l''annule, et on en ecrit un autre.',
+        colonne;
+    end if;
+  end loop;
+
   foreach colonne in array figees loop
     if avant ? colonne and (apres -> colonne) is distinct from (avant -> colonne) then
       raise exception
@@ -657,7 +674,7 @@ begin
 end $$;
 
 comment on function public.j2_protege_operation() is
-  'ADR-045 D15/D17/D18 — fige ce qui identifie la ligne (id, workspace_id, created_by, recorded_at, kind, comptes), gele le contenu d''une ligne annulee, et IMPOSE cancelled_at / cancelled_by au lieu de les croire. La reouverture reste permise.';
+  'ADR-045 D15/D17/D18/D20 — fige ce qui identifie la ligne (id, workspace_id, created_by, recorded_at, kind, comptes), fige ce qu''un releve MESURE (balance, stated_on, derived_balance), gele le contenu d''une ligne annulee, et IMPOSE cancelled_at / cancelled_by au lieu de les croire. La reouverture reste permise.';
 
 -- Une fonction neuve naît avec `proacl IS NULL`, donc EXECUTE pour anon,
 -- authenticated et service_role. L'impact réel est nul (un appel direct rend
@@ -827,6 +844,23 @@ begin
         where s.workspace_id = new.workspace_id
           and s.account_type = new.account_type
      );
+
+  -- L'ancre ne peut pas manquer EN SILENCE. L'insert ci-dessus rend zéro ligne
+  -- sans lever si le workspace n'est pas lisible, ou si l'écriture est filtrée
+  -- (FORCE RLS sans BYPASSRLS du propriétaire) : un compte naîtrait alors sans
+  -- date de départ, et personne ne le saurait avant le premier écran de
+  -- soldes. On relit, et l'inscription échoue plutôt que de livrer un compte
+  -- sans ancre. Le message ne porte aucun identifiant (dépôt public, et les
+  -- journaux d'inscription finissent dans des rapports).
+  if not exists (
+    select 1 from public.account_balance_statements s
+     where s.workspace_id = new.workspace_id
+       and s.account_type = new.account_type
+  ) then
+    raise exception
+      'J2 : un compte vient d''etre cree sans son releve initial. L''ancre n''a pas ete ecrite — verifier BYPASSRLS du role proprietaire de j2_ancre_nouveau_compte.';
+  end if;
+
   return null;
 end $$;
 
@@ -873,7 +907,7 @@ comment on column public.movements.cancelled_by is
 comment on table public.account_balance_statements is
   'ADR-045 D14 — un solde releve a une date, et l''historique se garde. Le dernier releve d''un compte se lit sous l''ordre total (stated_on desc, recorded_at desc, id desc).';
 comment on column public.account_balance_statements.balance is
-  'Le solde DECLARE par la personne ce jour-la. Negatif autorise (decouvert).';
+  'Le solde DECLARE par la personne ce jour-la. Negatif autorise (decouvert). FIGE (ADR-045 D20) : un releve est une mesure, il s''annule et se reecrit, il ne se corrige pas.';
 comment on column public.account_balance_statements.derived_balance is
   'Le solde DERIVE a l''instant du releve, donc l''ecart que ce releve absorbe (ADR-040 D11 : mesurer ce qui MANQUE). NULL tant qu''aucun ecran n''ecrit. Les releves semes par la migration du 2026-09-20 valent balance : aucun flux n''existait avant eux, l''ecart est nul par definition.';
 comment on column public.account_balance_statements.created_by is

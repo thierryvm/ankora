@@ -100,11 +100,20 @@ test.describe('J2 — le journal des opérations, ses garde-fous et son isolatio
       attendRefus(sommeFausse.error, 'movements_ventilation', '50 + 100 ≠ 200');
 
       // Aucun compte de part ni d'autre. Cette ligne viole `compte_present`
-      // ET `forme_selon_nature` : PostgreSQL ne nomme que la PREMIÈRE, et
-      // c'est ce qui a rendu ce cas rouge en CI. Il vise donc `compte_present`,
-      // et le cas suivant vise `forme_selon_nature` avec une ligne qui ne
-      // viole que lui. Un cas qui violerait deux contraintes ne prouverait
-      // aucune des deux : l'ordre des noms n'est pas un contrat.
+      // ET `forme_selon_nature`, et AUCUNE ligne ne peut violer le premier
+      // seul : `kind` n'admet que 'transfer' et 'income', et les deux formes
+      // exigent un compte cible — `compte_present` est redondant aujourd'hui
+      // (migration, CHECK 1), il ne se distingue qu'à l'arrivée de la sortie
+      // externe. Ce cas reste une preuve pour deux raisons, vérifiables :
+      //   · PostgreSQL évalue les CHECK d'une ligne dans l'ORDRE ALPHABÉTIQUE
+      //     de leurs noms (documenté depuis 9.5, CREATE TABLE), et c'est la
+      //     première violée qui est nommée — `compte_present` précède
+      //     `forme_selon_nature` ;
+      //   · retirer `compte_present` fait nommer `forme_selon_nature`, donc
+      //     ce cas ROUGIT — mesuré en local le 2026-09-21 en supprimant la
+      //     contrainte, puis en la restaurant.
+      // Le cas suivant vise `forme_selon_nature` avec une ligne qui ne viole
+      // que lui.
       const sansCompte = await client
         .from('movements')
         .insert({ ...base, kind: 'transfer', amount: 10, occurred_on: '2026-09-01' });
@@ -152,6 +161,31 @@ test.describe('J2 — le journal des opérations, ses garde-fous et son isolatio
         'movements_forme_selon_nature',
         'rentrée sans nature ni description',
       );
+
+      // Un plan à moitié copié : l'année sans le mois ni le montant proposé.
+      // La ligne est une rentrée JUSTE en tout le reste, donc seule
+      // `plan_complet` peut la refuser.
+      const planIncomplet = await client.from('movements').insert({
+        ...base,
+        kind: 'income',
+        to_account_type: 'income_bills',
+        amount: 25,
+        occurred_on: '2026-09-01',
+        income_nature: 'regular',
+        description: 'Revenu',
+        plan_year: 2026,
+      });
+      attendRefus(planIncomplet.error, 'movements_plan_complet', 'un plan copié à moitié');
+
+      // `movements_annulation_coherente` n'a PAS de cas ici, et ce n'est pas
+      // un oubli : aucun client ne peut l'atteindre. Les triggers
+      // `*_impose_ecriture` (INSERT) et `*_protege` (UPDATE) réécrivent
+      // `cancelled_at` et `cancelled_by` AVANT l'évaluation des CHECK, pour
+      // `authenticated` comme pour `service_role`. C'est un second filet, qui
+      // ne tient que si ces triggers disparaissent ; il se prouve donc en
+      // SQL, triggers coupés (`session_replication_role = replica`, réservé
+      // au superutilisateur) — mesuré en local le 2026-09-21, 23514 nommant
+      // la contrainte.
 
       // Et ce qui est juste passe : un virement ventilé, une rentrée, un relevé.
       const virement = await client.from('movements').insert({
@@ -323,7 +357,7 @@ test.describe('J2 — le journal des opérations, ses garde-fous et son isolatio
    * pouvait changer de compte après coup, et faire bouger un solde dérivé
    * sans trace.
    */
-  test('un relevé de solde se corrige, se figent son compte et son heure, et son annulation est écrite par la base', async () => {
+  test('un relevé de solde ne se corrige pas : il s’annule, par la base, et se réécrit', async () => {
     if (!admin) return;
     const alice = await seedOnboardedUser(admin);
     try {
@@ -361,15 +395,25 @@ test.describe('J2 — le journal des opérations, ses garde-fous et son isolatio
         .eq('id', releve!.id);
       expect(redate.error?.message ?? '', 'recorded_at est figé').toContain('recorded_at');
 
-      // Ce qui se corrige : le solde relevé et le jour du relevé.
-      const correction = await client
-        .from('account_balance_statements')
-        .update({ balance: 215.9, stated_on: '2026-09-06' })
-        .eq('id', releve!.id)
-        .select()
-        .single();
-      expect(correction.error, 'corriger le solde relevé et son jour').toBeNull();
-      expect(Number(correction.data!.balance), 'le solde corrigé').toBe(215.9);
+      // Un relevé est une MESURE (ADR-045 D20) : ni le solde, ni son jour, ni
+      // l'écart qu'il porte ne se corrigent. Une correction en place
+      // déplacerait l'ancre de chaque solde dérivé sans laisser de trace ; on
+      // annule, et on écrit un autre relevé. Chaque colonne est essayée SEULE,
+      // et le refus doit la NOMMER : un refus générique resterait vert si l'une
+      // des trois quittait la liste des colonnes figées.
+      for (const [colonne, valeur] of [
+        ['balance', 215.9],
+        ['stated_on', '2026-09-06'],
+        ['derived_balance', 0],
+      ] as const) {
+        const correction = await client
+          .from('account_balance_statements')
+          .update({ [colonne]: valeur })
+          .eq('id', releve!.id);
+        expect(correction.error?.message ?? '', `${colonne} est figé sur un relevé`).toContain(
+          `« ${colonne} » est fige`,
+        );
+      }
 
       // L'annulation : demandée par le client, HORODATÉE par la base, et
       // attribuée à la personne connectée même quand le client forge les deux.
@@ -388,16 +432,16 @@ test.describe('J2 — le journal des opérations, ses garde-fous et son isolatio
         alice.userId,
       );
 
+      // Annulé, il reste figé : le solde ne se réécrit pas davantage. Le gel
+      // des lignes ANNULÉES (« annulee ne se modifie plus ») n'a plus de
+      // colonne à garder sur un relevé — toutes celles qu'il couvrait sont
+      // figées d'emblée — et il reste prouvé côté opérations, cas précédent.
       const gele = await client
         .from('account_balance_statements')
         .update({ balance: 9999 })
         .eq('id', releve!.id);
-      // On nomme la CAUSE du refus, pas seulement « une erreur » : plusieurs
-      // choses refusent cet UPDATE (un privilège manquant, une policy, une
-      // contrainte), et `.not.toBeNull()` resterait vert si le gel des lignes
-      // annulées disparaissait pendant qu'autre chose casse à sa place.
       expect(gele.error?.message ?? '', 'modifier un relevé annulé').toContain(
-        'annulee ne se modifie plus',
+        '« balance » est fige',
       );
 
       // Ré-ouverture : les deux colonnes repartent ensemble. ADR-045 D18 —
@@ -425,6 +469,14 @@ test.describe('J2 — le journal des opérations, ses garde-fous et son isolatio
    * écrire et corriger sur la base déployée. Un `permission denied` ici, et
    * toute l'application est morte — c'est le symptôme rencontré le
    * 19 septembre sous une CLI Supabase non épinglée.
+   *
+   * Ce qu'il NE prouve PAS sous la CLI épinglée (2.84.2) : que les GRANT de la
+   * migration servent à quelque chose. Les privilèges par défaut du schéma
+   * `public` donnent déjà à `authenticated` les sept verbes, GRANT ou pas —
+   * retirer les trois GRANT laisserait ce cas vert. Il protège contre la CLI
+   * qui ne les donne pas ; le seul cas qui DISCRIMINE les droits écrits par
+   * la migration est le suivant, `anon` sans session, qui les perd par un
+   * REVOKE explicite.
    */
   test('le rôle authenticated peut lire, écrire et corriger les deux tables', async () => {
     if (!admin) return;
@@ -466,6 +518,29 @@ test.describe('J2 — le journal des opérations, ses garde-fous et son isolatio
       }
     } finally {
       await deleteSeededUser(admin, alice.userId);
+    }
+  });
+
+  /**
+   * Sans session, la clé publique ne touche pas au journal.
+   *
+   * Hors session, PostgREST joue le rôle `anon`. Les voisines lui accordent
+   * tout, et leurs policies rendent ce droit vide (`auth.uid()` est NULL) ; ici
+   * le droit lui-même est retiré. Le code attendu est `42501` — un refus de
+   * PRIVILÈGE —, pas une liste vide : une liste vide dirait seulement qu'une
+   * policy filtre, et resterait identique si le REVOKE disparaissait.
+   */
+  test('un client anon sans session reçoit 42501 sur les deux tables', async () => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const cle = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!url || !cle) throw new Error('NEXT_PUBLIC_SUPABASE_URL / ANON_KEY manquantes');
+    const inconnu = createClient(url, cle, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+
+    for (const table of ['movements', 'account_balance_statements'] as const) {
+      const lecture = await inconnu.from(table).select('id').limit(1);
+      expect(lecture.error?.code, `${table} — lecture sans session`).toBe('42501');
     }
   });
 
