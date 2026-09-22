@@ -1,5 +1,5 @@
 import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
+import { AppFooter } from '@/components/layout/AppFooter';
 import { AppRail } from '@/components/layout/AppRail';
 import { requireUser } from '@/lib/auth/require-user';
 
@@ -41,11 +41,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           maximum) : <main> prend la place libre (flex-1), donc sur une page
           courte le pied de page se pose en bas au lieu de flotter sous le contenu.
 
-          La reserve de la barre basse est ICI, sous le pied de page, et non dans
-          <main> ni dans le pied de page : c'est la derniere chose de la page qui
-          doit rester atteignable. Sa hauteur est celle de la barre — sa hauteur
-          de jeton, la bordure haute de 1 px, la zone de securite — et elle
-          disparait des 1024, la ou la barre disparait.
+          La reserve de la barre basse est ICI, en bas de la colonne, et non dans
+          <main> : c'est la derniere chose de la page qui doit rester atteignable.
+          Sa hauteur est celle de la barre — sa hauteur de jeton, la bordure haute
+          de 1 px, la zone de securite — et elle disparait des 1024, la ou la
+          barre disparait.
+
+          Le pied de page n'existe qu'a partir de 1024 (AppFooter, une ligne) :
+          sous 1024, la barre est le bas de l'ecran et « Plus » porte les liens
+          legaux, les preferences cookies et le © (decision @thierry, 22 sept.
+          2026).
 
           La colonne porte min-w-0 : un enfant flex ne descend jamais sous la
           largeur minimale de son contenu, donc sans elle une liste large (les
@@ -62,7 +67,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             >
               {children}
             </main>
-            <Footer reserveBottomBar={false} />
+            <AppFooter />
           </div>
         </div>
       </div>

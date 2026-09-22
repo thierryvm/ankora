@@ -100,6 +100,7 @@ export function MoreSheet({ isOpen, onClose, isAdmin = false }: MoreSheetProps) 
   const t = useTranslations('layout.moreSheet');
   const tLinks = useTranslations('layout.moreSheet.links');
   const tSections = useTranslations('layout.moreSheet.sections');
+  const tFooter = useTranslations('footer');
   const isClient = useIsClient();
   const isDark = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, getServerThemeSnapshot);
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -404,6 +405,13 @@ export function MoreSheet({ isOpen, onClose, isAdmin = false }: MoreSheetProps) 
               <RefreshCw className="h-4 w-4" aria-hidden="true" />
             </button>
           </section>
+
+          {/* The copyright lives here below 1024 px: the signed-in app has no
+              footer there any more (decision @thierry, 22 September 2026), so
+              the sheet that already carries the legal links carries it too. */}
+          <p data-testid="more-sheet-copyright" className="text-muted-foreground px-3 text-xs">
+            {tFooter('copyrightNotice', { year: new Date().getFullYear() })}
+          </p>
         </div>
       </div>
     </>

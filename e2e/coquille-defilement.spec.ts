@@ -32,8 +32,9 @@ const admin = adminClientOrNull();
  *   ouvert, repli refermé ; et le premier lien du rail est VISIBLE, c'est-à-dire
  *   que le point où le doigt tomberait lui appartient (`elementFromPoint`) ;
  * - à 375 et 500 : sur une page longue (cockpit) et une page courte
- *   (engagements, un seul engagement), le bas du pied de page est exactement le
- *   haut de la barre basse — ni dessous (coupé), ni au-dessus (un vide) ;
+ *   (engagements, un seul engagement), aucun pied de page n'est affiché (depuis
+ *   le 22 septembre 2026) et le bas de `<main>` est exactement le haut de la
+ *   barre basse — ni dessous (coupé), ni au-dessus (un vide) ;
  * - à 1440, sur la page courte : le pied de page touche le bas de la fenêtre.
  *
  * `elementFromPoint` rend `null` hors de la fenêtre : la sonde vérifie donc
@@ -107,13 +108,16 @@ async function lireRail(page: Page) {
 async function lirePied(page: Page) {
   return page.evaluate(() => {
     const pied = document.querySelector('footer');
+    const main = document.querySelector('main');
     const barre = document.querySelector('[data-testid="bottom-tab-bar"]');
-    if (!pied) return { erreur: 'pied de page introuvable' as const };
+    if (!pied || !main) return { erreur: 'pied de page ou <main> introuvable' as const };
     const p = pied.getBoundingClientRect();
     const b = barre?.getBoundingClientRect();
     const visible = !!barre && !!b && b.height > 0 && getComputedStyle(barre).display !== 'none';
     return {
       erreur: null,
+      piedAffiche: p.height > 0 && getComputedStyle(pied).display !== 'none',
+      basMain: Math.round(main.getBoundingClientRect().bottom * 10) / 10,
       basPied: Math.round(p.bottom * 10) / 10,
       hautBarre: visible && b ? Math.round(b.top * 10) / 10 : null,
       hauteurFenetre: window.innerHeight,
@@ -192,7 +196,12 @@ test.describe('coquille v3 — défilée : le rail collé, le pied de page posé
       ['longue (cockpit)', '/app'],
       ['courte (engagements)', '/app/commitments'],
     ] as const) {
-      test(`à ${vue.width}, page ${nom} : le bas du pied de page est le haut de la barre basse`, async ({
+      // Attendu CHANGÉ le 22 septembre 2026, et déclaré dans la PR : sous 1024,
+      // /app n'a plus de pied de page (décision @thierry, option A). La
+      // dernière boîte de la colonne est donc <main>, et c'est SON bas qui doit
+      // être le haut de la barre — la même garantie (ni coupé, ni un vide), sur
+      // l'élément qui porte désormais la fin de la page.
+      test(`à ${vue.width}, page ${nom} : aucun pied de page, le bas de <main> est le haut de la barre basse`, async ({
         page,
       }) => {
         if (!user) return;
@@ -209,10 +218,12 @@ test.describe('coquille v3 — défilée : le rail collé, le pied de page posé
         expect(m.hautBarre, 'la barre basse doit être visible sous 1024').not.toBeNull();
         if (m.hautBarre === null) return;
 
+        expect(m.piedAffiche, 'aucun pied de page sous 1024 dans /app').toBe(false);
+
         // Ni dessous (coupé par la barre), ni au-dessus (un vide entre eux).
         expect(
-          Math.abs(m.basPied - m.hautBarre),
-          `pied de page ${m.basPied} contre barre ${m.hautBarre} (fenêtre ${m.hauteurFenetre}, défilement ${m.defile})`,
+          Math.abs(m.basMain - m.hautBarre),
+          `<main> ${m.basMain} contre barre ${m.hautBarre} (fenêtre ${m.hauteurFenetre}, défilement ${m.defile})`,
         ).toBeLessThanOrEqual(TOLERANCE);
 
         // La garde de chaque cas : une page dite longue doit l'être, une page dite

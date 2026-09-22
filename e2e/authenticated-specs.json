@@ -36,7 +36,8 @@
     "e2e/mobile-ios/settings-locale-field.spec.ts",
     "e2e/navigation-reachable.spec.ts",
     "e2e/navigation-usable-first-visit.spec.ts",
-    "e2e/operations-compte.spec.ts"
+    "e2e/operations-compte.spec.ts",
+    "e2e/pied-de-page-app.spec.ts"
   ],
   "$quarantine_comment": [
     "Specs that DESCRIBE A DASHBOARD THAT NO LONGER EXISTS. They were merged, the",
