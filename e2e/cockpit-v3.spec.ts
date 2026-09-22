@@ -251,21 +251,31 @@ test.describe.serial('Cockpit v3 — le budget de page à 375 px', () => {
     // Ce qu'on mesure ici est sa BOÎTE : son bas doit être au-dessus de la barre.
     // La mesure exacte (bas du pied = haut de la barre, page longue et courte,
     // 375 et 500) vit dans `coquille-defilement.spec.ts`.
+    //
+    // Attendu CHANGÉ le 22 septembre 2026 (déclaré dans la PR) : sous 1024, /app
+    // n'a plus de pied de page affiché (décision @thierry, option A). La fin de
+    // la page est <main> : c'est sa boîte qui doit finir au-dessus de la barre,
+    // et le pied de page, présent dans le DOM pour le bureau, ne doit pas
+    // s'afficher.
     const pied = await page.evaluate(() => {
       const f = document.querySelector('footer');
+      const main = document.querySelector('main');
       const barre = document.querySelector('[data-testid="bottom-tab-bar"]');
-      if (!f || !barre) return { erreur: 'pied de page ou barre introuvable' as const };
+      if (!main || !barre) return { erreur: '<main> ou barre introuvable' as const };
       return {
         erreur: null,
-        basPied: Math.round(f.getBoundingClientRect().bottom),
+        piedAffiche:
+          !!f && f.getBoundingClientRect().height > 0 && getComputedStyle(f).display !== 'none',
+        basMain: Math.round(main.getBoundingClientRect().bottom),
         hautBarre: Math.round(barre.getBoundingClientRect().top),
       };
     });
     expect(pied.erreur, 'sonde sans cible').toBeNull();
     if (pied.erreur) return;
+    expect(pied.piedAffiche, 'un pied de page est affiché sous 1024').toBe(false);
     expect(
-      pied.basPied,
-      `le pied de page passe sous la barre : bas ${pied.basPied}, haut de la barre ${pied.hautBarre}`,
+      pied.basMain,
+      `la fin de la page passe sous la barre : bas ${pied.basMain}, haut de la barre ${pied.hautBarre}`,
     ).toBeLessThanOrEqual(pied.hautBarre + 1);
   });
 });
