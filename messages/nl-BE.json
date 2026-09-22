@@ -607,6 +607,7 @@
     "cookies": "Cookiebeleid",
     "faq": "FAQ",
     "copyrightNotice": "© {year} Ankora™. Alle rechten voorbehouden.",
+    "copyrightShort": "© {year} Ankora™",
     "cookiePreferences": "Cookievoorkeuren beheren"
   },
   "auth": {

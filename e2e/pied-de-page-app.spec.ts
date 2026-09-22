@@ -122,6 +122,28 @@ test.describe('pied de page de /app — une ligne au bureau, rien sous 1024', ()
     });
   }
 
+  // Le cas FR ci-dessus passait en local avec 5 px de marge et cassait en CI
+  // (61 px) ; l'espagnol, lui, passait déjà sur deux lignes en local. Mesuré le
+  // 23 septembre 2026. Chaque langue a sa propre largeur : chacune se mesure.
+  test('à 1024, une seule ligne de 48 px au plus dans les quatre autres langues', async ({
+    page,
+  }) => {
+    if (!user) return;
+    await page.setViewportSize({ width: 1024, height: 768 });
+    await seConnecter(page, user);
+    for (const langue of ['en', 'nl-BE', 'de-DE', 'es-ES']) {
+      await page.goto(`/${langue}/app`);
+      await expect(page.getByTestId('cockpit-il-te-reste')).toBeVisible();
+      await page.evaluate(() => document.fonts.ready.then(() => undefined));
+      const pied = page.locator('footer');
+      await expect(pied).toBeVisible();
+      const boite = await pied.boundingBox();
+      expect(boite, `pied de page sans boîte en ${langue}`).not.toBeNull();
+      expect(boite!.height, `hauteur du pied de page à 1024 en ${langue}`).toBeLessThanOrEqual(48);
+      await expect(pied.locator('nav > *')).toHaveCount(5);
+    }
+  });
+
   test('à 375, aucun pied de page, et chaque entrée s’atteint depuis « Plus » au clavier', async ({
     page,
   }) => {

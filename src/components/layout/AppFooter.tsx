@@ -21,6 +21,13 @@ import { CookiePreferencesLink } from '@/components/layout/CookiePreferencesLink
  *
  * Targets are 24 px tall at minimum (WCAG 2.2 SC 2.5.8) and the line stays at or
  * under 48 px — both measured in `e2e/pied-de-page-app.spec.ts`.
+ *
+ * The copyright is the short form (`footer.copyrightShort`). At 1024 px the
+ * footer sits right of the 240 px rail, and with the long notice the French line
+ * needed 731 px of the 736 px left — a 5 px margin, measured locally on
+ * 23 September 2026 — while the Spanish one needed 782 px and already wrapped.
+ * Chromium on the Linux CI wrapped the French line too (61 px). The long notice
+ * stays on the public footer; the five link labels are unchanged.
  */
 export async function AppFooter() {
   const t = await getTranslations('footer');
@@ -33,7 +40,7 @@ export async function AppFooter() {
     <footer data-testid="app-footer" className="border-border hidden border-t lg:block">
       <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-1 px-6 py-2 text-xs">
         <span className="text-muted-foreground">
-          {t('copyrightNotice', { year: new Date().getFullYear() })}
+          {t('copyrightShort', { year: new Date().getFullYear() })}
         </span>
         <nav
           aria-label={tCommon('nav.footerLabel')}
