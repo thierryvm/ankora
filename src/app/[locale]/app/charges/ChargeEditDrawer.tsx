@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useId, useState, useTransition } from 'react';
+import { useId, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { X } from 'lucide-react';
+import { Bookmark, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { updateChargeAction } from '@/lib/actions/charges';
@@ -14,7 +14,7 @@ import { toast } from '@/components/ui/toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
+import { Sheet } from '@/components/primitives/Sheet';
 
 import { CadenceField } from './CadenceField';
 
@@ -40,37 +40,46 @@ type Props = {
    * sheet mounted cannot offer a dead button.
    */
   onConvert?: (charge: ChargeEditDrawerCharge) => void;
+  /** « À surveiller » state of this charge (optimistic, owned by the list). */
+  watched?: boolean;
+  onToggleWatch?: () => void;
+  /** Deletes the charge — only reached through the in-drawer confirmation. */
+  onDelete?: (id: string) => void;
+  /** A list-level action (watch, delete) is in flight: freeze the gestures. */
+  pendingOutside?: boolean;
 };
 
 /**
- * "Modifier une charge" drawer — PR-BETA-CLEANUP-2 (THI-281).
- *
- * Edit affordance for `/app/charges` rows. Mirrors the create form
- * 1:1 (label, amount, frequency, dueMonth, paymentDay) so the user has
- * the same mental model whether they're adding or editing.
+ * "Modifier une facture" drawer — PR-BETA-CLEANUP-2 (THI-281), rebuilt on the
+ * shared `Sheet` primitive for the v3 mockup (F15): a sheet rising from the
+ * bottom on mobile, a centred dialog from `md`. It also owns the gestures that
+ * left the row (F11) — « À surveiller » and a confirmed delete.
  *
  * Error handling follows the PR-BETA-3 fail-loud pattern:
  *   - `{ ok: true }` → toast success + close + router.refresh
  *   - `{ ok: false, errorCode }` → toast translated, drawer STAYS OPEN
  *   - JS throw → toast generic, drawer STAYS OPEN
  *   - NEXT_REDIRECT / NEXT_NOT_FOUND → re-thrown so Next.js can navigate
- *
- * Slide-from-right on desktop, full-screen on mobile (h-svh + sm:max-w-md).
  */
-export function ChargeEditDrawer({ charge, onClose, onConvert }: Props) {
+export function ChargeEditDrawer({
+  charge,
+  onClose,
+  onConvert,
+  watched = false,
+  onToggleWatch,
+  onDelete,
+  pendingOutside = false,
+}: Props) {
   const t = useTranslations('app.charges');
   const translateError = useActionErrorTranslator();
   const router = useRouter();
 
   const labelId = useId();
   const amountId = useId();
-  const titleId = useId();
 
-  // Seed the form state from the charge BEFORE first render via a `key`-like
-  // technique: derive initial values from the charge.id so that opening a
-  // new charge swaps the entire state in one synchronous batch (no
-  // `setState`-in-effect cascading render). Tracks the last-seeded id to
-  // detect when a different charge is opened and re-seed accordingly.
+  // Seed the form from the charge during render, keyed on its id: opening a
+  // different charge swaps the whole state in one batch, with no
+  // setState-in-effect cascade.
   const [seedId, setSeedId] = useState<string | null>(charge?.id ?? null);
   const [label, setLabel] = useState(charge?.label ?? '');
   const [amount, setAmount] = useState(charge?.amount.toString() ?? '');
@@ -79,13 +88,9 @@ export function ChargeEditDrawer({ charge, onClose, onConvert }: Props) {
   );
   const [dueMonth, setDueMonth] = useState(charge ? String(charge.dueMonth) : '1');
   const [paymentDay, setPaymentDay] = useState(charge ? String(charge.paymentDay) : '1');
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  // When the parent swaps to a different charge while the component is
-  // still mounted, re-seed all fields. Running this during render (rather
-  // than in an effect) avoids the `react-hooks/set-state-in-effect`
-  // anti-pattern: React 19 reconciles the cascading setState batch in the
-  // same render pass.
   if (charge && charge.id !== seedId) {
     setSeedId(charge.id);
     setLabel(charge.label);
@@ -93,25 +98,8 @@ export function ChargeEditDrawer({ charge, onClose, onConvert }: Props) {
     setFrequency(normalizeFrequency(charge.frequency));
     setDueMonth(String(charge.dueMonth));
     setPaymentDay(String(charge.paymentDay));
+    setConfirmingDelete(false);
   }
-
-  // ESC closes; body scroll-locked while open.
-  useEffect(() => {
-    if (!charge) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = previous;
-    };
-  }, [charge, onClose]);
 
   if (!charge) return null;
 
@@ -153,99 +141,117 @@ export function ChargeEditDrawer({ charge, onClose, onConvert }: Props) {
     });
   }
 
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-end sm:items-stretch"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={titleId}
-      data-testid="charge-edit-drawer"
-    >
-      <button
-        type="button"
-        aria-label={t('drawer.cancel')}
-        className="bg-foreground/40 absolute inset-0 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      <aside
-        className={cn(
-          'bg-card text-foreground border-border relative flex w-full flex-col border shadow-xl',
-          // `svh` et jamais `dvh` — cf. ExpenseEditDrawer pour la mesure.
-          'h-svh max-h-svh',
-          // `sm:max-h-none` obligatoire — cf. ExpenseEditDrawer.
-          'sm:h-full sm:max-h-none sm:max-w-md sm:border-l',
-        )}
-      >
-        <header className="border-border flex items-center justify-between gap-3 border-b px-5 py-4">
-          <h2 id={titleId} className="text-lg font-semibold tracking-tight">
-            {t('drawer.title')}
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-muted-foreground hover:text-foreground focus-visible:ring-brand-700 -mr-1 rounded-md p-2 focus-visible:ring-2 focus-visible:outline-none"
-            aria-label={t('drawer.cancel')}
-          >
-            <X className="h-5 w-5" aria-hidden />
-          </button>
-        </header>
+  const busy = isPending || pendingOutside;
 
-        <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-5 py-6">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor={labelId}>{t('labelLabel')}</Label>
-            <Input
-              id={labelId}
-              value={label}
-              onChange={(e) => setLabel(e.target.value)}
-              maxLength={120}
-              data-testid="charge-edit-label"
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor={amountId}>{t('amountLabel')}</Label>
-            <Input
-              id={amountId}
-              type="number"
-              inputMode="decimal"
-              min={0}
-              step="0.01"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              data-testid="charge-edit-amount"
-            />
-          </div>
-          {/* THI-301: unified cadence cluster replaces the 3 separate fields.
-              submit() still reads Number(dueMonth) / Number(paymentDay) +
-              paymentMonthsFromFrequency — unchanged. */}
-          <CadenceField
-            idPrefix="edit-charge"
-            value={{
-              frequency,
-              dueMonth: Number(dueMonth),
-              paymentDay: Number(paymentDay) || 1,
-            }}
-            disabled={isPending}
-            onChange={(next) => {
-              setFrequency(next.frequency);
-              setDueMonth(String(next.dueMonth));
-              setPaymentDay(String(next.paymentDay));
-            }}
+  return (
+    <Sheet
+      open
+      onClose={onClose}
+      title={t('drawer.title')}
+      testId="charge-edit-drawer"
+      closeLabel={t('drawer.cancel')}
+      desktop="dialog"
+      footer={
+        <div className="flex items-center justify-end gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onClose}
+            disabled={busy}
+            data-testid="charge-edit-cancel"
+          >
+            {t('drawer.cancel')}
+          </Button>
+          <Button
+            type="button"
+            onClick={submit}
+            disabled={busy || label.trim().length === 0}
+            data-testid="charge-edit-save"
+          >
+            {isPending ? t('drawer.saving') : t('drawer.save')}
+          </Button>
+        </div>
+      }
+    >
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor={labelId}>{t('labelLabel')}</Label>
+          <Input
+            id={labelId}
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            maxLength={120}
+            data-testid="charge-edit-label"
           />
         </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor={amountId}>{t('amountLabel')}</Label>
+          <Input
+            id={amountId}
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step="0.01"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            data-testid="charge-edit-amount"
+          />
+        </div>
+        {/* THI-301: unified cadence cluster replaces the 3 separate fields. */}
+        <CadenceField
+          idPrefix="edit-charge"
+          value={{
+            frequency,
+            dueMonth: Number(dueMonth),
+            paymentDay: Number(paymentDay) || 1,
+          }}
+          disabled={busy}
+          onChange={(next) => {
+            setFrequency(next.frequency);
+            setDueMonth(String(next.dueMonth));
+            setPaymentDay(String(next.paymentDay));
+          }}
+        />
 
-        {/* « Convertir en engagement » lives here rather than on the row.
-            Converting is a rare, once-per-debt move; an invite on all 19 rows
-            reads as noise and buries the two actions that ARE routine (tick,
-            edit). One tap away, and the drawer closes before the sheet opens —
-            sequential panels, never nested. */}
-        {onConvert && (
-          <div className="border-border/60 border-t px-5 py-3">
+        {/* « À surveiller » moved here from the row (mockup F11: one action per
+            row). The gesture and what the cockpit reads from it are unchanged;
+            only its place is. */}
+        {onToggleWatch && (
+          <div className="border-border/60 flex items-start justify-between gap-3 border-t pt-4">
+            <div className="min-w-0">
+              <p className="text-foreground text-sm font-medium">{t('drawerWatch')}</p>
+              <p className="text-muted-foreground mt-0.5 text-xs">{t('drawerWatchHint')}</p>
+            </div>
             <button
               type="button"
-              onClick={() => {
-                if (charge) onConvert(charge);
-              }}
-              disabled={isPending}
+              onClick={onToggleWatch}
+              disabled={busy}
+              aria-pressed={watched}
+              aria-label={
+                watched
+                  ? t('unwatchAria', { label: charge.label })
+                  : t('watchAria', { label: charge.label })
+              }
+              data-testid="charge-drawer-watch"
+              className="hover:bg-surface-muted focus-visible:ring-brand-600 flex size-11 shrink-0 items-center justify-center rounded-md transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50"
+            >
+              <Bookmark
+                aria-hidden
+                className={`h-4 w-4 ${watched ? 'text-brand-text' : 'text-muted-foreground'}`}
+                fill={watched ? 'currentColor' : 'none'}
+              />
+            </button>
+          </div>
+        )}
+
+        {/* « Convertir en engagement » — a rare, once-per-debt move. The drawer
+            closes before the conversion sheet opens: sequential, never nested. */}
+        {onConvert && (
+          <div className="border-border/60 border-t pt-4">
+            <button
+              type="button"
+              onClick={() => onConvert(charge)}
+              disabled={busy}
               data-testid="charge-edit-convert"
               className="text-brand-text hover:text-brand-text-strong focus-visible:ring-brand-600 min-h-11 rounded text-sm font-medium underline underline-offset-2 transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50"
             >
@@ -255,27 +261,51 @@ export function ChargeEditDrawer({ charge, onClose, onConvert }: Props) {
           </div>
         )}
 
-        <footer className="border-border bg-card flex items-center justify-end gap-2 border-t px-5 py-4">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={onClose}
-            disabled={isPending}
-            data-testid="charge-edit-cancel"
-          >
-            {t('drawer.cancel')}
-          </Button>
-          <Button
-            type="button"
-            onClick={submit}
-            disabled={isPending || label.trim().length === 0}
-            data-testid="charge-edit-save"
-          >
-            {isPending ? t('drawer.saving') : t('drawer.save')}
-          </Button>
-        </footer>
-      </aside>
-    </div>
+        {/* Delete left the row for the drawer, and asks first (mockup F11): it
+            is the one gesture here that cannot be taken back. */}
+        {onDelete && (
+          <div className="border-border/60 border-t pt-4">
+            {confirmingDelete ? (
+              <div role="group" aria-label={t('drawerDelete')} className="flex flex-col gap-2">
+                <p className="text-foreground text-sm">
+                  {t('drawerDeleteQuestion', { label: charge.label })}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setConfirmingDelete(false)}
+                    disabled={busy}
+                  >
+                    {t('drawerDeleteKeep')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => onDelete(charge.id)}
+                    disabled={busy}
+                    data-testid="charge-drawer-delete-confirm"
+                  >
+                    {t('drawerDeleteConfirm')}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmingDelete(true)}
+                disabled={busy}
+                data-testid="charge-drawer-delete"
+                className="text-danger focus-visible:ring-brand-600 inline-flex min-h-11 items-center gap-2 rounded text-sm font-medium focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50"
+              >
+                <Trash2 aria-hidden className="h-4 w-4" />
+                {t('drawerDelete')}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </Sheet>
   );
 }
 

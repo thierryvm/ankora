@@ -763,10 +763,10 @@
     },
     "charges": {
       "title": "Mes factures",
-      "subtitle": "Chaque facture est lissée automatiquement sur 12 mois.",
+      "subtitle": "Les factures trimestrielles, semestrielles et annuelles sont réparties sur chaque mois ; les mensuelles comptent telles quelles.",
       "addFormTitle": "Ajouter une facture",
       "emptyState": "Aucune facture pour l'instant.",
-      "labelLabel": "Libellé",
+      "labelLabel": "Description",
       "amountLabel": "Montant (€)",
       "frequencyLabel": "Fréquence",
       "dueMonthLabel": "Mois de référence",
@@ -784,7 +784,7 @@
       "addButton": "Ajouter",
       "adding": "Ajout…",
       "count": "{count, plural, =0 {aucune facture} one {1 facture} other {# factures}}",
-      "totalMonthlyLabel": "Effort lissé / mois",
+      "totalMonthlyLabel": "Compté chaque mois",
       "totalAnnualLabel": "Équivalent annuel",
       "referenceFormat": "{frequency} · ref. {month}",
       "deleteAria": "Supprimer {label}",
@@ -825,10 +825,10 @@
         "errorGeneric": "La modification n'a pas pu être enregistrée. Réessaye dans un instant."
       },
       "aPayerCeMoisLabel": "À payer ce mois",
-      "aPayerCeMoisHint": "Ce qui quitte réellement le compte, factures et échéances confondues.",
+      "aPayerCeMoisHint": "Tout ce qui tombe ce mois, factures et échéances, payé compris.",
       "effortLisseLabel": "Effort lissé",
-      "effortLisseHint": "Factures mensuelles + provisions lissées + mensualités d’engagement.",
-      "commitmentsGroupTitle": "Crédits & échéanciers",
+      "effortLisseHint": "La part mensuelle de tes factures non mensuelles, facture par facture.",
+      "commitmentsGroupTitle": "Engagements",
       "installmentPosition": "échéance {index}/{total}",
       "commitmentRemaining": "reste {amount}",
       "markCommitmentPaidAria": "Marquer l’échéance {label} comme payée",
@@ -845,7 +845,7 @@
       "duplicateSignals": "Signaux : {signals}.",
       "signalMontant": "même montant",
       "signalJour": "même jour",
-      "signalLibelle": "libellés proches",
+      "signalLibelle": "noms proches",
       "convert": {
         "title": "Convertir en engagement",
         "intro": "{label} · {amount} par échéance. Il ne manque qu’une chose : quand ça se termine.",
@@ -871,7 +871,28 @@
         "noHorizon": "Sans horizon, la facture reste une facture : le budget reste juste, seul le compte à rebours manque.",
         "toastConverted": "{label} est devenu un engagement · fin {end}",
         "drawerHint": "Si cette facture est un crédit qui se termine, Ankora peut afficher son compte à rebours."
-      }
+      },
+      "headEyebrow": "Ce mois",
+      "encoreAPayer": "Encore à payer",
+      "encoreAPayerPeriod": "Encore à payer en {month}",
+      "groupSummaryDue": "{unpaid} à payer sur {due}",
+      "groupSummaryNone": "{count}, rien ce mois",
+      "totalSectionTitle": "Compté chaque mois pour tes factures",
+      "lissagePartSource": "{label} · {amount} tous les {months} mois",
+      "lissagePartMonthly": "{amount} par mois",
+      "totalMonthlyHint": "Factures mensuelles + effort lissé + échéances de tes engagements.",
+      "totalAnnualLine": "soit {amount} par an",
+      "drawerWatch": "À surveiller",
+      "drawerWatchHint": "Elle paraît dans « À surveiller » au cockpit.",
+      "drawerDelete": "Supprimer la facture",
+      "drawerDeleteQuestion": "Supprimer « {label} » ? Ce geste ne se défait pas.",
+      "drawerDeleteConfirm": "Oui, supprimer",
+      "drawerDeleteKeep": "Garder",
+      "instalmentCount": "{count, plural, one {# échéance} other {# échéances}}",
+      "posteMonthlyLabel": "Factures mensuelles",
+      "posteMonthlyHint": "Ce qui part chaque mois, facture par facture.",
+      "posteCommitmentsLabel": "Échéances d’engagement",
+      "posteCommitmentsHint": "La part de ce mois de chaque engagement en cours."
     },
     "accounts": {
       "metaTitle": "Mes comptes",
@@ -941,7 +962,7 @@
       "addFormTitle": "Ajouter un engagement",
       "addButton": "Ajouter",
       "adding": "Ajout…",
-      "labelLabel": "Libellé",
+      "labelLabel": "Description",
       "kindLabel": "Type",
       "totalAmountLabel": "Montant total dû (€)",
       "totalAmountHint": "Le montant total du plan, toutes échéances comprises — pas seulement ce qu'il te reste.",
@@ -993,7 +1014,17 @@
       "reductionBlocked": "Impossible : {paid} échéances sont déjà validées. Retire d’abord des paiements.",
       "editConsequence": "fin : {fromEnd} → {toEnd} · reste : {fromBalance} → {toBalance}",
       "editConsequenceLabel": "Ce que ça change",
-      "editNoChange": "Aucun changement sur la fin ni sur le reste dû."
+      "editNoChange": "Aucun changement sur la fin ni sur le reste dû.",
+      "headEyebrow": "Reste dû",
+      "headSummary": "{count, plural, =1 {1 engagement} other {# engagements}}, {ongoing} en cours",
+      "headEnds": "se termine en {month}",
+      "drawerEdit": "Modifier",
+      "drawerDelete": "Supprimer",
+      "drawerDeleteQuestion": "Supprimer « {label} » ? Ce geste ne se défait pas.",
+      "drawerDeleteConfirm": "Oui, supprimer",
+      "drawerDeleteKeep": "Garder",
+      "headThisMonth": "ce mois : {count, plural, one {# échéance} other {# échéances}}, {amount}",
+      "headThisMonthPaid": "payée"
     },
     "expenses": {
       "title": "Mes dépenses",
@@ -1465,7 +1496,7 @@
       },
       "charge": {
         "label": {
-          "required": "Libellé requis.",
+          "required": "Description requise.",
           "tooLong": "Maximum 120 caractères."
         },
         "amount": {
@@ -1492,7 +1523,7 @@
           "outOfRange": "Valeur hors limites."
         },
         "label": {
-          "required": "Libellé requis.",
+          "required": "Description requise.",
           "tooLong": "Maximum 80 caractères."
         }
       },
@@ -1514,7 +1545,7 @@
       },
       "expense": {
         "label": {
-          "required": "Libellé requis.",
+          "required": "Description requise.",
           "tooLong": "Maximum 120 caractères."
         },
         "amount": {
@@ -1556,7 +1587,7 @@
         },
         "firstCharge": {
           "label": {
-            "required": "Libellé requis.",
+            "required": "Description requise.",
             "tooLong": "Maximum 120 caractères."
           },
           "amount": {

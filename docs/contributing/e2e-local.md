@@ -57,6 +57,28 @@ Same three Supabase variables, plus `E2E_SUPABASE_READY=1` and
 npx playwright test e2e/<spec>.spec.ts --project=chromium-desktop --workers=1
 ```
 
+## 5. Looking at a signed-in screen (capture, manual check)
+
+`e2e/helpers/seed.ts` creates a RANDOM account per test and deletes it
+afterwards: there is no fixed login there. The fixed, fictitious account of the
+local stack comes from `scripts/dev/seed-profil-test.mjs` (both scripts refuse
+any non-local URL):
+
+```bash
+node scripts/dev/seed-profil-test.mjs    # bills, a repayment plan, expenses
+node scripts/dev/seed-vie-complete.mjs   # accounts, a second commitment, payments
+```
+
+Same three Supabase variables in the environment. Then sign in on
+`/fr-BE/login` with:
+
+- email: `ankora-test-profil@ankora.test`
+- password: `TestProfil!2026`
+
+Local stack only: this account does not exist anywhere else, and these values
+are not secrets. After login, go straight to `/fr-BE/app/charges` or
+`/fr-BE/app/commitments`.
+
 ## Traps met on the way
 
 - **A tap before hydration does nothing** under `next dev` (first compile of a

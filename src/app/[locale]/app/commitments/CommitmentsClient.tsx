@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useOptimistic, useState, useTransition } from 'react';
-import { Check, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Check, ChevronRight, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/components/ui/toast';
 import { InstallmentStepper } from '@/components/commitments/InstallmentStepper';
+import { Sheet } from '@/components/primitives/Sheet';
 import type { Locale } from '@/i18n/routing';
 import {
   createCommitmentAction,
@@ -40,6 +41,16 @@ import { formatCurrency, formatInstallmentDate, formatMonth } from '@/lib/i18n/f
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 
 /** Row shape crossing the RSC boundary (money as plain `number`, never Decimal). */
+/**
+ * E5 « ce mois : k échéances, X » — X with the instalments that make it (rule
+ * 10). Built server-side from the same list the total is summed from, so the
+ * lines cannot drift from the figure.
+ */
+export type ThisMonth = {
+  total: number;
+  parts: { id: string; label: string; amount: number; isPaid: boolean }[];
+};
+
 export type RawCommitment = CommitmentRow;
 
 type Props = {
@@ -47,6 +58,11 @@ type Props = {
   /** Ledger keys (`${year}-${month}`) per commitment id. */
   paidKeysByCommitment: Record<string, string[]>;
   currentPeriod: { year: number; month: number };
+  /**
+   * E5 — the instalments falling due in `currentPeriod` (paid ones included):
+   * how many, and their sum. Derived server-side by the domain.
+   */
+  thisMonth: ThisMonth;
   locale: Locale;
 };
 
@@ -75,10 +91,25 @@ const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
  */
 const PAYMENT_DAY_UNSET = 1;
 
+/**
+ * « mars 2027 » as it reads INSIDE a sentence: Intl already writes the month
+ * the way each language does mid-sentence (lower case in French, Dutch and
+ * Spanish, capitalised in German and English). `formatMonth` capitalises for
+ * standalone labels, which is wrong after « se termine en ».
+ */
+function monthInSentence(p: Period, locale: Locale): string {
+  return new Intl.DateTimeFormat(locale, {
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(Date.UTC(p.year, p.month - 1, 15)));
+}
+
 export function CommitmentsClient({
   commitments,
   paidKeysByCommitment,
   currentPeriod,
+  thisMonth,
   locale,
 }: Props) {
   const t = useTranslations('app.commitments');
@@ -102,6 +133,19 @@ export function CommitmentsClient({
   const [startYear, setStartYear] = useState(String(currentPeriod.year));
   const [paymentDay, setPaymentDay] = useState('');
   const [frequency, setFrequency] = useState<CommitmentFrequency>('monthly');
+
+  // E6 — the row's drawer: edit and delete left the row for it, and delete
+  // asks first. One drawer for the page, keyed on the commitment it shows.
+  const [drawerId, setDrawerId] = useState<string | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const openDrawer = (id: string) => {
+    setConfirmingDelete(false);
+    setDrawerId(id);
+  };
+  const closeDrawer = () => {
+    setConfirmingDelete(false);
+    setDrawerId(null);
+  };
 
   function resetForm() {
     setLabel('');
@@ -330,6 +374,7 @@ export function CommitmentsClient({
         const result = await deleteCommitmentAction(id);
         if (result.ok) {
           toast.success(t('toastDeleted'));
+          closeDrawer();
           // If the deleted row was being edited, drop the stale form.
           if (editingId === id) closeForm();
         } else {
@@ -438,6 +483,21 @@ export function CommitmentsClient({
     0,
   );
   const isFormOpen = formMode !== 'closed';
+
+  // E5 — how many are still running, and the month the last of them ends.
+  // Both read the same domain derivations as the rows (`installmentsPaid`,
+  // `endPeriod`); nothing is stored or summed anew.
+  const ongoing = active.filter(
+    (c) => installmentsPaid(toDomain(c), paidKeysOf(c.id)) < c.installmentsTotal,
+  );
+  const lastEnd = ongoing
+    .map((c) => endPeriod(toDomain(c)))
+    .reduce<Period | null>(
+      (latest, p) =>
+        latest === null || p.year * 12 + p.month > latest.year * 12 + latest.month ? p : latest,
+      null,
+    );
+  const drawerCommitment = drawerId ? (active.find((c) => c.id === drawerId) ?? null) : null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -664,23 +724,70 @@ export function CommitmentsClient({
         </Card>
       )}
 
+      {active.length > 0 && (
+        <section
+          data-testid="commitments-head-card"
+          aria-labelledby="commitments-head-title"
+          className="border-border bg-card rounded-2xl border p-4 shadow-sm"
+        >
+          <p className="text-muted-foreground text-[11px] font-semibold tracking-widest uppercase">
+            {t('headEyebrow')}
+          </p>
+          <div className="mt-2 flex items-baseline justify-between gap-3">
+            <h2 id="commitments-head-title" className="text-foreground text-sm font-medium">
+              {t('totalRemainingLabel')}
+            </h2>
+            <p
+              className="text-foreground text-3xl font-bold tracking-tight tabular-nums"
+              data-testid="commitments-total-remaining"
+            >
+              {formatCurrency(totalRemaining, locale)}
+            </p>
+          </div>
+          <p className="text-muted-foreground mt-1 text-xs" data-testid="commitments-head-summary">
+            {t('headSummary', { count: active.length, ongoing: ongoing.length })}
+            {lastEnd && <> · {t('headEnds', { month: monthInSentence(lastEnd, locale) })}</>}
+          </p>
+          <details className="mt-1 text-xs" data-testid="commitments-head-this-month-details">
+            <summary
+              className="text-muted-foreground cursor-pointer underline-offset-2 hover:underline"
+              data-testid="commitments-head-this-month"
+            >
+              {t('headThisMonth', {
+                count: thisMonth.parts.length,
+                amount: formatCurrency(thisMonth.total, locale),
+              })}
+            </summary>
+            {thisMonth.parts.length > 0 && (
+              <ul role="list" className="mt-1 space-y-0.5">
+                {thisMonth.parts.map((p) => (
+                  <li
+                    key={p.id}
+                    className="text-foreground flex justify-between gap-3 tabular-nums"
+                    data-testid={`commitments-this-month-part-${p.id}`}
+                  >
+                    <span>
+                      {p.label}
+                      {p.isPaid && (
+                        <span className="text-muted-foreground"> · {t('headThisMonthPaid')}</span>
+                      )}
+                    </span>
+                    <span>{formatCurrency(p.amount, locale)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </details>
+        </section>
+      )}
+
       <Card>
         <CardHeader>
-          <CardTitle className="flex flex-wrap items-baseline justify-between gap-3">
-            <span>{t('count', { count: active.length })}</span>
-            {active.length > 0 && (
-              <span className="text-right">
-                <span className="text-muted-foreground mr-1.5 text-xs font-normal">
-                  {t('totalRemainingLabel')}
-                </span>
-                <span
-                  className="text-foreground text-base font-bold tabular-nums"
-                  data-testid="commitments-total-remaining"
-                >
-                  {formatCurrency(totalRemaining, locale)}
-                </span>
-              </span>
-            )}
+          <CardTitle
+            as="h2"
+            className="text-muted-foreground text-xs font-semibold tracking-widest uppercase"
+          >
+            {t('count', { count: active.length })}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -710,12 +817,23 @@ export function CommitmentsClient({
                 return (
                   <li key={c.id} data-testid={`commitment-row-${c.id}`} className="py-4">
                     <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                      <p className="text-foreground text-sm font-medium">
-                        {c.label}
-                        <span className="text-muted-foreground ml-2 text-xs font-normal">
-                          {t(KIND_KEY[c.kind])}
+                      <button
+                        type="button"
+                        onClick={() => openDrawer(c.id)}
+                        data-testid={`commitment-open-${c.id}`}
+                        className="hover:bg-surface-muted focus-visible:ring-brand-600 -mx-2 inline-flex min-h-11 min-w-0 items-center gap-2 rounded-lg px-2 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                      >
+                        <span className="text-foreground min-w-0 text-sm font-medium [overflow-wrap:anywhere]">
+                          {c.label}
+                          <span className="text-muted-foreground ml-2 text-xs font-normal">
+                            {t(KIND_KEY[c.kind])}
+                          </span>
                         </span>
-                      </p>
+                        <ChevronRight
+                          aria-hidden
+                          className="text-muted-foreground h-4 w-4 shrink-0"
+                        />
+                      </button>
                       <p className="text-right">
                         {finished ? (
                           <span
@@ -787,8 +905,8 @@ export function CommitmentsClient({
                             })}
                     </p>
 
-                    {/* Controls row: payment stepper + edit + delete, in flow
-                        (no absolute corners — makes room for all three). */}
+                    {/* The row's one action: the instalment counter. Edit
+                        and delete live in the row's drawer (E6). */}
                     <div className="mt-3 flex flex-wrap items-center gap-2">
                       <InstallmentStepper
                         paid={paid}
@@ -804,32 +922,6 @@ export function CommitmentsClient({
                         markOneAriaLabel={t('markOneAria', { label: c.label })}
                         unmarkOneAriaLabel={t('unmarkOneAria', { label: c.label })}
                       />
-                      <div className="ml-auto flex items-center gap-1">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => openEdit(c)}
-                          disabled={isPending}
-                          aria-label={t('editAria', { label: c.label })}
-                          data-testid={`commitment-edit-${c.id}`}
-                          className="size-11 shrink-0 md:size-9"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onDelete(c.id)}
-                          disabled={isPending}
-                          aria-label={t('deleteAria', { label: c.label })}
-                          data-testid={`commitment-delete-${c.id}`}
-                          className="size-11 shrink-0 md:size-9"
-                        >
-                          <Trash2 className="text-danger h-4 w-4" />
-                        </Button>
-                      </div>
                     </div>
                   </li>
                 );
@@ -838,6 +930,85 @@ export function CommitmentsClient({
           )}
         </CardContent>
       </Card>
+
+      {drawerCommitment && (
+        <Sheet
+          open
+          onClose={closeDrawer}
+          title={drawerCommitment.label}
+          testId="commitment-drawer"
+          closeLabel={t('cancelButton')}
+          desktop="dialog"
+        >
+          <div className="flex flex-col gap-4">
+            <p className="text-muted-foreground text-sm">
+              {t(KIND_KEY[drawerCommitment.kind])} · {t('remainingLabel')}{' '}
+              <span className="text-foreground font-semibold tabular-nums">
+                {formatCurrency(
+                  remainingBalance(toDomain(drawerCommitment), paidKeysOf(drawerCommitment.id)),
+                  locale,
+                )}
+              </span>
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                const c = drawerCommitment;
+                closeDrawer();
+                openEdit(c);
+              }}
+              disabled={isPending}
+              aria-label={t('editAria', { label: drawerCommitment.label })}
+              data-testid={`commitment-edit-${drawerCommitment.id}`}
+              className="justify-start"
+            >
+              <Pencil className="h-4 w-4" aria-hidden />
+              {t('drawerEdit')}
+            </Button>
+            <div className="border-border/60 border-t pt-4">
+              {confirmingDelete ? (
+                <div role="group" aria-label={t('drawerDelete')} className="flex flex-col gap-2">
+                  <p className="text-foreground text-sm">
+                    {t('drawerDeleteQuestion', { label: drawerCommitment.label })}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setConfirmingDelete(false)}
+                      disabled={isPending}
+                    >
+                      {t('drawerDeleteKeep')}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={() => onDelete(drawerCommitment.id)}
+                      disabled={isPending}
+                      data-testid="commitment-delete-confirm"
+                    >
+                      {t('drawerDeleteConfirm')}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmingDelete(true)}
+                  disabled={isPending}
+                  aria-label={t('deleteAria', { label: drawerCommitment.label })}
+                  data-testid={`commitment-delete-${drawerCommitment.id}`}
+                  className="text-danger focus-visible:ring-brand-600 inline-flex min-h-11 items-center gap-2 rounded text-sm font-medium focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50"
+                >
+                  <Trash2 aria-hidden className="h-4 w-4" />
+                  {t('drawerDelete')}
+                </button>
+              )}
+            </div>
+          </div>
+        </Sheet>
+      )}
     </div>
   );
 }

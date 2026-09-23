@@ -763,10 +763,10 @@
     },
     "charges": {
       "title": "Mis facturas",
-      "subtitle": "Cada factura se distribuye automáticamente en 12 meses.",
+      "subtitle": "Las facturas trimestrales, semestrales y anuales se reparten en cada mes; las mensuales cuentan tal cual.",
       "addFormTitle": "Añadir una factura",
       "emptyState": "Ninguna factura por ahora.",
-      "labelLabel": "Etiqueta",
+      "labelLabel": "Descripción",
       "amountLabel": "Importe (€)",
       "frequencyLabel": "Frecuencia",
       "dueMonthLabel": "Mes de referencia",
@@ -784,7 +784,7 @@
       "addButton": "Añadir",
       "adding": "Añadiendo…",
       "count": "{count, plural, =0 {ninguna factura} one {1 factura} other {# facturas}}",
-      "totalMonthlyLabel": "Distribución mensual",
+      "totalMonthlyLabel": "Contado cada mes",
       "totalAnnualLabel": "Equivalente anual",
       "referenceFormat": "{frequency} · ref. {month}",
       "deleteAria": "Eliminar {label}",
@@ -825,10 +825,10 @@
         "errorGeneric": "El cambio no se ha podido guardar. Inténtalo de nuevo dentro de un momento."
       },
       "aPayerCeMoisLabel": "A pagar este mes",
-      "aPayerCeMoisHint": "Lo que sale realmente de la cuenta — facturas y cuotas juntas.",
+      "aPayerCeMoisHint": "Todo lo que vence este mes, facturas y plazos, lo pagado incluido.",
       "effortLisseLabel": "Esfuerzo prorrateado",
-      "effortLisseHint": "Facturas mensuales + provisiones prorrateadas + cuotas de compromisos.",
-      "commitmentsGroupTitle": "Créditos y planes de pago",
+      "effortLisseHint": "La parte mensual de tus facturas no mensuales, factura por factura.",
+      "commitmentsGroupTitle": "Compromisos",
       "installmentPosition": "cuota {index}/{total}",
       "commitmentRemaining": "quedan {amount}",
       "markCommitmentPaidAria": "Marcar la cuota {label} como pagada",
@@ -871,7 +871,28 @@
         "noHorizon": "Sin horizonte la factura sigue siendo una factura: el presupuesto sigue siendo correcto, solo falta la cuenta atrás.",
         "toastConverted": "{label} ya es un compromiso · fin {end}",
         "drawerHint": "Si esta factura es un crédito que termina, Ankora puede mostrarte su cuenta atrás."
-      }
+      },
+      "headEyebrow": "Este mes",
+      "encoreAPayer": "Aún por pagar",
+      "encoreAPayerPeriod": "Aún por pagar en {month}",
+      "groupSummaryDue": "{unpaid} por pagar de {due}",
+      "groupSummaryNone": "{count}, nada este mes",
+      "totalSectionTitle": "Contado cada mes para tus facturas",
+      "lissagePartSource": "{label} · {amount} cada {months} meses",
+      "lissagePartMonthly": "{amount} al mes",
+      "totalMonthlyHint": "Facturas mensuales + esfuerzo prorrateado + plazos de tus compromisos.",
+      "totalAnnualLine": "o sea {amount} al año",
+      "drawerWatch": "A vigilar",
+      "drawerWatchHint": "Aparece en « A vigilar » en el cockpit.",
+      "drawerDelete": "Eliminar la factura",
+      "drawerDeleteQuestion": "¿Eliminar « {label} »? No se puede deshacer.",
+      "drawerDeleteConfirm": "Sí, eliminar",
+      "drawerDeleteKeep": "Conservar",
+      "instalmentCount": "{count, plural, one {# plazo} other {# plazos}}",
+      "posteMonthlyLabel": "Facturas mensuales",
+      "posteMonthlyHint": "Lo que sale cada mes, factura por factura.",
+      "posteCommitmentsLabel": "Plazos de compromisos",
+      "posteCommitmentsHint": "La parte de este mes de cada compromiso en curso."
     },
     "accounts": {
       "metaTitle": "Mis cuentas",
@@ -941,7 +962,7 @@
       "addFormTitle": "Añadir un compromiso",
       "addButton": "Añadir",
       "adding": "Añadiendo…",
-      "labelLabel": "Nombre",
+      "labelLabel": "Descripción",
       "kindLabel": "Tipo",
       "totalAmountLabel": "Importe total adeudado (€)",
       "totalAmountHint": "El importe completo del plan, todas las cuotas incluidas — no solo lo que queda.",
@@ -993,7 +1014,17 @@
       "reductionBlocked": "No se puede: {paid} plazos ya están marcados. Desmarca algunos pagos primero.",
       "editConsequence": "fin: {fromEnd} → {toEnd} · queda: {fromBalance} → {toBalance}",
       "editConsequenceLabel": "Lo que esto cambia",
-      "editNoChange": "Sin cambios en la fecha de fin ni en el saldo pendiente."
+      "editNoChange": "Sin cambios en la fecha de fin ni en el saldo pendiente.",
+      "headEyebrow": "Pendiente",
+      "headSummary": "{count, plural, =1 {1 compromiso} other {# compromisos}}, {ongoing} en curso",
+      "headEnds": "termina en {month}",
+      "drawerEdit": "Modificar",
+      "drawerDelete": "Eliminar",
+      "drawerDeleteQuestion": "¿Eliminar « {label} »? No se puede deshacer.",
+      "drawerDeleteConfirm": "Sí, eliminar",
+      "drawerDeleteKeep": "Conservar",
+      "headThisMonth": "este mes: {count, plural, one {# plazo} other {# plazos}}, {amount}",
+      "headThisMonthPaid": "pagado"
     },
     "expenses": {
       "title": "Mis gastos",
@@ -1465,7 +1496,7 @@
       },
       "charge": {
         "label": {
-          "required": "Etiqueta requerida.",
+          "required": "Descripción obligatoria.",
           "tooLong": "Máximo 120 caracteres."
         },
         "amount": {
@@ -1492,7 +1523,7 @@
           "outOfRange": "Valor fuera de los límites."
         },
         "label": {
-          "required": "Etiqueta requerida.",
+          "required": "Descripción obligatoria.",
           "tooLong": "Máximo 80 caracteres."
         }
       },
@@ -1514,7 +1545,7 @@
       },
       "expense": {
         "label": {
-          "required": "Etiqueta requerida.",
+          "required": "Descripción obligatoria.",
           "tooLong": "Máximo 120 caracteres."
         },
         "amount": {
@@ -1556,7 +1587,7 @@
         },
         "firstCharge": {
           "label": {
-            "required": "Etiqueta requerida.",
+            "required": "Descripción obligatoria.",
             "tooLong": "Máximo 120 caracteres."
           },
           "amount": {

@@ -60,6 +60,7 @@ function renderPage(
         commitments={commitments}
         paidKeysByCommitment={overrides.paidKeysByCommitment ?? {}}
         currentPeriod={overrides.currentPeriod ?? { year: 2026, month: 1 }}
+        thisMonth={{ total: 0, parts: [] }}
         locale="fr-BE"
       />
     </NextIntlClientProvider>,
@@ -288,7 +289,9 @@ describe('<CommitmentsClient />', () => {
     createMock.mockResolvedValue({ ok: true });
     renderPage([], { currentPeriod: { year: 2026, month: 5 } });
     fireEvent.click(screen.getByTestId('commitments-add-toggle'));
-    fireEvent.change(screen.getByLabelText('Libellé'), { target: { value: 'Arrangement SPF' } });
+    fireEvent.change(screen.getByLabelText('Description'), {
+      target: { value: 'Arrangement SPF' },
+    });
     fireEvent.change(screen.getByLabelText(/Montant total dû/), { target: { value: '1600' } });
     fireEvent.change(screen.getByLabelText(/Montant par échéance/), { target: { value: '200' } });
     fireEvent.change(screen.getByLabelText(/Nombre total d'échéances/), { target: { value: '8' } });
@@ -313,7 +316,7 @@ describe('<CommitmentsClient />', () => {
     createMock.mockResolvedValue({ ok: true });
     renderPage([], { currentPeriod: { year: 2026, month: 7 } });
     fireEvent.click(screen.getByTestId('commitments-add-toggle'));
-    fireEvent.change(screen.getByLabelText('Libellé'), { target: { value: 'SPF impôt' } });
+    fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'SPF impôt' } });
     fireEvent.change(screen.getByLabelText(/Montant total dû/), { target: { value: '2407.93' } });
     fireEvent.change(screen.getByLabelText(/Montant par échéance/), { target: { value: '220' } });
     fireEvent.change(screen.getByLabelText(/Nombre total d'échéances/), {
@@ -344,7 +347,7 @@ describe('<CommitmentsClient />', () => {
     /** Fills everything the form needs EXCEPT the date fields under test. */
     function fillValidBaseline() {
       fireEvent.click(screen.getByTestId('commitments-add-toggle'));
-      fireEvent.change(screen.getByLabelText('Libellé'), { target: { value: 'SPF impôt' } });
+      fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'SPF impôt' } });
       fireEvent.change(screen.getByLabelText(/Montant total dû/), { target: { value: '2200' } });
       fireEvent.change(screen.getByLabelText(/Montant par échéance/), { target: { value: '200' } });
       fireEvent.change(screen.getByLabelText(/Nombre total d'échéances/), {
@@ -432,12 +435,14 @@ describe('<CommitmentsClient />', () => {
     // `payment_day` is `not null default 1`; a stored 1 means "never asked",
     // not "the 1st" — the form must not present it as a choice made.
     renderPage([{ ...carLoan, paymentDay: 1 }]);
+    fireEvent.click(screen.getByTestId('commitment-open-car'));
     fireEvent.click(screen.getByTestId('commitment-edit-car'));
     expect(screen.getByTestId('commitment-payment-day')).toHaveValue(null);
   });
 
   it('prefills a real payment day so an edit does not silently drop it', () => {
     renderPage([carLoan]); // paymentDay 15
+    fireEvent.click(screen.getByTestId('commitment-open-car'));
     fireEvent.click(screen.getByTestId('commitment-edit-car'));
     expect(screen.getByTestId('commitment-payment-day')).toHaveValue(15);
   });
@@ -448,7 +453,7 @@ describe('<CommitmentsClient />', () => {
     fireEvent.click(screen.getByTestId('commitments-add-toggle'));
     fireEvent.change(screen.getByTestId('commitment-kind'), { target: { value: 'one_off' } });
     expect(screen.queryByLabelText(/Montant par échéance/)).toBeNull();
-    fireEvent.change(screen.getByLabelText('Libellé'), { target: { value: 'Entretien' } });
+    fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'Entretien' } });
     fireEvent.change(screen.getByLabelText(/Montant total dû/), { target: { value: '340' } });
     await act(async () => {
       fireEvent.submit(screen.getByRole('button', { name: /^ajouter$/i }).closest('form')!);
@@ -463,20 +468,20 @@ describe('<CommitmentsClient />', () => {
     createMock.mockResolvedValue({ ok: false, errorCode: 'errors.commitments.createFailed' });
     renderPage([]);
     fireEvent.click(screen.getByTestId('commitments-add-toggle'));
-    fireEvent.change(screen.getByLabelText('Libellé'), { target: { value: 'X' } });
+    fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'X' } });
     fireEvent.change(screen.getByLabelText(/Montant total dû/), { target: { value: '100' } });
     fireEvent.change(screen.getByLabelText(/Montant par échéance/), { target: { value: '10' } });
     await act(async () => {
       fireEvent.submit(screen.getByRole('button', { name: /^ajouter$/i }).closest('form')!);
     });
     await waitFor(() => expect(toastErrorMock).toHaveBeenCalled());
-    expect(screen.getByLabelText('Libellé')).toBeInTheDocument();
+    expect(screen.getByLabelText('Description')).toBeInTheDocument();
   });
 
   it('rejects a negative amount client-side, before calling the action', async () => {
     renderPage([]);
     fireEvent.click(screen.getByTestId('commitments-add-toggle'));
-    fireEvent.change(screen.getByLabelText('Libellé'), { target: { value: 'X' } });
+    fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'X' } });
     fireEvent.change(screen.getByLabelText(/Montant total dû/), { target: { value: '-5' } });
     await act(async () => {
       fireEvent.submit(screen.getByRole('button', { name: /^ajouter$/i }).closest('form')!);
@@ -490,12 +495,13 @@ describe('<CommitmentsClient />', () => {
   it('edits a commitment: the pencil prefills the form and calls updateCommitmentAction', async () => {
     updateMock.mockResolvedValue({ ok: true });
     renderPage([carLoan]);
+    fireEvent.click(screen.getByTestId('commitment-open-car'));
     fireEvent.click(screen.getByTestId('commitment-edit-car'));
     // Form is prefilled with the row's current values.
-    expect(screen.getByLabelText('Libellé')).toHaveValue('Crédit voiture');
+    expect(screen.getByLabelText('Description')).toHaveValue('Crédit voiture');
     expect(screen.getByLabelText(/Nombre total d'échéances/)).toHaveValue(17);
 
-    fireEvent.change(screen.getByLabelText('Libellé'), { target: { value: 'Crédit auto' } });
+    fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'Crédit auto' } });
     await act(async () => {
       fireEvent.submit(screen.getByRole('button', { name: /enregistrer/i }).closest('form')!);
     });
@@ -510,15 +516,17 @@ describe('<CommitmentsClient />', () => {
 
   it('moves focus into the form when the pencil opens edit', async () => {
     renderPage([carLoan]);
+    fireEvent.click(screen.getByTestId('commitment-open-car'));
     fireEvent.click(screen.getByTestId('commitment-edit-car'));
     // The effect focuses the label field so keyboard/SR users land in the form
     // even when it opened off-screen at the top of a long list (ux-auditor P1).
-    await waitFor(() => expect(screen.getByLabelText('Libellé')).toHaveFocus());
+    await waitFor(() => expect(screen.getByLabelText('Description')).toHaveFocus());
   });
 
   it('blocks reducing installmentsTotal below the number already ticked', async () => {
     updateMock.mockResolvedValue({ ok: true });
     renderPage([carLoan], { paidKeysByCommitment: { car: ['2026-1', '2026-2', '2026-3'] } });
+    fireEvent.click(screen.getByTestId('commitment-open-car'));
     fireEvent.click(screen.getByTestId('commitment-edit-car'));
     fireEvent.change(screen.getByLabelText(/Nombre total d'échéances/), { target: { value: '2' } });
     await act(async () => {
@@ -532,7 +540,12 @@ describe('<CommitmentsClient />', () => {
     deleteMock.mockResolvedValue({ ok: true });
     renderPage([carLoan]);
     await act(async () => {
-      fireEvent.click(screen.getByTestId('commitment-delete-car'));
+      fireEvent.click(screen.getByTestId('commitment-open-car'));
+    });
+    fireEvent.click(await screen.findByTestId('commitment-delete-car'));
+    expect(deleteMock).not.toHaveBeenCalled();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('commitment-delete-confirm'));
     });
     await waitFor(() => expect(deleteMock).toHaveBeenCalledWith('car'));
   });

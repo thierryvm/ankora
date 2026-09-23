@@ -1,17 +1,15 @@
 'use client';
 
-import { useMemo, useOptimistic, useState, useTransition } from 'react';
+import { useMemo, useOptimistic, useState, useSyncExternalStore, useTransition } from 'react';
 import {
   AlertTriangle,
-  Bookmark,
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   ListChecks,
-  Pencil,
   Plus,
   Repeat,
-  Trash2,
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
@@ -61,6 +59,19 @@ type RawCharge = {
   notes: string | null;
 };
 
+const WIDE_QUERY = '(min-width: 768px)';
+
+function subscribeWide(onChange: () => void): () => void {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return () => {};
+  const mq = window.matchMedia(WIDE_QUERY);
+  mq.addEventListener('change', onChange);
+  return () => mq.removeEventListener('change', onChange);
+}
+
+function readWide(): boolean {
+  return typeof window.matchMedia === 'function' && window.matchMedia(WIDE_QUERY).matches;
+}
+
 /**
  * Today as an ISO `YYYY-MM-DD` string anchored to Europe/Brussels — same
  * timezone the rest of the cockpit uses for due-date math (cf.
@@ -93,6 +104,16 @@ export type CommitmentInstalmentRow = {
   installmentsTotal: number;
 };
 
+export type LissagePart = {
+  id: string;
+  label: string;
+  /** This bill's share of the month. */
+  monthly: number;
+  /** The bill's real amount, and every how many months it falls. */
+  invoiceAmount: number;
+  cycleMonths: number;
+};
+
 export type DuplicateWarning = {
   chargeId: string;
   chargeLabel: string;
@@ -122,6 +143,20 @@ type ChargesClientProps = {
   effortLisseTotal: number;
   /** Annual equivalent of the smoothed effort — the same figure × 12. */
   effortLisseAnnuelTotal: number;
+  /**
+   * « Effort lissé » in its narrow sense (F-3): the monthly share of the
+   * NON-monthly bills, part by part, each with the bill it comes from
+   * (DESIGN-v3 rule 28). Straight from the domain's `lissageDuMois`.
+   */
+  lissage: { total: number; parts: readonly LissagePart[] };
+  /**
+   * The two other shares of `effortLisseTotal` (rule of code 10): the monthly
+   * bills (`chargesFixesDuMois`) and the commitment instalments of the current
+   * month (`engagementsDuMois`). With `lissage`, the three add up to the
+   * total — the domain's `effortLisse` is exactly their sum.
+   */
+  monthlyBills: { total: number; parts: readonly LissagePart[] };
+  commitmentShare: { total: number; parts: readonly LissagePart[] };
   /** Charge/commitment pairs that look like the same obligation entered twice. */
   duplicates: DuplicateWarning[];
   /** State of the bulk « échéances passées » gesture, derived server-side. */
@@ -153,6 +188,9 @@ export function ChargesClient({
   aPayerCeMoisTotal,
   effortLisseTotal,
   effortLisseAnnuelTotal,
+  lissage,
+  monthlyBills,
+  commitmentShare,
   duplicates,
   bulk,
   viewedPeriod,
@@ -176,6 +214,22 @@ export function ChargesClient({
   // (dashboard-ux M1, scope validated @thierry 2026-07-18).
   const [showAddForm, setShowAddForm] = useState(false);
   const [convertingCharge, setConvertingCharge] = useState<ConvertibleCharge | null>(null);
+
+  // F10 — a disclosure per cadence. Below `md`, « Mensuel » opens and the
+  // others fold; from `md` up, everything opens. A tap overrides either way.
+  // The width is read through `useSyncExternalStore` (false on the server and
+  // in jsdom), never copied into state from an effect.
+  const isWide = useSyncExternalStore(subscribeWide, readWide, () => false);
+  const [groupOverride, setGroupOverride] = useState<Partial<Record<Frequency, boolean>>>({});
+  const isGroupOpen = (freq: Frequency): boolean =>
+    groupOverride[freq] ?? (isWide || freq === 'monthly');
+  const toggleGroup = (freq: Frequency, open: boolean) =>
+    setGroupOverride((prev) => ({ ...prev, [freq]: !open }));
+  // F13 — the commitments group folds below `md` like a non-monthly cadence.
+  const [commitmentsOpenOverride, setCommitmentsOpenOverride] = useState<boolean | null>(null);
+  const commitmentsOpen = commitmentsOpenOverride ?? isWide;
+  const [totalOpenOverride, setTotalOpenOverride] = useState<boolean | null>(null);
+  const totalOpen = totalOpenOverride ?? isWide;
 
   const todayIso = useMemo(() => todayBrusselsIso(), []);
 
@@ -407,6 +461,7 @@ export function ChargesClient({
         const result = await deleteChargeAction(id);
         if (result.ok) {
           toast.success(t('toastDeleted'));
+          setEditingCharge(null);
         } else {
           toast.error(translateError(result.errorCode));
         }
@@ -453,34 +508,23 @@ export function ChargesClient({
   }
 
   /**
-   * Render a single charge row. Mobile: a flat two-line row separated from its
-   * neighbours by the group `<ul>`'s `divide-y` (no card chrome). Desktop:
-   * `md:grid` projects the cells onto a 6-column baseline-aligned row via
-   * `md:contents`. The edit/delete buttons stay absolute top-right on mobile
-   * (`pr-24` reserves their space) and become inline cells 5/6 on desktop.
+   * One bill row, as the v3 mockup draws it (F11): the tick — the row's ONE
+   * action — then an opener that reads the description first, its amount, and
+   * the date and cadence underneath. Edit, delete and « À surveiller » live in
+   * the drawer the opener shows (F15). A charge not due this month keeps an
+   * empty slot where the tick would be, so descriptions stay aligned.
    */
   function renderChargeRow(c: RawCharge) {
     const isDue = c.isActive && c.paymentMonths.includes(viewedPeriod.month);
     const paid = optimisticPaid.has(c.id);
-    const watched = optimisticWatched.has(c.id);
     const { label: dueLabel, isOverdue } = periodDueFor(c, paid);
     return (
       <li
         key={c.id}
         data-testid={`charges-row-${c.id}`}
-        // `min-h-13` (52px) guarantees the row is always at least as tall as the
-        // absolute edit/delete buttons (top-2 + size-11 = 52px) now that the
-        // card padding (`p-4`) is gone — prevents the tap targets overflowing
-        // onto the next row on very short content (mobile-ios-auditor F3).
-        // Due-this-month rows reserve left room (`pl-14`/`md:pl-12`) for the
-        // absolutely-positioned Payé toggle — keeps the 6-col desktop grid and
-        // its baseline contract untouched (plan-reviewer CR-3).
-        className={`md:hover:bg-surface-muted relative min-h-14 py-3 pr-36 transition-colors md:grid md:min-h-0 md:grid-cols-[minmax(8rem,10rem)_minmax(0,1fr)_4.5rem_7rem_auto_auto_auto] md:items-baseline md:gap-4 md:py-3 md:pr-2 ${isDue ? 'pl-14 md:pl-12' : 'px-3 md:px-4'}`}
+        className="flex items-start gap-2 px-2 py-2 md:px-3"
       >
-        {/* Payé toggle — absolute left for due-this-month charges. Lives
-            outside the grid + the mobile flow so it never disturbs the four
-            baseline-measured cells. 44px touch target on mobile. */}
-        {isDue && (
+        {isDue ? (
           <button
             type="button"
             onClick={() => onTogglePaid(c)}
@@ -490,131 +534,132 @@ export function ChargesClient({
               paid ? t('unmarkPaidAria', { label: c.label }) : t('markPaidAria', { label: c.label })
             }
             data-testid={`charges-row-paid-${c.id}`}
-            className={`focus-visible:ring-brand-600 absolute top-2 left-2 flex size-11 cursor-pointer items-center justify-center rounded-full border-2 transition-colors [-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:top-1/2 md:left-3 md:size-7 md:-translate-y-1/2 ${
-              paid
-                ? 'border-brand-600 bg-brand-600 text-white'
-                : 'border-border hover:border-brand-600 text-transparent'
-            }`}
+            className="focus-visible:ring-brand-600 flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full [-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <Check className="h-4 w-4 md:h-3.5 md:w-3.5" strokeWidth={3} aria-hidden />
+            <span
+              aria-hidden
+              className={`flex size-7 items-center justify-center rounded-full border-2 transition-colors ${
+                paid ? 'border-brand-600 bg-brand-600 text-white' : 'border-border text-transparent'
+              }`}
+            >
+              <Check className="h-3.5 w-3.5" strokeWidth={3} />
+            </span>
           </button>
+        ) : (
+          <span aria-hidden className="size-11 shrink-0" />
         )}
 
-        {/* Mobile: header row (next-due + amount on a single line).
-            Desktop: contents — projects next-due + amount as grid cells 1 / 4. */}
-        <div className="flex items-baseline justify-between gap-3 md:contents">
-          {/* Date stays neutral (muted) in both themes; the overdue signal is
-              carried by the solid badge below — not by colouring the date, which
-              would be color-only (WCAG 1.4.1) and fail AA on the dark card
-              (`--color-danger` has no dark override). The badge uses white on a
-              solid `danger` fill = 4.84:1 in both themes (dashboard-ux C1). */}
-          <span
-            data-testid="charges-row-next-due"
-            className="text-muted-foreground inline-flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium tracking-wide md:order-1 md:text-sm"
-          >
-            {dueLabel}
-            {isOverdue && (
-              <span
-                data-testid={`charges-row-overdue-${c.id}`}
-                className="bg-danger rounded px-1.5 py-0.5 text-[11px] font-semibold tracking-normal text-white"
-              >
-                {t('statusOverdue')}
-              </span>
-            )}
-          </span>
-          <span
-            data-testid="charges-row-amount"
-            className={`shrink-0 text-base font-semibold tabular-nums md:order-4 md:text-right md:text-sm md:font-medium ${paid ? 'text-muted-foreground line-through' : 'text-foreground'}`}
-          >
-            {formatCurrency(c.amount, locale)}
-          </span>
-        </div>
-
-        {/* Mobile: body row (label + frequency chip).
-            Desktop: contents — projects label + chip as cells 2 / 3. */}
-        <div className="mt-2 flex items-center gap-2 md:mt-0 md:contents">
-          <span
-            data-testid="charges-row-label"
-            className="text-foreground min-w-0 truncate text-sm font-medium md:order-2 md:text-base"
-          >
-            {c.label}
-          </span>
-          {/* Frequency tag (THI-299): a neutral recurrence icon + the locale
-              abbreviation in `text-foreground`. NOT colour-coded — colour stays
-              reserved for the category `color_token` (@thierry locked). The
-              previous pill used `bg-surface-muted` (~1.05:1 on the card →
-              invisible) AND `text-muted-foreground` (identical to the next-due
-              label). The fix carries visibility + distinction on three opaque,
-              token-only signals instead of an invisible container: the icon, the
-              `text-foreground` colour (vs muted next-due, AAA on card), and the
-              abbreviated form. No border/fill, so no dependency on the
-              undefined `--color-border-strong` token. a11y: the icon is
-              decorative; the visible abbreviation is `aria-hidden` and the full
-              word is exposed to screen readers via `sr-only` (robust across
-              VoiceOver, which does not reliably announce `<abbr title>`), while
-              sighted users still get the full word on hover via `title`. */}
-          <span
-            data-testid="charges-row-frequency"
-            className="text-foreground inline-flex w-fit shrink-0 items-center gap-1 text-xs font-medium md:order-3"
-          >
-            <Repeat aria-hidden="true" className="text-muted-foreground size-3" />
-            <abbr
-              title={tFreq(c.frequency as Frequency)}
-              aria-hidden="true"
-              className="no-underline"
-            >
-              {tFreqAbbr(c.frequency as Frequency)}
-            </abbr>
-            <span className="sr-only">{tFreq(c.frequency as Frequency)}</span>
-          </span>
-        </div>
-
-        {/* Watch + Edit + Delete: stacked top-right tap targets on mobile,
-            inline cells 5 / 6 / 7 on desktop. The Bookmark fills brand when
-            the charge is flagged "à surveiller" (dashboard section). */}
-        <Button
+        <button
           type="button"
-          variant="ghost"
-          size="icon"
-          onClick={() => onToggleWatch(c)}
-          disabled={isPending}
-          aria-pressed={watched}
-          aria-label={
-            watched ? t('unwatchAria', { label: c.label }) : t('watchAria', { label: c.label })
-          }
-          data-testid={`charges-row-watch-${c.id}`}
-          className="absolute top-2 right-26 size-11 shrink-0 md:static md:order-5 md:size-9 md:self-center"
-        >
-          <Bookmark
-            className={`h-4 w-4 ${watched ? 'text-brand-text' : 'text-muted-foreground'}`}
-            fill={watched ? 'currentColor' : 'none'}
-          />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
           onClick={() => onEdit(c)}
-          disabled={isPending}
-          aria-label={t('editAria', { label: c.label })}
-          data-testid={`charges-row-edit-${c.id}`}
-          className="absolute top-2 right-14 size-11 shrink-0 md:static md:order-6 md:size-9 md:self-center"
+          data-testid={`charges-row-open-${c.id}`}
+          className="hover:bg-surface-muted focus-visible:ring-brand-600 flex min-h-11 min-w-0 flex-1 items-start gap-2 rounded-lg px-2 py-1.5 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
         >
-          <Pencil className="text-muted-foreground h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={() => onDelete(c.id)}
-          disabled={isPending}
-          aria-label={t('deleteAria', { label: c.label })}
-          data-testid={`charges-row-delete-${c.id}`}
-          className="absolute top-2 right-2 size-11 shrink-0 md:static md:order-7 md:size-9 md:self-center"
-        >
-          <Trash2 className="text-danger h-4 w-4" />
-        </Button>
+          <span className="min-w-0 flex-1">
+            <span className="flex items-baseline justify-between gap-3">
+              <span
+                data-testid="charges-row-label"
+                className="text-foreground min-w-0 text-sm font-medium [overflow-wrap:anywhere] md:text-base"
+              >
+                {c.label}
+              </span>
+              <span
+                data-testid="charges-row-amount"
+                className={`shrink-0 text-sm font-semibold tabular-nums md:text-base ${paid ? 'text-muted-foreground line-through' : 'text-foreground'}`}
+              >
+                {formatCurrency(c.amount, locale)}
+              </span>
+            </span>
+            <span className="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+              <span
+                data-testid="charges-row-next-due"
+                className="inline-flex flex-wrap items-center gap-x-2 gap-y-1"
+              >
+                {dueLabel}
+                {isOverdue && (
+                  <span
+                    data-testid={`charges-row-overdue-${c.id}`}
+                    className="bg-danger rounded px-1.5 py-0.5 text-[11px] font-semibold text-white"
+                  >
+                    {t('statusOverdue')}
+                  </span>
+                )}
+              </span>
+              <span aria-hidden>·</span>
+              {/* Frequency: neutral icon + abbreviation for the eye, the full
+                  word for screen readers (VoiceOver skips <abbr title>). */}
+              <span
+                data-testid="charges-row-frequency"
+                className="text-foreground inline-flex shrink-0 items-center gap-1 font-medium"
+              >
+                <Repeat aria-hidden="true" className="text-muted-foreground size-3" />
+                <abbr
+                  title={tFreq(c.frequency as Frequency)}
+                  aria-hidden="true"
+                  className="no-underline"
+                >
+                  {tFreqAbbr(c.frequency as Frequency)}
+                </abbr>
+                <span className="sr-only">{tFreq(c.frequency as Frequency)}</span>
+              </span>
+            </span>
+          </span>
+          <ChevronRight aria-hidden className="text-muted-foreground mt-1 h-4 w-4 shrink-0" />
+        </button>
       </li>
+    );
+  }
+
+  /**
+   * One share of « Compté chaque mois » other than the smoothed one: its
+   * total, then every line that composes it (rule of code 10). A share with
+   * nothing in it is not drawn — an empty heading explains nothing.
+   */
+  function renderPoste(
+    kind: 'monthly' | 'commitments',
+    poste: { total: number; parts: readonly LissagePart[] },
+  ) {
+    if (poste.parts.length === 0) return null;
+    const partTestId = kind === 'monthly' ? 'charges-monthly-part' : 'charges-commitment-part';
+    return (
+      <div data-testid={`charges-poste-${kind}`}>
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="text-foreground text-sm font-medium">
+            {t(kind === 'monthly' ? 'posteMonthlyLabel' : 'posteCommitmentsLabel')}
+          </span>
+          <span
+            data-testid={`charges-poste-${kind}-total`}
+            className="text-foreground text-sm font-semibold tabular-nums"
+          >
+            {formatCurrency(poste.total, locale)}
+          </span>
+        </div>
+        <p className="text-muted-foreground mt-0.5 text-xs">
+          {t(kind === 'monthly' ? 'posteMonthlyHint' : 'posteCommitmentsHint')}
+        </p>
+        <ul role="list" className="mt-2 flex flex-col gap-1.5">
+          {poste.parts.map((p) => (
+            <li
+              key={p.id}
+              data-testid={`${partTestId}-${p.id}`}
+              className="flex items-baseline justify-between gap-3 text-xs"
+            >
+              <span className="text-foreground min-w-0">
+                {p.cycleMonths > 1
+                  ? t('lissagePartSource', {
+                      label: p.label,
+                      amount: formatCurrency(p.invoiceAmount, locale),
+                      months: p.cycleMonths,
+                    })
+                  : p.label}
+              </span>
+              <span className="text-muted-foreground shrink-0 tabular-nums">
+                {t('lissagePartMonthly', { amount: formatCurrency(p.monthly, locale) })}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
     );
   }
 
@@ -628,11 +673,12 @@ export function ChargesClient({
     const dueIso = `${viewedPeriod.year}-${String(viewedPeriod.month).padStart(2, '0')}-${String(
       Math.min(row.paymentDay, 28),
     ).padStart(2, '0')}`;
+    // Same drawing as a bill row (F11): the tick, then the description first.
     return (
       <li
         key={row.id}
         data-testid={`charges-instalment-${row.id}`}
-        className="md:hover:bg-surface-muted relative min-h-14 py-3 pr-3 pl-14 transition-colors md:grid md:min-h-0 md:grid-cols-[minmax(8rem,10rem)_minmax(0,1fr)_minmax(0,8rem)_7rem] md:items-baseline md:gap-4 md:py-3 md:pl-12"
+        className="flex items-start gap-2 px-2 py-2 md:px-3"
       >
         <button
           type="button"
@@ -645,45 +691,41 @@ export function ChargesClient({
               : t('markCommitmentPaidAria', { label: row.label })
           }
           data-testid={`charges-instalment-paid-${row.id}`}
-          className={`focus-visible:ring-brand-600 absolute top-2 left-2 flex size-11 cursor-pointer items-center justify-center rounded-full border-2 transition-colors [-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:top-1/2 md:left-3 md:size-7 md:-translate-y-1/2 ${
-            paid
-              ? 'border-brand-600 bg-brand-600 text-white'
-              : 'border-border hover:border-brand-600 text-transparent'
-          }`}
+          className="focus-visible:ring-brand-600 flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full [-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         >
-          <Check className="h-4 w-4 md:h-3.5 md:w-3.5" strokeWidth={3} aria-hidden />
-        </button>
-
-        <div className="flex items-baseline justify-between gap-3 md:contents">
-          <span className="text-muted-foreground text-xs font-medium tracking-wide md:order-1 md:text-sm">
-            {formatDate(dueIso, locale, 'medium')}
-          </span>
           <span
-            data-testid={`charges-instalment-amount-${row.id}`}
-            className={`shrink-0 text-base font-semibold tabular-nums md:order-4 md:text-right md:text-sm md:font-medium ${
-              paid ? 'text-muted-foreground line-through' : 'text-foreground'
+            aria-hidden
+            className={`flex size-7 items-center justify-center rounded-full border-2 transition-colors ${
+              paid ? 'border-brand-600 bg-brand-600 text-white' : 'border-border text-transparent'
             }`}
           >
-            {formatCurrency(row.amountDue, locale)}
+            <Check className="h-3.5 w-3.5" strokeWidth={3} />
           </span>
-        </div>
-
-        <div className="mt-2 flex flex-wrap items-center gap-2 md:mt-0 md:contents">
-          <span className="text-foreground min-w-0 truncate text-sm font-medium md:order-2 md:text-base">
-            {row.label}
-          </span>
-          {/* The instalment carries its position in the schedule — « échéance
-              5/11 » — which a perpetual charge cannot have. Derived from the
-              anchor + cadence, never stored. */}
-          <span
-            data-testid={`charges-instalment-position-${row.id}`}
-            className="text-muted-foreground shrink-0 text-xs tabular-nums md:order-3"
-          >
-            {t('installmentPosition', {
-              index: row.installmentIndex,
-              total: row.installmentsTotal,
-            })}
-          </span>
+        </button>
+        <div className="min-w-0 flex-1 px-2 py-1.5">
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="text-foreground min-w-0 text-sm font-medium [overflow-wrap:anywhere] md:text-base">
+              {row.label}
+            </span>
+            <span
+              data-testid={`charges-instalment-amount-${row.id}`}
+              className={`shrink-0 text-sm font-semibold tabular-nums md:text-base ${
+                paid ? 'text-muted-foreground line-through' : 'text-foreground'
+              }`}
+            >
+              {formatCurrency(row.amountDue, locale)}
+            </span>
+          </div>
+          <p className="text-muted-foreground mt-0.5 text-xs">
+            {formatDate(dueIso, locale, 'medium')}
+            {' · '}
+            <span data-testid={`charges-instalment-position-${row.id}`} className="tabular-nums">
+              {t('installmentPosition', {
+                index: row.installmentIndex,
+                total: row.installmentsTotal,
+              })}
+            </span>
+          </p>
         </div>
       </li>
     );
@@ -791,315 +833,269 @@ export function ChargesClient({
         </Card>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {t('count', { count: charges.length })}
-            {/* Explains the "19 charges vs 16/16 paid" gap: charges not due
-                this month (e.g. annual bills anchored elsewhere) have no
-                toggle and are excluded from the paid countdown. */}
-            {dueThisMonthCount > 0 && (
-              <span className="text-muted-foreground ml-2 text-sm font-normal">
-                · {t('dueCount', { due: dueThisMonthCount })}
-              </span>
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {charges.length === 0 ? (
-            <p data-testid="charges-empty-state" className="text-muted-foreground text-sm">
+      {charges.length === 0 ? (
+        <Card>
+          <CardContent>
+            <p data-testid="charges-empty-state" className="text-muted-foreground pt-6 text-sm">
               {t('emptyState')}
             </p>
-          ) : (
-            <>
-              {/* Month-history navigator (@thierry priority 2026-07-19): browse
-                  any past month's paid/unpaid state; ticks stay editable so a
-                  forgotten June bill can be settled from July. */}
-              <nav
-                aria-label={t('periodNav.navAria')}
-                className="mb-4 flex flex-wrap items-center justify-between gap-3"
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          {/* Month-history navigator (@thierry 2026-07-19): browse any past
+              month's paid/unpaid state; ticks stay editable. */}
+          <nav
+            aria-label={t('periodNav.navAria')}
+            className="flex flex-wrap items-center justify-between gap-3"
+          >
+            <div className="flex items-center gap-1">
+              {periodNav.prevParam ? (
+                <Link
+                  href={{ pathname: '/app/charges', query: { period: periodNav.prevParam } }}
+                  aria-label={t('periodNav.prevAria')}
+                  data-testid="charges-period-prev"
+                  className="hover:bg-surface-muted focus-visible:ring-brand-600 text-muted-foreground flex size-11 items-center justify-center rounded-md transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                >
+                  <ChevronLeft aria-hidden className="h-4 w-4" />
+                </Link>
+              ) : (
+                <span className="text-muted-foreground/30 flex size-11 items-center justify-center">
+                  <ChevronLeft aria-hidden className="h-4 w-4" />
+                </span>
+              )}
+              <span
+                data-testid="charges-period-label"
+                className="text-foreground min-w-32 text-center text-sm font-semibold capitalize"
               >
-                <div className="flex items-center gap-1">
-                  {periodNav.prevParam ? (
-                    <Link
-                      href={{ pathname: '/app/charges', query: { period: periodNav.prevParam } }}
-                      aria-label={t('periodNav.prevAria')}
-                      data-testid="charges-period-prev"
-                      className="hover:bg-surface-muted focus-visible:ring-brand-600 text-muted-foreground flex size-9 items-center justify-center rounded-md transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                    >
-                      <ChevronLeft aria-hidden className="h-4 w-4" />
-                    </Link>
-                  ) : (
-                    <span className="text-muted-foreground/30 flex size-9 items-center justify-center">
-                      <ChevronLeft aria-hidden className="h-4 w-4" />
-                    </span>
-                  )}
-                  <span
-                    data-testid="charges-period-label"
-                    className="text-foreground min-w-32 text-center text-sm font-semibold capitalize"
-                  >
-                    {periodNav.label}
-                  </span>
-                  {periodNav.nextParam ? (
-                    <Link
-                      href={{ pathname: '/app/charges', query: { period: periodNav.nextParam } }}
-                      aria-label={t('periodNav.nextAria')}
-                      data-testid="charges-period-next"
-                      className="hover:bg-surface-muted focus-visible:ring-brand-600 text-muted-foreground flex size-9 items-center justify-center rounded-md transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                    >
-                      <ChevronRight aria-hidden className="h-4 w-4" />
-                    </Link>
-                  ) : (
-                    <span className="text-muted-foreground/30 flex size-9 items-center justify-center">
-                      <ChevronRight aria-hidden className="h-4 w-4" />
-                    </span>
-                  )}
-                </div>
-                {!periodNav.isCurrent && (
-                  <Link
-                    href="/app/charges"
-                    data-testid="charges-period-back"
-                    className="text-brand-text hover:text-brand-text-strong focus-visible:ring-brand-600 rounded-md text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                  >
-                    {t('periodNav.backToCurrent', { month: periodNav.currentLabel })}
-                  </Link>
-                )}
-              </nav>
-              {/* Live "reste à payer" headline — promoted to the TOP of the list
-                  (dashboard-ux M2: the old bottom summary was invisible after 16
-                  rows). Derived from `optimisticPaid`, so the amount counts down
-                  the instant a bill is ticked. Distinct from the smoothed
-                  "Effort lissé" total below (which intentionally never moves). */}
-              {/* THE TWO NAMED VIEWS (chantier 3).
-                  « À payer ce mois » is CASH: every occurrence falling due,
-                  bills and instalments together. « Effort lissé » is BUDGET:
-                  monthly charges + smoothed provisions + instalments. They are
-                  different numbers on purpose, and the whole class of bugs
-                  being closed here came from a screen carrying two totals whose
-                  periods nobody had named. */}
-              <div
-                data-testid="charges-two-views"
-                className="border-border/60 mb-4 grid gap-3 rounded-lg border p-3 sm:grid-cols-2"
+                {periodNav.label}
+              </span>
+              {periodNav.nextParam ? (
+                <Link
+                  href={{ pathname: '/app/charges', query: { period: periodNav.nextParam } }}
+                  aria-label={t('periodNav.nextAria')}
+                  data-testid="charges-period-next"
+                  className="hover:bg-surface-muted focus-visible:ring-brand-600 text-muted-foreground flex size-11 items-center justify-center rounded-md transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                >
+                  <ChevronRight aria-hidden className="h-4 w-4" />
+                </Link>
+              ) : (
+                <span className="text-muted-foreground/30 flex size-11 items-center justify-center">
+                  <ChevronRight aria-hidden className="h-4 w-4" />
+                </span>
+              )}
+            </div>
+            {!periodNav.isCurrent && (
+              <Link
+                href="/app/charges"
+                data-testid="charges-period-back"
+                className="text-brand-text hover:text-brand-text-strong focus-visible:ring-brand-600 rounded-md text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
               >
-                <div>
-                  <p className="text-muted-foreground text-xs font-medium">
-                    {t('aPayerCeMoisLabel')}
-                  </p>
-                  <p
-                    data-testid="charges-a-payer-total"
-                    className="text-foreground text-xl font-bold tabular-nums"
-                  >
-                    {formatCurrency(aPayerCeMoisTotal, locale)}
-                  </p>
-                  <p className="text-muted-foreground mt-0.5 text-[11px] leading-snug">
-                    {t('aPayerCeMoisHint')}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-xs font-medium">
-                    {t('effortLisseLabel')}
-                  </p>
-                  <p
-                    data-testid="charges-effort-lisse-total"
-                    className="text-foreground text-xl font-bold tabular-nums"
-                  >
-                    {formatCurrency(effortLisseTotal, locale)}
-                  </p>
-                  <p className="text-muted-foreground mt-0.5 text-[11px] leading-snug">
-                    {t('effortLisseHint')}
-                  </p>
-                </div>
+                {t('periodNav.backToCurrent', { month: periodNav.currentLabel })}
+              </Link>
+            )}
+          </nav>
+
+          {/* The page's answer card (F8): what is still to pay, how many of
+              the month's obligations are paid, and — its second row (F5) —
+              everything falling due this month, paid included. Both read
+              the SAME optimistic sets as the rows, so a tick moves them at
+              once. */}
+          <section
+            data-testid="charges-head-card"
+            aria-labelledby="charges-head-title"
+            className={`border-border rounded-2xl border p-4 shadow-sm ${
+              allPaidThisMonth ? 'bg-brand-600/10' : 'bg-card'
+            }`}
+          >
+            <p className="text-muted-foreground text-[11px] font-semibold tracking-widest uppercase">
+              {t('headEyebrow')}
+            </p>
+            <div
+              data-testid="charges-paid-summary"
+              className="mt-2"
+              aria-live="polite"
+              role="status"
+              aria-atomic="true"
+            >
+              <h2
+                id="charges-head-title"
+                className={`flex items-center gap-1.5 text-sm font-medium ${
+                  allPaidThisMonth ? 'text-brand-text' : 'text-foreground'
+                }`}
+              >
+                {allPaidThisMonth && <Check aria-hidden className="h-3.5 w-3.5" strokeWidth={3} />}
+                {allPaidThisMonth
+                  ? periodNav.isCurrent
+                    ? t('allPaidTitle')
+                    : t('allPaidPeriod', { month: periodNav.label })
+                  : periodNav.isCurrent
+                    ? t('encoreAPayer')
+                    : t('encoreAPayerPeriod', { month: periodNav.label })}
+              </h2>
+              <p
+                data-testid="charges-remaining-amount"
+                className={`text-3xl font-bold tracking-tight tabular-nums ${
+                  allPaidThisMonth ? 'text-brand-text' : 'text-foreground'
+                }`}
+              >
+                {formatCurrency(remainingThisMonth, locale)}
+              </p>
+              <p className="text-muted-foreground mt-0.5 text-xs tabular-nums">
+                {dueThisMonthCount > 0
+                  ? t('paidCount', { paid: paidThisMonthCount, total: dueThisMonthCount })
+                  : t('groupNothingDue')}
+              </p>
+            </div>
+            <div className="border-border/60 mt-3 flex items-baseline justify-between gap-3 border-t pt-3">
+              <div className="min-w-0">
+                <p className="text-foreground text-sm">{t('aPayerCeMoisLabel')}</p>
+                <p className="text-muted-foreground mt-0.5 text-xs">{t('aPayerCeMoisHint')}</p>
               </div>
+              <p
+                data-testid="charges-a-payer-total"
+                className="text-foreground shrink-0 text-base font-semibold tabular-nums"
+              >
+                {formatCurrency(aPayerCeMoisTotal, locale)}
+              </p>
+            </div>
+          </section>
 
-              {/* The heuristic WARNS. It never calculates — no total above or
-                  below moves because of what is said here. */}
-              {duplicates.map((d) => (
-                <div
-                  key={`${d.chargeId}-${d.commitmentId}`}
-                  data-testid={`charges-duplicate-${d.chargeId}`}
-                  role="status"
-                  className="border-warning/40 bg-warning/10 mb-4 flex gap-3 rounded-lg border p-3"
-                >
-                  <AlertTriangle
-                    aria-hidden
-                    className="text-warning mt-0.5 h-4 w-4 shrink-0"
-                    strokeWidth={2}
-                  />
-                  <div className="min-w-0 text-xs leading-relaxed">
-                    <p className="text-foreground font-semibold">{t('duplicateTitle')}</p>
-                    <p className="text-foreground mt-0.5">
-                      {t('duplicateBody', {
-                        charge: d.chargeLabel,
-                        commitment: d.commitmentLabel,
-                        amount: formatCurrency(d.montant, locale),
-                      })}
-                    </p>
-                    <p className="text-muted-foreground mt-0.5">
-                      {t('duplicateSignals', {
-                        signals: d.signaux
-                          .map((s) =>
-                            t(
-                              s === 'montant'
-                                ? 'signalMontant'
-                                : s === 'jour'
-                                  ? 'signalJour'
-                                  : 'signalLibelle',
-                            ),
-                          )
-                          .join(', '),
-                      })}
-                    </p>
-                    <p className="text-muted-foreground mt-0.5">{t('duplicateNote')}</p>
-                  </div>
-                </div>
-              ))}
-
-              {dueThisMonthCount > 0 && (
-                <div
-                  data-testid="charges-paid-summary"
-                  className={`mb-4 flex items-center justify-between gap-3 rounded-lg px-4 py-3 ${
-                    allPaidThisMonth ? 'bg-brand-600/10' : 'bg-surface-muted'
-                  }`}
-                >
-                  {/* aria-live sits on the container (label + amount) with
-                      aria-atomic, so screen readers announce "Reste à payer ce
-                      mois 45 €" as one utterance on each tick — not the bare
-                      currency value (Sourcery review). All-paid flips the banner
-                      to a success state: the month's micro-reward. */}
-                  <div className="min-w-0" aria-live="polite" role="status" aria-atomic="true">
-                    <p
-                      className={`flex items-center gap-1.5 text-xs font-medium ${
-                        allPaidThisMonth ? 'text-brand-text' : 'text-muted-foreground'
-                      }`}
-                    >
-                      {allPaidThisMonth && (
-                        <Check aria-hidden className="h-3.5 w-3.5" strokeWidth={3} />
-                      )}
-                      {allPaidThisMonth
-                        ? periodNav.isCurrent
-                          ? t('allPaidTitle')
-                          : t('allPaidPeriod', { month: periodNav.label })
-                        : periodNav.isCurrent
-                          ? t('remainingLabel')
-                          : t('remainingLabelPeriod', { month: periodNav.label })}
-                    </p>
-                    <p
-                      data-testid="charges-remaining-amount"
-                      className={`text-xl font-bold tabular-nums ${
-                        allPaidThisMonth ? 'text-brand-text' : 'text-foreground'
-                      }`}
-                    >
-                      {formatCurrency(remainingThisMonth, locale)}
-                    </p>
-                  </div>
-                  <span className="text-muted-foreground shrink-0 text-sm tabular-nums">
-                    {t('paidCount', { paid: paidThisMonthCount, total: dueThisMonthCount })}
-                  </span>
-                </div>
-              )}
-
-              {/* ONE gesture for the month's past instalments, and the same
-                  gesture undoes it. Deliberately NOT behind a confirmation
-                  dialog: the undo IS the button, so a dialog would only add a
-                  tap to a monthly routine. The label says which way the next
-                  press goes, so nothing has to be remembered. */}
-              {bulk.gesture !== 'rien' && (
-                <div className="mb-4 flex flex-wrap items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={onBulkPastDue}
-                    disabled={isPending}
-                    // Le libellé est une PHRASE, pas un verbe : « Marquer les
-                    // échéances passées comme payées » mesure 372 px, et la
-                    // primitive Button impose `whitespace-nowrap`. Sur un écran
-                    // de 375 px la ligne ne peut pas revenir, donc la PAGE
-                    // débordait de 38 px — attrapé par la spec d'anti-débordement.
-                    // On rend le retour à la ligne possible ici seulement, et la
-                    // hauteur suit (`h-auto`), sinon le texte replié sortirait du
-                    // bouton. `min-w-0` pour que le conteneur flex puisse le
-                    // rétrécir. Aucun autre bouton n'est touché.
-                    className="h-auto min-w-0 py-2 text-left whitespace-normal"
-                    data-testid="charges-bulk-past-due"
-                    data-gesture={bulk.gesture}
-                  >
-                    <ListChecks className="h-4 w-4 shrink-0" aria-hidden />
-                    {bulk.gesture === 'pointer' ? t('bulkPastDue') : t('bulkPastDueUndo')}
-                  </Button>
-                  <span className="text-muted-foreground text-xs">
-                    {t('bulkPastDueCount', { count: bulk.pastDueCount })} · {t('bulkPastDueHint')}
-                  </span>
-                </div>
-              )}
-
-              {/* One-time hint teaching the Payé toggle convention
-                  (dashboard-ux F2) — shown only while there is still something
-                  to tick; once the month is fully paid it is pure noise. */}
-              {dueThisMonthCount > 0 && !allPaidThisMonth && (
-                <p className="text-muted-foreground mb-4 text-xs" data-testid="charges-paid-hint">
-                  {t('paidHint')}
+          {/* The heuristic WARNS. It never calculates — no total moves because
+              of what is said here. */}
+          {duplicates.map((d) => (
+            <div
+              key={`${d.chargeId}-${d.commitmentId}`}
+              data-testid={`charges-duplicate-${d.chargeId}`}
+              role="status"
+              className="border-warning/40 bg-warning/10 flex gap-3 rounded-lg border p-3"
+            >
+              <AlertTriangle
+                aria-hidden
+                className="text-warning mt-0.5 h-4 w-4 shrink-0"
+                strokeWidth={2}
+              />
+              <div className="min-w-0 text-xs leading-relaxed">
+                <p className="text-foreground font-semibold">{t('duplicateTitle')}</p>
+                <p className="text-foreground mt-0.5">
+                  {t('duplicateBody', {
+                    charge: d.chargeLabel,
+                    commitment: d.commitmentLabel,
+                    amount: formatCurrency(d.montant, locale),
+                  })}
                 </p>
-              )}
-              {/* `charges-list` is now a wrapper holding one <section> per
-                  non-empty frequency group. The only `listitem`s remain the
-                  charge rows inside each group's <ul>, so the total count
-                  still equals `charges.length` (no row hidden, no parasite
-                  listitem from headings or the total footer). */}
-              <div data-testid="charges-list" className="flex flex-col gap-6">
-                {groups.map(({ freq, rows }) => {
-                  const headingId = `charges-group-${freq}-heading`;
-                  // Live per-group countdown: cash still due THIS month in this
-                  // group (due-this-month rows not ticked). Derived from the
-                  // optimistic paid set, so it drops the instant a bill is
-                  // ticked — unlike the subtotal, which documents the group's
-                  // full recurring cost and intentionally never moves.
-                  const groupDue = rows.filter(
-                    (c) => c.isActive && c.paymentMonths.includes(viewedPeriod.month),
-                  );
-                  const groupRemaining = groupDue
-                    .filter((c) => !optimisticPaid.has(c.id))
-                    .reduce((sum, c) => sum + c.amount, 0);
-                  const groupAllPaid =
-                    groupDue.length > 0 && groupDue.every((c) => optimisticPaid.has(c.id));
-                  return (
-                    <section
-                      key={freq}
-                      data-testid={`charges-group-${freq}`}
-                      aria-labelledby={headingId}
+                <p className="text-muted-foreground mt-0.5">
+                  {t('duplicateSignals', {
+                    signals: d.signaux
+                      .map((s) =>
+                        t(
+                          s === 'montant'
+                            ? 'signalMontant'
+                            : s === 'jour'
+                              ? 'signalJour'
+                              : 'signalLibelle',
+                        ),
+                      )
+                      .join(', '),
+                  })}
+                </p>
+                <p className="text-muted-foreground mt-0.5">{t('duplicateNote')}</p>
+              </div>
+            </div>
+          ))}
+
+          {/* F9 — ONE gesture for the month's past instalments, and the same
+              gesture undoes it. No dialog: the undo IS the button. The label
+              is a sentence, so it may wrap (`whitespace-normal`, `h-auto`). */}
+          {bulk.gesture !== 'rien' && (
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onBulkPastDue}
+                disabled={isPending}
+                className="h-auto min-w-0 py-2 text-left whitespace-normal"
+                data-testid="charges-bulk-past-due"
+                data-gesture={bulk.gesture}
+              >
+                <ListChecks className="h-4 w-4 shrink-0" aria-hidden />
+                {bulk.gesture === 'pointer' ? t('bulkPastDue') : t('bulkPastDueUndo')}
+              </Button>
+              <span className="text-muted-foreground text-xs">
+                {t('bulkPastDueCount', { count: bulk.pastDueCount })} · {t('bulkPastDueHint')}
+              </span>
+            </div>
+          )}
+
+          {dueThisMonthCount > 0 && !allPaidThisMonth && (
+            <p className="text-muted-foreground text-xs" data-testid="charges-paid-hint">
+              {t('paidHint')}
+            </p>
+          )}
+
+          {/* F10 — one disclosure per cadence. « Mensuel » opens by default;
+              the others start folded below `md` and open from `md` up. A
+              folded cadence still says what it holds. The only `listitem`s
+              are the rows, so their count still equals `charges.length` once
+              every group is open. */}
+          <div data-testid="charges-list" className="flex flex-col gap-3">
+            {groups.map(({ freq, rows }) => {
+              const headingId = `charges-group-${freq}-heading`;
+              const listId = `charges-group-${freq}-list`;
+              const open = isGroupOpen(freq);
+              const groupDue = rows.filter(
+                (c) => c.isActive && c.paymentMonths.includes(viewedPeriod.month),
+              );
+              const groupUnpaid = groupDue.filter((c) => !optimisticPaid.has(c.id));
+              const groupRemaining = groupUnpaid.reduce((sum, c) => sum + c.amount, 0);
+              const groupAllPaid = groupDue.length > 0 && groupUnpaid.length === 0;
+              return (
+                <section
+                  key={freq}
+                  data-testid={`charges-group-${freq}`}
+                  aria-labelledby={headingId}
+                  className="border-border bg-card rounded-2xl border"
+                >
+                  <h2 id={headingId} className="m-0">
+                    <button
+                      type="button"
+                      onClick={() => toggleGroup(freq, open)}
+                      aria-expanded={open}
+                      aria-controls={listId}
+                      data-testid={`charges-group-toggle-${freq}`}
+                      className="hover:bg-surface-muted focus-visible:ring-brand-600 flex min-h-12 w-full items-center justify-between gap-3 rounded-2xl px-4 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
                     >
-                      {/* Group header — neutral recurrence icon + frequency +
-                          item count, adopting the cockpit "Prochaines factures"
-                          card language. The subtotal moves BELOW the list
-                          (validated @thierry 2026-06-04: total read after the
-                          rows, coloured for impact). */}
-                      <h2
-                        id={headingId}
-                        className="text-muted-foreground mb-2 flex items-center gap-2 text-xs font-semibold tracking-wide uppercase"
-                      >
-                        <Repeat aria-hidden strokeWidth={1.5} className="h-4 w-4" />
-                        {tFreq(freq)}
-                        <span className="text-muted-foreground/70 ml-0.5 text-[11px] font-medium normal-case">
-                          {t('count', { count: rows.length })}
+                      <span className="min-w-0 text-sm">
+                        <span className="text-foreground font-semibold">{tFreq(freq)}</span>
+                        <span className="text-muted-foreground">
+                          {' · '}
+                          {groupDue.length > 0
+                            ? t('groupSummaryDue', {
+                                unpaid: groupUnpaid.length,
+                                due: groupDue.length,
+                              })
+                            : t('groupSummaryNone', { count: rows.length })}
                         </span>
-                      </h2>
-                      <ul
-                        role="list"
-                        className="border-border divide-border/60 divide-y overflow-hidden rounded-xl border"
-                      >
+                      </span>
+                      <ChevronDown
+                        aria-hidden
+                        className={`text-muted-foreground h-4 w-4 shrink-0 transition-transform ${
+                          open ? 'rotate-180' : ''
+                        }`}
+                      />
+                    </button>
+                  </h2>
+                  {open && (
+                    <div id={listId} className="pb-2">
+                      <ul role="list" className="divide-border/60 divide-y">
                         {rows.map((c) => renderChargeRow(c))}
                       </ul>
-                      {/* Group footer — ONE live figure (@thierry 2026-07-19):
-                          the remaining amount to pay in this group this month,
-                          counting down to ✓ 0 € as bills are ticked. The old
-                          static recurring-cost subtotal was redundant with the
-                          global totals below, and its "reste" chip duplicated
-                          the top banner. Groups with nothing due this month
-                          say so (keeps the footer — and its e2e-asserted
-                          testid — always present). */}
+                      {/* One live figure per group: what is still to pay in
+                          it this month, down to ✓ 0 €. */}
                       <p
                         data-testid={`charges-group-subtotal-${freq}`}
-                        className="mt-2 flex items-baseline justify-end gap-1.5 px-1"
+                        className="flex items-baseline justify-end gap-1.5 px-4 pt-1"
                       >
                         {groupDue.length === 0 ? (
                           <span className="text-muted-foreground text-xs">
@@ -1127,99 +1123,194 @@ export function ChargesClient({
                           </>
                         )}
                       </p>
-                    </section>
-                  );
-                })}
+                    </div>
+                  )}
+                </section>
+              );
+            })}
 
-                {/* « Crédits & échéanciers » — the third family, in the SAME
-                    list. Its rows are DERIVED from each commitment's anchor +
-                    cadence + instalment count (`isDueInPeriod`), never stored:
-                    generating instalment rows would reintroduce exactly the
-                    drift ADR-021 removed, and cost a migration.
-
-                    This group is the structural guard-rail of the whole
-                    chantier — a bill and an instalment for the same obligation
-                    are now visible side by side, and the warning above names
-                    them. */}
-                {commitmentInstalments.length > 0 && (
-                  <section
-                    data-testid="charges-group-commitments"
-                    aria-labelledby="charges-group-commitments-heading"
-                  >
-                    <h2
-                      id="charges-group-commitments-heading"
-                      className="text-muted-foreground mb-2 flex items-center gap-2 text-xs font-semibold tracking-wide uppercase"
-                    >
-                      <Repeat aria-hidden strokeWidth={1.5} className="h-4 w-4" />
-                      {t('commitmentsGroupTitle')}
-                      <span className="text-muted-foreground/70 ml-0.5 text-[11px] font-medium normal-case">
-                        {t('count', { count: commitmentInstalments.length })}
-                      </span>
-                    </h2>
-                    <ul
-                      role="list"
-                      className="border-border divide-border/60 divide-y overflow-hidden rounded-xl border"
-                    >
-                      {commitmentInstalments.map((row) => renderInstalmentRow(row))}
-                    </ul>
-                  </section>
-                )}
-              </div>
-
-              {/* Global total — the headline @thierry asked for ("on ne voit
-                  jamais le total des factures en bas"). The smoothed monthly
-                  effort is the lead figure (consistent with the subtitle "lissée
-                  sur 12 mois"); the annual equivalent is the secondary, descriptive
-                  line. FSMA: both are descriptive totals, no advice, and never a
-                  raw cross-cadence sum. Sits OUTSIDE every group <ul> so it
-                  introduces no `listitem`. */}
-              <div
-                data-testid="charges-total"
-                className="border-border/60 mt-6 flex flex-col gap-1 border-t pt-4"
+            {/* The month's commitment instalments, in the SAME list: a bill
+                and an instalment for the same obligation are visible side by
+                side (F13). Derived, never stored (ADR-021). */}
+            {commitmentInstalments.length > 0 && (
+              <section
+                data-testid="charges-group-commitments"
+                aria-labelledby="charges-group-commitments-heading"
+                className="border-border bg-card rounded-2xl border"
               >
-                <div className="flex items-baseline justify-between gap-3">
-                  <span className="text-foreground text-sm font-medium">
-                    {t('totalMonthlyLabel')}
-                  </span>
-                  <span
-                    data-testid="charges-total-monthly"
-                    className="text-foreground text-base font-semibold tabular-nums"
+                <h2 id="charges-group-commitments-heading" className="m-0">
+                  <button
+                    type="button"
+                    onClick={() => setCommitmentsOpenOverride(!commitmentsOpen)}
+                    aria-expanded={commitmentsOpen}
+                    aria-controls="charges-group-commitments-list"
+                    data-testid="charges-group-toggle-commitments"
+                    className="hover:bg-surface-muted focus-visible:ring-brand-600 flex min-h-12 w-full items-center justify-between gap-3 rounded-2xl px-4 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
                   >
+                    <span className="min-w-0 text-sm">
+                      <span className="text-foreground font-semibold">
+                        {t('commitmentsGroupTitle')}
+                      </span>
+                      <span className="text-muted-foreground">
+                        {' · '}
+                        {t('instalmentCount', { count: commitmentInstalments.length })}
+                      </span>
+                    </span>
+                    <ChevronDown
+                      aria-hidden
+                      className={`text-muted-foreground h-4 w-4 shrink-0 transition-transform ${
+                        commitmentsOpen ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </button>
+                </h2>
+                {commitmentsOpen && (
+                  <ul
+                    id="charges-group-commitments-list"
+                    role="list"
+                    className="divide-border/60 divide-y pb-2"
+                  >
+                    {commitmentInstalments.map((row) => renderInstalmentRow(row))}
+                  </ul>
+                )}
+              </section>
+            )}
+          </div>
+
+          {/* F6/F14 — what the month counts for your bills, opened on what
+              composes it (rule of code 10). « Effort lissé » is only the
+              monthly share of the NON-monthly bills (F-3), and each part says
+              the bill, its real amount and its rhythm (DESIGN-v3 rule 28).
+              The total is « Compté chaque mois », with its year beneath. */}
+          <section
+            data-testid="charges-total"
+            aria-labelledby="charges-total-heading"
+            className="border-border bg-card rounded-2xl border"
+          >
+            <h2 id="charges-total-heading" className="m-0">
+              <button
+                type="button"
+                onClick={() => setTotalOpenOverride(!totalOpen)}
+                aria-expanded={totalOpen}
+                aria-controls="charges-total-body"
+                data-testid="charges-total-toggle"
+                className="hover:bg-surface-muted focus-visible:ring-brand-600 flex min-h-12 w-full items-center justify-between gap-3 rounded-2xl px-4 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
+              >
+                <span className="text-foreground min-w-0 text-sm font-semibold">
+                  {t('totalSectionTitle')}
+                  <span className="text-muted-foreground font-normal tabular-nums">
+                    {' · '}
                     {formatCurrency(effortLisseTotal, locale)}
                   </span>
+                </span>
+                <ChevronDown
+                  aria-hidden
+                  className={`text-muted-foreground h-4 w-4 shrink-0 transition-transform ${
+                    totalOpen ? 'rotate-180' : ''
+                  }`}
+                />
+              </button>
+            </h2>
+            {totalOpen && (
+              <div id="charges-total-body" className="flex flex-col gap-3 px-4 pb-4">
+                {renderPoste('monthly', monthlyBills)}
+                <div>
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="text-foreground text-sm font-medium">
+                      {t('effortLisseLabel')}
+                    </span>
+                    <span
+                      data-testid="charges-effort-lisse-total"
+                      className="text-foreground text-sm font-semibold tabular-nums"
+                    >
+                      {formatCurrency(lissage.total, locale)}
+                    </span>
+                  </div>
+                  <p className="text-muted-foreground mt-0.5 text-xs">{t('effortLisseHint')}</p>
+                  {lissage.parts.length > 0 && (
+                    <ul role="list" className="mt-2 flex flex-col gap-1.5">
+                      {lissage.parts.map((p) => (
+                        <li
+                          key={p.id}
+                          data-testid={`charges-lissage-part-${p.id}`}
+                          className="flex items-baseline justify-between gap-3 text-xs"
+                        >
+                          <span className="text-foreground min-w-0">
+                            {t('lissagePartSource', {
+                              label: p.label,
+                              amount: formatCurrency(p.invoiceAmount, locale),
+                              months: p.cycleMonths,
+                            })}
+                          </span>
+                          <span className="text-muted-foreground shrink-0 tabular-nums">
+                            {t('lissagePartMonthly', {
+                              amount: formatCurrency(p.monthly, locale),
+                            })}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
-                <div className="flex items-baseline justify-between gap-3">
-                  <span className="text-muted-foreground text-sm">{t('totalAnnualLabel')}</span>
-                  <span
+                {renderPoste('commitments', commitmentShare)}
+                <div className="border-border/60 border-t pt-3">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="text-foreground text-sm font-medium">
+                      {t('totalMonthlyLabel')}
+                    </span>
+                    <span
+                      data-testid="charges-total-monthly"
+                      className="text-foreground text-base font-semibold tabular-nums"
+                    >
+                      {formatCurrency(effortLisseTotal, locale)}
+                    </span>
+                  </div>
+                  <p className="text-muted-foreground mt-0.5 text-xs">{t('totalMonthlyHint')}</p>
+                  <p
                     data-testid="charges-total-annual"
-                    className="text-muted-foreground text-sm tabular-nums"
+                    className="text-muted-foreground mt-0.5 text-xs tabular-nums"
                   >
-                    {formatCurrency(effortLisseAnnuelTotal, locale)}
-                  </span>
+                    {t('totalAnnualLine', {
+                      amount: formatCurrency(effortLisseAnnuelTotal, locale),
+                    })}
+                  </p>
                 </div>
               </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
+            )}
+          </section>
+        </>
+      )}
 
-      <ChargeEditDrawer
-        charge={editingCharge}
-        onClose={() => setEditingCharge(null)}
-        // Sequential panels, never nested: the drawer closes, then the sheet
-        // opens on the same charge.
-        onConvert={(c) => {
-          setEditingCharge(null);
-          setConvertingCharge({
-            id: c.id,
-            label: c.label,
-            amount: c.amount,
-            frequency: c.frequency,
-            paymentDay: c.paymentDay,
-            paymentMonths: c.paymentMonths,
-          });
-        }}
-      />
+      {/* Mounted per opening, keyed on the charge: closing unmounts it, so a
+          pending delete confirmation or an unsaved edit never survives into
+          the next opening (Reviewer, E1 bis). */}
+      {editingCharge && (
+        <ChargeEditDrawer
+          key={editingCharge.id}
+          charge={editingCharge}
+          onClose={() => setEditingCharge(null)}
+          watched={optimisticWatched.has(editingCharge.id)}
+          onToggleWatch={() => {
+            const c = charges.find((x) => x.id === editingCharge.id);
+            if (c) onToggleWatch(c);
+          }}
+          onDelete={onDelete}
+          pendingOutside={isPending}
+          // Sequential panels, never nested: the drawer closes, then the sheet
+          // opens on the same charge.
+          onConvert={(c) => {
+            setEditingCharge(null);
+            setConvertingCharge({
+              id: c.id,
+              label: c.label,
+              amount: c.amount,
+              frequency: c.frequency,
+              paymentDay: c.paymentDay,
+              paymentMonths: c.paymentMonths,
+            });
+          }}
+        />
+      )}
       <ConvertChargeSheet
         charge={convertingCharge}
         onClose={() => setConvertingCharge(null)}
