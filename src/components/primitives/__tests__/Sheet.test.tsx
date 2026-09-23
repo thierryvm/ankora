@@ -356,6 +356,22 @@ describe('Sheet — anchoring', () => {
     expect(panel.className).toContain('md:inset-y-0');
   });
 
+  // F-8 — a height floor keeps the sheet from jumping when its content
+  // changes, but a floor in px alone would beat the ceiling when the viewport
+  // shrinks (rotation, Android keyboard) and push the sheet off the top. The
+  // floor is therefore capped by the SAME svh ceiling (never dvh, #439).
+  it('holds a height floor that can never exceed its svh ceiling', async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    const panel = await open(user);
+    const classes = panel.className.split(/\s+/);
+    const floor = classes.filter((c) => c.startsWith('min-h-['));
+    expect(floor).toEqual(['min-h-[min(15rem,92svh)]']);
+    expect(classes).toContain('max-h-[92svh]');
+    // Desktop variants set their own height; the mobile floor does not follow.
+    expect(classes).toContain('md:min-h-0');
+  });
+
   it('renders the 36 × 5 grab handle', async () => {
     const user = userEvent.setup();
     render(<Harness />);
