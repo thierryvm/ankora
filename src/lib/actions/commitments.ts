@@ -4,6 +4,7 @@ import { z } from 'zod';
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidateAppPath, revalidateDashboard } from '@/lib/actions/revalidate';
+import { isCategoryWritable } from '@/lib/actions/category-ownership';
 import { accountTypeFromKind } from '@/lib/domain/accounts/account-type';
 import type { ChargePaidFrom } from '@/lib/domain/types';
 import { commitmentInputSchema, commitmentUpdateSchema } from '@/lib/schemas/commitment';
@@ -65,6 +66,11 @@ export async function createCommitmentAction(input: unknown): Promise<ActionResu
   }
 
   const supabase = await createClient();
+  if (
+    !(await isCategoryWritable(supabase, ctx.workspaceId, parsed.data.categoryId, 'commitment'))
+  ) {
+    return { ok: false, errorCode: 'errors.validation.generic' };
+  }
   const { error } = await supabase.from('commitments').insert({
     workspace_id: ctx.workspaceId,
     created_by: ctx.userId,
@@ -115,6 +121,9 @@ export async function updateCommitmentAction(id: string, input: unknown): Promis
 
   const d = parsed.data;
   const supabase = await createClient();
+  if (!(await isCategoryWritable(supabase, ctx.workspaceId, d.categoryId, 'commitment'))) {
+    return { ok: false, errorCode: 'errors.validation.generic' };
+  }
   const { error } = await supabase
     .from('commitments')
     .update({

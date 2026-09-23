@@ -4,6 +4,7 @@ import { z } from 'zod';
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidateAppPath, revalidateDashboard } from '@/lib/actions/revalidate';
+import { isCategoryWritable } from '@/lib/actions/category-ownership';
 import { chargeInputSchema, chargeUpdateSchema } from '@/lib/schemas/charge';
 import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
 import { rateLimit } from '@/lib/security/rate-limit';
@@ -64,6 +65,9 @@ export async function createChargeAction(input: unknown): Promise<ActionResult> 
       : undefined;
 
   const supabase = await createClient();
+  if (!(await isCategoryWritable(supabase, ctx.workspaceId, parsed.data.categoryId, 'charge'))) {
+    return { ok: false, errorCode: 'errors.validation.generic' };
+  }
   const { error } = await supabase.from('charges').insert({
     workspace_id: ctx.workspaceId,
     created_by: ctx.userId,
@@ -125,6 +129,9 @@ export async function updateChargeAction(id: string, input: unknown): Promise<Ac
       : parsed.data.dueMonth;
 
   const supabase = await createClient();
+  if (!(await isCategoryWritable(supabase, ctx.workspaceId, parsed.data.categoryId, 'charge'))) {
+    return { ok: false, errorCode: 'errors.validation.generic' };
+  }
   const { error } = await supabase
     .from('charges')
     .update({

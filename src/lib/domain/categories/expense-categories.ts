@@ -1,5 +1,6 @@
 import type { Expense } from '@/lib/domain/types';
 
+import { isCategoryKindAllowedFor } from './category-use';
 import type { Category } from './types';
 
 /**
@@ -44,12 +45,12 @@ export const CHIP_COUNT = 5;
  * `rankExpenseCategories`.
  */
 export function selectableExpenseCategories(categories: readonly Category[]): readonly Category[] {
-  return categories.filter((category) => category.kind === 'variable');
+  return categories.filter(isSelectableForExpense);
 }
 
 /** Is this category one an expense may be filed under? */
 export function isSelectableForExpense(category: Category): boolean {
-  return category.kind === 'variable';
+  return isCategoryKindAllowedFor('expense', category.kind);
 }
 
 /**

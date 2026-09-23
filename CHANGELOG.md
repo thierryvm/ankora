@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- Server-side writes now check that a referenced category belongs to the current workspace
+  and suits the kind of record being written.
+
 ### Added
 
 - **CI now runs the authenticated journeys.** A second Playwright job boots an ephemeral
