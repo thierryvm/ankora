@@ -1300,7 +1300,8 @@
         "detailOrigine": "{montant} {cycleMois, plural, =3 {tous les 3 mois} =6 {tous les 6 mois} =12 {une fois par an} other {tous les # mois}}",
         "recuEnPlus": "Reçus en plus",
         "misDeCote": "Mis de côté",
-        "revenuRecuDiffere": "Reçu ce mois-ci {recu}, prévu {prevu}",
+        "revenuRecuSurPrevu": "Reçu ce mois-ci {recu} sur {prevu} prévus",
+        "revenuRecuPlusQuePrevu": "Reçu ce mois-ci {recu}, plus que les {prevu} prévus",
         "auDela": "Ce mois-ci tu as mis de côté {montant} de plus que ce que ton revenu laissait : la différence vient de ton compte principal."
       },
       "barAria": "Répartition de tes revenus : {charges} de factures, {provisions} de provisions, {depense} dépensés, {reste} restants.",

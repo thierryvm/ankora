@@ -180,28 +180,73 @@ describe('« Il te reste » — the truth table (PR D, option B)', () => {
     expect(eur(s.ilTeReste)).toBe('1000.00');
   });
 
-  it('a regular income different from the written one REPLACES it (as the mock-up does), and says so', () => {
+  // Issue #483 — decided by the pilot on 21 September 2026, AGAINST the
+  // mock-up: the base income is the GREATER of the written income and the sum
+  // of this month's regular money received. Writing money received never makes
+  // « Il te reste » fall. The three cases below replaced tests that pinned the
+  // mock-up's rule (a regular income REPLACED the written one).
+
+  it('a regular income BELOW the written one keeps the written one, and says what was received', () => {
     const s = situation([argentRecu('regular', '1900')]);
-    expect(eur(s.revenus)).toBe('1900.00');
-    expect(eur(s.ilTeReste)).toBe('900.00');
+    expect(eur(s.revenus)).toBe('2000.00');
+    expect(eur(s.ilTeReste)).toBe('1000.00');
     expect(s.revenuRecu && eur(s.revenuRecu)).toBe('1900.00');
     expect(s.revenuEcrit && eur(s.revenuEcrit)).toBe('2000.00');
   });
 
-  it('an income received in TWO parts: the figure drops after the first, and comes back after the second', () => {
-    // Open screen decision for the pilot (issue): a beginner sees the figure
-    // FALL while writing money received. It is the mock-up's behaviour.
+  it('an income received in TWO parts: the figure does not move after the first, nor after the second', () => {
     const premier = argentRecu('regular', '1200');
-    expect(eur(situation([premier]).ilTeReste)).toBe('200.00');
+    expect(eur(situation([premier]).ilTeReste)).toBe('1000.00');
     const second = argentRecu('regular', '800', { occurredOn: day('2026-06-20') });
     expect(eur(situation([premier, second]).ilTeReste)).toBe('1000.00');
   });
 
-  it('a partial first salary turns the status RED until the rest arrives (mock-up rule, open decision)', () => {
-    // 100 received as « Mon revenu du mois » replaces the written 2 000: the
-    // obligations (755) exceed it. Pinned so the choice stays visible.
-    expect(situation([argentRecu('regular', '100')]).statut).toBe('rouge');
+  it('a partial first salary does not turn the status red: the written income still counts', () => {
+    const partiel = situation([argentRecu('regular', '100')]);
+    expect(partiel.statut).not.toBe('rouge');
+    expect(partiel.statut).toBe(situation([]).statut);
     expect(situation([argentRecu('regular', '2000')]).statut).not.toBe('rouge');
+  });
+
+  it('regular received ABOVE the written income raises the figure by the difference', () => {
+    const s = situation([
+      argentRecu('regular', '1200'),
+      argentRecu('regular', '1050', { occurredOn: day('2026-06-20') }),
+    ]);
+    expect(s.revenuRecu && eur(s.revenuRecu)).toBe('2250.00');
+    expect(eur(s.revenus)).toBe('2250.00');
+    expect(eur(s.ilTeReste)).toBe('1250.00');
+  });
+
+  it('a cancelled regular counts for nothing: the written income stays, and nothing is « received »', () => {
+    const s = situation([
+      argentRecu('regular', '1200'),
+      argentRecu('regular', '1050', { ...ANNULE, occurredOn: day('2026-06-20') }),
+    ]);
+    expect(s.revenuRecu && eur(s.revenuRecu)).toBe('1200.00');
+    expect(eur(s.ilTeReste)).toBe('1000.00');
+    expect(situation([argentRecu('regular', '2500', ANNULE)]).revenuRecu).toBeNull();
+  });
+
+  it('without a written income, the base is the sum of the regular received (unchanged)', () => {
+    const s = situation(
+      [
+        argentRecu('regular', '1200'),
+        argentRecu('regular', '300', { occurredOn: day('2026-06-20') }),
+      ],
+      null,
+    );
+    expect(eur(s.revenus)).toBe('1500.00');
+    expect(eur(s.ilTeReste)).toBe('500.00');
+  });
+
+  it('extra adds on top of the greater base, whichever it is', () => {
+    const sousEcrit = situation([argentRecu('regular', '1200'), argentRecu('extra', '120')]);
+    expect(eur(sousEcrit.revenus)).toBe('2120.00');
+    expect(eur(sousEcrit.ilTeReste)).toBe('1120.00');
+    const auDessus = situation([argentRecu('regular', '2250'), argentRecu('extra', '120')]);
+    expect(eur(auDessus.revenus)).toBe('2370.00');
+    expect(eur(auDessus.ilTeReste)).toBe('1370.00');
   });
 
   it('an operation of another plan month does not count', () => {

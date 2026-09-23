@@ -262,16 +262,33 @@ describe('<CascadeDuMois /> — PR D, set aside and received on top', () => {
     expect(document.querySelector('[data-au-dela]')).toBeNull();
   });
 
-  it('says so when the regular income received differs from the written one, and only then', async () => {
-    const { container, unmount } = await renderCascade({
-      revenus: 2400,
-      revenuRecu: 2400,
+  // Issue #483: the figure counts the GREATER of the two; the sentence says
+  // which side of the written income the received sum sits on.
+  it('says « X sur Y prévus » when less than the written income was received', async () => {
+    const { container } = await renderCascade({
+      revenus: 2500,
+      revenuRecu: 1200,
       revenuEcrit: 2500,
     });
     const ligne = container.querySelector('[data-revenu-recu-differe]');
-    expect(ligne?.textContent).toMatch(/2\s?400/u);
-    expect(ligne?.textContent).toMatch(/2\s?500/u);
-    unmount();
+    expect(ligne?.textContent).toMatch(
+      /^Reçu ce mois-ci 1[\s\u00a0\u202f]?200[\s\u00a0\u202f]€ sur 2[\s\u00a0\u202f]?500[\s\u00a0\u202f]€ prévus$/u,
+    );
+  });
+
+  it('says « X, plus que les Y prévus » when more than the written income was received', async () => {
+    const { container } = await renderCascade({
+      revenus: 2700,
+      revenuRecu: 2700,
+      revenuEcrit: 2500,
+    });
+    const ligne = container.querySelector('[data-revenu-recu-differe]');
+    expect(ligne?.textContent).toMatch(
+      /^Reçu ce mois-ci 2[\s\u00a0\u202f]?700[\s\u00a0\u202f]€, plus que les 2[\s\u00a0\u202f]?500[\s\u00a0\u202f]€ prévus$/u,
+    );
+  });
+
+  it('says nothing when the received sum equals the written income', async () => {
     const egal = await renderCascade({ revenuRecu: 2500, revenuEcrit: 2500 });
     expect(egal.container.querySelector('[data-revenu-recu-differe]')).toBeNull();
   });

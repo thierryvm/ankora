@@ -71,8 +71,9 @@ export type SituationDuMois = Readonly<{
   revenuEcrit: Decimal | null;
   /**
    * La somme des argents reçus `regular` du mois, `null` s'il n'y en a aucun.
-   * Quand elle existe, elle REMPLACE le revenu écrit (règle de la maquette) :
-   * la cascade dit alors « reçu X, prévu Y » si les deux diffèrent.
+   * Le revenu de base est le plus grand d'elle et du revenu écrit (issue #483) ;
+   * la cascade dit « reçu X sur Y prévus » ou « reçu X, plus que les Y prévus »
+   * quand les deux diffèrent.
    */
   revenuRecu: Decimal | null;
   /** L'argent reçu « en plus du revenu » (`extra`) du mois. */
@@ -133,11 +134,17 @@ export type SituationDuMois = Readonly<{
 
 export function calculerSituationDuMois(input: SituationDuMoisInput): SituationDuMois {
   const { operations } = input;
-  // PR D — le revenu de base : l'argent reçu `regular` du mois quand il y en a
-  // (c'est l'arrivée du revenu, il remplace l'écrit), sinon le revenu écrit.
-  // Sans l'un ni l'autre, l'argent reçu « en plus » est tout ce qu'il y a, et
-  // la maquette calcule sur lui. Sans rien du tout : incomplet (THI-335).
-  const revenuBase = operations.revenuRecu ?? input.revenus;
+  // Issue #483 (décision du pilote, 21 sept. 2026, contre la maquette) — le
+  // revenu de base est le PLUS GRAND du revenu écrit et de la somme des argents
+  // reçus `regular` du mois. Noter de l'argent reçu ne fait donc jamais baisser
+  // « Il te reste » : un revenu reçu en deux fois ne change rien avant d'avoir
+  // dépassé l'écrit. Sans revenu écrit, la somme reçue seule (inchangé). Sans
+  // l'un ni l'autre, l'argent reçu « en plus » est tout ce qu'il y a, et la
+  // maquette calcule sur lui. Sans rien du tout : incomplet (THI-335).
+  const revenuBase =
+    operations.revenuRecu !== null && input.revenus !== null
+      ? Decimal.max(operations.revenuRecu, input.revenus)
+      : (operations.revenuRecu ?? input.revenus);
   const hasRevenus = revenuBase !== null || operations.recuEnPlus.gt(0);
   const revenus = (revenuBase ?? new Decimal(0)).plus(operations.recuEnPlus);
 

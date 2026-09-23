@@ -1300,7 +1300,8 @@
         "detailOrigine": "{montant} {cycleMois, plural, =3 {every 3 months} =6 {every 6 months} =12 {once a year} other {every # months}}",
         "recuEnPlus": "Received on top",
         "misDeCote": "Set aside",
-        "revenuRecuDiffere": "Received this month {recu}, planned {prevu}",
+        "revenuRecuSurPrevu": "Received this month {recu} of {prevu} planned",
+        "revenuRecuPlusQuePrevu": "Received this month {recu}, more than the {prevu} planned",
         "auDela": "This month you set aside {montant} more than your income left: the difference comes from your main account."
       },
       "barAria": "How your income splits: {charges} of bills, {provisions} of provisions, {depense} spent, {reste} left.",

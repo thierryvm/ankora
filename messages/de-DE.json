@@ -1300,7 +1300,8 @@
         "detailOrigine": "{montant} {cycleMois, plural, =3 {every 3 months} =6 {every 6 months} =12 {once a year} other {every # months}}",
         "recuEnPlus": "Zusätzlich erhalten",
         "misDeCote": "Zurückgelegt",
-        "revenuRecuDiffere": "Diesen Monat erhalten {recu}, geplant {prevu}",
+        "revenuRecuSurPrevu": "Diesen Monat erhalten {recu} von {prevu} geplant",
+        "revenuRecuPlusQuePrevu": "Diesen Monat erhalten {recu}, mehr als die {prevu} geplant",
         "auDela": "Diesen Monat hast du {montant} mehr zurückgelegt, als dein Einkommen übrig ließ: Die Differenz kommt von deinem Hauptkonto."
       },
       "barAria": "Aufteilung deiner Einnahmen: {charges} Rechnungen, {provisions} Rücklagen, {depense} ausgegeben, {reste} übrig.",
