@@ -1023,7 +1023,8 @@
       "drawerDeleteQuestion": "¿Eliminar « {label} »? No se puede deshacer.",
       "drawerDeleteConfirm": "Sí, eliminar",
       "drawerDeleteKeep": "Conservar",
-      "headThisMonth": "este mes: {count, plural, one {# plazo} other {# plazos}}, {amount}"
+      "headThisMonth": "este mes: {count, plural, one {# plazo} other {# plazos}}, {amount}",
+      "headThisMonthPaid": "pagado"
     },
     "expenses": {
       "title": "Mis gastos",

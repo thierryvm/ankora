@@ -1023,7 +1023,8 @@
       "drawerDeleteQuestion": "Supprimer « {label} » ? Ce geste ne se défait pas.",
       "drawerDeleteConfirm": "Oui, supprimer",
       "drawerDeleteKeep": "Garder",
-      "headThisMonth": "ce mois : {count, plural, one {# échéance} other {# échéances}}, {amount}"
+      "headThisMonth": "ce mois : {count, plural, one {# échéance} other {# échéances}}, {amount}",
+      "headThisMonthPaid": "payée"
     },
     "expenses": {
       "title": "Mes dépenses",

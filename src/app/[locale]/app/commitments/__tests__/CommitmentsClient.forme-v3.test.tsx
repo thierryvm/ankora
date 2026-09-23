@@ -20,7 +20,7 @@ vi.mock('@/lib/actions/commitments', () => ({
 }));
 vi.mock('@/components/ui/toast', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
-import { CommitmentsClient, type RawCommitment } from '../CommitmentsClient';
+import { CommitmentsClient, type RawCommitment, type ThisMonth } from '../CommitmentsClient';
 
 const loan: RawCommitment = {
   id: 'car',
@@ -40,7 +40,10 @@ const loan: RawCommitment = {
 
 function renderPage(
   commitments: RawCommitment[],
-  thisMonth: { count: number; total: number } = { count: 1, total: 235 },
+  thisMonth: ThisMonth = {
+    total: 235,
+    parts: [{ id: 'car', label: 'Crédit voiture', amount: 235, isPaid: false }],
+  },
 ) {
   return render(
     <NextIntlClientProvider locale="fr-BE" messages={messages} timeZone="Europe/Brussels">
@@ -71,17 +74,44 @@ describe('CommitmentsClient — v3 shape', () => {
   // E5 of the mockup (engagements.js:57): the card also says what falls THIS
   // month — the count and the sum of the instalments due, derived server-side.
   it('E5: the head card says « ce mois : k échéances, X »', () => {
-    renderPage([loan], { count: 2, total: 470 });
+    renderPage([loan], {
+      total: 470,
+      parts: [
+        { id: 'car', label: 'Crédit voiture', amount: 235, isPaid: false },
+        { id: 'tv', label: 'Télévision', amount: 235, isPaid: true },
+      ],
+    });
     expect(screen.getByTestId('commitments-head-this-month')).toHaveTextContent(
       /ce mois : 2 échéances, 470\s€/,
     );
   });
 
-  it('E5: with nothing due this month, it says so with zero', () => {
-    renderPage([loan], { count: 0, total: 0 });
+  // Rule 10: « X » opens on the instalments that make it, each with its amount
+  // and whether it is already paid. The lines come from the server with the
+  // total; nothing is re-added on screen.
+  it('E5: « ce mois » opens on each instalment that makes the amount', () => {
+    renderPage([loan], {
+      total: 470,
+      parts: [
+        { id: 'car', label: 'Crédit voiture', amount: 235, isPaid: false },
+        { id: 'tv', label: 'Télévision', amount: 235, isPaid: true },
+      ],
+    });
+    const lines = screen.getAllByTestId(/^commitments-this-month-part-/);
+    expect(lines).toHaveLength(2);
+    expect(lines[0]).toHaveTextContent(/Crédit voiture.*235\s€/);
+    expect(lines[0]).not.toHaveTextContent(/payée/);
+    expect(lines[1]).toHaveTextContent(/Télévision · payée.*235\s€/);
+    fireEvent.click(screen.getByTestId('commitments-head-this-month'));
+    expect(lines[0]).toBeVisible();
+  });
+
+  it('E5: with nothing due this month, it says so with zero and opens on nothing', () => {
+    renderPage([loan], { total: 0, parts: [] });
     expect(screen.getByTestId('commitments-head-this-month')).toHaveTextContent(
       /ce mois : 0 échéance, 0\s€/,
     );
+    expect(screen.queryAllByTestId(/^commitments-this-month-part-/)).toHaveLength(0);
   });
 
   it('E6: the row keeps its counter but no edit or delete button', () => {

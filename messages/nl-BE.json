@@ -1023,7 +1023,8 @@
       "drawerDeleteQuestion": "« {label} » verwijderen? Dit kan niet ongedaan worden gemaakt.",
       "drawerDeleteConfirm": "Ja, verwijderen",
       "drawerDeleteKeep": "Behouden",
-      "headThisMonth": "deze maand: {count, plural, one {# termijn} other {# termijnen}}, {amount}"
+      "headThisMonth": "deze maand: {count, plural, one {# termijn} other {# termijnen}}, {amount}",
+      "headThisMonthPaid": "betaald"
     },
     "expenses": {
       "title": "Mijn uitgaven",

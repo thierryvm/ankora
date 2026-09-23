@@ -1023,7 +1023,8 @@
       "drawerDeleteQuestion": "Delete « {label} »? This cannot be undone.",
       "drawerDeleteConfirm": "Yes, delete",
       "drawerDeleteKeep": "Keep",
-      "headThisMonth": "this month: {count, plural, one {# instalment} other {# instalments}}, {amount}"
+      "headThisMonth": "this month: {count, plural, one {# instalment} other {# instalments}}, {amount}",
+      "headThisMonthPaid": "paid"
     },
     "expenses": {
       "title": "My expenses",

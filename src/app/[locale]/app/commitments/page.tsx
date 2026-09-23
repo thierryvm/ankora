@@ -42,8 +42,13 @@ export default async function CommitmentsPage() {
       paidKeysByCommitment={paidKeysByCommitment}
       currentPeriod={snapshot.currentPeriod}
       thisMonth={{
-        count: dueThisMonth.length,
         total: aPayerCeMois(dueThisMonth).toNumber(),
+        parts: dueThisMonth.map((o) => ({
+          id: o.id,
+          label: o.label,
+          amount: o.amountDue.toNumber(),
+          isPaid: o.isPaid,
+        })),
       }}
       locale={locale}
     />

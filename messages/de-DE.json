@@ -1023,7 +1023,8 @@
       "drawerDeleteQuestion": "« {label} » löschen? Das lässt sich nicht rückgängig machen.",
       "drawerDeleteConfirm": "Ja, löschen",
       "drawerDeleteKeep": "Behalten",
-      "headThisMonth": "diesen Monat: {count, plural, one {# Rate} other {# Raten}}, {amount}"
+      "headThisMonth": "diesen Monat: {count, plural, one {# Rate} other {# Raten}}, {amount}",
+      "headThisMonthPaid": "bezahlt"
     },
     "expenses": {
       "title": "Meine Ausgaben",

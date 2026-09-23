@@ -41,6 +41,16 @@ import { formatCurrency, formatInstallmentDate, formatMonth } from '@/lib/i18n/f
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 
 /** Row shape crossing the RSC boundary (money as plain `number`, never Decimal). */
+/**
+ * E5 « ce mois : k échéances, X » — X with the instalments that make it (rule
+ * 10). Built server-side from the same list the total is summed from, so the
+ * lines cannot drift from the figure.
+ */
+export type ThisMonth = {
+  total: number;
+  parts: { id: string; label: string; amount: number; isPaid: boolean }[];
+};
+
 export type RawCommitment = CommitmentRow;
 
 type Props = {
@@ -52,7 +62,7 @@ type Props = {
    * E5 — the instalments falling due in `currentPeriod` (paid ones included):
    * how many, and their sum. Derived server-side by the domain.
    */
-  thisMonth: { count: number; total: number };
+  thisMonth: ThisMonth;
   locale: Locale;
 };
 
@@ -737,23 +747,47 @@ export function CommitmentsClient({
           <p className="text-muted-foreground mt-1 text-xs" data-testid="commitments-head-summary">
             {t('headSummary', { count: active.length, ongoing: ongoing.length })}
             {lastEnd && <> · {t('headEnds', { month: monthInSentence(lastEnd, locale) })}</>}
-            {' · '}
-            <span data-testid="commitments-head-this-month">
+          </p>
+          <details className="mt-1 text-xs" data-testid="commitments-head-this-month-details">
+            <summary
+              className="text-muted-foreground cursor-pointer underline-offset-2 hover:underline"
+              data-testid="commitments-head-this-month"
+            >
               {t('headThisMonth', {
-                count: thisMonth.count,
+                count: thisMonth.parts.length,
                 amount: formatCurrency(thisMonth.total, locale),
               })}
-            </span>
-          </p>
+            </summary>
+            {thisMonth.parts.length > 0 && (
+              <ul role="list" className="mt-1 space-y-0.5">
+                {thisMonth.parts.map((p) => (
+                  <li
+                    key={p.id}
+                    className="text-foreground flex justify-between gap-3 tabular-nums"
+                    data-testid={`commitments-this-month-part-${p.id}`}
+                  >
+                    <span>
+                      {p.label}
+                      {p.isPaid && (
+                        <span className="text-muted-foreground"> · {t('headThisMonthPaid')}</span>
+                      )}
+                    </span>
+                    <span>{formatCurrency(p.amount, locale)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </details>
         </section>
       )}
 
       <Card>
         <CardHeader>
-          <CardTitle>
-            <h2 className="text-muted-foreground text-xs font-semibold tracking-widest uppercase">
-              {t('count', { count: active.length })}
-            </h2>
+          <CardTitle
+            as="h2"
+            className="text-muted-foreground text-xs font-semibold tracking-widest uppercase"
+          >
+            {t('count', { count: active.length })}
           </CardTitle>
         </CardHeader>
         <CardContent>
