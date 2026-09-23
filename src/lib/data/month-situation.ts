@@ -19,10 +19,11 @@ import { operationsDuMois } from '@/lib/domain/cockpit/operations-du-mois';
 import { createClient } from '@/lib/supabase/server';
 import { getCommitmentsWithLedger } from '@/lib/data/commitments';
 import {
-  getWorkspaceSnapshot,
+  getSnapshotWith,
   toCockpitCharges,
   type WorkspaceSnapshot,
 } from '@/lib/data/workspace-snapshot';
+import type { AppRoute } from '@/lib/data/render-timing';
 import type { CockpitCharge } from '@/lib/domain/cockpit/types';
 
 /**
@@ -230,12 +231,19 @@ function soldeDuQuotidien(input: MonthSituationInputs, todayIso: string) {
  * and the commitment ledger are returned alongside so the caller does not
  * re-read them.
  */
-export async function loadMonthSituation(): Promise<MonthSituationBundle & MonthSituationInputs> {
-  const snapshot = await getWorkspaceSnapshot();
-  const { commitments, paidKeysByCommitment } = await getCommitmentsWithLedger(
-    snapshot.workspaceId,
+export async function loadMonthSituation(
+  route: AppRoute | null = null,
+): Promise<MonthSituationBundle & MonthSituationInputs> {
+  // The commitments and the account journal need only the workspace id: both
+  // leave with the snapshot reads, in one wave, instead of two waves after it.
+  const [snapshot, [{ commitments, paidKeysByCommitment }, ledger]] = await getSnapshotWith(
+    route,
+    async (workspaceId) =>
+      Promise.all([
+        getCommitmentsWithLedger(workspaceId),
+        loadAccountLedger(await createClient(), workspaceId),
+      ]),
   );
-  const ledger = await loadAccountLedger(await createClient(), snapshot.workspaceId);
   // PR D — a figure computed without its operations would silently ignore
   // every transfer made: the worst lie the cockpit could tell. An unreadable
   // journal is a read failure like any other one this figure depends on.

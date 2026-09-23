@@ -114,7 +114,7 @@ export default async function DashboardPage() {
     joursRestants,
     joursDuMois: daysInMonth,
     todayIso,
-  } = await loadMonthSituation();
+  } = await loadMonthSituation('/app');
 
   const namedCommitments: NamedCommitment[] = commitments.map((c) => ({
     ...commitmentRowToDomain(c),

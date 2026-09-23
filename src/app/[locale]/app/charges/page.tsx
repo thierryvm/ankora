@@ -4,7 +4,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
 import { commitmentRowToDomain } from '@/lib/data/commitment-row';
 import { getCommitmentsWithLedger } from '@/lib/data/commitments';
-import { getWorkspaceSnapshot, toCockpitCharges } from '@/lib/data/workspace-snapshot';
+import { getSnapshotWith, toCockpitCharges } from '@/lib/data/workspace-snapshot';
 import { todayInAnkoraTz } from '@/lib/date/tz';
 import { engagementsMensuelsLisses } from '@/lib/domain/cockpit';
 import { paymentKey, type PaymentLedger } from '@/lib/domain/cockpit/types';
@@ -72,11 +72,14 @@ export default async function ChargesPage({
 }: {
   searchParams: Promise<{ period?: string }>;
 }) {
-  const [snapshot, params, locale] = await Promise.all([
-    getWorkspaceSnapshot(),
-    searchParams,
-    getLocale() as Promise<Locale>,
-  ]);
+  // The commitments read needs only the workspace id: it leaves with the
+  // snapshot reads (see the note on commitments below).
+  const [[snapshot, { commitments: commitmentRows, paidKeysByCommitment }], params, locale] =
+    await Promise.all([
+      getSnapshotWith('/app/charges', (workspaceId) => getCommitmentsWithLedger(workspaceId)),
+      searchParams,
+      getLocale() as Promise<Locale>,
+    ]);
 
   const current = snapshot.currentPeriod;
   const viewed = parseViewedPeriod(params.period, current);
@@ -86,10 +89,8 @@ export default async function ChargesPage({
   // here for the same reason they are read on the cockpit: their instalments
   // are cash leaving the account this month, and until now the only screen
   // showing them was a different tab. Same single read as `/app/commitments`,
-  // so the two surfaces can never disagree on what is owed.
-  const { commitments: commitmentRows, paidKeysByCommitment } = await getCommitmentsWithLedger(
-    snapshot.workspaceId,
-  );
+  // so the two surfaces can never disagree on what is owed. (Read above, with
+  // the snapshot.)
 
   // Paid charge ids for the VIEWED period. Current month comes free with the
   // snapshot; a past month needs one extra RLS-scoped read. The toggle action
