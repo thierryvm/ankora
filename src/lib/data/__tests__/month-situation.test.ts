@@ -24,6 +24,10 @@ vi.mock('@/lib/data/commitments', () => ({
 }));
 vi.mock('@/lib/data/workspace-snapshot', () => ({
   getWorkspaceSnapshot: async () => snapshot,
+  getSnapshotWith: async (_route: unknown, read: (workspaceId: string) => Promise<unknown>) => [
+    snapshot,
+    await read(snapshot.workspaceId),
+  ],
   toCockpitCharges: () => [],
 }));
 

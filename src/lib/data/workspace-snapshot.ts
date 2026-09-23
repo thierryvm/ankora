@@ -1,6 +1,9 @@
 import { getLocale } from 'next-intl/server';
+import { cache } from 'react';
 
 import { elevationDue } from '@/lib/auth/require-elevated';
+import { lookupSession } from '@/lib/auth/require-user';
+import { type AppRoute, logRenderTiming, recordStage } from '@/lib/data/render-timing';
 import { ANKORA_TIMEZONE } from '@/lib/date/tz';
 
 import { redirect } from '@/i18n/navigation';
@@ -130,7 +133,7 @@ export type WorkspaceSnapshot = {
 };
 
 /**
- * Fetch the authenticated user's primary workspace snapshot.
+ * Resolve the authenticated user's primary workspace.
  * Redirects to /onboarding if the user has no workspace or hasn't completed onboarding.
  *
  * Every read below whose result decides a redirect goes through `assertReadable`
@@ -140,43 +143,113 @@ export type WorkspaceSnapshot = {
  * its owner to create their workspace again. The 2026-07-18 note further down
  * this file records the same motif on `charges`; this is that lesson applied to
  * the reads that route rather than the reads that render.
+ *
+ * Who is asking, and which workspace they read — once per request.
+ *
+ * Everything a /app page reads hangs off the workspace id, so this is the one
+ * thing that must come first. It costs two waves, not four:
+ *   1. the session (shared with the layouts through `lookupSession`),
+ *   2. `users` and `workspace_members` TOGETHER — both need only the user id.
+ * Their results are still checked in the old order (onboarding first, then
+ * membership), so every redirect and every error is the one it used to be.
  */
-export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
+const resolveWorkspace = cache(async (): Promise<{ workspaceId: string }> => {
+  const lookup = await lookupSession();
+  // Same contract as before: any lookup that is not a signed-in user redirects
+  // to /login from here. During a page render the layout's `requireUser()` has
+  // already surfaced an outage as an error; this line matters for Server Actions.
+  if (lookup.status !== 'authenticated') {
+    return redirect({ href: '/login', locale: await getLocale() });
+  }
+  const user = lookup.user;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return redirect({ href: '/login', locale: await getLocale() });
 
   // This snapshot carries the whole financial picture, and it is reached by
   // `getExpenseEntryContextAction` — a Server Action, so a POST endpoint that
   // never renders a page and never meets the guard in `requireUser()`. Without
   // this line, a session that skipped its second factor could still read the
   // month's figures. It REDIRECTS rather than returning an error because this
-  // function's failure contract is a redirect (see the `!user` line above).
+  // function's failure contract is a redirect (see the `/login` line above).
   if (await elevationDue(supabase, user)) {
     return redirect({ href: '/login/2fa', locale: await getLocale() });
   }
 
-  const { data: profile, error: profileError } = await supabase
-    .from('users')
-    .select('onboarded_at')
-    .eq('id', user.id)
-    .maybeSingle();
+  const [{ data: profile, error: profileError }, { data: membership, error: membershipError }] =
+    await Promise.all([
+      supabase.from('users').select('onboarded_at').eq('id', user.id).maybeSingle(),
+      supabase
+        .from('workspace_members')
+        .select('workspace_id')
+        .eq('user_id', user.id)
+        .order('joined_at', { ascending: true })
+        .limit(1)
+        .maybeSingle(),
+    ]);
   assertReadable(profileError, 'workspace-snapshot: users.onboarded_at');
   if (!profile?.onboarded_at) return redirect({ href: '/onboarding', locale: await getLocale() });
 
-  const { data: membership, error: membershipError } = await supabase
-    .from('workspace_members')
-    .select('workspace_id')
-    .eq('user_id', user.id)
-    .order('joined_at', { ascending: true })
-    .limit(1)
-    .maybeSingle();
   assertReadable(membershipError, 'workspace-snapshot: workspace_members');
   if (!membership) return redirect({ href: '/onboarding', locale: await getLocale() });
 
-  const workspaceId = membership.workspace_id;
+  return { workspaceId: membership.workspace_id };
+});
+
+/**
+ * The snapshot AND the page's own read, sent in the same wave.
+ *
+ * A page read needs the workspace id, not the snapshot: waiting for the seven
+ * snapshot reads before starting it added one full round-trip to every page.
+ * `Promise.all` rejects on the first failure, which is the contract we want —
+ * a page never renders half its data — and the redirects still happen before
+ * the page read starts, inside `resolveWorkspace`.
+ *
+ * The workspace is resolved ONCE here and handed to both reads. Outside a
+ * render (a Server Action) `cache` memoizes nothing, so letting each read
+ * resolve it again would ask the auth server twice and read the membership
+ * twice.
+ *
+ * Accepted edge: a failed page read can win over the one redirect the snapshot
+ * itself makes (a workspace row missing behind a valid membership, i.e. a
+ * broken foreign key): the error screen shows instead of onboarding.
+ *
+ * `route` names the page in the render-timing log line, where `page_ms` is the
+ * page read alone; `null` (a Server Action, a test) logs nothing.
+ */
+export async function getSnapshotWith<T>(
+  route: AppRoute | null,
+  read: (workspaceId: string) => Promise<T>,
+): Promise<[WorkspaceSnapshot, T]> {
+  const { workspaceId } = await resolveWorkspace();
+  const pageStartedAt = performance.now();
+  let pageMs = 0;
+  const both = await Promise.all([
+    timedSnapshot(workspaceId),
+    read(workspaceId).then((value) => {
+      pageMs = Math.round(performance.now() - pageStartedAt);
+      return value;
+    }),
+  ]);
+  if (route) logRenderTiming(route, pageMs);
+  return both;
+}
+
+/** The snapshot alone: resolve the workspace, then its seven reads in one wave. */
+export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
+  const { workspaceId } = await resolveWorkspace();
+  return timedSnapshot(workspaceId);
+}
+
+async function timedSnapshot(workspaceId: string): Promise<WorkspaceSnapshot> {
+  const startedAt = performance.now();
+  try {
+    return await readWorkspaceSnapshot(workspaceId);
+  } finally {
+    recordStage('snapshot_ms', startedAt);
+  }
+}
+
+async function readWorkspaceSnapshot(workspaceId: string): Promise<WorkspaceSnapshot> {
+  const supabase = await createClient();
 
   const { startISO: startOfMonth, nextStartISO: startOfNextMonth } = getCurrentMonthBoundariesISO();
 

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 
 import { Expenses } from '@/lib/domain';
-import { getExpenses, getWorkspaceSnapshot } from '@/lib/data/workspace-snapshot';
+import { getExpenses, getSnapshotWith } from '@/lib/data/workspace-snapshot';
 import { ExpensesClient } from './ExpensesClient';
 
 // PR-D5 i18n: was a hardcoded FR string. See `charges/page.tsx`.
@@ -12,8 +12,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ExpensesPage() {
-  const snapshot = await getWorkspaceSnapshot();
-  const expenses = await getExpenses(snapshot.workspaceId);
+  const [snapshot, expenses] = await getSnapshotWith('/app/expenses', (workspaceId) =>
+    getExpenses(workspaceId),
+  );
   const rawExpenses = expenses.map((e) => ({
     id: e.id,
     label: e.label,

@@ -1,4 +1,5 @@
 import type { User } from '@supabase/supabase-js';
+import { cache } from 'react';
 import { getLocale } from 'next-intl/server';
 
 import { redirect } from '@/i18n/navigation';
@@ -11,6 +12,7 @@ import { assertReadable, describeReadFailure } from '@/lib/data/read-failure';
 import { createClient } from '@/lib/supabase/server';
 import { elevationDue } from '@/lib/auth/require-elevated';
 import { log } from '@/lib/log';
+import { recordStage } from '@/lib/data/render-timing';
 
 /**
  * Raised when the auth backend could not be reached, as opposed to having ruled
@@ -42,12 +44,21 @@ export class AuthBackendUnavailableError extends Error {
  * while the incident stayed invisible. Measured on 2026-07-30 against an
  * unreachable auth host with a valid session — `/app` answered `307 → /login`.
  */
-type SessionLookup =
+export type SessionLookup =
   | { status: 'authenticated'; user: User }
   | { status: 'anonymous' }
   | { status: 'unavailable'; cause: unknown };
 
-async function lookupSession(): Promise<SessionLookup> {
+async function lookupSessionOnce(): Promise<SessionLookup> {
+  const startedAt = performance.now();
+  try {
+    return await askAuthServer();
+  } finally {
+    recordStage('session_ms', startedAt);
+  }
+}
+
+async function askAuthServer(): Promise<SessionLookup> {
   let error: unknown = null;
   let user: User | null = null;
 
@@ -75,6 +86,27 @@ async function lookupSession(): Promise<SessionLookup> {
   // (`error === null`, `user === null` — an anonymous visitor).
   return { status: 'anonymous' };
 }
+
+/**
+ * The session lookup, asked ONCE per request.
+ *
+ * A /app render asks "who is this?" from the locale layout, the admin check, the
+ * app layout and the page snapshot. Next already collapses those identical
+ * `fetch` calls during a render (measured: one `/auth/v1/user` for the render,
+ * the other one on the Kong log is the proxy's), but that rests on Next patching
+ * `fetch`. `cache` makes the rule ours: one lookup, shared by everything that
+ * renders for this request.
+ *
+ * Safe for a session because React gives every server request its own memo:
+ * nothing here outlives the request, so no visitor can ever receive another
+ * visitor's lookup. A failure is memoized for the rest of THIS request only —
+ * the same answer the auth server would give a second time a few milliseconds
+ * later — and it stays a failure: the `status` is returned as is, never
+ * upgraded. Outside a render (a Server Action), `cache` memoizes nothing and
+ * every call asks again — which is why
+ * `getSnapshotWith` resolves the workspace once and hands it down.
+ */
+export const lookupSession = cache(lookupSessionOnce);
 
 function logUnavailable(where: string, cause: unknown): void {
   const record =

@@ -3,7 +3,7 @@ import { getTranslations } from 'next-intl/server';
 
 import { loadAccountLedger } from '@/lib/data/operations';
 import { todayIsoInBrussels } from '@/lib/data/month-situation';
-import { getWorkspaceSnapshot } from '@/lib/data/workspace-snapshot';
+import { getSnapshotWith } from '@/lib/data/workspace-snapshot';
 import { accountBalanceView } from '@/lib/domain/accounts/operations-view';
 import { createClient } from '@/lib/supabase/server';
 import { AccountsClient, type AccountBalanceProps } from './AccountsClient';
@@ -16,8 +16,9 @@ export async function generateMetadata(): Promise<Metadata> {
 const day = (d: Date) => d.toISOString().slice(0, 10);
 
 export default async function AccountsPage() {
-  const snapshot = await getWorkspaceSnapshot();
-  const ledger = await loadAccountLedger(await createClient(), snapshot.workspaceId);
+  const [snapshot, ledger] = await getSnapshotWith('/app/accounts', async (workspaceId) =>
+    loadAccountLedger(await createClient(), workspaceId),
+  );
   const today = todayIsoInBrussels();
 
   // Everything the cards show is computed HERE and handed down as plain
