@@ -40,6 +40,11 @@ type Props = {
    * sheet mounted cannot offer a dead button.
    */
   onConvert?: (charge: ChargeEditDrawerCharge) => void;
+  /**
+   * F-18 — archives this charge. Present only for a charge that has at least
+   * one payment; a charge never paid is deleted from its row instead.
+   */
+  onArchive?: (charge: ChargeEditDrawerCharge) => void;
 };
 
 /**
@@ -57,7 +62,7 @@ type Props = {
  *
  * Slide-from-right on desktop, full-screen on mobile (h-svh + sm:max-w-md).
  */
-export function ChargeEditDrawer({ charge, onClose, onConvert }: Props) {
+export function ChargeEditDrawer({ charge, onClose, onConvert, onArchive }: Props) {
   const t = useTranslations('app.charges');
   const translateError = useActionErrorTranslator();
   const router = useRouter();
@@ -252,6 +257,23 @@ export function ChargeEditDrawer({ charge, onClose, onConvert }: Props) {
               {t('convert.title')}
             </button>
             <p className="text-muted-foreground mt-0.5 text-xs">{t('convert.drawerHint')}</p>
+          </div>
+        )}
+
+        {onArchive && (
+          <div className="border-border/60 border-t px-5 py-3">
+            <button
+              type="button"
+              onClick={() => {
+                if (charge) onArchive(charge);
+              }}
+              disabled={isPending}
+              data-testid="charge-edit-archive"
+              className="text-brand-text hover:text-brand-text-strong focus-visible:ring-brand-600 min-h-11 rounded text-sm font-medium underline underline-offset-2 transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50"
+            >
+              {t('archive.action')}
+            </button>
+            <p className="text-muted-foreground mt-0.5 text-xs">{t('archive.hint')}</p>
           </div>
         )}
 

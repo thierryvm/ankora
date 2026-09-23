@@ -27,6 +27,7 @@
     "e2e/dashboard-simulator-drawer.spec.ts",
     "e2e/gdpr-deletion-queue.spec.ts",
     "e2e/gdpr-export.spec.ts",
+    "e2e/factures-archiver.spec.ts",
     "e2e/il-te-reste-formule.spec.ts",
     "e2e/journal-mouvements.spec.ts",
     "e2e/mobile-ios/auth-flow.spec.ts",

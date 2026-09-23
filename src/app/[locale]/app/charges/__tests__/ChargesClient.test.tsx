@@ -27,12 +27,16 @@ const toggleWatchMock = vi.hoisted(() => vi.fn());
 const toggleCommitmentPaymentMock = vi.hoisted(() => vi.fn());
 const togglePastDueMock = vi.hoisted(() => vi.fn());
 const convertChargeMock = vi.hoisted(() => vi.fn());
+const archiveChargeMock = vi.hoisted(() => vi.fn());
+const restoreChargeMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/actions/charges', () => ({
   createChargeAction: createChargeMock,
   updateChargeAction: updateChargeMock,
   deleteChargeAction: deleteChargeMock,
   toggleWatchAction: toggleWatchMock,
+  archiveChargeAction: archiveChargeMock,
+  restoreChargeAction: restoreChargeMock,
 }));
 
 vi.mock('@/lib/actions/charge-payments', () => ({
@@ -104,6 +108,7 @@ function renderCharges(
     <ChargesClient
       charges={charges}
       paidChargeIds={overrides.paidChargeIds ?? []}
+      chargeIdsWithPayments={overrides.chargeIdsWithPayments ?? []}
       // Chantier 3 — the month's list also carries commitment instalments, the
       // two named views and the bulk gesture. Defaulted to empty/neutral so the
       // structural tests below keep asserting layout, not arithmetic; the new
@@ -1082,4 +1087,57 @@ describe('app.charges — i18n parity (5 locales, PR-BETA-CLEANUP-2)', () => {
       expect((cw.toastUnwatched ?? '').length).toBeGreaterThan(0);
     },
   );
+});
+
+describe('<ChargesClient /> — F-18 archive and restore', () => {
+  const archived = { ...sampleCharges[1]!, id: 'a3', label: 'Abonnement clos', isActive: false };
+
+  beforeEach(() => {
+    archiveChargeMock.mockReset();
+    restoreChargeMock.mockReset();
+    toastSuccessMock.mockReset();
+    toastErrorMock.mockReset();
+  });
+
+  it('keeps an archived charge out of the active list, behind a closed fold that counts it', () => {
+    renderCharges([...sampleCharges, archived]);
+    const list = screen.getByTestId('charges-list');
+    expect(within(list).queryByTestId('charges-row-a3')).toBeNull();
+    const fold = screen.getByRole('button', { name: /Factures archivées \(1\)/ });
+    expect(fold).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByTestId('charges-archived-row-a3')).toBeNull();
+  });
+
+  it('shows no fold at all when nothing is archived', () => {
+    renderCharges(sampleCharges);
+    expect(screen.queryByRole('button', { name: /Factures archivées/ })).toBeNull();
+  });
+
+  it('opens the fold and restores a charge in one gesture', async () => {
+    restoreChargeMock.mockResolvedValue({ ok: true });
+    renderCharges([...sampleCharges, archived]);
+    fireEvent.click(screen.getByRole('button', { name: /Factures archivées \(1\)/ }));
+    const row = await screen.findByTestId('charges-archived-row-a3');
+    expect(within(row).getByText('Abonnement clos')).toBeInTheDocument();
+    fireEvent.click(within(row).getByRole('button', { name: /Restaurer/ }));
+    await waitFor(() => expect(restoreChargeMock).toHaveBeenCalledWith('a3'));
+    await waitFor(() => expect(toastSuccessMock).toHaveBeenCalled());
+  });
+
+  it('offers « Archiver » in the drawer only for a charge that has payments', async () => {
+    renderCharges(sampleCharges, { chargeIdsWithPayments: ['a1'] });
+    fireEvent.click(screen.getByTestId('charges-row-edit-a2'));
+    await screen.findByTestId('charge-edit-drawer');
+    expect(screen.queryByTestId('charge-edit-archive')).toBeNull();
+  });
+
+  it('archives a paid charge from its drawer, without confirmation (G-53)', async () => {
+    archiveChargeMock.mockResolvedValue({ ok: true });
+    renderCharges(sampleCharges, { chargeIdsWithPayments: ['a1'] });
+    fireEvent.click(screen.getByTestId('charges-row-edit-a1'));
+    await screen.findByTestId('charge-edit-drawer');
+    fireEvent.click(screen.getByTestId('charge-edit-archive'));
+    await waitFor(() => expect(archiveChargeMock).toHaveBeenCalledWith('a1'));
+    await waitFor(() => expect(toastSuccessMock).toHaveBeenCalled());
+  });
 });

@@ -232,3 +232,72 @@ export async function deleteChargeAction(id: string): Promise<ActionResult> {
   revalidateAppPath('charges');
   return { ok: true };
 }
+
+/**
+ * Archive or restore a charge (F-18). `charges.is_active` is the column the
+ * money math already reads everywhere (budget, provisions, transfers,
+ * obligations): an archived charge leaves every total exactly as an inactive
+ * one always has. Nothing is deleted, so its payments keep their history and
+ * « Restaurer » undoes the gesture at the same cost (code rule 11).
+ *
+ * Archiving is reserved to a charge that has at least one payment: a charge
+ * never paid carries no history worth keeping, and is deleted instead. The
+ * server enforces it, the UI only mirrors it.
+ */
+async function setChargeArchived(id: string, archived: boolean): Promise<ActionResult> {
+  if (!uuidSchema.safeParse(id).success) {
+    return { ok: false, errorCode: 'errors.validation.generic' };
+  }
+
+  const ctx = await authorizedWorkspace();
+  if (!ctx.ok) return ctx;
+
+  const rl = await rateLimit('mutation', `user:${ctx.userId}`);
+  if (!rl.success) return { ok: false, errorCode: 'errors.session.rateLimited' };
+
+  const supabase = await createClient();
+  const { data: charge, error: readError } = await supabase
+    .from('charges')
+    .select('id, is_active')
+    .eq('id', id)
+    .eq('workspace_id', ctx.workspaceId)
+    .maybeSingle();
+  if (readError || !charge) return { ok: false, errorCode: 'errors.charges.archiveFailed' };
+
+  if (archived) {
+    const { data: payment, error: paymentError } = await supabase
+      .from('charge_payments')
+      .select('charge_id')
+      .eq('charge_id', id)
+      .eq('workspace_id', ctx.workspaceId)
+      .limit(1)
+      .maybeSingle();
+    if (paymentError) return { ok: false, errorCode: 'errors.charges.archiveFailed' };
+    if (!payment) return { ok: false, errorCode: 'errors.charges.archiveNeedsPayment' };
+  }
+
+  const { error } = await supabase
+    .from('charges')
+    .update({ is_active: !archived })
+    .eq('id', id)
+    .eq('workspace_id', ctx.workspaceId);
+  if (error) return { ok: false, errorCode: 'errors.charges.archiveFailed' };
+
+  // No amount, no label: the event says what happened, not to what.
+  await logAuditEvent(archived ? AuditEvent.CHARGE_ARCHIVED : AuditEvent.CHARGE_RESTORED, {
+    userId: ctx.userId,
+    workspaceId: ctx.workspaceId,
+  });
+
+  revalidateDashboard();
+  revalidateAppPath('charges');
+  return { ok: true };
+}
+
+export async function archiveChargeAction(id: string): Promise<ActionResult> {
+  return setChargeArchived(id, true);
+}
+
+export async function restoreChargeAction(id: string): Promise<ActionResult> {
+  return setChargeArchived(id, false);
+}

@@ -60,6 +60,8 @@ export const AuditEvent = {
   CHARGE_DELETED: 'charge.deleted',
   CHARGE_PAYMENT_TOGGLED: 'charge.payment_toggled',
   CHARGE_WATCH_TOGGLED: 'charge.watch_toggled',
+  CHARGE_ARCHIVED: 'charge.archived',
+  CHARGE_RESTORED: 'charge.restored',
   COMMITMENT_CREATED: 'commitment.created',
   COMMITMENT_UPDATED: 'commitment.updated',
   COMMITMENT_DELETED: 'commitment.deleted',

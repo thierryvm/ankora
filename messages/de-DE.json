@@ -791,6 +791,15 @@
       "editAria": "{label} bearbeiten",
       "toastCreated": "Rechnung hinzugefügt",
       "toastUpdated": "Rechnung aktualisiert",
+      "archive": {
+        "fold": "Archivierte Rechnungen ({count})",
+        "action": "Archivieren",
+        "hint": "Sie zählt nicht mehr mit und behält ihre Zahlungen. „Wiederherstellen“ holt sie zurück.",
+        "restore": "Wiederherstellen",
+        "restoreLabel": "{label} wiederherstellen",
+        "toastArchived": "„{label}“ archiviert",
+        "toastRestored": "„{label}“ wiederhergestellt"
+      },
       "toastDeleted": "Rechnung gelöscht",
       "toastMarkedPaid": "Rechnung als bezahlt markiert",
       "toastMarkedUnpaid": "Rechnung als zu zahlen markiert",
@@ -1594,6 +1603,8 @@
       "createFailed": "Rechnung konnte nicht erstellt werden.",
       "updateFailed": "Rechnung konnte nicht aktualisiert werden.",
       "deleteFailed": "Rechnung konnte nicht gelöscht werden.",
+      "archiveFailed": "Die Rechnung konnte nicht archiviert oder wiederhergestellt werden.",
+      "archiveNeedsPayment": "Eine Rechnung ohne Zahlung wird gelöscht, nicht archiviert.",
       "watchFailed": "Die Markierung der Rechnung konnte nicht geändert werden.",
       "notFound": "Diese Rechnung wurde nicht gefunden.",
       "payments": {

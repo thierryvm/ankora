@@ -791,6 +791,15 @@
       "editAria": "{label} bewerken",
       "toastCreated": "Factuur toegevoegd",
       "toastUpdated": "Factuur bijgewerkt",
+      "archive": {
+        "fold": "Gearchiveerde facturen ({count})",
+        "action": "Archiveren",
+        "hint": "Ze telt niet meer mee en houdt haar betalingen. „Herstellen” brengt ze terug.",
+        "restore": "Herstellen",
+        "restoreLabel": "{label} herstellen",
+        "toastArchived": "„{label}” gearchiveerd",
+        "toastRestored": "„{label}” hersteld"
+      },
       "toastDeleted": "Factuur verwijderd",
       "toastMarkedPaid": "Factuur als betaald gemarkeerd",
       "toastMarkedUnpaid": "Factuur als te betalen gemarkeerd",
@@ -1594,6 +1603,8 @@
       "createFailed": "Kan de factuur niet aanmaken.",
       "updateFailed": "Kan de factuur niet bijwerken.",
       "deleteFailed": "Kan de factuur niet verwijderen.",
+      "archiveFailed": "Kan de factuur niet archiveren of herstellen.",
+      "archiveNeedsPayment": "Een factuur zonder betaling wordt verwijderd, niet gearchiveerd.",
       "watchFailed": "Kan de markering van de factuur niet bijwerken.",
       "notFound": "Deze factuur is niet gevonden.",
       "payments": {

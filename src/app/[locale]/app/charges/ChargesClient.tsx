@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   Bookmark,
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   ListChecks,
@@ -27,7 +28,13 @@ import {
   type ConvertibleCharge,
 } from '@/components/charges/ConvertChargeSheet';
 import type { Locale } from '@/i18n/routing';
-import { createChargeAction, deleteChargeAction, toggleWatchAction } from '@/lib/actions/charges';
+import {
+  archiveChargeAction,
+  createChargeAction,
+  deleteChargeAction,
+  restoreChargeAction,
+  toggleWatchAction,
+} from '@/lib/actions/charges';
 import { togglePaymentAction } from '@/lib/actions/charge-payments';
 import { toggleCommitmentPaymentAction } from '@/lib/actions/commitments';
 import { togglePastDueObligationsAction } from '@/lib/actions/obligations';
@@ -106,6 +113,11 @@ type ChargesClientProps = {
   charges: RawCharge[];
   /** Charge IDs already settled for `viewedPeriod` (seeds the Payé toggle). */
   paidChargeIds: string[];
+  /**
+   * Charges with at least one payment, in any month (F-18). Only they can be
+   * archived: a charge never paid carries no history and is deleted instead.
+   */
+  chargeIdsWithPayments?: readonly string[];
   /** Commitment instalments falling due in `viewedPeriod`, tickable like bills. */
   commitmentInstalments: CommitmentInstalmentRow[];
   /** « À payer ce mois » — the CASH view: every occurrence due this month. */
@@ -149,6 +161,7 @@ type ChargesClientProps = {
 export function ChargesClient({
   charges,
   paidChargeIds,
+  chargeIdsWithPayments = [],
   commitmentInstalments,
   aPayerCeMoisTotal,
   effortLisseTotal,
@@ -176,13 +189,19 @@ export function ChargesClient({
   // (dashboard-ux M1, scope validated @thierry 2026-07-18).
   const [showAddForm, setShowAddForm] = useState(false);
   const [convertingCharge, setConvertingCharge] = useState<ConvertibleCharge | null>(null);
+  const [archivedOpen, setArchivedOpen] = useState(false);
+  const archivedCharges = useMemo(
+    () => charges.filter((c) => !c.isActive).sort((a, b) => a.label.localeCompare(b.label, locale)),
+    [charges, locale],
+  );
+  const paidOnce = useMemo(() => new Set(chargeIdsWithPayments), [chargeIdsWithPayments]);
 
   const todayIso = useMemo(() => todayBrusselsIso(), []);
 
-  // Group charges by frequency in a fixed display order. Empty buckets are
-  // dropped so the list never shows a heading with no rows. The list stays
-  // exhaustive — every charge is rendered (no active/inactive filter here);
-  // only the money totals (server-side) skip inactive charges.
+  // Group ACTIVE charges by frequency in a fixed display order. Empty buckets
+  // are dropped so the list never shows a heading with no rows. An inactive
+  // charge is an ARCHIVED one (F-18): it leaves the list for the « Factures
+  // archivées (n) » fold below, exactly as the money totals already skip it.
   // Rows are sorted by resolved due date ascending — a STABLE order (ticking a
   // bill never reorders rows under the user's finger, unlike unpaid-first).
   // The resolver is paid-independent for the date, so `isPaid: false` is fine.
@@ -197,7 +216,7 @@ export function ChargesClient({
     return FREQUENCIES.map((freq) => ({
       freq,
       rows: charges
-        .filter((c) => c.frequency === freq)
+        .filter((c) => c.isActive && c.frequency === freq)
         .map((c) => ({ c, dueIso: dueIsoOf(c) }))
         .sort((a, b) => (a.dueIso < b.dueIso ? -1 : a.dueIso > b.dueIso ? 1 : 0))
         .map(({ c }) => c),
@@ -415,6 +434,27 @@ export function ChargesClient({
         // eslint-disable-next-line no-console
         console.error('deleteChargeAction threw', err);
         toast.error(translateError('errors.charges.deleteFailed'));
+      }
+    });
+  }
+
+  /** F-18 — archive (from the drawer) or restore (from the fold): one tap each, no confirmation (G-53). */
+  function onArchiveToggle(c: { id: string; label: string }, archive: boolean) {
+    startTransition(async () => {
+      try {
+        const result = archive ? await archiveChargeAction(c.id) : await restoreChargeAction(c.id);
+        if (result.ok) {
+          toast.success(
+            t(archive ? 'archive.toastArchived' : 'archive.toastRestored', { label: c.label }),
+          );
+        } else {
+          toast.error(translateError(result.errorCode));
+        }
+      } catch (err) {
+        if (isNextControlFlowError(err)) throw err;
+        // eslint-disable-next-line no-console
+        console.error('archive/restore threw', err);
+        toast.error(translateError('errors.charges.archiveFailed'));
       }
     });
   }
@@ -1166,6 +1206,65 @@ export function ChargesClient({
                 )}
               </div>
 
+              {/* F-18 — « Factures archivées (n) »: closed by default, absent when
+                  empty. One tap restores a row; nothing here is deleted, so an
+                  archived bill keeps its payments and comes back as it left. */}
+              {archivedCharges.length > 0 && (
+                <section
+                  data-testid="charges-archived"
+                  className="border-border/60 mt-6 border-t pt-2"
+                >
+                  <button
+                    type="button"
+                    aria-expanded={archivedOpen}
+                    aria-controls="charges-archived-list"
+                    onClick={() => setArchivedOpen((v) => !v)}
+                    className="text-foreground hover:text-brand-text-strong focus-visible:ring-brand-600 flex min-h-11 w-full items-center justify-between gap-2 rounded-md text-left text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
+                  >
+                    {t('archive.fold', { count: archivedCharges.length })}
+                    <ChevronDown
+                      aria-hidden
+                      strokeWidth={1.5}
+                      className={`h-4 w-4 shrink-0 transition-transform duration-150 motion-reduce:transition-none ${archivedOpen ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+                  {archivedOpen && (
+                    <ul
+                      id="charges-archived-list"
+                      role="list"
+                      className="divide-border/60 divide-y"
+                    >
+                      {archivedCharges.map((c) => (
+                        <li
+                          key={c.id}
+                          data-testid={`charges-archived-row-${c.id}`}
+                          className="flex min-h-11 items-center justify-between gap-3 py-2"
+                        >
+                          <span className="text-muted-foreground min-w-0 text-sm">
+                            <span className="text-foreground block truncate">{c.label}</span>
+                            <span className="tabular-nums">{formatCurrency(c.amount, locale)}</span>
+                            {' · '}
+                            {tFreq(c.frequency as Frequency)}
+                          </span>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="min-h-11 shrink-0"
+                            disabled={isPending}
+                            aria-label={t('archive.restoreLabel', { label: c.label })}
+                            onClick={() => onArchiveToggle(c, false)}
+                            data-testid={`charges-archived-restore-${c.id}`}
+                          >
+                            {t('archive.restore')}
+                          </Button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
+              )}
+
               {/* Global total — the headline @thierry asked for ("on ne voit
                   jamais le total des factures en bas"). The smoothed monthly
                   effort is the lead figure (consistent with the subtitle "lissée
@@ -1206,6 +1305,14 @@ export function ChargesClient({
       <ChargeEditDrawer
         charge={editingCharge}
         onClose={() => setEditingCharge(null)}
+        onArchive={
+          editingCharge && paidOnce.has(editingCharge.id)
+            ? (c) => {
+                setEditingCharge(null);
+                onArchiveToggle(c, true);
+              }
+            : undefined
+        }
         // Sequential panels, never nested: the drawer closes, then the sheet
         // opens on the same charge.
         onConvert={(c) => {

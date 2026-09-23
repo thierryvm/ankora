@@ -791,6 +791,15 @@
       "editAria": "Modifier {label}",
       "toastCreated": "Facture ajoutée",
       "toastUpdated": "Facture mise à jour",
+      "archive": {
+        "fold": "Factures archivées ({count})",
+        "action": "Archiver",
+        "hint": "Elle sort des calculs et garde ses paiements. « Restaurer » la ramène.",
+        "restore": "Restaurer",
+        "restoreLabel": "Restaurer {label}",
+        "toastArchived": "« {label} » archivée",
+        "toastRestored": "« {label} » restaurée"
+      },
       "toastDeleted": "Facture supprimée",
       "toastMarkedPaid": "Facture marquée payée",
       "toastMarkedUnpaid": "Facture marquée à payer",
@@ -1594,6 +1603,8 @@
       "createFailed": "Impossible de créer la facture.",
       "updateFailed": "Impossible de mettre à jour la facture.",
       "deleteFailed": "Impossible de supprimer la facture.",
+      "archiveFailed": "Impossible d'archiver ou de restaurer la facture.",
+      "archiveNeedsPayment": "Une facture sans paiement se supprime, elle ne s'archive pas.",
       "watchFailed": "Impossible de modifier la surveillance de la facture.",
       "notFound": "Cette facture est introuvable.",
       "payments": {

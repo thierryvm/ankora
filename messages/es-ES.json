@@ -791,6 +791,15 @@
       "editAria": "Modificar {label}",
       "toastCreated": "Factura añadida",
       "toastUpdated": "Factura actualizada",
+      "archive": {
+        "fold": "Facturas archivadas ({count})",
+        "action": "Archivar",
+        "hint": "Sale de todos los cálculos y conserva sus pagos. «Restaurar» la devuelve.",
+        "restore": "Restaurar",
+        "restoreLabel": "Restaurar {label}",
+        "toastArchived": "«{label}» archivada",
+        "toastRestored": "«{label}» restaurada"
+      },
       "toastDeleted": "Factura eliminada",
       "toastMarkedPaid": "Factura marcada como pagada",
       "toastMarkedUnpaid": "Factura marcada como por pagar",
@@ -1594,6 +1603,8 @@
       "createFailed": "No se ha podido crear la factura.",
       "updateFailed": "No se ha podido actualizar la factura.",
       "deleteFailed": "No se ha podido eliminar la factura.",
+      "archiveFailed": "No se ha podido archivar o restaurar la factura.",
+      "archiveNeedsPayment": "Una factura sin pagos se elimina, no se archiva.",
       "watchFailed": "No se ha podido actualizar el marcador de la factura.",
       "notFound": "No se ha encontrado esta factura.",
       "payments": {

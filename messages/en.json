@@ -791,6 +791,15 @@
       "editAria": "Edit {label}",
       "toastCreated": "Bill added",
       "toastUpdated": "Bill updated",
+      "archive": {
+        "fold": "Archived bills ({count})",
+        "action": "Archive",
+        "hint": "It leaves every total and keeps its payments. “Restore” brings it back.",
+        "restore": "Restore",
+        "restoreLabel": "Restore {label}",
+        "toastArchived": "“{label}” archived",
+        "toastRestored": "“{label}” restored"
+      },
       "toastDeleted": "Bill deleted",
       "toastMarkedPaid": "Bill marked as paid",
       "toastMarkedUnpaid": "Bill marked as to pay",
@@ -1594,6 +1603,8 @@
       "createFailed": "Unable to create the bill.",
       "updateFailed": "Unable to update the bill.",
       "deleteFailed": "Unable to delete the bill.",
+      "archiveFailed": "Unable to archive or restore the bill.",
+      "archiveNeedsPayment": "A bill with no payment is deleted, not archived.",
       "watchFailed": "Unable to update the bill's watch marker.",
       "notFound": "This bill could not be found.",
       "payments": {

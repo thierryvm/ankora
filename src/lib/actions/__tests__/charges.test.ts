@@ -124,6 +124,8 @@ vi.mock('@/lib/security/audit-log', () => ({
     CHARGE_DELETED: 'charge.deleted',
     CHARGE_PAYMENT_TOGGLED: 'charge.payment_toggled',
     CHARGE_WATCH_TOGGLED: 'charge.watch_toggled',
+    CHARGE_ARCHIVED: 'charge.archived',
+    CHARGE_RESTORED: 'charge.restored',
     EXPENSE_CREATED: 'expense.created',
     EXPENSE_UPDATED: 'expense.updated',
     EXPENSE_DELETED: 'expense.deleted',
@@ -139,7 +141,13 @@ vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
 }));
 
-import { updateChargeAction, createChargeAction, toggleWatchAction } from '../charges';
+import {
+  updateChargeAction,
+  createChargeAction,
+  toggleWatchAction,
+  archiveChargeAction,
+  restoreChargeAction,
+} from '../charges';
 
 const CHARGE_ID = '10dccda9-7e0f-4b4e-9c7d-23f3c1b7e8a9';
 
@@ -430,6 +438,109 @@ describe('toggleWatchAction — THI-329 PR-C', () => {
     });
     const r = await toggleWatchAction(CHARGE_ID);
     expect(r).toEqual({ ok: false, errorCode: 'errors.charges.watchFailed' });
+    expect(auditSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe('archiveChargeAction / restoreChargeAction — F-18', () => {
+  function programCharge(isActive: boolean | null) {
+    supa.program({
+      table: 'charges',
+      op: 'select',
+      result: {
+        data: isActive === null ? null : { id: CHARGE_ID, is_active: isActive },
+        error: null,
+      },
+    });
+  }
+  function programPayment(found: boolean) {
+    supa.program({
+      table: 'charge_payments',
+      op: 'select',
+      result: { data: found ? { charge_id: CHARGE_ID } : null, error: null },
+    });
+  }
+  function programUpdateOk() {
+    supa.program({ table: 'charges', op: 'update', result: { data: null, error: null } });
+  }
+
+  it('rejects a non-uuid id before any read', async () => {
+    const r = await archiveChargeAction('not-a-uuid');
+    expect(r).toEqual({ ok: false, errorCode: 'errors.validation.generic' });
+    expect(supa.client.from).not.toHaveBeenCalled();
+    const r2 = await restoreChargeAction('not-a-uuid');
+    expect(r2).toEqual({ ok: false, errorCode: 'errors.validation.generic' });
+  });
+
+  it('rejects a request without a session', async () => {
+    supa.authReturn({ data: { user: null } });
+    const r = await archiveChargeAction(CHARGE_ID);
+    expect(r).toEqual({ ok: false, errorCode: 'errors.session.expired' });
+    expect(supa.lastUpdatePayload()).toBeUndefined();
+  });
+
+  it('is rate limited', async () => {
+    programMembership();
+    rateLimitSpy.mockImplementationOnce(async () => ({ success: false, limit: 60, remaining: 0 }));
+    const r = await archiveChargeAction(CHARGE_ID);
+    expect(r).toEqual({ ok: false, errorCode: 'errors.session.rateLimited' });
+    expect(supa.lastUpdatePayload()).toBeUndefined();
+  });
+
+  it('refuses a charge that is not in the session workspace', async () => {
+    programMembership();
+    programCharge(null);
+    const r = await archiveChargeAction(CHARGE_ID);
+    expect(r).toEqual({ ok: false, errorCode: 'errors.charges.archiveFailed' });
+    expect(supa.lastUpdatePayload()).toBeUndefined();
+  });
+
+  it('refuses to archive a charge with no payment — it is deleted instead', async () => {
+    programMembership();
+    programCharge(true);
+    programPayment(false);
+    const r = await archiveChargeAction(CHARGE_ID);
+    expect(r).toEqual({ ok: false, errorCode: 'errors.charges.archiveNeedsPayment' });
+    expect(supa.lastUpdatePayload()).toBeUndefined();
+  });
+
+  it('archives a paid charge: is_active=false only, audit without any amount', async () => {
+    programMembership();
+    programCharge(true);
+    programPayment(true);
+    programUpdateOk();
+    const r = await archiveChargeAction(CHARGE_ID);
+    expect(r).toEqual({ ok: true });
+    expect(supa.lastUpdatePayload()).toEqual({ is_active: false });
+    expect(auditSpy).toHaveBeenCalledWith('charge.archived', {
+      userId: 'user-1',
+      workspaceId: 'ws-1',
+    });
+  });
+
+  it('restores an archived charge: is_active=true only, no payment needed', async () => {
+    programMembership();
+    programCharge(false);
+    programUpdateOk();
+    const r = await restoreChargeAction(CHARGE_ID);
+    expect(r).toEqual({ ok: true });
+    expect(supa.lastUpdatePayload()).toEqual({ is_active: true });
+    expect(auditSpy).toHaveBeenCalledWith('charge.restored', {
+      userId: 'user-1',
+      workspaceId: 'ws-1',
+    });
+  });
+
+  it('surfaces a failed write', async () => {
+    programMembership();
+    programCharge(false);
+    supa.program({
+      table: 'charges',
+      op: 'update',
+      result: { data: null, error: { message: 'boom' } },
+    });
+    const r = await restoreChargeAction(CHARGE_ID);
+    expect(r).toEqual({ ok: false, errorCode: 'errors.charges.archiveFailed' });
     expect(auditSpy).not.toHaveBeenCalled();
   });
 });

@@ -67,6 +67,27 @@ const shift = (p: Period, delta: 1 | -1): Period => {
 
 const toParam = (p: Period): string => `${p.year}-${String(p.month).padStart(2, '0')}`;
 
+/**
+ * F-18 — the charges that have at least one payment, in any month. Only they
+ * offer « Archiver »; the archive action re-checks it server-side, so this list
+ * only decides what the drawer shows. RLS-scoped, one column.
+ */
+async function readChargeIdsWithPayments(workspaceId: string): Promise<string[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('charge_payments')
+    .select('charge_id')
+    .eq('workspace_id', workspaceId);
+  if (error) {
+    log.error('Failed to load charges with payments', {
+      workspace_id: workspaceId,
+      error_code: error.code ?? 'unknown',
+    });
+    return [];
+  }
+  return Array.from(new Set((data ?? []).map((p) => p.charge_id)));
+}
+
 export default async function ChargesPage({
   searchParams,
 }: {
@@ -74,12 +95,17 @@ export default async function ChargesPage({
 }) {
   // The commitments read needs only the workspace id: it leaves with the
   // snapshot reads (see the note on commitments below).
-  const [[snapshot, { commitments: commitmentRows, paidKeysByCommitment }], params, locale] =
-    await Promise.all([
-      getSnapshotWith('/app/charges', (workspaceId) => getCommitmentsWithLedger(workspaceId)),
-      searchParams,
-      getLocale() as Promise<Locale>,
-    ]);
+  const [
+    [snapshot, [{ commitments: commitmentRows, paidKeysByCommitment }, chargeIdsWithPayments]],
+    params,
+    locale,
+  ] = await Promise.all([
+    getSnapshotWith('/app/charges', (workspaceId) =>
+      Promise.all([getCommitmentsWithLedger(workspaceId), readChargeIdsWithPayments(workspaceId)]),
+    ),
+    searchParams,
+    getLocale() as Promise<Locale>,
+  ]);
 
   const current = snapshot.currentPeriod;
   const viewed = parseViewedPeriod(params.period, current);
@@ -154,6 +180,7 @@ export default async function ChargesPage({
     <ChargesClient
       charges={snapshot.rawCharges}
       paidChargeIds={paidChargeIds}
+      chargeIdsWithPayments={chargeIdsWithPayments}
       viewedPeriod={viewed}
       commitmentInstalments={obligations
         .filter((o) => o.source === 'commitment')
