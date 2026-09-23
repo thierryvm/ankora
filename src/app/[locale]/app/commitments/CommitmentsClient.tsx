@@ -48,6 +48,11 @@ type Props = {
   /** Ledger keys (`${year}-${month}`) per commitment id. */
   paidKeysByCommitment: Record<string, string[]>;
   currentPeriod: { year: number; month: number };
+  /**
+   * E5 — the instalments falling due in `currentPeriod` (paid ones included):
+   * how many, and their sum. Derived server-side by the domain.
+   */
+  thisMonth: { count: number; total: number };
   locale: Locale;
 };
 
@@ -94,6 +99,7 @@ export function CommitmentsClient({
   commitments,
   paidKeysByCommitment,
   currentPeriod,
+  thisMonth,
   locale,
 }: Props) {
   const t = useTranslations('app.commitments');
@@ -731,6 +737,13 @@ export function CommitmentsClient({
           <p className="text-muted-foreground mt-1 text-xs" data-testid="commitments-head-summary">
             {t('headSummary', { count: active.length, ongoing: ongoing.length })}
             {lastEnd && <> · {t('headEnds', { month: monthInSentence(lastEnd, locale) })}</>}
+            {' · '}
+            <span data-testid="commitments-head-this-month">
+              {t('headThisMonth', {
+                count: thisMonth.count,
+                amount: formatCurrency(thisMonth.total, locale),
+              })}
+            </span>
           </p>
         </section>
       )}

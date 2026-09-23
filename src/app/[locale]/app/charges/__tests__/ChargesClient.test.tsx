@@ -140,6 +140,8 @@ function renderCharges(
       effortLisseTotal={overrides.effortLisseTotal ?? 0}
       effortLisseAnnuelTotal={overrides.effortLisseAnnuelTotal ?? 0}
       lissage={overrides.lissage ?? { total: 0, parts: [] }}
+      monthlyBills={overrides.monthlyBills ?? { total: 0, parts: [] }}
+      commitmentShare={overrides.commitmentShare ?? { total: 0, parts: [] }}
       duplicates={overrides.duplicates ?? []}
       bulk={overrides.bulk ?? { gesture: 'rien', pastDueCount: 0 }}
       viewedPeriod={overrides.viewedPeriod ?? { year: 2026, month: 1 }}

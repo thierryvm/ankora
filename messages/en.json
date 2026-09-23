@@ -888,7 +888,11 @@
       "drawerDeleteQuestion": "Delete « {label} »? This cannot be undone.",
       "drawerDeleteConfirm": "Yes, delete",
       "drawerDeleteKeep": "Keep",
-      "instalmentCount": "{count, plural, one {# instalment} other {# instalments}}"
+      "instalmentCount": "{count, plural, one {# instalment} other {# instalments}}",
+      "posteMonthlyLabel": "Monthly bills",
+      "posteMonthlyHint": "What leaves every month, bill by bill.",
+      "posteCommitmentsLabel": "Commitment instalments",
+      "posteCommitmentsHint": "This month’s share of each ongoing commitment."
     },
     "accounts": {
       "metaTitle": "My accounts",
@@ -1018,7 +1022,8 @@
       "drawerDelete": "Delete",
       "drawerDeleteQuestion": "Delete « {label} »? This cannot be undone.",
       "drawerDeleteConfirm": "Yes, delete",
-      "drawerDeleteKeep": "Keep"
+      "drawerDeleteKeep": "Keep",
+      "headThisMonth": "this month: {count, plural, one {# instalment} other {# instalments}}, {amount}"
     },
     "expenses": {
       "title": "My expenses",
@@ -1490,7 +1495,7 @@
       },
       "charge": {
         "label": {
-          "required": "Label required.",
+          "required": "Description required.",
           "tooLong": "Maximum 120 characters."
         },
         "amount": {
@@ -1517,7 +1522,7 @@
           "outOfRange": "Value out of range."
         },
         "label": {
-          "required": "Label required.",
+          "required": "Description required.",
           "tooLong": "Maximum 80 characters."
         }
       },
@@ -1539,7 +1544,7 @@
       },
       "expense": {
         "label": {
-          "required": "Label required.",
+          "required": "Description required.",
           "tooLong": "Maximum 120 characters."
         },
         "amount": {
@@ -1581,7 +1586,7 @@
         },
         "firstCharge": {
           "label": {
-            "required": "Label required.",
+            "required": "Description required.",
             "tooLong": "Maximum 120 characters."
           },
           "amount": {

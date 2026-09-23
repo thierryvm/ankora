@@ -6,7 +6,13 @@ import { commitmentRowToDomain } from '@/lib/data/commitment-row';
 import { getCommitmentsWithLedger } from '@/lib/data/commitments';
 import { getSnapshotWith, toCockpitCharges } from '@/lib/data/workspace-snapshot';
 import { todayInAnkoraTz } from '@/lib/date/tz';
-import { engagementsMensuelsLisses, lissageDuMois } from '@/lib/domain/cockpit';
+import {
+  chargesFixesDuMois,
+  engagementsDuMois,
+  engagementsMensuelsLisses,
+  lissageDuMois,
+  type Poste,
+} from '@/lib/domain/cockpit';
 import { paymentKey, type PaymentLedger } from '@/lib/domain/cockpit/types';
 import {
   aPayerCeMois,
@@ -64,6 +70,18 @@ const shift = (p: Period, delta: 1 | -1): Period => {
   const total = p.year * 12 + (p.month - 1) + delta;
   return { year: Math.floor(total / 12), month: (total % 12) + 1 };
 };
+
+/** A domain `Poste` as plain numbers — Decimal never crosses the RSC boundary. */
+const posteView = (poste: Poste) => ({
+  total: poste.total.toNumber(),
+  parts: poste.parts.map((p) => ({
+    id: p.id,
+    label: p.libelle,
+    monthly: p.montantMensuel.toNumber(),
+    invoiceAmount: p.origine?.montantFacture.toNumber() ?? p.montantMensuel.toNumber(),
+    cycleMonths: p.origine?.cycleMois ?? 1,
+  })),
+});
 
 const toParam = (p: Period): string => `${p.year}-${String(p.month).padStart(2, '0')}`;
 
@@ -172,19 +190,13 @@ export default async function ChargesPage({
       // « Effort lissé » in its narrow sense (F-3): the monthly share of the
       // NON-monthly bills only, with the bill each part comes from (DESIGN-v3
       // rule 28). Read from the domain's existing decomposition — no new sum.
-      lissage={(() => {
-        const poste = lissageDuMois(cockpitCharges);
-        return {
-          total: poste.total.toNumber(),
-          parts: poste.parts.map((p) => ({
-            id: p.id,
-            label: p.libelle,
-            monthly: p.montantMensuel.toNumber(),
-            invoiceAmount: p.origine?.montantFacture.toNumber() ?? p.montantMensuel.toNumber(),
-            cycleMonths: p.origine?.cycleMois ?? 1,
-          })),
-        };
-      })()}
+      lissage={posteView(lissageDuMois(cockpitCharges))}
+      // The two other shares of « Compté chaque mois » (rule of code 10). Same
+      // domain producers as the cockpit's cascade; `effortLisse` is exactly
+      // fixes + lissage + engagements, each `Poste` summing its own parts.
+      // Engagements at the CURRENT month, like `engagementsMensuels` above.
+      monthlyBills={posteView(chargesFixesDuMois(cockpitCharges))}
+      commitmentShare={posteView(engagementsDuMois(commitments, commitmentLedger, current))}
       duplicates={detecterDoublonsProbables({
         charges: cockpitCharges,
         commitments,

@@ -60,6 +60,7 @@ function renderPage(
         commitments={commitments}
         paidKeysByCommitment={overrides.paidKeysByCommitment ?? {}}
         currentPeriod={overrides.currentPeriod ?? { year: 2026, month: 1 }}
+        thisMonth={{ count: 0, total: 0 }}
         locale="fr-BE"
       />
     </NextIntlClientProvider>,

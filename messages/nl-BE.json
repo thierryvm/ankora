@@ -888,7 +888,11 @@
       "drawerDeleteQuestion": "« {label} » verwijderen? Dit kan niet ongedaan worden gemaakt.",
       "drawerDeleteConfirm": "Ja, verwijderen",
       "drawerDeleteKeep": "Behouden",
-      "instalmentCount": "{count, plural, one {# termijn} other {# termijnen}}"
+      "instalmentCount": "{count, plural, one {# termijn} other {# termijnen}}",
+      "posteMonthlyLabel": "Maandelijkse facturen",
+      "posteMonthlyHint": "Wat elke maand vertrekt, factuur per factuur.",
+      "posteCommitmentsLabel": "Termijnen van verbintenissen",
+      "posteCommitmentsHint": "Het deel van deze maand van elke lopende verbintenis."
     },
     "accounts": {
       "metaTitle": "Mijn rekeningen",
@@ -1018,7 +1022,8 @@
       "drawerDelete": "Verwijderen",
       "drawerDeleteQuestion": "« {label} » verwijderen? Dit kan niet ongedaan worden gemaakt.",
       "drawerDeleteConfirm": "Ja, verwijderen",
-      "drawerDeleteKeep": "Behouden"
+      "drawerDeleteKeep": "Behouden",
+      "headThisMonth": "deze maand: {count, plural, one {# termijn} other {# termijnen}}, {amount}"
     },
     "expenses": {
       "title": "Mijn uitgaven",

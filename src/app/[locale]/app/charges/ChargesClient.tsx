@@ -149,6 +149,14 @@ type ChargesClientProps = {
    * (DESIGN-v3 rule 28). Straight from the domain's `lissageDuMois`.
    */
   lissage: { total: number; parts: readonly LissagePart[] };
+  /**
+   * The two other shares of `effortLisseTotal` (rule of code 10): the monthly
+   * bills (`chargesFixesDuMois`) and the commitment instalments of the current
+   * month (`engagementsDuMois`). With `lissage`, the three add up to the
+   * total — the domain's `effortLisse` is exactly their sum.
+   */
+  monthlyBills: { total: number; parts: readonly LissagePart[] };
+  commitmentShare: { total: number; parts: readonly LissagePart[] };
   /** Charge/commitment pairs that look like the same obligation entered twice. */
   duplicates: DuplicateWarning[];
   /** State of the bulk « échéances passées » gesture, derived server-side. */
@@ -181,6 +189,8 @@ export function ChargesClient({
   effortLisseTotal,
   effortLisseAnnuelTotal,
   lissage,
+  monthlyBills,
+  commitmentShare,
   duplicates,
   bulk,
   viewedPeriod,
@@ -215,6 +225,9 @@ export function ChargesClient({
     groupOverride[freq] ?? (isWide || freq === 'monthly');
   const toggleGroup = (freq: Frequency, open: boolean) =>
     setGroupOverride((prev) => ({ ...prev, [freq]: !open }));
+  // F13 — the commitments group folds below `md` like a non-monthly cadence.
+  const [commitmentsOpenOverride, setCommitmentsOpenOverride] = useState<boolean | null>(null);
+  const commitmentsOpen = commitmentsOpenOverride ?? isWide;
   const [totalOpenOverride, setTotalOpenOverride] = useState<boolean | null>(null);
   const totalOpen = totalOpenOverride ?? isWide;
 
@@ -594,6 +607,59 @@ export function ChargesClient({
           <ChevronRight aria-hidden className="text-muted-foreground mt-1 h-4 w-4 shrink-0" />
         </button>
       </li>
+    );
+  }
+
+  /**
+   * One share of « Compté chaque mois » other than the smoothed one: its
+   * total, then every line that composes it (rule of code 10). A share with
+   * nothing in it is not drawn — an empty heading explains nothing.
+   */
+  function renderPoste(
+    kind: 'monthly' | 'commitments',
+    poste: { total: number; parts: readonly LissagePart[] },
+  ) {
+    if (poste.parts.length === 0) return null;
+    const partTestId = kind === 'monthly' ? 'charges-monthly-part' : 'charges-commitment-part';
+    return (
+      <div data-testid={`charges-poste-${kind}`}>
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="text-foreground text-sm font-medium">
+            {t(kind === 'monthly' ? 'posteMonthlyLabel' : 'posteCommitmentsLabel')}
+          </span>
+          <span
+            data-testid={`charges-poste-${kind}-total`}
+            className="text-foreground text-sm font-semibold tabular-nums"
+          >
+            {formatCurrency(poste.total, locale)}
+          </span>
+        </div>
+        <p className="text-muted-foreground mt-0.5 text-xs">
+          {t(kind === 'monthly' ? 'posteMonthlyHint' : 'posteCommitmentsHint')}
+        </p>
+        <ul role="list" className="mt-2 flex flex-col gap-1.5">
+          {poste.parts.map((p) => (
+            <li
+              key={p.id}
+              data-testid={`${partTestId}-${p.id}`}
+              className="flex items-baseline justify-between gap-3 text-xs"
+            >
+              <span className="text-foreground min-w-0">
+                {p.cycleMonths > 1
+                  ? t('lissagePartSource', {
+                      label: p.label,
+                      amount: formatCurrency(p.invoiceAmount, locale),
+                      months: p.cycleMonths,
+                    })
+                  : p.label}
+              </span>
+              <span className="text-muted-foreground shrink-0 tabular-nums">
+                {t('lissagePartMonthly', { amount: formatCurrency(p.monthly, locale) })}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
     );
   }
 
@@ -1072,18 +1138,41 @@ export function ChargesClient({
                 aria-labelledby="charges-group-commitments-heading"
                 className="border-border bg-card rounded-2xl border"
               >
-                <h2
-                  id="charges-group-commitments-heading"
-                  className="text-foreground flex min-h-12 items-center gap-2 px-4 py-2 text-sm font-semibold"
-                >
-                  {t('commitmentsGroupTitle')}
-                  <span className="text-muted-foreground font-normal">
-                    · {t('instalmentCount', { count: commitmentInstalments.length })}
-                  </span>
+                <h2 id="charges-group-commitments-heading" className="m-0">
+                  <button
+                    type="button"
+                    onClick={() => setCommitmentsOpenOverride(!commitmentsOpen)}
+                    aria-expanded={commitmentsOpen}
+                    aria-controls="charges-group-commitments-list"
+                    data-testid="charges-group-toggle-commitments"
+                    className="hover:bg-surface-muted focus-visible:ring-brand-600 flex min-h-12 w-full items-center justify-between gap-3 rounded-2xl px-4 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                  >
+                    <span className="min-w-0 text-sm">
+                      <span className="text-foreground font-semibold">
+                        {t('commitmentsGroupTitle')}
+                      </span>
+                      <span className="text-muted-foreground">
+                        {' · '}
+                        {t('instalmentCount', { count: commitmentInstalments.length })}
+                      </span>
+                    </span>
+                    <ChevronDown
+                      aria-hidden
+                      className={`text-muted-foreground h-4 w-4 shrink-0 transition-transform ${
+                        commitmentsOpen ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </button>
                 </h2>
-                <ul role="list" className="divide-border/60 divide-y pb-2">
-                  {commitmentInstalments.map((row) => renderInstalmentRow(row))}
-                </ul>
+                {commitmentsOpen && (
+                  <ul
+                    id="charges-group-commitments-list"
+                    role="list"
+                    className="divide-border/60 divide-y pb-2"
+                  >
+                    {commitmentInstalments.map((row) => renderInstalmentRow(row))}
+                  </ul>
+                )}
               </section>
             )}
           </div>
@@ -1124,6 +1213,7 @@ export function ChargesClient({
             </h2>
             {totalOpen && (
               <div id="charges-total-body" className="flex flex-col gap-3 px-4 pb-4">
+                {renderPoste('monthly', monthlyBills)}
                 <div>
                   <div className="flex items-baseline justify-between gap-3">
                     <span className="text-foreground text-sm font-medium">
@@ -1162,6 +1252,7 @@ export function ChargesClient({
                     </ul>
                   )}
                 </div>
+                {renderPoste('commitments', commitmentShare)}
                 <div className="border-border/60 border-t pt-3">
                   <div className="flex items-baseline justify-between gap-3">
                     <span className="text-foreground text-sm font-medium">

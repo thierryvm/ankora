@@ -888,7 +888,11 @@
       "drawerDeleteQuestion": "Supprimer « {label} » ? Ce geste ne se défait pas.",
       "drawerDeleteConfirm": "Oui, supprimer",
       "drawerDeleteKeep": "Garder",
-      "instalmentCount": "{count, plural, one {# échéance} other {# échéances}}"
+      "instalmentCount": "{count, plural, one {# échéance} other {# échéances}}",
+      "posteMonthlyLabel": "Factures mensuelles",
+      "posteMonthlyHint": "Ce qui part chaque mois, facture par facture.",
+      "posteCommitmentsLabel": "Échéances d’engagement",
+      "posteCommitmentsHint": "La part de ce mois de chaque engagement en cours."
     },
     "accounts": {
       "metaTitle": "Mes comptes",
@@ -1018,7 +1022,8 @@
       "drawerDelete": "Supprimer",
       "drawerDeleteQuestion": "Supprimer « {label} » ? Ce geste ne se défait pas.",
       "drawerDeleteConfirm": "Oui, supprimer",
-      "drawerDeleteKeep": "Garder"
+      "drawerDeleteKeep": "Garder",
+      "headThisMonth": "ce mois : {count, plural, one {# échéance} other {# échéances}}, {amount}"
     },
     "expenses": {
       "title": "Mes dépenses",
@@ -1517,7 +1522,7 @@
           "outOfRange": "Valeur hors limites."
         },
         "label": {
-          "required": "Libellé requis.",
+          "required": "Description requise.",
           "tooLong": "Maximum 80 caractères."
         }
       },
@@ -1539,7 +1544,7 @@
       },
       "expense": {
         "label": {
-          "required": "Libellé requis.",
+          "required": "Description requise.",
           "tooLong": "Maximum 120 caractères."
         },
         "amount": {
@@ -1581,7 +1586,7 @@
         },
         "firstCharge": {
           "label": {
-            "required": "Libellé requis.",
+            "required": "Description requise.",
             "tooLong": "Maximum 120 caractères."
           },
           "amount": {

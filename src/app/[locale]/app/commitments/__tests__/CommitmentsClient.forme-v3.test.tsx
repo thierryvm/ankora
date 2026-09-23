@@ -38,13 +38,17 @@ const loan: RawCommitment = {
   paidFrom: 'principal',
 };
 
-function renderPage(commitments: RawCommitment[]) {
+function renderPage(
+  commitments: RawCommitment[],
+  thisMonth: { count: number; total: number } = { count: 1, total: 235 },
+) {
   return render(
     <NextIntlClientProvider locale="fr-BE" messages={messages} timeZone="Europe/Brussels">
       <CommitmentsClient
         commitments={commitments}
         paidKeysByCommitment={{}}
         currentPeriod={{ year: 2026, month: 1 }}
+        thisMonth={thisMonth}
         locale="fr-BE"
       />
     </NextIntlClientProvider>,
@@ -62,6 +66,22 @@ describe('CommitmentsClient — v3 shape', () => {
       /2[\u00a0\u202f ]820/,
     );
     expect(card).toHaveTextContent(/1 engagement, 1 en cours · se termine en décembre 2026/);
+  });
+
+  // E5 of the mockup (engagements.js:57): the card also says what falls THIS
+  // month — the count and the sum of the instalments due, derived server-side.
+  it('E5: the head card says « ce mois : k échéances, X »', () => {
+    renderPage([loan], { count: 2, total: 470 });
+    expect(screen.getByTestId('commitments-head-this-month')).toHaveTextContent(
+      /ce mois : 2 échéances, 470\s€/,
+    );
+  });
+
+  it('E5: with nothing due this month, it says so with zero', () => {
+    renderPage([loan], { count: 0, total: 0 });
+    expect(screen.getByTestId('commitments-head-this-month')).toHaveTextContent(
+      /ce mois : 0 échéance, 0\s€/,
+    );
   });
 
   it('E6: the row keeps its counter but no edit or delete button', () => {

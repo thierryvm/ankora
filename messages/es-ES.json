@@ -888,7 +888,11 @@
       "drawerDeleteQuestion": "¿Eliminar « {label} »? No se puede deshacer.",
       "drawerDeleteConfirm": "Sí, eliminar",
       "drawerDeleteKeep": "Conservar",
-      "instalmentCount": "{count, plural, one {# plazo} other {# plazos}}"
+      "instalmentCount": "{count, plural, one {# plazo} other {# plazos}}",
+      "posteMonthlyLabel": "Facturas mensuales",
+      "posteMonthlyHint": "Lo que sale cada mes, factura por factura.",
+      "posteCommitmentsLabel": "Plazos de compromisos",
+      "posteCommitmentsHint": "La parte de este mes de cada compromiso en curso."
     },
     "accounts": {
       "metaTitle": "Mis cuentas",
@@ -1018,7 +1022,8 @@
       "drawerDelete": "Eliminar",
       "drawerDeleteQuestion": "¿Eliminar « {label} »? No se puede deshacer.",
       "drawerDeleteConfirm": "Sí, eliminar",
-      "drawerDeleteKeep": "Conservar"
+      "drawerDeleteKeep": "Conservar",
+      "headThisMonth": "este mes: {count, plural, one {# plazo} other {# plazos}}, {amount}"
     },
     "expenses": {
       "title": "Mis gastos",
@@ -1490,7 +1495,7 @@
       },
       "charge": {
         "label": {
-          "required": "Etiqueta requerida.",
+          "required": "Descripción obligatoria.",
           "tooLong": "Máximo 120 caracteres."
         },
         "amount": {
@@ -1517,7 +1522,7 @@
           "outOfRange": "Valor fuera de los límites."
         },
         "label": {
-          "required": "Etiqueta requerida.",
+          "required": "Descripción obligatoria.",
           "tooLong": "Máximo 80 caracteres."
         }
       },
@@ -1539,7 +1544,7 @@
       },
       "expense": {
         "label": {
-          "required": "Etiqueta requerida.",
+          "required": "Descripción obligatoria.",
           "tooLong": "Máximo 120 caracteres."
         },
         "amount": {
@@ -1581,7 +1586,7 @@
         },
         "firstCharge": {
           "label": {
-            "required": "Etiqueta requerida.",
+            "required": "Descripción obligatoria.",
             "tooLong": "Máximo 120 caracteres."
           },
           "amount": {

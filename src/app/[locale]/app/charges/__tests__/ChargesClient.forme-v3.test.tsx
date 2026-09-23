@@ -89,6 +89,15 @@ function renderCharges(charges: Props['charges'], overrides: Partial<Props> = {}
             parts: [{ id: 'water', label: 'Eau', monthly: 15, invoiceAmount: 45, cycleMonths: 3 }],
           }
         }
+        monthlyBills={
+          overrides.monthlyBills ?? {
+            total: 505,
+            parts: [
+              { id: 'rent', label: 'Loyer', monthly: 505, invoiceAmount: 505, cycleMonths: 1 },
+            ],
+          }
+        }
+        commitmentShare={overrides.commitmentShare ?? { total: 0, parts: [] }}
         duplicates={[]}
         bulk={overrides.bulk ?? { gesture: 'rien', pastDueCount: 0 }}
         viewedPeriod={{ year: 2026, month: 2 }}
@@ -228,5 +237,72 @@ describe('ChargesClient — v3 shape (F8 head card, F6/F14 footer)', () => {
     expect(screen.getByTestId('charges-total-monthly')).toHaveTextContent(/520\s€/);
     expect(screen.getByTestId('charges-total-annual')).toHaveTextContent(/6[\u00a0\u202f ]240\s€/);
     expect(total.textContent ?? '').not.toMatch(/retenu/i);
+  });
+
+  // Rule of code 10 (Reviewer blocker on #490): « Compté chaque mois » is the
+  // domain's `effortLisse` = monthly bills + smoothed share + commitment
+  // instalments. The footer used to open only the smoothed share, so 505 € of
+  // a 740 € total had no line. Every euro of the total now has a named line.
+  it('« Compté chaque mois » opens on its THREE parts, and they add up to it', () => {
+    const pret = {
+      id: 'pret',
+      label: 'Prêt voiture',
+      monthly: 220,
+      invoiceAmount: 220,
+      cycleMonths: 1,
+    };
+    renderCharges([rent, water], {
+      effortLisseTotal: 740,
+      effortLisseAnnuelTotal: 8880,
+      commitmentShare: { total: 220, parts: [pret] },
+    });
+    fireEvent.click(screen.getByTestId('charges-total-toggle'));
+
+    const amountOf = (testId: string): number => {
+      const raw = screen.getByTestId(testId).textContent ?? '';
+      return Number(raw.replace(/[^\d,]/g, '').replace(',', '.'));
+    };
+    const monthly = amountOf('charges-poste-monthly-total');
+    const smoothed = amountOf('charges-effort-lisse-total');
+    const commitments = amountOf('charges-poste-commitments-total');
+    expect([monthly, smoothed, commitments]).toEqual([505, 15, 220]);
+    expect(monthly + smoothed + commitments).toBe(amountOf('charges-total-monthly'));
+
+    expect(screen.getByTestId('charges-monthly-part-rent')).toHaveTextContent(
+      /Loyer.*505\s€ par mois/,
+    );
+    expect(screen.getByTestId('charges-commitment-part-pret')).toHaveTextContent(
+      /Prêt voiture.*220\s€ par mois/,
+    );
+  });
+
+  it('a part with nothing in it (no commitment this month) is not drawn', () => {
+    renderCharges([rent, water]);
+    fireEvent.click(screen.getByTestId('charges-total-toggle'));
+    expect(screen.getByTestId('charges-poste-monthly-total')).toHaveTextContent(/505\s€/);
+    expect(screen.queryByTestId('charges-poste-commitments-total')).toBeNull();
+  });
+});
+
+describe('ChargesClient — v3 shape (F13: the commitments group folds like a cadence)', () => {
+  const instalment = {
+    id: 'pret',
+    label: 'Prêt voiture',
+    amountDue: 220,
+    paymentDay: 12,
+    isPaid: false,
+    installmentIndex: 3,
+    installmentsTotal: 24,
+  };
+
+  it('below md it starts folded and still says what it holds; a tap opens it', () => {
+    renderCharges([rent], { commitmentInstalments: [instalment] });
+    const toggle = screen.getByTestId('charges-group-toggle-commitments');
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(toggle).toHaveTextContent(/Engagements.*1 échéance/);
+    expect(screen.queryByText('Prêt voiture')).toBeNull();
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText('Prêt voiture')).toBeInTheDocument();
   });
 });
