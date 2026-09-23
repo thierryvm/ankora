@@ -23,10 +23,10 @@ import type { ReferencePeriod } from './types';
  *   the same euro twice. A proposal that was not transferred takes nothing —
  *   it is not in the journal.
  * - **Money received** splits by nature. `extra` is money on top of the income:
- *   it adds. `regular` is the ARRIVAL of the month's income: it replaces the
- *   written income rather than adding to it — the mock-up's rule
- *   (`contexte.js`, `revenus()`), including when the amount received differs
- *   from the written one.
+ *   it adds. `regular` is the ARRIVAL of the month's income: it never adds
+ *   to the written income. `situation-mois.ts` keeps the GREATER of the two
+ *   (issue #483, the pilot's decision of 21 September 2026, against the
+ *   mock-up's replacement rule): writing money received never lowers the figure.
  * - **Out of the main account** (`sortiesDuPrincipal`) only feeds the neutral
  *   sentence of the cascade; it changes no figure.
  * - A cancelled operation counts for nothing. A reopened one (its

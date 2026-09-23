@@ -57,9 +57,9 @@ type Props = {
   revenus: number;
   /**
    * La somme des argents reçus `regular` du mois (`null` : aucun) et le revenu
-   * écrit. Quand les deux existent et diffèrent, le reçu a remplacé l'écrit
-   * (règle de la maquette) : la ligne Revenus le dit, et seulement alors — un
-   * chiffre qui change sans le dire est un défaut.
+   * écrit. Le revenu compté est le plus grand des deux (issue #483) ; quand ils
+   * existent et diffèrent, une phrase dit de quel côté de l'écrit tombe le reçu,
+   * et seulement alors — un écart qui ne se dit pas est un défaut.
    */
   revenuRecu: number | null;
   revenuEcrit: number | null;
@@ -304,15 +304,22 @@ export async function CascadeDuMois(props: Props) {
             </dd>
           </div>
         </dl>
-        {/* Outside the <dl>: a <p> is not a valid child of a definition list. */}
+        {/* Outside the <dl>: a <p> is not a valid child of a definition list.
+            Issue #483: the figure counts the GREATER of the two, so the
+            sentence says on which side of the written income the sum sits. */}
         {props.revenuRecu !== null &&
           props.revenuEcrit !== null &&
           props.revenuRecu !== props.revenuEcrit && (
             <p className="text-muted-foreground pl-3 text-xs" data-revenu-recu-differe>
-              {t('flow.revenuRecuDiffere', {
-                recu: fmt(props.revenuRecu),
-                prevu: fmt(props.revenuEcrit),
-              })}
+              {t(
+                props.revenuRecu < props.revenuEcrit
+                  ? 'flow.revenuRecuSurPrevu'
+                  : 'flow.revenuRecuPlusQuePrevu',
+                {
+                  recu: fmt(props.revenuRecu),
+                  prevu: fmt(props.revenuEcrit),
+                },
+              )}
             </p>
           )}
         {/* La phrase neutre (texte validé par @thierry le 20 sept. 2026) :

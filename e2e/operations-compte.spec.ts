@@ -5,8 +5,9 @@
  * - « J'ai fait ce virement » (cockpit), « Argent reçu » and a balance
  *   statement (Mes comptes) each reach the base, and show on the screen;
  * - « Il te reste » reads the SAME, character for character, before and after
- *   a transfer done and money received (voie A, 2026-09-21: neither touches
- *   `accounts.balance`, and the formula is PR D);
+ *   a transfer done, and before and after money received below the written
+ *   income (voie A, 2026-09-21: neither touches `accounts.balance`; issue #483:
+ *   the base income is the greater of written and received);
  * - an income line is cancelled, then restored, from the screen (rule 11);
  * - every gesture leaves one audit event, without amount nor description;
  * - a second fictitious account reads and writes nothing of the first (RLS);
@@ -170,12 +171,20 @@ test.describe.serial('Opérations de compte — trois gestes, un chiffre qui ne 
     });
     await expect(feuilleRecu).toBeHidden();
 
-    // PR D (declared in the PR): money received as « Mon revenu du mois » is the
-    // ARRIVAL of the income and REPLACES the written one (2 505) — the mock-up's
-    // rule. The figure therefore moves here, by design; before PR D it did not.
+    // Issue #483 (declared in PR #488): the month's base income is the GREATER
+    // of the written income (2 505) and the regular money received (705). A
+    // part of the income never lowers the month, so the figure does not move;
+    // the cascade says what was received out of what was planned. Until #488
+    // this step expected the opposite (received replaced written, PR D).
     const apresRecu = await lireIlTeReste(page);
-    expect(apresRecu, 'après un argent reçu regular').not.toBe(avant);
-    expect(apresRecu, 'le revenu reçu remplace le revenu écrit').toMatch(/ 705 − Déjà compté/u);
+    expect(apresRecu, 'après un argent reçu regular inférieur au revenu écrit').toBe(avant);
+    await ouvrirRepli(page, 'cockpit-repli-cascade');
+    const recuSurPrevu = page.locator('[data-revenu-recu-differe]');
+    await expect(recuSurPrevu).toBeVisible();
+    // `\s` covers the no-break and narrow no-break spaces of fr-BE amounts.
+    await expect(recuSurPrevu).toHaveText(
+      /^Reçu ce mois-ci 705(?:,00)?\s€ sur 2[\s.]?505(?:,00)?\s€ prévus$/u,
+    );
 
     // 3. Un relevé à découvert, sans signe moins à taper.
     await page.goto('/app/accounts');

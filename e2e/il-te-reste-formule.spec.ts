@@ -3,11 +3,13 @@
  *
  *   Il te reste = Revenus − Déjà compté pour tes factures − Mis de côté − Dépensé
  *
- * Three gestures, one figure read after each:
+ * Four gestures, one figure read after each:
  *   1. a transfer to provisions WITH a free part lowers the figure by exactly
  *      that free part;
  *   2. cancelling it brings the figure back to the cent;
- *   3. money received « on top of the income » raises it by exactly its amount.
+ *   3. money received « on top of the income » raises it by exactly its amount;
+ *   4. a PART of the month's income (issue #483) leaves it where it was, and
+ *      the cascade says « Reçu ce mois-ci X sur Y prévus ».
  * At every step the formula line is recomputed IN THE PAGE and must land on
  * the headline figure. Every field is typed key by key (`pressSequentially`),
  * read back on screen, then in the database.
@@ -291,6 +293,61 @@ test.describe.serial('« Il te reste » — la formule de la PR D, geste par ges
         amount: 120,
         income_nature: 'extra',
         description: 'Remboursement fictif',
+        cancelled_at: null,
+      },
+    ]);
+
+    // 4. Issue #483 — a PART of the month's income (1 200 of the 2 505
+    // written). The base income is the greater of the two: the headline must
+    // NOT move, and the cascade says what was received out of what was planned.
+    await page.goto('/app/accounts');
+    await ouvrirFeuille(
+      page,
+      page.getByRole('button', { name: 'Argent reçu', exact: true }),
+      'feuille-argent-recu',
+    );
+    const partiel = page.getByTestId('feuille-argent-recu');
+    const montantPartiel = partiel.getByLabel('Combien as-tu reçu ?');
+    await montantPartiel.click();
+    await montantPartiel.press('Control+a');
+    await montantPartiel.press('Backspace');
+    await montantPartiel.pressSequentially('1200');
+    await partiel.getByRole('radio', { name: 'Mon revenu du mois' }).check();
+    const descriptionPartiel = partiel.getByLabel('Description (facultatif)');
+    await descriptionPartiel.click();
+    await descriptionPartiel.pressSequentially('Premier versement fictif');
+    await expect(montantPartiel).toHaveValue('1200');
+    await expect(descriptionPartiel).toHaveValue('Premier versement fictif');
+    await expect(partiel.getByRole('radio', { name: 'Mon revenu du mois' })).toBeChecked();
+    await partiel.getByRole('button', { name: /^enregistrer$/i }).click();
+    await expect(page.getByText('Argent reçu enregistré').first()).toBeVisible({
+      timeout: ECRITURE_MS,
+    });
+
+    const apresPartiel = await lire(page);
+    expect(apresPartiel.resultat, 'un versement partiel ne fait pas baisser le chiffre').toBe(
+      apresRecu.resultat,
+    );
+    expect(apresPartiel.tete).toBe(apresRecu.tete);
+
+    await ouvrirRepli(page, 'cockpit-repli-cascade');
+    const phrase = page.locator('[data-revenu-recu-differe]');
+    await expect(phrase).toBeVisible();
+    await expect(phrase).toHaveText(
+      /^Reçu ce mois-ci 1[\s\u00a0\u202f.]?200(?:,00)?[\s\u00a0\u202f]€ sur 2[\s\u00a0\u202f.]?505(?:,00)?[\s\u00a0\u202f]€ prévus$/u,
+    );
+
+    const { data: reguliers } = await admin
+      .from('movements')
+      .select('amount, income_nature, description, cancelled_at')
+      .eq('workspace_id', a.workspaceId)
+      .eq('kind', 'income')
+      .eq('income_nature', 'regular');
+    expect(reguliers).toEqual([
+      {
+        amount: 1200,
+        income_nature: 'regular',
+        description: 'Premier versement fictif',
         cancelled_at: null,
       },
     ]);

@@ -1300,7 +1300,8 @@
         "detailOrigine": "{montant} {cycleMois, plural, =3 {every 3 months} =6 {every 6 months} =12 {once a year} other {every # months}}",
         "recuEnPlus": "Recibido de más",
         "misDeCote": "Apartado",
-        "revenuRecuDiffere": "Recibido este mes {recu}, previsto {prevu}",
+        "revenuRecuSurPrevu": "Recibido este mes {recu} de {prevu} previstos",
+        "revenuRecuPlusQuePrevu": "Recibido este mes {recu}, más que los {prevu} previstos",
         "auDela": "Este mes has apartado {montant} más de lo que dejaba tu ingreso: la diferencia viene de tu cuenta principal."
       },
       "barAria": "Reparto de tus ingresos: {charges} de facturas, {provisions} de reservas, {depense} gastado, {reste} restante.",
