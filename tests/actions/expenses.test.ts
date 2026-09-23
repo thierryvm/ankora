@@ -27,6 +27,20 @@ vi.mock('@/lib/supabase/server', () => ({
     auth: { getUser: async () => authenticatedUserResponse() },
     from: (table: string) => {
       if (table === 'workspace_members') return membershipLookupChain();
+      // A write carrying a categoryId first reads that category (own workspace,
+      // allowed kind). Answered as an own, variable one: this suite is about
+      // revalidation, the refusals live in category-ownership.test.ts.
+      if (table === 'categories') {
+        return {
+          select: () => ({
+            eq: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({ data: { kind: 'variable' }, error: null }),
+              }),
+            }),
+          }),
+        };
+      }
       if (table === 'expenses') {
         return {
           insert: insertSpy,

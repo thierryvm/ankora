@@ -146,6 +146,18 @@ function programMembership() {
   });
 }
 
+// Every write that carries a categoryId now reads that category (workspace +
+// kind) before writing: the cases below that reach the INSERT/UPDATE with a
+// category script that read as an own, variable category. The refusals are
+// proven in `category-ownership.test.ts`, on a double that holds two workspaces.
+function programOwnCategory() {
+  supa.program({
+    table: 'categories',
+    op: 'select',
+    result: { data: { kind: 'variable' }, error: null },
+  });
+}
+
 beforeEach(() => {
   supa.reset();
   auditSpy.mockClear();
@@ -217,6 +229,7 @@ describe('updateExpenseAction — validation', () => {
 describe('updateExpenseAction — happy path + audit', () => {
   it('updates fields and emits audit event', async () => {
     programMembership();
+    programOwnCategory();
     supa.program({
       table: 'expenses',
       op: 'update',
@@ -359,6 +372,8 @@ describe('createExpenseAction — validation', () => {
 });
 
 describe('createExpenseAction — what it actually writes', () => {
+  beforeEach(programOwnCategory);
+
   it('persists paid_from instead of dropping it', async () => {
     // The regression this pins: the INSERT listed every field except
     // `paid_from`, so the column silently fell back to its DB default while
