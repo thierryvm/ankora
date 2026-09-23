@@ -10,7 +10,7 @@
  * — NextIntlClientProvider with real fr-BE messages, action mocks via vi.hoisted.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { afterAll, beforeAll, describe, it, expect, vi, beforeEach } from 'vitest';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 
@@ -81,6 +81,33 @@ vi.mock('@/i18n/navigation', () => ({
 
 import { ChargesClient } from '../ChargesClient';
 
+// This suite describes the page from `md` up, where every cadence and the
+// « counted each month » footer start open (E1 bis, F10). The folded mobile
+// state has its own suite: ChargesClient.forme-v3.test.tsx.
+beforeAll(() => {
+  Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
+    value: (query: string) => ({
+      matches: query.includes('min-width'),
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }),
+  });
+});
+afterAll(() => {
+  // @ts-expect-error — restore jsdom's absence of matchMedia for other suites
+  delete window.matchMedia;
+});
+
+/** Opens a row's drawer and returns its « À surveiller » gesture (F11: moved off the row). */
+function openWatch(id: string): HTMLElement {
+  if (!screen.queryByTestId('charge-drawer-watch')) {
+    fireEvent.click(screen.getByTestId(`charges-row-open-${id}`));
+  }
+  return screen.getByTestId('charge-drawer-watch');
+}
+
 function renderWithIntl(ui: React.ReactNode) {
   return render(
     <NextIntlClientProvider locale="fr-BE" messages={messages} timeZone="Europe/Brussels">
@@ -112,6 +139,7 @@ function renderCharges(
       aPayerCeMoisTotal={overrides.aPayerCeMoisTotal ?? 0}
       effortLisseTotal={overrides.effortLisseTotal ?? 0}
       effortLisseAnnuelTotal={overrides.effortLisseAnnuelTotal ?? 0}
+      lissage={overrides.lissage ?? { total: 0, parts: [] }}
       duplicates={overrides.duplicates ?? []}
       bulk={overrides.bulk ?? { gesture: 'rien', pastDueCount: 0 }}
       viewedPeriod={overrides.viewedPeriod ?? { year: 2026, month: 1 }}
@@ -217,10 +245,10 @@ describe('<ChargesClient /> — PR-BETA-1 visual refactor', () => {
     expect(within(secondRow).getByTestId('charges-row-amount')).toHaveTextContent(/300/);
   });
 
-  it('exposes an aria-label naming the charge on every delete button', () => {
+  it('names the charge on every row opener (edit and delete now live in its drawer)', () => {
     renderCharges(sampleCharges);
-    expect(screen.getByRole('button', { name: 'Supprimer Loyer appartement' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Supprimer Taxe voiture' })).toBeInTheDocument();
+    expect(screen.getByTestId('charges-row-open-a1')).toHaveTextContent('Loyer appartement');
+    expect(screen.getByTestId('charges-row-open-a2')).toHaveTextContent('Taxe voiture');
   });
 
   it('marks the amount cell with tabular-nums so digits align vertically across rows', () => {
@@ -234,10 +262,10 @@ describe('<ChargesClient /> — PR-BETA-1 visual refactor', () => {
     renderCharges([]);
     // Coherence pass 2026-07: the form is collapsed by default (the list owns
     // the first screen) and opens through the header toggle.
-    expect(screen.queryByLabelText('Libellé')).toBeNull();
+    expect(screen.queryByLabelText('Description')).toBeNull();
     fireEvent.click(screen.getByTestId('charges-add-toggle'));
     // The 5 form fields + submit button stay reachable by their labels and roles.
-    expect(screen.getByLabelText('Libellé')).toBeInTheDocument();
+    expect(screen.getByLabelText('Description')).toBeInTheDocument();
     expect(screen.getByLabelText(/Montant/)).toBeInTheDocument();
     expect(screen.getByLabelText('Fréquence')).toBeInTheDocument();
     // THI-301: the anchor-month select is intentionally HIDDEN for monthly
@@ -271,19 +299,19 @@ describe('<ChargesClient /> — PR-BETA-CLEANUP-2 list & form', () => {
     expect(cell.textContent ?? '').not.toMatch(/^[a-zà-ÿ]{3,5}\.?$/i);
   });
 
-  it('renders both Modifier and Supprimer buttons on each row', () => {
+  it('offers edit and a confirmed delete in the row drawer, not on the row', () => {
     renderCharges(sampleCharges);
-    expect(screen.getByTestId('charges-row-edit-a1')).toBeInTheDocument();
-    expect(screen.getByTestId('charges-row-delete-a1')).toBeInTheDocument();
-    expect(screen.getByTestId('charges-row-edit-a2')).toBeInTheDocument();
-    expect(screen.getByTestId('charges-row-delete-a2')).toBeInTheDocument();
+    expect(screen.queryByTestId('charges-row-delete-a1')).toBeNull();
+    fireEvent.click(screen.getByTestId('charges-row-open-a1'));
+    expect(screen.getByTestId('charge-edit-save')).toBeInTheDocument();
+    expect(screen.getByTestId('charge-drawer-delete')).toBeInTheDocument();
   });
 
   it('passes paymentDay + computed paymentMonths to createChargeAction', async () => {
     createChargeMock.mockResolvedValue({ ok: true });
     renderCharges([]);
     fireEvent.click(screen.getByTestId('charges-add-toggle'));
-    fireEvent.change(screen.getByLabelText('Libellé'), { target: { value: 'Assurance' } });
+    fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'Assurance' } });
     fireEvent.change(screen.getByLabelText(/Montant/), { target: { value: '120' } });
     fireEvent.change(screen.getByLabelText(/jour du mois/i), { target: { value: '15' } });
     await act(async () => {
@@ -313,13 +341,13 @@ describe('<ChargesClient /> — PR-BETA-CLEANUP-2 edit drawer', () => {
   it('opens the drawer when the Modifier button is clicked', async () => {
     renderCharges(sampleCharges);
     expect(screen.queryByTestId('charge-edit-drawer')).toBeNull();
-    fireEvent.click(screen.getByTestId('charges-row-edit-a1'));
+    fireEvent.click(screen.getByTestId('charges-row-open-a1'));
     expect(await screen.findByTestId('charge-edit-drawer')).toBeInTheDocument();
   });
 
   it('pre-fills the drawer fields with the row data', async () => {
     renderCharges(sampleCharges);
-    fireEvent.click(screen.getByTestId('charges-row-edit-a1'));
+    fireEvent.click(screen.getByTestId('charges-row-open-a1'));
     await screen.findByTestId('charge-edit-drawer');
     expect(screen.getByTestId('charge-edit-label')).toHaveValue('Loyer appartement');
     expect(screen.getByTestId('charge-edit-amount')).toHaveValue(1200);
@@ -330,7 +358,7 @@ describe('<ChargesClient /> — PR-BETA-CLEANUP-2 edit drawer', () => {
   it('pre-fills the cadence cluster for a NON-monthly charge (anchor month visible)', async () => {
     // a2 = Taxe voiture: annual, dueMonth 6, paymentDay 15.
     renderCharges(sampleCharges);
-    fireEvent.click(screen.getByTestId('charges-row-edit-a2'));
+    fireEvent.click(screen.getByTestId('charges-row-open-a2'));
     await screen.findByTestId('charge-edit-drawer');
     expect(screen.getByTestId('edit-charge-frequency')).toHaveValue('annual');
     expect(screen.getByTestId('edit-charge-month')).toHaveValue('6');
@@ -341,7 +369,7 @@ describe('<ChargesClient /> — PR-BETA-CLEANUP-2 edit drawer', () => {
   it('calls updateChargeAction with the modified amount on Save', async () => {
     updateChargeMock.mockResolvedValue({ ok: true });
     renderCharges(sampleCharges);
-    fireEvent.click(screen.getByTestId('charges-row-edit-a1'));
+    fireEvent.click(screen.getByTestId('charges-row-open-a1'));
     await screen.findByTestId('charge-edit-drawer');
     fireEvent.change(screen.getByTestId('charge-edit-amount'), { target: { value: '1350' } });
     await act(async () => {
@@ -356,7 +384,7 @@ describe('<ChargesClient /> — PR-BETA-CLEANUP-2 edit drawer', () => {
   it('keeps the drawer open and shows an error toast on update failure', async () => {
     updateChargeMock.mockResolvedValue({ ok: false, errorCode: 'errors.charges.updateFailed' });
     renderCharges(sampleCharges);
-    fireEvent.click(screen.getByTestId('charges-row-edit-a1'));
+    fireEvent.click(screen.getByTestId('charges-row-open-a1'));
     await screen.findByTestId('charge-edit-drawer');
     await act(async () => {
       fireEvent.click(screen.getByTestId('charge-edit-save'));
@@ -426,8 +454,8 @@ describe('<ChargesClient /> — PR-UI-3a grouping & totals', () => {
       effortLisseAnnuelTotal: 22358.52,
     });
     const total = screen.getByTestId('charges-total');
-    expect(total).toHaveTextContent('Effort lissé / mois');
-    expect(total).toHaveTextContent('Équivalent annuel');
+    expect(total).toHaveTextContent('Compté chaque mois');
+    expect(total).toHaveTextContent('par an');
     expect(screen.getByTestId('charges-total-monthly')).toHaveTextContent(/1[  ]863,21/);
     expect(screen.getByTestId('charges-total-annual')).toHaveTextContent(/22[  ]358,52/);
   });
@@ -437,7 +465,7 @@ describe('<ChargesClient /> — PR-UI-3a grouping & totals', () => {
       effortLisseTotal: 1863.21,
       effortLisseAnnuelTotal: 1863.21 * 12,
     });
-    expect(screen.getByTestId('charges-effort-lisse-total')).toHaveTextContent(/1[  ]863,21/);
+    expect(screen.getByTestId('charges-total-toggle')).toHaveTextContent(/1[  ]863,21/);
     expect(screen.getByTestId('charges-total-monthly')).toHaveTextContent(/1[  ]863,21/);
     expect(screen.getByTestId('charges-total-annual')).toHaveTextContent(/22[  ]358,52/);
   });
@@ -560,7 +588,7 @@ describe('Factures Phase 2 — Payé toggle', () => {
     const { unmount } = renderCharges([monthlyCharge], {
       viewedPeriod: { year: 2026, month: 1 },
     });
-    expect(screen.getByTestId('charges-paid-summary')).toHaveTextContent('Reste à payer ce mois');
+    expect(screen.getByTestId('charges-paid-summary')).toHaveTextContent('Encore à payer');
     expect(screen.getByTestId('charges-paid-hint')).toBeInTheDocument();
     unmount();
     renderCharges([monthlyCharge], {
@@ -598,7 +626,15 @@ describe('Factures Phase 2 — Payé toggle', () => {
       viewedPeriod: { year: 2026, month: 1 },
     });
     // Due in January: monthly a1 + quarterly q1 + semiannual s1 (annual a2 is June).
-    expect(screen.getByText(/3 dues ce mois/)).toBeInTheDocument();
+    // The count now reads on each cadence's own heading (F10), not in one title.
+    expect(screen.getByTestId('charges-group-toggle-monthly')).toHaveTextContent('1 à payer sur 1');
+    expect(screen.getByTestId('charges-group-toggle-quarterly')).toHaveTextContent(
+      '1 à payer sur 1',
+    );
+    expect(screen.getByTestId('charges-group-toggle-semiannual')).toHaveTextContent(
+      '1 à payer sur 1',
+    );
+    expect(screen.getByTestId('charges-group-toggle-annual')).toHaveTextContent('1, rien ce mois');
     // Every due group carries a live footer; the off-month annual group says so.
     expect(screen.getByTestId('charges-group-remaining-monthly')).toBeInTheDocument();
     expect(screen.getByTestId('charges-group-remaining-quarterly')).toBeInTheDocument();
@@ -612,12 +648,12 @@ describe('Factures Phase 2 — Payé toggle', () => {
     createChargeMock.mockResolvedValue({ ok: true });
     renderCharges([]);
     fireEvent.click(screen.getByTestId('charges-add-toggle'));
-    fireEvent.change(screen.getByLabelText('Libellé'), { target: { value: 'Assurance' } });
+    fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'Assurance' } });
     fireEvent.change(screen.getByLabelText(/Montant/), { target: { value: '10' } });
     await act(async () => {
       fireEvent.submit(screen.getByRole('button', { name: /^ajouter$/i }).closest('form')!);
     });
-    await waitFor(() => expect(screen.queryByLabelText('Libellé')).toBeNull());
+    await waitFor(() => expect(screen.queryByLabelText('Description')).toBeNull());
   });
 
   it('reflects the collapsed/expanded state on the add toggle via aria-expanded', () => {
@@ -642,7 +678,7 @@ describe('Factures Phase 2 — Payé toggle', () => {
         }),
     );
     renderCharges([monthlyCharge], { viewedPeriod: { year: 2026, month: 1 } });
-    const watchBtn = screen.getByTestId(`charges-row-watch-${monthlyCharge.id}`);
+    const watchBtn = openWatch(monthlyCharge.id);
     expect(watchBtn).toHaveAttribute('aria-pressed', 'false');
     fireEvent.click(watchBtn);
     // Optimistic state visible before the server responds.
@@ -658,8 +694,9 @@ describe('Factures Phase 2 — Payé toggle', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     toggleWatchMock.mockRejectedValueOnce(new Error('network error'));
     renderCharges([monthlyCharge], { viewedPeriod: { year: 2026, month: 1 } });
+    const watch = openWatch(monthlyCharge.id);
     await act(async () => {
-      fireEvent.click(screen.getByTestId(`charges-row-watch-${monthlyCharge.id}`));
+      fireEvent.click(watch);
     });
     await waitFor(() => expect(toastErrorMock).toHaveBeenCalled());
     consoleSpy.mockRestore();
@@ -669,17 +706,15 @@ describe('Factures Phase 2 — Payé toggle', () => {
     renderCharges([{ ...monthlyCharge, isWatched: true }], {
       viewedPeriod: { year: 2026, month: 1 },
     });
-    expect(screen.getByTestId(`charges-row-watch-${monthlyCharge.id}`)).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
+    expect(openWatch(monthlyCharge.id)).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('shows an error toast when the watch toggle fails', async () => {
     toggleWatchMock.mockResolvedValue({ ok: false, errorCode: 'errors.charges.watchFailed' });
     renderCharges([monthlyCharge], { viewedPeriod: { year: 2026, month: 1 } });
+    const watch = openWatch(monthlyCharge.id);
     await act(async () => {
-      fireEvent.click(screen.getByTestId(`charges-row-watch-${monthlyCharge.id}`));
+      fireEvent.click(watch);
     });
     await waitFor(() => expect(toastErrorMock).toHaveBeenCalled());
   });
@@ -793,7 +828,7 @@ describe('<ChargesClient /> — month-history navigator', () => {
     expect(screen.getByTestId('charges-period-back')).toHaveTextContent('Revenir à juillet 2026');
     // Unpaid june bill → period-scoped remaining label.
     expect(screen.getByTestId('charges-paid-summary')).toHaveTextContent(
-      'Reste à payer en juin 2026',
+      'Encore à payer en juin 2026',
     );
   });
 
@@ -878,11 +913,10 @@ describe('<ChargesClient /> — chantier 3: obligations in one list', () => {
       aPayerCeMoisTotal: 1981.21,
       effortLisseTotal: 1863.21,
     });
-    const block = screen.getByTestId('charges-two-views');
-    expect(block).toHaveTextContent('À payer ce mois');
-    expect(block).toHaveTextContent('Effort lissé');
+    expect(screen.getByTestId('charges-head-card')).toHaveTextContent('À payer ce mois');
+    expect(screen.getByTestId('charges-total')).toHaveTextContent('Effort lissé');
     expect(screen.getByTestId('charges-a-payer-total')).toHaveTextContent(/1[  ]981/);
-    expect(screen.getByTestId('charges-effort-lisse-total')).toHaveTextContent(/1[  ]863/);
+    expect(screen.getByTestId('charges-total-monthly')).toHaveTextContent(/1[  ]863/);
   });
 
   it('WARNS about a probable duplicate — and moves no total while doing it', () => {
@@ -904,10 +938,10 @@ describe('<ChargesClient /> — chantier 3: obligations in one list', () => {
     const warning = screen.getByTestId('charges-duplicate-a1');
     expect(warning).toHaveTextContent('Impôt');
     expect(warning).toHaveTextContent('SPF Impôts');
-    expect(warning).toHaveTextContent('même montant, même jour, libellés proches');
+    expect(warning).toHaveTextContent('même montant, même jour, noms proches');
     // The totals are exactly what the server passed: nothing was netted off.
     expect(screen.getByTestId('charges-a-payer-total')).toHaveTextContent(/2[  ]024/);
-    expect(screen.getByTestId('charges-effort-lisse-total')).toHaveTextContent(/2[  ]024/);
+    expect(screen.getByTestId('charges-total-monthly')).toHaveTextContent(/2[  ]024/);
   });
 
   it('says nothing when there is no probable duplicate', () => {
@@ -977,7 +1011,7 @@ describe('<ChargesClient /> — chantier 3: the conversion entry point', () => {
   it('lives one tap away, in the edit drawer, and opens the sheet on that charge', async () => {
     renderCharges([monthly]);
     await act(async () => {
-      fireEvent.click(screen.getByTestId('charges-row-edit-a1'));
+      fireEvent.click(screen.getByTestId('charges-row-open-a1'));
     });
     const entry = screen.getByTestId('charge-edit-convert');
     expect(entry).toHaveTextContent('Convertir en engagement');
@@ -994,7 +1028,7 @@ describe('<ChargesClient /> — chantier 3: the conversion entry point', () => {
   it('refuses to submit until one of the three doors is answered', async () => {
     renderCharges([monthly]);
     await act(async () => {
-      fireEvent.click(screen.getByTestId('charges-row-edit-a1'));
+      fireEvent.click(screen.getByTestId('charges-row-open-a1'));
     });
     await act(async () => {
       fireEvent.click(screen.getByTestId('charge-edit-convert'));

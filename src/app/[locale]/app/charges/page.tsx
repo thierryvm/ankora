@@ -6,7 +6,7 @@ import { commitmentRowToDomain } from '@/lib/data/commitment-row';
 import { getCommitmentsWithLedger } from '@/lib/data/commitments';
 import { getSnapshotWith, toCockpitCharges } from '@/lib/data/workspace-snapshot';
 import { todayInAnkoraTz } from '@/lib/date/tz';
-import { engagementsMensuelsLisses } from '@/lib/domain/cockpit';
+import { engagementsMensuelsLisses, lissageDuMois } from '@/lib/domain/cockpit';
 import { paymentKey, type PaymentLedger } from '@/lib/domain/cockpit/types';
 import {
   aPayerCeMois,
@@ -169,6 +169,22 @@ export default async function ChargesPage({
       aPayerCeMoisTotal={aPayerCeMois(obligations).toNumber()}
       effortLisseTotal={effortLisse(cockpitCharges, engagementsMensuels).toNumber()}
       effortLisseAnnuelTotal={effortLisseAnnuel(cockpitCharges, engagementsMensuels).toNumber()}
+      // « Effort lissé » in its narrow sense (F-3): the monthly share of the
+      // NON-monthly bills only, with the bill each part comes from (DESIGN-v3
+      // rule 28). Read from the domain's existing decomposition — no new sum.
+      lissage={(() => {
+        const poste = lissageDuMois(cockpitCharges);
+        return {
+          total: poste.total.toNumber(),
+          parts: poste.parts.map((p) => ({
+            id: p.id,
+            label: p.libelle,
+            monthly: p.montantMensuel.toNumber(),
+            invoiceAmount: p.origine?.montantFacture.toNumber() ?? p.montantMensuel.toNumber(),
+            cycleMonths: p.origine?.cycleMois ?? 1,
+          })),
+        };
+      })()}
       duplicates={detecterDoublonsProbables({
         charges: cockpitCharges,
         commitments,

@@ -54,7 +54,13 @@ test.describe('Charges list — mobile layout (PR-BETA-1)', () => {
       await expect(page.getByTestId('charges-list')).toBeVisible();
 
       // PR-UI-3a (THI-300): rows are descendant <li> of the grouped sections.
+      // E1 bis (F10): at 375 px « Mensuel » is open and the other cadences
+      // fold — the annual bill is behind its heading until it is opened.
       const liRows = page.locator('[data-testid="charges-list"] li');
+      await expect(liRows).toHaveCount(1);
+      const annual = page.getByTestId('charges-group-toggle-annual');
+      await expect(annual).toHaveAttribute('aria-expanded', 'false');
+      await annual.click();
       await expect(liRows).toHaveCount(2);
 
       const firstRow = liRows.first();
@@ -72,17 +78,20 @@ test.describe('Charges list — mobile layout (PR-BETA-1)', () => {
       // The global total footer is the headline @thierry asked for.
       await expect(page.getByTestId('charges-total')).toBeVisible();
 
-      // Delete button — semantic class layer asserts the 44×44 touch target contract via `size-11`
-      // (the Button component's icon size). A single geometric backup catches breakage if the
-      // utility is overridden inline (defense in depth, kept light to avoid font-metric coupling).
-      const deleteButton = firstRow.getByRole('button', { name: /^Supprimer / });
-      await expect(deleteButton).toHaveClass(/size-11/);
-      const deleteBox = await deleteButton.boundingBox();
-      expect(deleteBox, 'delete button bounding box is rendered').not.toBeNull();
-      expect(
-        Math.min(deleteBox!.width, deleteBox!.height),
-        `delete touch target is at least 44×44 CSS px (got ${deleteBox!.width}×${deleteBox!.height})`,
-      ).toBeGreaterThanOrEqual(44);
+      // E1 bis (F11): the row's one action is the tick; edit and delete live
+      // in its drawer. Both targets on the row keep the 44×44 contract.
+      for (const target of [
+        firstRow.locator('[data-testid^="charges-row-paid-"]'),
+        firstRow.locator('[data-testid^="charges-row-open-"]'),
+      ]) {
+        const box = await target.boundingBox();
+        expect(box, 'row target is rendered').not.toBeNull();
+        expect(
+          Math.min(box!.width, box!.height),
+          `row touch target is at least 44×44 CSS px (got ${box!.width}×${box!.height})`,
+        ).toBeGreaterThanOrEqual(44);
+      }
+      await expect(firstRow.getByRole('button', { name: /^Supprimer / })).toHaveCount(0);
 
       // No horizontal overflow at the document level — a mobile card miss with `pr-14` overshoot
       // would leak into <body> scrollWidth and break swipe scroll. Stays at document level rather

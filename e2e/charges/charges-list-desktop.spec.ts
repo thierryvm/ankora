@@ -91,34 +91,37 @@ test.describe('Charges list — desktop layout (PR-BETA-1)', () => {
       await expect(frequencyCell).toBeVisible();
       await expect(amountCell).toBeVisible();
 
-      // Class layer — the layout primitives are present (md:items-baseline + amount text-right + chip shrink-0).
-      await expect(firstRow).toHaveClass(/md:items-baseline/);
-      await expect(amountCell).toHaveClass(/md:text-right/);
+      // E1 bis (F11): the row reads as the mockup draws it — the description
+      // first with its amount on the same line, the date and cadence beneath.
       await expect(amountCell).toHaveClass(/tabular-nums/);
       await expect(frequencyCell).toHaveClass(/shrink-0/);
-
-      // Computed CSS layer — guarantees the classes actually apply at the forced 1280×800 viewport.
       const frequencyFlexShrink = await frequencyCell.evaluate(
         (el) => window.getComputedStyle(el as HTMLElement).flexShrink,
       );
       expect(frequencyFlexShrink, 'frequency chip is shrink: 0').toBe('0');
 
-      // Geometry layer — defends against display:contents/grid-order regressions that classes alone
-      // would not catch (e.g. items reordered but classes still present).
-      const tops = await firstRow.evaluate((row) => {
-        const cell = (selector: string) =>
-          (row.querySelector(selector) as HTMLElement).getBoundingClientRect().bottom;
+      const lines = await firstRow.evaluate((row) => {
+        const box = (selector: string) =>
+          (row.querySelector(selector) as HTMLElement).getBoundingClientRect();
         return {
-          month: cell('[data-testid="charges-row-next-due"]'),
-          label: cell('[data-testid="charges-row-label"]'),
-          freq: cell('[data-testid="charges-row-frequency"]'),
-          amount: cell('[data-testid="charges-row-amount"]'),
+          label: box('[data-testid="charges-row-label"]'),
+          amount: box('[data-testid="charges-row-amount"]'),
+          month: box('[data-testid="charges-row-next-due"]'),
+          freq: box('[data-testid="charges-row-frequency"]'),
         };
       });
-      const spread =
-        Math.max(tops.month, tops.label, tops.freq, tops.amount) -
-        Math.min(tops.month, tops.label, tops.freq, tops.amount);
-      expect(spread, `cells share a baseline (spread: ${spread}px)`).toBeLessThanOrEqual(6);
+      expect(
+        Math.abs(lines.label.bottom - lines.amount.bottom),
+        'description and amount share the first line',
+      ).toBeLessThanOrEqual(6);
+      expect(
+        Math.abs(lines.month.bottom - lines.freq.bottom),
+        'date and cadence share the second line',
+      ).toBeLessThanOrEqual(6);
+      expect(lines.month.top, 'date and cadence sit under the description').toBeGreaterThanOrEqual(
+        lines.label.bottom - 2,
+      );
+      expect(lines.label.left, 'the description comes first').toBeLessThan(lines.amount.left);
 
       // Amount cell visually positioned in the right half of the row (catches column-order regressions).
       const rowBox = await firstRow.boundingBox();

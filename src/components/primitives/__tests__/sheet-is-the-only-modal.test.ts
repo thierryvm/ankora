@@ -36,7 +36,6 @@ const SRC = fileURLToPath(new URL('../../../', import.meta.url));
  * `<Sheet>` in C4. `AjusterResteAVivreDrawer` was the sixth; ADR-035 deleted it.
  */
 const PENDING_MIGRATION: readonly string[] = [
-  'app/[locale]/app/charges/ChargeEditDrawer.tsx',
   'app/[locale]/app/expenses/ExpenseEditDrawer.tsx',
   'components/dashboard/SimulatorDrawer.tsx',
   'components/layout/MoreSheet.tsx',
