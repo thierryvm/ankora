@@ -1,6 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from 'react';
 import { Plus } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
@@ -10,6 +17,11 @@ import { createExpenseCategoryAction } from '@/lib/actions/categories';
 import { createExpenseAction } from '@/lib/actions/expenses';
 import { getExpenseEntryContextAction } from '@/lib/actions/expense-entry';
 import { CATEGORY_COLOR_TOKENS, couleurLaMoinsUtilisee } from '@/lib/domain/categories';
+import {
+  recallCategory,
+  suggestDescriptions,
+  type DescriptionSuggestion,
+} from '@/lib/domain/expense-descriptions';
 import type { ExpenseEntryCategory, ExpenseEntryContext } from '@/lib/actions/expense-entry.types';
 import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
 import { announceOptimisticSpend, settleSpend } from '@/lib/expenses/optimistic-spend';
@@ -19,26 +31,28 @@ import { dayOffsetFrom, todayInAnkoraTz } from '@/lib/date/tz';
 import type { Locale } from '@/i18n/routing';
 
 /**
- * « Nouvelle dépense » — the two-tap entry flow (`DECISIONS-ANKORA.md` §3.4).
+ * « Nouvelle dépense » — the short entry flow (`DECISIONS-ANKORA.md` §3.4).
  *
  * ## The count, honestly
  *
- * Recording an expense costs **4 taps and a scroll** today: Dépenses tab →
- * Libellé → Montant → Ajouter. Target: **2 taps from anywhere**.
- *
  *   TAP 1  ⊕ — the sheet rises, the numeric keypad is ALREADY up and the caret
- *              is in the amount field. Date defaults to today, the most-used
- *              category is pre-selected, the label is optional.
- *   (typing the amount is not a tap — the keyboard is already open and focused;
- *    that is what makes "2 taps" real rather than an accounting trick)
- *   TAP 2  Ajouter — pinned above the keyboard, reachable by the thumb.
+ *              is in the amount field. Date defaults to today, the description
+ *              is optional.
+ *   (typing the amount is not a tap — the keyboard is already open and focused)
+ *   TAP 2  a category chip — ONLY when none is pre-selected (F-6). The most-used
+ *              category is pre-selected once it has been used in the last 30
+ *              days; on a fresh workspace nothing is, because the first chip is
+ *              then merely the first in declaration order, and pre-selecting it
+ *              filed expenses under a category nobody chose.
+ *   TAP 3  Ajouter — pinned above the keyboard, reachable by the thumb.
  *
- * Everything else in this file exists to protect those two taps. Every default
- * is chosen so the common case needs no interaction: pre-selected category,
- * today's date, optional label falling back to the category name. Changing the
- * category costs a third tap and that is assumed — the modal choice is right in
- * the large majority of entries, and a miscategorised one stays fixable in two
- * taps from the list.
+ * So: amount, chip, submit on a fresh workspace; amount, submit once a habit
+ * exists. No expense leaves without a category — the button waits, and a line
+ * under the chips says why.
+ *
+ * The description is a combobox (v3 mock-up, rule 26): the person's own
+ * descriptions first, then the built-in brands, each ticking the category it
+ * implies. It stays optional and falls back to the category name.
  *
  * ## The detail that makes it a decision rather than bookkeeping
  *
@@ -48,10 +62,12 @@ import type { Locale } from '@/i18n/routing';
  *
  * ## Loading, deliberately not blocking
  *
- * Categories and « Il te reste » come from a server action fired on first open.
- * The amount field is live before it resolves — a user who taps ⊕ and types
- * immediately never waits. The chips and the projection land into a skeleton,
- * never into an empty box.
+ * Categories and « Il te reste » come from a server action fired on EVERY
+ * opening (PR D) — a failed read included, which the next opening retries. The
+ * amount field is live before it resolves — a user who taps ⊕ and types
+ * immediately never waits. The chips land into a skeleton until a first read
+ * succeeds, and keep those of the last good read after that; the projection shows its skeleton
+ * until the new read arrives, never an old figure.
  */
 
 /**
@@ -161,6 +177,20 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [showAllCategories, setShowAllCategories] = useState(false);
 
+  // A chip clicked (or a category created) in THIS opening: from then on a
+  // description typed in full no longer re-ticks the recalled category — the
+  // person's own choice wins over our memory of their habits.
+  const [pickedByHand, setPickedByHand] = useState(false);
+
+  // The description combobox (v3 mock-up, rule 26).
+  const [descriptionListOpen, setDescriptionListOpen] = useState(false);
+  const [activeSuggestion, setActiveSuggestion] = useState(-1);
+
+  // The note (F-18), folded until asked for.
+  const [note, setNote] = useState('');
+  const [noteOpen, setNoteOpen] = useState(false);
+  const noteRef = useRef<HTMLTextAreaElement>(null);
+
   /*
     Créer une catégorie sans quitter la saisie en cours.
 
@@ -200,6 +230,10 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
   useEffect(() => {
     if (!open) {
       setFiguresFresh(false);
+      // A failed read belongs to the opening it happened in: the next one reads
+      // again, or a single dropped request would leave the sheet chipless for
+      // the rest of the session.
+      setContextFailed(false);
       setPendingLocal(0);
       return;
     }
@@ -233,9 +267,16 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
     if (open) return;
     setAmount('');
     setLabel('');
+    setDescriptionListOpen(false);
+    setActiveSuggestion(-1);
+    setNote('');
+    setNoteOpen(false);
     setShowAllCategories(false);
     setOccurredOn(todayInAnkoraTz());
+    // Back to the pre-selection — which may be null (F-6): a choice made in
+    // one opening must not silently carry over to the next expense.
     setCategoryId(context?.preselectedId ?? null);
+    setPickedByHand(false);
     // La LIGNE de création se referme, mais `justCreated` NON : la catégorie
     // existe réellement en base, et la faire disparaître à la fermeture de la
     // feuille reproduirait exactement le défaut qu'elle corrige.
@@ -245,15 +286,112 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
   }, [open, context?.preselectedId]);
 
   const parsed = parseAmountInput(amount);
-  const canSubmit = parsed !== null && !isSubmitting;
+  // F-6: no category, no submit. The server refuses it too; the button says so
+  // first, and the line under the chips says why.
+  const canSubmit = parsed !== null && categoryId !== null && !isSubmitting;
+  const categoryMissing = parsed !== null && categoryId === null && context !== null;
 
+  const chips = context?.chips ?? [];
+  const overflow = context?.overflow ?? [];
+  // Every category this sheet knows — the source for names, suggestions and
+  // recall, whether or not its chip is currently on show.
+  const knownCategories: ExpenseEntryCategory[] = [...chips, ...overflow, ...justCreated];
+  const ownDescriptions = context?.descriptions ?? [];
+
+  // v3 rule 25 — « the chips, plus the chosen one if it is not among them »: a
+  // category ticked by a suggestion or a recall may live in the overflow, and
+  // a ticked category nobody can see is a choice nobody can check.
+  const pinned =
+    !showAllCategories && categoryId !== null
+      ? overflow.find((category) => category.id === categoryId)
+      : undefined;
+  const hiddenCount = showAllCategories
+    ? 0
+    : overflow.filter((category) => category.id !== pinned?.id).length;
   const categories: ExpenseEntryCategory[] = [
-    ...(showAllCategories
-      ? [...(context?.chips ?? []), ...(context?.overflow ?? [])]
-      : (context?.chips ?? [])),
+    ...(showAllCategories ? [...chips, ...overflow] : [...chips, ...(pinned ? [pinned] : [])]),
     ...justCreated,
   ];
-  const selectedName = categories.find((c) => c.id === categoryId)?.name ?? '';
+  const selectedName = knownCategories.find((c) => c.id === categoryId)?.name ?? '';
+
+  const suggestions = descriptionListOpen
+    ? suggestDescriptions(label, ownDescriptions, knownCategories)
+    : [];
+  const listShown = suggestions.length > 0;
+  const activeIndex =
+    listShown && activeSuggestion >= 0 ? Math.min(activeSuggestion, suggestions.length - 1) : -1;
+
+  const closeDescriptionList = () => {
+    setDescriptionListOpen(false);
+    setActiveSuggestion(-1);
+  };
+
+  const pickCategory = (id: string) => {
+    setCategoryId(id);
+    setPickedByHand(true);
+    // Closed AFTER the click completes, never on the press: see the note on
+    // the description list below.
+    closeDescriptionList();
+  };
+
+  const changeDescription = (value: string) => {
+    setLabel(value);
+    setDescriptionListOpen(true);
+    setActiveSuggestion(-1);
+    // A description typed in full that the person has written before ticks
+    // the category it was filed under — unless they already chose one here.
+    if (!pickedByHand) {
+      const recalled = recallCategory(value, ownDescriptions, knownCategories);
+      if (recalled !== null) setCategoryId(recalled);
+    }
+  };
+
+  const chooseSuggestion = (suggestion: DescriptionSuggestion) => {
+    setLabel(suggestion.label);
+    // No category implied: the one already ticked stays.
+    if (suggestion.categoryId !== null) setCategoryId(suggestion.categoryId);
+    closeDescriptionList();
+  };
+
+  const handleDescriptionKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      if (!listShown) {
+        setDescriptionListOpen(true);
+        return;
+      }
+      const count = suggestions.length;
+      setActiveSuggestion(
+        event.key === 'ArrowDown'
+          ? (activeIndex + 1) % count
+          : activeIndex <= 0
+            ? count - 1
+            : activeIndex - 1,
+      );
+      return;
+    }
+    if (event.key === 'Enter' && listShown && activeIndex >= 0) {
+      event.preventDefault();
+      const chosen = suggestions[activeIndex];
+      if (chosen) chooseSuggestion(chosen);
+      return;
+    }
+    /*
+      `stopPropagation` is not a precaution: `Sheet` listens for `keydown` on
+      `document` and closes unconditionally. Without it, Escape meant to close
+      the list would close the sheet and lose the amount already typed. With
+      the list closed, the next Escape reaches `Sheet` and closes it.
+    */
+    if (event.key === 'Escape' && listShown) {
+      event.stopPropagation();
+      event.preventDefault();
+      closeDescriptionList();
+    }
+  };
+
+  useEffect(() => {
+    if (noteOpen) noteRef.current?.focus();
+  }, [noteOpen]);
 
   // « Il te restera X € » — the line that turns entry into a decision — and its
   // twin, « Dépensé ce mois », which the curve of the month reads.
@@ -366,6 +504,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
         // classement (zéro usage) et se retrouverait derrière « + N autres ».
         setJustCreated((current) => [...current, result.data]);
         setCategoryId(result.data.id);
+        setPickedByHand(true);
         setCreatingCategory(false);
         setNewCategoryName('');
         // Le focus revient là où l'utilisateur allait de toute façon.
@@ -379,11 +518,14 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
 
   const handleSubmit = useCallback(() => {
     const value = parseAmountInput(amount);
-    if (value === null) return;
+    // F-6 — the button is disabled in both cases; this guard keeps a stray
+    // Enter from sending what the server would refuse anyway.
+    if (value === null || categoryId === null) return;
 
-    // Label is optional and falls back to the category name — that fallback is
-    // what makes 2 taps possible, since typing a label would add a third.
+    // The description is optional and falls back to the category name — typing
+    // one would otherwise be a mandatory extra step on every entry.
     const resolvedLabel = label.trim() || selectedName || t('fallbackLabel');
+    const resolvedNote = note.trim() || null;
     // Only a spend inside the current month moves this month's hero. A
     // backdated one is recorded, and correctly changes nothing on screen.
     // `optimiste` is null when income is unconfigured (THI-335) — there is no
@@ -404,7 +546,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
           amount: value,
           occurredOn,
           categoryId,
-          note: null,
+          note: resolvedNote,
         });
         if (result.ok) {
           toast.success(t('toastCreated', { amount: fmt(value) }));
@@ -432,6 +574,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
   }, [
     amount,
     label,
+    note,
     selectedName,
     occurredOn,
     categoryId,
@@ -477,6 +620,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
           type="button"
           onClick={handleSubmit}
           disabled={!canSubmit}
+          aria-describedby={categoryMissing ? 'add-expense-category-required' : undefined}
           data-testid="add-expense-submit"
           className="bg-brand-700 text-primary-foreground focus-visible:ring-brand-600 hover:bg-brand-800 flex h-[50px] w-full items-center justify-center gap-2 rounded-2xl text-base font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-40"
         >
@@ -535,6 +679,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
               enterKeyHint="done"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
+              onFocus={closeDescriptionList}
               placeholder="0"
               aria-describedby={projection !== null ? 'add-expense-projection' : undefined}
               data-testid="add-expense-amount"
@@ -594,7 +739,96 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
         </div>
 
         {/*
-          ---------- 2. Les catégories. Elles ne défilent plus. ----------
+          ---------- 2. La description : où l'argent est parti. ----------
+
+          v3 mock-up, rule 26 — a combobox (ARIA 1.2, list autocomplete). From
+          the first letter, six suggestions at most: the person's own
+          descriptions first, then the built-in brands. Choosing one fills the
+          field and ticks the category it implies.
+
+          The list lives OUTSIDE the <label> — a click inside a label is
+          forwarded to its input — and in the flow under the field, never over
+          the chips it would hide.
+
+          It does NOT close on blur, deliberately. Being in the flow, closing
+          it moves the chips up; a blur fires on `mousedown`, so a tap on a
+          chip would collapse the list between press and release, the release
+          would land on another element, and the tap would be lost. It closes
+          on a choice, on Escape, on a chip picked, when the amount, the date or
+          the note takes the focus, and with the sheet.
+          Options prevent `mousedown` so the field keeps the focus (and the
+          phone keeps its keyboard) while one is chosen.
+        */}
+        <div className="flex flex-col gap-1">
+          <div className="bg-surface-soft flex flex-col gap-0.5 rounded-xl px-3 py-2">
+            <label
+              htmlFor="add-expense-label"
+              className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase"
+            >
+              {t('descriptionLabel')}
+            </label>
+            <input
+              id="add-expense-label"
+              type="text"
+              role="combobox"
+              aria-autocomplete="list"
+              aria-expanded={listShown}
+              aria-controls="add-expense-description-list"
+              aria-activedescendant={
+                activeIndex >= 0 ? `add-expense-description-option-${activeIndex}` : undefined
+              }
+              autoComplete="off"
+              /* Autocorrect would turn a brand into a dictionary word that no
+                 longer matches its suggestion. No `autoCapitalize`: the
+                 description keeps its capital letter. */
+              autoCorrect="off"
+              spellCheck={false}
+              maxLength={120}
+              value={label}
+              onChange={(e) => changeDescription(e.target.value)}
+              onKeyDown={handleDescriptionKeyDown}
+              /* The placeholder shows the fallback that will actually be
+                 stored, so leaving it empty is an informed choice. */
+              placeholder={selectedName || t('fallbackLabel')}
+              data-testid="add-expense-label"
+              className="text-foreground placeholder:text-muted-foreground/60 min-h-[26px] border-0 bg-transparent p-0 text-sm outline-none"
+            />
+          </div>
+          <ul
+            id="add-expense-description-list"
+            role="listbox"
+            aria-label={t('descriptionListLabel')}
+            hidden={!listShown}
+            className="bg-card border-border flex flex-col rounded-xl border p-1"
+          >
+            {suggestions.map((suggestion, index) => {
+              const categoryName =
+                suggestion.categoryId === null
+                  ? null
+                  : (knownCategories.find((c) => c.id === suggestion.categoryId)?.name ?? null);
+              return (
+                <li
+                  key={`${suggestion.label}-${index}`}
+                  id={`add-expense-description-option-${index}`}
+                  role="option"
+                  aria-selected={index === activeIndex}
+                  data-testid="add-expense-description-option"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => chooseSuggestion(suggestion)}
+                  className="hover:bg-surface-muted aria-selected:bg-surface-muted aria-selected:ring-brand-600 flex min-h-11 cursor-pointer flex-col justify-center rounded-lg px-3 py-1.5 aria-selected:ring-2 aria-selected:ring-inset"
+                >
+                  <span className="text-foreground text-sm">{suggestion.label}</span>
+                  {categoryName !== null && (
+                    <span className="text-muted-foreground text-xs">{categoryName}</span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
+        {/*
+          ---------- 3. Les catégories. Elles ne défilent plus. ----------
 
           MESURÉ le 2026-08-23 : la rangée contenait **602 px de puces dans une
           fenêtre de 390** — 212 px hors écran — et **3 puces sur 6 étaient
@@ -631,9 +865,9 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
               ))}
             </div>
           ) : categories.length === 0 ? (
-            /* Empty state, stated rather than hidden. A workspace with no
-               `variable` category can still record the spend — the amount is
-               what matters — so this explains instead of blocking. */
+            /* Empty state, stated rather than hidden. Since F-6 an expense
+               needs a category, so the message sends the person to « Nouvelle »
+               just below — rendered in this state precisely for that. */
             <p className="text-muted-foreground text-xs" data-testid="add-expense-no-categories">
               {t('noCategories')}
             </p>
@@ -651,7 +885,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
                     type="button"
                     role="radio"
                     aria-checked={selected}
-                    onClick={() => setCategoryId(category.id)}
+                    onClick={() => pickCategory(category.id)}
                     data-testid={`add-expense-chip-${category.id}`}
                     className={[
                       'focus-visible:ring-brand-600 flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none',
@@ -699,7 +933,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
           */}
           {context !== null && !contextFailed && (
             <div className="flex flex-wrap gap-2">
-              {!showAllCategories && (context?.overflow.length ?? 0) > 0 && (
+              {hiddenCount > 0 && (
                 <button
                   type="button"
                   onClick={() => setShowAllCategories(true)}
@@ -716,16 +950,12 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
                     perdait le verbe : un bouton nommé par un décompte ne dit pas
                     ce qu'il fait. D'où une clé dédiée qui garde les deux.
                   */
-                  aria-label={t('moreCategoriesAria', {
-                    count: context?.overflow.length ?? 0,
-                  })}
+                  aria-label={t('moreCategoriesAria', { count: hiddenCount })}
                   data-testid="add-expense-chip-more"
                   className="bg-surface-muted text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-brand-600 flex min-h-11 items-center gap-1.5 rounded-full px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
                 >
                   <Plus className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-                  <span aria-hidden="true">
-                    {t('moreCategoriesCount', { count: context?.overflow.length ?? 0 })}
-                  </span>
+                  <span aria-hidden="true">{t('moreCategoriesCount', { count: hiddenCount })}</span>
                 </button>
               )}
 
@@ -749,6 +979,22 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
                 </button>
               )}
             </div>
+          )}
+
+          {/*
+            F-6 — why the button waits. Shown only once a valid amount is typed:
+            before that, the amount is what is missing, and saying « choose a
+            category » over an empty field would point at the wrong thing.
+            Referenced by the button's `aria-describedby`.
+          */}
+          {categoryMissing && !contextFailed && (
+            <p
+              id="add-expense-category-required"
+              data-testid="add-expense-category-required"
+              className="text-muted-foreground text-xs"
+            >
+              {t('categoryRequired')}
+            </p>
           )}
 
           {/* ---------- La ligne de création, sous la rangée ---------- */}
@@ -884,8 +1130,8 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
           )}
         </div>
 
-        {/* ---------- 3. Date + label, 50/50, both optional. ---------- */}
-        <div className="grid grid-cols-2 gap-2">
+        {/* ---------- 4. La date, puis la note repliée. ---------- */}
+        <div className="flex flex-col gap-1">
           <div className="bg-surface-soft flex flex-col gap-0.5 rounded-xl px-3 py-2">
             <label
               htmlFor="add-expense-date"
@@ -915,6 +1161,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
                 type="date"
                 value={occurredOn}
                 onChange={(e) => setOccurredOn(e.target.value)}
+                onFocus={closeDescriptionList}
                 data-testid="add-expense-date"
                 className={[
                   'min-h-[26px] w-full border-0 bg-transparent p-0 text-sm tabular-nums outline-none',
@@ -932,26 +1179,42 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
               )}
             </div>
           </div>
-          <div className="bg-surface-soft flex flex-col gap-0.5 rounded-xl px-3 py-2">
-            <label
-              htmlFor="add-expense-label"
-              className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase"
+          {/*
+            F-18 — the note, folded behind a link: most expenses need none, and
+            an always-open field would push the date and the button down for
+            everyone to serve the few. Folded and emptied again on close.
+          */}
+          {noteOpen ? (
+            <div className="bg-surface-soft flex flex-col gap-0.5 rounded-xl px-3 py-2">
+              <label
+                htmlFor="add-expense-note"
+                className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase"
+              >
+                {t('noteLabel')}
+              </label>
+              <textarea
+                ref={noteRef}
+                id="add-expense-note"
+                rows={2}
+                maxLength={500}
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                onFocus={closeDescriptionList}
+                data-testid="add-expense-note"
+                className="text-foreground min-h-11 resize-none border-0 bg-transparent p-0 text-sm outline-none"
+              />
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setNoteOpen(true)}
+              data-testid="add-expense-note-toggle"
+              className="text-brand-text-strong focus-visible:ring-brand-600 -mx-2 flex min-h-11 items-center gap-1.5 self-start rounded-md px-2 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
             >
-              {t('labelLabel')}
-            </label>
-            <input
-              id="add-expense-label"
-              type="text"
-              maxLength={120}
-              value={label}
-              onChange={(e) => setLabel(e.target.value)}
-              /* The placeholder shows the fallback that will actually be
-                 stored, so leaving it empty is an informed choice. */
-              placeholder={selectedName || t('fallbackLabel')}
-              data-testid="add-expense-label"
-              className="text-foreground placeholder:text-muted-foreground/60 min-h-[26px] border-0 bg-transparent p-0 text-sm outline-none"
-            />
-          </div>
+              <Plus className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+              {t('noteToggle')}
+            </button>
+          )}
         </div>
 
         {!isCurrentMonth && (

@@ -98,6 +98,9 @@ function context(over: Record<string, unknown> = {}) {
       depensesDuMois: 288.4,
       incomplet: false,
       todayIso: '2026-07-18',
+      // The person's own descriptions (rule 26). None by default, so the cases
+      // written before the suggestions existed see the sheet they were written for.
+      descriptions: [],
       ...over,
     },
   };
@@ -462,7 +465,14 @@ describe('the chip row', () => {
 });
 
 describe('when the context cannot be read', () => {
-  it('still lets the amount be recorded, and says why the chips are missing', async () => {
+  /*
+    F-6 — this case used to read « still lets the amount be recorded, and says
+    why the chips are missing », and asserted that the expense left with
+    `categoryId: null`. The server now refuses exactly that payload, so letting
+    the button send it would promise a save that cannot happen. The sheet says
+    why the chips are missing — that half is unchanged — and holds the button.
+  */
+  it('says why the chips are missing, and sends nothing the server would refuse', async () => {
     getExpenseEntryContextAction.mockResolvedValue({ ok: false, errorCode: 'errors.generic' });
     const user = userEvent.setup();
     render(<AddExpenseSheet open onClose={vi.fn()} />);
@@ -472,12 +482,35 @@ describe('when the context cannot be read', () => {
     );
 
     await user.type(screen.getByTestId('add-expense-amount'), '18,50');
+    expect(screen.getByTestId('add-expense-submit')).toBeDisabled();
     await user.click(screen.getByTestId('add-expense-submit'));
+    expect(createExpenseAction).not.toHaveBeenCalled();
+  });
 
-    await waitFor(() => expect(createExpenseAction).toHaveBeenCalled());
-    // No category to send, so null — which is honest here, unlike the hardcoded
-    // null this whole flow replaces.
-    expect(createExpenseAction.mock.calls[0]?.[0]).toMatchObject({ categoryId: null });
+  /*
+    A failed read is not a verdict on the workspace: a dropped connection on one
+    opening must not leave the sheet without chips for the rest of the session.
+    Every opening reads again (PR D) — a failure included.
+  */
+  it.each([
+    ['answers ok: false', () => Promise.resolve({ ok: false, errorCode: 'errors.generic' })],
+    ['throws', () => Promise.reject(new Error('network'))],
+  ])('reads again on the next opening after a first read that %s', async (_, failure) => {
+    getExpenseEntryContextAction.mockImplementationOnce(failure);
+    const onClose = vi.fn();
+    const { rerender } = render(<AddExpenseSheet open onClose={onClose} />);
+    await waitFor(() =>
+      expect(screen.getByTestId('add-expense-context-failed')).toBeInTheDocument(),
+    );
+
+    rerender(<AddExpenseSheet open={false} onClose={onClose} />);
+    rerender(<AddExpenseSheet open onClose={onClose} />);
+
+    await waitFor(() =>
+      expect(screen.getByTestId(`add-expense-chip-${COURSES.id}`)).toBeInTheDocument(),
+    );
+    expect(screen.queryByTestId('add-expense-context-failed')).not.toBeInTheDocument();
+    expect(getExpenseEntryContextAction).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -685,5 +718,458 @@ describe('AddExpenseSheet — créer une catégorie', () => {
     expect(createExpenseAction).toHaveBeenCalledWith(
       expect.objectContaining({ categoryId: CREEE.id }),
     );
+  });
+});
+
+/**
+ * F-6 — no category ticked for you on a workspace that has never used one, and
+ * no expense leaves without a category.
+ */
+describe('F-6 — the category is chosen, never assumed', () => {
+  it('with nothing pre-selected, no chip is ticked', async () => {
+    getExpenseEntryContextAction.mockResolvedValue(context({ preselectedId: null }));
+    await openSheet();
+    for (const radio of screen.getAllByRole('radio')) {
+      expect(radio).toHaveAttribute('aria-checked', 'false');
+    }
+  });
+
+  it('holds the button and says why, once an amount is typed', async () => {
+    getExpenseEntryContextAction.mockResolvedValue(context({ preselectedId: null }));
+    const user = userEvent.setup();
+    await openSheet();
+
+    // No amount yet: nothing to explain.
+    expect(screen.queryByTestId('add-expense-category-required')).not.toBeInTheDocument();
+
+    await user.type(screen.getByTestId('add-expense-amount'), '18,50');
+    expect(screen.getByTestId('add-expense-submit')).toBeDisabled();
+    expect(screen.getByTestId('add-expense-category-required')).toHaveTextContent(
+      'Choisis une catégorie pour enregistrer.',
+    );
+
+    await user.click(screen.getByTestId(`add-expense-chip-${CARBURANT.id}`));
+    expect(screen.getByTestId('add-expense-submit')).toBeEnabled();
+    expect(screen.queryByTestId('add-expense-category-required')).not.toBeInTheDocument();
+  });
+
+  it('three gestures still record it: amount, chip, submit', async () => {
+    getExpenseEntryContextAction.mockResolvedValue(context({ preselectedId: null }));
+    const user = userEvent.setup();
+    await openSheet();
+
+    await user.type(screen.getByTestId('add-expense-amount'), '5,05');
+    await user.click(screen.getByTestId(`add-expense-chip-${CARBURANT.id}`));
+    await user.click(screen.getByTestId('add-expense-submit'));
+
+    await waitFor(() => expect(createExpenseAction).toHaveBeenCalledTimes(1));
+    expect(createExpenseAction.mock.calls[0]?.[0]).toMatchObject({
+      amount: 5.05,
+      categoryId: CARBURANT.id,
+      label: 'Carburant',
+    });
+  });
+
+  it('on close, the choice goes back to the pre-selection — null included', async () => {
+    getExpenseEntryContextAction.mockResolvedValue(context({ preselectedId: null }));
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    const { rerender } = render(<AddExpenseSheet open onClose={onClose} />);
+    await waitFor(() => expect(screen.getByTestId('add-expense-projection')).toBeInTheDocument());
+
+    await user.click(screen.getByTestId(`add-expense-chip-${CARBURANT.id}`));
+    rerender(<AddExpenseSheet open={false} onClose={onClose} />);
+    rerender(<AddExpenseSheet open onClose={onClose} />);
+
+    await waitFor(() => expect(screen.getByTestId('add-expense-projection')).toBeInTheDocument());
+    expect(screen.getByTestId(`add-expense-chip-${CARBURANT.id}`)).toHaveAttribute(
+      'aria-checked',
+      'false',
+    );
+  });
+
+  it('on close, the choice goes back to the pre-selected category when there is one', async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    const { rerender } = render(<AddExpenseSheet open onClose={onClose} />);
+    await waitFor(() => expect(screen.getByTestId('add-expense-projection')).toBeInTheDocument());
+
+    await user.click(screen.getByTestId(`add-expense-chip-${CARBURANT.id}`));
+    rerender(<AddExpenseSheet open={false} onClose={onClose} />);
+    rerender(<AddExpenseSheet open onClose={onClose} />);
+
+    await waitFor(() => expect(screen.getByTestId('add-expense-projection')).toBeInTheDocument());
+    expect(screen.getByTestId(`add-expense-chip-${COURSES.id}`)).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+  });
+
+  it('an empty workspace is told to create a category first', async () => {
+    getExpenseEntryContextAction.mockResolvedValue(
+      context({ chips: [], overflow: [], preselectedId: null }),
+    );
+    await openSheet();
+    const message = screen.getByTestId('add-expense-no-categories').textContent ?? '';
+    expect(message).toContain('Crée d’abord une catégorie');
+    // The old promise — « le montant sera enregistré sans catégorie » — is gone.
+    expect(message).not.toContain('sans catégorie');
+    expect(screen.getByTestId('add-expense-new-category')).toBeInTheDocument();
+  });
+});
+
+/** F-18 — a note, folded away until asked for. */
+describe('the note', () => {
+  it('is folded behind a 44 px link, under the date', async () => {
+    await openSheet();
+    expect(screen.queryByTestId('add-expense-note')).not.toBeInTheDocument();
+    const toggle = screen.getByTestId('add-expense-note-toggle');
+    expect(toggle).toHaveTextContent('Ajouter une note');
+    expect(toggle.className).toContain('min-h-11');
+    expect(
+      screen.getByTestId('add-expense-date').compareDocumentPosition(toggle) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it('unfolds into a labelled field of 500 characters at most', async () => {
+    const user = userEvent.setup();
+    await openSheet();
+    await user.click(screen.getByTestId('add-expense-note-toggle'));
+    const note = screen.getByTestId('add-expense-note');
+    expect(note.tagName).toBe('TEXTAREA');
+    expect(note).toHaveAttribute('maxLength', '500');
+    expect(screen.getByLabelText('Note')).toBe(note);
+  });
+
+  it('leaves with the expense, trimmed', async () => {
+    const user = userEvent.setup();
+    await openSheet();
+    await user.type(screen.getByTestId('add-expense-amount'), '7,05');
+    await user.click(screen.getByTestId('add-expense-note-toggle'));
+    await user.type(screen.getByTestId('add-expense-note'), '  À rembourser par Léa  ');
+    await user.click(screen.getByTestId('add-expense-submit'));
+
+    await waitFor(() => expect(createExpenseAction).toHaveBeenCalledTimes(1));
+    expect(createExpenseAction.mock.calls[0]?.[0]).toMatchObject({
+      note: 'À rembourser par Léa',
+    });
+  });
+
+  it('an empty note leaves as null', async () => {
+    const user = userEvent.setup();
+    await openSheet();
+    await user.type(screen.getByTestId('add-expense-amount'), '7,05');
+    await user.click(screen.getByTestId('add-expense-note-toggle'));
+    await user.type(screen.getByTestId('add-expense-note'), '   ');
+    await user.click(screen.getByTestId('add-expense-submit'));
+
+    await waitFor(() => expect(createExpenseAction).toHaveBeenCalledTimes(1));
+    expect(createExpenseAction.mock.calls[0]?.[0]).toMatchObject({ note: null });
+  });
+
+  it('is folded and emptied when the sheet closes', async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    const { rerender } = render(<AddExpenseSheet open onClose={onClose} />);
+    await waitFor(() => expect(screen.getByTestId('add-expense-projection')).toBeInTheDocument());
+
+    await user.click(screen.getByTestId('add-expense-note-toggle'));
+    await user.type(screen.getByTestId('add-expense-note'), 'Brouillon');
+    rerender(<AddExpenseSheet open={false} onClose={onClose} />);
+    rerender(<AddExpenseSheet open onClose={onClose} />);
+    await waitFor(() => expect(screen.getByTestId('add-expense-projection')).toBeInTheDocument());
+
+    expect(screen.queryByTestId('add-expense-note')).not.toBeInTheDocument();
+    await user.click(screen.getByTestId('add-expense-note-toggle'));
+    expect(screen.getByTestId('add-expense-note')).toHaveValue('');
+  });
+});
+
+/**
+ * v3 mock-up, rule 26 — the description says WHERE, the category says WHAT.
+ * A combobox (ARIA 1.2, list autocomplete): the person's own descriptions
+ * first, then the built-in brands; choosing one ticks the category it implies.
+ */
+describe('the description — suggestions and recall', () => {
+  const EXTRA = { id: 'cat-cadeaux', name: 'Cadeaux', colorToken: 'pink' };
+  const MINE = [
+    { label: 'Boulangerie Pierre', categoryId: RESTO.id, count: 4, lastOn: '2026-07-10' },
+    { label: 'Chez Paul', categoryId: null, count: 1, lastOn: '2026-07-09' },
+    { label: 'Anniversaire Léa', categoryId: EXTRA.id, count: 1, lastOn: '2026-07-08' },
+  ];
+
+  function withMine(over: Record<string, unknown> = {}) {
+    getExpenseEntryContextAction.mockResolvedValue(
+      context({ preselectedId: null, descriptions: MINE, overflow: [EXTRA], ...over }),
+    );
+  }
+
+  const field = () => screen.getByTestId('add-expense-label');
+  const options = () => screen.queryAllByTestId('add-expense-description-option');
+
+  it('is labelled « Description » and keeps the fallback as placeholder', async () => {
+    await openSheet();
+    expect(document.querySelector('label[for="add-expense-label"]')?.textContent).toBe(
+      'Description',
+    );
+    expect(field()).toHaveAttribute('placeholder', 'Courses');
+  });
+
+  it('sits between the amount and the categories, the date after them', async () => {
+    await openSheet();
+    const order = [
+      screen.getByTestId('add-expense-amount'),
+      field(),
+      screen.getByRole('radiogroup'),
+      screen.getByTestId('add-expense-date'),
+    ];
+    for (let i = 1; i < order.length; i += 1) {
+      expect(
+        order[i - 1]!.compareDocumentPosition(order[i]!) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    }
+  });
+
+  it('is an ARIA 1.2 combobox, collapsed until something is typed', async () => {
+    await openSheet();
+    expect(field()).toHaveAttribute('role', 'combobox');
+    expect(field()).toHaveAttribute('aria-autocomplete', 'list');
+    expect(field()).toHaveAttribute('aria-controls', 'add-expense-description-list');
+    expect(field()).toHaveAttribute('aria-expanded', 'false');
+    expect(options()).toHaveLength(0);
+  });
+
+  it('suggests brands from the first letters, each with the category it will tick', async () => {
+    const user = userEvent.setup();
+    await openSheet();
+    await user.type(field(), 'colr');
+
+    expect(field()).toHaveAttribute('aria-expanded', 'true');
+    const [first] = options();
+    expect(first).toHaveAttribute('role', 'option');
+    expect(first?.textContent).toContain('Colruyt');
+    expect(first?.textContent).toContain('Courses');
+    expect(first?.className).toContain('min-h-11');
+    // The list lives OUTSIDE the label: a click in a label is forwarded to its input.
+    const list = document.getElementById('add-expense-description-list');
+    expect(list).toHaveAttribute('role', 'listbox');
+    expect(list?.closest('label')).toBeNull();
+  });
+
+  it('puts the person’s own descriptions before the brands', async () => {
+    withMine();
+    const user = userEvent.setup();
+    await openSheet();
+    await user.type(field(), 'b');
+    expect(options()[0]?.textContent).toContain('Boulangerie Pierre');
+    // The second line names the category it will tick.
+    expect(options()[0]?.textContent).toContain(RESTO.name);
+  });
+
+  it('choosing a suggestion fills the field and ticks its category', async () => {
+    withMine();
+    const user = userEvent.setup();
+    await openSheet();
+    await user.type(field(), 'colr');
+    await user.click(options()[0]!);
+
+    expect(field()).toHaveValue('Colruyt');
+    expect(screen.getByTestId(`add-expense-chip-${COURSES.id}`)).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+    expect(options()).toHaveLength(0);
+    expect(field()).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('a suggestion without a category leaves the ticked one alone', async () => {
+    withMine();
+    const user = userEvent.setup();
+    await openSheet();
+    await user.click(screen.getByTestId(`add-expense-chip-${CARBURANT.id}`));
+    await user.type(field(), 'chez');
+    await user.click(options()[0]!);
+
+    expect(field()).toHaveValue('Chez Paul');
+    expect(screen.getByTestId(`add-expense-chip-${CARBURANT.id}`)).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+  });
+
+  it('the arrows move the active option, Enter chooses it', async () => {
+    withMine();
+    const user = userEvent.setup();
+    await openSheet();
+    await user.type(field(), 'b');
+    expect(field()).not.toHaveAttribute('aria-activedescendant');
+
+    await user.keyboard('{ArrowDown}');
+    const active = field().getAttribute('aria-activedescendant');
+    expect(active).toBe(options()[0]?.id);
+    expect(options()[0]).toHaveAttribute('aria-selected', 'true');
+
+    await user.keyboard('{ArrowDown}');
+    expect(field().getAttribute('aria-activedescendant')).toBe(options()[1]?.id);
+    await user.keyboard('{ArrowUp}');
+    expect(field().getAttribute('aria-activedescendant')).toBe(options()[0]?.id);
+
+    await user.keyboard('{Enter}');
+    expect(field()).toHaveValue('Boulangerie Pierre');
+    expect(screen.getByTestId(`add-expense-chip-${RESTO.id}`)).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+  });
+
+  it('Escape closes the list without closing the sheet; a second Escape closes the sheet', async () => {
+    const user = userEvent.setup();
+    const { onClose } = await openSheet();
+    await user.type(screen.getByTestId('add-expense-amount'), '18,50');
+    await user.type(field(), 'colr');
+    expect(options().length).toBeGreaterThan(0);
+
+    await user.keyboard('{Escape}');
+    expect(options()).toHaveLength(0);
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByTestId('add-expense-amount')).toHaveValue('18,50');
+
+    await user.keyboard('{Escape}');
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  /*
+    The list does not close on blur (see the component), so moving to another
+    FIELD has to close it: otherwise it stays open under a field the person has
+    left, announced as expanded to a screen reader that is now elsewhere.
+  */
+  it('closes when the amount field takes the focus', async () => {
+    const user = userEvent.setup();
+    await openSheet();
+    await user.type(field(), 'colr');
+    expect(field()).toHaveAttribute('aria-expanded', 'true');
+
+    await user.click(screen.getByTestId('add-expense-amount'));
+    expect(field()).toHaveAttribute('aria-expanded', 'false');
+    expect(options()).toHaveLength(0);
+  });
+
+  it('closes when the date field takes the focus', async () => {
+    const user = userEvent.setup();
+    await openSheet();
+    await user.type(field(), 'colr');
+    expect(field()).toHaveAttribute('aria-expanded', 'true');
+
+    await user.click(screen.getByTestId('add-expense-date'));
+    expect(field()).toHaveAttribute('aria-expanded', 'false');
+    expect(options()).toHaveLength(0);
+  });
+
+  it('closes when the note field takes the focus', async () => {
+    const user = userEvent.setup();
+    await openSheet();
+    await user.click(screen.getByTestId('add-expense-note-toggle'));
+    await user.type(field(), 'colr');
+    expect(field()).toHaveAttribute('aria-expanded', 'true');
+
+    await user.click(screen.getByTestId('add-expense-note'));
+    expect(field()).toHaveAttribute('aria-expanded', 'false');
+    expect(options()).toHaveLength(0);
+  });
+
+  it('marks the active option by more than a background tint', async () => {
+    // `bg-surface-muted` alone is a tint a few percent away from the card:
+    // the keyboard position must also read as an outline.
+    const user = userEvent.setup();
+    await openSheet();
+    await user.type(field(), 'colr');
+    const option = options()[0]!;
+    expect(option.className).toContain('aria-selected:ring-2');
+    expect(option.className).toContain('aria-selected:ring-inset');
+    expect(option.className).toContain('aria-selected:ring-brand-600');
+    expect(option.className).toContain('aria-selected:bg-surface-muted');
+  });
+
+  it('turns off autocorrect and spellcheck, but keeps the capital letter', async () => {
+    // A brand name corrected into a dictionary word stops matching the
+    // suggestions; a capitalised first letter is what a description should have.
+    await openSheet();
+    expect(field()).toHaveAttribute('autocorrect', 'off');
+    expect(field()).toHaveAttribute('spellcheck', 'false');
+    expect(field()).not.toHaveAttribute('autocapitalize');
+  });
+
+  it('typing one of the person’s descriptions in full ticks its category, no click', async () => {
+    withMine();
+    const user = userEvent.setup();
+    await openSheet();
+    await user.type(field(), 'boulangerie pierre');
+    expect(screen.getByTestId(`add-expense-chip-${RESTO.id}`)).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+  });
+
+  it('…unless the person already picked a chip in this opening', async () => {
+    withMine();
+    const user = userEvent.setup();
+    await openSheet();
+    await user.click(screen.getByTestId(`add-expense-chip-${CARBURANT.id}`));
+    await user.type(field(), 'Boulangerie Pierre');
+    expect(screen.getByTestId(`add-expense-chip-${CARBURANT.id}`)).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+    expect(screen.getByTestId(`add-expense-chip-${RESTO.id}`)).toHaveAttribute(
+      'aria-checked',
+      'false',
+    );
+  });
+
+  it('a ticked category hidden in the overflow is shown in the row', async () => {
+    withMine();
+    const user = userEvent.setup();
+    await openSheet();
+    expect(screen.queryByTestId(`add-expense-chip-${EXTRA.id}`)).not.toBeInTheDocument();
+
+    await user.type(field(), 'anniv');
+    await user.click(options()[0]!);
+
+    const chip = screen.getByTestId(`add-expense-chip-${EXTRA.id}`);
+    expect(chip).toHaveAttribute('aria-checked', 'true');
+    // Nothing left behind « + N autres »: the only overflow category is on show.
+    expect(screen.queryByTestId('add-expense-chip-more')).not.toBeInTheDocument();
+  });
+
+  it('sends the chosen description and its category', async () => {
+    withMine();
+    const user = userEvent.setup();
+    await openSheet();
+    await user.type(screen.getByTestId('add-expense-amount'), '7,05');
+    await user.type(field(), 'colr');
+    await user.click(options()[0]!);
+    await user.click(screen.getByTestId('add-expense-submit'));
+
+    await waitFor(() => expect(createExpenseAction).toHaveBeenCalledTimes(1));
+    expect(createExpenseAction.mock.calls[0]?.[0]).toMatchObject({
+      label: 'Colruyt',
+      categoryId: COURSES.id,
+      amount: 7.05,
+    });
+  });
+
+  it('the description is emptied and the list closed when the sheet closes', async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    const { rerender } = render(<AddExpenseSheet open onClose={onClose} />);
+    await waitFor(() => expect(screen.getByTestId('add-expense-projection')).toBeInTheDocument());
+    await user.type(field(), 'colr');
+    rerender(<AddExpenseSheet open={false} onClose={onClose} />);
+    rerender(<AddExpenseSheet open onClose={onClose} />);
+    await waitFor(() => expect(screen.getByTestId('add-expense-projection')).toBeInTheDocument());
+
+    expect(field()).toHaveValue('');
+    expect(options()).toHaveLength(0);
   });
 });

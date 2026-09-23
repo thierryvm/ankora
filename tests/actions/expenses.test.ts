@@ -56,7 +56,8 @@ describe('expenses Server Actions — revalidatePath uses [locale] dynamic segme
       label: 'Coffee',
       amount: 3.5,
       occurredOn: '2026-05-03',
-      categoryId: null,
+      // F-6: a category is required. v4-shaped uuid (Zod 4 checks the digits).
+      categoryId: '3f6c1a52-8e1b-4c3d-9a7e-2b5d6f8a9c01',
       note: null,
       paidFrom: 'vie_courante',
     });

@@ -304,8 +304,8 @@ export function BottomTabBar({ isAdmin = false }: BottomTabBarProps) {
       {/*
         Mounted here rather than per-page: the ⊕ is reachable from every screen
         the bar is on, which is what makes "2 taps from anywhere" true. The sheet
-        fetches its own context on first open, so mounting it costs nothing until
-        it is used.
+        fetches its own context each time it opens, so mounting it costs nothing
+        until it is used.
       */}
       <AddExpenseSheet open={isAddExpenseOpen} onClose={handleAddExpenseClose} />
     </>

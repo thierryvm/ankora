@@ -267,6 +267,119 @@ describe('<ExpensesClient /> — « Dépensé ce mois » (ADR-035)', () => {
   });
 });
 
+/**
+ * The month, grouped by description — « where did it go? ». Rule 10: the month
+ * total opens on what composes it, so the groups must add up to it exactly.
+ */
+describe('<ExpensesClient /> — the month grouped by description', () => {
+  const month = [
+    { id: 'g1', label: 'Colruyt', amount: 5.05, occurredOn: '2026-05-02', note: null },
+    { id: 'g2', label: 'Pharmacie', amount: 50.5, occurredOn: '2026-05-03', note: null },
+    { id: 'g3', label: 'COLRUYT', amount: 7.05, occurredOn: '2026-05-10', note: null },
+    { id: 'g4', label: 'Boulangerie', amount: 0.1, occurredOn: '2026-05-11', note: null },
+    { id: 'g5', label: 'boulangerie', amount: 0.2, occurredOn: '2026-05-12', note: null },
+  ];
+  const earlier = {
+    id: 'g0',
+    label: 'Colruyt',
+    amount: 70.5,
+    occurredOn: '2026-04-28',
+    note: null,
+  };
+
+  const groups = () => screen.getAllByTestId('expense-group');
+  const cents = (el: HTMLElement) => Number(el.getAttribute('data-sous-total'));
+  // The name a group shows: its title, or — for a group of one — its only row.
+  const shownName = (g: HTMLElement) =>
+    (within(g).queryByTestId('expense-group-label') ?? within(g).getByTestId('expenses-row-label'))
+      .textContent;
+
+  it('shows one group per description, the largest subtotal first', () => {
+    renderExpenses([...month, earlier]);
+    expect(groups().map(shownName)).toEqual(['Pharmacie', 'COLRUYT', 'boulangerie']);
+    expect(groups().map(cents)).toEqual([5050, 1210, 30]);
+  });
+
+  /*
+    A group of ONE expense is a plain row. A title repeating the row's own
+    description, over a subtotal repeating the row's own amount, doubled every
+    single-expense place on the list and said nothing the row did not.
+  */
+  it('renders a group of one expense as a plain row, without title or repeated subtotal', () => {
+    renderExpenses(month);
+    const pharmacie = groups()[0]!;
+    expect(within(pharmacie).queryByTestId('expense-group-label')).toBeNull();
+    expect(within(pharmacie).queryByTestId('expense-group-subtotal')).toBeNull();
+    expect(within(pharmacie).queryByRole('heading')).toBeNull();
+    // The row itself is complete: description, date, amount, edit target.
+    expect(within(pharmacie).getByTestId('expenses-row-label')).toHaveTextContent('Pharmacie');
+    expect(within(pharmacie).getByTestId('expenses-row-date')).toBeInTheDocument();
+    expect(within(pharmacie).getByTestId('expenses-row-amount')).toHaveTextContent(/50,50/);
+    expect(within(pharmacie).getByTestId('expenses-row-edit-g2')).toBeInTheDocument();
+    // …and it still counts as one line of the month's decomposition.
+    expect(cents(pharmacie)).toBe(5050);
+    expect(within(pharmacie).getAllByTestId('expenses-row-amount')).toHaveLength(1);
+  });
+
+  it('gives a group of two or more expenses its title and subtotal, then its rows', () => {
+    renderExpenses(month);
+    const colruyt = groups()[1]!;
+    const title = within(colruyt).getByTestId('expense-group-label');
+    expect(title).toHaveTextContent('COLRUYT');
+    expect(within(colruyt).getByTestId('expense-group-subtotal')).toHaveTextContent(/12,10/);
+    const rows = within(colruyt).getAllByTestId('expenses-row-label');
+    expect(rows).toHaveLength(2);
+    // The title comes before the rows it sums.
+    expect(title.compareDocumentPosition(rows[0]!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('the subtotals add up to the month total with only groups of one, too', () => {
+    renderExpenses(sampleExpenses); // two places, one expense each: 87,50 + 42
+    expect(groups()).toHaveLength(2);
+    for (const g of groups()) {
+      expect(within(g).queryByTestId('expense-group-label')).toBeNull();
+    }
+    expect(
+      groups()
+        .map(cents)
+        .reduce((a, b) => a + b, 0),
+    ).toBe(12950);
+    expect(screen.getByTestId('depense-mois-total')).toHaveTextContent(/129,50/);
+  });
+
+  it('shows each subtotal formatted, in the group title', () => {
+    renderExpenses(month);
+    expect(within(groups()[1]!).getByTestId('expense-group-subtotal')).toHaveTextContent(/12,10/);
+  });
+
+  it('keeps each row — and its edit target — under its group', () => {
+    renderExpenses(month);
+    const colruyt = groups()[1]!;
+    expect(within(colruyt).getByTestId('expenses-row-edit-g1')).toBeInTheDocument();
+    expect(within(colruyt).getByTestId('expenses-row-edit-g3')).toBeInTheDocument();
+    expect(within(colruyt).queryByTestId('expenses-row-g2')).toBeNull();
+    // The date is still on each row.
+    expect(within(colruyt).getAllByTestId('expenses-row-date')).toHaveLength(2);
+  });
+
+  it('the subtotals add up to the month total, to the cent', () => {
+    renderExpenses([...month, earlier]);
+    const sum = groups()
+      .map(cents)
+      .reduce((a, b) => a + b, 0);
+    // 5,05 + 50,50 + 7,05 + 0,10 + 0,20 = 62,90 — and the April row is not in it.
+    expect(sum).toBe(6290);
+    expect(screen.getByTestId('depense-mois-total')).toHaveTextContent(/62,90/);
+  });
+
+  it('leaves earlier months as they were, ungrouped', () => {
+    renderExpenses([...month, earlier]);
+    const before = screen.getByTestId('expenses-earlier');
+    expect(within(before).getByTestId('expenses-row-g0')).toBeInTheDocument();
+    expect(within(before).queryByTestId('expense-group')).toBeNull();
+  });
+});
+
 describe('app.expenses — i18n parity (5 locales, PR-BETA-CLEANUP-3)', () => {
   it.each(['fr-BE', 'en', 'de-DE', 'es-ES', 'nl-BE'] as const)(
     'locale %s exposes editAria + toastUpdated + drawer.{title,save,saving,cancel,errorGeneric}',

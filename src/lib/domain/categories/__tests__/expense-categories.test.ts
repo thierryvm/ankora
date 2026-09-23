@@ -180,9 +180,40 @@ describe('expenseCategoryChips — one row, never two', () => {
     expect(overflow).toHaveLength(many.length - CHIP_COUNT);
   });
 
-  it('pre-selects the first chip so the common case costs no tap', () => {
+  /*
+    F-6 — this case used to read « pre-selects the first chip so the common
+    case costs no tap », on an EMPTY history. On a fresh workspace the first
+    chip is only the first in declaration order: pre-selecting it filed the
+    first expenses under a category nobody chose. The expectation was wrong,
+    not the arithmetic, and it is replaced by the three cases below.
+  */
+  it('pre-selects nothing on a workspace with no use in the window (F-6)', () => {
     const { chips, preselectedId } = expenseCategoryChips(many, [], TODAY);
-    expect(preselectedId).toBe(chips[0]?.id);
+    expect(chips.length).toBeGreaterThan(0);
+    expect(preselectedId).toBeNull();
+  });
+
+  it('pre-selects the most-used category once there is use in the window', () => {
+    const history = [
+      spend(many[3]!.id, '2026-07-20'),
+      spend(many[3]!.id, '2026-07-21'),
+      spend(many[1]!.id, '2026-07-22'),
+    ];
+    const { chips, preselectedId } = expenseCategoryChips(many, history, TODAY);
+    expect(preselectedId).toBe(many[3]!.id);
+    expect(chips[0]?.id).toBe(many[3]!.id);
+  });
+
+  it('pre-selects nothing when every use is older than the window', () => {
+    // Use counted the way `rankExpenseCategories` counts it: 40 days back is
+    // outside the window, so it is no use at all for the pre-selection either.
+    const history = [spend(many[2]!.id, '2026-06-19')];
+    expect(expenseCategoryChips(many, history, TODAY).preselectedId).toBeNull();
+  });
+
+  it('pre-selects nothing when the only use is uncategorised', () => {
+    const history = [spend(null, '2026-07-28')];
+    expect(expenseCategoryChips(many, history, TODAY).preselectedId).toBeNull();
   });
 
   it('reports no pre-selection when nothing is selectable', () => {

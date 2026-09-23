@@ -25,9 +25,10 @@ import type { Category } from './types';
  * ## Ordering: measured use, not an alphabet
  *
  * `DECISIONS-ANKORA.md` §3.4 asks for the five most-used categories over 30
- * days, the first pre-selected, so the common case costs zero taps. Everything
- * below is about making that ordering *deterministic*, because a picker whose
- * chips reshuffle between two openings is worse than one that never learned.
+ * days, the first pre-selected — but only once it has actually been used (F-6,
+ * see `expenseCategoryChips`). Everything below is about making that ordering
+ * *deterministic*, because a picker whose chips reshuffle between two openings
+ * is worse than one that never learned.
  */
 
 /** Days of history the ranking looks at. §3.4 — recent habits, not a lifetime. */
@@ -66,6 +67,33 @@ function windowStart(todayIso: string, days: number): string {
 }
 
 /**
+ * Uses per category id within the window — the single definition of « used »
+ * for both the ranking and the pre-selection, so the two can never disagree.
+ */
+function usesInWindow(
+  expenses: readonly Expense[],
+  todayIso: string,
+  windowDays: number,
+): Map<string, { count: number; lastUsed: string }> {
+  const since = windowStart(todayIso, windowDays);
+  const uses = new Map<string, { count: number; lastUsed: string }>();
+  for (const expense of expenses) {
+    if (expense.categoryId === null) continue;
+    // `> since` and not `>=`: the window is the last N days, so the boundary
+    // day itself is already out of it.
+    if (expense.occurredOn <= since) continue;
+    const current = uses.get(expense.categoryId);
+    if (current) {
+      current.count += 1;
+      if (expense.occurredOn > current.lastUsed) current.lastUsed = expense.occurredOn;
+    } else {
+      uses.set(expense.categoryId, { count: 1, lastUsed: expense.occurredOn });
+    }
+  }
+  return uses;
+}
+
+/**
  * Selectable categories, most-used-first over the last {@link RANKING_WINDOW_DAYS}.
  *
  * Ties are broken by most recent use, then by declaration order — never by
@@ -81,22 +109,7 @@ export function rankExpenseCategories(
   windowDays: number = RANKING_WINDOW_DAYS,
 ): readonly Category[] {
   const selectable = selectableExpenseCategories(categories);
-  const since = windowStart(todayIso, windowDays);
-
-  const uses = new Map<string, { count: number; lastUsed: string }>();
-  for (const expense of expenses) {
-    if (expense.categoryId === null) continue;
-    // `> since` and not `>=`: the window is the last N days, so the boundary
-    // day itself is already out of it.
-    if (expense.occurredOn <= since) continue;
-    const current = uses.get(expense.categoryId);
-    if (current) {
-      current.count += 1;
-      if (expense.occurredOn > current.lastUsed) current.lastUsed = expense.occurredOn;
-    } else {
-      uses.set(expense.categoryId, { count: 1, lastUsed: expense.occurredOn });
-    }
-  }
+  const uses = usesInWindow(expenses, todayIso, windowDays);
 
   const position = new Map(selectable.map((category, index) => [category.id, index]));
 
@@ -115,13 +128,16 @@ export function rankExpenseCategories(
 /**
  * The chip row and the id to pre-select.
  *
- * `preselectedId` is the first chip, which is the most-used category — right in
- * the large majority of entries. Changing it costs a third tap, and that is
- * assumed (§3.4): a miscategorised expense stays fixable in two taps from the
- * list, whereas making everyone choose costs a tap on *every* entry.
+ * `preselectedId` is the first chip ONLY when that category has at least one
+ * use in the ranking window — then it is the habit, and pre-selecting it keeps
+ * the common case at no extra tap.
  *
- * `null` when the workspace has no selectable category at all — the caller must
- * render an empty state rather than a row of nothing.
+ * `null` otherwise (F-6). On a workspace with no use in the window, the first
+ * chip is merely the first in declaration order: pre-selecting it used to file
+ * the first expenses under a category nobody chose, and nothing on screen said
+ * so. The person picks one chip instead — one tap, once, and from then on the
+ * habit pre-selects itself. `null` too when there is no selectable category at
+ * all; the caller renders an empty state rather than a row of nothing.
  */
 export function expenseCategoryChips(
   categories: readonly Category[],
@@ -129,9 +145,11 @@ export function expenseCategoryChips(
   todayIso: string,
 ): { chips: readonly Category[]; overflow: readonly Category[]; preselectedId: string | null } {
   const ranked = rankExpenseCategories(categories, expenses, todayIso);
+  const first = ranked[0];
+  const uses = usesInWindow(expenses, todayIso, RANKING_WINDOW_DAYS);
   return {
     chips: ranked.slice(0, CHIP_COUNT),
     overflow: ranked.slice(CHIP_COUNT),
-    preselectedId: ranked[0]?.id ?? null,
+    preselectedId: first !== undefined && uses.has(first.id) ? first.id : null,
   };
 }

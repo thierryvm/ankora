@@ -11,6 +11,7 @@ import { AddExpenseSheet } from '@/components/expenses/AddExpenseSheet';
 import type { Locale } from '@/i18n/routing';
 import { deleteExpenseAction } from '@/lib/actions/expenses';
 import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
+import { groupExpensesByDescription } from '@/lib/domain/expenses/group-by-description';
 import { formatCurrency, formatDate, formatMonth } from '@/lib/i18n/formatters';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 
@@ -25,13 +26,17 @@ type RawExpense = {
 };
 
 type Props = {
+  /**
+   * The current month COMPLETE (from `monthlyExpenses`, uncapped), plus the
+   * most recent rows of earlier months. The current month has to be complete:
+   * it is grouped by description below, and those groups decompose the month
+   * total (rule 10) — a capped list would make them add up to less than it.
+   */
   expenses: RawExpense[];
   /**
    * AUTHORITATIVE total spent this month, summed server-side from the COMPLETE
-   * (unlimited) `monthlyExpenses`. The `expenses` list is capped at 50 rows, so
-   * the month total MUST NOT be derived from it — past the 51st
-   * current-month expense it would under-report the spend
-   * (a lie about the user's money). Sourcery #242.
+   * (unlimited) `monthlyExpenses` — never derived from `expenses` on this side
+   * (Sourcery #242).
    */
   spentThisMonth: number;
   currentYear: number;
@@ -81,12 +86,16 @@ export function ExpensesClient({
     });
   }
 
-  // Split the (capped) list for DISPLAY by the current calendar month. The
-  // per-day figure below never uses these sums — it uses the authoritative
-  // `spentThisMonth` (complete, server-side) so pagination cannot skew the money.
+  // Split the list for DISPLAY by the current calendar month (complete for the
+  // current month, capped for earlier ones — see `Props.expenses`). The per-day
+  // figure below never uses these sums — it uses the authoritative
+  // `spentThisMonth` (complete, server-side).
   const monthPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
   const thisMonth = expenses.filter((e) => e.occurredOn.startsWith(monthPrefix));
   const earlier = expenses.filter((e) => !e.occurredOn.startsWith(monthPrefix));
+  // « Where did it go? » — the month by description, largest subtotal first.
+  // Each group is one line of the month total's decomposition (rule 10).
+  const groups = groupExpensesByDescription(thisMonth);
   const monthName = formatMonth(currentMonth, locale, 'long');
   // ADR-035 — average daily spend so far. Replaces the former progress bar,
   // which measured spending against `reste_a_vivre_default`: a 500 € constant
@@ -212,8 +221,37 @@ export function ExpensesClient({
               {t('emptyState')}
             </p>
           ) : (
-            <ul role="list" data-testid="expenses-list" className="divide-border divide-y">
-              {thisMonth.map(renderRow)}
+            <ul role="list" data-testid="expenses-list" className="flex flex-col gap-4">
+              {groups.map((group) => (
+                <li
+                  key={group.key}
+                  data-testid="expense-group"
+                  // Whole cents, so a probe can add the groups up without
+                  // parsing a formatted amount. Set on EVERY group, a group of
+                  // one included: the sum of these is the month total.
+                  data-sous-total={group.subtotal.times(100).toDecimalPlaces(0).toNumber()}
+                >
+                  {/*
+                    A group of one expense is a plain row: its title would
+                    repeat the row's description, and its subtotal the row's
+                    amount. The title earns its place from two rows up, where
+                    the subtotal says something no single row does.
+                  */}
+                  {group.items.length > 1 && (
+                    <h4 className="border-border flex items-baseline justify-between gap-3 border-b pb-1 text-sm font-semibold">
+                      <span data-testid="expense-group-label" className="min-w-0 truncate">
+                        {group.label}
+                      </span>
+                      <span data-testid="expense-group-subtotal" className="shrink-0 tabular-nums">
+                        {fmt(group.subtotal.toNumber())}
+                      </span>
+                    </h4>
+                  )}
+                  <ul role="list" className="divide-border divide-y">
+                    {group.items.map(renderRow)}
+                  </ul>
+                </li>
+              ))}
             </ul>
           )}
 

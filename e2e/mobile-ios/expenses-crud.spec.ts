@@ -77,14 +77,16 @@ test.describe('Expenses — full lifecycle', () => {
     // catégories dépend de la migration `20260729000002`, qui n'est PAS
     // appliquée en production — nommer « Courses » ici coupleraient la spec à
     // une migration en attente et la ferait échouer selon l'environnement.
-    // Elle est facultative à la saisie (`canSubmit` ne regarde que le montant),
-    // donc on n'en exige pas la présence.
+    // Depuis F-6 elle est OBLIGATOIRE (`canSubmit` exige une catégorie, et un
+    // compte neuf n'en a aucune pré-cochée) : on attend qu'une puce soit là,
+    // au lieu de cliquer seulement si elle l'est déjà — les puces arrivent
+    // après le montant, et un `count()` pris trop tôt valait 0.
     const chips = page.locator(
       '[data-testid^="add-expense-chip-"]:not([data-testid$="-skeleton"]):not([data-testid$="-more"])',
     );
-    if ((await chips.count()) > 0) {
-      await chips.first().click();
-    }
+    await expect(chips.first()).toBeVisible({ timeout: 20_000 });
+    await chips.first().click();
+    await expect(chips.first()).toHaveAttribute('aria-checked', 'true');
 
     await expect(page.getByTestId('add-expense-submit')).toBeEnabled();
     await page.getByTestId('add-expense-submit').click();
@@ -106,13 +108,19 @@ test.describe('Expenses — full lifecycle', () => {
     await rows.first().click();
     await expect(page.getByTestId('expense-edit-drawer')).toBeVisible();
 
+    // « Description », the word the entry sheet uses for the same field — the
+    // drawer said « Libellé » until the vocabulary was aligned.
     await page
-      .getByLabel(/libellé/i)
+      .getByLabel(/description/i)
       .last()
       .fill('Intermarché — courses');
     await page.getByTestId('expense-edit-save').click();
     await expect(page.getByTestId('expense-edit-drawer')).toBeHidden({ timeout: 20_000 });
-    await expect(page.getByText('Intermarché — courses')).toBeVisible();
+    // The ROW carries the edited description. Since the month is grouped by
+    // description, the same text is also the group title above it.
+    await expect(
+      page.getByTestId('expenses-row-label').filter({ hasText: /^Intermarché — courses$/ }),
+    ).toBeVisible();
 
     // ── Suppression : deux temps, et la confirmation nomme la dépense ───────
     await rows.first().click();
