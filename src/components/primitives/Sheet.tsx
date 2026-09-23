@@ -400,6 +400,12 @@ export function Sheet({
           // moved; `svh` is defined against the viewport with browser UI
           // EXPANDED and, by spec, does not change when that UI retracts.
           'inset-x-0 bottom-0 max-h-[92svh] rounded-t-3xl border-t',
+          // F-8 — a height floor, so a sheet whose content changes does not
+          // jump under the finger. Written in px ALONE, a floor beats the
+          // ceiling when the viewport shrinks (rotation, Android keyboard) and
+          // pushes the sheet off the top; so it is the SMALLER of 15rem and the
+          // same 92svh ceiling. Desktop variants size themselves: no floor.
+          'min-h-[min(15rem,92svh)] md:min-h-0',
           // ≥ md, `panel` : colonne ancrée à droite, pleine hauteur.
           desktop === 'panel' &&
             // 26rem (416px) → 440px, la largeur du panneau de bureau dans la maquette v3.
