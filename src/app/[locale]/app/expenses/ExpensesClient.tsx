@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/toast';
 import { AddExpenseSheet } from '@/components/expenses/AddExpenseSheet';
+import { CHIP_DOT } from '@/components/expenses/category-dot';
+import type { CategoryBreakdown } from '@/lib/domain/expenses/descriptions';
 import type { Locale } from '@/i18n/routing';
 import { deleteExpenseAction } from '@/lib/actions/expenses';
 import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
@@ -22,6 +24,8 @@ type RawExpense = {
   amount: number;
   occurredOn: string;
   note: string | null;
+  /** Shown under the description when it says something else (rule 26). */
+  categoryName?: string | null;
 };
 
 type Props = {
@@ -38,6 +42,11 @@ type Props = {
   currentMonth: number;
   /** Days elapsed in the current month, including today. */
   joursEcoules: number;
+  /**
+   * The month total by category, then by description — built server-side from
+   * the same complete source as `spentThisMonth` (rule 10).
+   */
+  breakdown?: CategoryBreakdown[];
 };
 
 export function ExpensesClient({
@@ -46,6 +55,7 @@ export function ExpensesClient({
   currentYear,
   currentMonth,
   joursEcoules,
+  breakdown = [],
 }: Props) {
   const t = useTranslations('app.expenses');
   const locale = useLocale() as Locale;
@@ -95,6 +105,13 @@ export function ExpensesClient({
   // scoring it against an invented target. "What is left" is the hero's job.
   const perDayEcoule = joursEcoules > 0 ? spentThisMonth / joursEcoules : null;
 
+  /** The month's rows by day, newest day first; the order inside a day is kept. */
+  const byDay = (rows: RawExpense[]): [string, RawExpense[]][] => {
+    const days = new Map<string, RawExpense[]>();
+    for (const row of rows) days.set(row.occurredOn, [...(days.get(row.occurredOn) ?? []), row]);
+    return [...days.entries()].sort(([a], [b]) => (a < b ? 1 : a > b ? -1 : 0));
+  };
+
   const renderRow = (e: RawExpense) => (
     <li key={e.id} data-testid={`expenses-row-${e.id}`}>
       {/*
@@ -127,6 +144,9 @@ export function ExpensesClient({
           </span>
           <span data-testid="expenses-row-date" className="text-muted-foreground block text-xs">
             {formatDate(e.occurredOn, locale, 'medium')}
+            {e.categoryName && e.categoryName.trim().toLowerCase() !== e.label.trim().toLowerCase()
+              ? ` · ${e.categoryName}`
+              : ''}
           </span>
         </span>
         <span
@@ -146,33 +166,6 @@ export function ExpensesClient({
         <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{t('title')}</h1>
         <p className="text-muted-foreground mt-1">{t('subtitle')}</p>
       </header>
-
-      {/* « Dépensé ce mois » — the authoritative server-side total, with the
-          average daily rate so far. No budget, no bar: ADR-035 removed the
-          envelope this used to be measured against. */}
-      <Card data-testid="depense-mois-card">
-        <CardContent className="flex flex-col gap-4 py-6">
-          {/* Real <h2> (not a <p>) so screen-reader heading navigation has a
-              landmark for this section — the page otherwise has only the h1. */}
-          <h2 className="text-muted-foreground text-sm font-medium">
-            {t('depenseMoisLabel', { month: monthName })}
-          </h2>
-          <p
-            className="text-foreground text-4xl font-bold tracking-tight tabular-nums"
-            data-testid="depense-mois-total"
-          >
-            {fmt(spentThisMonth)}
-          </p>
-          {perDayEcoule !== null && (
-            <p
-              className="text-muted-foreground text-xs tabular-nums"
-              data-testid="depense-mois-perday"
-            >
-              {t('perDayElapsed', { amount: fmt(perDayEcoule), days: joursEcoules })}
-            </p>
-          )}
-        </CardContent>
-      </Card>
 
       {/*
         The inline add form is gone, replaced by the shared entry sheet.
@@ -200,6 +193,103 @@ export function ExpensesClient({
         {t('addButton')}
       </Button>
 
+      {/* « Dépensé ce mois » — the authoritative server-side total, with the
+          average daily rate so far. No budget, no bar: ADR-035 removed the
+          envelope this used to be measured against. */}
+      <Card data-testid="depense-mois-card">
+        <CardContent className="flex flex-col gap-4 py-6">
+          {/* Real <h2> (not a <p>) so screen-reader heading navigation has a
+              landmark for this section — the page otherwise has only the h1. */}
+          <h2 className="text-muted-foreground text-sm font-medium">
+            {t('depenseMoisLabel', { month: monthName })}
+          </h2>
+          <p
+            className="text-foreground text-4xl font-bold tracking-tight tabular-nums"
+            data-testid="depense-mois-total"
+          >
+            {fmt(spentThisMonth)}
+          </p>
+          {perDayEcoule !== null && (
+            <p
+              className="text-muted-foreground text-xs tabular-nums"
+              data-testid="depense-mois-perday"
+            >
+              {t('perDayElapsed', { amount: fmt(perDayEcoule), days: joursEcoules })}
+            </p>
+          )}
+          {/*
+            Rule 10 — the total opens on what makes it. Each category is a
+            native <details>: keyboard and screen reader for free, nothing to
+            re-implement. Inside, one group per description, largest first,
+            « Sans libellé » last (rule 26): the subtotals add up to the
+            category, the categories to the month, to the cent — the domain
+            sums in cents.
+          */}
+          {breakdown.length > 0 && (
+            <ul
+              role="list"
+              data-testid="depense-mois-categories"
+              className="divide-border divide-y"
+            >
+              {breakdown.map((category) => (
+                <li key={category.categoryId ?? 'none'}>
+                  <details
+                    className="group"
+                    data-testid="depense-categorie"
+                    data-total={Math.round(category.total * 100)}
+                  >
+                    <summary className="hover:bg-muted focus-visible:ring-brand-600 flex min-h-11 cursor-pointer list-none items-center gap-3 rounded-md px-2 py-2 focus-visible:ring-2 focus-visible:outline-none">
+                      <span
+                        aria-hidden="true"
+                        className={`h-2.5 w-2.5 shrink-0 rounded-full ${
+                          CHIP_DOT[category.colorToken ?? 'zinc'] ?? CHIP_DOT.zinc
+                        }`}
+                      />
+                      <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                        {category.name ?? t('noCategory')}
+                      </span>
+                      <span className="text-sm font-semibold tabular-nums">
+                        {fmt(category.total)}
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        className="text-muted-foreground transition-transform group-open:rotate-90"
+                      >
+                        ›
+                      </span>
+                    </summary>
+                    <div className="flex flex-col gap-3 py-2 pl-7">
+                      {category.groups.map((group) => (
+                        <div key={group.label ?? ''} data-testid="depense-groupe">
+                          <h3
+                            className="flex items-baseline justify-between gap-3 text-sm font-medium"
+                            data-libelle-groupe={group.label ?? ''}
+                            data-sous-total={Math.round(group.total * 100)}
+                          >
+                            <span className="min-w-0 truncate">
+                              {group.label ?? t('noDescription')}
+                            </span>
+                            <span className="tabular-nums">{fmt(group.total)}</span>
+                          </h3>
+                          <ul role="list" className="text-muted-foreground text-xs">
+                            {group.lines.map((line) => (
+                              <li key={line.id} className="flex justify-between gap-3 py-0.5">
+                                <span>{formatDate(line.occurredOn, locale, 'medium')}</span>
+                                <span className="tabular-nums">{fmt(line.amount)}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>
@@ -212,8 +302,17 @@ export function ExpensesClient({
               {t('emptyState')}
             </p>
           ) : (
-            <ul role="list" data-testid="expenses-list" className="divide-border divide-y">
-              {thisMonth.map(renderRow)}
+            <ul role="list" data-testid="expenses-list" className="flex flex-col gap-3">
+              {byDay(thisMonth).map(([day, rows]) => (
+                <li key={day} data-testid="expenses-day">
+                  <h3 className="text-muted-foreground px-2 text-xs font-semibold tracking-[0.09em] uppercase">
+                    {formatDate(day, locale, 'long')}
+                  </h3>
+                  <ul role="list" className="divide-border divide-y">
+                    {rows.map(renderRow)}
+                  </ul>
+                </li>
+              ))}
             </ul>
           )}
 

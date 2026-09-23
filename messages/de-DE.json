@@ -1037,11 +1037,11 @@
         "categoryLabel": "Kategorie",
         "moreCategoriesCount": "{count} weitere",
         "moreCategoriesAria": "Die {count} weiteren Kategorien anzeigen",
-        "noCategories": "Keine Ausgabenkategorie in deinem Bereich. Der Betrag wird ohne Kategorie gespeichert.",
+        "noCategories": "Noch keine Ausgabenkategorie in deinem Bereich. Lege eine an, um diesen Betrag zu speichern.",
         "dateLabel": "Datum",
         "dateToday": "Heute",
         "dateYesterday": "Gestern",
-        "labelLabel": "Bezeichnung (optional)",
+        "labelLabel": "Beschreibung · optional",
         "fallbackLabel": "Ausgabe",
         "projection": "Dir bleiben {amount}",
         "projectionIdle": "Dir bleiben {amount}",
@@ -1049,7 +1049,7 @@
         "submitting": "Wird hinzugefügt…",
         "toastCreated": "Ausgabe von {amount} gespeichert",
         "pastMonthNotice": "Dieses Datum liegt außerhalb des laufenden Monats: die Monatszahl bleibt unverändert.",
-        "contextFailed": "Deine Kategorien konnten nicht geladen werden. Du kannst den Betrag trotzdem speichern.",
+        "contextFailed": "Deine Kategorien konnten nicht geladen werden. Schließe das Blatt und öffne es erneut, um diesen Betrag zu speichern.",
         "newCategory": "Nouvelle",
         "newCategoryName": "Nom de la catégorie",
         "newCategoryColor": "Couleur",
@@ -1064,7 +1064,13 @@
           "pink": "Rose",
           "purple": "Violet",
           "zinc": "Gris"
-        }
+        },
+        "labelPlaceholder": "z. B. Colruyt, einmal volltanken",
+        "suggestionsLabel": "Vorgeschlagene Beschreibungen",
+        "suggestionCount": "{count, plural, one {einmal notiert} other {# Mal notiert}}",
+        "categoryRequired": "Wähle eine Kategorie, um diese Ausgabe zu speichern.",
+        "noteToggle": "Notiz hinzufügen",
+        "noteLabel": "Notiz · optional"
       },
       "addFormTitle": "Ausgabe hinzufügen",
       "labelLabel": "Bezeichnung",
@@ -1092,7 +1098,9 @@
       },
       "depenseMoisLabel": "Diesen Monat ausgegeben — {month}",
       "perDayElapsed": "≈ {amount}/Tag über {days} Tage",
-      "earlierToggle": "Frühere Monate ({count})"
+      "earlierToggle": "Frühere Monate ({count})",
+      "noCategory": "Ohne Kategorie",
+      "noDescription": "Ohne Beschreibung"
     },
     "settings": {
       "metaTitle": "Einstellungen",

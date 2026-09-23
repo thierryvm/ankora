@@ -77,14 +77,16 @@ test.describe('Expenses — full lifecycle', () => {
     // catégories dépend de la migration `20260729000002`, qui n'est PAS
     // appliquée en production — nommer « Courses » ici coupleraient la spec à
     // une migration en attente et la ferait échouer selon l'environnement.
-    // Elle est facultative à la saisie (`canSubmit` ne regarde que le montant),
-    // donc on n'en exige pas la présence.
+    // CHANGED with F-6 (PR E2): a category is REQUIRED — the sheet refuses to
+    // record without one, and no longer pre-checks one on a new account. The
+    // spec used to click a chip only if chips had already loaded; it now waits
+    // for them and chooses one, as a person must.
     const chips = page.locator(
       '[data-testid^="add-expense-chip-"]:not([data-testid$="-skeleton"]):not([data-testid$="-more"])',
     );
-    if ((await chips.count()) > 0) {
-      await chips.first().click();
-    }
+    await chips.first().waitFor({ state: 'visible', timeout: 20_000 });
+    await chips.first().click();
+    await expect(chips.first()).toHaveAttribute('aria-checked', 'true');
 
     await expect(page.getByTestId('add-expense-submit')).toBeEnabled();
     await page.getByTestId('add-expense-submit').click();
@@ -97,7 +99,9 @@ test.describe('Expenses — full lifecycle', () => {
     await rows.first().waitFor({ state: 'visible', timeout: 20_000 });
     const created = await rows.count();
     expect(created).toBe(before + 1);
-    await expect(page.getByText('Intermarché').first()).toBeVisible();
+    // Scoped to the list (PR E2): the description now ALSO appears in the
+    // month breakdown, folded in a <details> that comes first in the DOM.
+    await expect(page.getByTestId('expenses-list').getByText('Intermarché').first()).toBeVisible();
 
     // Rien de destructif n'est atteignable depuis la liste.
     await expect(page.locator('[data-testid^="expenses-row-delete-"]')).toHaveCount(0);
@@ -112,7 +116,9 @@ test.describe('Expenses — full lifecycle', () => {
       .fill('Intermarché — courses');
     await page.getByTestId('expense-edit-save').click();
     await expect(page.getByTestId('expense-edit-drawer')).toBeHidden({ timeout: 20_000 });
-    await expect(page.getByText('Intermarché — courses')).toBeVisible();
+    await expect(
+      page.getByTestId('expenses-list').getByText('Intermarché — courses'),
+    ).toBeVisible();
 
     // ── Suppression : deux temps, et la confirmation nomme la dépense ───────
     await rows.first().click();

@@ -98,6 +98,7 @@ function context(over: Record<string, unknown> = {}) {
       depensesDuMois: 288.4,
       incomplet: false,
       todayIso: '2026-07-18',
+      descriptions: [],
       ...over,
     },
   };
@@ -462,7 +463,10 @@ describe('the chip row', () => {
 });
 
 describe('when the context cannot be read', () => {
-  it('still lets the amount be recorded, and says why the chips are missing', async () => {
+  // CHANGED with F-6: this case used to record the spend with a null category.
+  // A category is now required on screen AND on the server, so without chips
+  // the sheet says why and records nothing — the server would refuse it.
+  it('says why the chips are missing, and refuses to record without a category', async () => {
     getExpenseEntryContextAction.mockResolvedValue({ ok: false, errorCode: 'errors.generic' });
     const user = userEvent.setup();
     render(<AddExpenseSheet open onClose={vi.fn()} />);
@@ -474,10 +478,8 @@ describe('when the context cannot be read', () => {
     await user.type(screen.getByTestId('add-expense-amount'), '18,50');
     await user.click(screen.getByTestId('add-expense-submit'));
 
-    await waitFor(() => expect(createExpenseAction).toHaveBeenCalled());
-    // No category to send, so null — which is honest here, unlike the hardcoded
-    // null this whole flow replaces.
-    expect(createExpenseAction.mock.calls[0]?.[0]).toMatchObject({ categoryId: null });
+    expect(await screen.findByTestId('add-expense-category-required')).toBeInTheDocument();
+    expect(createExpenseAction).not.toHaveBeenCalled();
   });
 });
 
@@ -684,6 +686,158 @@ describe('AddExpenseSheet — créer une catégorie', () => {
     await waitFor(() => expect(createExpenseAction).toHaveBeenCalledTimes(1));
     expect(createExpenseAction).toHaveBeenCalledWith(
       expect.objectContaining({ categoryId: CREEE.id }),
+    );
+  });
+});
+
+describe('F-6 — no category is pre-checked for a first expense', () => {
+  beforeEach(() => {
+    getExpenseEntryContextAction.mockResolvedValue(context({ preselectedId: null }));
+  });
+
+  it('checks no chip, and refuses to record until one is chosen', async () => {
+    const user = userEvent.setup();
+    await openSheet();
+    expect(
+      screen.getAllByRole('radio').every((r) => r.getAttribute('aria-checked') === 'false'),
+    ).toBe(true);
+
+    await user.type(screen.getByTestId('add-expense-amount'), '12');
+    await user.click(screen.getByTestId('add-expense-submit'));
+    const alert = await screen.findByTestId('add-expense-category-required');
+    expect(alert).toHaveAttribute('role', 'alert');
+    expect(createExpenseAction).not.toHaveBeenCalled();
+
+    // Three gestures: amount, category, save.
+    await user.click(screen.getByTestId(`add-expense-chip-${RESTO.id}`));
+    expect(screen.queryByTestId('add-expense-category-required')).not.toBeInTheDocument();
+    await user.click(screen.getByTestId('add-expense-submit'));
+    await waitFor(() =>
+      expect(createExpenseAction).toHaveBeenCalledWith(
+        expect.objectContaining({ categoryId: RESTO.id, amount: 12 }),
+      ),
+    );
+  });
+});
+
+describe('rule 26 — the description suggests, the category follows', () => {
+  const MINE = [
+    { label: 'Chez Mario', count: 3, lastOn: '2026-07-10', lastCategoryId: RESTO.id },
+    { label: 'Shell Namur', count: 1, lastOn: '2026-07-11', lastCategoryId: CARBURANT.id },
+  ];
+  beforeEach(() => {
+    getExpenseEntryContextAction.mockResolvedValue(context({ descriptions: MINE }));
+  });
+
+  it('is an ARIA combobox placed before the categories', async () => {
+    await openSheet();
+    const input = screen.getByTestId('add-expense-label');
+    expect(input).toHaveAttribute('role', 'combobox');
+    expect(input).toHaveAttribute('aria-autocomplete', 'list');
+    expect(input).toHaveAttribute('aria-expanded', 'false');
+    const radiogroup = screen.getByRole('radiogroup');
+    expect(
+      input.compareDocumentPosition(radiogroup) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("lists the person's descriptions before the built-in chains, six at most", async () => {
+    const user = userEvent.setup();
+    await openSheet();
+    await user.type(screen.getByTestId('add-expense-label'), 'c');
+    const options = within(screen.getByRole('listbox')).getAllByRole('option');
+    expect(options.length).toBeGreaterThan(1);
+    expect(options.length).toBeLessThanOrEqual(6);
+    expect(options[0]).toHaveTextContent(/^Chez Mario/);
+    expect(options.slice(1).some((o) => /^Colruyt/.test(o.textContent ?? ''))).toBe(true);
+    expect(screen.getByTestId('add-expense-label')).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('choosing a suggestion fills the field and checks its category', async () => {
+    const user = userEvent.setup();
+    await openSheet();
+    await user.type(screen.getByTestId('add-expense-label'), 'mar');
+    await user.click(
+      within(screen.getByRole('listbox')).getByRole('option', { name: /Chez Mario/ }),
+    );
+    expect(screen.getByTestId('add-expense-label')).toHaveValue('Chez Mario');
+    expect(screen.getByTestId(`add-expense-chip-${RESTO.id}`)).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+  });
+
+  it('F-20 — typing a known description in full recalls its last category', async () => {
+    const user = userEvent.setup();
+    await openSheet();
+    await user.type(screen.getByTestId('add-expense-amount'), '40');
+    await user.type(screen.getByTestId('add-expense-label'), 'shell namur');
+    expect(screen.getByTestId(`add-expense-chip-${CARBURANT.id}`)).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+    await user.click(screen.getByTestId('add-expense-submit'));
+    await waitFor(() =>
+      expect(createExpenseAction).toHaveBeenCalledWith(
+        expect.objectContaining({ categoryId: CARBURANT.id, label: 'shell namur' }),
+      ),
+    );
+  });
+
+  it('does not override a chip the person tapped in this opening', async () => {
+    const user = userEvent.setup();
+    await openSheet();
+    await user.click(screen.getByTestId(`add-expense-chip-${COURSES.id}`));
+    await user.type(screen.getByTestId('add-expense-label'), 'Shell Namur');
+    expect(screen.getByTestId(`add-expense-chip-${COURSES.id}`)).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+  });
+
+  it('Escape closes the list, not the sheet', async () => {
+    const user = userEvent.setup();
+    const { onClose } = await openSheet();
+    await user.type(screen.getByTestId('add-expense-label'), 'c');
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('arrows and Enter choose an option from the keyboard', async () => {
+    const user = userEvent.setup();
+    await openSheet();
+    await user.type(screen.getByTestId('add-expense-label'), 'shel');
+    await user.keyboard('{ArrowDown}{Enter}');
+    expect(screen.getByTestId('add-expense-label')).toHaveValue('Shell Namur');
+    expect(createExpenseAction).not.toHaveBeenCalled();
+  });
+});
+
+describe('F-18 — the note of an expense', () => {
+  it('is folded behind « Ajouter une note », and sent when written', async () => {
+    const user = userEvent.setup();
+    await openSheet();
+    expect(screen.queryByTestId('add-expense-note')).not.toBeInTheDocument();
+    await user.type(screen.getByTestId('add-expense-amount'), '9');
+    await user.click(screen.getByTestId('add-expense-note-toggle'));
+    await user.type(screen.getByTestId('add-expense-note'), 'ticket gardé');
+    await user.click(screen.getByTestId('add-expense-submit'));
+    await waitFor(() =>
+      expect(createExpenseAction).toHaveBeenCalledWith(
+        expect.objectContaining({ note: 'ticket gardé' }),
+      ),
+    );
+  });
+
+  it('sends no note when none was written', async () => {
+    const user = userEvent.setup();
+    await openSheet();
+    await user.type(screen.getByTestId('add-expense-amount'), '9');
+    await user.click(screen.getByTestId('add-expense-submit'));
+    await waitFor(() =>
+      expect(createExpenseAction).toHaveBeenCalledWith(expect.objectContaining({ note: null })),
     );
   });
 });

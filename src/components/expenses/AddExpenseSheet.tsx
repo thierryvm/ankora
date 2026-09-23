@@ -4,12 +4,18 @@ import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import { Plus } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
+import { CHIP_DOT } from '@/components/expenses/category-dot';
 import { Sheet } from '@/components/primitives/Sheet';
 import { toast } from '@/components/ui/toast';
 import { createExpenseCategoryAction } from '@/lib/actions/categories';
 import { createExpenseAction } from '@/lib/actions/expenses';
 import { getExpenseEntryContextAction } from '@/lib/actions/expense-entry';
 import { CATEGORY_COLOR_TOKENS, couleurLaMoinsUtilisee } from '@/lib/domain/categories';
+import {
+  recallCategory,
+  suggestDescriptions,
+  type DescriptionSuggestion,
+} from '@/lib/domain/expenses/descriptions';
 import type { ExpenseEntryCategory, ExpenseEntryContext } from '@/lib/actions/expense-entry.types';
 import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
 import { announceOptimisticSpend, settleSpend } from '@/lib/expenses/optimistic-spend';
@@ -33,7 +39,12 @@ import type { Locale } from '@/i18n/routing';
  *    that is what makes "2 taps" real rather than an accounting trick)
  *   TAP 2  Ajouter — pinned above the keyboard, reachable by the thumb.
  *
- * Everything else in this file exists to protect those two taps. Every default
+ * F-6 amends the count for a first expense: no category is pre-selected until
+ * the usage supports one, so a new workspace costs THREE gestures — amount,
+ * category, save — and the sheet refuses to record without a category rather
+ * than guessing one (measured: a first expense used to land in « Logement »).
+ *
+ * Everything else in this file exists to protect those taps. Every default
  * is chosen so the common case needs no interaction: pre-selected category,
  * today's date, optional label falling back to the category name. Changing the
  * category costs a third tap and that is assumed — the modal choice is right in
@@ -88,34 +99,6 @@ const LARGEURS_MONTANT = [
 ] as const;
 
 /**
- * Chip palette. Closed set, mirroring the DB `color_token` check constraint.
- *
- * ## `pink` a cessé d'être un doublon de `rose` — 2026-08-23
- *
- * Les deux pointaient sur `bg-danger`. Sur une pastille de 8 px posée à côté
- * d'un NOM, c'était sans conséquence : personne ne lit la couleur, on lit
- * « Loisirs ». Le jour où ces huit jetons deviennent un CHOIX — le sélecteur de
- * couleur d'une catégorie qu'on crée — deux pastilles identiques rendent le
- * contrôle cassé : on clique l'une, l'autre reste allumée à l'identique, et
- * rien ne dit laquelle on a prise. Mesuré à la capture 390 × 844.
- *
- * `pink` devient donc un dérivé de `--color-danger` éclairci vers la carte, et
- * non une couleur neuve : la palette reste fermée, la teinte reste de la
- * famille, et les deux se distinguent enfin. `color-mix` dans une classe
- * Tailwind, jamais dans un `style` inline — la CSP refuse le second.
- */
-const CHIP_DOT: Record<string, string> = {
-  blue: 'bg-info',
-  cyan: 'bg-brand-500',
-  emerald: 'bg-success',
-  amber: 'bg-warning',
-  rose: 'bg-danger',
-  pink: 'bg-[color-mix(in_oklab,var(--color-danger)_55%,var(--color-card))]',
-  purple: 'bg-accent-600',
-  zinc: 'bg-muted-foreground',
-};
-
-/**
  * Parse what a francophone actually types. `1.234,56` and `1234.56` are both
  * meant as the same amount; a bare `Number()` reads the first as 1.234.
  * Returns `null` for anything that is not a single positive amount.
@@ -160,6 +143,18 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
   const [occurredOn, setOccurredOn] = useState(todayInAnkoraTz());
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [showAllCategories, setShowAllCategories] = useState(false);
+
+  // F-6 — shown when « Ajouter » is pressed with no category checked.
+  const [categoryMissing, setCategoryMissing] = useState(false);
+  // F-20 — a chip tapped by the person in this opening is theirs: a recalled
+  // category never overrides it. Choosing a suggestion, an explicit act, does.
+  const [categoryTouched, setCategoryTouched] = useState(false);
+  // Rule 26 — the description combobox.
+  const [suggestOpen, setSuggestOpen] = useState(false);
+  const [activeSuggestion, setActiveSuggestion] = useState(-1);
+  // F-18 — the note, folded behind « Ajouter une note ».
+  const [noteOpen, setNoteOpen] = useState(false);
+  const [note, setNote] = useState('');
 
   /*
     Créer une catégorie sans quitter la saisie en cours.
@@ -234,6 +229,12 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
     setAmount('');
     setLabel('');
     setShowAllCategories(false);
+    setCategoryMissing(false);
+    setCategoryTouched(false);
+    setSuggestOpen(false);
+    setActiveSuggestion(-1);
+    setNoteOpen(false);
+    setNote('');
     setOccurredOn(todayInAnkoraTz());
     setCategoryId(context?.preselectedId ?? null);
     // La LIGNE de création se referme, mais `justCreated` NON : la catégorie
@@ -254,6 +255,47 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
     ...justCreated,
   ];
   const selectedName = categories.find((c) => c.id === categoryId)?.name ?? '';
+
+  // Every selectable category, folded or not: a recalled or suggested category
+  // may sit behind « + N autres », and must still be found.
+  const allCategories: ExpenseEntryCategory[] = [
+    ...(context?.chips ?? []),
+    ...(context?.overflow ?? []),
+    ...justCreated,
+  ];
+  const descriptions = context?.descriptions ?? [];
+  const suggestions: DescriptionSuggestion[] = suggestOpen
+    ? suggestDescriptions(label, descriptions, allCategories)
+    : [];
+  const listOpen = suggestions.length > 0;
+  const active =
+    listOpen && activeSuggestion >= 0 ? Math.min(activeSuggestion, suggestions.length - 1) : -1;
+
+  /** Check a category and make sure its chip is on screen (not behind « + N »). */
+  const checkCategory = (id: string) => {
+    setCategoryId(id);
+    setCategoryMissing(false);
+    if (context?.overflow.some((c) => c.id === id)) setShowAllCategories(true);
+  };
+
+  const onLabelChange = (value: string) => {
+    setLabel(value);
+    setSuggestOpen(true);
+    setActiveSuggestion(-1);
+    // F-20 — a description typed in full recalls the category of its last
+    // expense, unless the person already chose a chip in this opening.
+    if (!categoryTouched) {
+      const recalled = recallCategory(value, descriptions, allCategories);
+      if (recalled) checkCategory(recalled);
+    }
+  };
+
+  const chooseSuggestion = (suggestion: DescriptionSuggestion) => {
+    setLabel(suggestion.label);
+    setSuggestOpen(false);
+    setActiveSuggestion(-1);
+    if (suggestion.categoryId) checkCategory(suggestion.categoryId);
+  };
 
   // « Il te restera X € » — the line that turns entry into a decision — and its
   // twin, « Dépensé ce mois », which the curve of the month reads.
@@ -380,6 +422,12 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
   const handleSubmit = useCallback(() => {
     const value = parseAmountInput(amount);
     if (value === null) return;
+    // F-6 — no category, no record. Said on screen, before anything moves: the
+    // server refuses the same payload anyway.
+    if (categoryId === null) {
+      setCategoryMissing(true);
+      return;
+    }
 
     // Label is optional and falls back to the category name — that fallback is
     // what makes 2 taps possible, since typing a label would add a third.
@@ -404,7 +452,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
           amount: value,
           occurredOn,
           categoryId,
-          note: null,
+          note: note.trim() === '' ? null : note.trim(),
         });
         if (result.ok) {
           toast.success(t('toastCreated', { amount: fmt(value) }));
@@ -432,6 +480,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
   }, [
     amount,
     label,
+    note,
     selectedName,
     occurredOn,
     categoryId,
@@ -535,6 +584,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
               enterKeyHint="done"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
+              onFocus={() => setSuggestOpen(false)}
               placeholder="0"
               aria-describedby={projection !== null ? 'add-expense-projection' : undefined}
               data-testid="add-expense-amount"
@@ -594,7 +644,120 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
         </div>
 
         {/*
-          ---------- 2. Les catégories. Elles ne défilent plus. ----------
+          ---------- 2. La description. Elle dit où ; la catégorie dit à quoi. ----------
+
+          Règle 26 : la description monte juste avant la catégorie, parce que
+          c'est elle qui la propose. Combobox ARIA 1.2 (liste) : la `listbox`
+          vit HORS du `<label>` et dans le flux, sous le champ. Les
+          descriptions de la personne d'abord, puis les enseignes intégrées.
+          Le champ reste libre.
+        */}
+        <div className="flex flex-col gap-1">
+          <label
+            htmlFor="add-expense-label"
+            className="text-muted-foreground text-[11px] font-semibold tracking-[0.09em] uppercase"
+          >
+            {t('labelLabel')}
+          </label>
+          <input
+            id="add-expense-label"
+            type="text"
+            maxLength={120}
+            autoComplete="off"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded={listOpen}
+            aria-controls="add-expense-label-suggestions"
+            aria-activedescendant={active >= 0 ? `add-expense-suggestion-${active}` : undefined}
+            value={label}
+            onChange={(e) => onLabelChange(e.target.value)}
+            /*
+              No close on blur. The list lives IN the flow, above the chips:
+              closing it when the field loses focus moved the chips up between
+              the press and the release of a tap, and the tap landed beside
+              the chip. Measured by e2e on iPhone 14. It closes when a
+              suggestion or a chip is chosen, on Escape, and when the amount
+              takes the focus back — never under the finger.
+            */
+            onKeyDown={(e) => {
+              if (!listOpen) return;
+              if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                setActiveSuggestion((i) => (i + 1) % suggestions.length);
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                setActiveSuggestion((i) => (i <= 0 ? suggestions.length - 1 : i - 1));
+              } else if (e.key === 'Enter' && active >= 0) {
+                e.preventDefault();
+                chooseSuggestion(suggestions[active]!);
+              } else if (e.key === 'Escape') {
+                // `Sheet` closes on any Escape reaching `document`: the first
+                // one closes the list only, a second one the sheet.
+                e.stopPropagation();
+                setSuggestOpen(false);
+              }
+            }}
+            /* The placeholder shows the fallback that will actually be
+               stored, so leaving it empty is an informed choice. */
+            placeholder={selectedName || t('labelPlaceholder')}
+            data-testid="add-expense-label"
+            className="border-border bg-card text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-brand-600 min-h-11 rounded-lg border px-3 text-sm focus-visible:ring-2 focus-visible:outline-none"
+          />
+          {listOpen && (
+            <ul
+              id="add-expense-label-suggestions"
+              role="listbox"
+              aria-label={t('suggestionsLabel')}
+              data-testid="add-expense-label-suggestions"
+              className="border-border bg-card flex flex-col overflow-hidden rounded-lg border"
+            >
+              {suggestions.map((suggestion, i) => {
+                const category = allCategories.find((c) => c.id === suggestion.categoryId);
+                return (
+                  <li
+                    key={`${suggestion.source}-${suggestion.label}`}
+                    id={`add-expense-suggestion-${i}`}
+                    role="option"
+                    aria-selected={i === active}
+                    // `mousedown`, not `click`: the field's blur closes the
+                    // list, and a click would land on an option already gone.
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      chooseSuggestion(suggestion);
+                    }}
+                    data-testid="add-expense-suggestion"
+                    className={[
+                      'flex min-h-11 cursor-pointer flex-col justify-center px-3 py-1.5 text-sm',
+                      i === active ? 'bg-surface-muted' : 'hover:bg-surface-muted',
+                    ].join(' ')}
+                  >
+                    <span className="text-foreground font-medium">{suggestion.label}</span>
+                    {(category || suggestion.count > 0) && (
+                      <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
+                        {category && (
+                          <>
+                            <span
+                              aria-hidden="true"
+                              className={`h-2 w-2 shrink-0 rounded-full ${
+                                CHIP_DOT[category.colorToken] ?? CHIP_DOT.zinc
+                              }`}
+                            />
+                            {category.name}
+                          </>
+                        )}
+                        {category && suggestion.count > 0 && ' · '}
+                        {suggestion.count > 0 && t('suggestionCount', { count: suggestion.count })}
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
+        {/*
+          ---------- 3. Les catégories. Elles ne défilent plus. ----------
 
           MESURÉ le 2026-08-23 : la rangée contenait **602 px de puces dans une
           fenêtre de 390** — 212 px hors écran — et **3 puces sur 6 étaient
@@ -651,7 +814,12 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
                     type="button"
                     role="radio"
                     aria-checked={selected}
-                    onClick={() => setCategoryId(category.id)}
+                    onClick={() => {
+                      setCategoryId(category.id);
+                      setCategoryTouched(true);
+                      setCategoryMissing(false);
+                      setSuggestOpen(false);
+                    }}
                     data-testid={`add-expense-chip-${category.id}`}
                     className={[
                       'focus-visible:ring-brand-600 flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none',
@@ -749,6 +917,16 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
                 </button>
               )}
             </div>
+          )}
+
+          {categoryMissing && (
+            <p
+              role="alert"
+              data-testid="add-expense-category-required"
+              className="text-danger text-xs font-medium"
+            >
+              {t('categoryRequired')}
+            </p>
           )}
 
           {/* ---------- La ligne de création, sous la rangée ---------- */}
@@ -884,7 +1062,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
           )}
         </div>
 
-        {/* ---------- 3. Date + label, 50/50, both optional. ---------- */}
+        {/* ---------- 4. La date, et la note repliée (F-18). ---------- */}
         <div className="grid grid-cols-2 gap-2">
           <div className="bg-surface-soft flex flex-col gap-0.5 rounded-xl px-3 py-2">
             <label
@@ -932,27 +1110,39 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
               )}
             </div>
           </div>
-          <div className="bg-surface-soft flex flex-col gap-0.5 rounded-xl px-3 py-2">
-            <label
-              htmlFor="add-expense-label"
-              className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase"
+          {!noteOpen && (
+            <button
+              type="button"
+              onClick={() => setNoteOpen(true)}
+              data-testid="add-expense-note-toggle"
+              className="text-brand-text-strong hover:bg-surface-muted focus-visible:ring-brand-600 flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
             >
-              {t('labelLabel')}
+              <Plus className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+              {t('noteToggle')}
+            </button>
+          )}
+        </div>
+
+        {noteOpen && (
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor="add-expense-note"
+              className="text-muted-foreground text-[11px] font-semibold tracking-[0.09em] uppercase"
+            >
+              {t('noteLabel')}
             </label>
-            <input
-              id="add-expense-label"
-              type="text"
-              maxLength={120}
-              value={label}
-              onChange={(e) => setLabel(e.target.value)}
-              /* The placeholder shows the fallback that will actually be
-                 stored, so leaving it empty is an informed choice. */
-              placeholder={selectedName || t('fallbackLabel')}
-              data-testid="add-expense-label"
-              className="text-foreground placeholder:text-muted-foreground/60 min-h-[26px] border-0 bg-transparent p-0 text-sm outline-none"
+            <textarea
+              id="add-expense-note"
+              autoFocus
+              rows={2}
+              maxLength={500}
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              data-testid="add-expense-note"
+              className="border-border bg-card text-foreground focus-visible:ring-brand-600 rounded-lg border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:outline-none"
             />
           </div>
-        </div>
+        )}
 
         {!isCurrentMonth && (
           <p className="text-muted-foreground text-xs" data-testid="add-expense-past-month">

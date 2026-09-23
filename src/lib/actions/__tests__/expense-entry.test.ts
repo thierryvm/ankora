@@ -3,12 +3,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const loadMonthSituation = vi.fn();
 const getCategories = vi.fn();
+const getDescriptionRows = vi.fn();
 
 vi.mock('@/lib/data/month-situation', () => ({
   loadMonthSituation: () => loadMonthSituation(),
 }));
 vi.mock('@/lib/data/categories', () => ({
   getCategories: (id: string) => getCategories(id),
+}));
+vi.mock('@/lib/data/expense-descriptions', () => ({
+  getDescriptionRows: (id: string) => getDescriptionRows(id),
 }));
 
 import { getExpenseEntryContextAction } from '@/lib/actions/expense-entry';
@@ -63,6 +67,8 @@ function situationFactice(
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // A workspace with no expense yet unless a test says otherwise.
+  getDescriptionRows.mockResolvedValue([]);
   loadMonthSituation.mockResolvedValue(situationFactice());
   getCategories.mockResolvedValue([
     categorie('c-1', 'Courses', 'emerald'),
@@ -160,5 +166,36 @@ describe('getExpenseEntryContextAction — les catégories', () => {
     // dans le mauvais mois une nuit sur deux en fin de mois.
     const res = await getExpenseEntryContextAction();
     expect(res.ok && res.data.todayIso).toBe('2026-08-24');
+  });
+});
+
+describe('les descriptions déjà saisies (règle 26, F-20)', () => {
+  beforeEach(() => {
+    loadMonthSituation.mockResolvedValue(situationFactice());
+    getCategories.mockResolvedValue([
+      categorie('c-courses', 'Courses', 'emerald'),
+      categorie('c-carbu', 'Carburant', 'cyan'),
+    ]);
+  });
+
+  it('lit les descriptions du workspace de la session, et de lui seul', async () => {
+    getDescriptionRows.mockResolvedValue([]);
+    await getExpenseEntryContextAction();
+    expect(getDescriptionRows).toHaveBeenCalledWith('ws-1');
+  });
+
+  it('les rend distinctes, par fréquence, avec la catégorie de la plus récente', async () => {
+    getDescriptionRows.mockResolvedValue([
+      { label: 'Shell', occurredOn: '2026-08-20', categoryId: 'c-carbu' },
+      { label: 'Colruyt', occurredOn: '2026-08-19', categoryId: 'c-courses' },
+      { label: 'colruyt', occurredOn: '2026-08-02', categoryId: 'c-courses' },
+      { label: 'Courses', occurredOn: '2026-08-01', categoryId: 'c-courses' },
+    ]);
+    const r = await getExpenseEntryContextAction();
+    if (!r.ok) throw new Error('attendu ok');
+    expect(r.data.descriptions).toEqual([
+      { label: 'Colruyt', count: 2, lastOn: '2026-08-19', lastCategoryId: 'c-courses' },
+      { label: 'Shell', count: 1, lastOn: '2026-08-20', lastCategoryId: 'c-carbu' },
+    ]);
   });
 });

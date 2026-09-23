@@ -1,8 +1,10 @@
 'use server';
 
 import { getCategories } from '@/lib/data/categories';
+import { getDescriptionRows } from '@/lib/data/expense-descriptions';
 import { loadMonthSituation } from '@/lib/data/month-situation';
 import { expenseCategoryChips } from '@/lib/domain/categories';
+import { descriptionHistory } from '@/lib/domain/expenses/descriptions';
 import type { ActionResult } from '@/lib/actions/types';
 import type { ExpenseEntryContext } from '@/lib/actions/expense-entry.types';
 
@@ -30,7 +32,10 @@ export async function getExpenseEntryContextAction(): Promise<ActionResult<Expen
   // same session + RLS as the page that hosts it, and the mutation it precedes
   // is itself limited. Rate-limiting it would throttle opening a sheet.
   const { snapshot, situation, todayIso } = await loadMonthSituation();
-  const categories = await getCategories(snapshot.workspaceId);
+  const [categories, descriptionRows] = await Promise.all([
+    getCategories(snapshot.workspaceId),
+    getDescriptionRows(snapshot.workspaceId),
+  ]);
 
   const { chips, overflow, preselectedId } = expenseCategoryChips(
     categories,
@@ -57,6 +62,7 @@ export async function getExpenseEntryContextAction(): Promise<ActionResult<Expen
       depensesDuMois: situation.depensesDuMois.toNumber(),
       incomplet: situation.statut === 'incomplet',
       todayIso,
+      descriptions: descriptionHistory(descriptionRows, categories).slice(0, 200),
     },
   };
 }

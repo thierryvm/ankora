@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidateAppPath, revalidateDashboard } from '@/lib/actions/revalidate';
-import { expenseInputSchema, expenseUpdateSchema } from '@/lib/schemas/expense';
+import { expenseCreateSchema, expenseUpdateSchema } from '@/lib/schemas/expense';
 import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
 import { rateLimit } from '@/lib/security/rate-limit';
 import type { ActionResult } from '@/lib/actions/types';
@@ -47,7 +47,7 @@ export async function createExpenseAction(input: unknown): Promise<ActionResult>
   const rl = await rateLimit('mutation', `user:${ctx.userId}`);
   if (!rl.success) return { ok: false, errorCode: 'errors.session.rateLimited' };
 
-  const parsed = expenseInputSchema.safeParse(input);
+  const parsed = expenseCreateSchema.safeParse(input);
   if (!parsed.success) {
     return {
       ok: false,
@@ -57,6 +57,19 @@ export async function createExpenseAction(input: unknown): Promise<ActionResult>
   }
 
   const supabase = await createClient();
+
+  // The category must be a SPENDING category of the caller's own workspace.
+  // The foreign key alone accepts any category id, from any workspace, and of
+  // any kind — a bill or an income category would then count as a spend.
+  const { data: category } = await supabase
+    .from('categories')
+    .select('id')
+    .eq('id', parsed.data.categoryId)
+    .eq('workspace_id', ctx.workspaceId)
+    .eq('kind', 'variable')
+    .maybeSingle();
+  if (!category) return { ok: false, errorCode: 'errors.validation.generic' };
+
   const { error } = await supabase.from('expenses').insert({
     workspace_id: ctx.workspaceId,
     created_by: ctx.userId,

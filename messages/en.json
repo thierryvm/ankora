@@ -1037,11 +1037,11 @@
         "categoryLabel": "Category",
         "moreCategoriesCount": "{count} more",
         "moreCategoriesAria": "Show the {count} other categories",
-        "noCategories": "No expense category in your workspace. The amount will be saved without one.",
+        "noCategories": "No spending category in your space yet. Create one to record this amount.",
         "dateLabel": "Date",
         "dateToday": "Today",
         "dateYesterday": "Yesterday",
-        "labelLabel": "Label (optional)",
+        "labelLabel": "Description · optional",
         "fallbackLabel": "Expense",
         "projection": "You'll have {amount} left",
         "projectionIdle": "You have {amount} left",
@@ -1049,7 +1049,7 @@
         "submitting": "Adding…",
         "toastCreated": "{amount} expense saved",
         "pastMonthNotice": "This date is outside the current month: the monthly figure will not move.",
-        "contextFailed": "Your categories could not be loaded. You can still save the amount.",
+        "contextFailed": "Your categories could not be loaded. Close the sheet and open it again to record this amount.",
         "newCategory": "New",
         "newCategoryName": "Category name",
         "newCategoryColor": "Colour",
@@ -1064,7 +1064,13 @@
           "pink": "Pink",
           "purple": "Purple",
           "zinc": "Grey"
-        }
+        },
+        "labelPlaceholder": "e.g. Colruyt, a tank of fuel",
+        "suggestionsLabel": "Suggested descriptions",
+        "suggestionCount": "{count, plural, one {noted once} other {noted # times}}",
+        "categoryRequired": "Choose a category to record this expense.",
+        "noteToggle": "Add a note",
+        "noteLabel": "Note · optional"
       },
       "addFormTitle": "Add an expense",
       "labelLabel": "Label",
@@ -1092,7 +1098,9 @@
       },
       "depenseMoisLabel": "Spent this month — {month}",
       "perDayElapsed": "≈ {amount}/day over {days} days",
-      "earlierToggle": "Earlier months ({count})"
+      "earlierToggle": "Earlier months ({count})",
+      "noCategory": "No category",
+      "noDescription": "No description"
     },
     "settings": {
       "metaTitle": "Settings",

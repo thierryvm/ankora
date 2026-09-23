@@ -286,15 +286,26 @@ describe('updateExpenseAction — happy path + audit', () => {
 // can diff the three and see they hold the same contract.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// `categoryId` and `note` are nullable but NOT optional in the schema — omit
-// them and Zod rejects the payload before the action ever reaches the INSERT.
+// `note` is nullable but NOT optional in the schema — omit it and Zod rejects
+// the payload before the action ever reaches the INSERT. `categoryId` is
+// REQUIRED on create since F-6: a null one is refused (see below).
+const CATEGORY_ID = '3f0c2b7e-5a1d-4c8e-9b2a-7d6e5f4a3b21';
 const VALID_EXPENSE = {
   label: 'Delhaize',
   amount: 42.3,
   occurredOn: '2026-07-18',
-  categoryId: null,
+  categoryId: CATEGORY_ID,
   note: null,
 };
+
+/** The category lookup the action makes before inserting: found in the caller's workspace. */
+function programCategory(found = true) {
+  supa.program({
+    table: 'categories',
+    op: 'select',
+    result: { data: found ? { id: CATEGORY_ID } : null, error: null },
+  });
+}
 
 describe('createExpenseAction — authz', () => {
   it('returns errors.session.expired when no session', async () => {
@@ -340,6 +351,70 @@ describe('createExpenseAction — validation', () => {
   });
 });
 
+describe('createExpenseAction — a category is required (F-6)', () => {
+  it('refuses an expense without a category, before any write', async () => {
+    programMembership();
+    const r = await createExpenseAction({ ...VALID_EXPENSE, categoryId: null });
+    expect(r.ok).toBe(false);
+    expect(supa.lastInsertPayload()).toBeUndefined();
+    expect(auditSpy).not.toHaveBeenCalled();
+  });
+
+  it('refuses a category missing from the caller workspace (foreign, income or bill)', async () => {
+    programMembership();
+    programCategory(false);
+    const r = await createExpenseAction(VALID_EXPENSE);
+    expect(r).toEqual({ ok: false, errorCode: 'errors.validation.generic' });
+    expect(supa.lastInsertPayload()).toBeUndefined();
+  });
+
+  it('looks the category up in the caller workspace, among spending categories only', async () => {
+    programMembership();
+    programCategory();
+    supa.program({ table: 'expenses', op: 'insert', result: { data: null, error: null } });
+    await createExpenseAction({ ...VALID_EXPENSE, workspaceId: 'ws-attacker' });
+    const idx = supa.client.from.mock.calls.findIndex(([t]) => t === 'categories');
+    const builder = supa.client.from.mock.results[idx]?.value as {
+      eq: { mock: { calls: unknown[][] } };
+    };
+    expect(builder.eq.mock.calls).toEqual(
+      expect.arrayContaining([
+        ['id', CATEGORY_ID],
+        ['workspace_id', 'ws-1'],
+        ['kind', 'variable'],
+      ]),
+    );
+  });
+});
+
+describe('createExpenseAction — the note (F-18)', () => {
+  it('writes the note, trimmed', async () => {
+    programMembership();
+    programCategory();
+    supa.program({ table: 'expenses', op: 'insert', result: { data: null, error: null } });
+    await createExpenseAction({ ...VALID_EXPENSE, note: '  ticket dans la boîte à gants ' });
+    expect(supa.lastInsertPayload()).toMatchObject({ note: 'ticket dans la boîte à gants' });
+  });
+
+  it('stores an empty note as null', async () => {
+    programMembership();
+    programCategory();
+    supa.program({ table: 'expenses', op: 'insert', result: { data: null, error: null } });
+    await createExpenseAction({ ...VALID_EXPENSE, note: '   ' });
+    expect(supa.lastInsertPayload()).toMatchObject({ note: null });
+  });
+
+  it('never passes the description or the note to the audit log', async () => {
+    programMembership();
+    programCategory();
+    supa.program({ table: 'expenses', op: 'insert', result: { data: null, error: null } });
+    await createExpenseAction({ ...VALID_EXPENSE, note: 'secret' });
+    const logged = JSON.stringify(auditSpy.mock.calls);
+    expect(logged).not.toContain('Delhaize');
+    expect(logged).not.toContain('secret');
+  });
+});
+
 describe('createExpenseAction — what it actually writes', () => {
   it('persists paid_from instead of dropping it', async () => {
     // The regression this pins: the INSERT listed every field except
@@ -347,6 +422,7 @@ describe('createExpenseAction — what it actually writes', () => {
     // `updateExpenseAction` honoured it. Harmless until an account picker
     // exists — at which point the choice would vanish on create only.
     programMembership();
+    programCategory();
     supa.program({ table: 'expenses', op: 'insert', result: { data: null, error: null } });
     await createExpenseAction({ ...VALID_EXPENSE, paidFrom: 'epargne' });
     expect(supa.lastInsertPayload()).toMatchObject({ paid_from: 'epargne' });
@@ -354,6 +430,7 @@ describe('createExpenseAction — what it actually writes', () => {
 
   it('falls back to vie_courante when the caller omits paid_from', async () => {
     programMembership();
+    programCategory();
     supa.program({ table: 'expenses', op: 'insert', result: { data: null, error: null } });
     await createExpenseAction(VALID_EXPENSE);
     expect(supa.lastInsertPayload()).toMatchObject({ paid_from: 'vie_courante' });
@@ -361,6 +438,7 @@ describe('createExpenseAction — what it actually writes', () => {
 
   it('scopes the row to the caller workspace, never to a client-supplied one', async () => {
     programMembership();
+    programCategory();
     supa.program({ table: 'expenses', op: 'insert', result: { data: null, error: null } });
     await createExpenseAction({ ...VALID_EXPENSE, workspaceId: 'ws-attacker' });
     expect(supa.lastInsertPayload()).toMatchObject({ workspace_id: 'ws-1' });
@@ -368,6 +446,7 @@ describe('createExpenseAction — what it actually writes', () => {
 
   it('emits the audit event on success', async () => {
     programMembership();
+    programCategory();
     supa.program({ table: 'expenses', op: 'insert', result: { data: null, error: null } });
     const r = await createExpenseAction(VALID_EXPENSE);
     expect(r).toEqual({ ok: true });
@@ -376,6 +455,7 @@ describe('createExpenseAction — what it actually writes', () => {
 
   it('returns errors.expenses.createFailed on a DB error, with no audit event', async () => {
     programMembership();
+    programCategory();
     supa.program({
       table: 'expenses',
       op: 'insert',

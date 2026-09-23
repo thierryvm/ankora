@@ -115,13 +115,10 @@ export function rankExpenseCategories(
 /**
  * The chip row and the id to pre-select.
  *
- * `preselectedId` is the first chip, which is the most-used category — right in
- * the large majority of entries. Changing it costs a third tap, and that is
- * assumed (§3.4): a miscategorised expense stays fixable in two taps from the
- * list, whereas making everyone choose costs a tap on *every* entry.
- *
- * `null` when the workspace has no selectable category at all — the caller must
- * render an empty state rather than a row of nothing.
+ * `preselectedId` is the first chip, the most-used category, ONLY when at least
+ * one expense in the window used it (F-6). Otherwise `null`: a first expense
+ * costs a third tap (amount, category, save) rather than landing in an
+ * arbitrary category.
  */
 export function expenseCategoryChips(
   categories: readonly Category[],
@@ -129,9 +126,17 @@ export function expenseCategoryChips(
   todayIso: string,
 ): { chips: readonly Category[]; overflow: readonly Category[]; preselectedId: string | null } {
   const ranked = rankExpenseCategories(categories, expenses, todayIso);
+  // F-6 — pre-select only what the usage supports. On a new workspace the
+  // ranking falls back to declaration order, and its first entry is arbitrary:
+  // measured, the first expense of a fresh account fell into « Logement » for
+  // no reason. No use in the window, no pre-selection: the person picks.
+  const since = windowStart(todayIso, RANKING_WINDOW_DAYS);
+  const first = ranked[0];
+  const supported =
+    first !== undefined && expenses.some((e) => e.categoryId === first.id && e.occurredOn > since);
   return {
     chips: ranked.slice(0, CHIP_COUNT),
     overflow: ranked.slice(CHIP_COUNT),
-    preselectedId: ranked[0]?.id ?? null,
+    preselectedId: supported ? first.id : null,
   };
 }

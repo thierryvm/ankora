@@ -345,3 +345,52 @@ describe('app.expenses — i18n parity (5 locales, PR-BETA-CLEANUP-3)', () => {
     },
   );
 });
+
+describe('<ExpensesClient /> — v3: the month total opens by category, then by description', () => {
+  const breakdown = [
+    {
+      categoryId: 'c1',
+      name: 'Courses',
+      colorToken: 'emerald',
+      total: 129.5,
+      groups: [
+        {
+          label: 'Colruyt',
+          total: 87.5,
+          lines: [{ id: 'e1', label: 'Colruyt', amount: 87.5, occurredOn: '2026-05-15' }],
+        },
+        {
+          label: null,
+          total: 42,
+          lines: [{ id: 'e2', label: 'Courses', amount: 42, occurredOn: '2026-05-22' }],
+        },
+      ],
+    },
+  ];
+
+  it('lists each category with its total, and its descriptions add up to it', () => {
+    renderWithIntl(
+      <ExpensesClient
+        expenses={sampleExpenses}
+        spentThisMonth={129.5}
+        currentYear={2026}
+        currentMonth={5}
+        joursEcoules={20}
+        breakdown={breakdown}
+      />,
+    );
+    const category = screen.getByTestId('depense-categorie');
+    expect(category).toHaveAttribute('data-total', '12950');
+    const subtotals = within(category)
+      .getAllByRole('heading', { level: 3 })
+      .map((h) => Number(h.getAttribute('data-sous-total')));
+    expect(subtotals).toEqual([8750, 4200]);
+    expect(subtotals.reduce((a, b) => a + b, 0)).toBe(12950);
+    expect(within(category).getByText('Sans libellé')).toBeInTheDocument();
+  });
+
+  it('groups the month list by day', () => {
+    renderExpenses();
+    expect(screen.getAllByTestId('expenses-day')).toHaveLength(2);
+  });
+});

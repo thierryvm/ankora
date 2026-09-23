@@ -1037,11 +1037,11 @@
         "categoryLabel": "Catégorie",
         "moreCategoriesCount": "{count} autres",
         "moreCategoriesAria": "Voir les {count} autres catégories",
-        "noCategories": "Aucune catégorie de dépense dans ton espace. Le montant sera enregistré sans catégorie.",
+        "noCategories": "Aucune catégorie de dépense dans ton espace. Crée-en une pour enregistrer ce montant.",
         "dateLabel": "Date",
         "dateToday": "Aujourd'hui",
         "dateYesterday": "Hier",
-        "labelLabel": "Libellé (facultatif)",
+        "labelLabel": "Description · facultatif",
         "fallbackLabel": "Dépense",
         "projection": "Il te restera {amount}",
         "projectionIdle": "Il te reste {amount}",
@@ -1049,7 +1049,7 @@
         "submitting": "Ajout…",
         "toastCreated": "Dépense de {amount} enregistrée",
         "pastMonthNotice": "Cette date est hors du mois en cours : le chiffre du mois ne bougera pas.",
-        "contextFailed": "Tes catégories n'ont pas pu être chargées. Tu peux quand même enregistrer le montant.",
+        "contextFailed": "Tes catégories n’ont pas pu être chargées. Ferme la feuille et rouvre-la pour enregistrer ce montant.",
         "newCategory": "Nouvelle",
         "newCategoryName": "Nom de la catégorie",
         "newCategoryColor": "Couleur",
@@ -1064,7 +1064,13 @@
           "pink": "Rose",
           "purple": "Violet",
           "zinc": "Gris"
-        }
+        },
+        "labelPlaceholder": "ex. Colruyt, plein d’essence",
+        "suggestionsLabel": "Descriptions proposées",
+        "suggestionCount": "{count, plural, one {noté # fois} other {noté # fois}}",
+        "categoryRequired": "Choisis une catégorie pour enregistrer cette dépense.",
+        "noteToggle": "Ajouter une note",
+        "noteLabel": "Note · facultatif"
       },
       "addFormTitle": "Ajouter une dépense",
       "labelLabel": "Libellé",
@@ -1092,7 +1098,9 @@
       },
       "depenseMoisLabel": "Dépensé ce mois — {month}",
       "perDayElapsed": "≈ {amount}/jour sur {days} jours",
-      "earlierToggle": "Mois précédents ({count})"
+      "earlierToggle": "Mois précédents ({count})",
+      "noCategory": "Sans catégorie",
+      "noDescription": "Sans libellé"
     },
     "settings": {
       "metaTitle": "Paramètres",

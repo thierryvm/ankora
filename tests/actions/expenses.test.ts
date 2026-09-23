@@ -27,6 +27,15 @@ vi.mock('@/lib/supabase/server', () => ({
     auth: { getUser: async () => authenticatedUserResponse() },
     from: (table: string) => {
       if (table === 'workspace_members') return membershipLookupChain();
+      // F-6 (PR E2): create checks the category in the caller workspace first.
+      if (table === 'categories') {
+        const chain = {
+          select: () => chain,
+          eq: () => chain,
+          maybeSingle: async () => ({ data: { id: 'found' }, error: null }),
+        };
+        return chain;
+      }
       if (table === 'expenses') {
         return {
           insert: insertSpy,
@@ -56,7 +65,8 @@ describe('expenses Server Actions — revalidatePath uses [locale] dynamic segme
       label: 'Coffee',
       amount: 3.5,
       occurredOn: '2026-05-03',
-      categoryId: null,
+      // CHANGED with F-6: a category is required on create.
+      categoryId: '3f0c2b7e-5a1d-4c8e-9b2a-7d6e5f4a3b21',
       note: null,
       paidFrom: 'vie_courante',
     });

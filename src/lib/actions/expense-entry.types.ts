@@ -9,6 +9,8 @@
  * the boundary is already blurred.
  */
 
+import type { DescriptionEntry } from '@/lib/domain/expenses/descriptions';
+
 export type ExpenseEntryCategory = {
   id: string;
   name: string;
@@ -41,4 +43,9 @@ export type ExpenseEntryContext = {
   incomplet: boolean;
   /** Today in Europe/Brussels, so the date field defaults to the user's day. */
   todayIso: string;
+  /**
+   * The person's own descriptions, most used first (rule 26), each with the
+   * category of its latest expense (F-20). From their workspace only.
+   */
+  descriptions: DescriptionEntry[];
 };

@@ -1037,11 +1037,11 @@
         "categoryLabel": "Categoría",
         "moreCategoriesCount": "{count} más",
         "moreCategoriesAria": "Ver las otras {count} categorías",
-        "noCategories": "No hay ninguna categoría de gasto en tu espacio. El importe se guardará sin categoría.",
+        "noCategories": "Todavía no hay ninguna categoría de gasto en tu espacio. Crea una para guardar este importe.",
         "dateLabel": "Fecha",
         "dateToday": "Hoy",
         "dateYesterday": "Ayer",
-        "labelLabel": "Concepto (opcional)",
+        "labelLabel": "Descripción · opcional",
         "fallbackLabel": "Gasto",
         "projection": "Te quedarán {amount}",
         "projectionIdle": "Te quedan {amount}",
@@ -1049,7 +1049,7 @@
         "submitting": "Añadiendo…",
         "toastCreated": "Gasto de {amount} guardado",
         "pastMonthNotice": "Esta fecha está fuera del mes en curso: la cifra del mes no cambiará.",
-        "contextFailed": "No se han podido cargar tus categorías. Puedes guardar el importe de todos modos.",
+        "contextFailed": "No se han podido cargar tus categorías. Cierra la hoja y vuelve a abrirla para guardar este importe.",
         "newCategory": "Nouvelle",
         "newCategoryName": "Nom de la catégorie",
         "newCategoryColor": "Couleur",
@@ -1064,7 +1064,13 @@
           "pink": "Rose",
           "purple": "Violet",
           "zinc": "Gris"
-        }
+        },
+        "labelPlaceholder": "p. ej. Colruyt, un depósito de gasolina",
+        "suggestionsLabel": "Descripciones sugeridas",
+        "suggestionCount": "{count, plural, one {anotado # vez} other {anotado # veces}}",
+        "categoryRequired": "Elige una categoría para guardar este gasto.",
+        "noteToggle": "Añadir una nota",
+        "noteLabel": "Nota · opcional"
       },
       "addFormTitle": "Añadir un gasto",
       "labelLabel": "Etiqueta",
@@ -1092,7 +1098,9 @@
       },
       "depenseMoisLabel": "Gastado este mes — {month}",
       "perDayElapsed": "≈ {amount}/día en {days} días",
-      "earlierToggle": "Meses anteriores ({count})"
+      "earlierToggle": "Meses anteriores ({count})",
+      "noCategory": "Sin categoría",
+      "noDescription": "Sin descripción"
     },
     "settings": {
       "metaTitle": "Ajustes",

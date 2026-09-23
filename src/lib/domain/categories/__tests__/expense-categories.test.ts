@@ -180,9 +180,27 @@ describe('expenseCategoryChips — one row, never two', () => {
     expect(overflow).toHaveLength(many.length - CHIP_COUNT);
   });
 
-  it('pre-selects the first chip so the common case costs no tap', () => {
-    const { chips, preselectedId } = expenseCategoryChips(many, [], TODAY);
-    expect(preselectedId).toBe(chips[0]?.id);
+  it('pre-selects nothing when no use supports it (F-6: a first expense fell into « Logement »)', () => {
+    const { preselectedId } = expenseCategoryChips(many, [], TODAY);
+    expect(preselectedId).toBeNull();
+  });
+
+  it('pre-selects the most-used chip once the usage supports it', () => {
+    const used = many[3]!;
+    const history = [
+      {
+        id: 'e1',
+        label: 'x',
+        amount: money(5),
+        occurredOn: TODAY,
+        categoryId: used.id,
+        note: null,
+        paidFrom: 'vie_courante' as const,
+      },
+    ];
+    const { chips, preselectedId } = expenseCategoryChips(many, history, TODAY);
+    expect(preselectedId).toBe(used.id);
+    expect(chips[0]?.id).toBe(used.id);
   });
 
   it('reports no pre-selection when nothing is selectable', () => {
