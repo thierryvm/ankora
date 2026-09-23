@@ -25,6 +25,7 @@
     "e2e/dashboard-data-flow.spec.ts",
     "e2e/dashboard-expenses.spec.ts",
     "e2e/dashboard-simulator-drawer.spec.ts",
+    "e2e/expense-entry-v3.spec.ts",
     "e2e/gdpr-deletion-queue.spec.ts",
     "e2e/gdpr-export.spec.ts",
     "e2e/il-te-reste-formule.spec.ts",

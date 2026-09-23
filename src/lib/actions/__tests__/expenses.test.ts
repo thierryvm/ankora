@@ -222,17 +222,20 @@ describe('updateExpenseAction — happy path + audit', () => {
       op: 'update',
       result: { data: null, error: null },
     });
+    // F-6: this case used to send `categoryId: null` and expect `category_id:
+    // null` in the UPDATE. Stripping a category off an expense is now refused
+    // by the schema, so the case moves the expense to another category instead.
     const r = await updateExpenseAction(EXPENSE_ID, {
       label: 'Pharmacie',
       amount: 12.5,
-      categoryId: null,
+      categoryId: '5b2e9d10-4c7a-4f3e-8b6d-1a9c0e7f2d34',
       note: 'remboursable',
     });
     expect(r).toEqual({ ok: true });
     expect(supa.lastUpdatePayload()).toMatchObject({
       label: 'Pharmacie',
       amount: 12.5,
-      category_id: null,
+      category_id: '5b2e9d10-4c7a-4f3e-8b6d-1a9c0e7f2d34',
       note: 'remboursable',
     });
     expect(auditSpy).toHaveBeenCalledTimes(1);
@@ -286,13 +289,16 @@ describe('updateExpenseAction — happy path + audit', () => {
 // can diff the three and see they hold the same contract.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// `categoryId` and `note` are nullable but NOT optional in the schema — omit
-// them and Zod rejects the payload before the action ever reaches the INSERT.
+// `note` is nullable but NOT optional in the schema, and since F-6 `categoryId`
+// is required and never null — omit either and Zod rejects the payload before
+// the action ever reaches the INSERT. A v4-shaped uuid: Zod 4 checks the
+// version and variant digits.
+const CATEGORY_ID = '3f6c1a52-8e1b-4c3d-9a7e-2b5d6f8a9c01';
 const VALID_EXPENSE = {
   label: 'Delhaize',
   amount: 42.3,
   occurredOn: '2026-07-18',
-  categoryId: null,
+  categoryId: CATEGORY_ID,
   note: null,
 };
 
@@ -337,6 +343,18 @@ describe('createExpenseAction — validation', () => {
     programMembership();
     const r = await createExpenseAction({ ...VALID_EXPENSE, label: '   ' });
     expect(r.ok).toBe(false);
+  });
+
+  it.each([
+    ['without a categoryId key', { ...VALID_EXPENSE, categoryId: undefined }],
+    ['with a null categoryId', { ...VALID_EXPENSE, categoryId: null }],
+  ])('refuses an expense %s, and writes nothing (F-6)', async (_case, payload) => {
+    programMembership();
+    const r = await createExpenseAction(payload);
+    expect(r).toMatchObject({ ok: false, errorCode: 'errors.validation.generic' });
+    // No INSERT reached: the only table touched is the membership lookup.
+    expect(supa.client.from).not.toHaveBeenCalledWith('expenses');
+    expect(auditSpy).not.toHaveBeenCalled();
   });
 });
 

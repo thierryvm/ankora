@@ -9,6 +9,8 @@
  * the boundary is already blurred.
  */
 
+import type { OwnDescription } from '@/lib/domain/expense-descriptions';
+
 export type ExpenseEntryCategory = {
   id: string;
   name: string;
@@ -20,8 +22,18 @@ export type ExpenseEntryContext = {
   chips: ExpenseEntryCategory[];
   /** The rest, behind the « ＋ » chip. Bill categories are in NEITHER (ADR-035 §5). */
   overflow: ExpenseEntryCategory[];
-  /** The chip to pre-select — `null` when the workspace has no usable category. */
+  /**
+   * The chip to pre-select — `null` when no category has been used in the
+   * ranking window (F-6: a fresh workspace chooses) or none is usable at all.
+   */
   preselectedId: string | null;
+  /**
+   * The descriptions this workspace has already written, aggregated (v3
+   * mock-up, rule 26) — suggested first while typing, and the source of the
+   * category recalled for a description typed in full. Empty when the read
+   * fails: suggestions are a convenience, never a reason to refuse the sheet.
+   */
+  descriptions: OwnDescription[];
   /** « Il te reste » right now, so the sheet can show what a spend would leave. */
   ilTeReste: number;
   /** « Budget du mois » — the anchor. */

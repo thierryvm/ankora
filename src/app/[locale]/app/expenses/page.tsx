@@ -15,13 +15,22 @@ export default async function ExpensesPage() {
   const [snapshot, expenses] = await getSnapshotWith('/app/expenses', (workspaceId) =>
     getExpenses(workspaceId),
   );
-  const rawExpenses = expenses.map((e) => ({
+  const toRaw = (e: (typeof expenses)[number]) => ({
     id: e.id,
     label: e.label,
     amount: e.amount.toNumber(),
     occurredOn: e.occurredOn,
     note: e.note,
-  }));
+  });
+  // The current month comes COMPLETE from `monthlyExpenses` — the same source
+  // as `spentThisMonth` below — because the list groups it by description and
+  // those groups decompose that total (rule 10). The capped `getExpenses` read
+  // (50 rows) only supplies the OTHER months: see `currentMonthWithEarlier`.
+  const rawExpenses = Expenses.currentMonthWithEarlier(
+    snapshot.monthlyExpenses,
+    expenses,
+    snapshot.currentPeriod,
+  ).map(toRaw);
 
   // Days left in the current month (Europe/Brussels) for the per-day figure —
   // same TZ the snapshot derives `currentPeriod` from, so `bDay` is in-month.
