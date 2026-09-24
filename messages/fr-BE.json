@@ -1623,6 +1623,10 @@
         },
         "id": {
           "invalid": "Opération introuvable."
+        },
+        "budgetMonth": {
+          "invalid": "Mois invalide.",
+          "outOfRange": "Choisis le mois de la date, le précédent ou le suivant."
         }
       }
     },
@@ -1794,7 +1798,16 @@
       "cancelled": "Argent reçu annulé",
       "reopen": "Rétablir",
       "heading": "Argent reçu ce mois-ci",
-      "count": "{count, plural, one {# opération} other {# opérations}}"
+      "count": "{count, plural, one {# opération} other {# opérations}}",
+      "countsFor": "pour {month}",
+      "month": {
+        "legend": "Compte pour le budget de",
+        "option": "Pour {month}",
+        "warnNext": "Salaire du mois suivant : il comptera pour {month}.",
+        "warnPrevious": "Salaire du mois précédent : il comptera pour {month}.",
+        "warnOther": "Cet argent comptera pour {month}, pas pour le mois de sa date.",
+        "undo": "Non, pour {month}"
+      }
     },
     "statement": {
       "open": "Écrire le solde du jour",

@@ -27,6 +27,8 @@ export type AmountSheetProps = {
   dateLabel: string;
   initialAmount: number | null;
   initialDate: string;
+  /** Called on every change of the date, for a field that depends on it (tour 42: the month an income counts for). */
+  onDateChange?: (isoDay: string) => void;
   /**
    * A balance can be negative; an amount moved cannot. A negative balance is
    * given by an « overdrawn » switch rather than a typed minus: the iOS decimal
@@ -141,7 +143,10 @@ export function AmountSheet(props: AmountSheetProps) {
             type="date"
             max={props.initialDate}
             value={day}
-            onChange={(e) => setDay(e.target.value)}
+            onChange={(e) => {
+              setDay(e.target.value);
+              props.onDateChange?.(e.target.value);
+            }}
           />
         </div>
         {props.extraFields}

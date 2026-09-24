@@ -1623,6 +1623,10 @@
         },
         "id": {
           "invalid": "Operación no encontrada."
+        },
+        "budgetMonth": {
+          "invalid": "Mes no válido.",
+          "outOfRange": "Elige el mes de la fecha, el anterior o el siguiente."
         }
       }
     },
@@ -1794,7 +1798,16 @@
       "cancelled": "Dinero recibido anulado",
       "reopen": "Restablecer",
       "heading": "Dinero recibido este mes",
-      "count": "{count, plural, one {# operación} other {# operaciones}}"
+      "count": "{count, plural, one {# operación} other {# operaciones}}",
+      "countsFor": "para {month}",
+      "month": {
+        "legend": "Cuenta en el presupuesto de",
+        "option": "Para {month}",
+        "warnNext": "Sueldo del mes siguiente: contará para {month}.",
+        "warnPrevious": "Sueldo del mes anterior: contará para {month}.",
+        "warnOther": "Este dinero contará para {month}, no para el mes de su fecha.",
+        "undo": "No, para {month}"
+      }
     },
     "statement": {
       "open": "Anotar el saldo de hoy",

@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { decalerMois, moisDeLaDate } from '@/lib/domain/accounts/mois-concerne';
+
 /**
  * Input schemas for the three account operations of PR C bis (ADR-045):
  * a balance statement, a planned transfer marked as done, money received.
@@ -101,8 +103,26 @@ export const incomeReceivedSchema = z
       .trim()
       .max(120, { message: 'operations.description.tooLong' })
       .optional(),
+    // Tour 42 (ADR-046) — the month this money counts for, `YYYY-MM`. Absent:
+    // the month of the date. Bounded to one month either side of the date:
+    // the screen never offers further, so a further value is not a choice.
+    budgetMonth: z
+      .string()
+      .regex(/^\d{4}-(0[1-9]|1[0-2])$/, { message: 'operations.budgetMonth.invalid' })
+      .optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((v, ctx) => {
+    if (v.budgetMonth === undefined) return;
+    const m = moisDeLaDate(v.occurredOn);
+    if (![decalerMois(m, -1), m, decalerMois(m, 1)].includes(v.budgetMonth)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['budgetMonth'],
+        message: 'operations.budgetMonth.outOfRange',
+      });
+    }
+  });
 
 export type IncomeReceivedInput = z.infer<typeof incomeReceivedSchema>;
 

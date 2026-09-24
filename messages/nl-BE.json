@@ -1623,6 +1623,10 @@
         },
         "id": {
           "invalid": "Verrichting niet gevonden."
+        },
+        "budgetMonth": {
+          "invalid": "Ongeldige maand.",
+          "outOfRange": "Kies de maand van de datum, de vorige of de volgende."
         }
       }
     },
@@ -1794,7 +1798,16 @@
       "cancelled": "Ontvangen geld geannuleerd",
       "reopen": "Herstellen",
       "heading": "Deze maand ontvangen geld",
-      "count": "{count, plural, one {# verrichting} other {# verrichtingen}}"
+      "count": "{count, plural, one {# verrichting} other {# verrichtingen}}",
+      "countsFor": "voor {month}",
+      "month": {
+        "legend": "Telt mee in het budget van",
+        "option": "Voor {month}",
+        "warnNext": "Loon van volgende maand: het telt mee voor {month}.",
+        "warnPrevious": "Loon van vorige maand: het telt mee voor {month}.",
+        "warnOther": "Dit geld telt mee voor {month}, niet voor de maand van de datum.",
+        "undo": "Nee, voor {month}"
+      }
     },
     "statement": {
       "open": "Saldo van vandaag invullen",

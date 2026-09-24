@@ -1623,6 +1623,10 @@
         },
         "id": {
           "invalid": "Operation not found."
+        },
+        "budgetMonth": {
+          "invalid": "Invalid month.",
+          "outOfRange": "Choose the month of the date, the one before or the one after."
         }
       }
     },
@@ -1794,7 +1798,16 @@
       "cancelled": "Money received cancelled",
       "reopen": "Restore",
       "heading": "Money received this month",
-      "count": "{count, plural, one {# operation} other {# operations}}"
+      "count": "{count, plural, one {# operation} other {# operations}}",
+      "countsFor": "for {month}",
+      "month": {
+        "legend": "Counts in the budget of",
+        "option": "For {month}",
+        "warnNext": "Next month's salary: it will count for {month}.",
+        "warnPrevious": "Last month's salary: it will count for {month}.",
+        "warnOther": "This money will count for {month}, not for the month of its date.",
+        "undo": "No, for {month}"
+      }
     },
     "statement": {
       "open": "Write today’s balance",

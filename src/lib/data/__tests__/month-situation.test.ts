@@ -62,6 +62,8 @@ const transfer = (over: Partial<MovementRecord>): MovementRecord => ({
   provisionPart: new Decimal(705),
   freeSavingsPart: new Decimal(200),
   incomeNature: null,
+  budgetYear: null,
+  budgetMonth: null,
   description: null,
   ...over,
 });

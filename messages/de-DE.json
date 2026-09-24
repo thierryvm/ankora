@@ -1623,6 +1623,10 @@
         },
         "id": {
           "invalid": "Vorgang nicht gefunden."
+        },
+        "budgetMonth": {
+          "invalid": "Ungültiger Monat.",
+          "outOfRange": "Wähle den Monat des Datums, den davor oder den danach."
         }
       }
     },
@@ -1794,7 +1798,16 @@
       "cancelled": "Erhaltenes Geld storniert",
       "reopen": "Wiederherstellen",
       "heading": "Diesen Monat erhaltenes Geld",
-      "count": "{count, plural, one {# Vorgang} other {# Vorgänge}}"
+      "count": "{count, plural, one {# Vorgang} other {# Vorgänge}}",
+      "countsFor": "für {month}",
+      "month": {
+        "legend": "Zählt zum Budget von",
+        "option": "Für {month}",
+        "warnNext": "Gehalt für den nächsten Monat: Es zählt für {month}.",
+        "warnPrevious": "Gehalt für den Vormonat: Es zählt für {month}.",
+        "warnOther": "Dieses Geld zählt für {month}, nicht für den Monat seines Datums.",
+        "undo": "Nein, für {month}"
+      }
     },
     "statement": {
       "open": "Heutigen Kontostand eintragen",

@@ -328,3 +328,33 @@ describe('« Il te reste » — the truth table (PR D, option B)', () => {
     expect(eur(vide.sortiesDuPrincipal)).toBe(eur(AUCUNE_OPERATION.sortiesDuPrincipal));
   });
 });
+
+// Tour 42 — rule 3 of the plan: « the balances and the month's plan read the
+// assignment ». Received on 28 May, for June: it feeds JUNE's budget, not May's.
+describe('the month an income counts for', () => {
+  const salaireDuMoisSuivant = argentRecu('regular', '2100', {
+    occurredOn: day('2026-05-28'),
+    budgetYear: 2026,
+    budgetMonth: 6,
+  });
+
+  it('counts an income assigned to the next month in that month, not in the month of its date', () => {
+    expect(eur(operationsDuMois([salaireDuMoisSuivant], REF).revenuRecu!)).toBe('2100.00');
+    expect(
+      operationsDuMois([salaireDuMoisSuivant], { year: 2026, month: 5 }).revenuRecu,
+    ).toBeNull();
+  });
+
+  it('leaves an income without assignment in the month of its date', () => {
+    const sansAffectation = argentRecu('regular', '2100', { occurredOn: day('2026-05-28') });
+    expect(operationsDuMois([sansAffectation], REF).revenuRecu).toBeNull();
+    expect(eur(operationsDuMois([sansAffectation], { year: 2026, month: 5 }).revenuRecu!)).toBe(
+      '2100.00',
+    );
+  });
+
+  it('never moves a transfer by an income-only field', () => {
+    const t = { ...virement('income_bills', 'daily_card', '50'), budgetYear: 2026, budgetMonth: 7 };
+    expect(eur(operationsDuMois([t], REF).sortiesDuPrincipal)).toBe('50.00');
+  });
+});

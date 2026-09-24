@@ -44,6 +44,8 @@ export function movementRowToDomain(row: MovementRow): MovementRecord {
     provisionPart: row.provision_part === null ? null : toMoney(row.provision_part),
     freeSavingsPart: row.free_savings_part === null ? null : toMoney(row.free_savings_part),
     incomeNature: (row.income_nature as MovementRecord['incomeNature']) ?? null,
+    budgetYear: row.budget_year ?? null,
+    budgetMonth: row.budget_month ?? null,
     description: row.description,
   };
 }

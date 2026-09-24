@@ -29,6 +29,68 @@ function withIntl(node: React.ReactNode) {
 
 beforeEach(() => actions.income.mockClear());
 
+// Tour 42 (ADR-046) — the month an income counts for, proposed and never hidden.
+describe('IncomeButton — the month it counts for', () => {
+  async function open(today: string, moisServis: string[]) {
+    withIntl(<IncomeButton accounts={ACCOUNTS} today={today} moisServis={moisServis} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Argent reçu' }));
+    const sheet = screen.getByTestId('feuille-argent-recu');
+    const amount = within(sheet).getByLabelText('Combien as-tu reçu ?');
+    await waitFor(() => expect(document.activeElement).toBe(amount));
+    await userEvent.type(amount, '705');
+    return sheet;
+  }
+
+  it('says, before saving, that a salary received with September served counts for October', async () => {
+    const sheet = await open('2026-09-28', ['2026-08', '2026-09']);
+    const warning = within(sheet).getByTestId('mois-concerne-avertissement');
+    expect(warning.textContent).toContain('Salaire du mois suivant : il comptera pour octobre.');
+    expect(
+      (within(sheet).getByRole('radio', { name: 'Pour octobre' }) as HTMLInputElement).checked,
+    ).toBe(true);
+
+    await userEvent.click(within(sheet).getByRole('button', { name: 'Enregistrer' }));
+    expect(actions.income).toHaveBeenCalledWith({
+      toAccountType: 'income_bills',
+      amount: 705,
+      occurredOn: '2026-09-28',
+      nature: 'regular',
+      budgetMonth: '2026-10',
+    });
+  });
+
+  it('goes back to the month of the date in one tap, and the warning leaves', async () => {
+    const sheet = await open('2026-09-28', ['2026-09']);
+    await userEvent.click(within(sheet).getByRole('button', { name: 'Non, pour septembre' }));
+    expect(within(sheet).queryByTestId('mois-concerne-avertissement')).toBeNull();
+    expect(
+      (within(sheet).getByRole('radio', { name: 'Pour septembre' }) as HTMLInputElement).checked,
+    ).toBe(true);
+    await userEvent.click(within(sheet).getByRole('button', { name: 'Enregistrer' }));
+    expect(actions.income).toHaveBeenCalledWith({
+      toAccountType: 'income_bills',
+      amount: 705,
+      occurredOn: '2026-09-28',
+      nature: 'regular',
+    });
+  });
+
+  it('shows no warning when the proposal is the month of the date (no income yet)', async () => {
+    const sheet = await open('2026-09-28', []);
+    expect(within(sheet).queryByTestId('mois-concerne-avertissement')).toBeNull();
+    expect(
+      (within(sheet).getByRole('radio', { name: 'Pour septembre' }) as HTMLInputElement).checked,
+    ).toBe(true);
+  });
+
+  it('keeps a late salary of 2 October for September, and says so', async () => {
+    const sheet = await open('2026-10-02', ['2026-08']);
+    expect(within(sheet).getByTestId('mois-concerne-avertissement').textContent).toContain(
+      'Salaire du mois précédent : il comptera pour septembre.',
+    );
+  });
+});
+
 describe('IncomeButton — « Argent reçu »', () => {
   it('opens a sheet: amount, date today by default, account, nature, optional description', async () => {
     withIntl(<IncomeButton accounts={ACCOUNTS} today="2026-09-21" />);

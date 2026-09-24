@@ -677,6 +677,8 @@ export type Database = {
       movements: {
         Row: {
           amount: number;
+          budget_month: number | null;
+          budget_year: number | null;
           cancelled_at: string | null;
           cancelled_by: string | null;
           created_by: string;
@@ -699,6 +701,8 @@ export type Database = {
         };
         Insert: {
           amount: number;
+          budget_month?: number | null;
+          budget_year?: number | null;
           cancelled_at?: string | null;
           cancelled_by?: string | null;
           created_by: string;
@@ -721,6 +725,8 @@ export type Database = {
         };
         Update: {
           amount?: number;
+          budget_month?: number | null;
+          budget_year?: number | null;
           cancelled_at?: string | null;
           cancelled_by?: string | null;
           created_by?: string;

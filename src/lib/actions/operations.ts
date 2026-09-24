@@ -25,6 +25,7 @@ import {
 import { log } from '@/lib/log';
 import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
 import { rateLimit } from '@/lib/security/rate-limit';
+import { moisDeLaDate } from '@/lib/domain/accounts/mois-concerne';
 import { createClient } from '@/lib/supabase/server';
 
 /*
@@ -392,6 +393,12 @@ export async function recordPlannedTransferAction(
 // =========================================================================
 // « Argent reçu »
 // =========================================================================
+function budgetColumns(occurredOn: string, budgetMonth: string | undefined) {
+  if (budgetMonth === undefined || budgetMonth === moisDeLaDate(occurredOn)) return {};
+  const [y, m] = budgetMonth.split('-').map(Number) as [number, number];
+  return { budget_year: y, budget_month: m };
+}
+
 export async function recordIncomeAction(input: unknown): Promise<ActionResult<{ id: string }>> {
   const ctx = await gate();
   if (!ctx.ok) return ctx;
@@ -421,6 +428,10 @@ export async function recordIncomeAction(input: unknown): Promise<ActionResult<{
       occurred_on: v.occurredOn,
       income_nature: v.nature,
       description,
+      // ADR-046 — written only when it differs from the month of the date:
+      // without it the row already counts for that month, and a NULL keeps
+      // the invariant « an assignment says something the date does not ».
+      ...budgetColumns(v.occurredOn, v.budgetMonth),
     })
     .select('id')
     .single();
