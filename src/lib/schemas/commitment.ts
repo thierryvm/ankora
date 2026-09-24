@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { partialWithoutDefaults } from './partial-update';
+
 /**
  * Validation for commitments (épic « Dettes & échéanciers »). Mirrors the
  * `charge.ts` conventions: error strings are i18n keys resolved by
@@ -93,31 +95,35 @@ export const commitmentInputSchema = commitmentBaseSchema
  * a rule about fields it does not touch (the stored row already satisfies it).
  * The DB CHECKs remain the backstop.
  */
-export const commitmentUpdateSchema = commitmentBaseSchema.partial().superRefine((v, ctx) => {
-  if (v.kind === 'one_off' && v.installmentsTotal !== undefined && v.installmentsTotal !== 1) {
-    ctx.addIssue({
-      code: 'custom',
-      message: 'commitment.oneOff.singleInstallment',
-      path: ['installmentsTotal'],
-    });
-  }
-  // Mirrors `commitments_installment_amount_required` for the patch case:
-  // raising the instalment count above 1 in the SAME patch that nulls the
-  // instalment amount would be accepted by Zod and rejected by the DB
-  // (Sourcery #233). Only checked when both sides travel together — a lone
-  // `installmentsTotal` bump keeps the row's existing amount.
-  if (
-    v.installmentsTotal !== undefined &&
-    v.installmentsTotal > 1 &&
-    'installmentAmount' in v &&
-    v.installmentAmount === undefined
-  ) {
-    ctx.addIssue({
-      code: 'custom',
-      message: 'commitment.installmentAmount.required',
-      path: ['installmentAmount'],
-    });
-  }
-});
+// Derived WITHOUT the create defaults: a lone `label` edit must not reset the
+// payment day, frequency, category, note or active flag (`partialWithoutDefaults`).
+export const commitmentUpdateSchema = partialWithoutDefaults(commitmentBaseSchema).superRefine(
+  (v, ctx) => {
+    if (v.kind === 'one_off' && v.installmentsTotal !== undefined && v.installmentsTotal !== 1) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'commitment.oneOff.singleInstallment',
+        path: ['installmentsTotal'],
+      });
+    }
+    // Mirrors `commitments_installment_amount_required` for the patch case:
+    // raising the instalment count above 1 in the SAME patch that nulls the
+    // instalment amount would be accepted by Zod and rejected by the DB
+    // (Sourcery #233). Only checked when both sides travel together — a lone
+    // `installmentsTotal` bump keeps the row's existing amount.
+    if (
+      v.installmentsTotal !== undefined &&
+      v.installmentsTotal > 1 &&
+      'installmentAmount' in v &&
+      v.installmentAmount === undefined
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'commitment.installmentAmount.required',
+        path: ['installmentAmount'],
+      });
+    }
+  },
+);
 
 export type CommitmentInput = z.infer<typeof commitmentInputSchema>;

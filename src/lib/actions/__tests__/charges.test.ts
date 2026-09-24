@@ -358,6 +358,26 @@ describe('updateChargeAction — happy path + audit', () => {
     expect((auditSpy.mock.calls as unknown as unknown[][])[0]![0]).toBe('charge.updated');
   });
 
+  // A patch that does not carry isActive must not write is_active: the create
+  // default (true) used to come back out of the partial schema and re-activate
+  // a deactivated bill on any edit. `toStrictEqual`, because the
+  // `toMatchObject` above is exactly what let the extra column through.
+  it('a label-only patch writes the label and nothing else', async () => {
+    programMembership();
+    supa.program({ table: 'charges', op: 'update', result: { data: null, error: null } });
+    const r = await updateChargeAction(CHARGE_ID, { label: 'Loyer' });
+    expect(r).toEqual({ ok: true });
+    expect(supa.lastUpdatePayload()).toStrictEqual({ label: 'Loyer' });
+  });
+
+  it('an explicit null still clears the category and the note', async () => {
+    programMembership();
+    supa.program({ table: 'charges', op: 'update', result: { data: null, error: null } });
+    const r = await updateChargeAction(CHARGE_ID, { categoryId: null, notes: null });
+    expect(r).toEqual({ ok: true });
+    expect(supa.lastUpdatePayload()).toStrictEqual({ category_id: null, notes: null });
+  });
+
   it('returns errors.charges.updateFailed on DB error', async () => {
     programMembership();
     supa.program({

@@ -147,6 +147,7 @@ import {
   createCommitmentAction,
   deleteCommitmentAction,
   toggleCommitmentPaymentAction,
+  updateCommitmentAction,
 } from '../commitments';
 
 const COMMITMENT_ID = '10dccda9-7e0f-4b4e-9c7d-23f3c1b7e8a9';
@@ -245,6 +246,27 @@ describe('createCommitmentAction', () => {
     rateLimitSpy.mockImplementation(async () => ({ success: false, limit: 60, remaining: 0 }));
     const r = await createCommitmentAction(VALID_INPUT);
     expect(r).toEqual({ ok: false, errorCode: 'errors.session.rateLimited' });
+  });
+});
+
+// A patch writes what it carries and nothing else. The create defaults
+// (paymentDay 1, monthly, no category, no note, active) used to come back out
+// of the partial schema, so editing a label reset the other five columns.
+describe('updateCommitmentAction — a patch writes only what it carries', () => {
+  it('a label-only patch writes the label and nothing else', async () => {
+    programMembership();
+    supa.program({ table: 'commitments', op: 'update', result: { data: null, error: null } });
+    const r = await updateCommitmentAction(COMMITMENT_ID, { label: 'Crédit voiture' });
+    expect(r).toEqual({ ok: true });
+    expect(supa.lastUpdatePayload()).toStrictEqual({ label: 'Crédit voiture' });
+  });
+
+  it('an explicit null still clears the category and the note', async () => {
+    programMembership();
+    supa.program({ table: 'commitments', op: 'update', result: { data: null, error: null } });
+    const r = await updateCommitmentAction(COMMITMENT_ID, { categoryId: null, notes: null });
+    expect(r).toEqual({ ok: true });
+    expect(supa.lastUpdatePayload()).toStrictEqual({ category_id: null, notes: null });
   });
 });
 

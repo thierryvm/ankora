@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { accountKindSchema } from './account';
+import { partialWithoutDefaults } from './partial-update';
 
 export const expenseInputSchema = z.object({
   label: z
@@ -32,8 +33,9 @@ export const expenseInputSchema = z.object({
 
 // Partial: an update may leave the category alone — an expense recorded before
 // F-6 without one stays editable on its other fields — but it can never set it
-// to null, since the field above does not accept null.
-export const expenseUpdateSchema = expenseInputSchema.partial();
+// to null, since the field above does not accept null. Derived without the
+// create default, so an absent `paidFrom` leaves the account alone.
+export const expenseUpdateSchema = partialWithoutDefaults(expenseInputSchema);
 
 export type ExpenseInput = z.infer<typeof expenseInputSchema>;
 export type ExpenseUpdate = z.infer<typeof expenseUpdateSchema>;

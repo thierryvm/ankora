@@ -255,6 +255,25 @@ describe('updateExpenseAction — happy path + audit', () => {
     expect((auditSpy.mock.calls as unknown as unknown[][])[0]![0]).toBe('expense.updated');
   });
 
+  // A patch that does not carry paidFrom must not write paid_from: the create
+  // default used to come back out of the partial schema and move the expense
+  // back to the default account on any edit.
+  it('a label-only patch writes the label and nothing else', async () => {
+    programMembership();
+    supa.program({ table: 'expenses', op: 'update', result: { data: null, error: null } });
+    const r = await updateExpenseAction(EXPENSE_ID, { label: 'Pharmacie' });
+    expect(r).toEqual({ ok: true });
+    expect(supa.lastUpdatePayload()).toStrictEqual({ label: 'Pharmacie' });
+  });
+
+  it('an explicit null still clears the note', async () => {
+    programMembership();
+    supa.program({ table: 'expenses', op: 'update', result: { data: null, error: null } });
+    const r = await updateExpenseAction(EXPENSE_ID, { note: null });
+    expect(r).toEqual({ ok: true });
+    expect(supa.lastUpdatePayload()).toStrictEqual({ note: null });
+  });
+
   it('returns errors.expenses.updateFailed on DB error', async () => {
     programMembership();
     supa.program({
