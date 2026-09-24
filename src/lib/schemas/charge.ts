@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { partialWithoutDefaults } from './partial-update';
+
 export const chargeFrequencySchema = z.enum(['monthly', 'quarterly', 'semiannual', 'annual'], {
   error: 'charge.frequency.invalid',
 });
@@ -64,7 +66,9 @@ export const chargeInputSchema = z.object({
   paidFrom: chargePaidFromSchema.optional(),
 });
 
-export const chargeUpdateSchema = chargeInputSchema.partial();
+// A patch never carries the create default: `isActive` absent means « leave
+// it », not « re-activate » (see `partialWithoutDefaults`).
+export const chargeUpdateSchema = partialWithoutDefaults(chargeInputSchema);
 
 export type ChargeInput = z.infer<typeof chargeInputSchema>;
 export type ChargeUpdate = z.infer<typeof chargeUpdateSchema>;

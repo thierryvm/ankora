@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { partialWithoutDefaults } from './partial-update';
+
 export const workspaceInputSchema = z.object({
   name: z
     .string()
@@ -23,7 +25,7 @@ export const workspaceInputSchema = z.object({
     .optional(),
 });
 
-export const workspaceUpdateSchema = workspaceInputSchema.partial();
+export const workspaceUpdateSchema = partialWithoutDefaults(workspaceInputSchema);
 
 export const monthlyIncomeSchema = z.object({
   monthlyIncome: z
