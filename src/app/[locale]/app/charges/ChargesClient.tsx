@@ -5,7 +5,6 @@ import {
   AlertTriangle,
   Check,
   ChevronDown,
-  ChevronLeft,
   ChevronRight,
   ListChecks,
   Plus,
@@ -13,7 +12,7 @@ import {
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
-import { Link } from '@/i18n/navigation';
+import { MonthNav } from '@/components/period/MonthNav';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -845,56 +844,20 @@ export function ChargesClient({
         <>
           {/* Month-history navigator (@thierry 2026-07-19): browse any past
               month's paid/unpaid state; ticks stay editable. */}
-          <nav
-            aria-label={t('periodNav.navAria')}
-            className="flex flex-wrap items-center justify-between gap-3"
-          >
-            <div className="flex items-center gap-1">
-              {periodNav.prevParam ? (
-                <Link
-                  href={{ pathname: '/app/charges', query: { period: periodNav.prevParam } }}
-                  aria-label={t('periodNav.prevAria')}
-                  data-testid="charges-period-prev"
-                  className="hover:bg-surface-muted focus-visible:ring-brand-600 text-muted-foreground flex size-11 items-center justify-center rounded-md transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                >
-                  <ChevronLeft aria-hidden className="h-4 w-4" />
-                </Link>
-              ) : (
-                <span className="text-muted-foreground/30 flex size-11 items-center justify-center">
-                  <ChevronLeft aria-hidden className="h-4 w-4" />
-                </span>
-              )}
-              <span
-                data-testid="charges-period-label"
-                className="text-foreground min-w-32 text-center text-sm font-semibold capitalize"
-              >
-                {periodNav.label}
-              </span>
-              {periodNav.nextParam ? (
-                <Link
-                  href={{ pathname: '/app/charges', query: { period: periodNav.nextParam } }}
-                  aria-label={t('periodNav.nextAria')}
-                  data-testid="charges-period-next"
-                  className="hover:bg-surface-muted focus-visible:ring-brand-600 text-muted-foreground flex size-11 items-center justify-center rounded-md transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                >
-                  <ChevronRight aria-hidden className="h-4 w-4" />
-                </Link>
-              ) : (
-                <span className="text-muted-foreground/30 flex size-11 items-center justify-center">
-                  <ChevronRight aria-hidden className="h-4 w-4" />
-                </span>
-              )}
-            </div>
-            {!periodNav.isCurrent && (
-              <Link
-                href="/app/charges"
-                data-testid="charges-period-back"
-                className="text-brand-text hover:text-brand-text-strong focus-visible:ring-brand-600 rounded-md text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
-              >
-                {t('periodNav.backToCurrent', { month: periodNav.currentLabel })}
-              </Link>
-            )}
-          </nav>
+          <MonthNav
+            pathname="/app/charges"
+            testIdPrefix="charges-period"
+            label={periodNav.label}
+            prevParam={periodNav.prevParam}
+            nextParam={periodNav.nextParam}
+            isCurrent={periodNav.isCurrent}
+            labels={{
+              navAria: t('periodNav.navAria'),
+              prevAria: t('periodNav.prevAria'),
+              nextAria: t('periodNav.nextAria'),
+              backToCurrent: t('periodNav.backToCurrent', { month: periodNav.currentLabel }),
+            }}
+          />
 
           {/* The page's answer card (F8): what is still to pay, how many of
               the month's obligations are paid, and — its second row (F5) —

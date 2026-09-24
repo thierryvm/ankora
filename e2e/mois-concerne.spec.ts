@@ -154,4 +154,62 @@ test.describe.serial('Le mois concerné d’un argent reçu', () => {
       await page.getByTestId('argent-recu').getByRole('button').first().click();
     await expect(ligne).toContainText(`pour ${nomSuivant}`);
   });
+
+  test('le cockpit suit le mois choisi : › vers le mois suivant, ‹ pour revenir', async ({
+    page,
+  }) => {
+    if (!admin || !a) return;
+    test.setTimeout(120_000);
+    const { suivant } = moisDuJourEtSuivant();
+    const param = `${suivant.year}-${String(suivant.month).padStart(2, '0')}`;
+
+    // A bill of NEXT month ticked today (lot 2: it belongs to that month).
+    const { data: loyer, error: loyerError } = await admin
+      .from('charges')
+      .select('id')
+      .eq('workspace_id', a.workspaceId)
+      .eq('label', 'Loyer')
+      .single();
+    if (loyerError || !loyer) throw new Error(`loyer: ${loyerError?.message}`);
+    const { error: payError } = await admin.from('charge_payments').insert({
+      workspace_id: a.workspaceId,
+      charge_id: loyer.id,
+      created_by: a.userId,
+      paid_from_account_type: 'income_bills',
+      period_year: suivant.year,
+      period_month: suivant.month,
+      paid_amount: 505,
+      paid_at: new Date().toISOString(),
+    });
+    if (payError) throw new Error(`paiement: ${payError.message}`);
+
+    await seConnecter(page, a);
+    await page.goto('/app');
+    const titre = page.getByTestId('cockpit-title');
+    const cascade = page.getByTestId('cascade-du-mois');
+    const encore = page.getByTestId('cockpit-encore-a-payer');
+
+    // This month: only the first income (705) counts; the bill of next month is not paid here.
+    await expect(titre).not.toContainText('mois à venir');
+    await expect(cascade).toContainText(/Reçu ce mois-ci 705\s€ sur 2\s505\s€ prévus/);
+    await expect(encore).toContainText('0 payées sur 1');
+
+    // › : the next month, said in the title, with its own income and its own bill paid.
+    await page.getByTestId('cockpit-period-next').click();
+    await expect(page).toHaveURL(new RegExp(`period=${param}`));
+    await expect(titre).toContainText('mois à venir');
+    await expect(titre).toContainText(String(suivant.year));
+    await expect(cascade).toContainText(/Reçu ce mois-ci 505\s€ sur 2\s505\s€ prévus/);
+    await expect(encore).toContainText('1 payées sur 1');
+    // Today's balance of the daily account never sits next to another month's figure.
+    await expect(page.getByText(/Sur ton compte du quotidien/)).toHaveCount(0);
+    const lien = page.getByTestId('cockpit-voir-factures');
+    await expect(lien).toHaveAttribute('href', new RegExp(`/app/charges\\?period=${param}$`));
+    await expect(lien).toContainText(/^Voir les factures d/);
+
+    // ‹ : back to this month.
+    await page.getByTestId('cockpit-period-prev').click();
+    await expect(titre).not.toContainText('mois à venir');
+    await expect(cascade).toContainText(/Reçu ce mois-ci 705\s€ sur 2\s505\s€ prévus/);
+  });
 });

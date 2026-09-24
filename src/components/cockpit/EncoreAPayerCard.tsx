@@ -54,6 +54,12 @@ export type EncoreAPayerCardProps = Readonly<{
   bientot: readonly LigneBientot[];
   monthLabel: string;
   locale: Locale;
+  /**
+   * ADR-046, lot 2 — the cockpit shows another month than the current one.
+   * « Bientôt » is read from today, so it has nothing to say about October
+   * seen in September; the link then opens that month's bills instead.
+   */
+  moisVu?: { param: string; month: string; voyelle: boolean } | null;
 }>;
 
 /**
@@ -74,6 +80,7 @@ export async function EncoreAPayerCard({
   bientot,
   monthLabel,
   locale,
+  moisVu = null,
 }: EncoreAPayerCardProps) {
   const t = await getTranslations('cockpit.encoreAPayer');
   const tPart = await getTranslations('cockpit.partMensuelle');
@@ -203,10 +210,20 @@ export async function EncoreAPayerCard({
 
         <div className="mt-4">
           <Link
-            href="/app/charges"
+            href={
+              moisVu
+                ? { pathname: '/app/charges', query: { period: moisVu.param } }
+                : '/app/charges'
+            }
+            data-testid="cockpit-voir-factures"
             className="text-brand-text hover:text-brand-text-strong focus-visible:ring-brand-600 inline-flex min-h-11 items-center text-sm font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
           >
-            {t('voirFactures')}
+            {moisVu
+              ? t('voirFacturesDuMois', {
+                  month: moisVu.month,
+                  voyelle: moisVu.voyelle ? 'oui' : 'non',
+                })
+              : t('voirFactures')}
           </Link>
         </div>
       </CardContent>

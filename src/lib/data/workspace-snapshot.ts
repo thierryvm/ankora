@@ -48,6 +48,94 @@ export function toCockpitCharges(charges: readonly Charge[]): readonly CockpitCh
   }));
 }
 
+const EXPENSE_COLUMNS = 'id, label, amount, occurred_on, category_id, note, paid_from';
+const PAYMENT_COLUMNS = 'charge_id, period_year, period_month, paid_amount, paid_at';
+
+type ExpenseRow = {
+  id: string;
+  label: string;
+  amount: number | string;
+  occurred_on: string;
+  category_id: string | null;
+  note: string | null;
+  paid_from: string | null;
+};
+type PaymentRow = {
+  charge_id: string;
+  period_year: number;
+  period_month: number;
+  paid_amount: number | string;
+  paid_at: string;
+};
+
+function toExpense(e: ExpenseRow): Expense {
+  return {
+    id: e.id,
+    label: e.label,
+    amount: money(Number(e.amount)),
+    occurredOn: e.occurred_on,
+    categoryId: e.category_id,
+    note: e.note,
+    paidFrom: e.paid_from as AccountKind,
+  };
+}
+
+function toMonthPayment(p: PaymentRow): WorkspaceSnapshot['currentMonthPayments'][number] {
+  return {
+    chargeId: p.charge_id,
+    periodYear: p.period_year,
+    periodMonth: p.period_month,
+    paidAmount: Number(p.paid_amount),
+    paidAt: p.paid_at,
+  };
+}
+
+/**
+ * The bills paid and the spending of ONE month — the two reads of the snapshot
+ * that are tied to the current month, for a month the user chose (ADR-046,
+ * lot 2: the cockpit follows `?period=`). Same columns, same mapping, same
+ * failure handling as the snapshot, so October seen in September and October
+ * seen in October are read the same way.
+ */
+export async function readMonthActivity(
+  workspaceId: string,
+  ref: { year: number; month: number },
+): Promise<{
+  payments: WorkspaceSnapshot['currentMonthPayments'];
+  expenses: Expense[];
+}> {
+  const supabase = await createClient();
+  const start = `${ref.year}-${String(ref.month).padStart(2, '0')}-01`;
+  const nextYear = ref.month === 12 ? ref.year + 1 : ref.year;
+  const nextMonth = ref.month === 12 ? 1 : ref.month + 1;
+  const nextStart = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
+
+  const [expensesRes, paymentsRes] = await Promise.all([
+    supabase
+      .from('expenses')
+      .select(EXPENSE_COLUMNS)
+      .eq('workspace_id', workspaceId)
+      .gte('occurred_on', start)
+      .lt('occurred_on', nextStart)
+      .order('occurred_on', { ascending: false }),
+    supabase
+      .from('charge_payments')
+      .select(PAYMENT_COLUMNS)
+      .eq('workspace_id', workspaceId)
+      .eq('period_year', ref.year)
+      .eq('period_month', ref.month),
+  ]);
+  // A failed read here would show another month as « nothing paid, nothing
+  // spent »: wrong figures with no signal. Same stance as the journal read in
+  // month-situation.ts: a read failure, never a silent zero.
+  assertReadable(expensesRes.error, 'workspace-snapshot: viewed-month expenses');
+  assertReadable(paymentsRes.error, 'workspace-snapshot: viewed-month charge payments');
+  return {
+    payments: ((paymentsRes.data ?? []) as PaymentRow[]).map(toMonthPayment),
+    expenses: ((expensesRes.data ?? []) as ExpenseRow[]).map(toExpense),
+  };
+}
+
 function getCurrentMonthBoundariesISO(): { startISO: string; nextStartISO: string } {
   const formatter = new Intl.DateTimeFormat('en-CA', {
     timeZone: ANKORA_TIMEZONE,
@@ -395,15 +483,7 @@ async function readWorkspaceSnapshot(workspaceId: string): Promise<WorkspaceSnap
     });
   }
 
-  const monthlyExpenses: Expense[] = (monthlyExpensesRes.data ?? []).map((e) => ({
-    id: e.id,
-    label: e.label,
-    amount: money(Number(e.amount)),
-    occurredOn: e.occurred_on,
-    categoryId: e.category_id,
-    note: e.note,
-    paidFrom: e.paid_from as AccountKind,
-  }));
+  const monthlyExpenses: Expense[] = (monthlyExpensesRes.data ?? []).map(toExpense);
 
   if (currentMonthPaymentsRes.error) {
     log.warn('Failed to load current-month charge payments for dashboard', {
@@ -412,13 +492,7 @@ async function readWorkspaceSnapshot(workspaceId: string): Promise<WorkspaceSnap
     });
   }
 
-  const currentMonthPayments = (currentMonthPaymentsRes.data ?? []).map((p) => ({
-    chargeId: p.charge_id,
-    periodYear: p.period_year,
-    periodMonth: p.period_month,
-    paidAmount: Number(p.paid_amount),
-    paidAt: p.paid_at,
-  }));
+  const currentMonthPayments = (currentMonthPaymentsRes.data ?? []).map(toMonthPayment);
 
   if (previousMonthPaymentsRes.error) {
     log.warn('Failed to load previous-month charge payments for dashboard', {

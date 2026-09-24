@@ -721,6 +721,8 @@
     "dashboard": {
       "metaTitle": "Dashboard",
       "headerTitle": "{month} — your cockpit",
+      "headerTitleAVenir": "{month} {year} — upcoming month",
+      "headerTitlePasse": "{month} {year} — past month",
       "emptyTitle": "Start by adding your bills",
       "emptyDescription": "Rent, insurance, subscriptions — Ankora smooths them over 12 months for you.",
       "emptyCta": "Add a bill",
@@ -1751,6 +1753,7 @@
       "bientotHorsDe": "outside {month}",
       "bientotAutres": "+ {count} more in My bills",
       "voirFactures": "My bills",
+      "voirFacturesDuMois": "See the bills for {month}",
       "resteEngagements": "What is left to pay this month comes from your instalments: tick them in My commitments."
     },
     "partMensuelle": {

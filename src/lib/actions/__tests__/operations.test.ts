@@ -298,6 +298,25 @@ describe('recordPlannedTransferAction', () => {
     expect(writes('movements')).toHaveLength(0);
   });
 
+  it('accepts a plan month other than the month of its date, and writes both as given', async () => {
+    script('movements', 'select', { data: [], error: null });
+    script('movements', 'insert', { data: { id: 'm-next' }, error: null });
+    const r = await recordPlannedTransferAction({
+      ...base,
+      planMonth: 10,
+      toAccountType: 'daily_card',
+      amount: 505,
+      planSuggestedAmount: 505,
+      plannedProvisions: 0,
+    });
+    expect(r).toEqual({ ok: true, data: { id: 'm-next' } });
+    expect(writes('movements')[0]!.payload).toMatchObject({
+      occurred_on: '2026-09-21',
+      plan_year: 2026,
+      plan_month: 10,
+    });
+  });
+
   it('accepts the figures of a real plan, once rounded to the cent (280/12 + 70/3)', async () => {
     script('movements', 'select', { data: [], error: null });
     script('movements', 'insert', { data: { id: 'm-3' }, error: null });

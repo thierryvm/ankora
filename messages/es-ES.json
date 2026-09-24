@@ -721,6 +721,8 @@
     "dashboard": {
       "metaTitle": "Panel",
       "headerTitle": "{month} — tu cockpit",
+      "headerTitleAVenir": "{month} {year} — mes próximo",
+      "headerTitlePasse": "{month} {year} — mes pasado",
       "emptyTitle": "Empieza añadiendo tus facturas",
       "emptyDescription": "Alquiler, seguros, suscripciones — Ankora los distribuye en 12 meses por ti.",
       "emptyCta": "Añadir una factura",
@@ -1751,6 +1753,7 @@
       "bientotHorsDe": "outside {month}",
       "bientotAutres": "+ {count} more in My bills",
       "voirFactures": "My bills",
+      "voirFacturesDuMois": "Ver las facturas de {month}",
       "resteEngagements": "What is left to pay this month comes from your instalments: tick them in My commitments."
     },
     "partMensuelle": {

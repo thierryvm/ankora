@@ -721,6 +721,8 @@
     "dashboard": {
       "metaTitle": "Dashboard",
       "headerTitle": "{month} — je cockpit",
+      "headerTitleAVenir": "{month} {year} — komende maand",
+      "headerTitlePasse": "{month} {year} — voorbije maand",
       "emptyTitle": "Begin met het toevoegen van je facturen",
       "emptyDescription": "Huur, verzekeringen, abonnementen — Ankora spreidt ze voor jou over 12 maanden.",
       "emptyCta": "Factuur toevoegen",
@@ -1751,6 +1753,7 @@
       "bientotHorsDe": "outside {month}",
       "bientotAutres": "+ {count} more in My bills",
       "voirFactures": "My bills",
+      "voirFacturesDuMois": "Facturen van {month} bekijken",
       "resteEngagements": "What is left to pay this month comes from your instalments: tick them in My commitments."
     },
     "partMensuelle": {
