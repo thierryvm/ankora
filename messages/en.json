@@ -721,8 +721,6 @@
     "dashboard": {
       "metaTitle": "Dashboard",
       "headerTitle": "{month} — your cockpit",
-      "headerTitleAVenir": "{month} {year} — upcoming month",
-      "headerTitlePasse": "{month} {year} — past month",
       "emptyTitle": "Start by adding your bills",
       "emptyDescription": "Rent, insurance, subscriptions — Ankora smooths them over 12 months for you.",
       "emptyCta": "Add a bill",
@@ -761,7 +759,9 @@
       "accountsHeading": "My accounts",
       "provisionHealthSectionHeading": "Provisions health",
       "upcomingBillsSectionHeading": "Upcoming bills",
-      "commitmentsSectionHeading": "My commitments"
+      "commitmentsSectionHeading": "My commitments",
+      "etiquetteAVenir": "upcoming month",
+      "etiquettePasse": "past month"
     },
     "charges": {
       "title": "My bills",
@@ -1339,7 +1339,14 @@
         "misDeCote": "Set aside",
         "revenuRecuSurPrevu": "Received this month {recu} of {prevu} planned",
         "revenuRecuPlusQuePrevu": "Received this month {recu}, more than the {prevu} planned",
-        "auDela": "This month you set aside {montant} more than your income left: the difference comes from your main account."
+        "auDela": "This month you set aside {montant} more than your income left: the difference comes from your main account.",
+        "ilTeResteAVenir": "You will have left",
+        "ilTeRestePasse": "You had left",
+        "depenseMois": "Spent in {month}",
+        "revenuRecuSurPrevuMois": "Received for {month}: {recu} of {prevu} planned",
+        "revenuRecuPlusQuePrevuMois": "Received for {month}: {recu}, more than the {prevu} planned",
+        "epargneEstimeeAVenir": "Worked out once the month has started.",
+        "auDelaMois": "For {month}, you set aside {montant} more than your income left: the difference comes from your main account."
       },
       "barAria": "How your income splits: {charges} of bills, {provisions} of provisions, {depense} spent, {reste} left.",
       "barAriaEngagements": "Including {engagements} of commitments.",
@@ -1739,7 +1746,11 @@
       "incompletCta": "Add money in",
       "termeMisDeCote": "Set aside",
       "quotidien": "On your everyday account: {montant} · calculated from your operations",
-      "quotidienAria": "On your everyday account: {montant}, calculated from your operations, where this balance comes from"
+      "quotidienAria": "On your everyday account: {montant}, calculated from your operations, where this balance comes from",
+      "titreAVenir": "You will have left",
+      "titrePasse": "You had left",
+      "baseMois": "on your {month} budget",
+      "termeRevenusMois": "Received for {month}"
     },
     "encoreAPayer": {
       "etiquette": "Due this month",
@@ -1754,7 +1765,11 @@
       "bientotAutres": "+ {count} more in My bills",
       "voirFactures": "My bills",
       "voirFacturesDuMois": "See the bills for {month}",
-      "resteEngagements": "What is left to pay this month comes from your instalments: tick them in My commitments."
+      "resteEngagements": "What is left to pay this month comes from your instalments: tick them in My commitments.",
+      "etiquetteMois": "Due in {month}",
+      "dejaRetireAVenir": "Already taken out of what you will have left.",
+      "dejaRetirePasse": "Already taken out of what you had left.",
+      "resteEngagementsMois": "What is left to pay in {month} comes from your instalments: tick them in My commitments."
     },
     "partMensuelle": {
       "phrase": "{facture} every {cycle} months → {part} a month"
@@ -1770,7 +1785,8 @@
       "cleVirementsIncomplet": "to complete",
       "reserve": "Provisions for your bills",
       "cleReserve": "your buffer",
-      "engagements": "Commitments"
+      "engagements": "Commitments",
+      "soldesAujourdhui": "Today’s balances"
     },
     "virements": {
       "versQuotidien": "Transfer to make to Everyday spending",

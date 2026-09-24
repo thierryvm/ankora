@@ -20,8 +20,9 @@ vi.mock('@/lib/data/operations', () => ({
   loadAccountLedger: (...args: unknown[]) => loadAccountLedger(...args),
 }));
 vi.mock('@/lib/supabase/server', () => ({ createClient: async () => ({}) }));
+const commitmentsRead = vi.fn(() => ({ commitments: [] as unknown[], paidKeysByCommitment: {} }));
 vi.mock('@/lib/data/commitments', () => ({
-  getCommitmentsWithLedger: async () => ({ commitments: [], paidKeysByCommitment: {} }),
+  getCommitmentsWithLedger: async () => commitmentsRead(),
 }));
 vi.mock('@/lib/data/workspace-snapshot', () => ({
   getWorkspaceSnapshot: async () => snapshot,
@@ -30,13 +31,24 @@ vi.mock('@/lib/data/workspace-snapshot', () => ({
     await read(snapshot.workspaceId),
   ],
   readMonthActivity: (...args: unknown[]) => readMonthActivity(...args),
-  toCockpitCharges: () => [],
+  // Same projection as production (a field-for-field copy): the viewed-month
+  // test below needs REAL bills to reach the figure, not an empty list.
+  toCockpitCharges: (charges: readonly Record<string, unknown>[]) =>
+    charges.map((c) => ({
+      id: c.id,
+      label: c.label,
+      amount: c.amount,
+      frequency: c.frequency,
+      paymentMonths: c.paymentMonths,
+      paymentDay: c.paymentDay,
+      isActive: c.isActive,
+    })),
 }));
 
 const snapshot = {
   workspaceId: 'ws-fictif',
   monthlyIncome: 2000,
-  charges: [],
+  charges: [] as Record<string, unknown>[],
   accounts: [
     { accountType: 'income_bills', balance: 0 },
     { accountType: 'provisions', balance: 0 },
@@ -159,6 +171,82 @@ describe('loadMonthSituation — the viewed month (ADR-046, lot 2)', () => {
     loadAccountLedger.mockReset();
     readMonthActivity.mockReset();
     readMonthActivity.mockResolvedValue({ payments: [], expenses: [] });
+    snapshot.charges = [];
+    commitmentsRead.mockReset();
+    commitmentsRead.mockReturnValue({ commitments: [], paidKeysByCommitment: {} });
+  });
+
+  it('October with a real bill AND a commitment: both counted, the bill paid for October only', async () => {
+    // Fictitious family: 505 € of monthly bills, 705 € a year of insurance
+    // due in October, and a six-instalment plan of 100 € started in August.
+    snapshot.charges = [
+      {
+        id: 'c-loyer',
+        label: 'Loyer fictif',
+        amount: new Decimal(505),
+        frequency: 'monthly',
+        paymentMonths: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+        paymentDay: 5,
+        isActive: true,
+      },
+      {
+        id: 'c-assurance',
+        label: 'Assurance fictive',
+        amount: new Decimal(705),
+        frequency: 'annual',
+        paymentMonths: [10],
+        paymentDay: 15,
+        isActive: true,
+      },
+    ];
+    commitmentsRead.mockReturnValue({
+      commitments: [
+        {
+          id: 'k-plan',
+          label: 'Échéancier fictif',
+          kind: 'installment_plan',
+          totalAmount: 600,
+          installmentAmount: 100,
+          installmentsTotal: 6,
+          startYear: 2026,
+          startMonth: 8,
+          paymentDay: 10,
+          frequency: 'monthly',
+          notes: null,
+          isActive: true,
+          paidFrom: 'income_bills',
+        },
+      ],
+      paidKeysByCommitment: {},
+    });
+    loadAccountLedger.mockResolvedValue({
+      ok: true,
+      statements: [],
+      movements: [salairePourOctobre],
+    });
+    readMonthActivity.mockResolvedValue({
+      payments: [{ chargeId: 'c-assurance', periodYear: 2026, periodMonth: 10 }],
+      expenses: [],
+    });
+    const { loadMonthSituation } = await import('@/lib/data/month-situation');
+    const { paymentKey } = await import('@/lib/domain/cockpit');
+    const out = await loadMonthSituation(null, october);
+
+    // Each subtracted amount opens on the bill or plan it comes from (rule 10).
+    expect(out.decomposition.chargesFixes.parts.map((p) => p.libelle)).toEqual(['Loyer fictif']);
+    expect(out.decomposition.lissage.parts.map((p) => p.libelle)).toEqual(['Assurance fictive']);
+    expect(out.decomposition.engagements.parts.map((p) => p.libelle)).toEqual([
+      'Échéancier fictif',
+    ]);
+    expect(out.situation.chargesFixes.toFixed(2)).toBe('505.00');
+    expect(out.situation.provisionsLissees.toFixed(2)).toBe('58.75');
+    expect(out.situation.engagementsMensuels.toFixed(2)).toBe('100.00');
+    // Revenue counted = the salary « for October » (2 505 > 2 000 written):
+    // 2 505 − 505 − 58.75 − 100 = 1 841.25.
+    expect(out.situation.ilTeReste.toFixed(2)).toBe('1841.25');
+    // The insurance ticked for October is paid for October, and for no other month.
+    expect(out.paymentsLedger.get(paymentKey('c-assurance', 2026, 10))).toBe(true);
+    expect(out.paymentsLedger.get(paymentKey('c-assurance', 2026, 9))).toBeUndefined();
   });
 
   it('October shows a bill of October ticked in September as paid for October', async () => {

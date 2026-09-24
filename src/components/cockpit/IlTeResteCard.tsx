@@ -11,6 +11,7 @@ import { formatCurrency } from '@/lib/i18n/formatters';
 import { IlTeResteChiffres } from './IlTeResteChiffres';
 import { Repli } from './Repli';
 
+import type { MoisVu } from './mois-vu';
 /**
  * C2 — « Il te reste ». La carte de tête du cockpit v3.
  *
@@ -77,6 +78,12 @@ export type IlTeResteCardProps = Readonly<{
    * repli est un composant client, et c'est la page qui les marie.
    */
   cascade: ReactNode;
+  /**
+   * ADR-046, lot 2 bis — another month than the current one speaks in its
+   * tense (« Il te restera », « Il t’est resté ») and names itself mid-sentence
+   * (« Reçu pour octobre »). `null`: the current month, today's wording.
+   */
+  moisVu?: MoisVu | null;
 }>;
 
 export async function IlTeResteCard({
@@ -94,6 +101,7 @@ export async function IlTeResteCard({
   incomplet,
   locale,
   cascade,
+  moisVu = null,
 }: IlTeResteCardProps) {
   const t = await getTranslations('cockpit.ilTeReste');
   const fmt = (v: number) => formatCurrency(v, locale);
@@ -112,7 +120,7 @@ export async function IlTeResteCard({
             {t('incompletTitre')}
           </h2>
           <p className="text-muted-foreground mt-2 text-sm">
-            {t('incompletPhrase', { month: monthLabel })}
+            {t('incompletPhrase', { month: moisVu?.month ?? monthLabel })}
           </p>
           <Button asChild className="mt-4">
             <Link href="/app/accounts">{t('incompletCta')}</Link>
@@ -139,7 +147,7 @@ export async function IlTeResteCard({
         </p>
 
         <h2 id="cockpit-heading" className="mt-2 text-base font-medium">
-          {t('titre')}
+          {moisVu ? t(moisVu.temps === 'aVenir' ? 'titreAVenir' : 'titrePasse') : t('titre')}
         </h2>
 
         {/* Le chiffre, sa base et la ligne de formule passent par un composant
@@ -154,9 +162,13 @@ export async function IlTeResteCard({
           dejaCompte={retenu}
           misDeCote={misDeCote}
           locale={locale}
-          base={t('base', { month: monthLabel })}
+          base={
+            moisVu
+              ? t('baseMois', { month: moisVu.month, voyelle: moisVu.voyelle ? 'oui' : 'non' })
+              : t('base', { month: monthLabel })
+          }
           termes={{
-            revenus: t('termeRevenus'),
+            revenus: moisVu ? t('termeRevenusMois', { month: moisVu.month }) : t('termeRevenus'),
             retenu: t('termeRetenu'),
             depense: t('termeDepense'),
             misDeCote: t('termeMisDeCote'),

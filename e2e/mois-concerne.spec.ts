@@ -199,7 +199,21 @@ test.describe.serial('Le mois concerné d’un argent reçu', () => {
     await expect(page).toHaveURL(new RegExp(`period=${param}`));
     await expect(titre).toContainText('mois à venir');
     await expect(titre).toContainText(String(suivant.year));
-    await expect(cascade).toContainText(/Reçu ce mois-ci 505\s€ sur 2\s505\s€ prévus/);
+    // Tour 42 ter — another month speaks in its tense: same sums, « pour <mois> ».
+    const nomMois = moisDuJourEtSuivant().nomSuivant.split(' ')[0];
+    await expect(cascade).toContainText(
+      new RegExp(`Reçu pour ${nomMois} : 505\\s€ sur 2\\s505\\s€ prévus`),
+    );
+    await expect(page.getByTestId('cockpit-title-etiquette')).toHaveText('mois à venir');
+    // The title names the month; the selector no longer repeats it.
+    await expect(page.getByTestId('cockpit-period-label')).toHaveCount(0);
+    await expect(page.getByTestId('cockpit-il-te-reste')).toContainText('Il te restera');
+    // A month not begun has no estimate: « — », never the whole budget.
+    await expect(page.getByTestId('situation-epargne-estimee')).toHaveText('—');
+    await expect(page.getByTestId('repli-reserve')).toContainText('Soldes d’aujourd’hui');
+    // « Revenir à … » is a target of at least 44 px, measured in the page.
+    const retour = page.getByTestId('cockpit-period-back');
+    expect((await retour.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await expect(encore).toContainText('1 payées sur 1');
     // Today's balance of the daily account never sits next to another month's figure.
     await expect(page.getByText(/Sur ton compte du quotidien/)).toHaveCount(0);

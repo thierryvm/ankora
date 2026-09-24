@@ -22,10 +22,9 @@ import { paymentKey } from '@/lib/domain/cockpit/types';
 import type { NamedCommitment } from '@/lib/domain/obligations';
 import { loadMonthSituation, todayIsoInBrussels } from '@/lib/data/month-situation';
 import { MonthNav } from '@/components/period/MonthNav';
+import { moisVuDe } from '@/components/cockpit/mois-vu';
 import {
   parseViewedPeriod,
-  periodOrdinal,
-  toPeriodParam,
   transferPlanAllowed,
   viewedPeriodNav,
 } from '@/lib/domain/period/viewed-period';
@@ -163,10 +162,9 @@ export default async function DashboardPage({
   const monthLabel = formatMonth(currentMonth, locale);
   // Mid-sentence, the month keeps the case its language gives it (« d'octobre »,
   // « for October »), unlike `formatMonth`, which capitalises for titles.
-  const moisDansLaPhrase = new Intl.DateTimeFormat(locale, {
-    month: 'long',
-    timeZone: 'UTC',
-  }).format(new Date(Date.UTC(2000, period.month - 1, 1)));
+  // ADR-046, lot 2 bis — the tense and the mid-sentence name of another month,
+  // decided HERE once from the two periods (`null` = the current month).
+  const moisVu = moisVuDe(period, snapshot.currentPeriod, locale);
   const fmtMoney = (value: Parameters<typeof formatCurrency>[0]) => formatCurrency(value, locale);
 
   const hasCharges = snapshot.charges.length > 0;
@@ -315,6 +313,7 @@ export default async function DashboardPage({
         depensesDuMois={situation.depensesDuMois.toNumber()}
         ilTeReste={situation.ilTeReste.toNumber()}
         epargneEstimee={situation.epargneEstimee?.toNumber() ?? null}
+        moisVu={moisVu}
         locale={locale}
       />
     );
@@ -323,21 +322,30 @@ export default async function DashboardPage({
     <div className="flex flex-col gap-4">
       <header>
         <h1 className="text-2xl font-bold tracking-tight md:text-3xl" data-testid="cockpit-title">
-          {isCurrentMonth
-            ? t('headerTitle', { month: monthLabel })
-            : t(
-                periodOrdinal(period) > periodOrdinal(snapshot.currentPeriod)
-                  ? 'headerTitleAVenir'
-                  : 'headerTitlePasse',
-                { month: monthLabel, year: period.year },
-              )}
+          {moisVu ? (
+            <>
+              {`${monthLabel} ${period.year}`}
+              {/* The pause the old « — » gave, for a screen reader only. */}
+              <span className="sr-only">, </span>
+              {/* One title template for another month (@thierry, 24 Sept.
+                  2026): the month, then what it is — the selector below no
+                  longer repeats it. */}
+              <span
+                data-testid="cockpit-title-etiquette"
+                className="bg-surface-muted text-muted-foreground ml-1 inline-flex items-center rounded-full px-2.5 py-0.5 align-middle text-xs font-medium tracking-normal"
+              >
+                {t(moisVu.temps === 'aVenir' ? 'etiquetteAVenir' : 'etiquettePasse')}
+              </span>
+            </>
+          ) : (
+            t('headerTitle', { month: monthLabel })
+          )}
         </h1>
         <div className="mt-2">
           <MonthNav
             pathname="/app"
             testIdPrefix="cockpit-period"
             landmark={false}
-            label={`${monthLabel} ${period.year}`}
             {...viewedPeriodNav(period, snapshot.currentPeriod)}
             labels={{
               navAria: tNav('navAria'),
@@ -356,6 +364,7 @@ export default async function DashboardPage({
         <IlTeResteCard
           ilTeReste={situation.ilTeReste.toNumber()}
           resteDisponible={situation.resteDisponible.toNumber()}
+          moisVu={moisVu}
           revenus={situation.revenus.toNumber()}
           depensesDuMois={situation.depensesDuMois.toNumber()}
           retenu={situation.retenu.toNumber()}
@@ -382,15 +391,7 @@ export default async function DashboardPage({
             bientot={bientot}
             monthLabel={monthLabel}
             locale={locale}
-            moisVu={
-              isCurrentMonth
-                ? null
-                : {
-                    param: toPeriodParam(period),
-                    month: moisDansLaPhrase,
-                    voyelle: /^[aeiouyâàéèêîôûh]/i.test(moisDansLaPhrase),
-                  }
-            }
+            moisVu={moisVu}
           />
         </section>
       ) : (
@@ -414,7 +415,11 @@ export default async function DashboardPage({
           --------------------------------------------------------------------- */}
 
       {comptesVisibles.length > 0 && (
-        <Repli titre={tc('replis.comptes')} cle={cleComptes} testId="repli-comptes">
+        <Repli
+          titre={tc('replis.comptes')}
+          cle={moisVu ? tc('replis.soldesAujourdhui') : cleComptes}
+          testId="repli-comptes"
+        >
           <div className="grid gap-4 md:grid-cols-3">
             {comptesVisibles.map((accountType) => {
               const account = accountByType.get(accountType);
@@ -593,7 +598,14 @@ export default async function DashboardPage({
         </Repli>
       )}
 
-      <Repli titre={tc('replis.reserve')} cle={tc('replis.cleReserve')} testId="repli-reserve">
+      {/* Mes comptes and Provisions read today's balances, whatever the month
+          shown (@thierry, 24 Sept. 2026: October is prepared looking at what is
+          there now) — so on another month, their key says so. */}
+      <Repli
+        titre={tc('replis.reserve')}
+        cle={moisVu ? tc('replis.soldesAujourdhui') : tc('replis.cleReserve')}
+        testId="repli-reserve"
+      >
         <ProvisionHealthGaugeCard
           charges={cockpitCharges}
           payments={paymentsLedger}

@@ -721,8 +721,6 @@
     "dashboard": {
       "metaTitle": "Panel",
       "headerTitle": "{month} — tu cockpit",
-      "headerTitleAVenir": "{month} {year} — mes próximo",
-      "headerTitlePasse": "{month} {year} — mes pasado",
       "emptyTitle": "Empieza añadiendo tus facturas",
       "emptyDescription": "Alquiler, seguros, suscripciones — Ankora los distribuye en 12 meses por ti.",
       "emptyCta": "Añadir una factura",
@@ -761,7 +759,9 @@
       "accountsHeading": "Mis cuentas",
       "provisionHealthSectionHeading": "Salud de las provisiones",
       "upcomingBillsSectionHeading": "Próximas facturas",
-      "commitmentsSectionHeading": "Mis compromisos"
+      "commitmentsSectionHeading": "Mis compromisos",
+      "etiquetteAVenir": "mes próximo",
+      "etiquettePasse": "mes pasado"
     },
     "charges": {
       "title": "Mis facturas",
@@ -1339,7 +1339,14 @@
         "misDeCote": "Apartado",
         "revenuRecuSurPrevu": "Recibido este mes {recu} de {prevu} previstos",
         "revenuRecuPlusQuePrevu": "Recibido este mes {recu}, más que los {prevu} previstos",
-        "auDela": "Este mes has apartado {montant} más de lo que dejaba tu ingreso: la diferencia viene de tu cuenta principal."
+        "auDela": "Este mes has apartado {montant} más de lo que dejaba tu ingreso: la diferencia viene de tu cuenta principal.",
+        "ilTeResteAVenir": "Te quedará",
+        "ilTeRestePasse": "Te quedó",
+        "depenseMois": "Gastado en {month}",
+        "revenuRecuSurPrevuMois": "Recibido para {month}: {recu} de {prevu} previstos",
+        "revenuRecuPlusQuePrevuMois": "Recibido para {month}: {recu}, más que los {prevu} previstos",
+        "epargneEstimeeAVenir": "Se calcula una vez empezado el mes.",
+        "auDelaMois": "Para {month}, apartaste {montant} más de lo que dejaba tu ingreso: la diferencia viene de tu cuenta principal."
       },
       "barAria": "Reparto de tus ingresos: {charges} de facturas, {provisions} de reservas, {depense} gastado, {reste} restante.",
       "barAriaEngagements": "Incluyendo {engagements} de compromisos.",
@@ -1739,7 +1746,11 @@
       "incompletCta": "Add money in",
       "termeMisDeCote": "Apartado",
       "quotidien": "En tu cuenta del día a día: {montant} · calculado a partir de tus operaciones",
-      "quotidienAria": "En tu cuenta del día a día: {montant}, calculado a partir de tus operaciones, de dónde viene este saldo"
+      "quotidienAria": "En tu cuenta del día a día: {montant}, calculado a partir de tus operaciones, de dónde viene este saldo",
+      "titreAVenir": "Te quedará",
+      "titrePasse": "Te quedó",
+      "baseMois": "de tu presupuesto de {month}",
+      "termeRevenusMois": "Recibido para {month}"
     },
     "encoreAPayer": {
       "etiquette": "Due this month",
@@ -1754,7 +1765,11 @@
       "bientotAutres": "+ {count} more in My bills",
       "voirFactures": "My bills",
       "voirFacturesDuMois": "Ver las facturas de {month}",
-      "resteEngagements": "What is left to pay this month comes from your instalments: tick them in My commitments."
+      "resteEngagements": "What is left to pay this month comes from your instalments: tick them in My commitments.",
+      "etiquetteMois": "A pagar en {month}",
+      "dejaRetireAVenir": "Ya descontado de lo que te quedará.",
+      "dejaRetirePasse": "Ya descontado de lo que te quedó.",
+      "resteEngagementsMois": "Lo que queda por pagar en {month} viene de tus plazos: se marcan en Mis compromisos."
     },
     "partMensuelle": {
       "phrase": "{facture} every {cycle} months → {part} a month"
@@ -1770,7 +1785,8 @@
       "cleVirementsIncomplet": "to complete",
       "reserve": "Provisions for your bills",
       "cleReserve": "your buffer",
-      "engagements": "Commitments"
+      "engagements": "Commitments",
+      "soldesAujourdhui": "Saldos de hoy"
     },
     "virements": {
       "versQuotidien": "Transfer to make to Everyday spending",

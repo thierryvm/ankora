@@ -721,8 +721,6 @@
     "dashboard": {
       "metaTitle": "Dashboard",
       "headerTitle": "{month} — dein Cockpit",
-      "headerTitleAVenir": "{month} {year} — kommender Monat",
-      "headerTitlePasse": "{month} {year} — vergangener Monat",
       "emptyTitle": "Beginne mit dem Hinzufügen deiner Rechnungen",
       "emptyDescription": "Miete, Versicherungen, Abos — Ankora verteilt sie für dich auf 12 Monate.",
       "emptyCta": "Rechnung hinzufügen",
@@ -761,7 +759,9 @@
       "accountsHeading": "Meine Konten",
       "provisionHealthSectionHeading": "Gesundheit der Rücklagen",
       "upcomingBillsSectionHeading": "Anstehende Rechnungen",
-      "commitmentsSectionHeading": "Meine Verpflichtungen"
+      "commitmentsSectionHeading": "Meine Verpflichtungen",
+      "etiquetteAVenir": "kommender Monat",
+      "etiquettePasse": "vergangener Monat"
     },
     "charges": {
       "title": "Meine Rechnungen",
@@ -1339,7 +1339,14 @@
         "misDeCote": "Zurückgelegt",
         "revenuRecuSurPrevu": "Diesen Monat erhalten {recu} von {prevu} geplant",
         "revenuRecuPlusQuePrevu": "Diesen Monat erhalten {recu}, mehr als die {prevu} geplant",
-        "auDela": "Diesen Monat hast du {montant} mehr zurückgelegt, als dein Einkommen übrig ließ: Die Differenz kommt von deinem Hauptkonto."
+        "auDela": "Diesen Monat hast du {montant} mehr zurückgelegt, als dein Einkommen übrig ließ: Die Differenz kommt von deinem Hauptkonto.",
+        "ilTeResteAVenir": "Dir wird bleiben",
+        "ilTeRestePasse": "Dir blieb",
+        "depenseMois": "Ausgegeben im {month}",
+        "revenuRecuSurPrevuMois": "Erhalten für {month}: {recu} von {prevu} geplant",
+        "revenuRecuPlusQuePrevuMois": "Erhalten für {month}: {recu}, mehr als die {prevu} geplant",
+        "epargneEstimeeAVenir": "Wird berechnet, sobald der Monat begonnen hat.",
+        "auDelaMois": "Für {month} hast du {montant} mehr zurückgelegt, als dein Einkommen übrig ließ: Die Differenz kommt von deinem Hauptkonto."
       },
       "barAria": "Aufteilung deiner Einnahmen: {charges} Rechnungen, {provisions} Rücklagen, {depense} ausgegeben, {reste} übrig.",
       "barAriaEngagements": "Davon {engagements} an Verpflichtungen.",
@@ -1739,7 +1746,11 @@
       "incompletCta": "Add money in",
       "termeMisDeCote": "Zurückgelegt",
       "quotidien": "Auf deinem Alltagskonto: {montant} · aus deinen Buchungen berechnet",
-      "quotidienAria": "Auf deinem Alltagskonto: {montant}, aus deinen Buchungen berechnet, woher dieser Saldo kommt"
+      "quotidienAria": "Auf deinem Alltagskonto: {montant}, aus deinen Buchungen berechnet, woher dieser Saldo kommt",
+      "titreAVenir": "Dir wird bleiben",
+      "titrePasse": "Dir blieb",
+      "baseMois": "von deinem Budget für {month}",
+      "termeRevenusMois": "Erhalten für {month}"
     },
     "encoreAPayer": {
       "etiquette": "Due this month",
@@ -1754,7 +1765,11 @@
       "bientotAutres": "+ {count} more in My bills",
       "voirFactures": "My bills",
       "voirFacturesDuMois": "Rechnungen für {month} ansehen",
-      "resteEngagements": "What is left to pay this month comes from your instalments: tick them in My commitments."
+      "resteEngagements": "What is left to pay this month comes from your instalments: tick them in My commitments.",
+      "etiquetteMois": "Fällig im {month}",
+      "dejaRetireAVenir": "Bereits von dem abgezogen, was dir bleiben wird.",
+      "dejaRetirePasse": "Bereits von dem abgezogen, was dir blieb.",
+      "resteEngagementsMois": "Was im {month} noch zu zahlen ist, kommt von deinen Raten: Du hakst sie unter Meine Verpflichtungen ab."
     },
     "partMensuelle": {
       "phrase": "{facture} every {cycle} months → {part} a month"
@@ -1770,7 +1785,8 @@
       "cleVirementsIncomplet": "to complete",
       "reserve": "Provisions for your bills",
       "cleReserve": "your buffer",
-      "engagements": "Commitments"
+      "engagements": "Commitments",
+      "soldesAujourdhui": "Heutige Salden"
     },
     "virements": {
       "versQuotidien": "Transfer to make to Everyday spending",

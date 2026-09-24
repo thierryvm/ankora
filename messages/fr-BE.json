@@ -721,8 +721,6 @@
     "dashboard": {
       "metaTitle": "Tableau de bord",
       "headerTitle": "{month} — ton cockpit",
-      "headerTitleAVenir": "{month} {year} — mois à venir",
-      "headerTitlePasse": "{month} {year} — mois passé",
       "emptyTitle": "Commence par ajouter tes factures",
       "emptyDescription": "Loyer, assurances, abonnements — Ankora les lisse sur 12 mois pour toi.",
       "emptyCta": "Ajouter une facture",
@@ -761,7 +759,9 @@
       "accountsHeading": "Mes comptes",
       "provisionHealthSectionHeading": "Santé des provisions",
       "upcomingBillsSectionHeading": "Prochaines factures",
-      "commitmentsSectionHeading": "Mes engagements"
+      "commitmentsSectionHeading": "Mes engagements",
+      "etiquetteAVenir": "mois à venir",
+      "etiquettePasse": "mois passé"
     },
     "charges": {
       "title": "Mes factures",
@@ -1339,7 +1339,14 @@
         "misDeCote": "Mis de côté",
         "revenuRecuSurPrevu": "Reçu ce mois-ci {recu} sur {prevu} prévus",
         "revenuRecuPlusQuePrevu": "Reçu ce mois-ci {recu}, plus que les {prevu} prévus",
-        "auDela": "Ce mois-ci tu as mis de côté {montant} de plus que ce que ton revenu laissait : la différence vient de ton compte principal."
+        "auDela": "Ce mois-ci tu as mis de côté {montant} de plus que ce que ton revenu laissait : la différence vient de ton compte principal.",
+        "ilTeResteAVenir": "Il te restera",
+        "ilTeRestePasse": "Il t’est resté",
+        "depenseMois": "Dépensé en {month}",
+        "revenuRecuSurPrevuMois": "Reçu pour {month} : {recu} sur {prevu} prévus",
+        "revenuRecuPlusQuePrevuMois": "Reçu pour {month} : {recu}, plus que les {prevu} prévus",
+        "epargneEstimeeAVenir": "Se calcule une fois le mois commencé.",
+        "auDelaMois": "Pour {month}, tu as mis de côté {montant} de plus que ce que ton revenu laissait : la différence vient de ton compte principal."
       },
       "barAria": "Répartition de tes revenus : {charges} de factures, {provisions} de provisions, {depense} dépensés, {reste} restants.",
       "barAriaEngagements": "Dont {engagements} d'engagements.",
@@ -1739,7 +1746,11 @@
       "incompletCta": "Ajouter de l’argent reçu",
       "termeMisDeCote": "Mis de côté",
       "quotidien": "Sur ton compte du quotidien : {montant} · calculé depuis tes opérations",
-      "quotidienAria": "Sur ton compte du quotidien : {montant}, calculé depuis tes opérations, d'où vient ce solde"
+      "quotidienAria": "Sur ton compte du quotidien : {montant}, calculé depuis tes opérations, d'où vient ce solde",
+      "titreAVenir": "Il te restera",
+      "titrePasse": "Il t’est resté",
+      "baseMois": "sur ton budget {voyelle, select, oui {d’{month}} other {de {month}}}",
+      "termeRevenusMois": "Reçu pour {month}"
     },
     "encoreAPayer": {
       "etiquette": "À payer ce mois",
@@ -1754,7 +1765,11 @@
       "bientotAutres": "+ {count} autres dans Mes factures",
       "voirFactures": "Mes factures",
       "voirFacturesDuMois": "Voir les factures {voyelle, select, oui {d’{month}} other {de {month}}}",
-      "resteEngagements": "Le reste à payer de ce mois vient de tes échéances : elles se cochent dans Mes engagements."
+      "resteEngagements": "Le reste à payer de ce mois vient de tes échéances : elles se cochent dans Mes engagements.",
+      "etiquetteMois": "À payer en {month}",
+      "dejaRetireAVenir": "Déjà retiré de ce qu’il te restera.",
+      "dejaRetirePasse": "Déjà retiré de ce qu’il t’est resté.",
+      "resteEngagementsMois": "Le reste à payer {voyelle, select, oui {d’{month}} other {de {month}}} vient de tes échéances : elles se cochent dans Mes engagements."
     },
     "partMensuelle": {
       "phrase": "{facture} tous les {cycle} mois → {part} par mois"
@@ -1770,7 +1785,8 @@
       "cleVirementsIncomplet": "à compléter",
       "reserve": "Provisions pour tes factures",
       "cleReserve": "ta réserve",
-      "engagements": "Engagements"
+      "engagements": "Engagements",
+      "soldesAujourdhui": "Soldes d’aujourd’hui"
     },
     "virements": {
       "versQuotidien": "Virement à faire vers Dépenses du quotidien",

@@ -5,8 +5,9 @@ import { Link } from '@/i18n/navigation';
 /**
  * The ‹ month › selector, shared by Bills and the cockpit (ADR-046, lot 2).
  *
- * Moved out of `ChargesClient` with its DOM unchanged — the `data-testid`s are
- * built from `testIdPrefix`, so Bills keeps `charges-period-*`. No hook, no
+ * Moved out of `ChargesClient`; the `data-testid`s are built from
+ * `testIdPrefix`, so Bills keeps `charges-period-*`. Tour 42 ter: « Revenir à
+ * … » became a 44 px target here, for Bills and the cockpit alike. No hook, no
  * state: it renders the same from a Server Component (cockpit) and a Client
  * Component (Bills). The window (floor, twelve months ahead) is decided by
  * `viewedPeriodNav` in `domain/period/viewed-period.ts`, never here.
@@ -14,7 +15,12 @@ import { Link } from '@/i18n/navigation';
 export type MonthNavProps = Readonly<{
   pathname: '/app' | '/app/charges';
   testIdPrefix: string;
-  label: string;
+  /**
+   * The month's name between the arrows. The cockpit leaves it out: its title
+   * already names the month, and one screen names it once (@thierry, 24 Sept.
+   * 2026). Bills keeps it.
+   */
+  label?: string;
   prevParam: string | null;
   nextParam: string | null;
   isCurrent: boolean;
@@ -63,12 +69,14 @@ export function MonthNav({
             <ChevronLeft aria-hidden className="h-4 w-4" />
           </span>
         )}
-        <span
-          data-testid={`${testIdPrefix}-label`}
-          className="text-foreground min-w-32 text-center text-sm font-semibold capitalize"
-        >
-          {label}
-        </span>
+        {label !== undefined && (
+          <span
+            data-testid={`${testIdPrefix}-label`}
+            className="text-foreground min-w-32 text-center text-sm font-semibold capitalize"
+          >
+            {label}
+          </span>
+        )}
         {nextParam ? (
           <Link
             href={{ pathname, query: { period: nextParam } }}
@@ -88,7 +96,7 @@ export function MonthNav({
         <Link
           href={pathname}
           data-testid={`${testIdPrefix}-back`}
-          className="text-brand-text hover:text-brand-text-strong focus-visible:ring-brand-600 rounded-md text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+          className="text-brand-text hover:text-brand-text-strong focus-visible:ring-brand-600 inline-flex min-h-11 items-center rounded-md px-2 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
         >
           {labels.backToCurrent}
         </Link>

@@ -721,8 +721,6 @@
     "dashboard": {
       "metaTitle": "Dashboard",
       "headerTitle": "{month} — je cockpit",
-      "headerTitleAVenir": "{month} {year} — komende maand",
-      "headerTitlePasse": "{month} {year} — voorbije maand",
       "emptyTitle": "Begin met het toevoegen van je facturen",
       "emptyDescription": "Huur, verzekeringen, abonnementen — Ankora spreidt ze voor jou over 12 maanden.",
       "emptyCta": "Factuur toevoegen",
@@ -761,7 +759,9 @@
       "accountsHeading": "Mijn rekeningen",
       "provisionHealthSectionHeading": "Gezondheid van de voorzieningen",
       "upcomingBillsSectionHeading": "Aankomende facturen",
-      "commitmentsSectionHeading": "Mijn verbintenissen"
+      "commitmentsSectionHeading": "Mijn verbintenissen",
+      "etiquetteAVenir": "komende maand",
+      "etiquettePasse": "voorbije maand"
     },
     "charges": {
       "title": "Mijn facturen",
@@ -1339,7 +1339,14 @@
         "misDeCote": "Opzijgezet",
         "revenuRecuSurPrevu": "Deze maand ontvangen {recu} van {prevu} verwacht",
         "revenuRecuPlusQuePrevu": "Deze maand ontvangen {recu}, meer dan de {prevu} verwacht",
-        "auDela": "Deze maand heb je {montant} meer opzijgezet dan je inkomen overliet: het verschil komt van je hoofdrekening."
+        "auDela": "Deze maand heb je {montant} meer opzijgezet dan je inkomen overliet: het verschil komt van je hoofdrekening.",
+        "ilTeResteAVenir": "Je zal overhouden",
+        "ilTeRestePasse": "Je hield over",
+        "depenseMois": "Uitgegeven in {month}",
+        "revenuRecuSurPrevuMois": "Ontvangen voor {month}: {recu} van {prevu} verwacht",
+        "revenuRecuPlusQuePrevuMois": "Ontvangen voor {month}: {recu}, meer dan de {prevu} verwacht",
+        "epargneEstimeeAVenir": "Wordt berekend zodra de maand begonnen is.",
+        "auDelaMois": "Voor {month} heb je {montant} meer opzijgezet dan je inkomen toeliet: het verschil komt van je hoofdrekening."
       },
       "barAria": "Verdeling van je inkomen: {charges} facturen, {provisions} voorzieningen, {depense} uitgegeven, {reste} over.",
       "barAriaEngagements": "Waarvan {engagements} aan verbintenissen.",
@@ -1739,7 +1746,11 @@
       "incompletCta": "Add money in",
       "termeMisDeCote": "Opzijgezet",
       "quotidien": "Op je rekening voor elke dag: {montant} · berekend uit je verrichtingen",
-      "quotidienAria": "Op je rekening voor elke dag: {montant}, berekend uit je verrichtingen, waar dit saldo vandaan komt"
+      "quotidienAria": "Op je rekening voor elke dag: {montant}, berekend uit je verrichtingen, waar dit saldo vandaan komt",
+      "titreAVenir": "Je zal overhouden",
+      "titrePasse": "Je hield over",
+      "baseMois": "op je budget van {month}",
+      "termeRevenusMois": "Ontvangen voor {month}"
     },
     "encoreAPayer": {
       "etiquette": "Due this month",
@@ -1754,7 +1765,11 @@
       "bientotAutres": "+ {count} more in My bills",
       "voirFactures": "My bills",
       "voirFacturesDuMois": "Facturen van {month} bekijken",
-      "resteEngagements": "What is left to pay this month comes from your instalments: tick them in My commitments."
+      "resteEngagements": "What is left to pay this month comes from your instalments: tick them in My commitments.",
+      "etiquetteMois": "Te betalen in {month}",
+      "dejaRetireAVenir": "Al afgetrokken van wat je zal overhouden.",
+      "dejaRetirePasse": "Al afgetrokken van wat je overhield.",
+      "resteEngagementsMois": "Wat nog te betalen is in {month} komt van je termijnen: die vink je aan in Mijn verbintenissen."
     },
     "partMensuelle": {
       "phrase": "{facture} every {cycle} months → {part} a month"
@@ -1770,7 +1785,8 @@
       "cleVirementsIncomplet": "to complete",
       "reserve": "Provisions for your bills",
       "cleReserve": "your buffer",
-      "engagements": "Commitments"
+      "engagements": "Commitments",
+      "soldesAujourdhui": "Saldi van vandaag"
     },
     "virements": {
       "versQuotidien": "Transfer to make to Everyday spending",
