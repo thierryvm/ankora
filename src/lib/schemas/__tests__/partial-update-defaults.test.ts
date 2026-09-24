@@ -109,6 +109,15 @@ describe('partialWithoutDefaults', () => {
     expect(() =>
       partialWithoutDefaults(z.object({ a: z.string().default('x').nullable() })),
     ).toThrow(/empty patch must parse to \{\}/);
+    expect(() =>
+      partialWithoutDefaults(z.object({ a: z.string().default('x').optional() })),
+    ).toThrow(/empty patch must parse to \{\}/);
+  });
+
+  it('keeps the source object config (a strict create schema gives a strict patch)', () => {
+    const patch = partialWithoutDefaults(z.object({ a: z.string().default('x') }).strict());
+    expect(patch.safeParse({ b: 1 }).success).toBe(false);
+    expect(patch.parse({ a: 'y' })).toStrictEqual({ a: 'y' });
   });
 });
 

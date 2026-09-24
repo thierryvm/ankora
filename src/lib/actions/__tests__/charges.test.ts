@@ -360,7 +360,7 @@ describe('updateChargeAction — happy path + audit', () => {
 
   // A patch that does not carry isActive must not write is_active: the create
   // default (true) used to come back out of the partial schema and re-activate
-  // an archived or converted bill on any edit. `toStrictEqual`, because the
+  // a deactivated bill on any edit. `toStrictEqual`, because the
   // `toMatchObject` above is exactly what let the extra column through.
   it('a label-only patch writes the label and nothing else', async () => {
     programMembership();

@@ -27,11 +27,13 @@ export function partialWithoutDefaults<S extends z.ZodRawShape>(schema: z.ZodObj
     ]),
   ) as ShapeWithoutDefaults<S>;
 
-  const patch = z.object(shape).partial();
+  // `extend` keeps the source object's config (strict, catchall), which a
+  // fresh `z.object(shape)` would silently drop.
+  const patch = schema.extend(shape).partial();
 
   // A default nested under another wrapper (e.g. `.default(x).nullable()`) is
-  // not unwrapped above and would still fill an absent key. Refuse to build
-  // such a patch schema at all rather than let it write silently.
+  // not unwrapped above and would still fill an absent key. Throw when the
+  // module loads rather than let such a patch schema write silently.
   const probe = patch.safeParse({});
   if (!probe.success || Object.keys(probe.data).length > 0) {
     throw new Error(
