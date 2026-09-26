@@ -33,6 +33,12 @@ export type MovementRecord = {
   provisionPart: Money | null;
   freeSavingsPart: Money | null;
   incomeNature: 'regular' | 'extra' | null;
+  /**
+   * Tour 42 (ADR-046) — the month an income counts for. Both null: the month
+   * of its date. Never read for a balance: a balance moves at the DATE.
+   */
+  budgetYear: number | null;
+  budgetMonth: number | null;
   description: string | null;
 };
 

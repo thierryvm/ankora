@@ -46,6 +46,8 @@ function transfer(id: string, amount: number, over: Partial<MovementRecord> = {}
     provisionPart: null,
     freeSavingsPart: null,
     incomeNature: null,
+    budgetYear: null,
+    budgetMonth: null,
     description: null,
     ...over,
   };
@@ -204,5 +206,39 @@ describe('plannedTransferLine', () => {
       ],
     });
     expect(line).toEqual({ state: 'todo', cancelled: null });
+  });
+});
+
+// Tour 42 — an income assigned to the NEXT month is money really received on
+// its date: the balance of its account moves on that day, never on the month
+// it counts for. Two readings of one row, and they must never be mixed.
+describe('the balance stays at the date of an income assigned to the next month', () => {
+  const salaire: MovementRecord = transfer('sal', 705, {
+    kind: 'income',
+    fromAccountType: null,
+    toAccountType: 'daily_card',
+    occurredOn: d('2026-09-28'),
+    recordedAt: at('2026-09-28T18:00:00Z'),
+    planYear: null,
+    planMonth: null,
+    planSuggestedAmount: null,
+    incomeNature: 'regular',
+    budgetYear: 2026,
+    budgetMonth: 10,
+  });
+  const view = (today: string) =>
+    accountBalanceView({
+      accountType: 'daily_card',
+      statements: [statement('a', 505, '2026-09-01')],
+      movements: [salaire],
+      today: d(today),
+    });
+
+  it('is not in the balance before its date', () => {
+    expect(view('2026-09-27')!.computed).toBeNull();
+  });
+
+  it('is in the balance from its date, in September, although it counts for October', () => {
+    expect(view('2026-09-30')!.computed!.balance.toFixed(2)).toBe('1210.00');
   });
 });

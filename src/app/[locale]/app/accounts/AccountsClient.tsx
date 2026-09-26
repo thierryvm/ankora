@@ -21,7 +21,7 @@ import { Repli } from '@/components/cockpit/Repli';
 import type { AccountType } from '@/lib/domain/cockpit/types';
 import { ACCOUNT_KIND_I18N_KEY, type AccountKind } from '@/lib/schemas/account';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
-import { formatCurrency } from '@/lib/i18n/formatters';
+import { formatCurrency, formatMonthInSentence } from '@/lib/i18n/formatters';
 import type { Locale } from '@/i18n/routing';
 
 /** One « argent reçu » of the month on this account, cancelled ones included. */
@@ -31,6 +31,8 @@ export type IncomeLineProps = {
   occurredOn: string;
   description: string | null;
   cancelled: boolean;
+  /** ADR-046 — `YYYY-MM` the income counts for, when it is not the month of its date. */
+  countsFor?: string | null;
 };
 
 /** Plain values only — computed by the server page, never a Decimal. */
@@ -55,6 +57,8 @@ type Props = {
   vieCouranteMonthlyTransfer: number | null;
   balances: AccountBalanceProps[];
   today: string;
+  /** Tour 42 — months already served by a « mon revenu du mois », for the entry proposal. */
+  moisServis?: readonly string[];
   ledgerFailed?: boolean;
 };
 
@@ -78,6 +82,7 @@ export function AccountsClient({
   vieCouranteMonthlyTransfer,
   balances,
   today,
+  moisServis = [],
   ledgerFailed = false,
 }: Props) {
   const t = useTranslations('app.accounts');
@@ -95,6 +100,7 @@ export function AccountsClient({
           <div className="flex flex-wrap gap-2">
             <IncomeButton
               today={today}
+              moisServis={moisServis}
               accounts={ACCOUNT_ORDER.flatMap((kind) => {
                 const row = accountByKind.get(kind);
                 return row ? [{ accountType: row.accountType, label: row.label }] : [];
@@ -424,6 +430,9 @@ function IncomeLines({ lines }: { lines: IncomeLineProps[] }) {
                   {line.description}
                   <span className="text-muted-foreground block text-xs">
                     {t('receivedOn', { date: formatDay(line.occurredOn, locale) })}
+                    {line.countsFor
+                      ? ` · ${t('countsFor', { month: formatMonthInSentence(Number(line.countsFor.slice(5, 7)), locale) })}`
+                      : ''}
                     {line.cancelled ? ` · ${t('cancelled')}` : ''}
                   </span>
                 </span>

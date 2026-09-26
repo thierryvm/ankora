@@ -322,6 +322,31 @@ describe('exportUserData — the tables art. 20 was missing', () => {
   // Le CONTENU, pas seulement la clé (ADR-045 D19.4) : une table exportée vide
   // passerait sinon pour une table exportée, et c'est exactement ce qu'une
   // personne découvrirait le jour où elle ouvre son fichier.
+  // Tour 42 (ADR-046) — the month an income counts for is a datum the person
+  // chose: art. 20 hands it back. The read must be every column (a named list
+  // would silently drop the two new ones) and the row must travel as read.
+  it('exports the month an income counts for (budget_year, budget_month)', async () => {
+    rows.workspaces = [{ id: WS_A }];
+    rows.movements = [
+      {
+        id: 'mv-9',
+        kind: 'income',
+        amount: '705.00',
+        occurred_on: '2026-09-28',
+        budget_year: 2026,
+        budget_month: 10,
+      },
+    ];
+
+    const bundle = await exportUserData(USER_ID);
+
+    // Paged: one read per page. Every one of them must take every column.
+    const columns = selects.filter((s) => s.table === 'movements').map((s) => s.columns);
+    expect(columns.length).toBeGreaterThan(0);
+    expect(new Set(columns)).toEqual(new Set(['*']));
+    expect(bundle.movements).toStrictEqual(rows.movements);
+  });
+
   it('exports the operations and the balance statements the user recorded', async () => {
     rows.workspaces = [{ id: WS_A }];
     rows.movements = [{ id: 'mv-1', amount: '95.00', cancelled_at: '2026-09-04T10:00:00.000Z' }];

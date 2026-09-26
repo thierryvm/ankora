@@ -1,5 +1,6 @@
 import Decimal from 'decimal.js';
 
+import { moisConcerneDe } from '@/lib/domain/accounts/mois-concerne';
 import type { MovementRecord } from '@/lib/domain/accounts/operations-view';
 
 import type { ReferencePeriod } from './types';
@@ -55,7 +56,10 @@ export type OperationDuJournal = Pick<
   | 'planMonth'
   | 'freeSavingsPart'
   | 'incomeNature'
->;
+> &
+  // Optional here so a transfer-only fixture needs not spell it; the journal
+  // read (`movementRowToDomain`) always sets both.
+  Partial<Pick<MovementRecord, 'budgetYear' | 'budgetMonth'>>;
 
 export type OperationsDuMois = Readonly<{
   /** Sum of the `regular` money received this month; `null` when there is none. */
@@ -83,6 +87,17 @@ export const AUCUNE_OPERATION: OperationsDuMois = Object.freeze({
 function estDuMois(op: OperationDuJournal, ref: ReferencePeriod): boolean {
   if (op.kind === 'transfer' && op.planYear !== null && op.planMonth !== null) {
     return op.planYear === ref.year && op.planMonth === ref.month;
+  }
+  // Tour 42 (ADR-046) — money received counts for its ASSIGNED month when it
+  // has one: the salary of 28 September « for October » feeds October's
+  // budget. A transfer never reads this field (the base keeps it null there).
+  if (op.kind === 'income') {
+    const m = moisConcerneDe({
+      occurredOn: op.occurredOn,
+      budgetYear: op.budgetYear ?? null,
+      budgetMonth: op.budgetMonth ?? null,
+    });
+    return m.year === ref.year && m.month === ref.month;
   }
   return (
     op.occurredOn.getUTCFullYear() === ref.year && op.occurredOn.getUTCMonth() + 1 === ref.month

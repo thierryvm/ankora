@@ -35,6 +35,7 @@
     "e2e/mobile-ios/dashboard.spec.ts",
     "e2e/mobile-ios/expenses-crud.spec.ts",
     "e2e/mobile-ios/settings-locale-field.spec.ts",
+    "e2e/mois-concerne.spec.ts",
     "e2e/navigation-reachable.spec.ts",
     "e2e/navigation-usable-first-visit.spec.ts",
     "e2e/operations-compte.spec.ts",

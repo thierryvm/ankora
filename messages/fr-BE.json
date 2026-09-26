@@ -759,7 +759,9 @@
       "accountsHeading": "Mes comptes",
       "provisionHealthSectionHeading": "Santé des provisions",
       "upcomingBillsSectionHeading": "Prochaines factures",
-      "commitmentsSectionHeading": "Mes engagements"
+      "commitmentsSectionHeading": "Mes engagements",
+      "etiquetteAVenir": "mois à venir",
+      "etiquettePasse": "mois passé"
     },
     "charges": {
       "title": "Mes factures",
@@ -1337,7 +1339,14 @@
         "misDeCote": "Mis de côté",
         "revenuRecuSurPrevu": "Reçu ce mois-ci {recu} sur {prevu} prévus",
         "revenuRecuPlusQuePrevu": "Reçu ce mois-ci {recu}, plus que les {prevu} prévus",
-        "auDela": "Ce mois-ci tu as mis de côté {montant} de plus que ce que ton revenu laissait : la différence vient de ton compte principal."
+        "auDela": "Ce mois-ci tu as mis de côté {montant} de plus que ce que ton revenu laissait : la différence vient de ton compte principal.",
+        "ilTeResteAVenir": "Il te restera",
+        "ilTeRestePasse": "Il t’est resté",
+        "depenseMois": "Dépensé en {month}",
+        "revenuRecuSurPrevuMois": "Reçu pour {month} : {recu} sur {prevu} prévus",
+        "revenuRecuPlusQuePrevuMois": "Reçu pour {month} : {recu}, plus que les {prevu} prévus",
+        "epargneEstimeeAVenir": "Se calcule une fois le mois commencé.",
+        "auDelaMois": "Pour {month}, tu as mis de côté {montant} de plus que ce que ton revenu laissait : la différence vient de ton compte principal."
       },
       "barAria": "Répartition de tes revenus : {charges} de factures, {provisions} de provisions, {depense} dépensés, {reste} restants.",
       "barAriaEngagements": "Dont {engagements} d'engagements.",
@@ -1623,6 +1632,10 @@
         },
         "id": {
           "invalid": "Opération introuvable."
+        },
+        "budgetMonth": {
+          "invalid": "Mois invalide.",
+          "outOfRange": "Choisis le mois de la date, le précédent ou le suivant."
         }
       }
     },
@@ -1721,7 +1734,6 @@
     "ilTeReste": {
       "etiquette": "Situation",
       "titre": "Il te reste",
-      "base": "sur ton budget de {month}",
       "termeRevenus": "Argent reçu",
       "termeRetenu": "Déjà compté pour tes factures",
       "termeDepense": "Dépensé",
@@ -1733,7 +1745,11 @@
       "incompletCta": "Ajouter de l’argent reçu",
       "termeMisDeCote": "Mis de côté",
       "quotidien": "Sur ton compte du quotidien : {montant} · calculé depuis tes opérations",
-      "quotidienAria": "Sur ton compte du quotidien : {montant}, calculé depuis tes opérations, d'où vient ce solde"
+      "quotidienAria": "Sur ton compte du quotidien : {montant}, calculé depuis tes opérations, d'où vient ce solde",
+      "titreAVenir": "Il te restera",
+      "titrePasse": "Il t’est resté",
+      "baseMois": "sur ton budget {voyelle, select, oui {d’{month}} other {de {month}}}",
+      "termeRevenusMois": "Reçu pour {month}"
     },
     "encoreAPayer": {
       "etiquette": "À payer ce mois",
@@ -1744,10 +1760,15 @@
       "enRetard": "{date}, en retard",
       "autres": "{count} autres à payer dans le détail",
       "bientot": "Bientôt",
-      "bientotHorsDe": "hors de {month}",
+      "bientotHorsDe": "hors {voyelle, select, oui {d’{month}} other {de {month}}}",
       "bientotAutres": "+ {count} autres dans Mes factures",
       "voirFactures": "Mes factures",
-      "resteEngagements": "Le reste à payer de ce mois vient de tes échéances : elles se cochent dans Mes engagements."
+      "voirFacturesDuMois": "Voir les factures {voyelle, select, oui {d’{month}} other {de {month}}}",
+      "resteEngagements": "Le reste à payer de ce mois vient de tes échéances : elles se cochent dans Mes engagements.",
+      "etiquetteMois": "À payer en {month}",
+      "dejaRetireAVenir": "Déjà retiré de ce qu’il te restera.",
+      "dejaRetirePasse": "Déjà retiré de ce qu’il t’est resté.",
+      "resteEngagementsMois": "Le reste à payer {voyelle, select, oui {d’{month}} other {de {month}}} vient de tes échéances : elles se cochent dans Mes engagements."
     },
     "partMensuelle": {
       "phrase": "{facture} tous les {cycle} mois → {part} par mois"
@@ -1763,7 +1784,8 @@
       "cleVirementsIncomplet": "à compléter",
       "reserve": "Provisions pour tes factures",
       "cleReserve": "ta réserve",
-      "engagements": "Engagements"
+      "engagements": "Engagements",
+      "soldesAujourdhui": "Soldes d’aujourd’hui"
     },
     "virements": {
       "versQuotidien": "Virement à faire vers Dépenses du quotidien",
@@ -1794,7 +1816,16 @@
       "cancelled": "Argent reçu annulé",
       "reopen": "Rétablir",
       "heading": "Argent reçu ce mois-ci",
-      "count": "{count, plural, one {# opération} other {# opérations}}"
+      "count": "{count, plural, one {# opération} other {# opérations}}",
+      "countsFor": "pour {month}",
+      "month": {
+        "legend": "Compte pour le budget de",
+        "option": "Pour {month}",
+        "warnNext": "Salaire du mois suivant : il comptera pour {month}.",
+        "warnPrevious": "Salaire du mois précédent : il comptera pour {month}.",
+        "warnOther": "Cet argent comptera pour {month}, pas pour le mois de sa date.",
+        "undo": "Non, pour {month}"
+      }
     },
     "statement": {
       "open": "Écrire le solde du jour",

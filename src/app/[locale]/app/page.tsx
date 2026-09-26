@@ -20,7 +20,14 @@ import { depensesParJour, type Poste } from '@/lib/domain/cockpit';
 import { facturesBientot } from '@/lib/domain/cockpit/bientot';
 import { paymentKey } from '@/lib/domain/cockpit/types';
 import type { NamedCommitment } from '@/lib/domain/obligations';
-import { loadMonthSituation } from '@/lib/data/month-situation';
+import { loadMonthSituation, todayIsoInBrussels } from '@/lib/data/month-situation';
+import { MonthNav } from '@/components/period/MonthNav';
+import { moisDansLaPhrase, moisVuDe } from '@/components/cockpit/mois-vu';
+import {
+  parseViewedPeriod,
+  transferPlanAllowed,
+  viewedPeriodNav,
+} from '@/lib/domain/period/viewed-period';
 import { commitmentRowToDomain, hasLiveCommitments } from '@/lib/data/commitment-row';
 import type { AccountType } from '@/lib/schemas/account';
 import type { Locale } from '@/i18n/routing';
@@ -93,9 +100,21 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t('metaTitle') };
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ period?: string }>;
+}) {
   const t = await getTranslations('app.dashboard');
+  // ADR-046, lot 2 — the cockpit follows `?period=YYYY-MM`, with the window
+  // and the parser of Bills. Absent or out of the window: the current month.
+  const [todayYear, todayMonth] = todayIsoInBrussels().split('-').map(Number) as [number, number];
+  const viewedPeriod = parseViewedPeriod((await searchParams).period, {
+    year: todayYear,
+    month: todayMonth,
+  });
   const tc = await getTranslations('cockpit');
+  const tNav = await getTranslations('app.charges.periodNav');
   const locale = (await getLocale()) as Locale;
 
   const {
@@ -114,7 +133,10 @@ export default async function DashboardPage() {
     joursRestants,
     joursDuMois: daysInMonth,
     todayIso,
-  } = await loadMonthSituation('/app');
+    ref,
+    isCurrentMonth,
+    monthlyExpenses,
+  } = await loadMonthSituation('/app', viewedPeriod);
 
   const namedCommitments: NamedCommitment[] = commitments.map((c) => ({
     ...commitmentRowToDomain(c),
@@ -123,22 +145,37 @@ export default async function DashboardPage() {
   const commitmentLedger = new Map(
     Object.entries(paidKeysByCommitment).map(([id, keys]) => [id, new Set(keys)] as const),
   );
-  const period = snapshot.currentPeriod;
+  const period = ref;
   // Le mois vient de la PÉRIODE du domaine (Europe/Brussels), jamais du fuseau
   // du serveur : sur Vercel (UTC), le 1er du mois entre 00 h et 02 h heure
   // belge, `new Date().getMonth()` rend encore le mois précédent — le titre et
   // « hors de <mois> » auraient nommé septembre au-dessus de chiffres
   // d'octobre. Relevé à la relecture du 20 sept. 2026.
   const currentMonth = period.month;
+  // The plan's « I made this transfer » writes a movement for `period`. Allowed
+  // for the current month and the NEXT one only (@thierry, 24 Sept. 2026: the
+  // salary lands around the 28th and the next month's transfers are made
+  // then). UI-only restriction: the action accepts any valid plan month and
+  // validates it; the date written is today. Further ahead or in the past:
+  // no button.
+  const transferActionable = transferPlanAllowed(period, snapshot.currentPeriod);
   const monthLabel = formatMonth(currentMonth, locale);
+  // The cards speak of the month inside sentences (« sur ton budget d’octobre »,
+  // « hors d’octobre »): never the capitalised title form (26 Sept. 2026).
+  const moisPhrase = moisDansLaPhrase(currentMonth, locale);
+  // Mid-sentence, the month keeps the case its language gives it (« d'octobre »,
+  // « for October »), unlike `formatMonth`, which capitalises for titles.
+  // ADR-046, lot 2 bis — the tense and the mid-sentence name of another month,
+  // decided HERE once from the two periods (`null` = the current month).
+  const moisVu = moisVuDe(period, snapshot.currentPeriod, locale);
   const fmtMoney = (value: Parameters<typeof formatCurrency>[0]) => formatCurrency(value, locale);
 
   const hasCharges = snapshot.charges.length > 0;
 
-  const serieDuMois = depensesParJour(snapshot.monthlyExpenses, period, daysInMonth);
-  const monthlyExpenseTotal = Expenses.totalAmount(snapshot.monthlyExpenses);
-  const latestMonthlyExpenses = Expenses.latestExpenses(snapshot.monthlyExpenses, 5);
-  const monthlyExpenseCount = snapshot.monthlyExpenses.length;
+  const serieDuMois = depensesParJour(monthlyExpenses, period, daysInMonth);
+  const monthlyExpenseTotal = Expenses.totalAmount(monthlyExpenses);
+  const latestMonthlyExpenses = Expenses.latestExpenses(monthlyExpenses, 5);
+  const monthlyExpenseCount = monthlyExpenses.length;
 
   const monthlyIncome = money(snapshot.monthlyIncome ?? 0);
   const vieCouranteTransferAmount = money(snapshot.vieCouranteMonthlyTransfer ?? 0);
@@ -228,21 +265,25 @@ export default async function DashboardPage() {
 
   // « Bientôt » : calculé à la lecture sur 60 jours, en union avec la coche
   // « à surveiller » tant que /app/charges permet de la poser.
-  const bientot = facturesBientot({
-    charges: snapshot.charges.map((c) => ({
-      id: c.id,
-      label: c.label,
-      amount: c.amount,
-      frequency: c.frequency,
-      paymentMonths: c.paymentMonths,
-      paymentDay: c.paymentDay,
-      isActive: c.isActive,
-      isWatched: c.isWatched,
-    })),
-    payments: paymentsLedger,
-    todayIso,
-    period,
-  });
+  // « Bientôt » is read from TODAY: another month shows a link to that
+  // month's bills instead (EncoreAPayerCard, `moisVu`).
+  const bientot = !isCurrentMonth
+    ? []
+    : facturesBientot({
+        charges: snapshot.charges.map((c) => ({
+          id: c.id,
+          label: c.label,
+          amount: c.amount,
+          frequency: c.frequency,
+          paymentMonths: c.paymentMonths,
+          paymentDay: c.paymentDay,
+          isActive: c.isActive,
+          isWatched: c.isWatched,
+        })),
+        payments: paymentsLedger,
+        todayIso,
+        period,
+      });
 
   // ---------------------------------------------------------------------------
   // Les clés des replis — chaque titre répond AVANT qu'on l'ouvre.
@@ -275,6 +316,7 @@ export default async function DashboardPage() {
         depensesDuMois={situation.depensesDuMois.toNumber()}
         ilTeReste={situation.ilTeReste.toNumber()}
         epargneEstimee={situation.epargneEstimee?.toNumber() ?? null}
+        moisVu={moisVu}
         locale={locale}
       />
     );
@@ -282,9 +324,42 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-col gap-4">
       <header>
-        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-          {t('headerTitle', { month: monthLabel })}
+        <h1 className="text-2xl font-bold tracking-tight md:text-3xl" data-testid="cockpit-title">
+          {moisVu ? (
+            <>
+              {`${monthLabel} ${period.year}`}
+              {/* The pause the old « — » gave, for a screen reader only. */}
+              <span className="sr-only">, </span>
+              {/* One title template for another month (@thierry, 24 Sept.
+                  2026): the month, then what it is — the selector below no
+                  longer repeats it. */}
+              <span
+                data-testid="cockpit-title-etiquette"
+                className="bg-surface-muted text-muted-foreground ml-1 inline-flex items-center rounded-full px-2.5 py-0.5 align-middle text-xs font-medium tracking-normal"
+              >
+                {t(moisVu.temps === 'aVenir' ? 'etiquetteAVenir' : 'etiquettePasse')}
+              </span>
+            </>
+          ) : (
+            t('headerTitle', { month: monthLabel })
+          )}
         </h1>
+        <div className="mt-2">
+          <MonthNav
+            pathname="/app"
+            testIdPrefix="cockpit-period"
+            landmark={false}
+            {...viewedPeriodNav(period, snapshot.currentPeriod)}
+            labels={{
+              navAria: tNav('navAria'),
+              prevAria: tNav('prevAria'),
+              nextAria: tNav('nextAria'),
+              backToCurrent: tNav('backToCurrent', {
+                month: moisDansLaPhrase(snapshot.currentPeriod.month, locale),
+              }),
+            }}
+          />
+        </div>
       </header>
 
       {/* La carte de tête : une question, un chiffre, sa formule, une action. */}
@@ -292,6 +367,7 @@ export default async function DashboardPage() {
         <IlTeResteCard
           ilTeReste={situation.ilTeReste.toNumber()}
           resteDisponible={situation.resteDisponible.toNumber()}
+          moisVu={moisVu}
           revenus={situation.revenus.toNumber()}
           depensesDuMois={situation.depensesDuMois.toNumber()}
           retenu={situation.retenu.toNumber()}
@@ -300,7 +376,7 @@ export default async function DashboardPage() {
           chargesFixes={situation.chargesFixes.toNumber()}
           provisionsLissees={situation.provisionsLissees.toNumber()}
           engagementsMensuels={situation.engagementsMensuels.toNumber()}
-          monthLabel={monthLabel}
+          monthLabel={moisPhrase}
           incomplet={situation.statut === 'incomplet'}
           locale={locale}
           cascade={cascade}
@@ -316,8 +392,9 @@ export default async function DashboardPage() {
             total={obligationsDuMoisToutes.length}
             lignes={lignesAPayer}
             bientot={bientot}
-            monthLabel={monthLabel}
+            monthLabel={moisPhrase}
             locale={locale}
+            moisVu={moisVu}
           />
         </section>
       ) : (
@@ -341,7 +418,11 @@ export default async function DashboardPage() {
           --------------------------------------------------------------------- */}
 
       {comptesVisibles.length > 0 && (
-        <Repli titre={tc('replis.comptes')} cle={cleComptes} testId="repli-comptes">
+        <Repli
+          titre={tc('replis.comptes')}
+          cle={moisVu ? tc('replis.soldesAujourdhui') : cleComptes}
+          testId="repli-comptes"
+        >
           <div className="grid gap-4 md:grid-cols-3">
             {comptesVisibles.map((accountType) => {
               const account = accountByType.get(accountType);
@@ -404,7 +485,8 @@ export default async function DashboardPage() {
         </Repli>
       )}
 
-      {situation.statut !== 'incomplet' && (
+      {/* The rhythm counts days left from TODAY: it has nothing to say about another month. */}
+      {isCurrentMonth && situation.statut !== 'incomplet' && (
         <Repli titre={tc('replis.rythme')} cle={cleRythme} testId="repli-rythme">
           {/* Les libellés de la courbe sont ceux du hero d'avant (`dashboard.
               situation.courbe.*`) : le tracé n'a pas changé, seul l'endroit où
@@ -454,7 +536,7 @@ export default async function DashboardPage() {
                   <p className="font-mono text-sm tabular-nums">
                     {fmtMoney(plan.vieCouranteTransfer)}
                   </p>
-                  {plan.vieCouranteTransfer.gt(0) && (
+                  {transferActionable && plan.vieCouranteTransfer.gt(0) && (
                     <TransferDoneControl
                       lineLabel={tc('virements.versQuotidien')}
                       fromAccountType="income_bills"
@@ -483,7 +565,7 @@ export default async function DashboardPage() {
                 </p>
                 <div className="flex shrink-0 flex-col items-end">
                   <p className="font-mono text-sm tabular-nums">{fmtMoney(epargneNetAbs)}</p>
-                  {epargneNetAbs.gt(0) && (
+                  {transferActionable && epargneNetAbs.gt(0) && (
                     <TransferDoneControl
                       lineLabel={
                         epargneGoesToEpargne
@@ -519,7 +601,14 @@ export default async function DashboardPage() {
         </Repli>
       )}
 
-      <Repli titre={tc('replis.reserve')} cle={tc('replis.cleReserve')} testId="repli-reserve">
+      {/* Mes comptes and Provisions read today's balances, whatever the month
+          shown (@thierry, 24 Sept. 2026: October is prepared looking at what is
+          there now) — so on another month, their key says so. */}
+      <Repli
+        titre={tc('replis.reserve')}
+        cle={moisVu ? tc('replis.soldesAujourdhui') : tc('replis.cleReserve')}
+        testId="repli-reserve"
+      >
         <ProvisionHealthGaugeCard
           charges={cockpitCharges}
           payments={paymentsLedger}

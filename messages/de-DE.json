@@ -759,7 +759,9 @@
       "accountsHeading": "Meine Konten",
       "provisionHealthSectionHeading": "Gesundheit der Rücklagen",
       "upcomingBillsSectionHeading": "Anstehende Rechnungen",
-      "commitmentsSectionHeading": "Meine Verpflichtungen"
+      "commitmentsSectionHeading": "Meine Verpflichtungen",
+      "etiquetteAVenir": "kommender Monat",
+      "etiquettePasse": "vergangener Monat"
     },
     "charges": {
       "title": "Meine Rechnungen",
@@ -1337,7 +1339,14 @@
         "misDeCote": "Zurückgelegt",
         "revenuRecuSurPrevu": "Diesen Monat erhalten {recu} von {prevu} geplant",
         "revenuRecuPlusQuePrevu": "Diesen Monat erhalten {recu}, mehr als die {prevu} geplant",
-        "auDela": "Diesen Monat hast du {montant} mehr zurückgelegt, als dein Einkommen übrig ließ: Die Differenz kommt von deinem Hauptkonto."
+        "auDela": "Diesen Monat hast du {montant} mehr zurückgelegt, als dein Einkommen übrig ließ: Die Differenz kommt von deinem Hauptkonto.",
+        "ilTeResteAVenir": "Dir wird bleiben",
+        "ilTeRestePasse": "Dir blieb",
+        "depenseMois": "Ausgegeben im {month}",
+        "revenuRecuSurPrevuMois": "Erhalten für {month}: {recu} von {prevu} geplant",
+        "revenuRecuPlusQuePrevuMois": "Erhalten für {month}: {recu}, mehr als die {prevu} geplant",
+        "epargneEstimeeAVenir": "Wird berechnet, sobald der Monat begonnen hat.",
+        "auDelaMois": "Für {month} hast du {montant} mehr zurückgelegt, als dein Einkommen übrig ließ: Die Differenz kommt von deinem Hauptkonto."
       },
       "barAria": "Aufteilung deiner Einnahmen: {charges} Rechnungen, {provisions} Rücklagen, {depense} ausgegeben, {reste} übrig.",
       "barAriaEngagements": "Davon {engagements} an Verpflichtungen.",
@@ -1623,6 +1632,10 @@
         },
         "id": {
           "invalid": "Vorgang nicht gefunden."
+        },
+        "budgetMonth": {
+          "invalid": "Ungültiger Monat.",
+          "outOfRange": "Wähle den Monat des Datums, den davor oder den danach."
         }
       }
     },
@@ -1721,7 +1734,6 @@
     "ilTeReste": {
       "etiquette": "Situation",
       "titre": "You have left",
-      "base": "on your {month} budget",
       "termeRevenus": "Money in",
       "termeRetenu": "Already set aside for your bills",
       "termeDepense": "Spent",
@@ -1733,7 +1745,11 @@
       "incompletCta": "Add money in",
       "termeMisDeCote": "Zurückgelegt",
       "quotidien": "Auf deinem Alltagskonto: {montant} · aus deinen Buchungen berechnet",
-      "quotidienAria": "Auf deinem Alltagskonto: {montant}, aus deinen Buchungen berechnet, woher dieser Saldo kommt"
+      "quotidienAria": "Auf deinem Alltagskonto: {montant}, aus deinen Buchungen berechnet, woher dieser Saldo kommt",
+      "titreAVenir": "Dir wird bleiben",
+      "titrePasse": "Dir blieb",
+      "baseMois": "von deinem Budget für {month}",
+      "termeRevenusMois": "Erhalten für {month}"
     },
     "encoreAPayer": {
       "etiquette": "Due this month",
@@ -1747,7 +1763,12 @@
       "bientotHorsDe": "outside {month}",
       "bientotAutres": "+ {count} more in My bills",
       "voirFactures": "My bills",
-      "resteEngagements": "What is left to pay this month comes from your instalments: tick them in My commitments."
+      "voirFacturesDuMois": "Rechnungen für {month} ansehen",
+      "resteEngagements": "What is left to pay this month comes from your instalments: tick them in My commitments.",
+      "etiquetteMois": "Fällig im {month}",
+      "dejaRetireAVenir": "Bereits von dem abgezogen, was dir bleiben wird.",
+      "dejaRetirePasse": "Bereits von dem abgezogen, was dir blieb.",
+      "resteEngagementsMois": "Was im {month} noch zu zahlen ist, kommt von deinen Raten: Du hakst sie unter Meine Verpflichtungen ab."
     },
     "partMensuelle": {
       "phrase": "{facture} every {cycle} months → {part} a month"
@@ -1763,7 +1784,8 @@
       "cleVirementsIncomplet": "to complete",
       "reserve": "Provisions for your bills",
       "cleReserve": "your buffer",
-      "engagements": "Commitments"
+      "engagements": "Commitments",
+      "soldesAujourdhui": "Heutige Salden"
     },
     "virements": {
       "versQuotidien": "Transfer to make to Everyday spending",
@@ -1794,7 +1816,16 @@
       "cancelled": "Erhaltenes Geld storniert",
       "reopen": "Wiederherstellen",
       "heading": "Diesen Monat erhaltenes Geld",
-      "count": "{count, plural, one {# Vorgang} other {# Vorgänge}}"
+      "count": "{count, plural, one {# Vorgang} other {# Vorgänge}}",
+      "countsFor": "für {month}",
+      "month": {
+        "legend": "Zählt zum Budget von",
+        "option": "Für {month}",
+        "warnNext": "Gehalt für den nächsten Monat: Es zählt für {month}.",
+        "warnPrevious": "Gehalt für den Vormonat: Es zählt für {month}.",
+        "warnOther": "Dieses Geld zählt für {month}, nicht für den Monat seines Datums.",
+        "undo": "Nein, für {month}"
+      }
     },
     "statement": {
       "open": "Heutigen Kontostand eintragen",

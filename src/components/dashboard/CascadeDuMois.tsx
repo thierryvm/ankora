@@ -6,6 +6,7 @@ import { formatCurrency } from '@/lib/i18n/formatters';
 import type { Locale } from '@/i18n/routing';
 
 import { AllocationBar, type AllocationSegment } from './AllocationBar';
+import type { MoisVu } from '@/components/cockpit/mois-vu';
 
 /**
  * Une ligne de la décomposition d'un poste — règle 10 de `CLAUDE.md`.
@@ -93,6 +94,12 @@ type Props = {
   /** « Épargne estimée » (ADR-035). `null` avant le 7ᵉ jour → affiche « — ». */
   epargneEstimee: number | null;
   locale: Locale;
+  /**
+   * ADR-046, lot 2 bis — another month than the current one. A month ahead has
+   * no spending pace yet: its estimate would be the whole budget, so it shows
+   * « — » and says when it will exist (decision of @thierry, 24 Sept. 2026).
+   */
+  moisVu?: MoisVu | null;
 };
 
 /**
@@ -120,6 +127,7 @@ type Props = {
 export async function CascadeDuMois(props: Props) {
   const t = await getTranslations('dashboard.situation');
   const fmt = (value: Parameters<typeof formatCurrency>[0]) => formatCurrency(value, props.locale);
+  const aVenir = props.moisVu?.temps === 'aVenir';
 
   /**
    * Rend `undefined` sur une liste vide : un poste à 0 € n'a rien à montrer, et
@@ -280,13 +288,29 @@ export async function CascadeDuMois(props: Props) {
             <FlowRow label={t('flow.resteDisponible')} value={fmt(props.resteDisponible)} strong />
           </div>
           <FlowRow
-            label={t('flow.depense')}
+            label={
+              props.moisVu
+                ? t('flow.depenseMois', { month: props.moisVu.month })
+                : t('flow.depense')
+            }
             value={`− ${fmt(props.depensesDuMois)}`}
             muted
             dotClass="bg-warning"
           />
           <div className="border-border border-t pt-2">
-            <FlowRow label={t('flow.ilTeReste')} value={fmt(props.ilTeReste)} strong />
+            <FlowRow
+              label={
+                props.moisVu
+                  ? t(
+                      props.moisVu.temps === 'aVenir'
+                        ? 'flow.ilTeResteAVenir'
+                        : 'flow.ilTeRestePasse',
+                    )
+                  : t('flow.ilTeReste')
+              }
+              value={fmt(props.ilTeReste)}
+              strong
+            />
           </div>
           {/*
             « Épargne estimée » — a projection of the current spending pace, not
@@ -300,10 +324,15 @@ export async function CascadeDuMois(props: Props) {
               {t('flow.epargneEstimee')}
             </dt>
             <dd className="tabular-nums" data-testid="situation-epargne-estimee">
-              {props.epargneEstimee === null ? '—' : fmt(props.epargneEstimee)}
+              {props.epargneEstimee === null || aVenir ? '—' : fmt(props.epargneEstimee)}
             </dd>
           </div>
         </dl>
+        {aVenir && (
+          <p className="text-muted-foreground pl-3 text-xs" data-testid="situation-epargne-a-venir">
+            {t('flow.epargneEstimeeAVenir')}
+          </p>
+        )}
         {/* Outside the <dl>: a <p> is not a valid child of a definition list.
             Issue #483: the figure counts the GREATER of the two, so the
             sentence says on which side of the written income the sum sits. */}
@@ -311,15 +340,26 @@ export async function CascadeDuMois(props: Props) {
           props.revenuEcrit !== null &&
           props.revenuRecu !== props.revenuEcrit && (
             <p className="text-muted-foreground pl-3 text-xs" data-revenu-recu-differe>
-              {t(
-                props.revenuRecu < props.revenuEcrit
-                  ? 'flow.revenuRecuSurPrevu'
-                  : 'flow.revenuRecuPlusQuePrevu',
-                {
-                  recu: fmt(props.revenuRecu),
-                  prevu: fmt(props.revenuEcrit),
-                },
-              )}
+              {props.moisVu
+                ? t(
+                    props.revenuRecu < props.revenuEcrit
+                      ? 'flow.revenuRecuSurPrevuMois'
+                      : 'flow.revenuRecuPlusQuePrevuMois',
+                    {
+                      month: props.moisVu.month,
+                      recu: fmt(props.revenuRecu),
+                      prevu: fmt(props.revenuEcrit),
+                    },
+                  )
+                : t(
+                    props.revenuRecu < props.revenuEcrit
+                      ? 'flow.revenuRecuSurPrevu'
+                      : 'flow.revenuRecuPlusQuePrevu',
+                    {
+                      recu: fmt(props.revenuRecu),
+                      prevu: fmt(props.revenuEcrit),
+                    },
+                  )}
             </p>
           )}
         {/* La phrase neutre (texte validé par @thierry le 20 sept. 2026) :
@@ -327,7 +367,12 @@ export async function CascadeDuMois(props: Props) {
             aucun calcul. Seulement quand les virements dépassent. */}
         {props.auDelaDuRevenu > 0 && (
           <p className="text-muted-foreground mt-3 text-xs" data-au-dela>
-            {t('flow.auDela', { montant: fmt(props.auDelaDuRevenu) })}
+            {props.moisVu
+              ? t('flow.auDelaMois', {
+                  month: props.moisVu.month,
+                  montant: fmt(props.auDelaDuRevenu),
+                })
+              : t('flow.auDela', { montant: fmt(props.auDelaDuRevenu) })}
           </p>
         )}
       </CardContent>

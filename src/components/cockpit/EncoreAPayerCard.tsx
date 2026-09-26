@@ -7,6 +7,7 @@ import { formatCurrency, formatDate } from '@/lib/i18n/formatters';
 import type { LigneBientot } from '@/lib/domain/cockpit/bientot';
 
 import { PartMensuelle, type PartMensuelleProps } from './PartMensuelle';
+import { commenceParVoyelle, type MoisVu } from './mois-vu';
 
 /**
  * C6 — « Encore à payer », et le bloc « Bientôt » qui la suit.
@@ -54,6 +55,12 @@ export type EncoreAPayerCardProps = Readonly<{
   bientot: readonly LigneBientot[];
   monthLabel: string;
   locale: Locale;
+  /**
+   * ADR-046, lot 2 — the cockpit shows another month than the current one.
+   * « Bientôt » is read from today, so it has nothing to say about October
+   * seen in September; the link then opens that month's bills instead.
+   */
+  moisVu?: MoisVu | null;
 }>;
 
 /**
@@ -74,6 +81,7 @@ export async function EncoreAPayerCard({
   bientot,
   monthLabel,
   locale,
+  moisVu = null,
 }: EncoreAPayerCardProps) {
   const t = await getTranslations('cockpit.encoreAPayer');
   const tPart = await getTranslations('cockpit.partMensuelle');
@@ -99,7 +107,7 @@ export async function EncoreAPayerCard({
     <Card data-surface="C6" data-testid="cockpit-encore-a-payer">
       <CardContent className="pt-6">
         <p className="text-muted-foreground font-mono text-xs tracking-wide uppercase">
-          {t('etiquette')}
+          {moisVu ? t('etiquetteMois', { month: moisVu.month }) : t('etiquette')}
         </p>
 
         <div className="mt-2 flex items-start justify-between gap-4">
@@ -119,16 +127,27 @@ export async function EncoreAPayerCard({
             tes factures » dans sa décomposition). Une ligne le dit, plutôt que
             de laisser deux chiffres justes produire une conclusion fausse. */}
         <p className="text-muted-foreground mt-1 text-xs" data-testid="encore-a-payer-deja-retire">
-          {t('dejaRetire')}
+          {moisVu
+            ? t(moisVu.temps === 'aVenir' ? 'dejaRetireAVenir' : 'dejaRetirePasse')
+            : t('dejaRetire')}
         </p>
 
         {toutPaye ? (
-          <p className="text-success mt-3 text-sm">{t('toutPaye', { month: monthLabel })}</p>
+          <p className="text-success mt-3 text-sm">
+            {t('toutPaye', { month: moisVu?.month ?? monthLabel })}
+          </p>
         ) : resteSansLigne ? (
           /* Il reste de l'argent à sortir, mais aucune FACTURE : ce sont des
              échéances d'engagement. On dit où elles se lisent plutôt que de
              laisser un total sans ses parts (règle 10). */
-          <p className="text-muted-foreground mt-3 text-sm">{t('resteEngagements')}</p>
+          <p className="text-muted-foreground mt-3 text-sm">
+            {moisVu
+              ? t('resteEngagementsMois', {
+                  month: moisVu.month,
+                  voyelle: moisVu.voyelle ? 'oui' : 'non',
+                })
+              : t('resteEngagements')}
+          </p>
         ) : (
           <ul className="divide-border mt-3 divide-y">
             {visibles.map((ligne) => (
@@ -163,7 +182,11 @@ export async function EncoreAPayerCard({
               <strong className="font-semibold">{t('bientot')}</strong>
               <span className="text-muted-foreground">
                 {' '}
-                · {t('bientotHorsDe', { month: monthLabel })}
+                ·{' '}
+                {t('bientotHorsDe', {
+                  month: monthLabel,
+                  voyelle: commenceParVoyelle(monthLabel) ? 'oui' : 'non',
+                })}
               </span>
             </p>
             <ul className="divide-border mt-1 divide-y">
@@ -203,10 +226,20 @@ export async function EncoreAPayerCard({
 
         <div className="mt-4">
           <Link
-            href="/app/charges"
+            href={
+              moisVu
+                ? { pathname: '/app/charges', query: { period: moisVu.param } }
+                : '/app/charges'
+            }
+            data-testid="cockpit-voir-factures"
             className="text-brand-text hover:text-brand-text-strong focus-visible:ring-brand-600 inline-flex min-h-11 items-center text-sm font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
           >
-            {t('voirFactures')}
+            {moisVu
+              ? t('voirFacturesDuMois', {
+                  month: moisVu.month,
+                  voyelle: moisVu.voyelle ? 'oui' : 'non',
+                })
+              : t('voirFactures')}
           </Link>
         </div>
       </CardContent>

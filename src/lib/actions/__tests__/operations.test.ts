@@ -298,6 +298,25 @@ describe('recordPlannedTransferAction', () => {
     expect(writes('movements')).toHaveLength(0);
   });
 
+  it('accepts a plan month other than the month of its date, and writes both as given', async () => {
+    script('movements', 'select', { data: [], error: null });
+    script('movements', 'insert', { data: { id: 'm-next' }, error: null });
+    const r = await recordPlannedTransferAction({
+      ...base,
+      planMonth: 10,
+      toAccountType: 'daily_card',
+      amount: 505,
+      planSuggestedAmount: 505,
+      plannedProvisions: 0,
+    });
+    expect(r).toEqual({ ok: true, data: { id: 'm-next' } });
+    expect(writes('movements')[0]!.payload).toMatchObject({
+      occurred_on: '2026-09-21',
+      plan_year: 2026,
+      plan_month: 10,
+    });
+  });
+
   it('accepts the figures of a real plan, once rounded to the cent (280/12 + 70/3)', async () => {
     script('movements', 'select', { data: [], error: null });
     script('movements', 'insert', { data: { id: 'm-3' }, error: null });
@@ -402,6 +421,59 @@ describe('recordIncomeAction', () => {
     expect(writes('movements')[0]!.payload).toMatchObject({
       description: 'Remboursement mutuelle',
     });
+  });
+
+  // Tour 42 (ADR-046) — the month this money counts for.
+  it('writes the assigned month when it differs from the month of the date', async () => {
+    script('movements', 'insert', { data: { id: 'i-3' }, error: null });
+    await recordIncomeAction({
+      toAccountType: 'income_bills',
+      amount: 705,
+      occurredOn: '2026-09-02',
+      nature: 'regular',
+      description: 'Salaire',
+      budgetMonth: '2026-10',
+    });
+    expect(writes('movements')[0]!.payload).toStrictEqual({
+      workspace_id: 'ws-1',
+      created_by: expect.any(String),
+      kind: 'income',
+      to_account_type: 'income_bills',
+      amount: 705,
+      occurred_on: '2026-09-02',
+      income_nature: 'regular',
+      description: 'Salaire',
+      budget_year: 2026,
+      budget_month: 10,
+    });
+  });
+
+  it('writes no assignment when the chosen month is the month of the date', async () => {
+    script('movements', 'insert', { data: { id: 'i-4' }, error: null });
+    await recordIncomeAction({
+      toAccountType: 'income_bills',
+      amount: 505,
+      occurredOn: '2026-09-02',
+      nature: 'regular',
+      budgetMonth: '2026-09',
+    });
+    const payload = writes('movements')[0]!.payload as Record<string, unknown>;
+    expect('budget_year' in payload).toBe(false);
+    expect('budget_month' in payload).toBe(false);
+  });
+
+  it('refuses a month more than one month away from the date, and writes nothing', async () => {
+    const r = await recordIncomeAction({
+      toAccountType: 'income_bills',
+      amount: 505,
+      occurredOn: '2026-09-02',
+      nature: 'regular',
+      budgetMonth: '2026-12',
+    });
+    expect(r.ok).toBe(false);
+    // The refusal must come from THIS rule, not from any other field.
+    expect(!r.ok && r.fieldErrors?.budgetMonth).toEqual(['operations.budgetMonth.outOfRange']);
+    expect(writes('movements')).toHaveLength(0);
   });
 });
 

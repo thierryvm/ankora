@@ -1,3 +1,4 @@
+import { moisDansLaPhrase } from '@/components/cockpit/mois-vu';
 import type { Metadata } from 'next';
 import { getLocale, getTranslations } from 'next-intl/server';
 
@@ -25,6 +26,12 @@ import {
   type NamedCommitment,
 } from '@/lib/domain/obligations';
 import { formatMonth } from '@/lib/i18n/formatters';
+import {
+  isSamePeriod,
+  parseViewedPeriod,
+  viewedPeriodNav,
+  type Period,
+} from '@/lib/domain/period/viewed-period';
 import { log } from '@/lib/log';
 import type { Locale } from '@/i18n/routing';
 import { ChargesClient } from './ChargesClient';
@@ -35,41 +42,6 @@ export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('app.charges');
   return { title: t('title') };
 }
-
-type Period = { year: number; month: number };
-
-const PERIOD_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
-/** No payment data can exist before the app's first release month. */
-const PERIOD_FLOOR: Period = { year: 2026, month: 1 };
-/** Forward horizon (@thierry 2026-07-19): browse up to a year ahead to see
- *  what's coming — due dates render for that month, ledger is simply empty. */
-const FUTURE_SPAN_MONTHS = 12;
-
-const ordinal = (p: Period): number => p.year * 12 + p.month;
-
-/**
- * Month-history navigation (@thierry priority 2026-07-19): `?period=YYYY-MM`
- * selects which month's payment ledger the page shows. Invalid, pre-floor, or
- * beyond-horizon values silently fall back to the current period — the URL is
- * user-controlled input, never trusted.
- */
-function parseViewedPeriod(raw: string | undefined, current: Period): Period {
-  if (!raw || !PERIOD_RE.test(raw)) return current;
-  const [y, m] = raw.split('-').map(Number) as [number, number];
-  const candidate = { year: y, month: m };
-  if (
-    ordinal(candidate) > ordinal(current) + FUTURE_SPAN_MONTHS ||
-    ordinal(candidate) < ordinal(PERIOD_FLOOR)
-  ) {
-    return current;
-  }
-  return candidate;
-}
-
-const shift = (p: Period, delta: 1 | -1): Period => {
-  const total = p.year * 12 + (p.month - 1) + delta;
-  return { year: Math.floor(total / 12), month: (total % 12) + 1 };
-};
 
 /** A domain `Poste` as plain numbers — Decimal never crosses the RSC boundary. */
 const posteView = (poste: Poste) => ({
@@ -82,8 +54,6 @@ const posteView = (poste: Poste) => ({
     cycleMonths: p.origine?.cycleMois ?? 1,
   })),
 });
-
-const toParam = (p: Period): string => `${p.year}-${String(p.month).padStart(2, '0')}`;
 
 export default async function ChargesPage({
   searchParams,
@@ -101,7 +71,7 @@ export default async function ChargesPage({
 
   const current = snapshot.currentPeriod;
   const viewed = parseViewedPeriod(params.period, current);
-  const isCurrent = ordinal(viewed) === ordinal(current);
+  const isCurrent = isSamePeriod(viewed, current);
 
   // Chantier 3 — the month's obligations are ONE list. Commitments are read
   // here for the same reason they are read on the cockpit: their instalments
@@ -133,8 +103,7 @@ export default async function ChargesPage({
   }
 
   const monthLabel = (p: Period) => `${formatMonth(p.month, locale, 'long')} ${p.year}`;
-  const prev = shift(viewed, -1);
-  const next = shift(viewed, 1);
+  const nav = viewedPeriodNav(viewed, current);
 
   // --- The month's obligations, derived (never generated). ---
   const cockpitCharges = toCockpitCharges(snapshot.charges);
@@ -205,10 +174,11 @@ export default async function ChargesPage({
       bulk={{ gesture: bulkGesture, pastDueCount: pastDue.length }}
       periodNav={{
         label: monthLabel(viewed),
-        prevParam: ordinal(prev) >= ordinal(PERIOD_FLOOR) ? toParam(prev) : null,
-        nextParam: ordinal(next) <= ordinal(current) + FUTURE_SPAN_MONTHS ? toParam(next) : null,
+        prevParam: nav.prevParam,
+        nextParam: nav.nextParam,
         isCurrent,
-        currentLabel: monthLabel(current),
+        // Mid-sentence (« Revenir à septembre 2026 »): never the title's capital.
+        currentLabel: `${moisDansLaPhrase(current.month, locale)} ${current.year}`,
       }}
     />
   );
