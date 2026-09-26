@@ -224,6 +224,16 @@ describe('updateExpenseAction — validation', () => {
     const r = await updateExpenseAction(EXPENSE_ID, { label: '   ' });
     expect(r.ok).toBe(false);
   });
+  // « Depuis » (rule 25): the chips offer three accounts; the server trusts none
+  // of them and refuses any other value before a single column is written.
+  it('refuses an account outside the three and writes nothing', async () => {
+    programMembership();
+    const r = await updateExpenseAction(EXPENSE_ID, {
+      paidFrom: 'compte_joint' as unknown as 'principal',
+    });
+    expect(r.ok).toBe(false);
+    expect(supa.lastUpdatePayload()).toBeUndefined();
+  });
 });
 
 describe('updateExpenseAction — happy path + audit', () => {
@@ -284,6 +294,14 @@ describe('updateExpenseAction — happy path + audit', () => {
     const r = await updateExpenseAction(EXPENSE_ID, { label: 'X' });
     expect(r).toEqual({ ok: false, errorCode: 'errors.expenses.updateFailed' });
     expect(auditSpy).not.toHaveBeenCalled();
+  });
+
+  it('an account-only patch writes paid_from and nothing else', async () => {
+    programMembership();
+    supa.program({ table: 'expenses', op: 'update', result: { data: null, error: null } });
+    const r = await updateExpenseAction(EXPENSE_ID, { paidFrom: 'principal' });
+    expect(r).toEqual({ ok: true });
+    expect(supa.lastUpdatePayload()).toStrictEqual({ paid_from: 'principal' });
   });
 
   it('passes paid_from update through to the DB', async () => {
@@ -362,6 +380,15 @@ describe('createExpenseAction — validation', () => {
   it('rejects a negative amount', async () => {
     programMembership();
     const r = await createExpenseAction({ ...VALID_EXPENSE, amount: -1 });
+    expect(r.ok).toBe(false);
+  });
+
+  it('refuses an account outside the three', async () => {
+    programMembership();
+    const r = await createExpenseAction({
+      ...VALID_EXPENSE,
+      paidFrom: 'compte_joint' as unknown as 'principal',
+    });
     expect(r.ok).toBe(false);
   });
 

@@ -1030,6 +1030,7 @@
     },
     "expenses": {
       "title": "Mijn uitgaven",
+      "rowPaidFrom": "Betaald vanaf {account}",
       "subtitle": "De uitgaven buiten de terugkerende facturen — boodschappen, resto, vrije tijd…",
       "addSheet": {
         "title": "Nieuwe uitgave",
@@ -1037,6 +1038,7 @@
         "close": "Sluiten",
         "amountLabel": "Bedrag in euro",
         "categoryLabel": "Categorie",
+        "paidFromLabel": "Vanaf",
         "moreCategoriesCount": "{count} andere",
         "moreCategoriesAria": "Toon de {count} andere categorieën",
         "noCategories": "Nog geen uitgavecategorie in je ruimte. Maak eerst een categorie aan om een uitgave op te slaan.",

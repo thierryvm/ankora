@@ -12,6 +12,7 @@ import { Plus } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { Sheet } from '@/components/primitives/Sheet';
+import { PaidFromChips } from '@/components/expenses/PaidFromChips';
 import { toast } from '@/components/ui/toast';
 import { createExpenseCategoryAction } from '@/lib/actions/categories';
 import { createExpenseAction } from '@/lib/actions/expenses';
@@ -24,6 +25,8 @@ import {
 } from '@/lib/domain/expense-descriptions';
 import type { ExpenseEntryCategory, ExpenseEntryContext } from '@/lib/actions/expense-entry.types';
 import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
+import { recallPaidFrom } from '@/lib/domain/expenses/paid-from';
+import type { AccountKind } from '@/lib/domain/types';
 import { announceOptimisticSpend, settleSpend } from '@/lib/expenses/optimistic-spend';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 import { formatCurrency } from '@/lib/i18n/formatters';
@@ -181,6 +184,11 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
   // description typed in full no longer re-ticks the recalled category — the
   // person's own choice wins over our memory of their habits.
   const [pickedByHand, setPickedByHand] = useState(false);
+  // Same rule for the account (rule 25): the default, then the account a
+  // description recalls, and a chip tapped by hand over both. `null` until the
+  // context lands: the default is the workspace's, not ours to guess.
+  const [paidFrom, setPaidFrom] = useState<AccountKind | null>(null);
+  const [paidFromByHand, setPaidFromByHand] = useState(false);
 
   // The description combobox (v3 mock-up, rule 26).
   const [descriptionListOpen, setDescriptionListOpen] = useState(false);
@@ -250,6 +258,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
         setContext(result.data);
         setFiguresFresh(true);
         setCategoryId((current) => current ?? result.data.preselectedId);
+        setPaidFrom((current) => current ?? result.data.defaultPaidFrom);
       } catch (err) {
         if (isNextControlFlowError(err)) throw err;
         if (!cancelled) setContextFailed(true);
@@ -277,13 +286,15 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
     // one opening must not silently carry over to the next expense.
     setCategoryId(context?.preselectedId ?? null);
     setPickedByHand(false);
+    setPaidFrom(context?.defaultPaidFrom ?? null);
+    setPaidFromByHand(false);
     // La LIGNE de création se referme, mais `justCreated` NON : la catégorie
     // existe réellement en base, et la faire disparaître à la fermeture de la
     // feuille reproduirait exactement le défaut qu'elle corrige.
     setCreatingCategory(false);
     setNewCategoryName('');
     setNewCategoryError(null);
-  }, [open, context?.preselectedId]);
+  }, [open, context?.preselectedId, context?.defaultPaidFrom]);
 
   const parsed = parseAmountInput(amount);
   // F-6: no category, no submit. The server refuses it too; the button says so
@@ -344,12 +355,20 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
       const recalled = recallCategory(value, ownDescriptions, knownCategories);
       if (recalled !== null) setCategoryId(recalled);
     }
+    if (!paidFromByHand) {
+      const recalledAccount = recallPaidFrom(value, ownDescriptions);
+      if (recalledAccount !== null) setPaidFrom(recalledAccount);
+    }
   };
 
   const chooseSuggestion = (suggestion: DescriptionSuggestion) => {
     setLabel(suggestion.label);
     // No category implied: the one already ticked stays.
     if (suggestion.categoryId !== null) setCategoryId(suggestion.categoryId);
+    if (!paidFromByHand) {
+      const recalledAccount = recallPaidFrom(suggestion.label, ownDescriptions);
+      if (recalledAccount !== null) setPaidFrom(recalledAccount);
+    }
     closeDescriptionList();
   };
 
@@ -547,6 +566,9 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
           occurredOn,
           categoryId,
           note: resolvedNote,
+          // Absent until the context lands: the server then writes its own
+          // default, the same « Vie courante » the chips would have shown.
+          ...(paidFrom !== null && { paidFrom }),
         });
         if (result.ok) {
           toast.success(t('toastCreated', { amount: fmt(value) }));
@@ -578,6 +600,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
     selectedName,
     occurredOn,
     categoryId,
+    paidFrom,
     isCurrentMonth,
     projection,
     onClose,
@@ -1129,6 +1152,21 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
             </div>
           )}
         </div>
+
+        {/* ---------- 3 bis. Depuis quel compte (règle 25). ---------- */}
+        {context !== null && paidFrom !== null && context.accounts.length > 1 && (
+          <PaidFromChips
+            name="add-expense-paid-from"
+            legend={t('paidFromLabel')}
+            accounts={context.accounts}
+            value={paidFrom}
+            onChange={(kind) => {
+              setPaidFrom(kind);
+              setPaidFromByHand(true);
+            }}
+            disabled={isSubmitting}
+          />
+        )}
 
         {/* ---------- 4. La date, puis la note repliée. ---------- */}
         <div className="flex flex-col gap-1">

@@ -4,6 +4,9 @@ import { getCategories } from '@/lib/data/categories';
 import { loadMonthSituation } from '@/lib/data/month-situation';
 import { expenseCategoryChips } from '@/lib/domain/categories';
 import { ownDescriptionsFrom, type OwnDescription } from '@/lib/domain/expense-descriptions';
+import { defaultExpenseAccount } from '@/lib/domain/expenses/paid-from';
+import type { AccountKind } from '@/lib/domain/types';
+import { accountKindSchema } from '@/lib/schemas/account';
 import { createClient } from '@/lib/supabase/server';
 import type { ActionResult } from '@/lib/actions/types';
 import type { ExpenseEntryContext } from '@/lib/actions/expense-entry.types';
@@ -30,7 +33,10 @@ import type { ExpenseEntryContext } from '@/lib/actions/expense-entry.types';
  * a user who does wait sees a skeleton, not an empty box.
  */
 
-/** How many recent expenses feed the description suggestions. */
+/** The order of the « Depuis » chips — the order of the accounts screen. */
+const ACCOUNT_ORDER: readonly AccountKind[] = ['principal', 'vie_courante', 'epargne'];
+
+/** How many recent expenses feed the description suggestions and the default account. */
 const DESCRIPTION_SOURCE_ROWS = 200;
 
 /**
@@ -42,35 +48,50 @@ const DESCRIPTION_SOURCE_ROWS = 200;
 const FALLBACK_LABELS = ['Dépense', 'Uitgave', 'Expense', 'Ausgabe', 'Gasto'];
 
 /**
- * The workspace's own descriptions, read with the SESSION client (RLS applies)
- * and scoped to the workspace explicitly. A failed read yields no suggestion
- * rather than a failed sheet, and no description is ever logged.
+ * The workspace's own descriptions and the account its expenses are usually
+ * paid from, both from ONE read of its recent expenses, with the SESSION
+ * client (RLS applies) and scoped to the workspace explicitly. A failed read
+ * yields no suggestion and the schema's default account rather than a failed
+ * sheet, and no description is ever logged.
  */
-async function readOwnDescriptions(
+async function readOwnHabits(
   workspaceId: string,
   categoryNames: readonly string[],
-): Promise<OwnDescription[]> {
+): Promise<{ descriptions: OwnDescription[]; defaultPaidFrom: AccountKind }> {
+  const none = { descriptions: [], defaultPaidFrom: defaultExpenseAccount([]) };
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from('expenses')
-      .select('label, category_id, occurred_on, created_at')
+      .select('label, category_id, occurred_on, created_at, paid_from')
       .eq('workspace_id', workspaceId)
       .order('occurred_on', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(DESCRIPTION_SOURCE_ROWS);
-    if (error || !data) return [];
-    return ownDescriptionsFrom(
-      data.map((row) => ({
+    if (error || !data) return none;
+    const rows = data.map((row) => {
+      // The column's CHECK admits the three kinds only; parsing keeps a row
+      // the types cannot vouch for out of the count rather than trusting a cast.
+      const account = accountKindSchema.safeParse(row.paid_from);
+      return {
         label: row.label,
         categoryId: row.category_id,
         occurredOn: row.occurred_on,
         createdAt: row.created_at,
-      })),
-      { categoryNames, fallbackLabels: FALLBACK_LABELS },
-    );
+        ...(account.success && { paidFrom: account.data }),
+      };
+    });
+    return {
+      descriptions: ownDescriptionsFrom(rows, {
+        categoryNames,
+        fallbackLabels: FALLBACK_LABELS,
+      }),
+      defaultPaidFrom: defaultExpenseAccount(
+        rows.flatMap((row) => (row.paidFrom ? [{ paidFrom: row.paidFrom }] : [])),
+      ),
+    };
   } catch {
-    return [];
+    return none;
   }
 }
 
@@ -80,10 +101,14 @@ export async function getExpenseEntryContextAction(): Promise<ActionResult<Expen
   // is itself limited. Rate-limiting it would throttle opening a sheet.
   const { snapshot, situation, todayIso } = await loadMonthSituation();
   const categories = await getCategories(snapshot.workspaceId);
-  const descriptions = await readOwnDescriptions(
+  const { descriptions, defaultPaidFrom } = await readOwnHabits(
     snapshot.workspaceId,
     categories.map((category) => category.name),
   );
+  const accounts = ACCOUNT_ORDER.flatMap((kind) => {
+    const account = snapshot.accounts.find((a) => a.kind === kind);
+    return account ? [{ kind, label: account.displayName }] : [];
+  });
 
   const { chips, overflow, preselectedId } = expenseCategoryChips(
     categories,
@@ -104,6 +129,8 @@ export async function getExpenseEntryContextAction(): Promise<ActionResult<Expen
       overflow: overflow.map(strip),
       preselectedId,
       descriptions,
+      accounts,
+      defaultPaidFrom,
       // Decimal never crosses the RSC / action boundary — it loses its
       // prototype. Numbers here, formatting client-side.
       ilTeReste: situation.ilTeReste.toNumber(),

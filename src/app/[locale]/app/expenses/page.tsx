@@ -3,6 +3,8 @@ import { getTranslations } from 'next-intl/server';
 
 import { Expenses } from '@/lib/domain';
 import { getExpenses, getSnapshotWith } from '@/lib/data/workspace-snapshot';
+import type { AccountKind } from '@/lib/domain/types';
+
 import { ExpensesClient } from './ExpensesClient';
 
 // PR-D5 i18n: was a hardcoded FR string. See `charges/page.tsx`.
@@ -10,6 +12,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('app.expenses');
   return { title: t('title') };
 }
+
+/** The order of the « Depuis » chips — the order of the accounts screen. */
+const ACCOUNT_ORDER: readonly AccountKind[] = ['principal', 'vie_courante', 'epargne'];
 
 export default async function ExpensesPage() {
   const [snapshot, expenses] = await getSnapshotWith('/app/expenses', (workspaceId) =>
@@ -21,6 +26,7 @@ export default async function ExpensesPage() {
     amount: e.amount.toNumber(),
     occurredOn: e.occurredOn,
     note: e.note,
+    paidFrom: e.paidFrom,
   });
   // The current month comes COMPLETE from `monthlyExpenses` — the same source
   // as `spentThisMonth` below — because the list groups it by description and
@@ -58,6 +64,10 @@ export default async function ExpensesPage() {
       currentYear={year}
       currentMonth={month}
       joursEcoules={joursEcoules}
+      accounts={ACCOUNT_ORDER.flatMap((kind) => {
+        const account = snapshot.accounts.find((a) => a.kind === kind);
+        return account ? [{ kind, label: account.displayName }] : [];
+      })}
     />
   );
 }

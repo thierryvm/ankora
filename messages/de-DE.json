@@ -1030,6 +1030,7 @@
     },
     "expenses": {
       "title": "Meine Ausgaben",
+      "rowPaidFrom": "Bezahlt von {account}",
       "subtitle": "Die Ausgaben abseits wiederkehrender Rechnungen — Einkäufe, Restaurant, Freizeit…",
       "addSheet": {
         "title": "Neue Ausgabe",
@@ -1037,6 +1038,7 @@
         "close": "Schließen",
         "amountLabel": "Betrag in Euro",
         "categoryLabel": "Kategorie",
+        "paidFromLabel": "Von",
         "moreCategoriesCount": "{count} weitere",
         "moreCategoriesAria": "Die {count} weiteren Kategorien anzeigen",
         "noCategories": "Noch keine Ausgabenkategorie in deinem Bereich. Lege zuerst eine Kategorie an, um eine Ausgabe zu speichern.",

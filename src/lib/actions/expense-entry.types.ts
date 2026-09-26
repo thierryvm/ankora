@@ -10,6 +10,7 @@
  */
 
 import type { OwnDescription } from '@/lib/domain/expense-descriptions';
+import type { AccountKind } from '@/lib/domain/types';
 
 export type ExpenseEntryCategory = {
   id: string;
@@ -34,6 +35,14 @@ export type ExpenseEntryContext = {
    * fails: suggestions are a convenience, never a reason to refuse the sheet.
    */
   descriptions: OwnDescription[];
+  /** The « Depuis » chips (v3 rule 25): the workspace's accounts, in screen order, under their own names. */
+  accounts: { kind: AccountKind; label: string }[];
+  /**
+   * The account ticked on opening: the one most expenses were paid from,
+   * « Vie courante » before the first. A description typed in full recalls its
+   * own last account over this one.
+   */
+  defaultPaidFrom: AccountKind;
   /** « Il te reste » right now, so the sheet can show what a spend would leave. */
   ilTeReste: number;
   /** « Budget du mois » — the anchor. */

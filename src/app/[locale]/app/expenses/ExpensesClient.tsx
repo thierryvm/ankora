@@ -15,6 +15,8 @@ import { groupExpensesByDescription } from '@/lib/domain/expenses/group-by-descr
 import { formatCurrency, formatDate, formatMonth } from '@/lib/i18n/formatters';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 
+import type { AccountKind } from '@/lib/domain/types';
+
 import { ExpenseEditDrawer, type ExpenseEditDrawerExpense } from './ExpenseEditDrawer';
 
 type RawExpense = {
@@ -23,6 +25,7 @@ type RawExpense = {
   amount: number;
   occurredOn: string;
   note: string | null;
+  paidFrom: AccountKind;
 };
 
 type Props = {
@@ -43,6 +46,8 @@ type Props = {
   currentMonth: number;
   /** Days elapsed in the current month, including today. */
   joursEcoules: number;
+  /** The workspace's accounts, for the « Depuis » chips and the row line (rule 25). */
+  accounts: { kind: AccountKind; label: string }[];
 };
 
 export function ExpensesClient({
@@ -51,6 +56,7 @@ export function ExpensesClient({
   currentYear,
   currentMonth,
   joursEcoules,
+  accounts,
 }: Props) {
   const t = useTranslations('app.expenses');
   const locale = useLocale() as Locale;
@@ -83,6 +89,7 @@ export function ExpensesClient({
       amount: e.amount,
       occurredOn: e.occurredOn,
       note: e.note,
+      paidFrom: e.paidFrom,
     });
   }
 
@@ -137,6 +144,18 @@ export function ExpensesClient({
           <span data-testid="expenses-row-date" className="text-muted-foreground block text-xs">
             {formatDate(e.occurredOn, locale, 'medium')}
           </span>
+          {/* « Vie courante » is the default every expense starts on: only
+              another account is worth a line (rule 25). */}
+          {e.paidFrom !== 'vie_courante' && (
+            <span
+              data-testid="expenses-row-paid-from"
+              className="text-muted-foreground block text-xs"
+            >
+              {t('rowPaidFrom', {
+                account: accounts.find((a) => a.kind === e.paidFrom)?.label ?? e.paidFrom,
+              })}
+            </span>
+          )}
         </span>
         <span
           data-testid="expenses-row-amount"
@@ -278,7 +297,11 @@ export function ExpensesClient({
         </CardContent>
       </Card>
 
-      <ExpenseEditDrawer expense={editingExpense} onClose={() => setEditingExpense(null)} />
+      <ExpenseEditDrawer
+        expense={editingExpense}
+        accounts={accounts}
+        onClose={() => setEditingExpense(null)}
+      />
       <AddExpenseSheet open={isAddOpen} onClose={() => setIsAddOpen(false)} />
     </div>
   );

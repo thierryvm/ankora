@@ -1030,6 +1030,7 @@
     },
     "expenses": {
       "title": "Mes dépenses",
+      "rowPaidFrom": "Payé depuis {account}",
       "subtitle": "Les sorties hors factures récurrentes — courses, resto, loisirs…",
       "addSheet": {
         "title": "Nouvelle dépense",
@@ -1037,6 +1038,7 @@
         "close": "Fermer",
         "amountLabel": "Montant en euros",
         "categoryLabel": "Catégorie",
+        "paidFromLabel": "Depuis",
         "moreCategoriesCount": "{count} autres",
         "moreCategoriesAria": "Voir les {count} autres catégories",
         "noCategories": "Aucune catégorie de dépense dans ton espace. Crée d’abord une catégorie avec « Nouvelle » pour enregistrer une dépense.",
