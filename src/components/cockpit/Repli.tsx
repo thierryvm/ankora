@@ -53,10 +53,12 @@ export type RepliProps = Readonly<{
   cle: string;
   /** Identifiant stable pour les sondes et la spec e2e. */
   testId?: string;
+  /** Called with the new state on every toggle — lets a body read its data only once opened. */
+  onToggle?: (ouvert: boolean) => void;
   children: ReactNode;
 }>;
 
-export function Repli({ titre, cle, testId, children }: RepliProps) {
+export function Repli({ titre, cle, testId, onToggle, children }: RepliProps) {
   const [ouvert, setOuvert] = useState(false);
   const corpsId = useId();
 
@@ -72,7 +74,11 @@ export function Repli({ titre, cle, testId, children }: RepliProps) {
         type="button"
         aria-expanded={ouvert}
         aria-controls={corpsId}
-        onClick={() => setOuvert((o) => !o)}
+        onClick={() => {
+          const suivant = !ouvert;
+          setOuvert(suivant);
+          onToggle?.(suivant);
+        }}
         className="focus-visible:ring-brand-600 flex min-h-11 w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
         data-repli-tete
       >
@@ -80,10 +86,14 @@ export function Repli({ titre, cle, testId, children }: RepliProps) {
           {titre}
           {/* Le séparateur est décoratif : un lecteur d'écran lit « Mes comptes 3 »,
               le point médian n'apporte rien à l'oral. */}
-          <span aria-hidden> · </span>
-          <span className="text-muted-foreground font-normal" data-repli-cle>
-            {cle}
-          </span>
+          {cle && (
+            <>
+              <span aria-hidden> · </span>
+              <span className="text-muted-foreground font-normal" data-repli-cle>
+                {cle}
+              </span>
+            </>
+          )}
         </span>
         <ChevronDown
           aria-hidden

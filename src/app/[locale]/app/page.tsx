@@ -11,6 +11,7 @@ import { EngagementsCard } from '@/components/dashboard/EngagementsCard';
 import { MonthCurveLive } from '@/components/dashboard/MonthCurveLive';
 import { SimulatorDrawer } from '@/components/dashboard/SimulatorDrawer';
 import { Repli } from '@/components/cockpit/Repli';
+import { SixMoisRepli } from '@/components/cockpit/SixMoisRepli';
 import { IlTeResteCard } from '@/components/cockpit/IlTeResteCard';
 import { EncoreAPayerCard, type LigneAPayer } from '@/components/cockpit/EncoreAPayerCard';
 import { Expenses, Transfer, money } from '@/lib/domain';
@@ -484,6 +485,13 @@ export default async function DashboardPage({
           )}
         </Repli>
       )}
+
+      {/* « Six mois » (G-six) — the six months ending on the viewed month. Closed by
+          default; it reads its months when it opens, never at this render. */}
+      <SixMoisRepli
+        key={`${period.year}-${period.month}`}
+        fin={{ year: period.year, month: period.month }}
+      />
 
       {/* The rhythm counts days left from TODAY: it has nothing to say about another month. */}
       {isCurrentMonth && situation.statut !== 'incomplet' && (
