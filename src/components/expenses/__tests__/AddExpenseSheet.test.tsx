@@ -101,6 +101,14 @@ function context(over: Record<string, unknown> = {}) {
       // The person's own descriptions (rule 26). None by default, so the cases
       // written before the suggestions existed see the sheet they were written for.
       descriptions: [],
+      // The « Depuis » chips (rule 25). « Vie courante » by default, the
+      // schema's own default, so earlier cases keep the sheet they were written for.
+      accounts: [
+        { kind: 'principal', label: 'Compte principal' },
+        { kind: 'vie_courante', label: 'Vie courante' },
+        { kind: 'epargne', label: 'Épargne' },
+      ],
+      defaultPaidFrom: 'vie_courante',
       ...over,
     },
   };
@@ -460,7 +468,8 @@ describe('the chip row', () => {
   it('is a radiogroup, so a screen reader reads it as one choice', async () => {
     await openSheet();
     expect(screen.getByRole('radiogroup')).toBeInTheDocument();
-    expect(screen.getAllByRole('radio')).toHaveLength(3);
+    // Scoped to the category group: the « Depuis » chips below are radios too.
+    expect(within(screen.getByRole('radiogroup')).getAllByRole('radio')).toHaveLength(3);
   });
 });
 
@@ -729,7 +738,8 @@ describe('F-6 — the category is chosen, never assumed', () => {
   it('with nothing pre-selected, no chip is ticked', async () => {
     getExpenseEntryContextAction.mockResolvedValue(context({ preselectedId: null }));
     await openSheet();
-    for (const radio of screen.getAllByRole('radio')) {
+    // Scoped to the category group: an account is always ticked, a category not.
+    for (const radio of within(screen.getByRole('radiogroup')).getAllByRole('radio')) {
       expect(radio).toHaveAttribute('aria-checked', 'false');
     }
   });
@@ -1171,5 +1181,74 @@ describe('the description — suggestions and recall', () => {
 
     expect(field()).toHaveValue('');
     expect(options()).toHaveLength(0);
+  });
+});
+
+describe('« Depuis » — the account the expense is paid from (rule 25)', () => {
+  const loyer = {
+    label: 'Loyer garage',
+    categoryId: null,
+    count: 2,
+    lastOn: '2026-07-01',
+    paidFrom: 'principal',
+  };
+
+  it('shows the accounts as chips, the default one ticked', async () => {
+    await openSheet();
+    const group = screen.getByRole('group', { name: 'Depuis' });
+    const ticked = within(group).getByRole('radio', { checked: true });
+    expect(ticked).toHaveAccessibleName('Vie courante');
+    expect(within(group).getAllByRole('radio')).toHaveLength(3);
+  });
+
+  it('sends the account most expenses were paid from when nothing else is chosen', async () => {
+    getExpenseEntryContextAction.mockResolvedValue(context({ defaultPaidFrom: 'principal' }));
+    const user = userEvent.setup();
+    await openSheet();
+
+    await user.type(screen.getByTestId('add-expense-amount'), '60');
+    await user.click(screen.getByTestId('add-expense-submit'));
+
+    await waitFor(() => expect(createExpenseAction).toHaveBeenCalled());
+    expect(createExpenseAction.mock.calls[0]?.[0]).toMatchObject({ paidFrom: 'principal' });
+  });
+
+  it('recalls the account of the last expense with the same description', async () => {
+    getExpenseEntryContextAction.mockResolvedValue(context({ descriptions: [loyer] }));
+    const user = userEvent.setup();
+    await openSheet();
+
+    await user.type(screen.getByTestId('add-expense-amount'), '45');
+    await user.type(screen.getByTestId('add-expense-label'), 'Loyer garage');
+    await user.click(screen.getByTestId('add-expense-submit'));
+
+    await waitFor(() => expect(createExpenseAction).toHaveBeenCalled());
+    expect(createExpenseAction.mock.calls[0]?.[0]).toMatchObject({ paidFrom: 'principal' });
+  });
+
+  it('sends the account tapped just before submitting, with no description', async () => {
+    const user = userEvent.setup();
+    await openSheet();
+
+    await user.type(screen.getByTestId('add-expense-amount'), '12');
+    await user.click(screen.getByRole('radio', { name: 'Épargne' }));
+    await user.click(screen.getByTestId('add-expense-submit'));
+
+    await waitFor(() => expect(createExpenseAction).toHaveBeenCalled());
+    expect(createExpenseAction.mock.calls[0]?.[0]).toMatchObject({ paidFrom: 'epargne' });
+  });
+
+  it('keeps an account chosen by hand over the one a description recalls', async () => {
+    getExpenseEntryContextAction.mockResolvedValue(context({ descriptions: [loyer] }));
+    const user = userEvent.setup();
+    await openSheet();
+
+    await user.type(screen.getByTestId('add-expense-amount'), '45');
+    await user.click(screen.getByRole('radio', { name: 'Épargne' }));
+    await user.type(screen.getByTestId('add-expense-label'), 'Loyer garage');
+    await user.click(screen.getByTestId('add-expense-submit'));
+
+    await waitFor(() => expect(createExpenseAction).toHaveBeenCalled());
+    expect(createExpenseAction.mock.calls[0]?.[0]).toMatchObject({ paidFrom: 'epargne' });
   });
 });

@@ -43,6 +43,8 @@ vi.mock('@/components/expenses/AddExpenseSheet', () => ({
     open ? <div data-testid="add-expense-sheet-mock" /> : null,
 }));
 
+import type { AccountKind } from '@/lib/domain/types';
+
 import { ExpensesClient } from '../ExpensesClient';
 
 function renderWithIntl(ui: React.ReactNode) {
@@ -53,13 +55,27 @@ function renderWithIntl(ui: React.ReactNode) {
   );
 }
 
-const sampleExpenses = [
+const ACCOUNTS = [
+  { kind: 'principal' as const, label: 'Compte principal' },
+  { kind: 'vie_courante' as const, label: 'Vie courante' },
+  { kind: 'epargne' as const, label: 'Épargne' },
+];
+
+const sampleExpenses: {
+  id: string;
+  label: string;
+  amount: number;
+  occurredOn: string;
+  note: string | null;
+  paidFrom: AccountKind;
+}[] = [
   {
     id: 'e1',
     label: 'Courses Carrefour',
     amount: 87.5,
     occurredOn: '2026-05-15',
     note: null,
+    paidFrom: 'vie_courante' as const,
   },
   {
     id: 'e2',
@@ -67,6 +83,7 @@ const sampleExpenses = [
     amount: 42,
     occurredOn: '2026-05-22',
     note: null,
+    paidFrom: 'vie_courante' as const,
   },
 ];
 
@@ -94,6 +111,7 @@ function renderExpenses(expenses = sampleExpenses, opts: RenderOpts = {}) {
       currentYear={cy}
       currentMonth={cm}
       joursEcoules={opts.joursEcoules ?? 20}
+      accounts={ACCOUNTS}
     />,
   );
 }
@@ -178,11 +196,8 @@ describe('<ExpensesClient /> — PR-BETA-CLEANUP-3 edit drawer', () => {
     });
     await waitFor(() => expect(updateExpenseMock).toHaveBeenCalledTimes(1));
     expect(updateExpenseMock.mock.calls[0]?.[0]).toBe('e1');
-    expect(updateExpenseMock.mock.calls[0]?.[1]).toMatchObject({
-      amount: 95,
-      label: 'Courses Carrefour',
-      occurredOn: '2026-05-15',
-    });
+    // Only the field that changed travels: the drawer never rewrites the others.
+    expect(updateExpenseMock.mock.calls[0]?.[1]).toEqual({ amount: 95 });
     await waitFor(() => expect(screen.queryByTestId('expense-edit-drawer')).toBeNull());
     expect(toastSuccessMock).toHaveBeenCalledTimes(1);
     expect(routerRefreshMock).toHaveBeenCalledTimes(1);
@@ -196,6 +211,7 @@ describe('<ExpensesClient /> — PR-BETA-CLEANUP-3 edit drawer', () => {
     renderExpenses();
     fireEvent.click(screen.getByTestId('expenses-row-edit-e1'));
     await screen.findByTestId('expense-edit-drawer');
+    fireEvent.change(screen.getByTestId('expense-edit-amount'), { target: { value: '95' } });
     await act(async () => {
       fireEvent.click(screen.getByTestId('expense-edit-save'));
     });
@@ -203,6 +219,63 @@ describe('<ExpensesClient /> — PR-BETA-CLEANUP-3 edit drawer', () => {
     expect(screen.getByTestId('expense-edit-drawer')).toBeInTheDocument();
     expect(toastSuccessMock).not.toHaveBeenCalled();
     expect(routerRefreshMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('<ExpensesClient /> — « Depuis », the account of an expense (rule 25)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('writes exactly { paidFrom } when only the account changes', async () => {
+    updateExpenseMock.mockResolvedValue({ ok: true });
+    renderExpenses();
+    fireEvent.click(screen.getByTestId('expenses-row-edit-e1'));
+    await screen.findByTestId('expense-edit-drawer');
+    fireEvent.click(screen.getByRole('radio', { name: 'Compte principal' }));
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('expense-edit-save'));
+    });
+    await waitFor(() => expect(updateExpenseMock).toHaveBeenCalledTimes(1));
+    expect(updateExpenseMock).toHaveBeenCalledWith('e1', { paidFrom: 'principal' });
+  });
+
+  it('ticks the account the expense was paid from when the drawer opens', async () => {
+    renderExpenses([{ ...sampleExpenses[0]!, paidFrom: 'epargne' }]);
+    fireEvent.click(screen.getByTestId('expenses-row-edit-e1'));
+    await screen.findByTestId('expense-edit-drawer');
+    expect(screen.getByRole('radio', { name: 'Épargne' })).toBeChecked();
+  });
+
+  it('forgets an account picked then cancelled when the same expense reopens', async () => {
+    renderExpenses();
+    fireEvent.click(screen.getByTestId('expenses-row-edit-e1'));
+    await screen.findByTestId('expense-edit-drawer');
+    fireEvent.click(screen.getByRole('radio', { name: 'Compte principal' }));
+    fireEvent.keyDown(window, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByTestId('expense-edit-drawer')).toBeNull());
+
+    fireEvent.click(screen.getByTestId('expenses-row-edit-e1'));
+    await screen.findByTestId('expense-edit-drawer');
+    expect(screen.getByRole('radio', { name: 'Vie courante' })).toBeChecked();
+  });
+
+  it('closes without writing when nothing changed', async () => {
+    renderExpenses();
+    fireEvent.click(screen.getByTestId('expenses-row-edit-e1'));
+    await screen.findByTestId('expense-edit-drawer');
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('expense-edit-save'));
+    });
+    await waitFor(() => expect(screen.queryByTestId('expense-edit-drawer')).toBeNull());
+    expect(updateExpenseMock).not.toHaveBeenCalled();
+  });
+
+  it('names the account on the row only when it is not « Vie courante »', () => {
+    renderExpenses([{ ...sampleExpenses[0]!, paidFrom: 'principal' }, sampleExpenses[1]!]);
+    const lines = screen.getAllByTestId('expenses-row-paid-from');
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toHaveTextContent('Payé depuis Compte principal');
   });
 });
 
@@ -233,7 +306,14 @@ describe('<ExpensesClient /> — « Dépensé ce mois » (ADR-035)', () => {
   it('splits current-month from earlier months into a collapsible section', () => {
     const mixed = [
       sampleExpenses[0]!, // e1 — May (this month)
-      { id: 'e3', label: 'Avril lointain', amount: 20, occurredOn: '2026-04-10', note: null },
+      {
+        id: 'e3',
+        label: 'Avril lointain',
+        amount: 20,
+        occurredOn: '2026-04-10',
+        note: null,
+        paidFrom: 'vie_courante' as const,
+      },
     ];
     renderExpenses(mixed);
     // Current-month list has only e1; e3 lives in the « earlier months » details.
@@ -253,7 +333,14 @@ describe('<ExpensesClient /> — « Dépensé ce mois » (ADR-035)', () => {
 
   it('shows the empty-state + earlier section when nothing is from this month', () => {
     const earlierOnly = [
-      { id: 'e3', label: 'Avril lointain', amount: 20, occurredOn: '2026-04-10', note: null },
+      {
+        id: 'e3',
+        label: 'Avril lointain',
+        amount: 20,
+        occurredOn: '2026-04-10',
+        note: null,
+        paidFrom: 'vie_courante' as const,
+      },
     ];
     renderExpenses(earlierOnly);
     // No current-month list — the empty-state message stands in.
@@ -273,11 +360,46 @@ describe('<ExpensesClient /> — « Dépensé ce mois » (ADR-035)', () => {
  */
 describe('<ExpensesClient /> — the month grouped by description', () => {
   const month = [
-    { id: 'g1', label: 'Colruyt', amount: 5.05, occurredOn: '2026-05-02', note: null },
-    { id: 'g2', label: 'Pharmacie', amount: 50.5, occurredOn: '2026-05-03', note: null },
-    { id: 'g3', label: 'COLRUYT', amount: 7.05, occurredOn: '2026-05-10', note: null },
-    { id: 'g4', label: 'Boulangerie', amount: 0.1, occurredOn: '2026-05-11', note: null },
-    { id: 'g5', label: 'boulangerie', amount: 0.2, occurredOn: '2026-05-12', note: null },
+    {
+      id: 'g1',
+      label: 'Colruyt',
+      amount: 5.05,
+      occurredOn: '2026-05-02',
+      note: null,
+      paidFrom: 'vie_courante' as const,
+    },
+    {
+      id: 'g2',
+      label: 'Pharmacie',
+      amount: 50.5,
+      occurredOn: '2026-05-03',
+      note: null,
+      paidFrom: 'vie_courante' as const,
+    },
+    {
+      id: 'g3',
+      label: 'COLRUYT',
+      amount: 7.05,
+      occurredOn: '2026-05-10',
+      note: null,
+      paidFrom: 'vie_courante' as const,
+    },
+    {
+      id: 'g4',
+      label: 'Boulangerie',
+      amount: 0.1,
+      occurredOn: '2026-05-11',
+      note: null,
+      paidFrom: 'vie_courante' as const,
+    },
+    {
+      id: 'g5',
+      label: 'boulangerie',
+      amount: 0.2,
+      occurredOn: '2026-05-12',
+      note: null,
+      paidFrom: 'vie_courante' as const,
+    },
   ];
   const earlier = {
     id: 'g0',
@@ -285,6 +407,7 @@ describe('<ExpensesClient /> — the month grouped by description', () => {
     amount: 70.5,
     occurredOn: '2026-04-28',
     note: null,
+    paidFrom: 'vie_courante' as const,
   };
 
   const groups = () => screen.getAllByTestId('expense-group');
