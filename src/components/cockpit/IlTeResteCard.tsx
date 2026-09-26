@@ -11,7 +11,7 @@ import { formatCurrency } from '@/lib/i18n/formatters';
 import { IlTeResteChiffres } from './IlTeResteChiffres';
 import { Repli } from './Repli';
 
-import type { MoisVu } from './mois-vu';
+import { commenceParVoyelle, type MoisVu } from './mois-vu';
 /**
  * C2 — « Il te reste ». La carte de tête du cockpit v3.
  *
@@ -67,7 +67,7 @@ export type IlTeResteCardProps = Readonly<{
   chargesFixes: number;
   provisionsLissees: number;
   engagementsMensuels: number;
-  /** Le mois, déjà formaté par la page. */
+  /** Le mois tel qu'une phrase l'écrit (« octobre »), déjà formaté par la page. */
   monthLabel: string;
   /** Vrai quand aucun revenu n'est connu : rien ne se calcule sans lui. */
   incomplet: boolean;
@@ -165,7 +165,10 @@ export async function IlTeResteCard({
           base={
             moisVu
               ? t('baseMois', { month: moisVu.month, voyelle: moisVu.voyelle ? 'oui' : 'non' })
-              : t('base', { month: monthLabel })
+              : t('baseMois', {
+                  month: monthLabel,
+                  voyelle: commenceParVoyelle(monthLabel) ? 'oui' : 'non',
+                })
           }
           termes={{
             revenus: moisVu ? t('termeRevenusMois', { month: moisVu.month }) : t('termeRevenus'),

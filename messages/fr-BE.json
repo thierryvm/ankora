@@ -1734,7 +1734,6 @@
     "ilTeReste": {
       "etiquette": "Situation",
       "titre": "Il te reste",
-      "base": "sur ton budget de {month}",
       "termeRevenus": "Argent reçu",
       "termeRetenu": "Déjà compté pour tes factures",
       "termeDepense": "Dépensé",
@@ -1761,7 +1760,7 @@
       "enRetard": "{date}, en retard",
       "autres": "{count} autres à payer dans le détail",
       "bientot": "Bientôt",
-      "bientotHorsDe": "hors de {month}",
+      "bientotHorsDe": "hors {voyelle, select, oui {d’{month}} other {de {month}}}",
       "bientotAutres": "+ {count} autres dans Mes factures",
       "voirFactures": "Mes factures",
       "voirFacturesDuMois": "Voir les factures {voyelle, select, oui {d’{month}} other {de {month}}}",

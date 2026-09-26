@@ -28,6 +28,11 @@ export function moisDansLaPhrase(month: number, locale: string): string {
   );
 }
 
+/** French elides before a vowel or a mute h: « d’octobre », « hors d’août ». */
+export function commenceParVoyelle(mois: string): boolean {
+  return /^[aeiouyâàéèêîôûh]/i.test(mois);
+}
+
 export function moisVuDe(viewed: Period, current: Period, locale: string): MoisVu | null {
   const ecart = periodOrdinal(viewed) - periodOrdinal(current);
   if (ecart === 0) return null;
@@ -35,7 +40,7 @@ export function moisVuDe(viewed: Period, current: Period, locale: string): MoisV
   return {
     temps: ecart > 0 ? 'aVenir' : 'passe',
     month,
-    voyelle: /^[aeiouyâàéèêîôûh]/i.test(month),
+    voyelle: commenceParVoyelle(month),
     param: toPeriodParam(viewed),
   };
 }

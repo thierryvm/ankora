@@ -1734,7 +1734,6 @@
     "ilTeReste": {
       "etiquette": "Situation",
       "titre": "You have left",
-      "base": "on your {month} budget",
       "termeRevenus": "Money in",
       "termeRetenu": "Already set aside for your bills",
       "termeDepense": "Spent",

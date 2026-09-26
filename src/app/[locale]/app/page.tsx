@@ -22,7 +22,7 @@ import { paymentKey } from '@/lib/domain/cockpit/types';
 import type { NamedCommitment } from '@/lib/domain/obligations';
 import { loadMonthSituation, todayIsoInBrussels } from '@/lib/data/month-situation';
 import { MonthNav } from '@/components/period/MonthNav';
-import { moisVuDe } from '@/components/cockpit/mois-vu';
+import { moisDansLaPhrase, moisVuDe } from '@/components/cockpit/mois-vu';
 import {
   parseViewedPeriod,
   transferPlanAllowed,
@@ -160,6 +160,9 @@ export default async function DashboardPage({
   // no button.
   const transferActionable = transferPlanAllowed(period, snapshot.currentPeriod);
   const monthLabel = formatMonth(currentMonth, locale);
+  // The cards speak of the month inside sentences (« sur ton budget d’octobre »,
+  // « hors d’octobre »): never the capitalised title form (26 Sept. 2026).
+  const moisPhrase = moisDansLaPhrase(currentMonth, locale);
   // Mid-sentence, the month keeps the case its language gives it (« d'octobre »,
   // « for October »), unlike `formatMonth`, which capitalises for titles.
   // ADR-046, lot 2 bis — the tense and the mid-sentence name of another month,
@@ -352,7 +355,7 @@ export default async function DashboardPage({
               prevAria: tNav('prevAria'),
               nextAria: tNav('nextAria'),
               backToCurrent: tNav('backToCurrent', {
-                month: formatMonth(snapshot.currentPeriod.month, locale),
+                month: moisDansLaPhrase(snapshot.currentPeriod.month, locale),
               }),
             }}
           />
@@ -373,7 +376,7 @@ export default async function DashboardPage({
           chargesFixes={situation.chargesFixes.toNumber()}
           provisionsLissees={situation.provisionsLissees.toNumber()}
           engagementsMensuels={situation.engagementsMensuels.toNumber()}
-          monthLabel={monthLabel}
+          monthLabel={moisPhrase}
           incomplet={situation.statut === 'incomplet'}
           locale={locale}
           cascade={cascade}
@@ -389,7 +392,7 @@ export default async function DashboardPage({
             total={obligationsDuMoisToutes.length}
             lignes={lignesAPayer}
             bientot={bientot}
-            monthLabel={monthLabel}
+            monthLabel={moisPhrase}
             locale={locale}
             moisVu={moisVu}
           />

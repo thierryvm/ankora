@@ -7,7 +7,7 @@ import { formatCurrency, formatDate } from '@/lib/i18n/formatters';
 import type { LigneBientot } from '@/lib/domain/cockpit/bientot';
 
 import { PartMensuelle, type PartMensuelleProps } from './PartMensuelle';
-import type { MoisVu } from './mois-vu';
+import { commenceParVoyelle, type MoisVu } from './mois-vu';
 
 /**
  * C6 — « Encore à payer », et le bloc « Bientôt » qui la suit.
@@ -182,7 +182,11 @@ export async function EncoreAPayerCard({
               <strong className="font-semibold">{t('bientot')}</strong>
               <span className="text-muted-foreground">
                 {' '}
-                · {t('bientotHorsDe', { month: monthLabel })}
+                ·{' '}
+                {t('bientotHorsDe', {
+                  month: monthLabel,
+                  voyelle: commenceParVoyelle(monthLabel) ? 'oui' : 'non',
+                })}
               </span>
             </p>
             <ul className="divide-border mt-1 divide-y">

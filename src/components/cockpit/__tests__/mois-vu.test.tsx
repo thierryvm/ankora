@@ -38,7 +38,7 @@ vi.mock('next-intl/server', () => ({
   },
 }));
 
-import { moisDansLaPhrase, moisVuDe, type MoisVu } from '../mois-vu';
+import { commenceParVoyelle, moisDansLaPhrase, moisVuDe, type MoisVu } from '../mois-vu';
 import { IlTeResteCard } from '../IlTeResteCard';
 import { EncoreAPayerCard } from '../EncoreAPayerCard';
 import { CascadeDuMois } from '@/components/dashboard/CascadeDuMois';
@@ -133,6 +133,22 @@ describe('fr-BE — the exact sentences decided by the pilot', () => {
       'sur ton budget de novembre',
     );
   });
+
+  it('« Bientôt » is « hors d’octobre », « hors de novembre »', () => {
+    expect(t('cockpit.encoreAPayer.bientotHorsDe', { month: 'octobre', voyelle: 'oui' })).toBe(
+      'hors d’octobre',
+    );
+    expect(t('cockpit.encoreAPayer.bientotHorsDe', { month: 'novembre', voyelle: 'non' })).toBe(
+      'hors de novembre',
+    );
+  });
+
+  it('the month inside a sentence of the CURRENT month comes from moisDansLaPhrase: « octobre », « août »', () => {
+    expect(moisDansLaPhrase(10, 'fr-BE')).toBe('octobre');
+    expect(moisDansLaPhrase(8, 'fr-BE')).toBe('août');
+    expect(commenceParVoyelle('octobre')).toBe(true);
+    expect(commenceParVoyelle('septembre')).toBe(false);
+  });
 });
 
 const october: MoisVu = { temps: 'aVenir', month: 'octobre', voyelle: true, param: '2026-10' };
@@ -171,11 +187,20 @@ describe('IlTeResteCard — the tense of the viewed month', () => {
     expect(screen.getByText(/Reçu pour août/)).toBeInTheDocument();
   });
 
-  it('the current month keeps today’s wording', async () => {
-    render(await IlTeResteCard({ ...carteProps, monthLabel: 'Septembre', moisVu: null }));
+  // Changed expectation (26 Sept. 2026): « sur ton budget de Septembre »
+  // asserted the defect itself — a capital mid-sentence, and from 1 October
+  // « de Octobre ». The page now passes the month as a sentence writes it.
+  it('the current month keeps today’s wording, the month written as a sentence writes it', async () => {
+    render(await IlTeResteCard({ ...carteProps, monthLabel: 'septembre', moisVu: null }));
     expect(screen.getByText('Il te reste')).toBeInTheDocument();
     expect(screen.getByText(/Argent reçu/)).toBeInTheDocument();
-    expect(screen.getByText(/sur ton budget de Septembre/)).toBeInTheDocument();
+    expect(screen.getByText(/sur ton budget de septembre/)).toBeInTheDocument();
+  });
+
+  it('the current month elides too: from 1 October, « sur ton budget d’octobre », never « de Octobre »', async () => {
+    render(await IlTeResteCard({ ...carteProps, monthLabel: 'octobre', moisVu: null }));
+    expect(screen.getByText(/sur ton budget d’octobre/)).toBeInTheDocument();
+    expect(screen.queryByText(/de octobre|de Octobre/)).toBeNull();
   });
 });
 

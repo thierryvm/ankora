@@ -1,3 +1,4 @@
+import { moisDansLaPhrase } from '@/components/cockpit/mois-vu';
 import type { Metadata } from 'next';
 import { getLocale, getTranslations } from 'next-intl/server';
 
@@ -176,7 +177,8 @@ export default async function ChargesPage({
         prevParam: nav.prevParam,
         nextParam: nav.nextParam,
         isCurrent,
-        currentLabel: monthLabel(current),
+        // Mid-sentence (« Revenir à septembre 2026 »): never the title's capital.
+        currentLabel: `${moisDansLaPhrase(current.month, locale)} ${current.year}`,
       }}
     />
   );
