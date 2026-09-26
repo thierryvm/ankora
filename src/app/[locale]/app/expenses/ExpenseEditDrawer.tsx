@@ -14,6 +14,9 @@ import { toast } from '@/components/ui/toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PaidFromChips } from '@/components/expenses/PaidFromChips';
+import type { ExpenseUpdate } from '@/lib/schemas/expense';
+import type { AccountKind } from '@/lib/domain/types';
 import { cn } from '@/lib/utils';
 
 export type ExpenseEditDrawerExpense = {
@@ -22,10 +25,13 @@ export type ExpenseEditDrawerExpense = {
   amount: number;
   occurredOn: string;
   note: string | null;
+  paidFrom: AccountKind;
 };
 
 type Props = {
   expense: ExpenseEditDrawerExpense | null;
+  /** The « Depuis » chips (rule 25), in screen order, under the person's names. */
+  accounts: readonly { kind: AccountKind; label: string }[];
   onClose: () => void;
 };
 
@@ -43,7 +49,7 @@ type Props = {
  *
  * Slide-from-right on desktop, full-screen on mobile (h-svh + sm:max-w-md).
  */
-export function ExpenseEditDrawer({ expense, onClose }: Props) {
+export function ExpenseEditDrawer({ expense, accounts, onClose }: Props) {
   const t = useTranslations('app.expenses');
   const translateError = useActionErrorTranslator();
   const router = useRouter();
@@ -60,15 +66,21 @@ export function ExpenseEditDrawer({ expense, onClose }: Props) {
   const [label, setLabel] = useState(expense?.label ?? '');
   const [amount, setAmount] = useState(expense?.amount.toString() ?? '');
   const [occurredOn, setOccurredOn] = useState(expense?.occurredOn ?? '');
+  const [paidFrom, setPaidFrom] = useState<AccountKind>(expense?.paidFrom ?? 'vie_courante');
   const locale = useLocale() as Locale;
   const [isPending, startTransition] = useTransition();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
+  // Closing forgets the seed: reopening the SAME expense must start from what
+  // it holds, never from choices made and then cancelled — an account ticked
+  // then abandoned would otherwise travel with the next unrelated save.
+  if (!expense && seedId !== null) setSeedId(null);
   if (expense && expense.id !== seedId) {
     setSeedId(expense.id);
     setLabel(expense.label);
     setAmount(expense.amount.toString());
     setOccurredOn(expense.occurredOn);
+    setPaidFrom(expense.paidFrom);
     // Reset the confirmation too: reopening on another expense must never
     // inherit an armed delete from the previous one.
     setConfirmingDelete(false);
@@ -102,15 +114,24 @@ export function ExpenseEditDrawer({ expense, onClose }: Props) {
       return;
     }
 
+    // Only what changed travels (#494): an untouched field stays undefined and
+    // the partial update schema leaves its column alone. Nothing changed, nothing
+    // written — the drawer just closes.
+    const trimmedLabel = label.trim();
+    const changes: ExpenseUpdate = {
+      ...(trimmedLabel !== expense.label && { label: trimmedLabel }),
+      ...(parsedAmount !== expense.amount && { amount: parsedAmount }),
+      ...(occurredOn !== expense.occurredOn && { occurredOn }),
+      ...(paidFrom !== expense.paidFrom && { paidFrom }),
+    };
+    if (Object.keys(changes).length === 0) {
+      onClose();
+      return;
+    }
+
     startTransition(async () => {
       try {
-        const result = await updateExpenseAction(expense.id, {
-          label: label.trim(),
-          amount: parsedAmount,
-          occurredOn,
-          // Untouched fields stay undefined → the partial update schema
-          // skips them in the SQL UPDATE statement.
-        });
+        const result = await updateExpenseAction(expense.id, changes);
         if (result.ok) {
           toast.success(t('toastUpdated'));
           onClose();
@@ -243,6 +264,16 @@ export function ExpenseEditDrawer({ expense, onClose }: Props) {
               data-testid="expense-edit-occurred-on"
             />
           </div>
+          {accounts.length > 1 && (
+            <PaidFromChips
+              name="expense-edit-paid-from"
+              legend={t('addSheet.paidFromLabel')}
+              accounts={accounts}
+              value={paidFrom}
+              onChange={setPaidFrom}
+              disabled={isPending}
+            />
+          )}
         </div>
 
         {/*

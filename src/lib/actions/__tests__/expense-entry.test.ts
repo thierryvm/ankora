@@ -88,7 +88,16 @@ function situationFactice(
   }> = {},
 ) {
   return {
-    snapshot: { workspaceId: 'ws-1', monthlyExpenses: [] },
+    snapshot: {
+      workspaceId: 'ws-1',
+      monthlyExpenses: [],
+      // Stored in another order than the chips show them, on purpose.
+      accounts: [
+        { kind: 'epargne', displayName: 'Épargne' },
+        { kind: 'principal', displayName: 'Compte principal' },
+        { kind: 'vie_courante', displayName: 'Vie courante' },
+      ],
+    },
     situation: {
       ilTeReste: new Decimal('429.89'),
       resteDisponible: new Decimal('838.52'),
@@ -214,13 +223,14 @@ describe('getExpenseEntryContextAction — les descriptions déjà saisies (règ
     occurred_on: string,
     category_id: string | null,
     created_at = `${occurred_on}T12:00:00Z`,
-  ) => ({ label, category_id, occurred_on, created_at });
+    paid_from?: string,
+  ) => ({ label, category_id, occurred_on, created_at, paid_from });
 
   it('lit les dépenses de l’espace du snapshot, et de lui seul', async () => {
     await getExpenseEntryContextAction();
     expect(descriptionsQuery.calls).toEqual([
       ['from', ['expenses']],
-      ['select', ['label, category_id, occurred_on, created_at']],
+      ['select', ['label, category_id, occurred_on, created_at, paid_from']],
       ['eq', ['workspace_id', 'ws-1']],
       ['order', ['occurred_on', { ascending: false }]],
       ['order', ['created_at', { ascending: false }]],
@@ -292,5 +302,54 @@ describe('getExpenseEntryContextAction — les descriptions déjà saisies (règ
     descriptionsQuery.throws = true;
     const res = await getExpenseEntryContextAction();
     expect(res.ok && res.data.descriptions).toEqual([]);
+  });
+});
+
+describe('getExpenseEntryContextAction — le compte « Depuis » (règle 25)', () => {
+  const payee = (label: string, occurred_on: string, paid_from: string) => ({
+    label,
+    category_id: null,
+    occurred_on,
+    created_at: `${occurred_on}T12:00:00Z`,
+    paid_from,
+  });
+
+  it('propose « Vie courante » quand aucune dépense n’est écrite', async () => {
+    const res = await getExpenseEntryContextAction();
+    expect(res.ok && res.data.defaultPaidFrom).toBe('vie_courante');
+  });
+
+  it('propose le compte le plus utilisé pour les dépenses', async () => {
+    descriptionsQuery.result = {
+      data: [
+        payee('Colruyt', '2026-08-20', 'vie_courante'),
+        payee('Loyer garage', '2026-08-18', 'principal'),
+        payee('Assurance vélo', '2026-08-10', 'principal'),
+      ],
+      error: null,
+    };
+    const res = await getExpenseEntryContextAction();
+    expect(res.ok && res.data.defaultPaidFrom).toBe('principal');
+  });
+
+  it('retient le compte de la dernière dépense de chaque description', async () => {
+    descriptionsQuery.result = {
+      data: [
+        payee('Loyer garage', '2026-08-18', 'principal'),
+        payee('Loyer garage', '2026-07-18', 'vie_courante'),
+      ],
+      error: null,
+    };
+    const res = await getExpenseEntryContextAction();
+    expect(res.ok && res.data.descriptions[0]?.paidFrom).toBe('principal');
+  });
+
+  it('rend les comptes dans l’ordre des puces, sous le nom que la personne leur a donné', async () => {
+    const res = await getExpenseEntryContextAction();
+    expect(res.ok && res.data.accounts).toEqual([
+      { kind: 'principal', label: 'Compte principal' },
+      { kind: 'vie_courante', label: 'Vie courante' },
+      { kind: 'epargne', label: 'Épargne' },
+    ]);
   });
 });

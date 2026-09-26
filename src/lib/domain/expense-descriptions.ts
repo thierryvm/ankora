@@ -1,3 +1,5 @@
+import type { AccountKind } from '@/lib/domain/types';
+
 /**
  * Descriptions of an expense — suggestions while typing, and the category they
  * recall. v3 mock-up, rule 26: « the description says WHERE, the category says
@@ -117,6 +119,8 @@ export type OwnDescription = {
   count: number;
   /** Date (`YYYY-MM-DD`) of the most recent one. */
   lastOn: string;
+  /** Account the most recent one was paid from, when it was read. */
+  paidFrom?: AccountKind;
 };
 
 export type DescriptionSuggestion = {
@@ -228,6 +232,7 @@ export type DescriptionSource = {
   occurredOn: string;
   /** Tie-breaker between two expenses of the same day: the later entry wins. */
   createdAt: string;
+  paidFrom?: AccountKind;
 };
 
 /**
@@ -257,6 +262,7 @@ export function ownDescriptionsFrom(
         count: 1,
         lastOn: row.occurredOn,
         lastCreatedAt: row.createdAt,
+        ...(row.paidFrom !== undefined && { paidFrom: row.paidFrom }),
       });
       continue;
     }
@@ -267,12 +273,19 @@ export function ownDescriptionsFrom(
     if (newer) {
       current.label = row.label.trim();
       current.categoryId = row.categoryId;
+      if (row.paidFrom !== undefined) current.paidFrom = row.paidFrom;
       current.lastOn = row.occurredOn;
       current.lastCreatedAt = row.createdAt;
     }
   }
 
   return [...byKey.values()]
-    .map(({ label, categoryId, count, lastOn }) => ({ label, categoryId, count, lastOn }))
+    .map(({ label, categoryId, count, lastOn, paidFrom }) => ({
+      label,
+      categoryId,
+      count,
+      lastOn,
+      ...(paidFrom !== undefined && { paidFrom }),
+    }))
     .sort(byCountThenRecency);
 }
