@@ -8,10 +8,10 @@ import { AccountCard } from '@/components/features/AccountCard';
 import { CascadeDuMois, type PartAffichee } from '@/components/dashboard/CascadeDuMois';
 import { ProvisionHealthGaugeCard } from '@/components/dashboard/ProvisionHealthGaugeCard';
 import { EngagementsCard } from '@/components/dashboard/EngagementsCard';
-import { MonthCurveLive } from '@/components/dashboard/MonthCurveLive';
 import { SimulatorDrawer } from '@/components/dashboard/SimulatorDrawer';
 import { Repli } from '@/components/cockpit/Repli';
 import { SixMoisRepli } from '@/components/cockpit/SixMoisRepli';
+import { RythmeDuMois } from '@/components/cockpit/RythmeDuMois';
 import { IlTeResteCard } from '@/components/cockpit/IlTeResteCard';
 import { EncoreAPayerCard, type LigneAPayer } from '@/components/cockpit/EncoreAPayerCard';
 import { Expenses, Transfer, money } from '@/lib/domain';
@@ -131,7 +131,6 @@ export default async function DashboardPage({
     soldeQuotidien,
     ledger,
     joursEcoules,
-    joursRestants,
     joursDuMois: daysInMonth,
     todayIso,
     ref,
@@ -235,7 +234,6 @@ export default async function DashboardPage({
   const dailyPlafondMissing =
     snapshot.vieCouranteMonthlyTransfer === null || snapshot.vieCouranteMonthlyTransfer === 0;
   const tDaily = await getTranslations('dashboard.daily');
-  const tSituation = await getTranslations('dashboard.situation');
   const showCommitments = hasLiveCommitments(commitments, paidKeysByCommitment);
 
   // ---------------------------------------------------------------------------
@@ -296,7 +294,6 @@ export default async function DashboardPage({
     ? tc('replis.cleVirementsIncomplet')
     : tc('replis.cleVirements', { montant: fmtMoney(plan.vieCouranteTransfer) });
   const cleEngagements = String(commitments.length);
-  const cleRythme = tc('replis.cleRythme', { jours: joursRestants });
 
   const cascade =
     situation.statut === 'incomplet' ? null : (
@@ -495,30 +492,30 @@ export default async function DashboardPage({
 
       {/* The rhythm counts days left from TODAY: it has nothing to say about another month. */}
       {isCurrentMonth && situation.statut !== 'incomplet' && (
-        <Repli titre={tc('replis.rythme')} cle={cleRythme} testId="repli-rythme">
-          {/* Les libellés de la courbe sont ceux du hero d'avant (`dashboard.
-              situation.courbe.*`) : le tracé n'a pas changé, seul l'endroit où
-              il se lit a changé. Les recopier ailleurs aurait créé deux jeux de
-              mots pour un seul dessin. */}
-          <MonthCurveLive
-            serie={serieDuMois}
-            budgetDuMois={situation.resteDisponible.toNumber()}
-            depensesDuMois={situation.depensesDuMois.toNumber()}
-            projection={situation.depensesProjetees?.toNumber() ?? null}
-            joursEcoules={joursEcoules}
-            joursDuMois={daysInMonth}
-            labels={{
-              aria: tSituation('pace.barAria', {
-                depense: fmtMoney(situation.depensesDuMois),
-                budget: fmtMoney(situation.resteDisponible),
-              }),
-              reel: tSituation('courbe.reel'),
-              rythme: tSituation('courbe.rythme'),
-              projection: tSituation('courbe.projection'),
-              verdict: null,
-            }}
-          />
-        </Repli>
+        <RythmeDuMois
+          year={period.year}
+          month={period.month}
+          joursDuMois={daysInMonth}
+          joursEcoules={joursEcoules}
+          serie={serieDuMois}
+          depenses={monthlyExpenses.map((e) => ({
+            id: e.id,
+            label: e.label,
+            montant: e.amount.toNumber(),
+            date: e.occurredOn.slice(0, 10),
+          }))}
+          depensesDuMois={situation.depensesDuMois.toNumber()}
+          projection={situation.depensesProjetees?.toNumber() ?? null}
+          budget={{
+            montant: situation.resteDisponible.toNumber(),
+            revenus: situation.revenus.toNumber(),
+            retenu: situation.retenu.toNumber(),
+            chargesFixes: situation.chargesFixes.toNumber(),
+            provisionsLissees: situation.provisionsLissees.toNumber(),
+            engagementsMensuels: situation.engagementsMensuels.toNumber(),
+            misDeCote: situation.misDeCote.toNumber(),
+          }}
+        />
       )}
 
       {hasCharges && (

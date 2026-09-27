@@ -44,7 +44,8 @@ const LEAF_KEYS = [
   'flow.epargneEstimee',
   'flow.parJour',
   'barAria',
-  // Les trois légendes de `MonthCurve`. Elles sont le CANAL NON-COULEUR de la
+  // Les trois légendes de l'ancienne courbe du mois (retirée au tour 45, clés
+  // gardées jusqu'à leur nettoyage). Elles sont le CANAL NON-COULEUR de la
   // courbe : trois tracés qui ne se distingueraient que par leur teinte
   // violeraient WCAG 1.4.1. Une locale qui en perdrait une rendrait donc une
   // courbe illisible pour un daltonien — sans qu'aucun autre test ne bouge,

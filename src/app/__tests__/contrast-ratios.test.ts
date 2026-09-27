@@ -483,8 +483,11 @@ const GRAPH_TOKENS = [
 ] as const;
 
 /**
- * Les teintes que `MonthCurve` pose en `stroke`, et pourquoi elles ont leur
- * propre contrôle.
+ * Les teintes posées en `stroke` par la courbe du mois, et pourquoi elles ont
+ * leur propre contrôle. Depuis le tour 45, la carte « Rythme du mois »
+ * (`RythmeDuMois`) remplace `MonthCurve` : son tracé prend la série dépenses
+ * (`--color-serie-depenses`) et sa droite du budget le neutre
+ * (`--color-muted-foreground`). La liste suit ce qui est tracé aujourd'hui.
  *
  * La rampe ci-dessus couvre les jetons **catégoriels** — ceux d'un anneau de
  * répartition. Les traits de la courbe du mois viennent d'ailleurs : trois
@@ -502,12 +505,7 @@ const GRAPH_TOKENS = [
  * aujourd'hui, et un seuil mesuré sur la seule surface qu'on croit utiliser
  * n'est pas un seuil.
  */
-const CURVE_STROKE_TOKENS = [
-  'color-brand-text',
-  'color-warning',
-  'color-danger',
-  'color-muted-foreground',
-] as const;
+const CURVE_STROKE_TOKENS = ['color-serie-depenses', 'color-muted-foreground'] as const;
 
 const THEMES = [
   ['clair', THEME_BLOCK],

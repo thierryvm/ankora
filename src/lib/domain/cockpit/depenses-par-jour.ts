@@ -18,11 +18,11 @@ import Decimal from 'decimal.js';
  * contrainte en base. `depensesDuMois()` la compte ; la portion écoulée de cette
  * série, non. Les deux totaux ne se rejoignent qu'au 31.
  *
- * Conséquence à l'écran, connue et non résolue ici : `MonthCurve` force son
- * dernier point visible sur le total affiché, donc une dépense post-datée
- * apparaît comme une marche verticale sur AUJOURD'HUI plutôt qu'au jour qu'elle
- * porte. La courbe reste d'accord avec le chiffre du hero — c'est ce qui
- * compte le plus — mais elle place la dépense au mauvais jour. Ticket à ouvrir.
+ * Conséquence à l'écran : la carte « Rythme du mois » (`RythmeDuMois`, tour
+ * 45) lit le cumulé AU JOUR D'AUJOURD'HUI, comme la maquette. Une dépense
+ * post-datée n'y paraît qu'à son jour ; tant qu'il n'est pas venu, le chiffre de
+ * la carte vaut « Dépensé ce mois » moins cette dépense. (L'ancienne courbe
+ * forçait son dernier point sur le total et plaçait la dépense au mauvais jour.)
  *
  * D'où deux choix qui n'en sont pas vraiment :
  *

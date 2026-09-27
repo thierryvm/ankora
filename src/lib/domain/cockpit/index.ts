@@ -21,3 +21,4 @@ export * from './engagements-lisses';
 export * from './depenses-du-mois';
 export * from './depenses-par-jour';
 export * from './epargne-estimee';
+export * from './rythme';
