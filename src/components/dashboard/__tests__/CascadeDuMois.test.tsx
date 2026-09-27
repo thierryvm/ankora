@@ -248,15 +248,15 @@ describe('<CascadeDuMois /> — PR D, set aside and received on top', () => {
       const n = Number(t.replace(/^[−+]/u, '').replace(/\./gu, '').replace(',', '.'));
       return Math.round(signe * n * 100);
     });
-    // base, + on top, − bills, − smoothing, − their subtotal (« Déjà compté
-    // pour tes factures »), − set aside = budget, − spent = reste. Declared
-    // change (26 Sept. 2026): the subtotal row sits between the rows it sums
-    // and the budget, so the sum now goes THROUGH it — stricter than before.
+    // base, + on top, − bills, − smoothing, [their subtotal], − set aside =
+    // budget, − spent = reste. The SIGNED rows alone rebuild the budget: the
+    // subtotal is a total, unsigned, never a further deduction (Sourcery on
+    // #500: shown « − 2 263 € » it read as the same money taken twice).
     const [base, plus, factures, lissage, retenu, mis, budget, depense, reste] =
       montants as number[];
-    expect(factures! + lissage!).toBe(retenu);
-    expect(retenu).toBe(-BASE.retenu * 100);
-    expect(base! + plus! + retenu! + mis!).toBe(budget);
+    expect(base! + plus! + factures! + lissage! + mis!).toBe(budget);
+    expect(retenu).toBe(BASE.retenu * 100);
+    expect(retenu).toBe(-(factures! + lissage!));
     expect(budget).toBe(pr.resteDisponible * 100);
     expect(budget! + depense!).toBe(reste);
     expect(reste).toBe(pr.ilTeReste * 100);
@@ -314,7 +314,8 @@ describe('<CascadeDuMois /> — le sous-total « Déjà compté pour tes facture
     await renderCascade();
     const sousTotal = screen.getByText('Déjà compté pour tes factures');
     const ligne = sousTotal.closest('div');
-    expect(ligne).toHaveTextContent(/−[\s\u202f\u00a0]?1[\s\u202f\u00a0]?838[\s\u202f\u00a0]?€/);
+    expect(ligne).toHaveTextContent(/factures1[\s\u202f\u00a0]?838[\s\u202f\u00a0]?€$/);
+    expect(ligne?.textContent).not.toContain('−');
     const lissage = screen.getByText('Lissage');
     const budget = screen.getByText('Budget du mois');
     expect(

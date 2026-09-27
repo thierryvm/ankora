@@ -288,7 +288,10 @@ export async function CascadeDuMois(props: Props) {
               the smoothing and the commitments take together, before the
               budget of the month. */}
           <div className="border-border border-t pt-2">
-            <FlowRow label={t('flow.retenu')} value={`− ${fmt(props.retenu)}`} />
+            {/* Unsigned, like « Budget du mois »: a total of the rows above,
+                not one more deduction. Shown « − », it read as the same money
+                taken twice (Sourcery on #500). */}
+            <FlowRow label={t('flow.retenu')} value={fmt(props.retenu)} />
           </div>
           {props.misDeCote > 0 && (
             <FlowRow
