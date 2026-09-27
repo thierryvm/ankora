@@ -13,6 +13,10 @@ vi.mock('@/i18n/navigation', () => ({
   ),
 }));
 
+import Decimal from 'decimal.js';
+
+import { epargneEstimee } from '@/lib/domain/cockpit/epargne-estimee';
+
 import { RythmeDuMois, type RythmeDuMoisProps } from '../RythmeDuMois';
 
 // Fictitious household (public repo): the 505 € budget family. September 2026,
@@ -45,6 +49,8 @@ const BASE: RythmeDuMoisProps = {
   depenses: DEPENSES,
   depensesDuMois: 112,
   projection: 336,
+  epargne: 169,
+  tropTot: false,
   budget: {
     montant: 505,
     revenus: 1705,
@@ -134,5 +140,45 @@ describe('RythmeDuMois', () => {
     const lien = screen.getByRole('link', { name: 'Ajouter une dépense' });
     expect(lien.getAttribute('href')).toMatch(/\/app\/expenses$/);
     expect(screen.queryAllByTestId('rythme-tranche')).toHaveLength(0);
+  });
+});
+
+describe('RythmeDuMois — ÉPARGNE block and « Trop tôt pour projeter » (G-12, G-31)', () => {
+  it('writes the domain savings figure, source « calculé », and its operation in one line', () => {
+    const domaine = epargneEstimee({
+      budgetDuMois: new Decimal(BASE.budget.montant),
+      depensesDuMois: new Decimal(BASE.depensesDuMois),
+      joursEcoules: BASE.joursEcoules,
+      joursDuMois: BASE.joursDuMois,
+    });
+    expect(domaine?.toNumber()).toBe(169);
+    monter({ epargne: domaine!.toNumber() });
+    const bloc = screen.getByTestId('rythme-epargne');
+    expect(bloc).toHaveTextContent(/^Épargne · calculé/);
+    expect(bloc).toHaveTextContent(
+      /Fin septembre : 169\s€, le budget moins le dépensé projeté au 30\./,
+    );
+    expect(bloc).not.toHaveTextContent(/estim/i);
+  });
+
+  it('before the 7th day of the month, says when the figure appears, without an amount', () => {
+    monter({ joursEcoules: 5, projection: null, epargne: null });
+    expect(screen.getByTestId('rythme-epargne')).toHaveTextContent(
+      'Fin septembre : se calcule dès le 7.',
+    );
+  });
+
+  it('too early: says so, and writes neither the projection nor a savings amount', () => {
+    monter({ tropTot: true });
+    const bloc = screen.getByTestId('rythme-epargne');
+    expect(bloc).toHaveTextContent(/^Épargne/);
+    expect(bloc).not.toHaveTextContent('calculé');
+    expect(bloc).toHaveTextContent(
+      'Trop tôt pour projeter. La projection paraît au 7e jour de données, ou à la 5e dépense.',
+    );
+    expect(bloc).not.toHaveTextContent('169');
+    // The projection (336 €) is written nowhere on the card, key and header included.
+    expect(screen.getByTestId('repli-rythme')).not.toHaveTextContent(/336/);
+    expect(document.querySelector('[data-rythme="projection"]')).toBeNull();
   });
 });

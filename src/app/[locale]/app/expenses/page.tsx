@@ -2,7 +2,9 @@ import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 
 import { Expenses } from '@/lib/domain';
+import { getCategories } from '@/lib/data/categories';
 import { getExpenses, getSnapshotWith } from '@/lib/data/workspace-snapshot';
+import { categoriesDuMois } from '@/lib/domain/expenses/categories-du-mois';
 import type { AccountKind } from '@/lib/domain/types';
 
 import { ExpensesClient } from './ExpensesClient';
@@ -17,8 +19,8 @@ export async function generateMetadata(): Promise<Metadata> {
 const ACCOUNT_ORDER: readonly AccountKind[] = ['principal', 'vie_courante', 'epargne'];
 
 export default async function ExpensesPage() {
-  const [snapshot, expenses] = await getSnapshotWith('/app/expenses', (workspaceId) =>
-    getExpenses(workspaceId),
+  const [snapshot, [expenses, categories]] = await getSnapshotWith('/app/expenses', (workspaceId) =>
+    Promise.all([getExpenses(workspaceId), getCategories(workspaceId)]),
   );
   const toRaw = (e: (typeof expenses)[number]) => ({
     id: e.id,
@@ -56,6 +58,20 @@ export default async function ExpensesPage() {
   // Authoritative current-month spend: summed from `monthlyExpenses` (complete,
   // no 50-row cap) so the figure never under-reports (Sourcery #242).
   const spentThisMonth = Expenses.totalAmount(snapshot.monthlyExpenses).toNumber();
+  // « Catégories » (G-cat): the SAME complete source, grouped by the domain's
+  // `summarizeExpenses` — the card's total is the sum of its groups (rule 10).
+  const categoryGroups = categoriesDuMois(snapshot.monthlyExpenses, categories).map((g) => ({
+    id: g.id,
+    nom: g.nom,
+    couleur: g.couleur,
+    total: g.total.toNumber(),
+    lignes: g.lignes.map((e) => ({
+      id: e.id,
+      label: e.label,
+      montant: e.amount.toNumber(),
+      date: e.occurredOn.slice(0, 10),
+    })),
+  }));
 
   return (
     <ExpensesClient
@@ -64,6 +80,7 @@ export default async function ExpensesPage() {
       currentYear={year}
       currentMonth={month}
       joursEcoules={joursEcoules}
+      categoryGroups={categoryGroups}
       accounts={ACCOUNT_ORDER.flatMap((kind) => {
         const account = snapshot.accounts.find((a) => a.kind === kind);
         return account ? [{ kind, label: account.displayName }] : [];

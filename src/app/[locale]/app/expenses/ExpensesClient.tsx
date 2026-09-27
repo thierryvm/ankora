@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/toast';
 import { AddExpenseSheet } from '@/components/expenses/AddExpenseSheet';
+import { CategoriesCard, type CategorieCarte } from '@/components/expenses/CategoriesCard';
 import type { Locale } from '@/i18n/routing';
 import { deleteExpenseAction } from '@/lib/actions/expenses';
 import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
@@ -46,6 +47,8 @@ type Props = {
   currentMonth: number;
   /** Days elapsed in the current month, including today. */
   joursEcoules: number;
+  /** The month by category, computed on the server (`categoriesDuMois`). */
+  categoryGroups: ReadonlyArray<CategorieCarte>;
   /** The workspace's accounts, for the « Depuis » chips and the row line (rule 25). */
   accounts: { kind: AccountKind; label: string }[];
 };
@@ -56,6 +59,7 @@ export function ExpensesClient({
   currentYear,
   currentMonth,
   joursEcoules,
+  categoryGroups,
   accounts,
 }: Props) {
   const t = useTranslations('app.expenses');
@@ -175,32 +179,16 @@ export function ExpensesClient({
         <p className="text-muted-foreground mt-1">{t('subtitle')}</p>
       </header>
 
-      {/* « Dépensé ce mois » — the authoritative server-side total, with the
-          average daily rate so far. No budget, no bar: ADR-035 removed the
-          envelope this used to be measured against. */}
-      <Card data-testid="depense-mois-card">
-        <CardContent className="flex flex-col gap-4 py-6">
-          {/* Real <h2> (not a <p>) so screen-reader heading navigation has a
-              landmark for this section — the page otherwise has only the h1. */}
-          <h2 className="text-muted-foreground text-sm font-medium">
-            {t('depenseMoisLabel', { month: monthName })}
-          </h2>
-          <p
-            className="text-foreground text-4xl font-bold tracking-tight tabular-nums"
-            data-testid="depense-mois-total"
-          >
-            {fmt(spentThisMonth)}
-          </p>
-          {perDayEcoule !== null && (
-            <p
-              className="text-muted-foreground text-xs tabular-nums"
-              data-testid="depense-mois-perday"
-            >
-              {t('perDayElapsed', { amount: fmt(perDayEcoule), days: joursEcoules })}
-            </p>
-          )}
-        </CardContent>
-      </Card>
+      {/* « Catégories » (G-cat) — replaces « Dépensé ce mois »: the same
+          authoritative server-side total, the « ≈ X / day » line under it, and
+          the total opening category by category (COUVERTURE-v3, D2). */}
+      <CategoriesCard
+        total={spentThisMonth}
+        parJour={perDayEcoule}
+        joursEcoules={joursEcoules}
+        month={currentMonth}
+        groupes={categoryGroups}
+      />
 
       {/*
         The inline add form is gone, replaced by the shared entry sheet.

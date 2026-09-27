@@ -18,6 +18,7 @@ import { createExpenseCategoryAction } from '@/lib/actions/categories';
 import { createExpenseAction } from '@/lib/actions/expenses';
 import { getExpenseEntryContextAction } from '@/lib/actions/expense-entry';
 import { CATEGORY_COLOR_TOKENS, couleurLaMoinsUtilisee } from '@/lib/domain/categories';
+import { CATEGORY_DOT } from '@/components/expenses/category-colors';
 import {
   recallCategory,
   suggestDescriptions,
@@ -123,16 +124,7 @@ const LARGEURS_MONTANT = [
  * famille, et les deux se distinguent enfin. `color-mix` dans une classe
  * Tailwind, jamais dans un `style` inline — la CSP refuse le second.
  */
-const CHIP_DOT: Record<string, string> = {
-  blue: 'bg-info',
-  cyan: 'bg-brand-500',
-  emerald: 'bg-success',
-  amber: 'bg-warning',
-  rose: 'bg-danger',
-  pink: 'bg-[color-mix(in_oklab,var(--color-danger)_55%,var(--color-card))]',
-  purple: 'bg-accent-600',
-  zinc: 'bg-muted-foreground',
-};
+const CHIP_DOT = CATEGORY_DOT;
 
 /**
  * Parse what a francophone actually types. `1.234,56` and `1234.56` are both

@@ -45,6 +45,17 @@ export type RythmeDuMoisProps = Readonly<{
   depensesDuMois: number;
   /** `depensesProjetees`, or null (nothing before the 7th day). */
   projection: number | null;
+  /**
+   * `situation.epargneEstimee` — the SAME figure as the domain's, or null
+   * (null exactly when `projection` is). Shown in the ÉPARGNE block (G-12).
+   */
+  epargne: number | null;
+  /**
+   * G-31, `tropTotPourProjeter`: under 7 days of data AND under 5 expenses.
+   * Then neither the projection nor the savings figure is written anywhere on
+   * the card, and the block says « Trop tôt pour projeter » instead.
+   */
+  tropTot: boolean;
   /** The month budget (`resteDisponible`) and the parts it is made of. */
   budget: Readonly<{
     montant: number;
@@ -158,7 +169,9 @@ function useFormats() {
 }
 
 export function RythmeDuMois(props: RythmeDuMoisProps) {
-  const { year, month, joursDuMois: jM, serie, depenses, projection } = props;
+  const { year, month, joursDuMois: jM, serie, depenses, tropTot } = props;
+  // G-31: too early, no projection is written anywhere — header, key, trace, drawer.
+  const projection = tropTot ? null : props.projection;
   const t = useTranslations('cockpit.rythme');
   const tr = useTranslations('cockpit.replis');
   const f = useFormats();
@@ -261,6 +274,7 @@ export function RythmeDuMois(props: RythmeDuMoisProps) {
             </p>
             <Trace
               {...props}
+              projection={projection}
               jE={jE}
               depense={depense}
               onTranche={(a, b) => setTiroir({ a, b, mois: false })}
@@ -279,13 +293,58 @@ export function RythmeDuMois(props: RythmeDuMoisProps) {
               )}
             </ul>
             <p className="text-muted-foreground mt-1 text-xs">{t('sousTrace')}</p>
+            <BlocEpargne
+              tropTot={tropTot}
+              epargne={tropTot ? null : props.epargne}
+              mois={mois}
+              jour={jM}
+              euro={f.euro}
+            />
           </>
         )}
       </div>
       {tiroir && (
-        <TiroirRythme {...props} jE={jE} tiroir={tiroir} onClose={() => setTiroir(null)} />
+        <TiroirRythme
+          {...props}
+          projection={projection}
+          jE={jE}
+          tiroir={tiroir}
+          onClose={() => setTiroir(null)}
+        />
       )}
     </Repli>
+  );
+}
+/**
+ * The ÉPARGNE block (G-12, mockup `blocEpargne` / `blocTropTot`): the savings
+ * figure with its source « calculé » and its operation in one line. The word
+ * « estimé » is gone from this block. Too early (G-31): the label loses
+ * « calculé » — nothing is calculated — and no amount is written.
+ */
+function BlocEpargne(
+  props: Readonly<{
+    tropTot: boolean;
+    epargne: number | null;
+    mois: string;
+    jour: number;
+    euro: (v: number) => string;
+  }>,
+) {
+  const t = useTranslations('cockpit.rythme.epargne');
+  const { tropTot, epargne, mois, jour, euro } = props;
+  return (
+    <div data-testid="rythme-epargne" className="border-border mt-4 border-t pt-3">
+      <p className="text-muted-foreground font-mono text-xs tracking-wide uppercase">
+        {tropTot ? t('etiquette') : t('etiquetteCalcule')}
+      </p>
+      <p className="text-muted-foreground mt-1 text-sm">
+        {tropTot
+          ? t('tropTot')
+          : epargne === null
+            ? t('desLe7', { mois })
+            : t('operation', { mois, montant: euro(epargne), jour })}
+      </p>
+    </div>
   );
 }
 

@@ -12,6 +12,8 @@ import { SimulatorDrawer } from '@/components/dashboard/SimulatorDrawer';
 import { Repli } from '@/components/cockpit/Repli';
 import { SixMoisRepli } from '@/components/cockpit/SixMoisRepli';
 import { RythmeDuMois } from '@/components/cockpit/RythmeDuMois';
+import { readDebutDesDonnees } from '@/lib/data/debut-des-donnees';
+import { epargneAffichee, tropTotPourProjeter } from '@/lib/domain/cockpit/trop-tot';
 import { IlTeResteCard } from '@/components/cockpit/IlTeResteCard';
 import { EncoreAPayerCard, type LigneAPayer } from '@/components/cockpit/EncoreAPayerCard';
 import { Expenses, Transfer, money } from '@/lib/domain';
@@ -137,6 +139,29 @@ export default async function DashboardPage({
     isCurrentMonth,
     monthlyExpenses,
   } = await loadMonthSituation('/app', viewedPeriod);
+
+  // G-31 — « Trop tôt pour projeter »: days of data count from the FIRST
+  // operation ever recorded. Movements are already loaded (`ledger`, sorted by
+  // date); the expenses' side is one bounded read. Only the current month has
+  // a projection, so only it pays for the read — and not while the situation
+  // is incomplete: the pace card is not shown then, and a failed read would
+  // take the whole cockpit down for a card that is absent.
+  const tropTot =
+    isCurrentMonth && situation.statut !== 'incomplet'
+      ? tropTotPourProjeter({
+          ...(await readDebutDesDonnees(
+            snapshot.workspaceId,
+            todayIso,
+            ledger.movements
+              .map((m) => m.occurredOn.toISOString().slice(0, 10))
+              .find((d) => d <= todayIso) ?? null,
+          )),
+          aujourdhui: todayIso,
+        })
+      : false;
+  // One savings figure for the whole cockpit (G-31): the cascade and the pace
+  // card read the same value, never one « too early » beside one amount.
+  const epargne = epargneAffichee(situation.epargneEstimee?.toNumber() ?? null, tropTot);
 
   const namedCommitments: NamedCommitment[] = commitments.map((c) => ({
     ...commitmentRowToDomain(c),
@@ -313,7 +338,7 @@ export default async function DashboardPage({
         resteDisponible={situation.resteDisponible.toNumber()}
         depensesDuMois={situation.depensesDuMois.toNumber()}
         ilTeReste={situation.ilTeReste.toNumber()}
-        epargneEstimee={situation.epargneEstimee?.toNumber() ?? null}
+        epargneEstimee={epargne}
         moisVu={moisVu}
         locale={locale}
       />
@@ -506,6 +531,8 @@ export default async function DashboardPage({
           }))}
           depensesDuMois={situation.depensesDuMois.toNumber()}
           projection={situation.depensesProjetees?.toNumber() ?? null}
+          epargne={epargne}
+          tropTot={tropTot}
           budget={{
             montant: situation.resteDisponible.toNumber(),
             revenus: situation.revenus.toNumber(),

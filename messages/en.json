@@ -1098,9 +1098,24 @@
         "confirmDelete": "Delete “{label}” — {amount}? This expense will be permanently erased.",
         "confirmDeleteAction": "Yes, delete"
       },
-      "depenseMoisLabel": "Spent this month — {month}",
       "perDayElapsed": "≈ {amount}/day over {days} days",
-      "earlierToggle": "Earlier months ({count})"
+      "earlierToggle": "Earlier months ({count})",
+      "categories": {
+        "etiquette": "Categories",
+        "titre": "Where the money goes in {month}",
+        "depensesEn": "spent in {month}",
+        "sansCategorie": "No category",
+        "nbDepenses": "{count, plural, one {# expense} other {# expenses}}",
+        "ligneAria": "{nom}, {montant}, {nb}, open the detail",
+        "autres": "{count, plural, one {# more category} other {# more categories}}",
+        "reduire": "Show less",
+        "tiroirTitre": "{nom} · {month}",
+        "tiroirTotal": "Spent in this category",
+        "tiroirSous": "{nb} · calculated from your operations",
+        "fermer": "Close",
+        "vide": "No expense in {month}: nothing to sort.",
+        "videAide": "Every expense goes into its category: tap ⊕ after a purchase."
+      }
     },
     "settings": {
       "metaTitle": "Settings",
@@ -1353,16 +1368,10 @@
       "barAria": "How your income splits: {charges} of bills, {provisions} of provisions, {depense} spent, {reste} left.",
       "barAriaEngagements": "Including {engagements} of commitments.",
       "pace": {
-        "barAria": "{depense} spent of a {budget} monthly budget, on day {jours} of {total}.",
         "perDay": "{amount} / day until the {day}",
         "onTrack": "on pace",
         "faster": "above pace",
         "exceeded": "budget exceeded"
-      },
-      "courbe": {
-        "reel": "Spent",
-        "rythme": "Even pace",
-        "projection": "Estimate"
       }
     },
     "daily": {
@@ -1896,7 +1905,14 @@
       "budgetTotal": "= Month budget",
       "joursEtiquette": "Day by day",
       "aucuneDepenseJour": "No spending this day",
-      "fermer": "Close"
+      "fermer": "Close",
+      "epargne": {
+        "etiquette": "Savings",
+        "etiquetteCalcule": "Savings · calculated",
+        "tropTot": "Too early to project. The projection appears on the 7th day of data, or at the 5th expense.",
+        "desLe7": "End of {mois}: calculated from the 7th.",
+        "operation": "End of {mois}: {montant}, the budget minus the spending projected to the {jour, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}."
+      }
     }
   },
   "operations": {
