@@ -335,6 +335,7 @@ export default async function DashboardPage({
         chargesFixesParts={partsAffichees(decomposition.chargesFixes)}
         lissageParts={partsAffichees(decomposition.lissage)}
         engagementsParts={partsAffichees(decomposition.engagements)}
+        retenu={situation.retenu.toNumber()}
         resteDisponible={situation.resteDisponible.toNumber()}
         depensesDuMois={situation.depensesDuMois.toNumber()}
         ilTeReste={situation.ilTeReste.toNumber()}

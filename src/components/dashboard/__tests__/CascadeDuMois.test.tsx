@@ -58,6 +58,8 @@ const BASE: CascadeDuMoisProps = {
     },
   ],
   engagementsParts: [],
+  // factures 1500 + lissage 338 + engagements 0 — the domain's « retenu ».
+  retenu: 1838,
   resteDisponible: 662,
   depensesDuMois: 200,
   ilTeReste: 462,
@@ -246,9 +248,15 @@ describe('<CascadeDuMois /> — PR D, set aside and received on top', () => {
       const n = Number(t.replace(/^[−+]/u, '').replace(/\./gu, '').replace(',', '.'));
       return Math.round(signe * n * 100);
     });
-    // base, + on top, − bills, − smoothing, − set aside = budget, − spent = reste
-    const [base, plus, factures, lissage, mis, budget, depense, reste] = montants as number[];
-    expect(base! + plus! + factures! + lissage! + mis!).toBe(budget);
+    // base, + on top, − bills, − smoothing, − their subtotal (« Déjà compté
+    // pour tes factures »), − set aside = budget, − spent = reste. Declared
+    // change (26 Sept. 2026): the subtotal row sits between the rows it sums
+    // and the budget, so the sum now goes THROUGH it — stricter than before.
+    const [base, plus, factures, lissage, retenu, mis, budget, depense, reste] =
+      montants as number[];
+    expect(factures! + lissage!).toBe(retenu);
+    expect(retenu).toBe(-BASE.retenu * 100);
+    expect(base! + plus! + retenu! + mis!).toBe(budget);
     expect(budget).toBe(pr.resteDisponible * 100);
     expect(budget! + depense!).toBe(reste);
     expect(reste).toBe(pr.ilTeReste * 100);
@@ -298,5 +306,58 @@ describe('<CascadeDuMois /> — PR D, set aside and received on top', () => {
     const phrase = container.querySelector('[data-au-dela]');
     expect(phrase?.textContent).toContain('de plus que ce que ton revenu laissait');
     expect(phrase?.textContent).toMatch(/55/u);
+  });
+});
+
+describe('<CascadeDuMois /> — le sous-total « Déjà compté pour tes factures »', () => {
+  it('écrit le total retenu par le domaine, entre les postes et le budget du mois', async () => {
+    await renderCascade();
+    const sousTotal = screen.getByText('Déjà compté pour tes factures');
+    const ligne = sousTotal.closest('div');
+    expect(ligne).toHaveTextContent(/−[\s\u202f\u00a0]?1[\s\u202f\u00a0]?838[\s\u202f\u00a0]?€/);
+    const lissage = screen.getByText('Lissage');
+    const budget = screen.getByText('Budget du mois');
+    expect(
+      lissage.compareDocumentPosition(sousTotal) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      sousTotal.compareDocumentPosition(budget) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it('refait le budget : revenus − retenu = budget du mois quand rien n’est mis de côté', async () => {
+    await renderCascade();
+    expect(BASE.revenus - BASE.retenu).toBe(BASE.resteDisponible);
+  });
+});
+
+describe('<CascadeDuMois /> — le libellé d’une ligne dépliable est aligné sur son montant', () => {
+  it('donne au libellé la même hauteur de 44 px que le bouton du montant', async () => {
+    await renderCascade();
+    const libelle = screen.getByText('Factures mensuelles').closest('dt');
+    expect(libelle).toHaveClass('min-h-11');
+  });
+
+  // Seen at 375 px on 27 Sept. 2026: « − 1 804,21 € » broke after the minus,
+  // which landed on top of its label. An amount is one unit: it never wraps.
+  it('ne coupe jamais un montant, ouvrable ou non', async () => {
+    const { container } = await renderCascade();
+    const ouvrable = container.querySelector('summary span');
+    const simple = screen
+      .getByText('Déjà compté pour tes factures')
+      .closest('div')
+      ?.querySelector('dd');
+    expect(ouvrable).toHaveClass('whitespace-nowrap');
+    expect(simple).toHaveClass('whitespace-nowrap');
+  });
+
+  // Same capture: once unbreakable, the amount overflowed LEFT onto its label,
+  // because `min-w-0` let its column shrink below it. Without it, the column
+  // never goes under its amount and the label wraps instead.
+  it('ne laisse jamais la colonne du montant se réduire sous son montant', async () => {
+    await renderCascade();
+    const colonne = screen.getByText('Factures mensuelles').closest('div')?.querySelector('dd');
+    expect(colonne).not.toHaveClass('min-w-0');
+    expect(colonne).toHaveClass('flex-1');
   });
 });

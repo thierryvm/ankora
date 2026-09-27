@@ -265,6 +265,8 @@ const cascadeProps = {
   chargesFixesParts: [],
   lissageParts: [],
   engagementsParts: [],
+  // 505 + 609 + 100: the domain's « retenu », so 2505 − 1214 = 1291.
+  retenu: 1214,
   resteDisponible: 1291,
   depensesDuMois: 0,
   ilTeReste: 1291,
