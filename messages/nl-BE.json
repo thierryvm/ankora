@@ -1098,9 +1098,24 @@
         "confirmDelete": "“{label}” — {amount} verwijderen? Deze uitgave wordt definitief gewist.",
         "confirmDeleteAction": "Ja, verwijderen"
       },
-      "depenseMoisLabel": "Deze maand uitgegeven — {month}",
       "perDayElapsed": "≈ {amount}/dag over {days} dagen",
-      "earlierToggle": "Vorige maanden ({count})"
+      "earlierToggle": "Vorige maanden ({count})",
+      "categories": {
+        "etiquette": "Categorieën",
+        "titre": "Waar het geld naartoe gaat in {month}",
+        "depensesEn": "uitgegeven in {month}",
+        "sansCategorie": "Zonder categorie",
+        "nbDepenses": "{count, plural, one {# uitgave} other {# uitgaven}}",
+        "ligneAria": "{nom}, {montant}, {nb}, open het detail",
+        "autres": "{count, plural, one {# andere categorie} other {# andere categorieën}}",
+        "reduire": "Minder tonen",
+        "tiroirTitre": "{nom} · {month}",
+        "tiroirTotal": "Uitgegeven in deze categorie",
+        "tiroirSous": "{nb} · berekend uit je verrichtingen",
+        "fermer": "Sluiten",
+        "vide": "Geen uitgave in {month}: niets te ordenen.",
+        "videAide": "Elke uitgave krijgt haar categorie: tik op ⊕ na een aankoop."
+      }
     },
     "settings": {
       "metaTitle": "Instellingen",
@@ -1353,16 +1368,10 @@
       "barAria": "Verdeling van je inkomen: {charges} facturen, {provisions} voorzieningen, {depense} uitgegeven, {reste} over.",
       "barAriaEngagements": "Waarvan {engagements} aan verbintenissen.",
       "pace": {
-        "barAria": "{depense} besteed van {budget} maandbudget, op dag {jours} van {total}.",
         "perDay": "{amount} / dag tot de {day}e",
         "onTrack": "op schema",
         "faster": "boven schema",
         "exceeded": "budget overschreden"
-      },
-      "courbe": {
-        "reel": "Besteed",
-        "rythme": "Gelijkmatig tempo",
-        "projection": "Schatting"
       }
     },
     "daily": {
@@ -1896,7 +1905,14 @@
       "budgetTotal": "= Budget van de maand",
       "joursEtiquette": "Dag per dag",
       "aucuneDepenseJour": "Geen uitgave deze dag",
-      "fermer": "Sluiten"
+      "fermer": "Sluiten",
+      "epargne": {
+        "etiquette": "Sparen",
+        "etiquetteCalcule": "Sparen · berekend",
+        "tropTot": "Te vroeg om te projecteren. De projectie verschijnt op de 7e dag met gegevens, of bij de 5e uitgave.",
+        "desLe7": "Eind {mois}: berekend vanaf de 7e.",
+        "operation": "Eind {mois}: {montant}, het budget min de geprojecteerde uitgaven tot de {jour}e."
+      }
     }
   },
   "operations": {

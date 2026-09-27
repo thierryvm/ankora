@@ -1098,9 +1098,24 @@
         "confirmDelete": "„{label}“ — {amount} löschen? Diese Ausgabe wird endgültig entfernt.",
         "confirmDeleteAction": "Ja, löschen"
       },
-      "depenseMoisLabel": "Diesen Monat ausgegeben — {month}",
       "perDayElapsed": "≈ {amount}/Tag über {days} Tage",
-      "earlierToggle": "Frühere Monate ({count})"
+      "earlierToggle": "Frühere Monate ({count})",
+      "categories": {
+        "etiquette": "Kategorien",
+        "titre": "Wohin das Geld im {month} geht",
+        "depensesEn": "ausgegeben im {month}",
+        "sansCategorie": "Ohne Kategorie",
+        "nbDepenses": "{count, plural, one {# Ausgabe} other {# Ausgaben}}",
+        "ligneAria": "{nom}, {montant}, {nb}, Details öffnen",
+        "autres": "{count, plural, one {# weitere Kategorie} other {# weitere Kategorien}}",
+        "reduire": "Weniger anzeigen",
+        "tiroirTitre": "{nom} · {month}",
+        "tiroirTotal": "In dieser Kategorie ausgegeben",
+        "tiroirSous": "{nb} · berechnet aus deinen Vorgängen",
+        "fermer": "Schließen",
+        "vide": "Keine Ausgabe im {month}: nichts einzuordnen.",
+        "videAide": "Jede Ausgabe kommt in ihre Kategorie: tippe nach einem Kauf auf ⊕."
+      }
     },
     "settings": {
       "metaTitle": "Einstellungen",
@@ -1353,16 +1368,10 @@
       "barAria": "Aufteilung deiner Einnahmen: {charges} Rechnungen, {provisions} Rücklagen, {depense} ausgegeben, {reste} übrig.",
       "barAriaEngagements": "Davon {engagements} an Verpflichtungen.",
       "pace": {
-        "barAria": "{depense} von {budget} Monatsbudget ausgegeben, Tag {jours} von {total}.",
         "perDay": "{amount} / Tag bis zum {day}.",
         "onTrack": "im Rhythmus",
         "faster": "über dem Rhythmus",
         "exceeded": "Budget überschritten"
-      },
-      "courbe": {
-        "reel": "Ausgegeben",
-        "rythme": "Gleichmäßiger Rhythmus",
-        "projection": "Schätzung"
       }
     },
     "daily": {
@@ -1896,7 +1905,14 @@
       "budgetTotal": "= Monatsbudget",
       "joursEtiquette": "Tag für Tag",
       "aucuneDepenseJour": "Keine Ausgabe an diesem Tag",
-      "fermer": "Schließen"
+      "fermer": "Schließen",
+      "epargne": {
+        "etiquette": "Ersparnis",
+        "etiquetteCalcule": "Ersparnis · berechnet",
+        "tropTot": "Zu früh für eine Hochrechnung. Sie erscheint am 7. Tag mit Daten oder bei der 5. Ausgabe.",
+        "desLe7": "Ende {mois}: wird ab dem 7. berechnet.",
+        "operation": "Ende {mois}: {montant}, das Budget minus die bis zum {jour}. hochgerechneten Ausgaben."
+      }
     }
   },
   "operations": {

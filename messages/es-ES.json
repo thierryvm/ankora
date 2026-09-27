@@ -1098,9 +1098,24 @@
         "confirmDelete": "¿Eliminar «{label}» — {amount}? Este gasto se borrará definitivamente.",
         "confirmDeleteAction": "Sí, eliminar"
       },
-      "depenseMoisLabel": "Gastado este mes — {month}",
       "perDayElapsed": "≈ {amount}/día en {days} días",
-      "earlierToggle": "Meses anteriores ({count})"
+      "earlierToggle": "Meses anteriores ({count})",
+      "categories": {
+        "etiquette": "Categorías",
+        "titre": "Adónde va el dinero en {month}",
+        "depensesEn": "gastados en {month}",
+        "sansCategorie": "Sin categoría",
+        "nbDepenses": "{count, plural, one {# gasto} other {# gastos}}",
+        "ligneAria": "{nom}, {montant}, {nb}, abrir el detalle",
+        "autres": "{count, plural, one {# categoría más} other {# categorías más}}",
+        "reduire": "Mostrar menos",
+        "tiroirTitre": "{nom} · {month}",
+        "tiroirTotal": "Gastado en esta categoría",
+        "tiroirSous": "{nb} · calculado a partir de tus operaciones",
+        "fermer": "Cerrar",
+        "vide": "Ningún gasto en {month}: nada que clasificar.",
+        "videAide": "Cada gasto va a su categoría: toca ⊕ después de una compra."
+      }
     },
     "settings": {
       "metaTitle": "Ajustes",
@@ -1353,16 +1368,10 @@
       "barAria": "Reparto de tus ingresos: {charges} de facturas, {provisions} de reservas, {depense} gastado, {reste} restante.",
       "barAriaEngagements": "Incluyendo {engagements} de compromisos.",
       "pace": {
-        "barAria": "{depense} gastados de {budget} de presupuesto del mes, día {jours} de {total}.",
         "perDay": "{amount} / día hasta el {day}",
         "onTrack": "al ritmo",
         "faster": "por encima del ritmo",
         "exceeded": "presupuesto superado"
-      },
-      "courbe": {
-        "reel": "Gastado",
-        "rythme": "Ritmo constante",
-        "projection": "Estimación"
       }
     },
     "daily": {
@@ -1896,7 +1905,14 @@
       "budgetTotal": "= Presupuesto del mes",
       "joursEtiquette": "Día a día",
       "aucuneDepenseJour": "Ningún gasto este día",
-      "fermer": "Cerrar"
+      "fermer": "Cerrar",
+      "epargne": {
+        "etiquette": "Ahorro",
+        "etiquetteCalcule": "Ahorro · calculado",
+        "tropTot": "Demasiado pronto para proyectar. La proyección aparece el 7.º día con datos, o en el 5.º gasto.",
+        "desLe7": "Fin de {mois}: se calcula a partir del día 7.",
+        "operation": "Fin de {mois}: {montant}, el presupuesto menos el gasto proyectado al día {jour}."
+      }
     }
   },
   "operations": {

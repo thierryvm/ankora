@@ -112,6 +112,28 @@ function renderExpenses(expenses = sampleExpenses, opts: RenderOpts = {}) {
       currentMonth={cm}
       joursEcoules={opts.joursEcoules ?? 20}
       accounts={ACCOUNTS}
+      // The card's groups come from the server (`categoriesDuMois`); here, one
+      // uncategorised group carrying the whole total, so the total still shows.
+      categoryGroups={
+        spentThisMonth > 0
+          ? [
+              {
+                id: null,
+                nom: null,
+                couleur: null,
+                total: spentThisMonth,
+                lignes: expenses
+                  .filter((e) => e.occurredOn.startsWith(prefix))
+                  .map((e) => ({
+                    id: e.id,
+                    label: e.label,
+                    montant: e.amount,
+                    date: e.occurredOn,
+                  })),
+              },
+            ]
+          : []
+      }
     />,
   );
 }
@@ -349,8 +371,11 @@ describe('<ExpensesClient /> — « Dépensé ce mois » (ADR-035)', () => {
     // The earlier expense still lives in the collapsible « Mois précédents ».
     const earlier = screen.getByTestId('expenses-earlier');
     expect(within(earlier).getByTestId('expenses-row-e3')).toBeInTheDocument();
-    // Nothing spent this month → the total reads zero, not a leftover budget.
-    expect(screen.getByTestId('depense-mois-total')).toHaveTextContent(/0/);
+    // Nothing spent this month → the card says so in words (mockup `videG`),
+    // never a leftover budget. Was `/0/` before the « Catégories » card.
+    expect(screen.getByTestId('depense-mois-total')).toHaveTextContent(
+      'Aucune dépense en mai : rien à classer.',
+    );
   });
 });
 
@@ -570,7 +595,9 @@ describe('app.expenses — i18n parity (5 locales, PR-BETA-CLEANUP-3)', () => {
         expect(e[key]).toBeTypeOf('string');
         for (const tok of tokens) expect(e[key] ?? '').toContain(tok);
       };
-      has('depenseMoisLabel', ['{month}']);
+      // « Dépensé ce mois » gave way to the « Catégories » card (G-cat), whose
+      // keys live under `categories`: the old label has no reader any more.
+      expect(e['depenseMoisLabel']).toBeUndefined();
       has('perDayElapsed', ['{amount}', '{days}']);
       // ADR-035 — these five keys described the envelope and are gone. Pinning
       // their absence stops a copy-paste from resurrecting the vocabulary.

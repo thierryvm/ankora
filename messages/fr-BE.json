@@ -1098,9 +1098,24 @@
         "confirmDelete": "Supprimer « {label} » — {amount} ? Cette dépense sera définitivement effacée.",
         "confirmDeleteAction": "Oui, supprimer"
       },
-      "depenseMoisLabel": "Dépensé ce mois — {month}",
       "perDayElapsed": "≈ {amount}/jour sur {days} jours",
-      "earlierToggle": "Mois précédents ({count})"
+      "earlierToggle": "Mois précédents ({count})",
+      "categories": {
+        "etiquette": "Catégories",
+        "titre": "Où part l'argent en {month}",
+        "depensesEn": "dépensés en {month}",
+        "sansCategorie": "Sans catégorie",
+        "nbDepenses": "{count, plural, one {# dépense} other {# dépenses}}",
+        "ligneAria": "{nom}, {montant}, {nb}, ouvrir le détail",
+        "autres": "{count, plural, one {# autre catégorie} other {# autres catégories}}",
+        "reduire": "Réduire",
+        "tiroirTitre": "{nom} · {month}",
+        "tiroirTotal": "Dépensé dans cette catégorie",
+        "tiroirSous": "{nb} · calculé depuis tes opérations",
+        "fermer": "Fermer",
+        "vide": "Aucune dépense en {month} : rien à classer.",
+        "videAide": "Chaque dépense se range dans sa catégorie : touche ⊕ après un achat."
+      }
     },
     "settings": {
       "metaTitle": "Paramètres",
@@ -1353,16 +1368,10 @@
       "barAria": "Répartition de tes revenus : {charges} de factures, {provisions} de provisions, {depense} dépensés, {reste} restants.",
       "barAriaEngagements": "Dont {engagements} d'engagements.",
       "pace": {
-        "barAria": "{depense} dépensés sur {budget} de budget du mois, au jour {jours} sur {total}.",
         "perDay": "{amount} / jour jusqu'au {day}",
         "onTrack": "dans le rythme",
         "faster": "au-dessus du rythme",
         "exceeded": "budget dépassé"
-      },
-      "courbe": {
-        "reel": "Dépensé",
-        "rythme": "Rythme régulier",
-        "projection": "Estimation"
       }
     },
     "daily": {
@@ -1896,7 +1905,14 @@
       "budgetTotal": "= Budget du mois",
       "joursEtiquette": "Jour par jour",
       "aucuneDepenseJour": "Aucune dépense ce jour",
-      "fermer": "Fermer"
+      "fermer": "Fermer",
+      "epargne": {
+        "etiquette": "Épargne",
+        "etiquetteCalcule": "Épargne · calculé",
+        "tropTot": "Trop tôt pour projeter. La projection paraît au 7e jour de données, ou à la 5e dépense.",
+        "desLe7": "Fin {mois} : se calcule dès le 7.",
+        "operation": "Fin {mois} : {montant}, le budget moins le dépensé projeté au {jour}."
+      }
     }
   },
   "operations": {
