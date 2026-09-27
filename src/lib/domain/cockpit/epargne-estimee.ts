@@ -26,7 +26,7 @@ export type EpargneEstimeeInput = Readonly<{
  *     depensesDuMois × joursDuMois / joursEcoules
  *
  * Extracted from {@link epargneEstimee}, which was hiding it as a local.
- * `MonthCurve` needs exactly this figure — it is the endpoint of the dashed
+ * The « Rythme du mois » card (`RythmeDuMois`) needs exactly this figure — it is the endpoint of the dashed
  * continuation — and re-deriving it on screen as `budgetDuMois − epargneEstimee`
  * would be a second computation of the same quantity at display time, which
  * `CLAUDE.md` rule 10 forbids and by which two readings of one month begin to

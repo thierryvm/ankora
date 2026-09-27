@@ -55,10 +55,23 @@ export type RepliProps = Readonly<{
   testId?: string;
   /** Called with the new state on every toggle — lets a body read its data only once opened. */
   onToggle?: (ouvert: boolean) => void;
+  /**
+   * Open on desktop (lg and up): the fold's header hides and the body shows,
+   * whatever the state. The body is hidden by a class below lg, never by the
+   * `hidden` attribute, which the base styles force with `!important`.
+   */
+  ouvertAuBureau?: boolean;
   children: ReactNode;
 }>;
 
-export function Repli({ titre, cle, testId, onToggle, children }: RepliProps) {
+export function Repli({
+  titre,
+  cle,
+  testId,
+  onToggle,
+  ouvertAuBureau = false,
+  children,
+}: RepliProps) {
   const [ouvert, setOuvert] = useState(false);
   const corpsId = useId();
 
@@ -79,7 +92,10 @@ export function Repli({ titre, cle, testId, onToggle, children }: RepliProps) {
           setOuvert(suivant);
           onToggle?.(suivant);
         }}
-        className="focus-visible:ring-brand-600 flex min-h-11 w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+        className={[
+          'focus-visible:ring-brand-600 flex min-h-11 w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
+          ouvertAuBureau ? 'lg:hidden' : '',
+        ].join(' ')}
         data-repli-tete
       >
         <span className="line-clamp-2 min-w-0 flex-1 text-sm font-semibold">
@@ -106,7 +122,18 @@ export function Repli({ titre, cle, testId, onToggle, children }: RepliProps) {
       {/* Rendu en permanence, masqué par `hidden` : démonter le corps ferait
           pointer `aria-controls` vers un id absent, et casserait le lien que le
           lecteur d'écran annonce. */}
-      <div id={corpsId} hidden={!ouvert} className="border-border border-t px-4 py-4">
+      <div
+        id={corpsId}
+        hidden={ouvertAuBureau ? undefined : !ouvert}
+        className={
+          ouvertAuBureau
+            ? [
+                'border-border border-t px-4 py-4 lg:block lg:border-t-0',
+                ouvert ? '' : 'hidden',
+              ].join(' ')
+            : 'border-border border-t px-4 py-4'
+        }
+      >
         {children}
       </div>
     </div>

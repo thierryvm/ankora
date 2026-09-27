@@ -92,7 +92,7 @@ describe('depensesProjetees — le point terminal de la courbe', () => {
   /**
    * Ces deux fonctions décrivent le MÊME mois : l'une dit où la dépense
    * atterrit, l'autre ce qu'il resterait alors. Elles s'affichent côte à côte —
-   * le point terminal de `MonthCurve` et la ligne « Épargne estimée » de la
+   * le point terminal de la projection de la carte « Rythme du mois » et la ligne « Épargne estimée » de la
    * cascade. Si elles divergeaient d'un centime, l'écran se contredirait sur
    * une seule question, et personne ne saurait laquelle croire.
    */
