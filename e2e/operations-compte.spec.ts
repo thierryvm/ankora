@@ -141,7 +141,8 @@ test.describe.serial('Opérations de compte — trois gestes, un chiffre qui ne 
     // amount is typed key by key like a person would.
     const champVirement = feuilleVirement.getByLabel('Combien as-tu viré ?');
     await expect(champVirement).toHaveValue('');
-    await expect(feuilleVirement.getByText(/505,00\s€ prévus/)).toBeVisible();
+    // formatCurrency strips the cents of a whole amount: « 505 € prévus. … ».
+    await expect(feuilleVirement.getByText(/^505\s€ prévus\./u)).toBeVisible();
     await champVirement.pressSequentially('505');
     await expect(champVirement).toHaveValue('505');
     await feuilleVirement.getByRole('button', { name: /^enregistrer$/i }).click();
