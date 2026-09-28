@@ -21,6 +21,7 @@ import * as Obligations from '@/lib/domain/obligations';
 import { currentPeriodDueDate } from '@/lib/domain/charges';
 import { depensesParJour, type Poste } from '@/lib/domain/cockpit';
 import { facturesBientot } from '@/lib/domain/cockpit/bientot';
+import { revenuDeBaseEstLePrevu } from '@/lib/domain/cockpit/situation-mois';
 import { paymentKey } from '@/lib/domain/cockpit/types';
 import type { NamedCommitment } from '@/lib/domain/obligations';
 import { loadMonthSituation, todayIsoInBrussels } from '@/lib/data/month-situation';
@@ -145,9 +146,10 @@ export default async function DashboardPage({
   } = await loadMonthSituation('/app', viewedPeriod);
   // The month the cockpit calls « current »: the budget month running now.
   const moisEnCours = snapshot.moisDeBudget;
-  // No money received « for » this month: the income shown is the one of the
-  // settings. It is called « Revenu prévu », never « Argent reçu ».
-  const revenuPrevu = situation.revenuRecu === null && situation.statut !== 'incomplet';
+  // Issue #504 — the base income is called what it is: « Revenu prévu » while
+  // the written income is the figure (nothing received, or less than planned),
+  // « Argent reçu » only when the figure is the money received.
+  const revenuPrevu = revenuDeBaseEstLePrevu(situation);
 
   // G-31 — « Trop tôt pour projeter »: days of data count from the FIRST
   // operation ever recorded. Movements are already loaded (`ledger`, sorted by

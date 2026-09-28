@@ -85,8 +85,8 @@ export type IlTeResteCardProps = Readonly<{
    */
   moisVu?: MoisVu | null;
   /**
-   * No money received noted for this month: the income is the one of the
-   * settings, and says so (« Revenu prévu »), never « Argent reçu ».
+   * The figure is the written income of the settings (issue #504: nothing
+   * received, or less than planned), and says so (« Revenu prévu »).
    */
   revenuPrevu?: boolean;
 }>;

@@ -71,7 +71,7 @@ export type RythmeDuMoisProps = Readonly<{
   budget: Readonly<{
     montant: number;
     revenus: number;
-    /** No money received noted for the month: « Revenu prévu », not « Argent reçu ». */
+    /** The figure is the written income (issue #504): « Revenu prévu », not « Argent reçu ». */
     revenuPrevu?: boolean;
     /** « Déjà compté pour tes factures » (`situation.retenu`): bills + monthly share + instalments. */
     retenu: number;

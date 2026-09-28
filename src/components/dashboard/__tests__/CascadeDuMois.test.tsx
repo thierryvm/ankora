@@ -237,6 +237,23 @@ describe('<CascadeDuMois /> — ADR-047, revenu prévu', () => {
     expect(screen.queryByText('Revenu prévu')).not.toBeInTheDocument();
     expect(screen.queryByTestId('situation-revenu-prevu')).not.toBeInTheDocument();
   });
+
+  // Issue #504 — part of the written income received: the figure is still the
+  // one planned, so the row says « Revenu prévu », the sentence says what came
+  // in, and « Aucun argent reçu noté » would be false, so it is not written.
+  it('reçu partiel : « Revenu prévu », « Reçu ce mois-ci X sur Y », sans la note « aucun argent reçu »', async () => {
+    const { container } = await renderCascade({
+      revenuPrevu: true,
+      revenus: 2505,
+      revenuRecu: 705,
+      revenuEcrit: 2505,
+    });
+    expect(screen.getByText('Revenu prévu')).toBeInTheDocument();
+    expect(container.querySelector('[data-revenu-recu-differe]')?.textContent).toMatch(
+      /^Reçu ce mois-ci 705[\s  ]€ sur 2[\s  ]?505[\s  ]€ prévus$/u,
+    );
+    expect(screen.queryByTestId('situation-revenu-prevu')).not.toBeInTheDocument();
+  });
 });
 
 describe('<CascadeDuMois /> — PR D, set aside and received on top', () => {

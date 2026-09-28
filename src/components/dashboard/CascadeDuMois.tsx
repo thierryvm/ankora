@@ -65,8 +65,9 @@ type Props = {
    */
   revenuRecu: number | null;
   /**
-   * No money received noted for this month: the row says « Revenu prévu » and
-   * the card offers to note what really arrived.
+   * The base figure is the written income (issue #504: nothing received, or
+   * less than planned): the row says « Revenu prévu ». When nothing at all was
+   * received (`revenuRecu === null`), the card also offers to note it.
    */
   revenuPrevu?: boolean;
   revenuEcrit: number | null;
@@ -359,7 +360,9 @@ export async function CascadeDuMois(props: Props) {
             {t('flow.epargneEstimeeAVenir')}
           </p>
         )}
-        {props.revenuPrevu && (
+        {/* Issue #504 — only when NOTHING was received: with part of the income
+            received, the sentence below says it, and this one would be false. */}
+        {props.revenuPrevu && props.revenuRecu === null && (
           <p className="text-muted-foreground pl-3 text-xs" data-testid="situation-revenu-prevu">
             {t('flow.revenuPrevuNote')}{' '}
             <Link href="/app/accounts" className="text-foreground underline underline-offset-2">

@@ -132,6 +132,22 @@ export type SituationDuMois = Readonly<{
   rattrapageMensuel: Decimal;
 }>;
 
+/**
+ * Issue #504 — the word before the base income says what the AMOUNT is. The
+ * base is the greater of the written income and the regular money received
+ * (issue #483, below): as long as the written income wins, the figure is the
+ * one planned in the settings (« Revenu prévu »), even when part of it has
+ * arrived; « Argent reçu » only when the figure IS the money received. Without
+ * a written income nothing is planned, so never « Revenu prévu ».
+ */
+export function revenuDeBaseEstLePrevu(input: {
+  revenuEcrit: Decimal | null;
+  revenuRecu: Decimal | null;
+}): boolean {
+  if (input.revenuEcrit === null) return false;
+  return input.revenuRecu === null || input.revenuRecu.lt(input.revenuEcrit);
+}
+
 export function calculerSituationDuMois(input: SituationDuMoisInput): SituationDuMois {
   const { operations } = input;
   // Issue #483 (décision du pilote, 21 sept. 2026, contre la maquette) — le
@@ -143,7 +159,10 @@ export function calculerSituationDuMois(input: SituationDuMoisInput): SituationD
   // maquette calcule sur lui. Sans rien du tout : incomplet (THI-335).
   const revenuBase =
     operations.revenuRecu !== null && input.revenus !== null
-      ? Decimal.max(operations.revenuRecu, input.revenus)
+      ? // Issue #504 — one rule decides both the figure and its word.
+        revenuDeBaseEstLePrevu({ revenuEcrit: input.revenus, revenuRecu: operations.revenuRecu })
+        ? input.revenus
+        : operations.revenuRecu
       : (operations.revenuRecu ?? input.revenus);
   const hasRevenus = revenuBase !== null || operations.recuEnPlus.gt(0);
   const revenus = (revenuBase ?? new Decimal(0)).plus(operations.recuEnPlus);
