@@ -936,7 +936,14 @@
         "saveLabel": "Aktualisieren",
         "srLabel": "Aktueller Saldo von {label}",
         "toastSaved": "{name} aktualisiert",
-        "manualNotice": "Dieser Kontostand ändert sich nur, wenn du einen neuen einträgst."
+        "manualNotice": "Dieser Kontostand ändert sich nur, wenn du einen neuen einträgst.",
+        "sourceRead": "Kontostand gelesen am {date}",
+        "sourceStart": "Anfangsstand, am {date}",
+        "sourceSince": "Gelesen am {date}, plus {count, plural, one {# Buchung} other {# Buchungen}} seitdem",
+        "none": "Kein Kontostand für dieses Konto.",
+        "detail": "Details ansehen",
+        "detailAria": "Details ansehen zum Kontostand von {name}",
+        "sourceSinceStart": "Anfangsstand vom {date}, plus {count, plural, one {# Buchung} other {# Buchungen}} seitdem"
       },
       "kind": {
         "principal": {
@@ -1444,7 +1451,9 @@
       "projectionBalance": "Saldo",
       "projectionDeficit": "Im {month} rutscht der Fonds unter null.",
       "projectionHolds": "Der Fonds hält über die nächsten 12 Monate.",
-      "projectionNegative": "negativer Saldo"
+      "projectionNegative": "negativer Saldo",
+      "noStatement": "Kein Kontostand für dieses Konto notiert: die Reserve beginnt bei 0.",
+      "currentDetail": "Details ansehen"
     },
     "upcomingBills": {
       "title": "Anstehende Rechnungen",

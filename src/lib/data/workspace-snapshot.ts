@@ -219,7 +219,8 @@ export type AccountSnapshot = {
   accountType: AccountType;
   /** ADR-008 user-defined display name. Editable inline since PR-D2. */
   displayName: string;
-  balance: number;
+  // No `balance`: the column only follows the statements (tour 59). The
+  // balance of an account is `accountBalanceView`, read from the journal.
 };
 
 export type WorkspaceSnapshot = {
@@ -463,7 +464,7 @@ async function readWorkspaceSnapshot(workspaceId: string): Promise<WorkspaceSnap
       .order('created_at', { ascending: true }),
     supabase
       .from('accounts')
-      .select('kind, label, account_type, display_name, balance')
+      .select('kind, label, account_type, display_name')
       .eq('workspace_id', workspaceId),
     supabase
       .from('expenses')
@@ -542,7 +543,6 @@ async function readWorkspaceSnapshot(workspaceId: string): Promise<WorkspaceSnap
     label: a.label,
     accountType: a.account_type as AccountType,
     displayName: a.display_name,
-    balance: Number(a.balance),
   }));
 
   if (monthlyExpensesRes.error) {

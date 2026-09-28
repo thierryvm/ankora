@@ -60,9 +60,11 @@ import { createClient } from '@/lib/supabase/server';
  * `accounts.balance` (phase « expand », voie A decided by @thierry on
  * 2026-09-21): a STATEMENT keeps the column equal to the latest non-cancelled
  * statement, because the statement replaces the old « edit the balance »
- * gesture. A transfer or an income never touches the column — the cockpit's
- * « Il te reste » reads it through `soldeEpargneActuel`, and its formula is
- * PR D, not this one. The two writes are NOT atomic (two PostgREST requests);
+ * gesture. A transfer or an income never touches the column, so it is the
+ * balance of the latest statement, not the balance of the account. Since
+ * tour 59 NOTHING reads it: every screen reads `accountBalanceView` (statement
+ * plus the operations since), and a guard test forbids a new reader. The
+ * column waits for its contraction (ADR-045). The two writes are NOT atomic (two PostgREST requests);
  * a failed second write cancels the statement just written. Atomicity needs an
  * RPC, hence a migration: it comes with the next one.
  */

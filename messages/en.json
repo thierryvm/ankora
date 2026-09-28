@@ -936,7 +936,14 @@
         "saveLabel": "Update",
         "srLabel": "Current balance of {label}",
         "toastSaved": "{name} updated",
-        "manualNotice": "This balance only changes when you write a new one."
+        "manualNotice": "This balance only changes when you write a new one.",
+        "sourceRead": "Balance read on {date}",
+        "sourceStart": "Starting balance, on {date}",
+        "sourceSince": "Read on {date}, plus {count, plural, one {# operation} other {# operations}} since",
+        "none": "No balance for this account.",
+        "detail": "See the breakdown",
+        "detailAria": "See the breakdown of the balance of {name}",
+        "sourceSinceStart": "Starting balance of {date}, plus {count, plural, one {# operation} other {# operations}} since"
       },
       "kind": {
         "principal": {
@@ -1444,7 +1451,9 @@
       "projectionBalance": "Balance",
       "projectionDeficit": "In {month}, the fund goes below zero.",
       "projectionHolds": "The fund holds across the next 12 months.",
-      "projectionNegative": "negative balance"
+      "projectionNegative": "negative balance",
+      "noStatement": "No balance written for this account: the reserve starts from 0.",
+      "currentDetail": "See the breakdown"
     },
     "upcomingBills": {
       "title": "Upcoming bills",

@@ -4,6 +4,7 @@ import { getTranslations } from 'next-intl/server';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/i18n/formatters';
 import type { Locale } from '@/i18n/routing';
+import { Link } from '@/i18n/navigation';
 import { money } from '@/lib/domain/types';
 import type { AccountType } from '@/lib/schemas/account';
 
@@ -12,7 +13,12 @@ import { AccountCardEditableTitle } from './AccountCardEditableTitle';
 type AccountCardProps = {
   accountType: AccountType;
   displayName: string;
-  balance: number;
+  /**
+   * Today's balance as the Accounts page shows it (tour 59): the latest
+   * statement plus the operations since. `null`: no statement, so no figure.
+   * Plain values only — this crosses into a Server Component tree.
+   */
+  solde: SoldeCarte | null;
   locale: Locale;
   /**
    * Optional inline hint rendered below the balance — used by the dashboard
@@ -21,6 +27,21 @@ type AccountCardProps = {
    */
   extraHint?: React.ReactNode;
 };
+
+export type SoldeCarte = {
+  montant: number;
+  /** YYYY-MM-DD, the day the statement was read. */
+  luLe: string;
+  depart: boolean;
+  /** Operations counted on top of the statement (0 = the statement alone). */
+  operations: number;
+};
+
+function formatDay(iso: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', timeZone: 'UTC' }).format(
+    new Date(`${iso}T00:00:00Z`),
+  );
+}
 
 const TYPE_VISUAL: Record<
   AccountType,
@@ -56,7 +77,7 @@ const TYPE_VISUAL: Record<
 export async function AccountCard({
   accountType,
   displayName,
-  balance,
+  solde,
   locale,
   extraHint,
 }: AccountCardProps) {
@@ -64,7 +85,19 @@ export async function AccountCard({
   const visual = TYPE_VISUAL[accountType];
   const Icon = visual.icon;
   const subLabel = t(`types.${accountType}`);
-  const balanceLabel = formatCurrency(money(balance), locale);
+  // Rule 10 — the figure says where it comes from, and opens on the Accounts
+  // page, which carries its breakdown.
+  const source =
+    solde === null
+      ? t('balance.none')
+      : solde.operations > 0
+        ? t(solde.depart ? 'balance.sourceSinceStart' : 'balance.sourceSince', {
+            date: formatDay(solde.luLe, locale),
+            count: solde.operations,
+          })
+        : t(solde.depart ? 'balance.sourceStart' : 'balance.sourceRead', {
+            date: formatDay(solde.luLe, locale),
+          });
 
   return (
     <Card
@@ -82,12 +115,24 @@ export async function AccountCard({
         </div>
       </CardHeader>
       <CardContent>
-        <p
-          className="text-2xl font-semibold tracking-tight tabular-nums"
-          aria-label={t('balance.srLabel', { label: displayName })}
-        >
-          {balanceLabel}
+        {solde !== null ? (
+          <p
+            className="text-2xl font-semibold tracking-tight tabular-nums"
+            aria-label={t('balance.srLabel', { label: displayName })}
+          >
+            {formatCurrency(money(solde.montant), locale)}
+          </p>
+        ) : null}
+        <p className="text-muted-foreground mt-1 text-xs" data-testid="solde-source">
+          {source}
         </p>
+        <Link
+          href="/app/accounts"
+          aria-label={t('balance.detailAria', { name: displayName })}
+          className="text-muted-foreground hover:text-brand-700 -my-1.5 inline-flex min-h-11 items-center text-xs underline underline-offset-2"
+        >
+          {t('balance.detail')}
+        </Link>
         {extraHint ? <div className="mt-2">{extraHint}</div> : null}
       </CardContent>
     </Card>

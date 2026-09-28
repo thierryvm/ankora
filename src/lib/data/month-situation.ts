@@ -15,6 +15,8 @@ import { commitmentRowToDomain } from '@/lib/data/commitment-row';
 import { loadAccountLedger, type AccountLedger } from '@/lib/data/operations';
 import { DataReadUnavailableError } from '@/lib/data/read-failure';
 import { accountBalanceView } from '@/lib/domain/accounts/operations-view';
+import { soldeAffiche, type SoldeAffiche } from '@/lib/domain/accounts/solde-affiche';
+import type { AccountType } from '@/lib/schemas/account';
 import {
   depensesDuMoisDeBudget,
   fenetreDuMoisDeBudget,
@@ -137,6 +139,10 @@ export type MonthSituationBundle = MonthSituation & {
   paymentsLedger: PaymentLedger;
   cockpitCharges: readonly CockpitCharge[];
   soldeEpargneActuel: ReturnType<typeof money>;
+  /** No statement on the provisions account: the reserve starts from 0, and says so. */
+  provisionsSansReleve: boolean;
+  /** Today's balance of each account, as the Accounts page shows it (tour 59). */
+  soldesComptes: Partial<Record<AccountType, SoldeAffiche>>;
   /**
    * The balance of the account that pays for daily life (`daily_card`),
    * computed from its latest statement and the operations since — the same
@@ -167,8 +173,16 @@ export function computeMonthSituation(input: MonthSituationInputs): MonthSituati
   );
   const cockpitCharges = toCockpitCharges(snapshot.charges);
 
-  const provisionsAccount = snapshot.accounts.find((a) => a.accountType === 'provisions');
-  const soldeEpargneActuel = money(provisionsAccount?.balance ?? 0);
+  // Tour 59 — one balance per account: the one the Accounts page shows, read
+  // from the journal on TODAY (whatever month is viewed), never the
+  // `accounts.balance` column, which only follows the statements.
+  const todayIso = todayIsoInBrussels();
+  const soldesComptes = soldesDesComptes(input, todayIso);
+  const provisions = soldesComptes.provisions;
+  const provisionsSansReleve = provisions === undefined || provisions.etat === 'aucun';
+  // Without a statement the reserve starts from 0 — and `provisionsSansReleve`
+  // makes the screen say so, never pass that 0 off as a balance.
+  const soldeEpargneActuel = provisions?.etat === 'lu' ? provisions.montant : money(0);
 
   const paymentsLedger: PaymentLedger = new Map(
     monthPayments.map((p) => [paymentKey(p.chargeId, p.periodYear, p.periodMonth), true]),
@@ -199,7 +213,6 @@ export function computeMonthSituation(input: MonthSituationInputs): MonthSituati
   // ADR-047 — the days are those of the BUDGET month: October opened by a
   // salary on 28 September counts from the 28th. The running month is the
   // snapshot's budget month, not the calendar one.
-  const todayIso = todayIsoInBrussels();
   const fenetre = fenetreDuMoisDeBudget(ref, input.ledger.movements);
   const joursDuMois = fenetre.jours;
   const ecoules =
@@ -253,24 +266,39 @@ export function computeMonthSituation(input: MonthSituationInputs): MonthSituati
     paymentsLedger,
     cockpitCharges,
     soldeEpargneActuel,
+    provisionsSansReleve,
+    soldesComptes,
     // Today's balance of the daily account belongs to today. Next to another
     // month's « Il te reste » it would read as that month's money.
-    soldeQuotidien: isCurrentMonth ? soldeDuQuotidien(input, todayIso) : null,
+    soldeQuotidien:
+      isCurrentMonth && soldesComptes.daily_card?.etat === 'lu'
+        ? soldesComptes.daily_card.montant
+        : null,
   };
 }
 
-function soldeDuQuotidien(input: MonthSituationInputs, todayIso: string) {
-  if (!input.snapshot.accounts.some((a) => a.accountType === 'daily_card')) return null;
-  const view = accountBalanceView({
-    accountType: 'daily_card',
-    statements: input.ledger.statements,
-    movements: input.ledger.movements,
-    // ADR-045 D22 — the daily account goes down with its expenses and bills.
-    debits: input.ledger.debits,
-    today: new Date(`${todayIso}T00:00:00Z`),
-  });
-  if (view === null) return null;
-  return view.computed?.balance ?? view.read.balance;
+/**
+ * The balance of every account of the workspace, by the function and on the
+ * day the Accounts page uses — so the two screens cannot disagree.
+ */
+function soldesDesComptes(
+  input: MonthSituationInputs,
+  todayIso: string,
+): Partial<Record<AccountType, SoldeAffiche>> {
+  const out: Partial<Record<AccountType, SoldeAffiche>> = {};
+  for (const account of input.snapshot.accounts) {
+    out[account.accountType] = soldeAffiche(
+      accountBalanceView({
+        accountType: account.accountType,
+        statements: input.ledger.statements,
+        movements: input.ledger.movements,
+        // ADR-045 D22 — expenses and paid bills leave their account too.
+        debits: input.ledger.debits,
+        today: new Date(`${todayIso}T00:00:00Z`),
+      }),
+    );
+  }
+  return out;
 }
 
 /**

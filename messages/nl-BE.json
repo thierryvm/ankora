@@ -936,7 +936,14 @@
         "saveLabel": "Bijwerken",
         "srLabel": "Huidig saldo van {label}",
         "toastSaved": "{name} bijgewerkt",
-        "manualNotice": "Dit saldo verandert pas als je een nieuw invult."
+        "manualNotice": "Dit saldo verandert pas als je een nieuw invult.",
+        "sourceRead": "Saldo gelezen op {date}",
+        "sourceStart": "Beginsaldo, op {date}",
+        "sourceSince": "Gelezen op {date}, plus {count, plural, one {# verrichting} other {# verrichtingen}} sindsdien",
+        "none": "Geen saldo voor deze rekening.",
+        "detail": "Details bekijken",
+        "detailAria": "Details bekijken van het saldo van {name}",
+        "sourceSinceStart": "Beginsaldo van {date}, plus {count, plural, one {# verrichting} other {# verrichtingen}} sindsdien"
       },
       "kind": {
         "principal": {
@@ -1444,7 +1451,9 @@
       "projectionBalance": "Saldo",
       "projectionDeficit": "In {month} zakt het fonds onder nul.",
       "projectionHolds": "Het fonds houdt stand over de volgende 12 maanden.",
-      "projectionNegative": "negatief saldo"
+      "projectionNegative": "negatief saldo",
+      "noStatement": "Geen saldo genoteerd voor deze rekening: de reserve start bij 0.",
+      "currentDetail": "Details bekijken"
     },
     "upcomingBills": {
       "title": "Aankomende facturen",
