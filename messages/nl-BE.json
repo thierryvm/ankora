@@ -1032,6 +1032,7 @@
       "title": "Mijn uitgaven",
       "rowPaidFrom": "Betaald vanaf {account}",
       "subtitle": "De uitgaven buiten de terugkerende facturen — boodschappen, resto, vrije tijd…",
+      "budgetPeriod": "Dit budget loopt van {debut} tot {fin}: het begint wanneer je inkomen binnenkomt.",
       "addSheet": {
         "title": "Nieuwe uitgave",
         "cancel": "Annuleren",
@@ -1355,6 +1356,9 @@
         "detailOrigine": "{montant} {cycleMois, plural, =3 {every 3 months} =6 {every 6 months} =12 {once a year} other {every # months}}",
         "recuEnPlus": "Extra ontvangen",
         "misDeCote": "Opzijgezet",
+        "revenuPrevu": "Verwacht inkomen",
+        "revenuPrevuNote": "Geen ontvangen geld genoteerd voor deze maand: dit bedrag is het inkomen uit je instellingen.",
+        "revenuPrevuLien": "Ontvangen geld noteren",
         "revenuRecuSurPrevu": "Deze maand ontvangen {recu} van {prevu} verwacht",
         "revenuRecuPlusQuePrevu": "Deze maand ontvangen {recu}, meer dan de {prevu} verwacht",
         "auDela": "Deze maand heb je {montant} meer opzijgezet dan je inkomen overliet: het verschil komt van je hoofdrekening.",
@@ -1765,6 +1769,7 @@
       "titreAVenir": "Je zal overhouden",
       "titrePasse": "Je hield over",
       "baseMois": "op je budget van {month}",
+      "termeRevenuPrevu": "Verwacht inkomen",
       "termeRevenusMois": "Ontvangen voor {month}"
     },
     "encoreAPayer": {
@@ -1901,6 +1906,7 @@
       "depenseAu": "Uitgegeven tot {jour}",
       "projectionAu": "= Projectie op {jour}",
       "projectionOp": "{depense} × {jours} dagen ÷ {ecoules} dagen",
+      "revenuPrevu": "Verwacht inkomen",
       "budgetEtiquette": "Budget van de maand · berekend",
       "revenus": "Ontvangen geld",
       "factures": "Je facturen van de maand",

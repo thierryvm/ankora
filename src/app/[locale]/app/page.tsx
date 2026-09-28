@@ -28,6 +28,7 @@ import { MonthNav } from '@/components/period/MonthNav';
 import { moisDansLaPhrase, moisVuDe } from '@/components/cockpit/mois-vu';
 import {
   parseViewedPeriod,
+  toPeriodParam,
   transferPlanAllowed,
   viewedPeriodNav,
 } from '@/lib/domain/period/viewed-period';
@@ -112,10 +113,12 @@ export default async function DashboardPage({
   // ADR-046, lot 2 — the cockpit follows `?period=YYYY-MM`, with the window
   // and the parser of Bills. Absent or out of the window: the current month.
   const [todayYear, todayMonth] = todayIsoInBrussels().split('-').map(Number) as [number, number];
-  const viewedPeriod = parseViewedPeriod((await searchParams).period, {
-    year: todayYear,
-    month: todayMonth,
-  });
+  // ADR-047 — WITHOUT `?period`, the month shown is the budget month running
+  // (`null` here; `loadMonthSituation` resolves it from the journal): on
+  // 28 September with October's salary written, the cockpit opens October.
+  const rawPeriod = (await searchParams).period;
+  const parsedPeriod = parseViewedPeriod(rawPeriod, { year: todayYear, month: todayMonth });
+  const viewedPeriod = rawPeriod === toPeriodParam(parsedPeriod) ? parsedPeriod : null;
   const tc = await getTranslations('cockpit');
   const tNav = await getTranslations('app.charges.periodNav');
   const locale = (await getLocale()) as Locale;
@@ -138,7 +141,13 @@ export default async function DashboardPage({
     ref,
     isCurrentMonth,
     monthlyExpenses,
+    fenetre,
   } = await loadMonthSituation('/app', viewedPeriod);
+  // The month the cockpit calls « current »: the budget month running now.
+  const moisEnCours = snapshot.moisDeBudget;
+  // No money received « for » this month: the income shown is the one of the
+  // settings. It is called « Revenu prévu », never « Argent reçu ».
+  const revenuPrevu = situation.revenuRecu === null && situation.statut !== 'incomplet';
 
   // G-31 — « Trop tôt pour projeter »: days of data count from the FIRST
   // operation ever recorded. Movements are already loaded (`ledger`, sorted by
@@ -183,7 +192,7 @@ export default async function DashboardPage({
   // then). UI-only restriction: the action accepts any valid plan month and
   // validates it; the date written is today. Further ahead or in the past:
   // no button.
-  const transferActionable = transferPlanAllowed(period, snapshot.currentPeriod);
+  const transferActionable = transferPlanAllowed(period, moisEnCours);
   const monthLabel = formatMonth(currentMonth, locale);
   // The cards speak of the month inside sentences (« sur ton budget d’octobre »,
   // « hors d’octobre »): never the capitalised title form (26 Sept. 2026).
@@ -192,12 +201,21 @@ export default async function DashboardPage({
   // « for October »), unlike `formatMonth`, which capitalises for titles.
   // ADR-046, lot 2 bis — the tense and the mid-sentence name of another month,
   // decided HERE once from the two periods (`null` = the current month).
-  const moisVu = moisVuDe(period, snapshot.currentPeriod, locale);
+  const moisVu = moisVuDe(period, moisEnCours, locale);
   const fmtMoney = (value: Parameters<typeof formatCurrency>[0]) => formatCurrency(value, locale);
 
   const hasCharges = snapshot.charges.length > 0;
 
-  const serieDuMois = depensesParJour(monthlyExpenses, period, daysInMonth);
+  // ADR-047 — a budget month that opened before the 1st draws from its first
+  // day: the series and the Rythme card count the days of the budget month.
+  const [debutY, debutM, debutJ] = fenetre.debut.split('-').map(Number) as [number, number, number];
+  const decalage = fenetre.calendaire ? 0 : debutJ - 1;
+  const serieDuMois = depensesParJour(
+    monthlyExpenses,
+    period,
+    daysInMonth,
+    fenetre.calendaire ? undefined : fenetre.debut,
+  );
   const monthlyExpenseTotal = Expenses.totalAmount(monthlyExpenses);
   const latestMonthlyExpenses = Expenses.latestExpenses(monthlyExpenses, 5);
   const monthlyExpenseCount = monthlyExpenses.length;
@@ -334,6 +352,7 @@ export default async function DashboardPage({
       <CascadeDuMois
         revenus={situation.revenus.toNumber()}
         revenuRecu={situation.revenuRecu?.toNumber() ?? null}
+        revenuPrevu={revenuPrevu}
         revenuEcrit={situation.revenuEcrit?.toNumber() ?? null}
         recuEnPlus={situation.recuEnPlus.toNumber()}
         misDeCote={situation.misDeCote.toNumber()}
@@ -382,13 +401,13 @@ export default async function DashboardPage({
             pathname="/app"
             testIdPrefix="cockpit-period"
             landmark={false}
-            {...viewedPeriodNav(period, snapshot.currentPeriod)}
+            {...viewedPeriodNav(period, moisEnCours)}
             labels={{
               navAria: tNav('navAria'),
               prevAria: tNav('prevAria'),
               nextAria: tNav('nextAria'),
               backToCurrent: tNav('backToCurrent', {
-                month: moisDansLaPhrase(snapshot.currentPeriod.month, locale),
+                month: moisDansLaPhrase(moisEnCours.month, locale),
               }),
             }}
           />
@@ -398,6 +417,7 @@ export default async function DashboardPage({
       {/* La carte de tête : une question, un chiffre, sa formule, une action. */}
       <section aria-labelledby="cockpit-heading">
         <IlTeResteCard
+          revenuPrevu={revenuPrevu}
           ilTeReste={situation.ilTeReste.toNumber()}
           resteDisponible={situation.resteDisponible.toNumber()}
           moisVu={moisVu}
@@ -528,8 +548,9 @@ export default async function DashboardPage({
       {/* The rhythm counts days left from TODAY: it has nothing to say about another month. */}
       {isCurrentMonth && situation.statut !== 'incomplet' && (
         <RythmeDuMois
-          year={period.year}
-          month={period.month}
+          year={fenetre.calendaire ? period.year : debutY}
+          month={fenetre.calendaire ? period.month : debutM}
+          decalage={decalage}
           joursDuMois={daysInMonth}
           joursEcoules={joursEcoules}
           serie={serieDuMois}
@@ -546,6 +567,7 @@ export default async function DashboardPage({
           budget={{
             montant: situation.resteDisponible.toNumber(),
             revenus: situation.revenus.toNumber(),
+            revenuPrevu,
             retenu: situation.retenu.toNumber(),
             chargesFixes: situation.chargesFixes.toNumber(),
             provisionsLissees: situation.provisionsLissees.toNumber(),

@@ -15,6 +15,11 @@ import { commitmentRowToDomain } from '@/lib/data/commitment-row';
 import { loadAccountLedger, type AccountLedger } from '@/lib/data/operations';
 import { DataReadUnavailableError } from '@/lib/data/read-failure';
 import { accountBalanceView } from '@/lib/domain/accounts/operations-view';
+import {
+  depensesDuMoisDeBudget,
+  fenetreDuMoisDeBudget,
+  type FenetreDuMois,
+} from '@/lib/domain/budget/mois-de-budget';
 import { operationsDuMois } from '@/lib/domain/cockpit/operations-du-mois';
 import { createClient } from '@/lib/supabase/server';
 import { getCommitmentsWithLedger } from '@/lib/data/commitments';
@@ -118,8 +123,13 @@ export type MonthDecomposition = {
 export type MonthSituationBundle = MonthSituation & {
   /** The month every figure of this bundle is about. */
   ref: Period;
-  /** `ref` is the snapshot's current month (Europe/Brussels). */
+  /**
+   * `ref` is the budget month running now (ADR-047): the calendar month, or
+   * the next one once its income has arrived.
+   */
   isCurrentMonth: boolean;
+  /** The days of `ref` as a budget month (ADR-047) — `joursDuMois` is its length. */
+  fenetre: FenetreDuMois;
   /** The spending of `ref` — the one subtracted from « Il te reste ». */
   monthlyExpenses: Expense[];
   engagementsMensuels: Poste['total'];
@@ -145,10 +155,16 @@ export type MonthSituationBundle = MonthSituation & {
  */
 export function computeMonthSituation(input: MonthSituationInputs): MonthSituationBundle {
   const { snapshot } = input;
-  const ref = input.viewed?.ref ?? snapshot.currentPeriod;
-  const isCurrentMonth = isSamePeriod(ref, snapshot.currentPeriod);
+  const ref = input.viewed?.ref ?? snapshot.moisDeBudget;
+  const isCurrentMonth = isSamePeriod(ref, snapshot.moisDeBudget);
   const monthPayments = input.viewed?.payments ?? snapshot.currentMonthPayments;
-  const monthlyExpenses = input.viewed?.expenses ?? snapshot.monthlyExpenses;
+  // ADR-047 — ranged here by the whole journal, whichever read supplied them:
+  // the list the cockpit shows is the list « Dépensé » sums, never a wider one.
+  const monthlyExpenses = depensesDuMoisDeBudget(
+    input.viewed?.expenses ?? snapshot.monthlyExpenses,
+    ref,
+    input.ledger.movements,
+  );
   const cockpitCharges = toCockpitCharges(snapshot.charges);
 
   const provisionsAccount = snapshot.accounts.find((a) => a.accountType === 'provisions');
@@ -179,19 +195,24 @@ export function computeMonthSituation(input: MonthSituationInputs): MonthSituati
   // counts as fully elapsed so the projection behind « Épargne estimée » is a
   // completed month rather than a partial one — the guard that was defensive
   // until now, unchanged.
+  //
+  // ADR-047 — the days are those of the BUDGET month: October opened by a
+  // salary on 28 September counts from the 28th. The running month is the
+  // snapshot's budget month, not the calendar one.
   const todayIso = todayIsoInBrussels();
-  const [bYear, bMonth, bDay] = todayIso.split('-').map(Number);
-  const isCurrentPeriod = bYear === ref.year && bMonth === ref.month;
-  const joursDuMois = new Date(ref.year, ref.month, 0).getDate();
-  const joursRestants = isCurrentPeriod ? Math.max(1, joursDuMois - (bDay ?? 1) + 1) : 0;
-  const joursEcoules = isCurrentPeriod
-    ? Math.min(joursDuMois, Math.max(1, bDay ?? 1))
-    : joursDuMois;
+  const fenetre = fenetreDuMoisDeBudget(ref, input.ledger.movements);
+  const joursDuMois = fenetre.jours;
+  const ecoules =
+    Math.round(
+      (Date.parse(`${todayIso}T00:00:00Z`) - Date.parse(`${fenetre.debut}T00:00:00Z`)) / 86_400_000,
+    ) + 1;
+  const joursEcoules = isCurrentMonth ? Math.min(joursDuMois, Math.max(1, ecoules)) : joursDuMois;
+  const joursRestants = isCurrentMonth ? Math.max(1, joursDuMois - joursEcoules + 1) : 0;
 
   // ADR-035 — « Dépensé ce mois ». `monthlyExpenses` is already server-filtered
   // to the reference month; running the domain filter over it again is cheap
   // and keeps the figure correct if that guarantee ever moves.
-  const depenses = depensesDuMois(monthlyExpenses, ref);
+  const depenses = depensesDuMois(monthlyExpenses, ref, input.ledger.movements);
 
   const situation = calculerSituationDuMois({
     // Distinct from the Transfer plan's income (which coerces null → 0): the
@@ -212,6 +233,7 @@ export function computeMonthSituation(input: MonthSituationInputs): MonthSituati
   return {
     ref,
     isCurrentMonth,
+    fenetre,
     monthlyExpenses,
     situation,
     joursEcoules,
@@ -275,8 +297,18 @@ export async function loadMonthSituation(
   // Another month than the snapshot's: its bills paid and its spending are
   // read after the snapshot, because the snapshot is what says which month is
   // current. The current month reads nothing more than before.
-  const other = viewed !== null && !isSamePeriod(viewed, snapshot.currentPeriod) ? viewed : null;
-  const activity = other ? await readMonthActivity(snapshot.workspaceId, other) : null;
+  //
+  // ADR-047 — the snapshot holds the RUNNING BUDGET month's expenses and the
+  // CALENDAR month's bills paid. When both are the month shown, nothing more is
+  // read; otherwise that month's activity is, ranged by the whole journal.
+  const ref = viewed ?? snapshot.moisDeBudget;
+  const other =
+    isSamePeriod(ref, snapshot.moisDeBudget) && isSamePeriod(ref, snapshot.currentPeriod)
+      ? null
+      : ref;
+  const activity = other
+    ? await readMonthActivity(snapshot.workspaceId, other, ledger.movements)
+    : null;
   const inputs: MonthSituationInputs = {
     snapshot,
     commitments,

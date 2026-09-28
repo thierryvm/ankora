@@ -47,6 +47,17 @@ type Props = {
   currentMonth: number;
   /** Days elapsed in the current month, including today. */
   joursEcoules: number;
+  /**
+   * ADR-047 — the days of the budget month, formatted, when it is not the
+   * calendar month (« du 28 septembre au 27 octobre »). `expenses` then starts
+   * with that month's rows, known by id from `monthIds`.
+   */
+  periodeBudget?: { debut: string; fin: string } | null;
+  /**
+   * The ids of the budget month's rows — the rows summed into `spentThisMonth`.
+   * Absent: the calendar month of `currentYear`/`currentMonth`.
+   */
+  monthIds?: readonly string[];
   /** The month by category, computed on the server (`categoriesDuMois`). */
   categoryGroups: ReadonlyArray<CategorieCarte>;
   /** The workspace's accounts, for the « Depuis » chips and the row line (rule 25). */
@@ -59,6 +70,8 @@ export function ExpensesClient({
   currentYear,
   currentMonth,
   joursEcoules,
+  periodeBudget = null,
+  monthIds,
   categoryGroups,
   accounts,
 }: Props) {
@@ -101,9 +114,16 @@ export function ExpensesClient({
   // current month, capped for earlier ones — see `Props.expenses`). The per-day
   // figure below never uses these sums — it uses the authoritative
   // `spentThisMonth` (complete, server-side).
+  //
+  // ADR-047 — the budget month is ranged on the server
+  // (`depensesDuMoisDeBudget`); its rows are exactly the ones summed into
+  // `spentThisMonth`, known by id: a 29 September row can belong to October.
   const monthPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
-  const thisMonth = expenses.filter((e) => e.occurredOn.startsWith(monthPrefix));
-  const earlier = expenses.filter((e) => !e.occurredOn.startsWith(monthPrefix));
+  const idsDuMois = monthIds ? new Set(monthIds) : null;
+  const duMois = (e: RawExpense) =>
+    idsDuMois ? idsDuMois.has(e.id) : e.occurredOn.startsWith(monthPrefix);
+  const thisMonth = expenses.filter(duMois);
+  const earlier = expenses.filter((e) => !duMois(e));
   // « Where did it go? » — the month by description, largest subtotal first.
   // Each group is one line of the month total's decomposition (rule 10).
   const groups = groupExpensesByDescription(thisMonth);
@@ -177,6 +197,11 @@ export function ExpensesClient({
       <header>
         <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{t('title')}</h1>
         <p className="text-muted-foreground mt-1">{t('subtitle')}</p>
+        {periodeBudget && (
+          <p data-testid="expenses-budget-period" className="text-muted-foreground mt-1 text-sm">
+            {t('budgetPeriod', { debut: periodeBudget.debut, fin: periodeBudget.fin })}
+          </p>
+        )}
       </header>
 
       {/* « Catégories » (G-cat) — replaces « Dépensé ce mois »: the same

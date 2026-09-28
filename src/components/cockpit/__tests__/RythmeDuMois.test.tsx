@@ -182,3 +182,36 @@ describe('RythmeDuMois — ÉPARGNE block and « Trop tôt pour projeter » (G-1
     expect(document.querySelector('[data-rythme="projection"]')).toBeNull();
   });
 });
+
+// ADR-047 — October's budget month opened on 28 September (fictitious payday):
+// index 1 is 28 September, index 30 is 27 October.
+describe('RythmeDuMois — budget month that opened before the 1st (ADR-047)', () => {
+  const OCTOBRE = { year: 2026, month: 9, decalage: 27, joursDuMois: 30, joursEcoules: 10 };
+
+  it('the axis names dates of the budget window, never raw day indexes', () => {
+    monter(OCTOBRE);
+    const axe = screen.getByTestId('rythme-axe');
+    const reperes = Array.from(axe.querySelectorAll('span')).map((s) => s.textContent);
+    expect(reperes[0]).toBe('28 sept.');
+    expect(reperes).toContain('5 oct.');
+    expect(reperes[reperes.length - 1]).toBe('27 oct.');
+    // No bare number: « 1 », « 5 », « 10 » would read as days of September.
+    for (const r of reperes) expect(r).toMatch(/\D/);
+  });
+
+  it('the savings line calls the end by the budget month, not the calendar one', () => {
+    monter(OCTOBRE);
+    const epargne = screen.getByTestId('rythme-epargne');
+    expect(epargne).toHaveTextContent('Fin octobre');
+    expect(epargne).not.toHaveTextContent('septembre');
+    expect(epargne).toHaveTextContent('27 oct.');
+  });
+
+  it('a calendar month keeps its numbered axis', () => {
+    monter();
+    const reperes = Array.from(screen.getByTestId('rythme-axe').querySelectorAll('span')).map(
+      (s) => s.textContent,
+    );
+    expect(reperes).toEqual(['1', '5', '10', '15', '20', '25', '30']);
+  });
+});

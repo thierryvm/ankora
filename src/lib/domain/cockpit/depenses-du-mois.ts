@@ -1,3 +1,4 @@
+import { depensesDuMoisDeBudget, type RevenuDuJournal } from '@/lib/domain/budget/mois-de-budget';
 import { totalAmount } from '@/lib/domain/expenses/helpers';
 import { type Expense, type Money } from '@/lib/domain/types';
 
@@ -22,8 +23,16 @@ import type { ReferencePeriod } from './types';
  * constructing dates: `occurredOn` is an ISO calendar date with no time or
  * zone, so a `new Date()` round-trip would reintroduce a timezone question
  * that the data does not have. The prefix comparison is exact and total.
+ *
+ * ADR-047 — « the month » is the BUDGET month: an expense made after the
+ * income « for » the next month arrived belongs to that next month
+ * (`mois-de-budget.ts`, the one ranging every reader follows). Without any
+ * income passed, the ranging is the calendar month, exactly as before.
  */
-export function depensesDuMois(expenses: readonly Expense[], ref: ReferencePeriod): Money {
-  const prefix = `${ref.year}-${String(ref.month).padStart(2, '0')}-`;
-  return totalAmount(expenses.filter((expense) => expense.occurredOn.startsWith(prefix)));
+export function depensesDuMois(
+  expenses: readonly Expense[],
+  ref: ReferencePeriod,
+  revenus: readonly RevenuDuJournal[] = [],
+): Money {
+  return totalAmount(depensesDuMoisDeBudget(expenses, ref, revenus));
 }

@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 
 import { Expenses } from '@/lib/domain';
+import { todayIsoInBrussels } from '@/lib/data/month-situation';
+import { fenetreDuMoisDeBudget } from '@/lib/domain/budget/mois-de-budget';
 import { getCategories } from '@/lib/data/categories';
 import { getExpenses, getSnapshotWith } from '@/lib/data/workspace-snapshot';
 import { categoriesDuMois } from '@/lib/domain/expenses/categories-du-mois';
@@ -22,6 +24,7 @@ export default async function ExpensesPage() {
   const [snapshot, [expenses, categories]] = await getSnapshotWith('/app/expenses', (workspaceId) =>
     Promise.all([getExpenses(workspaceId), getCategories(workspaceId)]),
   );
+  const locale = await getLocale();
   const toRaw = (e: (typeof expenses)[number]) => ({
     id: e.id,
     label: e.label,
@@ -34,26 +37,33 @@ export default async function ExpensesPage() {
   // as `spentThisMonth` below — because the list groups it by description and
   // those groups decompose that total (rule 10). The capped `getExpenses` read
   // (50 rows) only supplies the OTHER months: see `currentMonthWithEarlier`.
-  const rawExpenses = Expenses.currentMonthWithEarlier(
-    snapshot.monthlyExpenses,
-    expenses,
-    snapshot.currentPeriod,
-  ).map(toRaw);
+  //
+  // ADR-047 — « the current month » is the BUDGET month running now: its rows
+  // are known by id (a 29 September expense can belong to October), so the
+  // earlier rows are the capped ones that are not among them.
+  const duMois = new Set(snapshot.monthlyExpenses.map((e) => e.id));
+  const rawExpenses = [
+    ...snapshot.monthlyExpenses,
+    ...expenses.filter((e) => !duMois.has(e.id)),
+  ].map(toRaw);
 
-  // Days left in the current month (Europe/Brussels) for the per-day figure —
-  // same TZ the snapshot derives `currentPeriod` from, so `bDay` is in-month.
-  const { year, month } = snapshot.currentPeriod;
-  const [, , bDay] = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Europe/Brussels',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  })
-    .format(new Date())
-    .split('-')
-    .map(Number);
-  const daysInMonth = new Date(year, month, 0).getDate();
-  const joursEcoules = Math.min(daysInMonth, Math.max(1, bDay ?? 1));
+  // Days elapsed in the budget month (Europe/Brussels), today included.
+  const { year, month } = snapshot.moisDeBudget;
+  const todayIso = todayIsoInBrussels();
+  const fenetre = fenetreDuMoisDeBudget(snapshot.moisDeBudget, snapshot.revenus);
+  const ecoules =
+    Math.round(
+      (Date.parse(`${todayIso}T00:00:00Z`) - Date.parse(`${fenetre.debut}T00:00:00Z`)) / 86_400_000,
+    ) + 1;
+  const joursEcoules = Math.min(fenetre.jours, Math.max(1, ecoules));
+  // Said on the page only when the budget month is not the calendar month.
+  const jour = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', timeZone: 'UTC' });
+  const periodeBudget = fenetre.calendaire
+    ? null
+    : {
+        debut: jour.format(new Date(`${fenetre.debut}T00:00:00Z`)),
+        fin: jour.format(new Date(`${fenetre.fin}T00:00:00Z`)),
+      };
 
   // Authoritative current-month spend: summed from `monthlyExpenses` (complete,
   // no 50-row cap) so the figure never under-reports (Sourcery #242).
@@ -80,6 +90,8 @@ export default async function ExpensesPage() {
       currentYear={year}
       currentMonth={month}
       joursEcoules={joursEcoules}
+      periodeBudget={periodeBudget}
+      monthIds={[...duMois]}
       categoryGroups={categoryGroups}
       accounts={ACCOUNT_ORDER.flatMap((kind) => {
         const account = snapshot.accounts.find((a) => a.kind === kind);

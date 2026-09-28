@@ -37,6 +37,12 @@ export type RythmeDuMoisProps = Readonly<{
   joursDuMois: number;
   /** Today's day of the month, today included. */
   joursEcoules: number;
+  /**
+   * ADR-047 — days between the 1st of `year`/`month` and the first day of the
+   * budget month (27 when October opened on 28 September, with `month` = 9).
+   * Absent: the calendar month.
+   */
+  decalage?: number;
   /** `depensesParJour`: one point per day, with its running total. */
   serie: ReadonlyArray<Readonly<{ jour: number; duJour: number; cumule: number }>>;
   /** The month's expenses, for the lines of each day. */
@@ -60,6 +66,8 @@ export type RythmeDuMoisProps = Readonly<{
   budget: Readonly<{
     montant: number;
     revenus: number;
+    /** No money received noted for the month: « Revenu prévu », not « Argent reçu ». */
+    revenuPrevu?: boolean;
     /** « Déjà compté pour tes factures » (`situation.retenu`): bills + monthly share + instalments. */
     retenu: number;
     chargesFixes: number;
@@ -139,7 +147,21 @@ export function tranchesDeJours(jE: number): Array<[number, number]> {
   return t;
 }
 
-function useFormats() {
+/**
+ * Axis ticks, as day indexes. A calendar month keeps 1, 5, 10… and its last
+ * day. Shifted (ADR-047), dates are wider than numbers: one tick a week from
+ * the first day, and the last day, dropping a weekly tick too close to it.
+ */
+export function reperesDeLAxe(jM: number, decalage: number): number[] {
+  if (!decalage)
+    return [1, 5, 10, 15, 20, 25, jM].filter((j, i, a) => j <= jM && a.indexOf(j) === i);
+  const t: number[] = [];
+  for (let j = 1; j <= jM - 4; j += 7) t.push(j);
+  t.push(jM);
+  return t;
+}
+
+function useFormats(decalage = 0) {
   const locale = useLocale() as Locale;
   const euros = new Intl.NumberFormat(locale, {
     style: 'currency',
@@ -147,10 +169,14 @@ function useFormats() {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   });
+  // ADR-047 — `day` is the index in the budget month; `decalage` shifts it to
+  // the calendar (October opened on 28 September: index 1 is the 28th).
+  // Date.UTC carries an overflowing day into the next month.
+  const reel = (year: number, month: number, day: number) =>
+    new Date(Date.UTC(year, month - 1, day + decalage));
   const date = (year: number, month: number, day: number, o: Intl.DateTimeFormatOptions) =>
-    new Intl.DateTimeFormat(locale, { ...o, timeZone: 'UTC' }).format(
-      new Date(Date.UTC(year, month - 1, day)),
-    );
+    new Intl.DateTimeFormat(locale, { ...o, timeZone: 'UTC' }).format(reel(year, month, day));
+  const premier = (y: number, m: number, d: number) => reel(y, m, d).getUTCDate() === 1;
   const fr = locale.startsWith('fr');
   return {
     euro: (v: number) => euros.format(v),
@@ -158,13 +184,15 @@ function useFormats() {
     moins: (v: number) => `−${formatCurrency(v, locale)}`,
     // « 1er » in French, as in the mockup; Intl writes « 1 ».
     numJour: (y: number, m: number, d: number) =>
-      fr && d === 1 ? '1er' : date(y, m, d, { day: 'numeric' }),
+      fr && premier(y, m, d) ? '1er' : date(y, m, d, { day: 'numeric' }),
     jourMois: (y: number, m: number, d: number) =>
-      fr && d === 1
+      fr && premier(y, m, d)
         ? `1er ${date(y, m, d, { month: 'long' })}`
         : date(y, m, d, { day: 'numeric', month: 'long' }),
     jourMoisCourt: (y: number, m: number, d: number) =>
       date(y, m, d, { day: 'numeric', month: 'short' }),
+    /** `YYYY-MM-DD` of index `d`. */
+    iso: (y: number, m: number, d: number) => reel(y, m, d).toISOString().slice(0, 10),
   };
 }
 
@@ -174,7 +202,7 @@ export function RythmeDuMois(props: RythmeDuMoisProps) {
   const projection = tropTot ? null : props.projection;
   const t = useTranslations('cockpit.rythme');
   const tr = useTranslations('cockpit.replis');
-  const f = useFormats();
+  const f = useFormats(props.decalage ?? 0);
   const locale = useLocale();
   const [tiroir, setTiroir] = useState<Tiroir | null>(null);
 
@@ -188,8 +216,12 @@ export function RythmeDuMois(props: RythmeDuMoisProps) {
   const rythme = rythmeAuJour(budget, jE, jM);
   const ecart = rythme ? ecartAuRythme(new Decimal(depense), rythme) : null;
   const enCours = jE < jM;
-  const mois = moisDansLaPhrase(month, locale);
+  // ADR-047 — a budget month opens on the 1st or before it, never after: shifted,
+  // it is the month that follows the one its first day falls in.
+  const mois = moisDansLaPhrase(props.decalage ? (month % 12) + 1 : month, locale);
   const jourMois = (d: number) => f.jourMois(year, month, d);
+  // Shifted, an index is not a day of any month: the last day is named by its date.
+  const jourFin = props.decalage ? f.jourMoisCourt(year, month, jM) : jM;
 
   const motEcart = (e: Decimal, montant: (v: number) => string) => {
     const sens = sensDeLEcart(e);
@@ -288,7 +320,7 @@ export function RythmeDuMois(props: RythmeDuMoisProps) {
               )}
               {aB && enCours && projection !== null && (
                 <Cle trait="tirets">
-                  {t('legendeProjection', { jour: jM, montant: f.euro(projection) })}
+                  {t('legendeProjection', { jour: jourFin, montant: f.euro(projection) })}
                 </Cle>
               )}
             </ul>
@@ -297,7 +329,7 @@ export function RythmeDuMois(props: RythmeDuMoisProps) {
               tropTot={tropTot}
               epargne={tropTot ? null : props.epargne}
               mois={mois}
-              jour={jM}
+              jour={jourFin}
               euro={f.euro}
             />
           </>
@@ -326,7 +358,7 @@ function BlocEpargne(
     tropTot: boolean;
     epargne: number | null;
     mois: string;
-    jour: number;
+    jour: number | string;
     euro: (v: number) => string;
   }>,
 ) {
@@ -406,7 +438,7 @@ function Trace(
 ) {
   const { year, month, joursDuMois: jM, jE, depense, serie, projection, onTranche } = props;
   const t = useTranslations('cockpit.rythme');
-  const f = useFormats();
+  const f = useFormats(props.decalage ?? 0);
   const budget = props.budget.montant;
   const aB = budget > 0;
   const auServeur = (j: number) => (j <= 0 ? 0 : (serie[j - 1]?.cumule ?? 0));
@@ -418,7 +450,9 @@ function Trace(
   const pts = Array.from({ length: jE + 1 }, (_, j) => `${j},${y(cumul(j))}`);
   const tranches = tranchesDeJours(jE);
   const jourMois = (d: number) => f.jourMois(year, month, d);
-  const axe = [1, 5, 10, 15, 20, 25, jM].filter((j, i, a) => j <= jM && a.indexOf(j) === i);
+  const axe = reperesDeLAxe(jM, props.decalage ?? 0);
+  // ADR-047 — shifted, an index is not a day of any month: the axis names dates.
+  const repere = (j: number) => (props.decalage ? f.jourMoisCourt(year, month, j) : String(j));
   const suite = `${aB ? t('grapheAriaBudget', { budget: f.euro(budget) }) : ''}${
     proj !== null ? t('grapheAriaProjection', { projection: f.euro(proj), jour: jourMois(jM) }) : ''
   }`;
@@ -535,11 +569,12 @@ function Trace(
       </div>
       <div
         aria-hidden
+        data-testid="rythme-axe"
         className={`text-muted-foreground mt-1 grid ${GRILLE[jM] ?? 'grid-cols-31'} text-xs tabular-nums`}
       >
         {axe.map((j) => (
           <span key={j} className={`${DEBUT[j]} row-start-1 justify-self-center whitespace-nowrap`}>
-            {j}
+            {repere(j)}
           </span>
         ))}
       </div>
@@ -595,7 +630,7 @@ function TiroirRythme(
   const { year, month, joursDuMois: jM, jE, serie, depenses, projection, tiroir, onClose } = props;
   const { a, b } = tiroir;
   const t = useTranslations('cockpit.rythme');
-  const f = useFormats();
+  const f = useFormats(props.decalage ?? 0);
   const jourMois = (d: number) => f.jourMois(year, month, d);
   const cumul = (j: number) => (j <= 0 ? 0 : (serie[j - 1]?.cumule ?? 0));
   const tot = new Decimal(cumul(b)).minus(cumul(a - 1)).toNumber();
@@ -607,12 +642,10 @@ function TiroirRythme(
   const libTotal =
     a === b
       ? t('totalJour', { jour: jourMois(a) })
-      : a === 1
+      : a === 1 && !props.decalage
         ? t('totalDepuis1er', { jour: jourMois(b) })
         : t('totalTranche', { debut: f.numJour(year, month, a), fin: jourMois(b) });
-  const prefixe = `${year}-${String(month).padStart(2, '0')}-`;
-  const lignesDu = (j: number) =>
-    depenses.filter((d) => d.date.startsWith(prefixe) && Number(d.date.slice(8, 10)) === j);
+  const lignesDu = (j: number) => depenses.filter((d) => d.date === f.iso(year, month, j));
   const sens = ec ? sensDeLEcart(ec) : null;
   const b1 = props.budget;
   const postes: Array<[string, number]> = (
@@ -705,7 +738,10 @@ function TiroirRythme(
         )}
         {tiroir.mois && (
           <Bloc etiquette={t('budgetEtiquette')} testId="rythme-budget">
-            <Ligne libelle={t('revenus')} montant={f.centime(b1.revenus)} />
+            <Ligne
+              libelle={b1.revenuPrevu ? t('revenuPrevu') : t('revenus')}
+              montant={f.centime(b1.revenus)}
+            />
             {postes.map(([lib, v]) => (
               <Ligne key={lib} libelle={lib} montant={f.moins(v)} />
             ))}
