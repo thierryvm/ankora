@@ -1031,6 +1031,7 @@
     "expenses": {
       "title": "Mijn uitgaven",
       "rowPaidFrom": "Betaald vanaf {account}",
+      "rowNoDescription": "geen omschrijving",
       "subtitle": "De uitgaven buiten de terugkerende facturen — boodschappen, resto, vrije tijd…",
       "budgetPeriod": "Dit budget loopt van {debut} tot {fin}: het begint wanneer je inkomen binnenkomt.",
       "addSheet": {
@@ -1059,7 +1060,7 @@
         "toastCreated": "Uitgave van {amount} opgeslagen",
         "pastMonthNotice": "Deze datum valt buiten deze maand: het maandcijfer verandert niet.",
         "contextFailed": "Je categorieën konden niet worden geladen, en een uitgave wordt met haar categorie opgeslagen. Herlaad de pagina om het opnieuw te proberen.",
-        "newCategory": "Nouvelle",
+        "newCategory": "Nieuwe categorie",
         "newCategoryName": "Nom de la catégorie",
         "newCategoryColor": "Couleur",
         "newCategoryCreate": "Créer",

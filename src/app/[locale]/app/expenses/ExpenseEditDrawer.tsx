@@ -230,7 +230,7 @@ export function ExpenseEditDrawer({ expense, accounts, onClose }: Props) {
           </button>
         </header>
 
-        <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-5 py-6">
+        <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-5 py-6 [--rangee-gouttiere:1.25rem]">
           <div className="flex flex-col gap-2">
             <Label htmlFor={labelId}>{t('labelLabel')}</Label>
             <Input

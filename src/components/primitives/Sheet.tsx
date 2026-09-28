@@ -102,6 +102,8 @@ import { useIsClient } from '@/lib/hooks/useIsClient';
 // reste piégé après la fin du mouvement. Le couple n'a aucun garde-fou
 // automatique : il se tient à la main, ici et dans `globals.css`.
 const TRANSITION_MS = 300;
+/** Air kept between the top of the lifted sheet and the top of the visible screen. */
+const KEYBOARD_GAP_PX = 8;
 
 /** Past this many pixels of downward drag, releasing dismisses the sheet. */
 const DRAG_DISMISS_PX = 96;
@@ -269,6 +271,50 @@ export function Sheet({
     clearDragTransform();
     onCloseRef.current();
   }, [clearDragTransform]);
+
+  // --- The phone keyboard. ---
+  // On iOS the keyboard does not shrink the LAYOUT viewport, so a panel fixed
+  // at `bottom: 0` stays under it — footer, and its submit button, included.
+  // Only the VISUAL viewport knows the keyboard is there: the panel is lifted
+  // by what it hides and capped to what it leaves. Written through the CSSOM
+  // (never an inline style attribute, which the CSP would drop), with no
+  // transition of its own, so there is nothing to animate under reduced
+  // motion. A pinch-zoom also shrinks the visual viewport; `scale` tells the
+  // two apart, and a zoom the person chose is left alone. No
+  // `visualViewport` (older engines, jsdom): nothing happens.
+  // Keyed on `rendered`, not `open`: the panel stays mounted through its exit
+  // slide, and resetting `bottom` at the first frame of that slide would drop
+  // it by the keyboard's height before it glides away.
+  useEffect(() => {
+    if (!rendered) return;
+    const viewport = window.visualViewport;
+    const panel = panelRef.current;
+    if (!viewport || !panel) return;
+    const place = () => {
+      const hidden = Math.round(window.innerHeight - (viewport.offsetTop + viewport.height));
+      if (viewport.scale > 1.01 || hidden < 1) {
+        panel.style.bottom = '';
+        panel.style.maxHeight = '';
+        panel.style.minHeight = '';
+        return;
+      }
+      panel.style.bottom = `${hidden}px`;
+      panel.style.maxHeight = `${Math.max(0, Math.round(viewport.height) - KEYBOARD_GAP_PX)}px`;
+      // The height floor must not beat this ceiling on a short screen: the
+      // floor would push the sheet's top above the visible area.
+      panel.style.minHeight = '0px';
+    };
+    place();
+    viewport.addEventListener('resize', place);
+    viewport.addEventListener('scroll', place);
+    return () => {
+      viewport.removeEventListener('resize', place);
+      viewport.removeEventListener('scroll', place);
+      panel.style.bottom = '';
+      panel.style.maxHeight = '';
+      panel.style.minHeight = '';
+    };
+  }, [rendered]);
 
   // --- Escape, focus trap, scroll lock, initial focus, focus restoration. ---
   useEffect(() => {

@@ -1031,6 +1031,7 @@
     "expenses": {
       "title": "Mis gastos",
       "rowPaidFrom": "Pagado desde {account}",
+      "rowNoDescription": "sin descripción",
       "subtitle": "Las salidas fuera de las facturas recurrentes — compra, restaurantes, ocio…",
       "budgetPeriod": "Este presupuesto va del {debut} al {fin}: empieza cuando llega tu ingreso.",
       "addSheet": {
@@ -1059,7 +1060,7 @@
         "toastCreated": "Gasto de {amount} guardado",
         "pastMonthNotice": "Esta fecha está fuera del mes en curso: la cifra del mes no cambiará.",
         "contextFailed": "No se han podido cargar tus categorías, y un gasto se guarda con su categoría. Recarga la página para volver a intentarlo.",
-        "newCategory": "Nouvelle",
+        "newCategory": "Nueva categoría",
         "newCategoryName": "Nom de la catégorie",
         "newCategoryColor": "Couleur",
         "newCategoryCreate": "Créer",

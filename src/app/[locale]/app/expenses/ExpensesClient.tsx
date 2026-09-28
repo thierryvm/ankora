@@ -27,7 +27,20 @@ type RawExpense = {
   occurredOn: string;
   note: string | null;
   paidFrom: AccountKind;
+  /**
+   * The name of the expense's category, when it has one. An expense saved
+   * without a description takes this name as its title (`fallbackLabel` in the
+   * sheet); the row says so rather than letting « Autres » over « Payé depuis
+   * … » read as two categories (seen on 28 September 2026).
+   */
+  categoryName?: string | null;
 };
+
+/** The title is only the category's name: no description was written. */
+function titleIsCategory(e: RawExpense): boolean {
+  if (!e.categoryName) return false;
+  return e.label.trim().toLocaleLowerCase() === e.categoryName.trim().toLocaleLowerCase();
+}
 
 type Props = {
   /**
@@ -157,13 +170,27 @@ export function ExpensesClient({
         type="button"
         onClick={() => onEdit(e)}
         disabled={isPending}
-        aria-label={t('editAria', { label: e.label })}
+        // The row's `aria-label` replaces its content for a screen reader, so the
+        // « sans description » hint has to be in the name too.
+        aria-label={t('editAria', {
+          label: titleIsCategory(e) ? `${e.label}, ${t('rowNoDescription')}` : e.label,
+        })}
         data-testid={`expenses-row-edit-${e.id}`}
         className="hover:bg-muted focus-visible:ring-brand-600 flex min-h-11 w-full items-center justify-between gap-3 rounded-md px-2 py-3 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:cursor-progress"
       >
         <span className="min-w-0 flex-1">
-          <span data-testid="expenses-row-label" className="block truncate font-medium">
-            {e.label}
+          {/* The hint is a sibling of the truncated title, never inside it: a
+              long category name must not push it past the ellipsis. */}
+          <span className="flex min-w-0 items-baseline">
+            <span data-testid="expenses-row-label" className="min-w-0 truncate font-medium">
+              {e.label}
+            </span>
+            {titleIsCategory(e) && (
+              <span className="text-muted-foreground shrink-0 text-xs font-normal">
+                <span aria-hidden="true">{' · '}</span>
+                <span data-testid="expenses-row-no-description">{t('rowNoDescription')}</span>
+              </span>
+            )}
           </span>
           <span data-testid="expenses-row-date" className="text-muted-foreground block text-xs">
             {formatDate(e.occurredOn, locale, 'medium')}

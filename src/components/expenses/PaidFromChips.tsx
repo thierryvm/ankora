@@ -1,5 +1,6 @@
 'use client';
 
+import { keepFocusedChipInView } from '@/components/expenses/chip-row';
 import type { AccountKind } from '@/lib/domain/types';
 
 type Props = {
@@ -28,7 +29,8 @@ export function PaidFromChips({ name, legend, accounts, value, onChange, disable
       <legend className="text-muted-foreground mb-2 text-[11px] font-semibold tracking-[0.09em] uppercase">
         {legend}
       </legend>
-      <div className="flex flex-wrap gap-2">
+      {/* One sideways row, never wrapped blocks: see `.ankora-rangee`. */}
+      <div className="ankora-rangee" onFocus={keepFocusedChipInView}>
         {accounts.map((account) => {
           const selected = account.kind === value;
           return (

@@ -68,6 +68,7 @@ const sampleExpenses: {
   occurredOn: string;
   note: string | null;
   paidFrom: AccountKind;
+  categoryName?: string | null;
 }[] = [
   {
     id: 'e1',
@@ -607,4 +608,34 @@ describe('app.expenses — i18n parity (5 locales, PR-BETA-CLEANUP-3)', () => {
       has('earlierToggle', ['{count}']);
     },
   );
+});
+
+describe('<ExpensesClient /> — a row with no description of its own', () => {
+  // Seen on 28 September 2026: an expense saved without a description takes
+  // its category's name as its title, and « Autres » over « Payé depuis … »
+  // read as two categories. The row now says the title is the category.
+  it('says « sans description » when the title is only the category name', () => {
+    renderExpenses([
+      { ...sampleExpenses[0]!, label: 'Autres', categoryName: 'Autres', paidFrom: 'principal' },
+    ]);
+    const row = screen.getByTestId('expenses-row-e1');
+    expect(within(row).getByTestId('expenses-row-label').textContent).toBe('Autres');
+    // A screen reader hears the row's name, not its content: the hint is in it.
+    expect(screen.getByTestId('expenses-row-edit-e1').getAttribute('aria-label')).toBe(
+      'Modifier Autres, sans description',
+    );
+    expect(within(row).getByTestId('expenses-row-no-description').textContent).toBe(
+      'sans description',
+    );
+  });
+
+  it('matches the category name whatever its case or surrounding spaces', () => {
+    renderExpenses([{ ...sampleExpenses[0]!, label: ' autres ', categoryName: 'Autres' }]);
+    expect(screen.getByTestId('expenses-row-no-description')).toBeTruthy();
+  });
+
+  it('says nothing when the person wrote a description', () => {
+    renderExpenses([{ ...sampleExpenses[0]!, categoryName: 'Courses' }]);
+    expect(screen.queryByTestId('expenses-row-no-description')).toBeNull();
+  });
 });

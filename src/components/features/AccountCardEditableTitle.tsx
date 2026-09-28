@@ -118,7 +118,7 @@ export function AccountCardEditableTitle({ accountType, displayName, subLabel }:
           required
           autoComplete="off"
           spellCheck={false}
-          className="border-border bg-background focus-visible:ring-brand-700 w-full rounded-md border px-2 py-1 text-base font-semibold tracking-tight focus-visible:ring-2 focus-visible:outline-none"
+          className="border-border bg-background focus-visible:ring-brand-700 ankora-text-16 w-full rounded-md border px-2 py-1 font-semibold tracking-tight focus-visible:ring-2 focus-visible:outline-none"
           placeholder={t('placeholder')}
           aria-describedby={`${inputId}-sub`}
         />

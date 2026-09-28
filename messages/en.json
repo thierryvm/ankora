@@ -1031,6 +1031,7 @@
     "expenses": {
       "title": "My expenses",
       "rowPaidFrom": "Paid from {account}",
+      "rowNoDescription": "no description",
       "subtitle": "Spending outside recurring bills — groceries, dining, leisure…",
       "budgetPeriod": "This budget runs from {debut} to {fin}: it starts when your income arrives.",
       "addSheet": {
@@ -1059,7 +1060,7 @@
         "toastCreated": "{amount} expense saved",
         "pastMonthNotice": "This date is outside the current month: the monthly figure will not move.",
         "contextFailed": "Your categories could not be loaded, and an expense is saved with its category. Reload the page to try again.",
-        "newCategory": "New",
+        "newCategory": "New category",
         "newCategoryName": "Category name",
         "newCategoryColor": "Colour",
         "newCategoryCreate": "Create",

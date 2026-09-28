@@ -533,16 +533,29 @@ describe('when the context cannot be read', () => {
  * exact qui produisait le défaut peut l'attraper.
  */
 describe('la feuille après le chantier visuel', () => {
-  it('la rangée de catégories ne défile plus horizontalement', async () => {
+  it('la rangée de catégories défile sur une ligne, et le dit', async () => {
     await openSheet();
-    // MESURÉ avant : 602 px de puces dans une fenêtre de 390, donc 212 px hors
-    // écran et 3 puces sur 6 entièrement visibles, sans la moindre affordance.
-    // Le pied de `Sheet` étant `shrink-0`, l'enroulement ne peut plus le
-    // pousser sous le clavier — la raison d'être du défilement a disparu.
-    const groupe = screen.getByRole('radiogroup');
-    expect(groupe.className).toContain('flex-wrap');
-    expect(groupe.className).not.toContain('overflow-x-auto');
-    expect(groupe.className).not.toContain('flex-nowrap');
+    // ATTENDU CHANGÉ le 28 septembre 2026 (tour 50), déclaré dans la PR. Il
+    // exigeait `flex-wrap` depuis le 23 août. Vu sur un téléphone le 28/09 :
+    // en blocs, catégories puis « Depuis » repoussaient la date et le bouton
+    // sous le clavier. La rangée défile de nouveau, mais avec ce qui manquait
+    // le 23 août : un bord estompé (`.ankora-rangee`) qui dit qu'il y a une
+    // suite, et le déclencheur du reste qui dit combien.
+    const rangee = screen.getByTestId('add-expense-category-row');
+    expect(rangee.className).toContain('ankora-rangee');
+    expect(rangee.className).not.toContain('flex-wrap');
+    expect(rangee.contains(screen.getByRole('radiogroup'))).toBe(true);
+  });
+
+  it('« + Nouvelle catégorie » ouvre la rangée, avec son mot complet, hors du radiogroup', async () => {
+    await openSheet();
+    // Le 28/09, « Nouvelle » en fin de rangée ne se voyait pas : une catégorie
+    // « Enfants » n'a pas pu être créée depuis la feuille.
+    const rangee = screen.getByTestId('add-expense-category-row');
+    const nouvelle = screen.getByTestId('add-expense-new-category');
+    expect(rangee.firstElementChild).toBe(nouvelle);
+    expect(nouvelle.textContent).toContain('Nouvelle catégorie');
+    expect(screen.getByRole('radiogroup').contains(nouvelle)).toBe(false);
   });
 
   it('le déclencheur du reste dit COMBIEN il en reste', async () => {
