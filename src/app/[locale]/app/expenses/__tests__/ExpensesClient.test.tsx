@@ -211,7 +211,9 @@ describe('<ExpensesClient /> — PR-BETA-CLEANUP-3 edit drawer', () => {
     fireEvent.click(screen.getByTestId('expenses-row-edit-e1'));
     expect(await screen.findByTestId('expense-edit-drawer')).toBeInTheDocument();
     expect(screen.getByTestId('expense-edit-label')).toHaveValue('Courses Carrefour');
-    expect(screen.getByTestId('expense-edit-amount')).toHaveValue(87.5);
+    // A text field now (a numeric one blanked « 5,90 » to 0 €): its value is
+    // the string the person reads, no longer a number.
+    expect(screen.getByTestId('expense-edit-amount')).toHaveValue('87.5');
     expect(screen.getByTestId('expense-edit-occurred-on')).toHaveValue('2026-05-15');
   });
 

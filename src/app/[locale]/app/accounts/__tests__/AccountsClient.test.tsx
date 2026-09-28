@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 
@@ -235,6 +235,101 @@ describe('AccountsClient — un solde lu, daté, et nommé pour ce qu’il est',
       'Sert à la jauge de provisions du tableau de bord.',
     );
     expect(document.body.textContent).not.toMatch(/Saisi à la main/);
+  });
+});
+
+/**
+ * The two amounts of this page — monthly income, monthly transfer — read what
+ * a francophone types. Both fields were `type="number"`: « 5,90 » was blanked,
+ * read as empty, and SENT AS null — the configured income was erased by
+ * typing it with a comma. Their rule is « 0 or more, or empty to unset »
+ * (`monthlyIncomeSchema`, `vieCouranteTransferSchema`), and it stays: only the
+ * reading changes. Typed key by key. Figures are fictitious.
+ */
+describe('AccountsClient — income and transfer read « 5,90 » as 5.9', () => {
+  const INVALID_AMOUNT = 'Écris un montant de 0 ou plus, avec une virgule ou un point.';
+  const INCOME = 'Revenu mensuel net (€)';
+  const TRANSFER = 'Virement mensuel vers Vie Courante (€)';
+
+  async function actions() {
+    const mod = await import('@/lib/actions/accounts');
+    vi.mocked(mod.updateMonthlyIncomeAction).mockReset().mockResolvedValue({ ok: true });
+    vi.mocked(mod.updateVieCouranteTransferAction).mockReset().mockResolvedValue({ ok: true });
+    return mod;
+  }
+
+  async function typeInto(label: string, value: string) {
+    const user = userEvent.setup();
+    const field = screen.getByLabelText(label);
+    await user.clear(field);
+    if (value !== '') await user.type(field, value);
+    const save = within(field.closest('form') as HTMLElement).getByRole('button', {
+      name: 'Enregistrer',
+    });
+    return { user, field, save };
+  }
+
+  it('are text fields with a decimal keypad', () => {
+    renderClient();
+    for (const label of [INCOME, TRANSFER]) {
+      const field = screen.getByLabelText(label);
+      expect(field).toHaveAttribute('type', 'text');
+      expect(field).toHaveAttribute('inputmode', 'decimal');
+    }
+  });
+
+  it('sends an income of 5.9 when « 5,90 » is typed', async () => {
+    const mod = await actions();
+    renderClient();
+    const { user, save } = await typeInto(INCOME, '5,90');
+    await user.click(save);
+    await waitFor(() =>
+      expect(mod.updateMonthlyIncomeAction).toHaveBeenCalledWith({ monthlyIncome: 5.9 }),
+    );
+  });
+
+  it('sends a transfer of 5.9 when « 5,90 » is typed', async () => {
+    const mod = await actions();
+    renderClient();
+    const { user, save } = await typeInto(TRANSFER, '5,90');
+    await user.click(save);
+    await waitFor(() =>
+      expect(mod.updateVieCouranteTransferAction).toHaveBeenCalledWith({ amount: 5.9 }),
+    );
+  });
+
+  it('keeps 0 as a valid income — the rule of this field is « 0 or more »', async () => {
+    const mod = await actions();
+    renderClient();
+    const { user, save } = await typeInto(INCOME, '0');
+    await user.click(save);
+    await waitFor(() =>
+      expect(mod.updateMonthlyIncomeAction).toHaveBeenCalledWith({ monthlyIncome: 0 }),
+    );
+  });
+
+  it('keeps an emptied income as « not configured » (null), not as 0', async () => {
+    const mod = await actions();
+    renderClient();
+    const { user, save } = await typeInto(INCOME, '');
+    expect(screen.queryByText(INVALID_AMOUNT)).toBeNull();
+    await user.click(save);
+    await waitFor(() =>
+      expect(mod.updateMonthlyIncomeAction).toHaveBeenCalledWith({ monthlyIncome: null }),
+    );
+  });
+
+  it('keeps Enregistrer disabled on an unreadable amount, and the field says why', async () => {
+    const mod = await actions();
+    renderClient();
+    const { user, field, save } = await typeInto(INCOME, 'abc');
+    expect(save).toBeDisabled();
+    const message = screen.getByText(INVALID_AMOUNT);
+    expect(field).toHaveAttribute('aria-invalid', 'true');
+    expect(message.id).not.toBe('');
+    expect(field.getAttribute('aria-describedby') ?? '').toContain(message.id);
+    await user.click(save);
+    expect(mod.updateMonthlyIncomeAction).not.toHaveBeenCalled();
   });
 });
 

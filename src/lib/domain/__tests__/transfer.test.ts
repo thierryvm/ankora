@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
 import { money, type Charge } from '@/lib/domain/types';
+import { lissageDuMois, totalChargesMensuelles } from '@/lib/domain/cockpit/effort-financier-lisse';
 import {
   computeMonthlyTransferPlan,
   projectedEpargneBalance,
@@ -408,6 +409,78 @@ describe('provisionPartOfMonth — the net, never the target', () => {
     });
     // 2505 − 505 − 70 (net transfer) − 15 (bill paid from the main account)
     expect(plan.netPrincipalAfterPlan.toNumber()).toBe(1915);
+  });
+});
+
+/**
+ * WHERE « APRÈS TES SORTIES » LOST THE READER — documented, not changed.
+ *
+ * `principalBillsDue` is « every charge paid from the main account that falls
+ * due this month »: the monthly bills AND any non-monthly bill flagged
+ * `paidFrom: 'principal'` in its due month, at its FULL amount. The cockpit's
+ * « factures du mois » (`totalChargesMensuelles`) holds the monthly bills only,
+ * and the same non-monthly bill appears there as a smoothed share
+ * (`lissageDuMois`, amount ÷ cycle) — never at its full amount.
+ *
+ * So in a month where such a bill drops, the old line subtracted more than the
+ * bills the screen names, and nothing said which one. This test pins the gap
+ * to the one charge that causes it; the cockpit no longer shows this figure
+ * (« Sur ton compte principal après tes factures », `principal-apres-factures.ts`).
+ */
+describe('computeMonthlyTransferPlan — principalBillsDue vs the monthly bills', () => {
+  // 705 € of monthly bills, plus a 60 € quarterly bill paid from the main
+  // account, due in September.
+  const loyer = monthlyCharge({ id: 'loyer', label: 'Loyer', amount: money(705) });
+  const eau = monthlyCharge({
+    id: 'eau',
+    label: 'Eau',
+    amount: money(60),
+    frequency: 'quarterly',
+    dueMonth: 3,
+    paymentMonths: [3, 6, 9, 12],
+    paidFrom: 'principal',
+  });
+  const toCockpit = (c: Charge) => ({
+    id: c.id,
+    label: c.label,
+    amount: c.amount,
+    frequency: c.frequency,
+    paymentMonths: c.paymentMonths,
+    paymentDay: c.paymentDay,
+    isActive: c.isActive,
+  });
+
+  it('counts a quarterly bill paid from Principal in full, where the monthly bills do not', () => {
+    const plan = computeMonthlyTransferPlan({
+      charges: [loyer, eau],
+      month: 9,
+      monthlyIncome: money(1705),
+      vieCouranteMonthlyTransfer: money(505),
+      commitmentsDue: money(0),
+    });
+    const facturesMensuelles = totalChargesMensuelles([loyer, eau].map(toCockpit));
+    const lissage = lissageDuMois([loyer, eau].map(toCockpit));
+
+    expect(plan.principalBillsDue.toNumber()).toBe(765);
+    expect(facturesMensuelles.toNumber()).toBe(705);
+    // The whole gap is the quarterly bill, at its full amount…
+    expect(plan.principalBillsDue.minus(facturesMensuelles).toNumber()).toBe(60);
+    // …which the cockpit's cascade only knows as a 20 € monthly share.
+    expect(lissage.parts.map((p) => [p.id, p.montantMensuel.toNumber()])).toEqual([['eau', 20]]);
+    // And it is NOT in the provisions target: that one only reads `paidFrom: 'epargne'`.
+    expect(plan.epargneProvisionTarget.toNumber()).toBe(0);
+  });
+
+  it('drops it again in a month where it is not due', () => {
+    const plan = computeMonthlyTransferPlan({
+      charges: [loyer, eau],
+      month: 10,
+      monthlyIncome: money(1705),
+      vieCouranteMonthlyTransfer: money(505),
+      commitmentsDue: money(0),
+    });
+
+    expect(plan.principalBillsDue.toNumber()).toBe(705);
   });
 });
 

@@ -34,6 +34,7 @@ import type { SignalDoublon } from '@/lib/domain/obligations';
 import { CHARGE_FREQUENCIES, type ChargeFrequency } from '@/lib/domain/types';
 import { formatCurrency, formatDate, formatMonth } from '@/lib/i18n/formatters';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
+import { parseAmountInput } from '@/lib/i18n/parse-amount';
 
 import { CadenceField } from './CadenceField';
 import { ChargeEditDrawer, type ChargeEditDrawerCharge } from './ChargeEditDrawer';
@@ -198,12 +199,18 @@ export function ChargesClient({
   const t = useTranslations('app.charges');
   const tFreq = useTranslations('common.frequency');
   const tFreqAbbr = useTranslations('common.frequencyAbbr');
+  const tAmount = useTranslations('ui.amountField');
   const locale = useLocale() as Locale;
   const translateError = useActionErrorTranslator();
 
   const [isPending, startTransition] = useTransition();
   const [label, setLabel] = useState('');
   const [amount, setAmount] = useState('');
+  // A bill is never 0 €. Empty keeps « Ajouter » waiting without a word (the
+  // amount is simply not typed yet); something typed that does not read —
+  // letters, zero — also says why under the field.
+  const amountReadable = parseAmountInput(amount) !== null;
+  const amountInvalid = amount.trim() !== '' && !amountReadable;
   const [frequency, setFrequency] = useState<Frequency>('monthly');
   const [dueMonth, setDueMonth] = useState('1');
   const [paymentDay, setPaymentDay] = useState('1');
@@ -413,11 +420,10 @@ export function ChargesClient({
 
   function onCreate(e: React.FormEvent) {
     e.preventDefault();
-    const parsedAmount = Number(amount.replace(',', '.'));
-    if (!Number.isFinite(parsedAmount) || parsedAmount < 0) {
-      toast.error(translateError('errors.validation.generic'));
-      return;
-    }
+    // « Ajouter » already waits for a readable amount; this guard keeps a
+    // stray Enter from sending what the server would refuse.
+    const parsedAmount = parseAmountInput(amount);
+    if (parsedAmount === null) return;
     const parsedDueMonth = Number(dueMonth);
     const parsedPaymentDay = Number(paymentDay);
     const computedPaymentMonths = paymentMonthsFromFrequency(frequency, parsedDueMonth);
@@ -878,17 +884,24 @@ export function ChargesClient({
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="amount">{t('amountLabel')}</Label>
+                {/* Text with a decimal keypad, never `type="number"`: the
+                    browser blanks a comma-typed « 5,90 », read as 0 €. */}
                 <Input
                   id="amount"
-                  type="number"
+                  type="text"
                   autoComplete="off"
                   inputMode="decimal"
-                  min={0}
-                  step="0.01"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
+                  aria-invalid={amountInvalid || undefined}
+                  aria-describedby={amountInvalid ? 'charges-add-amount-error' : undefined}
                   required
                 />
+                {amountInvalid && (
+                  <p id="charges-add-amount-error" className="text-danger text-xs font-medium">
+                    {tAmount('positive')}
+                  </p>
+                )}
               </div>
               {/* THI-301: unified cadence cluster replaces the 3 separate
                   fields (frequency / anchor month / day). The parent state and
@@ -910,7 +923,7 @@ export function ChargesClient({
                 />
               </div>
               <div className="md:col-span-2">
-                <Button type="submit" disabled={isPending}>
+                <Button type="submit" disabled={isPending || !amountReadable}>
                   <Plus className="h-4 w-4" />
                   {isPending ? t('adding') : t('addButton')}
                 </Button>

@@ -7,6 +7,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 
 import messages from '../../../../../../messages/fr-BE.json';
@@ -548,5 +549,65 @@ describe('<CommitmentsClient />', () => {
       fireEvent.click(screen.getByTestId('commitment-delete-confirm'));
     });
     await waitFor(() => expect(deleteMock).toHaveBeenCalledWith('car'));
+  });
+});
+
+/**
+ * The two AMOUNT fields of the form (total, per instalment) read what a
+ * francophone types. Both were `type="number"`: « 5,90 » was blanked and
+ * `Number('')` sent 0. Their rule stays « 0 or more » (`commitment.ts`,
+ * `total_amount >= 0` in SQL) — only the reading changes. The count, the day
+ * and the year are whole numbers and are not touched. Typed key by key.
+ * Figures are fictitious.
+ */
+describe('<CommitmentsClient /> — amounts read « 5,90 » as 5.9', () => {
+  const INVALID_AMOUNT = 'Écris un montant de 0 ou plus, avec une virgule ou un point.';
+
+  beforeEach(() => {
+    createMock.mockReset();
+    createMock.mockResolvedValue({ ok: true });
+  });
+
+  it('the total and the per-instalment amount are text fields with a decimal keypad', () => {
+    renderPage([]);
+    fireEvent.click(screen.getByTestId('commitments-add-toggle'));
+    for (const field of [
+      screen.getByLabelText(/Montant total dû/),
+      screen.getByLabelText(/Montant par échéance/),
+    ]) {
+      expect(field).toHaveAttribute('type', 'text');
+      expect(field).toHaveAttribute('inputmode', 'decimal');
+    }
+  });
+
+  it('sends 5.9 for both amounts when « 5,90 » is typed', async () => {
+    const user = userEvent.setup();
+    renderPage([], { currentPeriod: { year: 2026, month: 5 } });
+    await user.click(screen.getByTestId('commitments-add-toggle'));
+    await user.type(screen.getByLabelText('Description'), 'Arrangement');
+    await user.type(screen.getByLabelText(/Montant total dû/), '5,90');
+    await user.type(screen.getByLabelText(/Montant par échéance/), '5,90');
+    await user.click(screen.getByRole('button', { name: /^ajouter$/i }));
+    await waitFor(() => expect(createMock).toHaveBeenCalledTimes(1));
+    expect(createMock.mock.calls[0]?.[0]).toMatchObject({
+      totalAmount: 5.9,
+      installmentAmount: 5.9,
+    });
+  });
+
+  it('keeps « Ajouter » disabled on an unreadable total, and the field says why', async () => {
+    const user = userEvent.setup();
+    renderPage([], { currentPeriod: { year: 2026, month: 5 } });
+    await user.click(screen.getByTestId('commitments-add-toggle'));
+    await user.type(screen.getByLabelText('Description'), 'Arrangement');
+    await user.type(screen.getByLabelText(/Montant par échéance/), '505');
+    const total = screen.getByLabelText(/Montant total dû/);
+    await user.type(total, 'abc');
+    expect(screen.getByRole('button', { name: /^ajouter$/i })).toBeDisabled();
+    const message = screen.getByText(INVALID_AMOUNT);
+    expect(total).toHaveAttribute('aria-invalid', 'true');
+    expect(message.id).not.toBe('');
+    expect(total.getAttribute('aria-describedby') ?? '').toContain(message.id);
+    expect(createMock).not.toHaveBeenCalled();
   });
 });

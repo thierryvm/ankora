@@ -21,6 +21,7 @@ import {
 } from '@/lib/domain/commitments';
 import { formatCurrency, formatMonth, formatMonthInSentence } from '@/lib/i18n/formatters';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
+import { parseAmountInput } from '@/lib/i18n/parse-amount';
 import type { Locale } from '@/i18n/routing';
 
 export type ConvertibleCharge = {
@@ -48,6 +49,19 @@ const parseNumber = (raw: string): number | null => {
 };
 
 /**
+ * An AMOUNT door, read like every amount field of the app. Optional: empty is
+ * « not known » (`amount: null`, valid). Something typed that does not read is
+ * `invalid` — it blocks the submit and says so, since a door dropped in silence
+ * is a figure lost in silence. The count and the year stay on `parseNumber`:
+ * they are whole numbers, not amounts.
+ */
+const readAmountDoor = (raw: string): { amount: number | null; invalid: boolean } => {
+  if (raw.trim() === '') return { amount: null, invalid: false };
+  const amount = parseAmountInput(raw);
+  return { amount, invalid: amount === null };
+};
+
+/**
  * « Convertir cette charge en engagement » — the flow, designed on the degraded
  * case (§1.7).
  *
@@ -70,6 +84,7 @@ const parseNumber = (raw: string): number | null => {
  */
 export function ConvertChargeSheet({ charge, onClose, locale }: Props) {
   const t = useTranslations('app.charges.convert');
+  const tAmount = useTranslations('ui.amountField');
   const translateError = useActionErrorTranslator();
   const [isPending, startTransition] = useTransition();
 
@@ -78,6 +93,10 @@ export function ConvertChargeSheet({ charge, onClose, locale }: Props) {
   const [remainingCount, setRemainingCount] = useState('');
   const [remainingBalance, setRemainingBalance] = useState('');
   const [remembered, setRemembered] = useState('');
+  const balanceDoor = readAmountDoor(remainingBalance);
+  const rememberedDoor = readAmountDoor(remembered);
+  const balanceAmount = balanceDoor.amount;
+  const amountsInvalid = balanceDoor.invalid || rememberedDoor.invalid;
 
   const fmt = (v: number) => formatCurrency(v, locale);
   /** Explicit branches, not a lookup: `next-intl` types message keys literally. */
@@ -126,10 +145,10 @@ export function ConvertChargeSheet({ charge, onClose, locale }: Props) {
     const ey = parseNumber(endYear);
     const em = parseNumber(endMonth);
     if (ey !== null && em !== null) out.push({ kind: 'dateDeFin', year: ey, month: em });
-    const balance = parseNumber(remainingBalance);
+    const balance = balanceAmount;
     if (balance !== null) out.push({ kind: 'soldeRestantDu', balance });
     return out;
-  }, [remainingCount, endYear, endMonth, remainingBalance]);
+  }, [remainingCount, endYear, endMonth, balanceAmount]);
 
   const confrontation = useMemo(() => {
     if (!charge || !anchor) return null;
@@ -155,7 +174,7 @@ export function ConvertChargeSheet({ charge, onClose, locale }: Props) {
     };
   }, [charge, anchor, confrontation]);
 
-  const rememberedTotal = parseNumber(remembered);
+  const rememberedTotal = rememberedDoor.amount;
   const rememberedDiverges =
     preview !== null &&
     rememberedTotal !== null &&
@@ -164,6 +183,9 @@ export function ConvertChargeSheet({ charge, onClose, locale }: Props) {
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!charge) return;
+    // The submit already waits; this guard keeps a stray Enter from sending
+    // the conversion without the balance that was typed.
+    if (amountsInvalid) return;
     if (!confrontation) {
       toast.error(t('needOneDoor'));
       return;
@@ -171,7 +193,7 @@ export function ConvertChargeSheet({ charge, onClose, locale }: Props) {
     const count = parseNumber(remainingCount);
     const ey = parseNumber(endYear);
     const em = parseNumber(endMonth);
-    const balance = parseNumber(remainingBalance);
+    const balance = balanceAmount;
 
     startTransition(async () => {
       try {
@@ -213,7 +235,7 @@ export function ConvertChargeSheet({ charge, onClose, locale }: Props) {
           type="submit"
           form="convert-charge-form"
           className="w-full"
-          disabled={isPending || confrontation === null}
+          disabled={isPending || confrontation === null || amountsInvalid}
           data-testid="convert-charge-submit"
         >
           {isPending ? t('submitting') : t('submit')}
@@ -283,16 +305,23 @@ export function ConvertChargeSheet({ charge, onClose, locale }: Props) {
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="convert-balance">{t('remainingBalanceLabel')}</Label>
+            {/* Text with a decimal keypad, never `type="number"`: the browser
+                blanks a comma-typed « 5,90 », and the door read as unanswered. */}
             <Input
               id="convert-balance"
-              type="number"
+              type="text"
               inputMode="decimal"
               autoComplete="off"
-              min={0}
-              step="0.01"
               value={remainingBalance}
               onChange={(e) => setRemainingBalance(e.target.value)}
+              aria-invalid={balanceDoor.invalid || undefined}
+              aria-describedby={balanceDoor.invalid ? 'convert-balance-error' : undefined}
             />
+            {balanceDoor.invalid && (
+              <p id="convert-balance-error" className="text-danger text-xs font-medium">
+                {tAmount('positive')}
+              </p>
+            )}
           </div>
 
           {/* Live consequence — the same « Il te restera X € » discipline as the
@@ -339,14 +368,19 @@ export function ConvertChargeSheet({ charge, onClose, locale }: Props) {
             <Label htmlFor="convert-remembered">{t('rememberedLabel')}</Label>
             <Input
               id="convert-remembered"
-              type="number"
+              type="text"
               inputMode="decimal"
               autoComplete="off"
-              min={0}
-              step="0.01"
               value={remembered}
               onChange={(e) => setRemembered(e.target.value)}
+              aria-invalid={rememberedDoor.invalid || undefined}
+              aria-describedby={rememberedDoor.invalid ? 'convert-remembered-error' : undefined}
             />
+            {rememberedDoor.invalid && (
+              <p id="convert-remembered-error" className="text-danger text-xs font-medium">
+                {tAmount('positive')}
+              </p>
+            )}
             <p className="text-muted-foreground text-xs">{t('rememberedHint')}</p>
           </div>
 

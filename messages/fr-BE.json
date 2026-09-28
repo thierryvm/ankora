@@ -160,6 +160,10 @@
       "preparing": "Préparation…",
       "confirm": "Confirmer",
       "close": "Fermer"
+    },
+    "amountField": {
+      "positive": "Écris un montant supérieur à 0, avec une virgule ou un point.",
+      "zeroAllowed": "Écris un montant de 0 ou plus, avec une virgule ou un point."
     }
   },
   "landing": {
@@ -761,7 +765,15 @@
       "upcomingBillsSectionHeading": "Prochaines factures",
       "commitmentsSectionHeading": "Mes engagements",
       "etiquetteAVenir": "mois à venir",
-      "etiquettePasse": "mois passé"
+      "etiquettePasse": "mois passé",
+      "principalApresFactures": "Sur ton compte principal après tes factures {voyelle, select, oui {d’{month}} other {de {month}}}",
+      "principalApresFacturesToggle": "Voir ce qui compose ce chiffre",
+      "principalApresFacturesSolde": "Solde calculé du compte principal",
+      "principalApresFacturesResultat": "Après tes factures encore à payer",
+      "principalApresFacturesJour": "le {jour}",
+      "principalApresFacturesEcheance": "le {jour} · échéance {index}/{total}",
+      "principalApresFacturesSansSolde": "Pas encore de solde pour ton compte principal : note-le dans Mes comptes pour voir ce chiffre.",
+      "principalApresFacturesAutreMois": "Ce chiffre part du solde de ton compte principal aujourd’hui : il ne se lit que sur le mois en cours."
     },
     "charges": {
       "title": "Mes factures",
@@ -1560,7 +1572,9 @@
         "amount": {
           "invalid": "Montant invalide.",
           "negative": "Le montant doit être ≥ 0.",
-          "tooHigh": "Montant trop élevé."
+          "tooHigh": "Montant trop élevé.",
+          "notPositive": "Le montant doit être supérieur à zéro.",
+          "subCent": "Deux décimales au plus : le montant se compte au centime."
         },
         "frequency": {
           "invalid": "Fréquence invalide."
@@ -1609,7 +1623,9 @@
         "amount": {
           "invalid": "Montant invalide.",
           "negative": "Doit être ≥ 0.",
-          "tooHigh": "Montant trop élevé."
+          "tooHigh": "Montant trop élevé.",
+          "notPositive": "Le montant doit être supérieur à zéro.",
+          "subCent": "Deux décimales au plus : le montant se compte au centime."
         },
         "date": {
           "format": "Format attendu : YYYY-MM-DD."
@@ -1769,7 +1785,8 @@
       "writeFailed": "L’opération n’a pas pu être enregistrée. Réessaie.",
       "notFound": "Cette opération n’existe plus ou ne t’appartient pas.",
       "alreadyDone": "Ce virement est déjà noté comme fait pour ce mois.",
-      "startingBalance": "Le solde de départ ne s’annule pas : écris plutôt le solde du jour."
+      "startingBalance": "Le solde de départ ne s’annule pas : écris plutôt le solde du jour.",
+      "planMonthNotAllowed": "Ce virement ne se note que pour le mois en cours ou le suivant."
     }
   },
   "opengraphImage": {
@@ -1804,7 +1821,8 @@
       "titrePasse": "Il t’est resté",
       "baseMois": "sur ton budget {voyelle, select, oui {d’{month}} other {de {month}}}",
       "termeRevenuPrevu": "Revenu prévu",
-      "termeRevenusMois": "Reçu pour {month}"
+      "termeRevenusMois": "Reçu pour {month}",
+      "termeRevenuRienNote": "Revenu prévu, rien de reçu noté pour {month}"
     },
     "encoreAPayer": {
       "etiquette": "À payer ce mois",
@@ -2051,7 +2069,9 @@
       "cancel": "Annuler",
       "cancelled": "Virement annulé",
       "reopen": "Rétablir le virement annulé",
-      "explain": "Ankora ne déplace pas ton argent : fais le virement dans ta banque, puis coche-le ici."
+      "explain": "Ankora ne déplace pas ton argent : fais le virement dans ta banque, puis coche-le ici.",
+      "recalculateSplit": "Recalculer le découpage",
+      "splitRecalculated": "Découpage recalculé"
     },
     "readFailed": "Tes soldes n’ont pas pu être lus. Recharge la page."
   }

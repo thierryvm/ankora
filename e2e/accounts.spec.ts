@@ -99,7 +99,7 @@ test.describe('Accounts — 3-comptes saisie + Plan du mois', () => {
       await expect(
         page.getByText(/virement à faire vers provisions pour tes factures/i),
       ).toBeVisible();
-      await expect(page.getByText(/après tes sorties/i)).toBeVisible();
+      await expect(page.getByText(/sur ton compte principal après tes factures/i)).toBeVisible();
 
       const planCard = page.getByTestId('repli-virements');
       // Round euros render WITHOUT decimals since 2026-06-02: formatters.ts sets

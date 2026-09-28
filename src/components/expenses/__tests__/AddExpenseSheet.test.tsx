@@ -3,7 +3,8 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import frMessages from '../../../../messages/fr-BE.json';
-import { AddExpenseSheet, parseAmountInput } from '../AddExpenseSheet';
+import { AddExpenseSheet } from '../AddExpenseSheet';
+import { parseAmountInput } from '@/lib/i18n/parse-amount';
 import { todayInAnkoraTz } from '@/lib/date/tz';
 
 /**

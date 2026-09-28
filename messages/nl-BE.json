@@ -160,6 +160,10 @@
       "preparing": "Voorbereiden…",
       "confirm": "Bevestigen",
       "close": "Sluiten"
+    },
+    "amountField": {
+      "positive": "Vul een bedrag groter dan 0 in, met een komma of een punt.",
+      "zeroAllowed": "Vul een bedrag van 0 of meer in, met een komma of een punt."
     }
   },
   "landing": {
@@ -761,7 +765,15 @@
       "upcomingBillsSectionHeading": "Aankomende facturen",
       "commitmentsSectionHeading": "Mijn verbintenissen",
       "etiquetteAVenir": "komende maand",
-      "etiquettePasse": "voorbije maand"
+      "etiquettePasse": "voorbije maand",
+      "principalApresFactures": "Op je hoofdrekening na je facturen van {month}",
+      "principalApresFacturesToggle": "Bekijk waaruit dit bedrag bestaat",
+      "principalApresFacturesSolde": "Berekend saldo van de hoofdrekening",
+      "principalApresFacturesResultat": "Na je facturen die nog te betalen zijn",
+      "principalApresFacturesJour": "op de {jour}e",
+      "principalApresFacturesEcheance": "op de {jour}e · termijn {index}/{total}",
+      "principalApresFacturesSansSolde": "Nog geen saldo voor je hoofdrekening: noteer het in Mijn rekeningen om dit bedrag te zien.",
+      "principalApresFacturesAutreMois": "Dit bedrag vertrekt van het saldo van je hoofdrekening vandaag: het geldt alleen voor de lopende maand."
     },
     "charges": {
       "title": "Mijn facturen",
@@ -1560,7 +1572,9 @@
         "amount": {
           "invalid": "Bedrag niet geldig.",
           "negative": "Het bedrag moet ≥ 0 zijn.",
-          "tooHigh": "Bedrag te hoog."
+          "tooHigh": "Bedrag te hoog.",
+          "notPositive": "Het bedrag moet groter zijn dan nul.",
+          "subCent": "Hoogstens twee decimalen: het bedrag telt tot op de cent."
         },
         "frequency": {
           "invalid": "Frequentie niet geldig."
@@ -1609,7 +1623,9 @@
         "amount": {
           "invalid": "Bedrag niet geldig.",
           "negative": "Moet ≥ 0 zijn.",
-          "tooHigh": "Bedrag te hoog."
+          "tooHigh": "Bedrag te hoog.",
+          "notPositive": "Het bedrag moet groter zijn dan nul.",
+          "subCent": "Hoogstens twee decimalen: het bedrag telt tot op de cent."
         },
         "date": {
           "format": "Verwacht formaat: YYYY-MM-DD."
@@ -1769,7 +1785,8 @@
       "writeFailed": "De verrichting kon niet worden opgeslagen. Probeer opnieuw.",
       "notFound": "Deze verrichting bestaat niet meer of is niet van jou.",
       "alreadyDone": "Deze overschrijving staat al als gedaan voor deze maand.",
-      "startingBalance": "Het beginsaldo wordt niet geannuleerd: vul liever het saldo van vandaag in."
+      "startingBalance": "Het beginsaldo wordt niet geannuleerd: vul liever het saldo van vandaag in.",
+      "planMonthNotAllowed": "Deze overschrijving kan alleen voor de lopende of de volgende maand worden genoteerd."
     }
   },
   "opengraphImage": {
@@ -1804,7 +1821,8 @@
       "titrePasse": "Je hield over",
       "baseMois": "op je budget van {month}",
       "termeRevenuPrevu": "Verwacht inkomen",
-      "termeRevenusMois": "Ontvangen voor {month}"
+      "termeRevenusMois": "Ontvangen voor {month}",
+      "termeRevenuRienNote": "Gepland inkomen, niets ontvangen genoteerd voor {month}"
     },
     "encoreAPayer": {
       "etiquette": "Due this month",
@@ -2051,7 +2069,9 @@
       "cancel": "Annuleren",
       "cancelled": "Overschrijving geannuleerd",
       "reopen": "Geannuleerde overschrijving herstellen",
-      "explain": "Ankora verplaatst je geld niet: doe de overschrijving bij je bank en vink ze hier aan."
+      "explain": "Ankora verplaatst je geld niet: doe de overschrijving bij je bank en vink ze hier aan.",
+      "recalculateSplit": "Verdeling herberekenen",
+      "splitRecalculated": "Verdeling herberekend"
     },
     "readFailed": "Je saldi konden niet worden gelezen. Laad de pagina opnieuw."
   }

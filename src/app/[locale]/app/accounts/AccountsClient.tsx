@@ -23,6 +23,7 @@ import type { AccountType } from '@/lib/domain/cockpit/types';
 import { ACCOUNT_KIND_I18N_KEY, type AccountKind } from '@/lib/schemas/account';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 import { formatCurrency, formatMonthInSentence } from '@/lib/i18n/formatters';
+import { parseAmountInput } from '@/lib/i18n/parse-amount';
 import type { Locale } from '@/i18n/routing';
 
 /** One « argent reçu » of the month on this account, cancelled ones included. */
@@ -98,11 +99,17 @@ const ACCOUNT_ICONS: Record<AccountKind, typeof Landmark> = {
 
 const ACCOUNT_ORDER: AccountKind[] = ['principal', 'vie_courante', 'epargne'];
 
-function parseAmount(raw: string): number | null {
-  const normalized = raw.trim().replace(',', '.');
-  if (normalized === '') return null;
-  const n = Number(normalized);
-  return Number.isFinite(n) ? n : null;
+/**
+ * The income and the transfer are « 0 or more, or empty to unset »
+ * (`monthlyIncomeSchema`, `vieCouranteTransferSchema`). Empty stays `null` —
+ * « not configured » — and is valid; something typed that does not read is
+ * `invalid`, and never sent: before, a comma-typed « 5,90 » behind a numeric
+ * field was blanked and sent as `null`, erasing the configured figure.
+ */
+function readOptionalAmount(raw: string): { amount: number | null; invalid: boolean } {
+  if (raw.trim() === '') return { amount: null, invalid: false };
+  const amount = parseAmountInput(raw, { allowZero: true });
+  return { amount, invalid: amount === null };
 }
 
 export function AccountsClient({
@@ -177,13 +184,15 @@ export function AccountsClient({
 function MonthlyIncomeCard({ initialValue }: { initialValue: number | null }) {
   const t = useTranslations('app.accounts');
   const tIncome = useTranslations('app.accounts.income');
+  const tAmount = useTranslations('ui.amountField');
   const translateError = useActionErrorTranslator();
   const [value, setValue] = useState(initialValue === null ? '' : String(initialValue));
   const [isPending, startTransition] = useTransition();
+  const { amount, invalid } = readOptionalAmount(value);
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const amount = parseAmount(value);
+    if (invalid) return;
     startTransition(async () => {
       const result = await updateMonthlyIncomeAction({ monthlyIncome: amount });
       if (result.ok) toast.success(tIncome('toastSaved'));
@@ -214,16 +223,22 @@ function MonthlyIncomeCard({ initialValue }: { initialValue: number | null }) {
             <Input
               id="monthly-income"
               className="min-h-11"
-              type="number"
+              type="text"
               inputMode="decimal"
-              min={0}
-              step="0.01"
+              autoComplete="off"
               placeholder={tIncome('placeholder')}
               value={value}
               onChange={(e) => setValue(e.target.value)}
+              aria-invalid={invalid || undefined}
+              aria-describedby={invalid ? 'monthly-income-error' : undefined}
             />
+            {invalid && (
+              <p id="monthly-income-error" className="text-danger text-xs font-medium">
+                {tAmount('zeroAllowed')}
+              </p>
+            )}
           </div>
-          <Button type="submit" className="min-h-11" disabled={isPending}>
+          <Button type="submit" className="min-h-11" disabled={isPending || invalid}>
             {isPending ? t('saving') : t('saveButton')}
           </Button>
         </form>
@@ -235,13 +250,15 @@ function MonthlyIncomeCard({ initialValue }: { initialValue: number | null }) {
 function VieCouranteTransferCard({ initialValue }: { initialValue: number | null }) {
   const t = useTranslations('app.accounts');
   const tTransfer = useTranslations('app.accounts.transfer');
+  const tAmount = useTranslations('ui.amountField');
   const translateError = useActionErrorTranslator();
   const [value, setValue] = useState(initialValue === null ? '' : String(initialValue));
   const [isPending, startTransition] = useTransition();
+  const { amount, invalid } = readOptionalAmount(value);
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const amount = parseAmount(value);
+    if (invalid) return;
     startTransition(async () => {
       const result = await updateVieCouranteTransferAction({ amount });
       if (result.ok) toast.success(tTransfer('toastSaved'));
@@ -263,16 +280,22 @@ function VieCouranteTransferCard({ initialValue }: { initialValue: number | null
             <Input
               id="vie-transfer"
               className="min-h-11"
-              type="number"
+              type="text"
               inputMode="decimal"
-              min={0}
-              step="0.01"
+              autoComplete="off"
               placeholder={tTransfer('placeholder')}
               value={value}
               onChange={(e) => setValue(e.target.value)}
+              aria-invalid={invalid || undefined}
+              aria-describedby={invalid ? 'vie-transfer-error' : undefined}
             />
+            {invalid && (
+              <p id="vie-transfer-error" className="text-danger text-xs font-medium">
+                {tAmount('zeroAllowed')}
+              </p>
+            )}
           </div>
-          <Button type="submit" className="min-h-11" disabled={isPending}>
+          <Button type="submit" className="min-h-11" disabled={isPending || invalid}>
             {isPending ? t('saving') : t('saveButton')}
           </Button>
         </form>

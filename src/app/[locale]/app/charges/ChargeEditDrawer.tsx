@@ -10,6 +10,7 @@ import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
 import { paymentMonthsFromFrequency } from '@/lib/domain/charges';
 import { CHARGE_FREQUENCIES, type ChargeFrequency } from '@/lib/domain/types';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
+import { parseAmountInput } from '@/lib/i18n/parse-amount';
 import { toast } from '@/components/ui/toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -71,11 +72,13 @@ export function ChargeEditDrawer({
   pendingOutside = false,
 }: Props) {
   const t = useTranslations('app.charges');
+  const tAmount = useTranslations('ui.amountField');
   const translateError = useActionErrorTranslator();
   const router = useRouter();
 
   const labelId = useId();
   const amountId = useId();
+  const amountErrorId = useId();
 
   // Seed the form from the charge during render, keyed on its id: opening a
   // different charge swaps the whole state in one batch, with no
@@ -103,13 +106,14 @@ export function ChargeEditDrawer({
 
   if (!charge) return null;
 
+  // A bill is never 0 €: an amount that does not read — empty, letters, zero —
+  // keeps « Enregistrer » waiting, and the field says why. The field is
+  // pre-filled, so an unreadable value is always something typed over it.
+  const parsedAmount = parseAmountInput(amount);
+  const amountInvalid = parsedAmount === null;
+
   function submit() {
-    if (!charge) return;
-    const parsedAmount = Number(amount.replace(',', '.'));
-    if (!Number.isFinite(parsedAmount) || parsedAmount < 0) {
-      toast.error(translateError('errors.validation.generic'));
-      return;
-    }
+    if (!charge || parsedAmount === null) return;
     const parsedDueMonth = Number(dueMonth);
     const parsedPaymentDay = Number(paymentDay);
     const computedPaymentMonths = paymentMonthsFromFrequency(frequency, parsedDueMonth);
@@ -165,7 +169,7 @@ export function ChargeEditDrawer({
           <Button
             type="button"
             onClick={submit}
-            disabled={busy || label.trim().length === 0}
+            disabled={busy || label.trim().length === 0 || amountInvalid}
             data-testid="charge-edit-save"
           >
             {isPending ? t('drawer.saving') : t('drawer.save')}
@@ -186,16 +190,24 @@ export function ChargeEditDrawer({
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor={amountId}>{t('amountLabel')}</Label>
+          {/* Text with a decimal keypad, never `type="number"`: the browser
+              blanks a comma-typed « 5,90 », and the bill went in at 0 €. */}
           <Input
             id={amountId}
-            type="number"
+            type="text"
             inputMode="decimal"
-            min={0}
-            step="0.01"
+            autoComplete="off"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
+            aria-invalid={amountInvalid || undefined}
+            aria-describedby={amountInvalid ? amountErrorId : undefined}
             data-testid="charge-edit-amount"
           />
+          {amountInvalid && (
+            <p id={amountErrorId} className="text-danger text-xs font-medium">
+              {tAmount('positive')}
+            </p>
+          )}
         </div>
         {/* THI-301: unified cadence cluster replaces the 3 separate fields. */}
         <CadenceField
