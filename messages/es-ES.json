@@ -936,7 +936,14 @@
         "saveLabel": "Actualizar",
         "srLabel": "Saldo actual de {label}",
         "toastSaved": "{name} actualizado",
-        "manualNotice": "Este saldo solo cambia cuando anotas uno nuevo."
+        "manualNotice": "Este saldo solo cambia cuando anotas uno nuevo.",
+        "sourceRead": "Saldo leído el {date}",
+        "sourceStart": "Saldo inicial, el {date}",
+        "sourceSince": "Leído el {date}, más {count, plural, one {# operación} other {# operaciones}} desde entonces",
+        "none": "No hay saldo para esta cuenta.",
+        "detail": "Ver el detalle",
+        "detailAria": "Ver el detalle del saldo de {name}",
+        "sourceSinceStart": "Saldo inicial del {date}, más {count, plural, one {# operación} other {# operaciones}} desde entonces"
       },
       "kind": {
         "principal": {
@@ -1444,7 +1451,9 @@
       "projectionBalance": "Saldo",
       "projectionDeficit": "En {month}, el fondo baja de cero.",
       "projectionHolds": "El fondo aguanta durante los próximos 12 meses.",
-      "projectionNegative": "saldo negativo"
+      "projectionNegative": "saldo negativo",
+      "noStatement": "No hay saldo anotado para esta cuenta: la reserva parte de 0.",
+      "currentDetail": "Ver el detalle"
     },
     "upcomingBills": {
       "title": "Próximas facturas",

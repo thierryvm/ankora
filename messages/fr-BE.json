@@ -936,7 +936,14 @@
         "saveLabel": "Mettre à jour",
         "srLabel": "Solde actuel de {label}",
         "toastSaved": "{name} mis à jour",
-        "manualNotice": "Ce solde ne change que quand tu en écris un nouveau."
+        "manualNotice": "Ce solde ne change que quand tu en écris un nouveau.",
+        "sourceRead": "Solde lu le {date}",
+        "sourceStart": "Solde de départ, le {date}",
+        "sourceSince": "Lu le {date}, plus {count, plural, one {# opération} other {# opérations}} depuis",
+        "none": "Aucun solde pour ce compte.",
+        "detail": "Voir le détail",
+        "detailAria": "Voir le détail du solde de {name}",
+        "sourceSinceStart": "Solde de départ du {date}, plus {count, plural, one {# opération} other {# opérations}} depuis"
       },
       "kind": {
         "principal": {
@@ -1444,7 +1451,9 @@
       "projectionBalance": "Solde",
       "projectionDeficit": "En {month}, le fonds passe sous zéro.",
       "projectionHolds": "Le fonds tient sur les 12 prochains mois.",
-      "projectionNegative": "solde négatif"
+      "projectionNegative": "solde négatif",
+      "noStatement": "Aucun solde noté pour ce compte : la réserve part de 0.",
+      "currentDetail": "Voir le détail"
     },
     "upcomingBills": {
       "title": "Prochaines factures",

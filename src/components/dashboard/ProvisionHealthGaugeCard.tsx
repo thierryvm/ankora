@@ -3,6 +3,7 @@ import { Activity, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Link } from '@/i18n/navigation';
 import { Progress } from '@/components/ui/progress';
 import { ProvisionFundProjection } from '@/components/dashboard/ProvisionFundProjection';
 import {
@@ -20,6 +21,11 @@ type Props = {
   charges: readonly CockpitCharge[];
   payments: PaymentLedger;
   soldeEpargneActuel: Decimal;
+  /**
+   * Tour 59 — no statement on the provisions account: the reserve starts from
+   * 0, and the line says so rather than showing that 0 as a balance.
+   */
+  sansReleve?: boolean;
   /** Renamed from the domain's `ref` to avoid clashing with React's reserved `ref` prop. */
   period: ReferencePeriod;
   locale: Locale;
@@ -56,6 +62,7 @@ export async function ProvisionHealthGaugeCard({
   charges,
   payments,
   soldeEpargneActuel,
+  sansReleve = false,
   period,
   locale,
 }: Props) {
@@ -207,6 +214,21 @@ export async function ProvisionHealthGaugeCard({
                   <dd className="text-foreground mt-0.5 font-semibold tabular-nums">
                     {fmt(result.soldeEpargneActuel)}
                   </dd>
+                  {/* Rule 10 — the balance opens on the Accounts page, which
+                      carries its statement and every operation since. */}
+                  <dd>
+                    <Link
+                      href="/app/accounts"
+                      className="text-muted-foreground hover:text-brand-700 -my-1.5 inline-flex min-h-11 items-center underline underline-offset-2"
+                    >
+                      {t('currentDetail')}
+                    </Link>
+                  </dd>
+                  {sansReleve ? (
+                    <dd className="text-muted-foreground mt-0.5" data-testid="reserve-sans-releve">
+                      {t('noStatement')}
+                    </dd>
+                  ) : null}
                 </div>
               </dl>
               {result.statut === 'deficit' && result.rattrapageMensuel.gt(0) && (

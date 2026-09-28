@@ -26,6 +26,14 @@ vi.mock('next-intl/server', () => ({
   },
 }));
 
+vi.mock('@/i18n/navigation', () => ({
+  Link: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
+  ),
+}));
+
 import { ProvisionHealthGaugeCard } from '../ProvisionHealthGaugeCard';
 
 const ANNUAL_CHARGE = (over: Partial<CockpitCharge>): CockpitCharge => ({
@@ -44,18 +52,41 @@ const ANNUAL_CHARGE = (over: Partial<CockpitCharge>): CockpitCharge => ({
 const emptyPayments: PaymentLedger = new Map();
 const JAN = { year: 2026, month: 1 } as const;
 
-const renderCard = async (input: { charges: CockpitCharge[]; soldeEpargneActuel: Decimal }) =>
+const renderCard = async (input: {
+  charges: CockpitCharge[];
+  soldeEpargneActuel: Decimal;
+  sansReleve?: boolean;
+}) =>
   render(
     await ProvisionHealthGaugeCard({
       charges: input.charges,
       payments: emptyPayments,
       soldeEpargneActuel: input.soldeEpargneActuel,
+      sansReleve: input.sansReleve,
       period: JAN,
       locale: 'fr-BE',
     }),
   );
 
 describe('<ProvisionHealthGaugeCard /> (THI-190 cockpit v3 #2)', () => {
+  it('tour 59 — the current balance opens on the Accounts page (rule 10)', async () => {
+    await renderCard({ charges: [ANNUAL_CHARGE({})], soldeEpargneActuel: new Decimal(1200) });
+    const link = screen.getByRole('link', { name: messages.dashboard.health.currentDetail });
+    expect(link.getAttribute('href')).toBe('/app/accounts');
+    expect(screen.queryByTestId('reserve-sans-releve')).toBeNull();
+  });
+
+  it('tour 59 — without a statement, the line says the reserve starts from 0', async () => {
+    await renderCard({
+      charges: [ANNUAL_CHARGE({})],
+      soldeEpargneActuel: new Decimal(0),
+      sansReleve: true,
+    });
+    expect(screen.getByTestId('reserve-sans-releve').textContent).toBe(
+      messages.dashboard.health.noStatement,
+    );
+  });
+
   it('renders the FR title from the dashboard.health namespace', async () => {
     await renderCard({
       charges: [ANNUAL_CHARGE({})],

@@ -4,7 +4,8 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AccountCard } from '@/components/features/AccountCard';
+import { AccountCard, type SoldeCarte } from '@/components/features/AccountCard';
+import type { SoldeAffiche } from '@/lib/domain/accounts/solde-affiche';
 import { CascadeDuMois, type PartAffichee } from '@/components/dashboard/CascadeDuMois';
 import { ProvisionHealthGaugeCard } from '@/components/dashboard/ProvisionHealthGaugeCard';
 import { EngagementsCard } from '@/components/dashboard/EngagementsCard';
@@ -111,6 +112,17 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t('metaTitle') };
 }
 
+/** Tour 59 — the card receives plain values: a Decimal never crosses into it. */
+function soldeCarte(solde: SoldeAffiche | undefined): SoldeCarte | null {
+  if (solde === undefined || solde.etat === 'aucun') return null;
+  return {
+    montant: solde.montant.toNumber(),
+    luLe: solde.luLe.toISOString().slice(0, 10),
+    depart: solde.depart,
+    operations: solde.operations,
+  };
+}
+
 export default async function DashboardPage({
   searchParams,
 }: {
@@ -140,6 +152,8 @@ export default async function DashboardPage({
     paymentsLedger,
     cockpitCharges,
     soldeEpargneActuel,
+    provisionsSansReleve,
+    soldesComptes,
     soldeQuotidien,
     ledger,
     joursEcoules,
@@ -556,7 +570,7 @@ export default async function DashboardPage({
                   key={accountType}
                   accountType={accountType}
                   displayName={account.displayName}
-                  balance={account.balance}
+                  solde={soldeCarte(soldesComptes[accountType])}
                   locale={locale}
                   extraHint={extraHint}
                 />
@@ -766,6 +780,7 @@ export default async function DashboardPage({
           charges={cockpitCharges}
           payments={paymentsLedger}
           soldeEpargneActuel={soldeEpargneActuel}
+          sansReleve={provisionsSansReleve}
           period={period}
           locale={locale}
         />

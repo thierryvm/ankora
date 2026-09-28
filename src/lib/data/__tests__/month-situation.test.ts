@@ -383,6 +383,89 @@ describe('loadMonthSituation — the viewed month (ADR-046, lot 2)', () => {
     );
   });
 
+  it('tour 59 — the reserve and every account read the computed balance, never the column', async () => {
+    const { expenseToFlow } = await import('@/lib/domain/accounts/debits');
+    const { money } = await import('@/lib/domain/types');
+    const releveProvisions: AccountBalanceStatement = {
+      id: 's-provisions',
+      accountType: 'provisions',
+      balance: new Decimal(705),
+      statedOn: day('2026-09-01'),
+      recordedAt: new Date('2026-09-01T08:00:00Z'),
+      cancelledAt: null,
+    };
+    // The column says 505: what a statement written in the morning left it at.
+    const provisions = snapshot.accounts.find((a) => a.accountType === 'provisions')!;
+    provisions.balance = 505;
+    try {
+      loadAccountLedger.mockResolvedValue({
+        ok: true,
+        statements: [releveProvisions, releveQuotidien],
+        movements: [
+          transfer({
+            id: 'in',
+            amount: new Decimal(100),
+            planSuggestedAmount: new Decimal(100),
+            provisionPart: new Decimal(100),
+            freeSavingsPart: new Decimal(0),
+          }),
+          transfer({
+            id: 'out',
+            fromAccountType: 'provisions',
+            toAccountType: 'daily_card',
+            amount: new Decimal(50),
+            planYear: null,
+            planMonth: null,
+            planSuggestedAmount: null,
+            provisionPart: null,
+            freeSavingsPart: null,
+          }),
+        ],
+        debits: [
+          expenseToFlow({
+            id: 'courses',
+            amount: money(45),
+            occurredOn: '2026-09-02',
+            createdAt: new Date('2026-09-02T08:00:00Z'),
+            paidFrom: 'vie_courante',
+          })!,
+        ],
+      });
+      const { loadMonthSituation } = await import('@/lib/data/month-situation');
+      const out = await loadMonthSituation(null);
+
+      // 705 read, + 100 in, - 50 out: the reserve starts from 755, not from 505.
+      expect(out.soldeEpargneActuel.toFixed(2)).toBe('755.00');
+      expect(out.provisionsSansReleve).toBe(false);
+      const p = out.soldesComptes.provisions;
+      expect(p?.etat === 'lu' && p.montant.toFixed(2)).toBe('755.00');
+      expect(p?.etat === 'lu' && p.operations).toBe(2);
+      // 400 read, + 50 in, - 45 spent.
+      const q = out.soldesComptes.daily_card;
+      expect(q?.etat === 'lu' && q.montant.toFixed(2)).toBe('405.00');
+      expect(out.soldeQuotidien?.toFixed(2)).toBe('405.00');
+      // No statement on the main account: no figure, whatever the column holds.
+      expect(out.soldesComptes.income_bills).toEqual({ etat: 'aucun' });
+    } finally {
+      provisions.balance = 0;
+    }
+  });
+
+  it('tour 59 — without a statement the reserve starts from 0 and says so', async () => {
+    const provisions = snapshot.accounts.find((a) => a.accountType === 'provisions')!;
+    provisions.balance = 505;
+    try {
+      loadAccountLedger.mockResolvedValue({ ok: true, statements: [], movements: [] });
+      const { loadMonthSituation } = await import('@/lib/data/month-situation');
+      const out = await loadMonthSituation(null);
+
+      expect(out.soldeEpargneActuel.toFixed(2)).toBe('0.00');
+      expect(out.provisionsSansReleve).toBe(true);
+    } finally {
+      provisions.balance = 0;
+    }
+  });
+
   it('the current month reads nothing more than before', async () => {
     loadAccountLedger.mockResolvedValue({ ok: true, statements: [], movements: [] });
     const { loadMonthSituation } = await import('@/lib/data/month-situation');
