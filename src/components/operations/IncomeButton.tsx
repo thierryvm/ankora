@@ -187,7 +187,7 @@ export function IncomeButton({
                 <Label htmlFor={`${ids}-account`}>{t('account')}</Label>
                 <select
                   id={`${ids}-account`}
-                  className="border-input bg-background min-h-11 rounded-md border px-3 text-sm"
+                  className="border-input bg-background ankora-text-16 min-h-11 rounded-md border px-3"
                   value={accountType}
                   onChange={(e) => setAccountType(e.target.value as AccountType)}
                 >

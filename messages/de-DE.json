@@ -1031,6 +1031,7 @@
     "expenses": {
       "title": "Meine Ausgaben",
       "rowPaidFrom": "Bezahlt von {account}",
+      "rowNoDescription": "ohne Beschreibung",
       "subtitle": "Die Ausgaben abseits wiederkehrender Rechnungen — Einkäufe, Restaurant, Freizeit…",
       "budgetPeriod": "Dieses Budget läuft vom {debut} bis zum {fin}: Es beginnt, wenn dein Einkommen eingeht.",
       "addSheet": {
@@ -1059,7 +1060,7 @@
         "toastCreated": "Ausgabe von {amount} gespeichert",
         "pastMonthNotice": "Dieses Datum liegt außerhalb des laufenden Monats: die Monatszahl bleibt unverändert.",
         "contextFailed": "Deine Kategorien konnten nicht geladen werden, und eine Ausgabe wird mit ihrer Kategorie gespeichert. Lade die Seite neu, um es erneut zu versuchen.",
-        "newCategory": "Nouvelle",
+        "newCategory": "Neue Kategorie",
         "newCategoryName": "Nom de la catégorie",
         "newCategoryColor": "Couleur",
         "newCategoryCreate": "Créer",

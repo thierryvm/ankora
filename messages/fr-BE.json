@@ -1031,6 +1031,7 @@
     "expenses": {
       "title": "Mes dépenses",
       "rowPaidFrom": "Payé depuis {account}",
+      "rowNoDescription": "sans description",
       "subtitle": "Les sorties hors factures récurrentes — courses, resto, loisirs…",
       "budgetPeriod": "Ce budget va du {debut} au {fin} : il commence à l’arrivée de ton revenu.",
       "addSheet": {
@@ -1059,7 +1060,7 @@
         "toastCreated": "Dépense de {amount} enregistrée",
         "pastMonthNotice": "Cette date est hors du mois en cours : le chiffre du mois ne bougera pas.",
         "contextFailed": "Tes catégories n’ont pas pu être chargées, et une dépense s’enregistre avec sa catégorie. Recharge la page pour réessayer.",
-        "newCategory": "Nouvelle",
+        "newCategory": "Nouvelle catégorie",
         "newCategoryName": "Nom de la catégorie",
         "newCategoryColor": "Couleur",
         "newCategoryCreate": "Créer",

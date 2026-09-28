@@ -32,6 +32,7 @@ export default async function ExpensesPage() {
     occurredOn: e.occurredOn,
     note: e.note,
     paidFrom: e.paidFrom,
+    categoryName: categories.find((c) => c.id === e.categoryId)?.name ?? null,
   });
   // The current month comes COMPLETE from `monthlyExpenses` — the same source
   // as `spentThisMonth` below — because the list groups it by description and

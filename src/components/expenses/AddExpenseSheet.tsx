@@ -13,6 +13,7 @@ import { useLocale, useTranslations } from 'next-intl';
 
 import { Sheet } from '@/components/primitives/Sheet';
 import { PaidFromChips } from '@/components/expenses/PaidFromChips';
+import { keepFocusedChipInView } from '@/components/expenses/chip-row';
 import { toast } from '@/components/ui/toast';
 import { createExpenseCategoryAction } from '@/lib/actions/categories';
 import { createExpenseAction } from '@/lib/actions/expenses';
@@ -806,7 +807,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
                  stored, so leaving it empty is an informed choice. */
               placeholder={selectedName || t('fallbackLabel')}
               data-testid="add-expense-label"
-              className="text-foreground placeholder:text-muted-foreground/60 min-h-[26px] border-0 bg-transparent p-0 text-sm outline-none"
+              className="text-foreground placeholder:text-muted-foreground/60 ankora-text-16 min-h-[26px] border-0 bg-transparent p-0 outline-none"
             />
           </div>
           <ul
@@ -843,24 +844,15 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
         </div>
 
         {/*
-          ---------- 3. Les catégories. Elles ne défilent plus. ----------
+          ---------- 3. Les catégories. ----------
 
-          MESURÉ le 2026-08-23 : la rangée contenait **602 px de puces dans une
-          fenêtre de 390** — 212 px hors écran — et **3 puces sur 6 étaient
-          entièrement visibles**. Aucune ombre, aucune flèche, rien ne disait
-          qu'il y avait une suite. Constat de @thierry : « les catégories ne
-          sont pas facilement accessibles ».
-
-          Le commentaire d'origine justifiait le défilement ainsi : « une 6ᵉ
-          puce pousse la rangée sur deux lignes et fait passer le bouton
-          Ajouter sous le clavier ». **Cette contrainte n'existe plus.** Le pied
-          de `Sheet` est `shrink-0` et son contenu `min-h-0 flex-1
-          overflow-y-auto` : le pied ne PEUT plus être poussé hors écran, c'est
-          le contenu qui défile. Vérifié dans `Sheet.tsx` avant de changer ceci.
-
-          Donc `flex-wrap`. Rien n'est caché sans le dire, et le repli tient à
-          ce que le serveur classe déjà les puces par usage — ce qu'on voit en
-          premier est ce qu'on utilise le plus.
+          Histoire, pour ne pas la rejouer. Le 23 août 2026, la rangée défilait
+          SANS rien dire de sa suite (602 px de puces dans 390, 3 sur 6
+          visibles) : elle est passée à `flex-wrap`. Le 28 septembre, en blocs,
+          les catégories puis « Depuis » repoussaient la date et le bouton sous
+          le clavier. Elle défile de nouveau, mais en le disant : bord droit
+          estompé, « + Nouvelle catégorie » en tête, « + N autres » en fin, et
+          le serveur classe déjà les puces par usage.
         */}
         <div className="flex flex-col gap-2">
           <span
@@ -869,8 +861,25 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
           >
             {t('categoryLabel')}
           </span>
+          {/*
+            Une rangée qui DÉFILE, et non plus des blocs qui passent à la ligne.
+
+            Vu sur un téléphone le 28 septembre 2026 : en blocs, les puces de
+            catégorie puis celles de « Depuis » repoussaient la date, la note et
+            le bouton sous le clavier. En une ligne, la feuille garde sa hauteur
+            quel que soit le nombre de catégories ; le bord droit s'estompe pour
+            dire qu'il y a une suite (`.ankora-rangee`, `globals.css`).
+
+            « + Nouvelle catégorie » vient EN PREMIER, avec son mot complet. Le
+            même jour, un versement n'a pas pu être rangé dans une catégorie qui
+            n'existait pas encore : le bouton « Nouvelle », en fin de rangée, ne
+            se voyait pas. En tête, il est visible sans défiler.
+
+            Le `radiogroup` ne contient que les radios ; les deux boutons sont
+            ses voisins dans la même rangée, jamais ses enfants.
+          */}
           {context === null && !contextFailed ? (
-            <div className="flex flex-wrap gap-2" aria-hidden="true">
+            <div className="ankora-rangee" aria-hidden="true">
               {[0, 1, 2].map((i) => (
                 <span
                   key={i}
@@ -879,106 +888,29 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
                 />
               ))}
             </div>
-          ) : categories.length === 0 ? (
-            /* Empty state, stated rather than hidden. Since F-6 an expense
-               needs a category, so the message sends the person to « Nouvelle »
-               just below — rendered in this state precisely for that. */
-            <p className="text-muted-foreground text-xs" data-testid="add-expense-no-categories">
-              {t('noCategories')}
-            </p>
           ) : (
-            <div
-              role="radiogroup"
-              aria-labelledby="add-expense-category-label"
-              className="flex flex-wrap gap-2"
-            >
-              {categories.map((category) => {
-                const selected = category.id === categoryId;
-                return (
-                  <button
-                    key={category.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={selected}
-                    onClick={() => pickCategory(category.id)}
-                    data-testid={`add-expense-chip-${category.id}`}
-                    className={[
-                      'focus-visible:ring-brand-600 flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none',
-                      selected
-                        ? 'bg-brand-700 text-primary-foreground'
-                        : 'bg-surface-muted text-foreground hover:bg-muted',
-                    ].join(' ')}
-                  >
-                    {!selected && (
-                      <span
-                        aria-hidden="true"
-                        className={`h-2 w-2 shrink-0 rounded-full ${
-                          CHIP_DOT[category.colorToken] ?? CHIP_DOT.zinc
-                        }`}
-                      />
-                    )}
-                    {category.name}
-                  </button>
-                );
-              })}
-              {/*
-                Le déclencheur portait un « + » seul dans un rond de 44 px.
-                Un glyphe sans mot ne dit ni ce qu'il révèle ni combien : sur
-                une rangée qui cachait déjà la moitié de son contenu, c'était la
-                seule chose qui aurait pu le dire, et elle ne le disait pas.
-                Il porte maintenant le nombre — « + 12 autres » — parce qu'on
-                décide d'ouvrir bien plus volontiers quand on sait ce qu'il y a
-                derrière.
-              */}
-            </div>
-          )}
-
-          {/*
-            Rangée SŒUR, hors du `radiogroup`.
-
-            Ces deux boutons ne sont pas des `radio` : un `radiogroup` ne doit
-            contenir que des `radio`, et « + N autres » y vivait déjà en
-            infraction. Ajouter « + Nouvelle » dedans aurait aggravé le défaut,
-            et y poser les 8 pastilles aurait imbriqué un `radiogroup` dans un
-            autre — invalide.
-
-            Rendue dès que le contexte est chargé, y compris quand il n'y a
-            AUCUNE catégorie : c'est précisément l'état où créer sert le plus.
-            La rattacher au `radiogroup` l'aurait fait disparaître là.
-          */}
-          {context !== null && !contextFailed && (
-            <div className="flex flex-wrap gap-2">
-              {hiddenCount > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setShowAllCategories(true)}
-                  /*
-                    Le nom accessible porte LE VERBE ET LE NOMBRE.
-
-                    Défaut signalé par Sourcery le 2026-08-23, et c'en était un :
-                    le texte visible « + 9 autres » est `aria-hidden`, donc un
-                    `aria-label` sans compteur annonçait « Voir toutes les
-                    catégories » — le nombre, seule information que ce chantier
-                    ajoutait, n'existait pas pour un lecteur d'écran.
-
-                    Sa correction remplaçait l'étiquette par « 9 autres », ce qui
-                    perdait le verbe : un bouton nommé par un décompte ne dit pas
-                    ce qu'il fait. D'où une clé dédiée qui garde les deux.
-                  */
-                  aria-label={t('moreCategoriesAria', { count: hiddenCount })}
-                  data-testid="add-expense-chip-more"
-                  className="bg-surface-muted text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-brand-600 flex min-h-11 items-center gap-1.5 rounded-full px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+            <>
+              {categories.length === 0 && (
+                /* Empty state, stated rather than hidden. Since F-6 an expense
+                   needs a category, so the message sends the person to the
+                   « Nouvelle catégorie » chip just below. */
+                <p
+                  className="text-muted-foreground text-xs"
+                  data-testid="add-expense-no-categories"
                 >
-                  <Plus className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-                  <span aria-hidden="true">{t('moreCategoriesCount', { count: hiddenCount })}</span>
-                </button>
+                  {t('noCategories')}
+                </p>
               )}
-
-              {!creatingCategory && (
-                <button
-                  type="button"
-                  onClick={openCategoryCreation}
-                  /*
+              <div
+                className="ankora-rangee"
+                data-testid="add-expense-category-row"
+                onFocus={keepFocusedChipInView}
+              >
+                {context !== null && !contextFailed && !creatingCategory && (
+                  <button
+                    type="button"
+                    onClick={openCategoryCreation}
+                    /*
                     `data-testid` DÉLIBÉRÉMENT hors du préfixe
                     `add-expense-chip-` : une spec e2e sélectionne
                     `[data-testid^="add-expense-chip-"]` puis clique la
@@ -986,14 +918,79 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
                     cliquer comme une catégorie, et le plancher public serait
                     tombé sans qu'aucune ligne n'explique pourquoi.
                   */
-                  data-testid="add-expense-new-category"
-                  className="border-border text-foreground hover:bg-surface-muted focus-visible:ring-brand-600 flex min-h-11 items-center gap-1.5 rounded-full border border-dashed px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                >
-                  <Plus className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-                  {t('newCategory')}
-                </button>
-              )}
-            </div>
+                    data-testid="add-expense-new-category"
+                    className="border-border text-foreground hover:bg-surface-muted focus-visible:ring-brand-600 flex min-h-11 items-center gap-1.5 rounded-full border border-dashed px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                  >
+                    <Plus className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+                    {t('newCategory')}
+                  </button>
+                )}
+                {categories.length > 0 && (
+                  <div
+                    role="radiogroup"
+                    aria-labelledby="add-expense-category-label"
+                    className="flex gap-2"
+                  >
+                    {categories.map((category) => {
+                      const selected = category.id === categoryId;
+                      return (
+                        <button
+                          key={category.id}
+                          type="button"
+                          role="radio"
+                          aria-checked={selected}
+                          onClick={() => pickCategory(category.id)}
+                          data-testid={`add-expense-chip-${category.id}`}
+                          className={[
+                            'focus-visible:ring-brand-600 flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none',
+                            selected
+                              ? 'bg-brand-700 text-primary-foreground'
+                              : 'bg-surface-muted text-foreground hover:bg-muted',
+                          ].join(' ')}
+                        >
+                          {!selected && (
+                            <span
+                              aria-hidden="true"
+                              className={`h-2 w-2 shrink-0 rounded-full ${
+                                CHIP_DOT[category.colorToken] ?? CHIP_DOT.zinc
+                              }`}
+                            />
+                          )}
+                          {category.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                {context !== null && !contextFailed && hiddenCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllCategories(true)}
+                    /*
+                      Le nom accessible porte LE VERBE ET LE NOMBRE.
+
+                      Défaut signalé par Sourcery le 2026-08-23, et c'en était un :
+                      le texte visible « + 9 autres » est `aria-hidden`, donc un
+                      `aria-label` sans compteur annonçait « Voir toutes les
+                      catégories » — le nombre, seule information que ce chantier
+                      ajoutait, n'existait pas pour un lecteur d'écran.
+
+                      Sa correction remplaçait l'étiquette par « 9 autres », ce qui
+                      perdait le verbe : un bouton nommé par un décompte ne dit pas
+                      ce qu'il fait. D'où une clé dédiée qui garde les deux.
+                    */
+                    aria-label={t('moreCategoriesAria', { count: hiddenCount })}
+                    data-testid="add-expense-chip-more"
+                    className="bg-surface-muted text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-brand-600 flex min-h-11 items-center gap-1.5 rounded-full px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                  >
+                    <Plus className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+                    <span aria-hidden="true">
+                      {t('moreCategoriesCount', { count: hiddenCount })}
+                    </span>
+                  </button>
+                )}
+              </div>
+            </>
           )}
 
           {/*
@@ -1058,7 +1055,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
                     }
                   }}
                   data-testid="add-expense-new-category-name"
-                  className="border-border bg-card text-foreground focus-visible:ring-brand-600 min-h-11 rounded-lg border px-3 text-sm focus-visible:ring-2 focus-visible:outline-none"
+                  className="border-border bg-card text-foreground focus-visible:ring-brand-600 ankora-text-16 min-h-11 rounded-lg border px-3 focus-visible:ring-2 focus-visible:outline-none"
                 />
               </div>
 
@@ -1194,7 +1191,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
                 onFocus={closeDescriptionList}
                 data-testid="add-expense-date"
                 className={[
-                  'min-h-[26px] w-full border-0 bg-transparent p-0 text-sm tabular-nums outline-none',
+                  'ankora-text-16 min-h-[26px] w-full border-0 bg-transparent p-0 tabular-nums outline-none',
                   friendlyDate ? 'text-transparent' : 'text-foreground',
                 ].join(' ')}
               />
@@ -1202,7 +1199,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
                 <span
                   aria-hidden="true"
                   data-testid="add-expense-date-friendly"
-                  className="text-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center text-sm"
+                  className="text-foreground ankora-text-16 pointer-events-none absolute inset-y-0 left-0 flex items-center"
                 >
                   {friendlyDate}
                 </span>
@@ -1231,7 +1228,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
                 onChange={(e) => setNote(e.target.value)}
                 onFocus={closeDescriptionList}
                 data-testid="add-expense-note"
-                className="text-foreground min-h-11 resize-none border-0 bg-transparent p-0 text-sm outline-none"
+                className="text-foreground ankora-text-16 min-h-11 resize-none border-0 bg-transparent p-0 outline-none"
               />
             </div>
           ) : (

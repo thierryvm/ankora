@@ -1007,6 +1007,45 @@ body > main {
   font-size: 16px !important;
 }
 
+/* The same 16 px, and nothing else: for fields that keep the global focus
+   outline (a borderless field inside a tinted row, where the emerald-edge
+   companion above would have no edge to colour). Under 16 px, iOS Safari
+   zooms the page on focus and does not zoom back out when the field is left
+   (reported on a phone on 28 September 2026). Guarded for every field of the
+   app by `text-fields-are-16px.test.ts`. Never block zoom instead. */
+.ankora-text-16 {
+  font-size: 16px !important;
+}
+
+/* A row of chips that scrolls sideways instead of wrapping, so a long list of
+   categories or accounts never pushes the sheet's content down. It bleeds to
+   the sheet's edges (the sheet body has a 1rem gutter); the right edge fades
+   to say there is more. The trailing padding and `scroll-padding-inline` are
+   the fade's width, so a chip scrolled into view — by a finger or by the
+   focus — always lands outside the fade: a focused chip is never veiled.
+   The vertical padding leaves room for the 2px focus ring, which the scroll
+   container would otherwise clip. The scrollbar is hidden on purpose: the
+   fade is the affordance. */
+.ankora-rangee {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  /* The host's horizontal gutter: 1rem in `Sheet`; a host with another
+     gutter sets `--rangee-gouttiere` on an ancestor. */
+  scroll-padding-inline: var(--rangee-gouttiere, 1rem) 1.5rem;
+  margin: -0.25rem calc(-1 * var(--rangee-gouttiere, 1rem));
+  padding: 0.25rem 1.5rem 0.25rem var(--rangee-gouttiere, 1rem);
+  mask-image: linear-gradient(to right, #000 calc(100% - 1.5rem), transparent);
+}
+.ankora-rangee::-webkit-scrollbar {
+  display: none;
+}
+.ankora-rangee > * {
+  flex-shrink: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
