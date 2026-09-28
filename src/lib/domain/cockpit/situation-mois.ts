@@ -57,6 +57,12 @@ export type SituationDuMoisInput = Readonly<{
   joursEcoules: number;
   /** Nombre de jours du mois de référence. */
   joursDuMois: number;
+  /**
+   * Tour 56 — le mois de référence est TERMINÉ (avant le mois de budget en
+   * cours). Son revenu de base est alors l'argent reçu, pas la prévision
+   * d'aujourd'hui. Absent = mois en cours ou à venir.
+   */
+  moisTermine?: boolean;
 }>;
 
 export type SituationDuMois = Readonly<{
@@ -67,6 +73,8 @@ export type SituationDuMois = Readonly<{
    * incomplet.
    */
   revenus: Decimal;
+  /** Le mot du revenu de base, décidé avec son montant (`revenuDeBase`). */
+  termeRevenu: TermeRevenu;
   /** Le revenu écrit dans les réglages, tel quel. `null` = non configuré. */
   revenuEcrit: Decimal | null;
   /**
@@ -143,9 +151,41 @@ export type SituationDuMois = Readonly<{
 export function revenuDeBaseEstLePrevu(input: {
   revenuEcrit: Decimal | null;
   revenuRecu: Decimal | null;
+  moisTermine?: boolean;
 }): boolean {
-  if (input.revenuEcrit === null) return false;
-  return input.revenuRecu === null || input.revenuRecu.lt(input.revenuEcrit);
+  return revenuDeBase(input).terme === 'prevu';
+}
+
+/**
+ * What the base income word says: `prevu` (the written income is the figure),
+ * `recu` (the figure IS the money received), `rienNote` (a finished month with
+ * no money received noted: the written income stands in, and the word must
+ * not say « received »).
+ */
+export type TermeRevenu = 'prevu' | 'recu' | 'rienNote';
+
+/**
+ * Tour 56 — ONE function decides the base income AND its word, so the two can
+ * no longer diverge. Running or coming month: issue #483, the greater of the
+ * written income and the regular money received. FINISHED month (@thierry,
+ * 28 Sept. 2026): the money received, whatever the written income says today —
+ * the settings hold today's forecast, not the one of that month, and a raised
+ * forecast used to rewrite a closed month under « Revenu prévu ».
+ */
+export function revenuDeBase(input: {
+  revenuEcrit: Decimal | null;
+  revenuRecu: Decimal | null;
+  moisTermine?: boolean;
+}): { montant: Decimal | null; terme: TermeRevenu } {
+  const { revenuEcrit, revenuRecu } = input;
+  if (revenuRecu === null) {
+    if (revenuEcrit === null) return { montant: null, terme: 'recu' };
+    return { montant: revenuEcrit, terme: input.moisTermine ? 'rienNote' : 'prevu' };
+  }
+  if (revenuEcrit === null || input.moisTermine || !revenuRecu.lt(revenuEcrit)) {
+    return { montant: revenuRecu, terme: 'recu' };
+  }
+  return { montant: revenuEcrit, terme: 'prevu' };
 }
 
 export function calculerSituationDuMois(input: SituationDuMoisInput): SituationDuMois {
@@ -157,13 +197,13 @@ export function calculerSituationDuMois(input: SituationDuMoisInput): SituationD
   // dépassé l'écrit. Sans revenu écrit, la somme reçue seule (inchangé). Sans
   // l'un ni l'autre, l'argent reçu « en plus » est tout ce qu'il y a, et la
   // maquette calcule sur lui. Sans rien du tout : incomplet (THI-335).
-  const revenuBase =
-    operations.revenuRecu !== null && input.revenus !== null
-      ? // Issue #504 — one rule decides both the figure and its word.
-        revenuDeBaseEstLePrevu({ revenuEcrit: input.revenus, revenuRecu: operations.revenuRecu })
-        ? input.revenus
-        : operations.revenuRecu
-      : (operations.revenuRecu ?? input.revenus);
+  // Tour 56 : un mois TERMINÉ prend l'argent reçu (`revenuDeBase`).
+  const base = revenuDeBase({
+    revenuEcrit: input.revenus,
+    revenuRecu: operations.revenuRecu,
+    moisTermine: input.moisTermine,
+  });
+  const revenuBase = base.montant;
   const hasRevenus = revenuBase !== null || operations.recuEnPlus.gt(0);
   const revenus = (revenuBase ?? new Decimal(0)).plus(operations.recuEnPlus);
 
@@ -244,6 +284,7 @@ export function calculerSituationDuMois(input: SituationDuMoisInput): SituationD
     statut,
     hasRevenus,
     revenus,
+    termeRevenu: base.terme,
     revenuEcrit: input.revenus,
     revenuRecu: operations.revenuRecu,
     recuEnPlus: operations.recuEnPlus,

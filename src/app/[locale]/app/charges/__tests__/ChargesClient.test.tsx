@@ -12,6 +12,7 @@
 
 import { afterAll, beforeAll, describe, it, expect, vi, beforeEach } from 'vitest';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 
 import messages from '../../../../../../messages/fr-BE.json';
@@ -352,7 +353,9 @@ describe('<ChargesClient /> — PR-BETA-CLEANUP-2 edit drawer', () => {
     fireEvent.click(screen.getByTestId('charges-row-open-a1'));
     await screen.findByTestId('charge-edit-drawer');
     expect(screen.getByTestId('charge-edit-label')).toHaveValue('Loyer appartement');
-    expect(screen.getByTestId('charge-edit-amount')).toHaveValue(1200);
+    // A text field now (a numeric one blanked « 5,90 » to 0 €): its value is
+    // the string the person reads, no longer a number.
+    expect(screen.getByTestId('charge-edit-amount')).toHaveValue('1200');
     // THI-301: native <select> in CadenceField → string value.
     expect(screen.getByTestId('edit-charge-day')).toHaveValue('5');
   });
@@ -1151,4 +1154,54 @@ describe('app.charges — i18n parity (5 locales, PR-BETA-CLEANUP-2)', () => {
       expect((cw.toastUnwatched ?? '').length).toBeGreaterThan(0);
     },
   );
+});
+
+/**
+ * « Ajouter une facture » — the amount a francophone types.
+ *
+ * Same defect as the edit drawer: a `type="number"` field blanks « 5,90 », and
+ * `Number('')` sent 0 € to the action. Typed key by key (`userEvent.type`),
+ * since the blanking happens per keystroke. Figures are fictitious.
+ */
+describe('<ChargesClient /> — the create form reads « 5,90 » as 5.9', () => {
+  const INVALID_AMOUNT = 'Écris un montant supérieur à 0, avec une virgule ou un point.';
+
+  beforeEach(() => {
+    createChargeMock.mockReset();
+    createChargeMock.mockResolvedValue({ ok: true });
+  });
+
+  it('is a text field with a decimal keypad', () => {
+    renderCharges([]);
+    fireEvent.click(screen.getByTestId('charges-add-toggle'));
+    const field = screen.getByLabelText(/Montant/);
+    expect(field).toHaveAttribute('type', 'text');
+    expect(field).toHaveAttribute('inputmode', 'decimal');
+  });
+
+  it('sends 5.9 when « 5,90 » is typed', async () => {
+    const user = userEvent.setup();
+    renderCharges([]);
+    await user.click(screen.getByTestId('charges-add-toggle'));
+    await user.type(screen.getByLabelText('Description'), 'Assurance');
+    await user.type(screen.getByLabelText(/Montant/), '5,90');
+    await user.click(screen.getByRole('button', { name: /^ajouter$/i }));
+    await waitFor(() => expect(createChargeMock).toHaveBeenCalledTimes(1));
+    expect(createChargeMock.mock.calls[0]?.[0]).toMatchObject({ amount: 5.9 });
+  });
+
+  it('keeps « Ajouter » disabled on an unreadable amount, and the field says why', async () => {
+    const user = userEvent.setup();
+    renderCharges([]);
+    await user.click(screen.getByTestId('charges-add-toggle'));
+    await user.type(screen.getByLabelText('Description'), 'Assurance');
+    const field = screen.getByLabelText(/Montant/);
+    await user.type(field, 'abc');
+    expect(screen.getByRole('button', { name: /^ajouter$/i })).toBeDisabled();
+    const message = screen.getByText(INVALID_AMOUNT);
+    expect(field).toHaveAttribute('aria-invalid', 'true');
+    expect(message.id).not.toBe('');
+    expect(field.getAttribute('aria-describedby') ?? '').toContain(message.id);
+    expect(createChargeMock).not.toHaveBeenCalled();
+  });
 });

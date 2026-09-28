@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 
@@ -8,12 +8,17 @@ import messages from '../../../../messages/fr-BE.json';
 const actions = vi.hoisted(() => ({
   record: vi.fn(async (_input: unknown) => ({ ok: true, data: { id: 'mv-1' } })),
   cancel: vi.fn(async (_input: unknown) => ({ ok: true })),
+  recalc: vi.fn(async (_input: unknown): Promise<{ ok: boolean; errorCode?: string }> => ({
+    ok: true,
+  })),
 }));
 vi.mock('@/lib/actions/operations', () => ({
   recordPlannedTransferAction: actions.record,
   setMovementCancelledAction: actions.cancel,
+  recalculateTransferSplitAction: actions.recalc,
 }));
-vi.mock('@/components/ui/toast', () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
+const toasts = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
+vi.mock('@/components/ui/toast', () => ({ toast: toasts }));
 
 import { TransferDoneControl, type TransferLineState } from '../TransferDoneControl';
 
@@ -33,7 +38,10 @@ const BASE = {
   today: '2026-09-21',
 };
 
-function renderControl(line: TransferLineState, overrides: Partial<typeof BASE> = {}) {
+function renderControl(
+  line: TransferLineState,
+  overrides: Partial<typeof BASE> & { splitOutdated?: boolean } = {},
+) {
   return render(
     <NextIntlClientProvider locale="fr-BE" messages={messages} timeZone="Europe/Brussels">
       <TransferDoneControl {...BASE} {...overrides} line={line} />
@@ -44,6 +52,9 @@ function renderControl(line: TransferLineState, overrides: Partial<typeof BASE> 
 beforeEach(() => {
   actions.record.mockClear();
   actions.cancel.mockClear();
+  actions.recalc.mockClear();
+  toasts.success.mockClear();
+  toasts.error.mockClear();
 });
 
 describe('TransferDoneControl — « J’ai fait ce virement »', () => {
@@ -113,6 +124,45 @@ describe('TransferDoneControl — « J’ai fait ce virement »', () => {
     expect(screen.getByTestId('virement-fait').textContent).toMatch(/Fait le 18 septembre : 50\s€/);
     await userEvent.click(screen.getByRole('button', { name: 'Annuler' }));
     expect(actions.cancel).toHaveBeenCalledWith({ id: 'mv-1', cancelled: true });
+  });
+
+  // Tour 58 — a transfer written before the rule of #505 keeps its old split.
+  describe('« Recalculer le découpage »', () => {
+    const DONE: TransferLineState = {
+      state: 'done',
+      id: 'mv-1',
+      amount: 505,
+      suggested: 505,
+      occurredOn: '2026-09-18',
+    };
+
+    it('is absent when the split already follows the rule', () => {
+      renderControl(DONE, { splitOutdated: false });
+      expect(screen.queryByRole('button', { name: 'Recalculer le découpage' })).toBeNull();
+      renderControl(DONE);
+      expect(screen.queryByRole('button', { name: 'Recalculer le découpage' })).toBeNull();
+    });
+
+    it('recalculates the split of THIS transfer, with a 44 px target, and says it is done', async () => {
+      renderControl(DONE, { splitOutdated: true });
+      const button = screen.getByRole('button', { name: 'Recalculer le découpage' });
+      expect(button.className).toContain('min-h-11');
+      await userEvent.click(button);
+      expect(actions.recalc).toHaveBeenCalledWith({ id: 'mv-1' });
+      await waitFor(() => expect(toasts.success).toHaveBeenCalledWith('Découpage recalculé'));
+    });
+
+    it('says the error when the server refuses', async () => {
+      actions.recalc.mockResolvedValueOnce({ ok: false, errorCode: 'errors.operations.notFound' });
+      renderControl(DONE, { splitOutdated: true });
+      await userEvent.click(screen.getByRole('button', { name: 'Recalculer le découpage' }));
+      await waitFor(() =>
+        expect(toasts.error).toHaveBeenCalledWith(
+          'Cette opération n’existe plus ou ne t’appartient pas.',
+        ),
+      );
+      expect(toasts.success).not.toHaveBeenCalled();
+    });
   });
 
   it('offers « Rétablir » on a cancelled line, next to the button that writes it again', async () => {

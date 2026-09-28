@@ -160,6 +160,10 @@
       "preparing": "Vorbereiten…",
       "confirm": "Bestätigen",
       "close": "Schließen"
+    },
+    "amountField": {
+      "positive": "Gib einen Betrag über 0 ein, mit Komma oder Punkt.",
+      "zeroAllowed": "Gib einen Betrag von 0 oder mehr ein, mit Komma oder Punkt."
     }
   },
   "landing": {
@@ -761,7 +765,15 @@
       "upcomingBillsSectionHeading": "Anstehende Rechnungen",
       "commitmentsSectionHeading": "Meine Verpflichtungen",
       "etiquetteAVenir": "kommender Monat",
-      "etiquettePasse": "vergangener Monat"
+      "etiquettePasse": "vergangener Monat",
+      "principalApresFactures": "Auf deinem Hauptkonto nach deinen Rechnungen im {month}",
+      "principalApresFacturesToggle": "Sieh, woraus sich dieser Betrag zusammensetzt",
+      "principalApresFacturesSolde": "Berechneter Saldo des Hauptkontos",
+      "principalApresFacturesResultat": "Nach deinen noch offenen Rechnungen",
+      "principalApresFacturesJour": "am {jour}.",
+      "principalApresFacturesEcheance": "am {jour}. · Rate {index}/{total}",
+      "principalApresFacturesSansSolde": "Noch kein Saldo für dein Hauptkonto: trag ihn unter Meine Konten ein, um diesen Betrag zu sehen.",
+      "principalApresFacturesAutreMois": "Dieser Betrag geht vom heutigen Saldo deines Hauptkontos aus: er gilt nur für den laufenden Monat."
     },
     "charges": {
       "title": "Meine Rechnungen",
@@ -1532,7 +1544,9 @@
         "amount": {
           "invalid": "Ungültiger Betrag.",
           "negative": "Der Betrag muss ≥ 0 sein.",
-          "tooHigh": "Betrag zu hoch."
+          "tooHigh": "Betrag zu hoch.",
+          "notPositive": "Der Betrag muss größer als null sein.",
+          "subCent": "Höchstens zwei Dezimalstellen: Beträge zählen auf den Cent."
         },
         "frequency": {
           "invalid": "Ungültige Frequenz."
@@ -1581,7 +1595,9 @@
         "amount": {
           "invalid": "Ungültiger Betrag.",
           "negative": "Muss ≥ 0 sein.",
-          "tooHigh": "Betrag zu hoch."
+          "tooHigh": "Betrag zu hoch.",
+          "notPositive": "Der Betrag muss größer als null sein.",
+          "subCent": "Höchstens zwei Dezimalstellen: Beträge zählen auf den Cent."
         },
         "date": {
           "format": "Erwartetes Format: YYYY-MM-DD."
@@ -1736,7 +1752,8 @@
       "writeFailed": "Der Vorgang konnte nicht gespeichert werden. Versuche es erneut.",
       "notFound": "Dieser Vorgang existiert nicht mehr oder gehört nicht dir.",
       "alreadyDone": "Diese Überweisung ist für diesen Monat bereits als erledigt vermerkt.",
-      "startingBalance": "Der Anfangssaldo lässt sich nicht stornieren: trag lieber den heutigen Kontostand ein."
+      "startingBalance": "Der Anfangssaldo lässt sich nicht stornieren: trag lieber den heutigen Kontostand ein.",
+      "planMonthNotAllowed": "Diese Überweisung lässt sich nur für den laufenden oder den nächsten Monat eintragen."
     }
   },
   "opengraphImage": {
@@ -1771,7 +1788,8 @@
       "titrePasse": "Dir blieb",
       "baseMois": "von deinem Budget für {month}",
       "termeRevenuPrevu": "Erwartetes Einkommen",
-      "termeRevenusMois": "Erhalten für {month}"
+      "termeRevenusMois": "Erhalten für {month}",
+      "termeRevenuRienNote": "Geplantes Einkommen, nichts Erhaltenes für {month} eingetragen"
     },
     "encoreAPayer": {
       "etiquette": "Due this month",
@@ -2018,7 +2036,9 @@
       "cancel": "Stornieren",
       "cancelled": "Überweisung storniert",
       "reopen": "Stornierte Überweisung wiederherstellen",
-      "explain": "Ankora bewegt dein Geld nicht: mach die Überweisung bei deiner Bank und hake sie dann hier ab."
+      "explain": "Ankora bewegt dein Geld nicht: mach die Überweisung bei deiner Bank und hake sie dann hier ab.",
+      "recalculateSplit": "Aufteilung neu berechnen",
+      "splitRecalculated": "Aufteilung neu berechnet"
     },
     "readFailed": "Deine Kontostände konnten nicht gelesen werden. Lade die Seite neu."
   }

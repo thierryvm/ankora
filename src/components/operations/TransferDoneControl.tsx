@@ -13,7 +13,11 @@ import {
 } from '@/components/operations/SameDayStatementQuestion';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/toast';
-import { recordPlannedTransferAction, setMovementCancelledAction } from '@/lib/actions/operations';
+import {
+  recalculateTransferSplitAction,
+  recordPlannedTransferAction,
+  setMovementCancelledAction,
+} from '@/lib/actions/operations';
 import type { AccountType } from '@/lib/domain/cockpit/types';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 import { formatCurrency } from '@/lib/i18n/formatters';
@@ -40,6 +44,11 @@ type Props = {
   line: TransferLineState;
   /** ADR-045 D21 — per account, the statement a same-day transfer could double. */
   statements?: RewritableStatements;
+  /**
+   * The split written for the done transfer is not the one of the rule
+   * (`splitDiffersFromRule`, computed by the page): offers to recalculate it.
+   */
+  splitOutdated?: boolean;
 };
 
 function formatDay(iso: string, locale: string): string {
@@ -80,6 +89,14 @@ export function TransferDoneControl(props: Props) {
     });
   }
 
+  function recalculateSplit(id: string) {
+    startTransition(async () => {
+      const r = await recalculateTransferSplitAction({ id });
+      if (r.ok) toast.success(t('splitRecalculated'));
+      else toast.error(translateError(r.errorCode));
+    });
+  }
+
   if (props.line.state === 'done') {
     const { id, amount, suggested, occurredOn } = props.line;
     return (
@@ -89,6 +106,18 @@ export function TransferDoneControl(props: Props) {
             ? t('doneOn', { date: formatDay(occurredOn, locale) })
             : t('doneAmount', { date: formatDay(occurredOn, locale), montant: fmt(amount) })}
         </span>
+        {props.splitOutdated ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="min-h-11"
+            disabled={isPending}
+            onClick={() => recalculateSplit(id)}
+          >
+            {t('recalculateSplit')}
+          </Button>
+        ) : null}
         <Button
           type="button"
           variant="ghost"

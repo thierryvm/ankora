@@ -39,6 +39,14 @@ import {
 } from '@/lib/domain/commitments';
 import { formatCurrency, formatInstallmentDate, formatMonth } from '@/lib/i18n/formatters';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
+import { parseAmountInput } from '@/lib/i18n/parse-amount';
+
+/**
+ * The total and the per-instalment amount are « 0 or more » (`commitment.ts`,
+ * `total_amount >= 0` in SQL): read with zero allowed. `null` = not readable.
+ */
+const readCommitmentAmount = (raw: string): number | null =>
+  parseAmountInput(raw, { allowZero: true });
 
 /** Row shape crossing the RSC boundary (money as plain `number`, never Decimal). */
 /**
@@ -113,6 +121,7 @@ export function CommitmentsClient({
   locale,
 }: Props) {
   const t = useTranslations('app.commitments');
+  const tAmount = useTranslations('ui.amountField');
   const translateError = useActionErrorTranslator();
 
   const [isPending, startTransition] = useTransition();
@@ -125,6 +134,15 @@ export function CommitmentsClient({
   const [kind, setKind] = useState<CommitmentKind>('debt');
   const [totalAmount, setTotalAmount] = useState('');
   const [installmentAmount, setInstallmentAmount] = useState('');
+  // Empty keeps the submit waiting without a word (not typed yet); something
+  // typed that does not read also says why under its field. The per-instalment
+  // amount only counts when the field is shown (not for a one-off).
+  const parsedTotal = readCommitmentAmount(totalAmount);
+  const parsedInstallment = readCommitmentAmount(installmentAmount);
+  const totalInvalid = totalAmount.trim() !== '' && parsedTotal === null;
+  const installmentInvalid = installmentAmount.trim() !== '' && parsedInstallment === null;
+  const amountsReadable =
+    parsedTotal !== null && (kind === 'one_off' || parsedInstallment !== null);
   const [installmentsTotal, setInstallmentsTotal] = useState('12');
   // The first instalment: entered by the user, NOT inferred from the creation
   // month. Anchoring on "now" is what pushed the SPF plan's end date two
@@ -284,12 +302,14 @@ export function CommitmentsClient({
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const total = Number(totalAmount.replace(',', '.'));
-    const perInstallment = Number(installmentAmount.replace(',', '.'));
+    const total = parsedTotal;
+    const perInstallment = parsedInstallment;
     const count = Number(installmentsTotal);
     const isOneOff = kind === 'one_off';
 
-    if (!Number.isFinite(total) || total < 0) {
+    // The submit already waits for readable amounts; this guard covers a
+    // stray Enter, and still says so rather than sending a guessed figure.
+    if (total === null || (!isOneOff && perInstallment === null)) {
       toast.error(translateError('errors.validation.generic'));
       return;
     }
@@ -336,7 +356,9 @@ export function CommitmentsClient({
       label: label.trim(),
       kind,
       totalAmount: total,
-      ...(isOneOff ? {} : { installmentAmount: perInstallment }),
+      // `perInstallment === null` cannot reach here for a non-one-off (guard
+      // above); it is repeated so the type narrows without a cast.
+      ...(isOneOff || perInstallment === null ? {} : { installmentAmount: perInstallment }),
       installmentsTotal: isOneOff ? 1 : count,
       startYear: anchorYear,
       startMonth: anchorMonth,
@@ -441,16 +463,17 @@ export function CommitmentsClient({
     if (!target) return null;
 
     const count = Number(installmentsTotal);
-    const perInstallment = Number(installmentAmount.replace(',', '.'));
-    const total = Number(totalAmount.replace(',', '.'));
-    if (!Number.isFinite(count) || count < 1 || !Number.isFinite(total)) return null;
+    // Same reading as the submit: a preview of a figure the form would refuse
+    // to send would describe an edit that cannot happen.
+    const perInstallment = parsedInstallment;
+    const total = parsedTotal;
+    if (!Number.isFinite(count) || count < 1 || total === null) return null;
 
     const before = commitmentRowToDomain(target);
     const after = {
       ...before,
       installmentsTotal: kind === 'one_off' ? 1 : count,
-      installmentAmount:
-        kind === 'one_off' || !Number.isFinite(perInstallment) ? null : perInstallment,
+      installmentAmount: kind === 'one_off' ? null : perInstallment,
       totalAmount: total,
     };
     const paidKeys = paidKeysOf(target.id);
@@ -469,8 +492,8 @@ export function CommitmentsClient({
     editingId,
     commitments,
     installmentsTotal,
-    installmentAmount,
-    totalAmount,
+    parsedInstallment,
+    parsedTotal,
     kind,
     optimisticPaid,
   ]);
@@ -553,17 +576,24 @@ export function CommitmentsClient({
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="commitment-total">{t('totalAmountLabel')}</Label>
+                {/* Text with a decimal keypad, never `type="number"`: the
+                    browser blanks a comma-typed « 5,90 », read as 0 €. */}
                 <Input
                   id="commitment-total"
-                  type="number"
+                  type="text"
                   autoComplete="off"
                   inputMode="decimal"
-                  min={0}
-                  step="0.01"
                   value={totalAmount}
                   onChange={(e) => setTotalAmount(e.target.value)}
+                  aria-invalid={totalInvalid || undefined}
+                  aria-describedby={totalInvalid ? 'commitment-total-error' : undefined}
                   required
                 />
+                {totalInvalid && (
+                  <p id="commitment-total-error" className="text-danger text-xs font-medium">
+                    {tAmount('zeroAllowed')}
+                  </p>
+                )}
                 <p className="text-muted-foreground text-xs">{t('totalAmountHint')}</p>
               </div>
               {kind !== 'one_off' && (
@@ -571,15 +601,25 @@ export function CommitmentsClient({
                   <Label htmlFor="commitment-installment">{t('installmentAmountLabel')}</Label>
                   <Input
                     id="commitment-installment"
-                    type="number"
+                    type="text"
                     autoComplete="off"
                     inputMode="decimal"
-                    min={0}
-                    step="0.01"
                     value={installmentAmount}
                     onChange={(e) => setInstallmentAmount(e.target.value)}
+                    aria-invalid={installmentInvalid || undefined}
+                    aria-describedby={
+                      installmentInvalid ? 'commitment-installment-error' : undefined
+                    }
                     required
                   />
+                  {installmentInvalid && (
+                    <p
+                      id="commitment-installment-error"
+                      className="text-danger text-xs font-medium"
+                    >
+                      {tAmount('zeroAllowed')}
+                    </p>
+                  )}
                 </div>
               )}
               {kind !== 'one_off' && (
@@ -706,7 +746,7 @@ export function CommitmentsClient({
                 </div>
               )}
               <div className="flex items-center gap-3 md:col-span-2">
-                <Button type="submit" disabled={isPending}>
+                <Button type="submit" disabled={isPending || !amountsReadable}>
                   {formMode === 'edit'
                     ? isPending
                       ? t('saving')

@@ -228,6 +228,10 @@ export function computeMonthSituation(input: MonthSituationInputs): MonthSituati
     operations: operationsDuMois(input.ledger.movements, ref),
     joursEcoules,
     joursDuMois,
+    // Tour 56 — a month before the running budget month is finished: its
+    // base income is the money received (`revenuDeBase`).
+    moisTermine:
+      ref.year * 12 + ref.month < snapshot.moisDeBudget.year * 12 + snapshot.moisDeBudget.month,
   });
 
   return {

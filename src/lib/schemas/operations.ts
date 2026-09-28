@@ -164,3 +164,11 @@ export const operationCancellationSchema = z
   .strict();
 
 export type OperationCancellationInput = z.infer<typeof operationCancellationSchema>;
+
+/**
+ * « Recalculer le découpage » — only the id travels. The split is the
+ * server's (`splitByRule`): an amount or a share sent here is refused.
+ */
+export const transferSplitRecalculationSchema = z
+  .object({ id: z.string().uuid({ message: 'operations.id.invalid' }) })
+  .strict();

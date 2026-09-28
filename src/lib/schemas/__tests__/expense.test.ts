@@ -79,3 +79,59 @@ describe('expenseUpdateSchema — optional, never null', () => {
     expect(messagesFor(result)).toEqual(['expense.category.required']);
   });
 });
+
+/**
+ * An expense is never recorded at 0 €.
+ *
+ * Incident: « Modifier la dépense » read its amount through a numeric field,
+ * which blanks a comma-typed « 5,90 »; `Number('')` is 0, and the schema
+ * accepted 0. Refused here, at the boundary, in creation AND in a patch that
+ * carries the amount.
+ */
+function amountMessagesFor(result: { success: boolean; error?: { issues: Issue[] } }) {
+  return (result.error?.issues ?? [])
+    .filter((issue) => issue.path[0] === 'amount')
+    .map((issue) => issue.message);
+}
+
+describe('expenseInputSchema — the amount is strictly positive', () => {
+  it('accepts a positive amount with cents', () => {
+    expect(expenseInputSchema.safeParse({ ...VALID, amount: 5.9 }).success).toBe(true);
+  });
+
+  it.each([
+    ['zero', 0],
+    ['a negative amount', -5.9],
+  ])('refuses %s, saying it must be above zero', (_label, amount) => {
+    const result = expenseInputSchema.safeParse({ ...VALID, amount });
+    expect(result.success).toBe(false);
+    expect(amountMessagesFor(result)).toEqual(['expense.amount.notPositive']);
+  });
+
+  it('refuses an expense with no amount at all', () => {
+    const withoutAmount = {
+      label: VALID.label,
+      occurredOn: VALID.occurredOn,
+      categoryId: VALID.categoryId,
+      note: VALID.note,
+    };
+    const result = expenseInputSchema.safeParse(withoutAmount);
+    expect(result.success).toBe(false);
+    expect(amountMessagesFor(result)).toEqual(['expense.amount.invalid']);
+  });
+});
+
+describe('expenseUpdateSchema — a patch may leave the amount alone, never zero it', () => {
+  it('accepts a patch that does not carry the amount', () => {
+    expect(expenseUpdateSchema.safeParse({ label: 'Pharmacie' }).success).toBe(true);
+  });
+
+  it.each([
+    ['zero', 0],
+    ['a negative amount', -505],
+  ])('refuses a patch setting the amount to %s', (_label, amount) => {
+    const result = expenseUpdateSchema.safeParse({ amount });
+    expect(result.success).toBe(false);
+    expect(amountMessagesFor(result)).toEqual(['expense.amount.notPositive']);
+  });
+});

@@ -16,17 +16,18 @@ import { readDebutDesDonnees } from '@/lib/data/debut-des-donnees';
 import { epargneAffichee, tropTotPourProjeter } from '@/lib/domain/cockpit/trop-tot';
 import { IlTeResteCard } from '@/components/cockpit/IlTeResteCard';
 import { EncoreAPayerCard, type LigneAPayer } from '@/components/cockpit/EncoreAPayerCard';
+import { PrincipalApresFactures } from '@/components/cockpit/PrincipalApresFactures';
+import { principalApresFactures } from '@/lib/domain/cockpit/principal-apres-factures';
 import { Expenses, Transfer, money } from '@/lib/domain';
 import * as Obligations from '@/lib/domain/obligations';
 import { currentPeriodDueDate } from '@/lib/domain/charges';
 import { depensesParJour, type Poste } from '@/lib/domain/cockpit';
 import { facturesBientot } from '@/lib/domain/cockpit/bientot';
-import { revenuDeBaseEstLePrevu } from '@/lib/domain/cockpit/situation-mois';
 import { paymentKey } from '@/lib/domain/cockpit/types';
 import type { NamedCommitment } from '@/lib/domain/obligations';
 import { loadMonthSituation, todayIsoInBrussels } from '@/lib/data/month-situation';
 import { MonthNav } from '@/components/period/MonthNav';
-import { moisDansLaPhrase, moisVuDe } from '@/components/cockpit/mois-vu';
+import { commenceParVoyelle, moisDansLaPhrase, moisVuDe } from '@/components/cockpit/mois-vu';
 import {
   parseViewedPeriod,
   toPeriodParam,
@@ -93,7 +94,12 @@ function partsAffichees(poste: Poste): PartAffichee[] {
   }));
 }
 
-import { plannedTransferLine, rewritableStatements } from '@/lib/domain/accounts/operations-view';
+import {
+  accountBalanceView,
+  plannedTransferLine,
+  rewritableStatements,
+} from '@/lib/domain/accounts/operations-view';
+import { splitDiffersFromRule } from '@/lib/domain/accounts/split-rule';
 import {
   TransferDoneControl,
   type TransferLineState,
@@ -149,7 +155,9 @@ export default async function DashboardPage({
   // Issue #504 — the base income is called what it is: « Revenu prévu » while
   // the written income is the figure (nothing received, or less than planned),
   // « Argent reçu » only when the figure is the money received.
-  const revenuPrevu = revenuDeBaseEstLePrevu(situation);
+  // Tour 56 — the word comes WITH the amount, from `revenuDeBase`. A finished
+  // month with nothing received keeps the written income: never « reçu ».
+  const revenuPrevu = situation.termeRevenu !== 'recu';
 
   // G-31 — « Trop tôt pour projeter »: days of data count from the FIRST
   // operation ever recorded. Movements are already loaded (`ledger`, sorted by
@@ -281,9 +289,46 @@ export default async function DashboardPage({
   };
   const epargneFrom: LedgerAccountType = epargneGoesToEpargne ? 'income_bills' : 'provisions';
   const epargneTo: LedgerAccountType = epargneGoesToEpargne ? 'provisions' : 'income_bills';
+  // Tour 56 — a transfer to the provisions written before the domain rule
+  // (#505) keeps its old split; the line then offers to recompute it in place.
+  const epargneLine = plannedTransferLine({
+    movements: ledger.movements,
+    fromAccountType: epargneFrom,
+    toAccountType: epargneTo,
+    planYear: period.year,
+    planMonth: period.month,
+  });
+  const epargneSplitOutdated =
+    epargneLine.state === 'done' && splitDiffersFromRule(epargneLine.movement, snapshot.charges);
   const missingSetup =
     snapshot.monthlyIncome === null || snapshot.vieCouranteMonthlyTransfer === null;
   const accountByType = new Map(snapshot.accounts.map((a) => [a.accountType, a]));
+
+  // « Sur ton compte principal après tes factures de <mois> ». The main
+  // account's balance comes from the function and the day the Accounts page
+  // uses — the same call `loadMonthSituation` makes for the daily account —
+  // and already went down with every bill ticked paid (ADR-045 D22). Only the
+  // bills still unticked are subtracted, by the domain, with their lines.
+  // Today's balance belongs to today: another month gets no figure.
+  const vuePrincipal =
+    isCurrentMonth && accountByType.has('income_bills')
+      ? accountBalanceView({
+          accountType: 'income_bills',
+          statements: ledger.statements,
+          movements: ledger.movements,
+          debits: ledger.debits,
+          today: new Date(`${todayIso}T00:00:00Z`),
+        })
+      : null;
+  const principalApres = isCurrentMonth
+    ? principalApresFactures({
+        soldePrincipal: vuePrincipal
+          ? (vuePrincipal.computed?.balance ?? vuePrincipal.read.balance)
+          : null,
+        obligations: obligationsDuMoisToutes,
+        ref: period,
+      })
+    : null;
 
   const dailyPlafondMissing =
     snapshot.vieCouranteMonthlyTransfer === null || snapshot.vieCouranteMonthlyTransfer === 0;
@@ -434,6 +479,7 @@ export default async function DashboardPage({
       <section aria-labelledby="cockpit-heading">
         <IlTeResteCard
           revenuPrevu={revenuPrevu}
+          revenuRienNote={situation.termeRevenu === 'rienNote'}
           ilTeReste={situation.ilTeReste.toNumber()}
           resteDisponible={situation.resteDisponible.toNumber()}
           moisVu={moisVu}
@@ -663,21 +709,45 @@ export default async function DashboardPage({
                       today={todayIso}
                       statements={transferStatements}
                       line={lineState(epargneFrom, epargneTo)}
+                      splitOutdated={epargneSplitOutdated}
                     />
                   )}
                 </div>
               </li>
-              <li className="flex items-center justify-between gap-4 py-2">
-                <p className="min-w-0 text-sm font-medium">
-                  {t('transferPrincipalRemaining', { month: monthLabel })}
-                </p>
-                <p
-                  className={`shrink-0 font-mono text-sm tabular-nums ${
-                    plan.netPrincipalAfterPlan.gte(0) ? 'text-success' : 'text-danger'
-                  }`}
-                >
-                  {fmtMoney(plan.netPrincipalAfterPlan)}
-                </p>
+              <li>
+                <PrincipalApresFactures
+                  detail={
+                    principalApres && {
+                      solde: principalApres.solde.toNumber(),
+                      montant: principalApres.montant.toNumber(),
+                      lignes: principalApres.lignes.map((l) => ({
+                        id: `${l.source}:${l.id}`,
+                        label: l.label,
+                        montant: l.montant.toNumber(),
+                        quand: l.rang
+                          ? t('principalApresFacturesEcheance', {
+                              jour: l.jour,
+                              index: l.rang.index,
+                              total: l.rang.total,
+                            })
+                          : t('principalApresFacturesJour', { jour: l.jour }),
+                      })),
+                    }
+                  }
+                  labels={{
+                    titre: t('principalApresFactures', {
+                      month: moisPhrase,
+                      voyelle: commenceParVoyelle(moisPhrase) ? 'oui' : 'non',
+                    }),
+                    toggle: t('principalApresFacturesToggle'),
+                    solde: t('principalApresFacturesSolde'),
+                    resultat: t('principalApresFacturesResultat'),
+                    absence: isCurrentMonth
+                      ? t('principalApresFacturesSansSolde')
+                      : t('principalApresFacturesAutreMois'),
+                  }}
+                  locale={locale}
+                />
               </li>
             </ul>
           )}

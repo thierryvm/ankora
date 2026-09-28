@@ -160,6 +160,10 @@
       "preparing": "Preparando…",
       "confirm": "Confirmar",
       "close": "Cerrar"
+    },
+    "amountField": {
+      "positive": "Escribe un importe mayor que 0, con coma o punto.",
+      "zeroAllowed": "Escribe un importe de 0 o más, con coma o punto."
     }
   },
   "landing": {
@@ -761,7 +765,15 @@
       "upcomingBillsSectionHeading": "Próximas facturas",
       "commitmentsSectionHeading": "Mis compromisos",
       "etiquetteAVenir": "mes próximo",
-      "etiquettePasse": "mes pasado"
+      "etiquettePasse": "mes pasado",
+      "principalApresFactures": "En tu cuenta principal tras tus facturas de {month}",
+      "principalApresFacturesToggle": "Ver qué compone esta cifra",
+      "principalApresFacturesSolde": "Saldo calculado de la cuenta principal",
+      "principalApresFacturesResultat": "Tras tus facturas aún por pagar",
+      "principalApresFacturesJour": "el día {jour}",
+      "principalApresFacturesEcheance": "el día {jour} · plazo {index}/{total}",
+      "principalApresFacturesSansSolde": "Aún no hay saldo para tu cuenta principal: anótalo en Mis cuentas para ver esta cifra.",
+      "principalApresFacturesAutreMois": "Esta cifra parte del saldo de tu cuenta principal hoy: solo vale para el mes en curso."
     },
     "charges": {
       "title": "Mis facturas",
@@ -1532,7 +1544,9 @@
         "amount": {
           "invalid": "Importe inválido.",
           "negative": "El importe debe ser ≥ 0.",
-          "tooHigh": "Importe demasiado elevado."
+          "tooHigh": "Importe demasiado elevado.",
+          "notPositive": "El importe debe ser mayor que cero.",
+          "subCent": "Dos decimales como máximo: el importe se cuenta al céntimo."
         },
         "frequency": {
           "invalid": "Frecuencia inválida."
@@ -1581,7 +1595,9 @@
         "amount": {
           "invalid": "Importe inválido.",
           "negative": "Debe ser ≥ 0.",
-          "tooHigh": "Importe demasiado elevado."
+          "tooHigh": "Importe demasiado elevado.",
+          "notPositive": "El importe debe ser mayor que cero.",
+          "subCent": "Dos decimales como máximo: el importe se cuenta al céntimo."
         },
         "date": {
           "format": "Formato esperado: YYYY-MM-DD."
@@ -1736,7 +1752,8 @@
       "writeFailed": "No se pudo guardar la operación. Inténtalo de nuevo.",
       "notFound": "Esta operación ya no existe o no es tuya.",
       "alreadyDone": "Esta transferencia ya consta como hecha este mes.",
-      "startingBalance": "El saldo inicial no se anula: anota mejor el saldo de hoy."
+      "startingBalance": "El saldo inicial no se anula: anota mejor el saldo de hoy.",
+      "planMonthNotAllowed": "Esta transferencia solo se anota para el mes en curso o el siguiente."
     }
   },
   "opengraphImage": {
@@ -1771,7 +1788,8 @@
       "titrePasse": "Te quedó",
       "baseMois": "de tu presupuesto de {month}",
       "termeRevenuPrevu": "Ingreso previsto",
-      "termeRevenusMois": "Recibido para {month}"
+      "termeRevenusMois": "Recibido para {month}",
+      "termeRevenuRienNote": "Ingreso previsto, nada recibido anotado para {month}"
     },
     "encoreAPayer": {
       "etiquette": "Due this month",
@@ -2018,7 +2036,9 @@
       "cancel": "Anular",
       "cancelled": "Transferencia anulada",
       "reopen": "Restablecer la transferencia anulada",
-      "explain": "Ankora no mueve tu dinero: haz la transferencia en tu banco y márcala aquí."
+      "explain": "Ankora no mueve tu dinero: haz la transferencia en tu banco y márcala aquí.",
+      "recalculateSplit": "Recalcular el reparto",
+      "splitRecalculated": "Reparto recalculado"
     },
     "readFailed": "No se pudieron leer tus saldos. Recarga la página."
   }

@@ -31,8 +31,15 @@ export const chargeInputSchema = z.object({
   amount: z
     .number({ error: 'charge.amount.invalid' })
     .finite({ message: 'charge.amount.invalid' })
-    .min(0, { message: 'charge.amount.negative' })
-    .max(1_000_000, { message: 'charge.amount.tooHigh' }),
+    // Strictly positive: a bill at 0 € is a field that failed to read, not a
+    // bill. A patch that leaves the amount out stays valid (partial schema).
+    .positive({ message: 'charge.amount.notPositive' })
+    .max(1_000_000, { message: 'charge.amount.tooHigh' })
+    // Cents are the smallest unit (ADR-045 D19): the numeric(12,2) column
+    // would round 0.004 to a 0 EUR row. Refused, never rounded.
+    .refine((v) => Math.abs(Math.round(v * 100) - v * 100) < 1e-6, {
+      message: 'charge.amount.subCent',
+    }),
   frequency: chargeFrequencySchema,
   /**
    * Legacy single-month reference. Kept for backward-compat with the existing

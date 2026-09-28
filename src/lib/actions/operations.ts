@@ -15,6 +15,7 @@ import {
   sameDayStatement,
   splitTransferToProvisions,
   startingStatementId,
+  toMoney,
   type MovementRecord,
 } from '@/lib/domain/accounts/operations-view';
 import {
@@ -22,8 +23,15 @@ import {
   type AccountBalanceStatement,
   type AccountFlow,
 } from '@/lib/domain/accounts/solde';
+import {
+  splitByRule,
+  splitDiffersFromRule,
+  splitRuleApplies,
+} from '@/lib/domain/accounts/split-rule';
 import { validateTransferAllocation } from '@/lib/domain/accounts/virement';
+import { moisDeBudgetEnCours } from '@/lib/domain/budget/mois-de-budget';
 import type { AccountType } from '@/lib/domain/cockpit/types';
+import { transferPlanAllowed } from '@/lib/domain/period/viewed-period';
 import { provisionPartOfMonth } from '@/lib/domain/transfer';
 import { money } from '@/lib/domain/types';
 import {
@@ -33,6 +41,7 @@ import {
   plannedTransferSchema,
   requiredStatementAnswersSchema,
   statementIncludedSchema,
+  transferSplitRecalculationSchema,
 } from '@/lib/schemas/operations';
 import { log } from '@/lib/log';
 import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
@@ -113,19 +122,21 @@ type Ctx = Extract<Awaited<ReturnType<typeof gate>>, { ok: true }>;
  * description. The audit log leaves in the art. 20 export; it must not double
  * the data it points to.
  */
-function auditMovement(
-  ctx: Ctx,
-  kind: 'transfer' | 'income',
-  id: string,
-  change?: { cancelled: boolean },
-) {
+type MovementChange = { cancelled: boolean } | { splitRecalculated: true };
+
+function auditMovement(ctx: Ctx, kind: 'transfer' | 'income', id: string, change?: MovementChange) {
+  const cancellation = change && 'cancelled' in change ? change : null;
   return logAuditEvent(
-    change ? AuditEvent.MOVEMENT_CANCELLATION_SET : AuditEvent.MOVEMENT_RECORDED,
+    cancellation ? AuditEvent.MOVEMENT_CANCELLATION_SET : AuditEvent.MOVEMENT_RECORDED,
     { userId: ctx.userId, workspaceId: ctx.workspaceId },
     {
       resource_type: `movement_${kind}`,
       resource_id: id,
-      ...(change ? cancellationStates(change.cancelled) : {}),
+      ...(cancellation ? cancellationStates(cancellation.cancelled) : {}),
+      // Fixed strings under whitelisted keys: the parts themselves never travel.
+      ...(change && 'splitRecalculated' in change
+        ? { previous_state: 'split_outdated', new_state: 'split_by_rule' }
+        : {}),
     },
   );
 }
@@ -613,6 +624,17 @@ export async function recordPlannedTransferAction(
 
   const ledger = await loadAccountLedger(ctx.supabase, ctx.workspaceId);
   if (!ledger.ok) return { ok: false, errorCode: 'errors.operations.writeFailed' };
+
+  // The screen offers the gesture for the running budget month and the next
+  // one only (`transferPlanAllowed`); the server holds the same line, since
+  // an action is callable without the screen. The running month is computed
+  // HERE, from the journal just read, by the function the cockpit's snapshot
+  // uses (ADR-047) — never taken from the client.
+  const moisCourant = moisDeBudgetEnCours(ledger.movements, todayIsoInBrussels(), new Date());
+  if (!transferPlanAllowed({ year: v.planYear, month: v.planMonth }, moisCourant)) {
+    return { ok: false, errorCode: 'errors.operations.planMonthNotAllowed' };
+  }
+
   const sameDay = sameDayAnswers(
     ledger,
     [v.fromAccountType, v.toAccountType],
@@ -791,6 +813,98 @@ export async function setMovementCancelledAction(input: unknown): Promise<Action
   if (!data || data.length === 0) return { ok: false, errorCode: 'errors.operations.notFound' };
 
   await auditMovement(ctx, row.kind === 'transfer' ? 'transfer' : 'income', id, { cancelled });
+  revalidateOperationPaths();
+  return { ok: true };
+}
+
+// =========================================================================
+// « Recalculer le découpage » — a transfer to the provisions written before
+// `provisionPartOfMonth` (#505) keeps the target as its provisions share.
+// Cancelling and writing it again is blocked by D21 as soon as another
+// operation of its day follows the statement: this corrects the two parts
+// in place, which the base allows (« la ventilation » se corrige, D17).
+// =========================================================================
+export async function recalculateTransferSplitAction(input: unknown): Promise<ActionResult> {
+  const ctx = await gate();
+  if (!ctx.ok) return ctx;
+
+  const parsed = transferSplitRecalculationSchema.safeParse(input);
+  if (!parsed.success) return invalid(parsed.error);
+  const { id } = parsed.data;
+
+  // Read in the SESSION workspace: an id of another workspace is not found.
+  const { data: row, error: readError } = await ctx.supabase
+    .from('movements')
+    .select(
+      'id, kind, to_account_type, amount, plan_year, plan_month, provision_part, free_savings_part, cancelled_at',
+    )
+    .eq('id', id)
+    .eq('workspace_id', ctx.workspaceId)
+    .maybeSingle();
+  if (readError) return { ok: false, errorCode: 'errors.operations.writeFailed' };
+  if (!row) return { ok: false, errorCode: 'errors.operations.notFound' };
+
+  const movement = {
+    kind: row.kind as MovementRecord['kind'],
+    toAccountType: (row.to_account_type as AccountType | null) ?? null,
+    amount: toMoney(row.amount),
+    cancelledAt: row.cancelled_at ? new Date(row.cancelled_at) : null,
+    planYear: row.plan_year,
+    planMonth: row.plan_month,
+    provisionPart: row.provision_part === null ? null : toMoney(row.provision_part),
+    freeSavingsPart: row.free_savings_part === null ? null : toMoney(row.free_savings_part),
+  };
+  // Cancelled, not a plan transfer to the provisions: a stale screen — the
+  // button is only shown where the rule applies.
+  if (!splitRuleApplies(movement)) {
+    return { ok: false, errorCode: 'errors.operations.notFound' };
+  }
+
+  // Security review, tour 56 — the same month window as the write: the
+  // running budget month (computed here from the journal) and the next one.
+  // Without it, a May transfer would be re-split with today's bills.
+  const ledger = await loadAccountLedger(ctx.supabase, ctx.workspaceId);
+  if (!ledger.ok) return { ok: false, errorCode: 'errors.operations.writeFailed' };
+  const moisCourant = moisDeBudgetEnCours(ledger.movements, todayIsoInBrussels(), new Date());
+  if (
+    !transferPlanAllowed(
+      { year: movement.planYear as number, month: movement.planMonth as number },
+      moisCourant,
+    )
+  ) {
+    return { ok: false, errorCode: 'errors.operations.planMonthNotAllowed' };
+  }
+
+  const charges = await loadWorkspaceCharges(ctx.supabase, ctx.workspaceId);
+  if (charges === null) return { ok: false, errorCode: 'errors.operations.writeFailed' };
+  // Idempotent: a split already equal to the rule writes and audits nothing.
+  if (!splitDiffersFromRule(movement, charges)) return { ok: true };
+  const split = splitByRule(movement, charges);
+  const allocation = validateTransferAllocation({
+    toAccountType: 'provisions',
+    amount: movement.amount,
+    provisionPart: split?.provisionPart ?? null,
+    freeSavingsPart: split?.freeSavingsPart ?? null,
+  });
+  if (!allocation.ok) return { ok: false, errorCode: 'errors.validation.generic' };
+
+  // The two parts ONLY: the amount, the day and the write time stay as they
+  // were written (`recorded_at` is frozen by the base anyway, D17).
+  const { data, error } = await ctx.supabase
+    .from('movements')
+    .update({
+      provision_part: allocation.provisionPart?.toNumber() ?? null,
+      free_savings_part: allocation.freeSavingsPart?.toNumber() ?? null,
+    })
+    .eq('id', id)
+    .eq('workspace_id', ctx.workspaceId)
+    .select('id');
+
+  if (error) return { ok: false, errorCode: 'errors.operations.writeFailed' };
+  // Zero row: RLS lets only the author update — another member's transfer.
+  if (!data || data.length === 0) return { ok: false, errorCode: 'errors.operations.notFound' };
+
+  await auditMovement(ctx, 'transfer', id, { splitRecalculated: true });
   revalidateOperationPaths();
   return { ok: true };
 }

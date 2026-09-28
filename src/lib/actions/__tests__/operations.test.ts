@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 type Result = { data: unknown; error: { message: string } | null };
 type Call = { table: string; op: string; payload?: unknown; filters: Record<string, unknown> };
@@ -86,6 +86,7 @@ import {
   confirmStatementIncludedAction,
   recordBalanceStatementAction,
   recordIncomeAction,
+  recalculateTransferSplitAction,
   recordPlannedTransferAction,
   setMovementCancelledAction,
   setStatementCancelledAction,
@@ -1180,5 +1181,235 @@ describe('D21 — what the security review found (2026-09-28)', () => {
     const r = await confirmStatementIncludedAction({ statementId: D21_SID });
     expect(r.ok).toBe(true);
     expect(writes('account_balance_statements').filter((c) => c.op === 'update')).toHaveLength(1);
+  });
+});
+
+// =========================================================================
+// The plan month a transfer is written for — the SAME rule as the screen
+// (`transferPlanAllowed`), against the budget month running (ADR-047)
+// =========================================================================
+describe('recordPlannedTransferAction — plan month allowed (current budget month or the next)', () => {
+  const transfer = (planYear: number, planMonth: number) => ({
+    fromAccountType: 'income_bills',
+    toAccountType: 'daily_card',
+    amount: 505,
+    occurredOn: '2026-09-21',
+    planYear,
+    planMonth,
+    planSuggestedAmount: 505,
+  });
+
+  it('refuses a plan month two months ahead, or a past one, and writes nothing', async () => {
+    for (const [year, month] of [
+      [2026, 11],
+      [2026, 8],
+      [2027, 9],
+    ] as const) {
+      const r = await recordPlannedTransferAction(transfer(year, month));
+      expect(r).toEqual({ ok: false, errorCode: 'errors.operations.planMonthNotAllowed' });
+    }
+    expect(h.calls).toHaveLength(0);
+  });
+
+  it('accepts the current budget month and the next one', async () => {
+    for (const month of [9, 10]) {
+      script('movements', 'select', { data: [], error: null });
+      script('movements', 'insert', { data: { id: `m-${month}` }, error: null });
+      const r = await recordPlannedTransferAction(transfer(2026, month));
+      expect(r).toEqual({ ok: true, data: { id: `m-${month}` } });
+    }
+  });
+
+  it('follows the budget month, not the calendar: October’s salary received on 20 September opens October', async () => {
+    const octoberSalary = {
+      ...d17Income,
+      id: 'm-salary',
+      occurredOn: d17Day('2026-09-20'),
+      recordedAt: new Date('2026-09-20T08:00:00Z'),
+      budgetYear: 2026,
+      budgetMonth: 10,
+    };
+    h.ledger.mockImplementation(async () => ({
+      ok: true,
+      statements: [],
+      movements: [octoberSalary],
+    }));
+    // Budget month = October: September is now the past, November the next.
+    expect(await recordPlannedTransferAction(transfer(2026, 9))).toEqual({
+      ok: false,
+      errorCode: 'errors.operations.planMonthNotAllowed',
+    });
+    script('movements', 'select', { data: [], error: null });
+    script('movements', 'insert', { data: { id: 'm-nov' }, error: null });
+    expect(await recordPlannedTransferAction(transfer(2026, 11))).toEqual({
+      ok: true,
+      data: { id: 'm-nov' },
+    });
+  });
+});
+
+// =========================================================================
+// « Recalculer le découpage » — a transfer to the provisions written before
+// the rule `provisionPartOfMonth` (#505) keeps the target as its provisions
+// share; the correction rewrites the two parts ONLY.
+// =========================================================================
+describe('recalculateTransferSplitAction', () => {
+  // 840 a year, due in January: 70 a month of provisions in September.
+  const CHARGES = [smoothed(840, 'annual', 1)];
+  const row = (patch: Record<string, unknown> = {}) => ({
+    id: ID,
+    kind: 'transfer',
+    to_account_type: 'provisions',
+    amount: 505,
+    plan_year: 2026,
+    plan_month: 9,
+    provision_part: 505,
+    free_savings_part: 0,
+    cancelled_at: null,
+    ...patch,
+  });
+
+  beforeEach(() => {
+    h.charges.mockClear();
+    h.charges.mockImplementation(async () => CHARGES);
+  });
+  afterEach(() => {
+    h.charges.mockImplementation(async () => []);
+  });
+
+  it('rewrites an old split (whole amount in provisions) with the share of the domain rule', async () => {
+    script('movements', 'select', { data: row(), error: null });
+    script('movements', 'update', { data: [{ id: ID }], error: null });
+
+    const r = await recalculateTransferSplitAction({ id: ID });
+
+    expect(r).toEqual({ ok: true });
+    const [read] = h.calls.filter((c) => c.table === 'movements' && c.op === 'select');
+    expect(read!.filters).toMatchObject({ id: ID, workspace_id: 'ws-1' });
+    const [update] = writes('movements');
+    // The two parts ONLY: never the amount, the day, nor the write time.
+    expect(update!.payload).toStrictEqual({ provision_part: 70, free_savings_part: 435 });
+    expect(update!.filters).toEqual({ id: ID, workspace_id: 'ws-1' });
+    expect(h.charges).toHaveBeenCalledWith(h.client, 'ws-1');
+  });
+
+  // Security review, tour 56 (I3) — the screen only offers the gesture on the
+  // running budget month and the next; the action holds the same line, or a
+  // May transfer would be re-split with September's bills.
+  it('refuses a transfer of a plan month outside the running month and the next, and writes nothing', async () => {
+    script('movements', 'select', { data: row({ plan_month: 5 }), error: null });
+    script('movements', 'update', { data: [{ id: ID }], error: null });
+
+    const r = await recalculateTransferSplitAction({ id: ID });
+
+    expect(r).toEqual({ ok: false, errorCode: 'errors.operations.planMonthNotAllowed' });
+    expect(writes('movements')).toHaveLength(0);
+    expect(h.audit).not.toHaveBeenCalled();
+  });
+
+  it('audits the correction with ids and fixed states only — no amount', async () => {
+    script('movements', 'select', { data: row(), error: null });
+    script('movements', 'update', { data: [{ id: ID }], error: null });
+    await recalculateTransferSplitAction({ id: ID });
+    expect(h.audit).toHaveBeenCalledTimes(1);
+    expect(h.audit.mock.calls[0]).toEqual([
+      'movement.recorded',
+      { userId: 'user-1', workspaceId: 'ws-1' },
+      {
+        resource_type: 'movement_transfer',
+        resource_id: ID,
+        previous_state: 'split_outdated',
+        new_state: 'split_by_rule',
+      },
+    ]);
+    expect(JSON.stringify(h.audit.mock.calls)).not.toMatch(/505|435|70/);
+  });
+
+  it('is idempotent: a split already equal to the rule writes and audits nothing', async () => {
+    script('movements', 'select', {
+      data: row({ provision_part: 70, free_savings_part: 435 }),
+      error: null,
+    });
+    expect(await recalculateTransferSplitAction({ id: ID })).toEqual({ ok: true });
+    expect(writes('movements')).toHaveLength(0);
+    expect(h.audit).not.toHaveBeenCalled();
+  });
+
+  it('refuses a cancelled transfer, one not to the provisions, an income, and one outside a plan', async () => {
+    for (const patch of [
+      { cancelled_at: '2026-09-20T10:00:00Z' },
+      { to_account_type: 'daily_card', provision_part: null, free_savings_part: null },
+      { kind: 'income', provision_part: null, free_savings_part: null },
+      { plan_month: null },
+      { plan_year: null },
+    ]) {
+      script('movements', 'select', { data: row(patch), error: null });
+      expect(await recalculateTransferSplitAction({ id: ID })).toEqual({
+        ok: false,
+        errorCode: 'errors.operations.notFound',
+      });
+    }
+    expect(writes('movements')).toHaveLength(0);
+    expect(h.audit).not.toHaveBeenCalled();
+  });
+
+  it('says notFound for an id of another workspace: absent from the read, or zero row updated', async () => {
+    script('movements', 'select', { data: null, error: null });
+    expect(await recalculateTransferSplitAction({ id: ID })).toEqual({
+      ok: false,
+      errorCode: 'errors.operations.notFound',
+    });
+    expect(writes('movements')).toHaveLength(0);
+
+    script('movements', 'select', { data: row(), error: null });
+    script('movements', 'update', { data: [], error: null });
+    expect(await recalculateTransferSplitAction({ id: ID })).toEqual({
+      ok: false,
+      errorCode: 'errors.operations.notFound',
+    });
+    expect(h.audit).not.toHaveBeenCalled();
+  });
+
+  it('writes nothing when the charges cannot be read, and returns writeFailed on a database error', async () => {
+    h.charges.mockImplementation(async () => null);
+    script('movements', 'select', { data: row(), error: null });
+    expect(await recalculateTransferSplitAction({ id: ID })).toEqual({
+      ok: false,
+      errorCode: 'errors.operations.writeFailed',
+    });
+    expect(writes('movements')).toHaveLength(0);
+
+    script('movements', 'select', { data: null, error: { message: 'x' } });
+    expect(await recalculateTransferSplitAction({ id: ID })).toEqual({
+      ok: false,
+      errorCode: 'errors.operations.writeFailed',
+    });
+
+    h.charges.mockImplementation(async () => CHARGES);
+    script('movements', 'select', { data: row(), error: null });
+    script('movements', 'update', { data: null, error: { message: 'x' } });
+    expect(await recalculateTransferSplitAction({ id: ID })).toEqual({
+      ok: false,
+      errorCode: 'errors.operations.writeFailed',
+    });
+    expect(h.audit).not.toHaveBeenCalled();
+  });
+
+  it('refuses anything but one uuid (no workspace, no amount travels), and a missing session', async () => {
+    for (const input of [
+      { id: 'abc' },
+      { id: ID, workspaceId: 'ws-2' },
+      { id: ID, amount: 505 },
+      {},
+    ]) {
+      const r = await recalculateTransferSplitAction(input);
+      expect(r).toMatchObject({ ok: false, errorCode: 'errors.validation.generic' });
+    }
+    h.auth.mockImplementation(async () => ({ ok: false, errorCode: 'errors.session.expired' }));
+    expect(await recalculateTransferSplitAction({ id: ID })).toEqual({
+      ok: false,
+      errorCode: 'errors.session.expired',
+    });
+    expect(h.calls).toHaveLength(0);
   });
 });

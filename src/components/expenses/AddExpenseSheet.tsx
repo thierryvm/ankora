@@ -32,6 +32,7 @@ import type { AccountKind } from '@/lib/domain/types';
 import { announceOptimisticSpend, settleSpend } from '@/lib/expenses/optimistic-spend';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 import { formatCurrency } from '@/lib/i18n/formatters';
+import { parseAmountInput } from '@/lib/i18n/parse-amount';
 import { dayOffsetFrom, todayInAnkoraTz } from '@/lib/date/tz';
 import type { Locale } from '@/i18n/routing';
 
@@ -126,32 +127,6 @@ const LARGEURS_MONTANT = [
  * Tailwind, jamais dans un `style` inline — la CSP refuse le second.
  */
 const CHIP_DOT = CATEGORY_DOT;
-
-/**
- * Parse what a francophone actually types. `1.234,56` and `1234.56` are both
- * meant as the same amount; a bare `Number()` reads the first as 1.234.
- * Returns `null` for anything that is not a single positive amount.
- */
-export function parseAmountInput(raw: string): number | null {
-  const trimmed = raw.trim().replace(/\s| /g, '');
-  if (trimmed === '') return null;
-  // Whichever separator appears LAST is the decimal one; earlier ones group.
-  const decimalAt = Math.max(trimmed.lastIndexOf(','), trimmed.lastIndexOf('.'));
-  const integerPart = decimalAt === -1 ? trimmed : trimmed.slice(0, decimalAt);
-  const decimalPart = decimalAt === -1 ? '' : trimmed.slice(decimalAt + 1);
-
-  // Grouping, if present, must actually BE grouping: `1.234,56` is an amount,
-  // `1,2,3` is a typo. Without this check the latter silently became 12,30 € —
-  // a wrong figure accepted without a word, on the one field that matters.
-  const groups = integerPart.split(/[.,]/);
-  if (groups.length > 1 && !groups.slice(1).every((group) => /^\d{3}$/.test(group))) return null;
-
-  const normalised = decimalAt === -1 ? groups.join('') : `${groups.join('')}.${decimalPart}`;
-  if (!/^\d+(\.\d*)?$/.test(normalised)) return null;
-  const value = Number(normalised);
-  if (!Number.isFinite(value) || value <= 0) return null;
-  return value;
-}
 
 export type AddExpenseSheetProps = {
   open: boolean;

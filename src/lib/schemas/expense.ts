@@ -12,8 +12,15 @@ export const expenseInputSchema = z.object({
   amount: z
     .number({ error: 'expense.amount.invalid' })
     .finite({ message: 'expense.amount.invalid' })
-    .min(0, { message: 'expense.amount.negative' })
-    .max(1_000_000, { message: 'expense.amount.tooHigh' }),
+    // Strictly positive: an expense at 0 € is a field that failed to read, not
+    // an expense. A patch that leaves the amount out stays valid (partial schema).
+    .positive({ message: 'expense.amount.notPositive' })
+    .max(1_000_000, { message: 'expense.amount.tooHigh' })
+    // Cents are the smallest unit (ADR-045 D19): the numeric(12,2) column
+    // would round 0.004 to a 0 EUR row. Refused, never rounded.
+    .refine((v) => Math.abs(Math.round(v * 100) - v * 100) < 1e-6, {
+      message: 'expense.amount.subCent',
+    }),
   occurredOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'expense.date.format' }),
   // F-6 — required, and never null. An expense recorded « without a category »
   // was in practice filed under whatever chip happened to be pre-selected; the

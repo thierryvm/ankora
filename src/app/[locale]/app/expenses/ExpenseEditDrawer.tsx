@@ -9,6 +9,7 @@ import { deleteExpenseAction, updateExpenseAction } from '@/lib/actions/expenses
 import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 import { formatCurrency } from '@/lib/i18n/formatters';
+import { parseAmountInput } from '@/lib/i18n/parse-amount';
 import type { Locale } from '@/i18n/routing';
 import { toast } from '@/components/ui/toast';
 import { Button } from '@/components/ui/button';
@@ -51,11 +52,13 @@ type Props = {
  */
 export function ExpenseEditDrawer({ expense, accounts, onClose }: Props) {
   const t = useTranslations('app.expenses');
+  const tAmount = useTranslations('ui.amountField');
   const translateError = useActionErrorTranslator();
   const router = useRouter();
 
   const labelId = useId();
   const amountId = useId();
+  const amountErrorId = useId();
   const occurredOnId = useId();
   const titleId = useId();
 
@@ -106,13 +109,14 @@ export function ExpenseEditDrawer({ expense, accounts, onClose }: Props) {
 
   if (!expense) return null;
 
+  // An expense is never 0 €: an amount that does not read — empty, letters,
+  // zero — keeps « Enregistrer » waiting, and the field says why. The field is
+  // pre-filled, so an unreadable value is always something typed over it.
+  const parsedAmount = parseAmountInput(amount);
+  const amountInvalid = parsedAmount === null;
+
   function submit() {
-    if (!expense) return;
-    const parsedAmount = Number(amount.replace(',', '.'));
-    if (!Number.isFinite(parsedAmount) || parsedAmount < 0) {
-      toast.error(translateError('errors.validation.generic'));
-      return;
-    }
+    if (!expense || parsedAmount === null) return;
 
     // Only what changed travels (#494): an untouched field stays undefined and
     // the partial update schema leaves its column alone. Nothing changed, nothing
@@ -243,16 +247,24 @@ export function ExpenseEditDrawer({ expense, accounts, onClose }: Props) {
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor={amountId}>{t('amountLabel')}</Label>
+            {/* Text with a decimal keypad, never `type="number"`: the browser
+                blanks a comma-typed « 5,90 », and the expense went in at 0 €. */}
             <Input
               id={amountId}
-              type="number"
+              type="text"
               inputMode="decimal"
-              min={0}
-              step="0.01"
+              autoComplete="off"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
+              aria-invalid={amountInvalid || undefined}
+              aria-describedby={amountInvalid ? amountErrorId : undefined}
               data-testid="expense-edit-amount"
             />
+            {amountInvalid && (
+              <p id={amountErrorId} className="text-danger text-xs font-medium">
+                {tAmount('positive')}
+              </p>
+            )}
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor={occurredOnId}>{t('dateLabel')}</Label>
@@ -342,7 +354,7 @@ export function ExpenseEditDrawer({ expense, accounts, onClose }: Props) {
           <Button
             type="button"
             onClick={submit}
-            disabled={isPending || label.trim().length === 0}
+            disabled={isPending || label.trim().length === 0 || amountInvalid}
             data-testid="expense-edit-save"
           >
             {isPending ? t('drawer.saving') : t('drawer.save')}

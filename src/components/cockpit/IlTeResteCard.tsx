@@ -89,6 +89,8 @@ export type IlTeResteCardProps = Readonly<{
    * received, or less than planned), and says so (« Revenu prévu »).
    */
   revenuPrevu?: boolean;
+  /** A finished month with no money received noted (tour 56): says so. */
+  revenuRienNote?: boolean;
 }>;
 
 export async function IlTeResteCard({
@@ -108,6 +110,7 @@ export async function IlTeResteCard({
   cascade,
   moisVu = null,
   revenuPrevu = false,
+  revenuRienNote = false,
 }: IlTeResteCardProps) {
   const t = await getTranslations('cockpit.ilTeReste');
   const fmt = (v: number) => formatCurrency(v, locale);
@@ -177,11 +180,14 @@ export async function IlTeResteCard({
                 })
           }
           termes={{
-            revenus: revenuPrevu
-              ? t('termeRevenuPrevu')
-              : moisVu
-                ? t('termeRevenusMois', { month: moisVu.month })
-                : t('termeRevenus'),
+            revenus:
+              revenuRienNote && moisVu
+                ? t('termeRevenuRienNote', { month: moisVu.month })
+                : revenuPrevu
+                  ? t('termeRevenuPrevu')
+                  : moisVu
+                    ? t('termeRevenusMois', { month: moisVu.month })
+                    : t('termeRevenus'),
             retenu: t('termeRetenu'),
             depense: t('termeDepense'),
             misDeCote: t('termeMisDeCote'),
