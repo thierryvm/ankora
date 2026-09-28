@@ -1345,6 +1345,7 @@
         "chargesFixes": "Factures mensuelles",
         "lissage": "Lissage",
         "engagements": "Engagements",
+        "retenu": "Déjà compté pour tes factures",
         "resteDisponible": "Budget du mois",
         "depense": "Dépensé ce mois",
         "ilTeReste": "Il te reste",

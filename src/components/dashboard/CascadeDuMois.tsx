@@ -85,6 +85,14 @@ type Props = {
   chargesFixesParts: readonly PartAffichee[];
   lissageParts: readonly PartAffichee[];
   engagementsParts: readonly PartAffichee[];
+  /**
+   * « Déjà compté pour tes factures » = factures mensuelles + lissage +
+   * engagements, as the domain carries it (`situation.retenu`). Shown as the
+   * subtotal of the three rows above it, so « revenus − retenu = budget » reads
+   * in two steps. Never summed here: a second computation of the same total at
+   * display time is what rule 10 forbids.
+   */
+  retenu: number;
   /** « Budget du mois » (ADR-035). */
   resteDisponible: number;
   /** « Dépensé ce mois » (ADR-035). */
@@ -276,6 +284,15 @@ export async function CascadeDuMois(props: Props) {
               )}
             />
           )}
+          {/* The subtotal Thierry asked for on 26 Sept. 2026: what the bills,
+              the smoothing and the commitments take together, before the
+              budget of the month. */}
+          <div className="border-border border-t pt-2">
+            {/* Unsigned, like « Budget du mois »: a total of the rows above,
+                not one more deduction. Shown « − », it read as the same money
+                taken twice (Sourcery on #500). */}
+            <FlowRow label={t('flow.retenu')} value={fmt(props.retenu)} />
+          </div>
           {props.misDeCote > 0 && (
             <FlowRow
               label={t('flow.misDeCote')}
@@ -400,16 +417,21 @@ function FlowRow({
    */
   detail?: FlowRowDetail;
 }) {
-  const amountClass = `tabular-nums ${strong ? 'font-bold' : 'font-medium'} text-foreground`;
+  // `whitespace-nowrap`: an amount is one unit. Without it « − 1 804,21 € »
+  // broke after the minus at 375 px and the sign landed on its label.
+  const amountClass = `whitespace-nowrap tabular-nums ${strong ? 'font-bold' : 'font-medium'} text-foreground`;
 
   return (
     <div className="flex items-start justify-between gap-3">
+      {/*
+        A row that opens puts its amount in a 44 px summary, centred. Without
+        the same minimum height the label stayed at the top and its amount sat
+        half a line lower (seen by @thierry, 26 Sept. 2026).
+      */}
       <dt
-        className={`flex items-center gap-2 ${muted ? 'text-muted-foreground' : 'text-foreground'}`}
+        className={`flex items-center gap-2 ${detail ? 'min-h-11' : ''} ${muted ? 'text-muted-foreground' : 'text-foreground'}`}
       >
-        {dotClass && (
-          <span aria-hidden className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${dotClass}`} />
-        )}
+        {dotClass && <span aria-hidden className={`h-2 w-2 shrink-0 rounded-full ${dotClass}`} />}
         {label}
       </dt>
       {/*
@@ -418,7 +440,10 @@ function FlowRow({
         Le `flex-1` lui rend la largeur dont il a besoin pour être lisible à
         390 px — sans quoi il se serrerait sous le montant.
       */}
-      <dd className={detail ? 'min-w-0 flex-1' : amountClass}>
+      {/* No `min-w-0`: the column must never shrink under its amount, or the
+          amount spills onto its label (375 px, 27 Sept. 2026) — the label
+          wraps instead. Open, the list's labels wrap too. */}
+      <dd className={detail ? 'flex-1' : amountClass}>
         {detail ? (
           <details className="group" data-testid={detail.testId}>
             {/*
