@@ -61,6 +61,11 @@ export type AccountBalanceProps = {
     readIsStartingBalance: boolean;
     computed: number | null;
     /**
+     * Tour 59 bis — the operations counted since the statement, as the cockpit
+     * counts them (`soldeAffiche`). 0 = the statement alone.
+     */
+    operations: number;
+    /**
      * `amount` is `read - expected` (ADR-045 D22): negative when the account
      * holds less than expected. `lines` are the domain's decomposition of
      * `expected` — summed there, never here.
@@ -506,25 +511,38 @@ function AccountBalanceCard({ row, today }: { row: AccountBalanceProps; today: s
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
+        {/* Tour 59 bis — one big figure per account, the one the cockpit shows
+            (`soldeAffiche`): the latest statement plus the operations since.
+            The statement is its source, written small underneath. */}
         {view ? (
-          <div data-testid="solde-lu">
+          <div data-testid="solde-affiche">
             <p className="text-muted-foreground text-xs">
-              {view.readIsStartingBalance
-                ? tS('start', { date: formatDay(view.readStatedOn, locale) })
-                : tS('read', { date: formatDay(view.readStatedOn, locale) })}
+              {view.operations > 0
+                ? tS('computed')
+                : view.readIsStartingBalance
+                  ? tS('start', { date: formatDay(view.readStatedOn, locale) })
+                  : tS('read', { date: formatDay(view.readStatedOn, locale) })}
             </p>
-            <p className="text-foreground font-mono text-xl tabular-nums">
-              {fmt(view.readBalance)}
+            <p
+              className="text-foreground font-mono text-xl tabular-nums"
+              data-testid="solde-affiche-montant"
+            >
+              {fmt(view.computed ?? view.readBalance)}
             </p>
           </div>
         ) : (
           <p className="text-muted-foreground text-sm">{tS('none')}</p>
         )}
 
-        {view?.computed !== null && view?.computed !== undefined ? (
-          <div data-testid="solde-calcule">
-            <p className="text-muted-foreground text-xs">{tS('computed')}</p>
-            <p className="text-foreground font-mono tabular-nums">{fmt(view.computed)}</p>
+        {view && view.operations > 0 ? (
+          <div className="flex flex-col gap-1" data-testid="solde-calcule">
+            <p className="text-muted-foreground text-xs tabular-nums" data-testid="solde-lu">
+              {tBalance(view.readIsStartingBalance ? 'readSinceStart' : 'readSince', {
+                date: formatDay(view.readStatedOn, locale),
+                montant: fmt(view.readBalance),
+                count: view.operations,
+              })}
+            </p>
             <p className="text-muted-foreground text-xs">{tS('computedHint')}</p>
             {view.sameDayAfter && view.sameDayAfter.flows.length > 0 ? (
               <SameDayLine

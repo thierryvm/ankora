@@ -912,8 +912,8 @@
       "metaTitle": "Meine Konten",
       "metaDescription": "Verfolge die Salden deiner Konten Hauptkonto, Alltag und Sparen. Stelle dein monatliches Einkommen und deine Überweisung auf Alltag ein.",
       "title": "Meine Konten",
-      "subtitle": "Set your income and monthly transfer. The balances below are entered by hand: Ankora does not update them on its own.",
-      "balancesHeading": "Entered balances",
+      "subtitle": "Lege dein Einkommen und deine monatliche Überweisung fest. Die Kontostände unten folgen deinen Buchungen: Notiere deinen echten Kontostand, wenn du sie abgleichen willst.",
+      "balancesHeading": "Kontostände deiner Konten",
       "amountLabel": "Betrag (€)",
       "saveButton": "Speichern",
       "saving": "Speichern…",
@@ -936,9 +936,11 @@
         "saveLabel": "Aktualisieren",
         "srLabel": "Aktueller Saldo von {label}",
         "toastSaved": "{name} aktualisiert",
-        "manualNotice": "Dieser Kontostand ändert sich nur, wenn du einen neuen einträgst.",
+        "manualNotice": "Dieser Kontostand folgt deinen Buchungen. Notiere deinen echten Kontostand, um ihn abzugleichen.",
         "sourceRead": "Kontostand gelesen am {date}",
         "sourceStart": "Anfangsstand, am {date}",
+        "readSince": "Gelesen am {date}: {montant}, plus {count, plural, one {# Buchung} other {# Buchungen}} seitdem",
+        "readSinceStart": "Anfangsstand vom {date}: {montant}, plus {count, plural, one {# Buchung} other {# Buchungen}} seitdem",
         "sourceSince": "Gelesen am {date}, plus {count, plural, one {# Buchung} other {# Buchungen}} seitdem",
         "none": "Kein Kontostand für dieses Konto.",
         "detail": "Details ansehen",
@@ -948,15 +950,15 @@
       "kind": {
         "principal": {
           "description": "Erhält das Gehalt, zahlt die monatlichen Rechnungen.",
-          "usage": "Not used in any calculation yet."
+          "usage": "Dient dem Dashboard: was nach deinen Rechnungen auf deinem Hauptkonto bleibt."
         },
         "vieCourante": {
           "description": "Budget des Alltags (Einkäufe, Benzin, Restaurants).",
-          "usage": "Not used in any calculation yet."
+          "usage": "Dient dem Dashboard: was auf deinem Alltagskonto ist, unter dem, was dir bleibt."
         },
         "epargne": {
           "description": "Verteilt die vierteljährlichen und jährlichen Rechnungen.",
-          "usage": "Feeds the provisions gauge on the dashboard."
+          "usage": "Dient der Gesundheit der Rücklagen im Dashboard."
         }
       },
       "types": {
@@ -1452,7 +1454,8 @@
       "projectionDeficit": "Im {month} rutscht der Fonds unter null.",
       "projectionHolds": "Der Fonds hält über die nächsten 12 Monate.",
       "projectionNegative": "negativer Saldo",
-      "noStatement": "Kein Kontostand für dieses Konto notiert: die Reserve beginnt bei 0.",
+      "noStatement": "Kein Kontostand für dieses Konto notiert: Die Reserve lässt sich nicht messen.",
+      "noStatementLink": "Notiere den echten Kontostand deiner Ersparnisse unter Meine Konten",
       "currentDetail": "Details ansehen"
     },
     "upcomingBills": {

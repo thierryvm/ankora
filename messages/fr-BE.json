@@ -912,8 +912,8 @@
       "metaTitle": "Mes comptes",
       "metaDescription": "Suis les soldes de tes comptes Principal, Vie Courante et Épargne. Règle ton revenu mensuel et ton virement vers Vie Courante.",
       "title": "Mes comptes",
-      "subtitle": "Règle ton revenu et ton virement mensuel. Les soldes plus bas sont saisis à la main : Ankora ne les met pas à jour tout seul.",
-      "balancesHeading": "Soldes saisis",
+      "subtitle": "Règle ton revenu et ton virement mensuel. Les soldes plus bas suivent tes opérations : note ton solde réel quand tu veux les recaler.",
+      "balancesHeading": "Soldes de tes comptes",
       "amountLabel": "Montant (€)",
       "saveButton": "Enregistrer",
       "saving": "Enregistrement…",
@@ -936,9 +936,11 @@
         "saveLabel": "Mettre à jour",
         "srLabel": "Solde actuel de {label}",
         "toastSaved": "{name} mis à jour",
-        "manualNotice": "Ce solde ne change que quand tu en écris un nouveau.",
+        "manualNotice": "Ce solde suit tes opérations. Note ton solde réel pour le recaler.",
         "sourceRead": "Solde lu le {date}",
         "sourceStart": "Solde de départ, le {date}",
+        "readSince": "Lu le {date} : {montant}, plus {count, plural, one {# opération} other {# opérations}} depuis",
+        "readSinceStart": "Solde de départ du {date} : {montant}, plus {count, plural, one {# opération} other {# opérations}} depuis",
         "sourceSince": "Lu le {date}, plus {count, plural, one {# opération} other {# opérations}} depuis",
         "none": "Aucun solde pour ce compte.",
         "detail": "Voir le détail",
@@ -948,15 +950,15 @@
       "kind": {
         "principal": {
           "description": "Reçoit le salaire, paye les factures mensuelles.",
-          "usage": "N'entre dans aucun calcul pour l'instant."
+          "usage": "Sert au tableau de bord : « Sur ton compte principal après tes factures »."
         },
         "vieCourante": {
           "description": "Budget du quotidien (courses, essence, restos).",
-          "usage": "N'entre dans aucun calcul pour l'instant."
+          "usage": "Sert au tableau de bord : ce qu’il y a sur ton compte du quotidien, sous « Il te reste »."
         },
         "epargne": {
           "description": "Lisse les factures trimestrielles et annuelles.",
-          "usage": "Sert à la jauge de provisions du tableau de bord."
+          "usage": "Sert à la santé des provisions du tableau de bord."
         }
       },
       "types": {
@@ -1452,7 +1454,8 @@
       "projectionDeficit": "En {month}, le fonds passe sous zéro.",
       "projectionHolds": "Le fonds tient sur les 12 prochains mois.",
       "projectionNegative": "solde négatif",
-      "noStatement": "Aucun solde noté pour ce compte : la réserve part de 0.",
+      "noStatement": "Aucun solde noté pour ce compte : la réserve ne peut pas se mesurer.",
+      "noStatementLink": "Note le solde réel de ton épargne dans Mes comptes",
       "currentDetail": "Voir le détail"
     },
     "upcomingBills": {

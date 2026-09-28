@@ -49,6 +49,8 @@ const row = (flows: Flow[] | null): AccountBalanceProps => ({
     readStatedOn: '2026-09-28',
     readIsStartingBalance: false,
     computed: 1100,
+    // Same-day flows come after the statement: each is an operation since.
+    operations: Math.max(1, flows?.length ?? 0),
     gap: null,
     reopenable: null,
     sameDayAfter: flows && { flows },

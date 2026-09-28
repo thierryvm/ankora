@@ -6,6 +6,7 @@ import { todayIsoInBrussels } from '@/lib/data/month-situation';
 import { getSnapshotWith } from '@/lib/data/workspace-snapshot';
 import { moisConcerneDe, moisServisParRevenu } from '@/lib/domain/accounts/mois-concerne';
 import { accountBalanceView } from '@/lib/domain/accounts/operations-view';
+import { soldeAffiche } from '@/lib/domain/accounts/solde-affiche';
 import { createClient } from '@/lib/supabase/server';
 import { AccountsClient, type AccountBalanceProps } from './AccountsClient';
 
@@ -74,6 +75,7 @@ export default async function AccountsPage() {
       debits: ledger.debits,
       today: new Date(`${today}T00:00:00Z`),
     });
+    const shown = soldeAffiche(view);
     return {
       kind: account.kind,
       accountType: account.accountType,
@@ -85,6 +87,8 @@ export default async function AccountsPage() {
         readStatedOn: day(view.read.statedOn),
         readIsStartingBalance: view.readIsStartingBalance,
         computed: view.computed ? view.computed.balance.toNumber() : null,
+        // Counted by the cockpit's own function, so both screens say the same.
+        operations: shown.etat === 'lu' ? shown.operations : 0,
         gap: view.gap && {
           expected: view.gap.derived.toNumber(),
           read: view.gap.declared.toNumber(),

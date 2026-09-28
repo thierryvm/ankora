@@ -37,6 +37,7 @@ const START: AccountBalanceProps = {
     readStatedOn: '2026-09-21',
     readIsStartingBalance: true,
     computed: null,
+    operations: 0,
     gap: null,
     reopenable: null,
   },
@@ -51,6 +52,7 @@ const READ_NEGATIVE: AccountBalanceProps = {
     readStatedOn: '2026-09-17',
     readIsStartingBalance: false,
     computed: 462.5,
+    operations: 2,
     gap: {
       expected: 520,
       read: -42.5,
@@ -95,33 +97,47 @@ const card = (type: string) =>
 describe('AccountsClient — un solde lu, daté, et nommé pour ce qu’il est', () => {
   it('appelle le premier relevé « solde de départ », jamais « relevé » ni « lu »', () => {
     renderClient();
-    const lu = within(card('income_bills')).getByTestId('solde-lu');
-    expect(lu).toHaveTextContent(/Solde de départ, le 21 septembre/);
-    expect(lu.textContent).not.toMatch(/relev|lu le/i);
+    const affiche = within(card('income_bills')).getByTestId('solde-affiche');
+    expect(affiche).toHaveTextContent(/Solde de départ, le 21 septembre/);
+    expect(affiche.textContent).not.toMatch(/relev|lu le/i);
   });
 
   it('date un solde lu par stated_on, pas par la fin du mois', () => {
     renderClient();
     const lu = within(card('daily_card')).getByTestId('solde-lu');
-    expect(lu).toHaveTextContent('Solde lu le 17 septembre');
+    expect(lu).toHaveTextContent('Lu le 17 septembre');
     expect(lu.textContent).not.toMatch(/30 septembre/);
+  });
+
+  it('tour 59 bis — le gros chiffre est le solde calculé, comme au cockpit ; le relevé est sa source, en petit', () => {
+    renderClient();
+    const c = card('daily_card');
+    const gros = within(c).getByTestId('solde-affiche-montant');
+    expect(gros.textContent).toMatch(/462,50/);
+    expect(gros.className).toMatch(/text-xl/);
+    const lu = within(c).getByTestId('solde-lu');
+    expect(lu.textContent).toMatch(
+      /^Lu le 17 septembre : [-−]\s*42,50\s*€, plus 2 opérations depuis$/,
+    );
+    expect(lu.querySelector('.text-xl')).toBeNull();
+    // One big figure per account, never two.
+    expect(c.querySelectorAll('.text-xl')).toHaveLength(1);
   });
 
   it('ne dit jamais « calculé » d’un solde lu, ni « relevé » ou « lu » d’un solde calculé', () => {
     renderClient();
     const c = card('daily_card');
     expect(within(c).getByTestId('solde-lu').textContent).not.toMatch(/calcul/i);
-    const calcule = within(c).getByTestId('solde-calcule');
+    const calcule = within(c).getByTestId('solde-affiche');
     expect(calcule).toHaveTextContent('Calculé depuis tes opérations');
-    expect(calcule.textContent).not.toMatch(/relev|\blu\b/i);
+    expect(calcule.textContent).not.toMatch(/relev|lu/i);
   });
 
   it('affiche un solde négatif tel quel, sans couleur d’alarme', () => {
     renderClient();
     const lu = within(card('daily_card')).getByTestId('solde-lu');
-    const montant = lu.querySelector('p.font-mono') as HTMLElement;
-    expect(montant.textContent).toMatch(/-\s*42,50|−\s*42,50/);
-    expect(montant.className).not.toMatch(/danger|destructive|red|warning/);
+    expect(lu.textContent).toMatch(/-\s*42,50|−\s*42,50/);
+    expect(lu.innerHTML).not.toMatch(/danger|destructive|red|warning/);
   });
 
   it('ne rend chaque solde qu’une fois', () => {
@@ -196,9 +212,10 @@ describe('AccountsClient — un solde lu, daté, et nommé pour ce qu’il est',
 
   it('ne dit plus que les dépenses manquent au solde calculé', () => {
     renderClient();
-    const calcule = within(card('daily_card')).getByTestId('solde-calcule');
-    expect(calcule.textContent).not.toMatch(/n’y sont pas encore/);
-    expect(calcule).toHaveTextContent(/dépenses/);
+    // Tour 59 bis — the explanation sits under the big figure, with its source.
+    const c = card('daily_card');
+    expect(c.textContent).not.toMatch(/n’y sont pas encore/);
+    expect(c).toHaveTextContent(/moins les factures payées et les dépenses écrites depuis/);
   });
 
   it('ne laisse pas annuler un solde de départ, mais bien un solde lu', () => {
@@ -228,13 +245,21 @@ describe('AccountsClient — un solde lu, daté, et nommé pour ce qu’il est',
     expect(within(feuille).queryByDisplayValue('Provisions pour tes factures')).toBeNull();
   });
 
-  it('garde une phrase d’usage vraie : deux comptes n’entrent dans aucun calcul, les provisions servent la jauge', () => {
+  it('tour 59 bis — dit à quoi sert chaque solde, et qu’il suit les opérations', () => {
     renderClient();
-    expect(card('income_bills')).toHaveTextContent("N'entre dans aucun calcul pour l'instant.");
-    expect(card('provisions')).toHaveTextContent(
-      'Sert à la jauge de provisions du tableau de bord.',
+    expect(card('income_bills')).toHaveTextContent(
+      'Sert au tableau de bord : « Sur ton compte principal après tes factures ».',
     );
-    expect(document.body.textContent).not.toMatch(/Saisi à la main/);
+    expect(card('daily_card')).toHaveTextContent(
+      'Sert au tableau de bord : ce qu’il y a sur ton compte du quotidien, sous « Il te reste ».',
+    );
+    expect(card('provisions')).toHaveTextContent(
+      'Sert à la santé des provisions du tableau de bord.',
+    );
+    expect(document.body.textContent).toMatch(/Ce solde suit tes opérations\./);
+    expect(document.body.textContent).not.toMatch(
+      /Saisi à la main|aucun calcul|ne change que|ne les met pas à jour|Soldes saisis/i,
+    );
   });
 });
 

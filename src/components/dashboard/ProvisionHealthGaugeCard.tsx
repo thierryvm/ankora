@@ -22,8 +22,10 @@ type Props = {
   payments: PaymentLedger;
   soldeEpargneActuel: Decimal;
   /**
-   * Tour 59 — no statement on the provisions account: the reserve starts from
-   * 0, and the line says so rather than showing that 0 as a balance.
+   * Tour 59 bis — no statement on the provisions account: there is no balance
+   * to measure the reserve against, so nothing is computed from a 0 (no gauge,
+   * percentage, colour, catch-up plan or projection). The card asks for the
+   * real balance instead, and links to the Accounts page where it is noted.
    */
   sansReleve?: boolean;
   /** Renamed from the domain's `ref` to avoid clashing with React's reserved `ref` prop. */
@@ -67,6 +69,32 @@ export async function ProvisionHealthGaugeCard({
   locale,
 }: Props) {
   const t = await getTranslations('dashboard.health');
+
+  if (sansReleve) {
+    return (
+      <Card
+        className="relative overflow-hidden"
+        data-testid="provision-health-gauge-card"
+        data-tier="sans-releve"
+      >
+        <CardHeader className="relative pb-2">
+          <CardTitle className="text-muted-foreground text-sm font-medium">{t('title')}</CardTitle>
+        </CardHeader>
+        <CardContent className="relative">
+          <p className="text-sm leading-relaxed" data-testid="reserve-sans-releve">
+            {t('noStatement')}{' '}
+            <Link
+              href="/app/accounts"
+              className="text-brand-700 hover:text-brand-800 inline-flex min-h-11 scroll-mt-24 scroll-mb-24 items-center underline underline-offset-2"
+            >
+              {t('noStatementLink')}
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const result = calculerSanteProvisions({
     charges,
     payments,
@@ -209,7 +237,10 @@ export async function ProvisionHealthGaugeCard({
                     {fmt(result.totalEpargneTheorique)}
                   </dd>
                 </div>
-                <div>
+                {/* Tour 59 bis — the line and its link sit at the bottom of a
+                    fold, right above the fixed mobile bar: when scrolled to,
+                    they stop clear of it rather than under it. */}
+                <div className="scroll-mt-24 scroll-mb-24">
                   <dt className="text-muted-foreground">{t('current')}</dt>
                   <dd className="text-foreground mt-0.5 font-semibold tabular-nums">
                     {fmt(result.soldeEpargneActuel)}
@@ -224,11 +255,6 @@ export async function ProvisionHealthGaugeCard({
                       {t('currentDetail')}
                     </Link>
                   </dd>
-                  {sansReleve ? (
-                    <dd className="text-muted-foreground mt-0.5" data-testid="reserve-sans-releve">
-                      {t('noStatement')}
-                    </dd>
-                  ) : null}
                 </div>
               </dl>
               {result.statut === 'deficit' && result.rattrapageMensuel.gt(0) && (

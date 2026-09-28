@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import Decimal from 'decimal.js';
 
 import messages from '../../../../messages/fr-BE.json';
@@ -76,15 +76,31 @@ describe('<ProvisionHealthGaugeCard /> (THI-190 cockpit v3 #2)', () => {
     expect(screen.queryByTestId('reserve-sans-releve')).toBeNull();
   });
 
-  it('tour 59 — without a statement, the line says the reserve starts from 0', async () => {
-    await renderCard({
+  it('tour 59 bis — without a statement, nothing is computed from 0: one sentence and a link', async () => {
+    const { container } = await renderCard({
       charges: [ANNUAL_CHARGE({})],
       soldeEpargneActuel: new Decimal(0),
       sansReleve: true,
     });
-    expect(screen.getByTestId('reserve-sans-releve').textContent).toBe(
-      messages.dashboard.health.noStatement,
-    );
+    const phrase = screen.getByTestId('reserve-sans-releve');
+    expect(phrase).toHaveTextContent(messages.dashboard.health.noStatement);
+    const link = within(phrase).getByRole('link', {
+      name: messages.dashboard.health.noStatementLink,
+    });
+    expect(link.getAttribute('href')).toBe('/app/accounts');
+    // No gauge, percentage, colour, catch-up plan or projection built on a 0.
+    expect(screen.queryByTestId('provision-health-gauge-percent')).toBeNull();
+    expect(screen.queryByRole('progressbar')).toBeNull();
+    expect(screen.queryByTestId('provision-health-gauge-rattrapage')).toBeNull();
+    expect(screen.queryByTestId('provision-health-gauge-breakdown')).toBeNull();
+    expect(screen.queryByText(messages.dashboard.health.projectionToggle)).toBeNull();
+    expect(container.innerHTML).not.toMatch(/success|warning|danger/);
+  });
+
+  it('tour 59 bis — the « Solde actuel » line clears a fixed bar when scrolled to', async () => {
+    await renderCard({ charges: [ANNUAL_CHARGE({})], soldeEpargneActuel: new Decimal(1200) });
+    const link = screen.getByRole('link', { name: messages.dashboard.health.currentDetail });
+    expect(link.closest('div')?.className).toMatch(/scroll-m[by]-/);
   });
 
   it('renders the FR title from the dashboard.health namespace', async () => {
