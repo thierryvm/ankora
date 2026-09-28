@@ -110,4 +110,36 @@ describe('CategoriesCard (G-cat)', () => {
     );
     expect(screen.queryByTestId('g-cat-ligne')).toBeNull();
   });
+  it('after a merge, « Courses » opens on its shops, whose subtotals add up to the line', () => {
+    // Fictional amounts: two shops regrouped into one post.
+    monter({
+      total: 257.76,
+      groupes: [
+        {
+          id: 'c-courses',
+          nom: 'Courses',
+          couleur: 'amber',
+          total: 257.76,
+          lignes: [
+            { id: 'i1', label: 'Intermarché', montant: 200.1, date: '2026-09-03' },
+            { id: 'k1', label: 'Colruyt', montant: 8.59, date: '2026-09-05' },
+            { id: 'i2', label: 'INTERMARCHE', montant: 49.07, date: '2026-09-08' },
+          ],
+        },
+      ],
+    });
+    const ligne = screen.getByTestId('g-cat-ligne');
+    fireEvent.click(ligne);
+    const tiroir = screen.getByTestId('g-cat-tiroir');
+    const titres = [...tiroir.querySelectorAll('[data-sous-total]')];
+    expect(titres.map((h) => h.querySelector('span.truncate')?.textContent)).toEqual([
+      'INTERMARCHE',
+      'Colruyt',
+    ]);
+    const sousTotaux = titres.map((h) => Number(h.getAttribute('data-sous-total')));
+    expect(sousTotaux).toEqual([249.17, 8.59]);
+    const somme = sousTotaux.reduce((s, v) => s + Math.round(v * 100), 0);
+    expect(somme).toBe(Math.round(Number(ligne.getAttribute('data-total')) * 100));
+    expect(within(tiroir).getByTestId('g-cat-total').getAttribute('data-total')).toBe('257.76');
+  });
 });

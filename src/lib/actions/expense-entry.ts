@@ -1,5 +1,6 @@
 'use server';
 
+import { EXPENSE_FALLBACK_LABELS } from '@/lib/domain/categories/merge';
 import { getCategories } from '@/lib/data/categories';
 import { loadMonthSituation } from '@/lib/data/month-situation';
 import { expenseCategoryChips } from '@/lib/domain/categories';
@@ -39,13 +40,8 @@ const ACCOUNT_ORDER: readonly AccountKind[] = ['principal', 'vie_courante', 'epa
 /** How many recent expenses feed the description suggestions and the default account. */
 const DESCRIPTION_SOURCE_ROWS = 200;
 
-/**
- * The default word the sheet writes when an expense has neither description
- * nor category — `app.expenses.addSheet.fallbackLabel`, in every locale the
- * sheet may have been used in. It names no place, so it is never suggested.
- * Kept in step with the messages by `expense-entry.test.ts`.
- */
-const FALLBACK_LABELS = ['Dépense', 'Uitgave', 'Expense', 'Ausgabe', 'Gasto'];
+/** The sheet's fallback word names no place, so it is never suggested (domain/categories/merge). */
+const FALLBACK_LABELS = EXPENSE_FALLBACK_LABELS;
 
 /**
  * The workspace's own descriptions and the account its expenses are usually

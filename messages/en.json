@@ -1117,6 +1117,34 @@
         "fermer": "Close",
         "vide": "No expense in {month}: nothing to sort.",
         "videAide": "Every expense goes into its category: tap ⊕ after a purchase."
+      },
+      "mergeOpen": "Regroup categories",
+      "merge": {
+        "titre": "Regroup categories",
+        "fermer": "Close",
+        "intro": "The category says what the money is for (Groceries), the description says where (Intermarché). Pick the categories to fold into one post.",
+        "chargement": "Loading categories…",
+        "tropPeu": "You need at least two expense categories to regroup them.",
+        "sources": "Categories to regroup",
+        "cible": "Into which category?",
+        "nouvelle": "New category",
+        "nouveauNom": "Name of the new category",
+        "nouveauNomExemple": "E.g. Groceries",
+        "nbDepenses": "{count, plural, =0 {no expense} one {# expense} other {# expenses}}",
+        "resume": "{count, plural, =0 {No expense will move} one {# expense will move} other {# expenses will move}} into “{cible}”.",
+        "resumeFactures": "{count, plural, one {# bill or commitment follows} other {# bills or commitments follow}} too.",
+        "resumeDescriptions": "Each expense keeps its description; those without one take the name of their former category. No amount changes.",
+        "resumeVide": "Tick at least one category, then choose where to regroup them.",
+        "continuer": "Regroup…",
+        "confirmation": "Move {count, plural, one {# expense} other {# expenses}} into “{cible}”?",
+        "confirmer": "Yes, regroup",
+        "annuler": "Cancel",
+        "fait": "{count, plural, =0 {No expense moved} one {# expense filed} other {# expenses filed}} under “{cible}”.",
+        "vides": "{count, plural, one {# category is now empty} other {# categories are now empty}} — delete them?",
+        "videsAide": "They hold nothing any more: deleting them loses no expense.",
+        "supprimerVides": "Delete the empty categories",
+        "garderVides": "Keep them",
+        "videsSupprimees": "{count, plural, one {# category deleted} other {# categories deleted}}."
       }
     },
     "settings": {
@@ -1730,7 +1758,12 @@
     "categories": {
       "createFailed": "Could not create the category.",
       "duplicate": "You already have a category with this name.",
-      "duplicateBill": "That name is already taken by a bill category. It is not offered here because a bill is not an expense — it is already deducted from your budget."
+      "duplicateBill": "That name is already taken by a bill category. It is not offered here because a bill is not an expense — it is already deducted from your budget.",
+      "mergeInvalid": "One of the chosen categories is no longer available. Reload the page and try again.",
+      "mergeStale": "Some expenses changed in the meantime. Check the number shown and try again.",
+      "mergePartial": "The regrouping stopped halfway. No amount changed; run it again to finish.",
+      "mergeFailed": "The categories cannot be regrouped right now.",
+      "notEmpty": "This category still holds expenses or bills: it was not deleted."
     },
     "operations": {
       "writeFailed": "The operation could not be saved. Try again.",

@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/toast';
 import { AddExpenseSheet } from '@/components/expenses/AddExpenseSheet';
 import { CategoriesCard, type CategorieCarte } from '@/components/expenses/CategoriesCard';
+import { MergeCategoriesSheet } from '@/components/expenses/MergeCategoriesSheet';
 import type { Locale } from '@/i18n/routing';
 import { deleteExpenseAction } from '@/lib/actions/expenses';
 import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
@@ -96,6 +97,7 @@ export function ExpensesClient({
   const [isPending, startTransition] = useTransition();
   const [editingExpense, setEditingExpense] = useState<ExpenseEditDrawerExpense | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isMergeOpen, setIsMergeOpen] = useState(false);
 
   function onDelete(id: string) {
     startTransition(async () => {
@@ -241,6 +243,20 @@ export function ExpensesClient({
         month={currentMonth}
         groupes={categoryGroups}
       />
+      {/* Shops become descriptions, the category becomes the post: the card
+          then speaks of « Courses », which opens on Intermarché and Colruyt. */}
+      <div className="-mt-4 flex justify-end">
+        <Button
+          type="button"
+          variant="ghost"
+          data-testid="merge-ouvrir"
+          className="min-h-11"
+          onClick={() => setIsMergeOpen(true)}
+        >
+          {t('mergeOpen')}
+        </Button>
+      </div>
+      {isMergeOpen && <MergeCategoriesSheet open onClose={() => setIsMergeOpen(false)} />}
 
       {/*
         The inline add form is gone, replaced by the shared entry sheet.

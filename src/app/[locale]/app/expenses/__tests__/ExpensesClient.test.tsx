@@ -38,6 +38,13 @@ vi.mock('next/navigation', () => ({
  * Stubbed to a marker: this suite is about the list and the edit drawer.
  * `AddExpenseSheet` has its own suite in `src/components/expenses/__tests__/`.
  */
+// The merge sheet reaches server actions (and the server env) on import; it is
+// covered by its own test, so the page test only needs it to render nothing.
+vi.mock('@/lib/actions/category-merge', () => ({
+  getCategoryMergeContextAction: vi.fn(async () => ({ ok: true, data: [] })),
+  mergeCategoriesAction: vi.fn(),
+  deleteEmptyCategoriesAction: vi.fn(),
+}));
 vi.mock('@/components/expenses/AddExpenseSheet', () => ({
   AddExpenseSheet: ({ open }: { open: boolean }) =>
     open ? <div data-testid="add-expense-sheet-mock" /> : null,

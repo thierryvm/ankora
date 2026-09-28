@@ -74,3 +74,33 @@ export const expenseCategoryInputSchema = z.object({
 });
 
 export type ExpenseCategoryInput = z.infer<typeof expenseCategoryInputSchema>;
+
+/**
+ * Regrouping several expense categories into one post (« Courses »).
+ *
+ * `confirmedExpenseCount` is the number the sheet showed before the person
+ * confirmed (`confirmedBillCount`: the bills and commitments that follow).
+ * The server recounts both, refuses when either moved in between, then
+ * writes only the rows it counted, by id. Any workspace id the
+ * client sends is stripped here — the workspace is the session's.
+ */
+export const categoryMergeInputSchema = z.object({
+  sourceIds: z.array(z.uuid()).min(1).max(30),
+  target: z.discriminatedUnion('kind', [
+    z.object({ kind: z.literal('existing'), id: z.uuid() }),
+    z.object({
+      kind: z.literal('new'),
+      name: categoryNameSchema,
+      colorToken: categoryColorTokenSchema,
+    }),
+  ]),
+  confirmedExpenseCount: z.number().int().min(0).max(1_000_000),
+  /** Bills and commitments that follow, as shown: recounted the same way. */
+  confirmedBillCount: z.number().int().min(0).max(1_000_000),
+});
+export type CategoryMergeInput = z.infer<typeof categoryMergeInputSchema>;
+
+/** Deleting categories the merge left empty — a separate, confirmed gesture. */
+export const emptyCategoriesDeleteSchema = z.object({
+  ids: z.array(z.uuid()).min(1).max(30),
+});
