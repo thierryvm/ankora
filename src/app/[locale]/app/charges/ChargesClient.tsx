@@ -737,13 +737,101 @@ export function ChargesClient({
     dueThisMonth.filter((c) => optimisticPaid.has(c.id)).length +
     commitmentInstalments.filter((i) => optimisticInstalmentPaid.has(i.id)).length;
   const dueThisMonthCount = dueThisMonth.length + commitmentInstalments.length;
-  const remainingThisMonth =
-    dueThisMonth.filter((c) => !optimisticPaid.has(c.id)).reduce((sum, c) => sum + c.amount, 0) +
-    commitmentInstalments
-      .filter((i) => !optimisticInstalmentPaid.has(i.id))
-      .reduce((sum, i) => sum + i.amountDue, 0);
+  // Two named parts, and the total is their sum: the head card says how it
+  // splits, so the lists below can be checked against it (reported by
+  // @thierry, 28 Sept. 2026 — the instalment counted, but out of sight).
+  const remainingBills = dueThisMonth
+    .filter((c) => !optimisticPaid.has(c.id))
+    .reduce((sum, c) => sum + c.amount, 0);
+  const remainingInstalments = commitmentInstalments
+    .filter((i) => !optimisticInstalmentPaid.has(i.id))
+    .reduce((sum, i) => sum + i.amountDue, 0);
+  const remainingThisMonth = remainingBills + remainingInstalments;
   // Count-based (not amount-based) so a 0 € bill still has to be ticked.
   const allPaidThisMonth = dueThisMonthCount > 0 && paidThisMonthCount === dueThisMonthCount;
+
+  const renderGroup = ({ freq, rows }: (typeof groups)[number]) => {
+    const headingId = `charges-group-${freq}-heading`;
+    const listId = `charges-group-${freq}-list`;
+    const open = isGroupOpen(freq);
+    const groupDue = rows.filter((c) => c.isActive && c.paymentMonths.includes(viewedPeriod.month));
+    const groupUnpaid = groupDue.filter((c) => !optimisticPaid.has(c.id));
+    const groupRemaining = groupUnpaid.reduce((sum, c) => sum + c.amount, 0);
+    const groupAllPaid = groupDue.length > 0 && groupUnpaid.length === 0;
+    return (
+      <section
+        key={freq}
+        data-testid={`charges-group-${freq}`}
+        aria-labelledby={headingId}
+        className="border-border bg-card rounded-2xl border"
+      >
+        <h2 id={headingId} className="m-0">
+          <button
+            type="button"
+            onClick={() => toggleGroup(freq, open)}
+            aria-expanded={open}
+            aria-controls={listId}
+            data-testid={`charges-group-toggle-${freq}`}
+            className="hover:bg-surface-muted focus-visible:ring-brand-600 flex min-h-12 w-full items-center justify-between gap-3 rounded-2xl px-4 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
+          >
+            <span className="min-w-0 text-sm">
+              <span className="text-foreground font-semibold">{tFreq(freq)}</span>
+              <span className="text-muted-foreground">
+                {' · '}
+                {groupDue.length > 0
+                  ? t('groupSummaryDue', {
+                      unpaid: groupUnpaid.length,
+                      due: groupDue.length,
+                    })
+                  : t('groupSummaryNone', { count: rows.length })}
+              </span>
+            </span>
+            <ChevronDown
+              aria-hidden
+              className={`text-muted-foreground h-4 w-4 shrink-0 transition-transform ${
+                open ? 'rotate-180' : ''
+              }`}
+            />
+          </button>
+        </h2>
+        {open && (
+          <div id={listId} className="pb-2">
+            <ul role="list" className="divide-border/60 divide-y">
+              {rows.map((c) => renderChargeRow(c))}
+            </ul>
+            {/* One live figure per group: what is still to pay in
+                          it this month, down to ✓ 0 €. */}
+            <p
+              data-testid={`charges-group-subtotal-${freq}`}
+              className="flex items-baseline justify-end gap-1.5 px-4 pt-1"
+            >
+              {groupDue.length === 0 ? (
+                <span className="text-muted-foreground text-xs">{t('groupNothingDue')}</span>
+              ) : groupAllPaid ? (
+                <span
+                  data-testid={`charges-group-allpaid-${freq}`}
+                  className="text-brand-text inline-flex items-center gap-1 text-sm font-semibold tabular-nums"
+                >
+                  <Check aria-hidden className="h-3.5 w-3.5" strokeWidth={3} />
+                  {formatCurrency(0, locale)}
+                </span>
+              ) : (
+                <>
+                  <span className="text-muted-foreground text-xs">{t('groupRemainingLabel')}</span>
+                  <span
+                    data-testid={`charges-group-remaining-${freq}`}
+                    className="text-foreground text-sm font-semibold tabular-nums"
+                  >
+                    {formatCurrency(groupRemaining, locale)}
+                  </span>
+                </>
+              )}
+            </p>
+          </div>
+        )}
+      </section>
+    );
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -909,6 +997,17 @@ export function ChargesClient({
                   ? t('paidCount', { paid: paidThisMonthCount, total: dueThisMonthCount })
                   : t('groupNothingDue')}
               </p>
+              {remainingBills > 0 && remainingInstalments > 0 && (
+                <p
+                  data-testid="charges-remaining-split"
+                  className="text-muted-foreground mt-0.5 text-xs tabular-nums"
+                >
+                  {t('remainingSplit', {
+                    bills: formatCurrency(remainingBills, locale),
+                    instalments: formatCurrency(remainingInstalments, locale),
+                  })}
+                </p>
+              )}
             </div>
             <div className="border-border/60 mt-3 flex items-baseline justify-between gap-3 border-t pt-3">
               <div className="min-w-0">
@@ -1003,94 +1102,7 @@ export function ChargesClient({
               are the rows, so their count still equals `charges.length` once
               every group is open. */}
           <div data-testid="charges-list" className="flex flex-col gap-3">
-            {groups.map(({ freq, rows }) => {
-              const headingId = `charges-group-${freq}-heading`;
-              const listId = `charges-group-${freq}-list`;
-              const open = isGroupOpen(freq);
-              const groupDue = rows.filter(
-                (c) => c.isActive && c.paymentMonths.includes(viewedPeriod.month),
-              );
-              const groupUnpaid = groupDue.filter((c) => !optimisticPaid.has(c.id));
-              const groupRemaining = groupUnpaid.reduce((sum, c) => sum + c.amount, 0);
-              const groupAllPaid = groupDue.length > 0 && groupUnpaid.length === 0;
-              return (
-                <section
-                  key={freq}
-                  data-testid={`charges-group-${freq}`}
-                  aria-labelledby={headingId}
-                  className="border-border bg-card rounded-2xl border"
-                >
-                  <h2 id={headingId} className="m-0">
-                    <button
-                      type="button"
-                      onClick={() => toggleGroup(freq, open)}
-                      aria-expanded={open}
-                      aria-controls={listId}
-                      data-testid={`charges-group-toggle-${freq}`}
-                      className="hover:bg-surface-muted focus-visible:ring-brand-600 flex min-h-12 w-full items-center justify-between gap-3 rounded-2xl px-4 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                    >
-                      <span className="min-w-0 text-sm">
-                        <span className="text-foreground font-semibold">{tFreq(freq)}</span>
-                        <span className="text-muted-foreground">
-                          {' · '}
-                          {groupDue.length > 0
-                            ? t('groupSummaryDue', {
-                                unpaid: groupUnpaid.length,
-                                due: groupDue.length,
-                              })
-                            : t('groupSummaryNone', { count: rows.length })}
-                        </span>
-                      </span>
-                      <ChevronDown
-                        aria-hidden
-                        className={`text-muted-foreground h-4 w-4 shrink-0 transition-transform ${
-                          open ? 'rotate-180' : ''
-                        }`}
-                      />
-                    </button>
-                  </h2>
-                  {open && (
-                    <div id={listId} className="pb-2">
-                      <ul role="list" className="divide-border/60 divide-y">
-                        {rows.map((c) => renderChargeRow(c))}
-                      </ul>
-                      {/* One live figure per group: what is still to pay in
-                          it this month, down to ✓ 0 €. */}
-                      <p
-                        data-testid={`charges-group-subtotal-${freq}`}
-                        className="flex items-baseline justify-end gap-1.5 px-4 pt-1"
-                      >
-                        {groupDue.length === 0 ? (
-                          <span className="text-muted-foreground text-xs">
-                            {t('groupNothingDue')}
-                          </span>
-                        ) : groupAllPaid ? (
-                          <span
-                            data-testid={`charges-group-allpaid-${freq}`}
-                            className="text-brand-text inline-flex items-center gap-1 text-sm font-semibold tabular-nums"
-                          >
-                            <Check aria-hidden className="h-3.5 w-3.5" strokeWidth={3} />
-                            {formatCurrency(0, locale)}
-                          </span>
-                        ) : (
-                          <>
-                            <span className="text-muted-foreground text-xs">
-                              {t('groupRemainingLabel')}
-                            </span>
-                            <span
-                              data-testid={`charges-group-remaining-${freq}`}
-                              className="text-foreground text-sm font-semibold tabular-nums"
-                            >
-                              {formatCurrency(groupRemaining, locale)}
-                            </span>
-                          </>
-                        )}
-                      </p>
-                    </div>
-                  )}
-                </section>
-              );
-            })}
+            {groups.filter((g) => g.freq === 'monthly').map(renderGroup)}
 
             {/* The month's commitment instalments, in the SAME list: a bill
                 and an instalment for the same obligation are visible side by
@@ -1116,7 +1128,12 @@ export function ChargesClient({
                       </span>
                       <span className="text-muted-foreground">
                         {' · '}
-                        {t('instalmentCount', { count: commitmentInstalments.length })}
+                        {t('groupSummaryDue', {
+                          unpaid: commitmentInstalments.filter(
+                            (i) => !optimisticInstalmentPaid.has(i.id),
+                          ).length,
+                          due: commitmentInstalments.length,
+                        })}
                       </span>
                     </span>
                     <ChevronDown
@@ -1136,8 +1153,32 @@ export function ChargesClient({
                     {commitmentInstalments.map((row) => renderInstalmentRow(row))}
                   </ul>
                 )}
+                {commitmentsOpen && (
+                  <p
+                    data-testid="charges-group-subtotal-commitments"
+                    className="flex items-baseline justify-end gap-1.5 px-4 pb-3"
+                  >
+                    {remainingInstalments === 0 ? (
+                      <span className="text-brand-text inline-flex items-center gap-1 text-sm font-semibold tabular-nums">
+                        <Check aria-hidden className="h-3.5 w-3.5" strokeWidth={3} />
+                        {formatCurrency(0, locale)}
+                      </span>
+                    ) : (
+                      <>
+                        <span className="text-muted-foreground text-xs">
+                          {t('groupRemainingLabel')}
+                        </span>
+                        <span className="text-foreground text-sm font-semibold tabular-nums">
+                          {formatCurrency(remainingInstalments, locale)}
+                        </span>
+                      </>
+                    )}
+                  </p>
+                )}
               </section>
             )}
+
+            {groups.filter((g) => g.freq !== 'monthly').map(renderGroup)}
           </div>
 
           {/* F6/F14 — what the month counts for your bills, opened on what

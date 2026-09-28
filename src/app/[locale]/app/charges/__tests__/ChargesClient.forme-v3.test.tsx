@@ -299,7 +299,9 @@ describe('ChargesClient — v3 shape (F13: the commitments group folds like a ca
     renderCharges([rent], { commitmentInstalments: [instalment] });
     const toggle = screen.getByTestId('charges-group-toggle-commitments');
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
-    expect(toggle).toHaveTextContent(/Engagements.*1 échéance/);
+    // Declared change (28 Sept. 2026): folded, the group says what is still to
+    // pay, in the words of every other group, not a bare instalment count.
+    expect(toggle).toHaveTextContent(/Engagements.*1 à payer sur 1/);
     expect(screen.queryByText('Prêt voiture')).toBeNull();
     fireEvent.click(toggle);
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
