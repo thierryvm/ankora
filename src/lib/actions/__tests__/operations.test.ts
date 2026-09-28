@@ -36,7 +36,11 @@ const h = vi.hoisted(() => {
     rate: vi.fn(async () => ({ success: true })),
     audit: vi.fn(async () => {}),
     logError: vi.fn(),
-    ledger: vi.fn(async () => ({ ok: true, statements: [] as unknown[], movements: [] })),
+    ledger: vi.fn(async () => ({
+      ok: true,
+      statements: [] as unknown[],
+      movements: [] as unknown[],
+    })),
   };
 });
 
@@ -67,6 +71,7 @@ vi.mock('next-intl/server', () => ({
 
 import { money } from '@/lib/domain/types';
 import {
+  confirmStatementIncludedAction,
   recordBalanceStatementAction,
   recordIncomeAction,
   recordPlannedTransferAction,
@@ -721,5 +726,380 @@ describe('compensation that fails itself', () => {
       gesture: 'record',
       error_code: 'no_row',
     });
+  });
+});
+
+// =========================================================================
+// ADR-045 D21 — an operation dated on the day of the account's statement
+// =========================================================================
+const D21_SID = '4b0f6c1e-2d3a-4e5f-8a9b-0c1d2e3f4a5b';
+const d17Day = (iso: string) => new Date(`${iso}T00:00:00Z`);
+const d17Statement = (
+  id: string,
+  balance: number,
+  statedOn: string,
+  recordedAt: string,
+  cancelled = false,
+) => ({
+  id,
+  accountType: 'income_bills' as const,
+  balance: money(balance),
+  statedOn: d17Day(statedOn),
+  recordedAt: new Date(recordedAt),
+  cancelledAt: cancelled ? new Date('2026-09-21T10:00:00Z') : null,
+});
+const d17Previous = d17Statement('s-prev', 200, '2026-09-10', '2026-09-10T08:00:00Z');
+const d17OfTheDay = d17Statement(D21_SID, 905, '2026-09-21', '2026-09-21T08:00:00Z');
+const d17Income = {
+  id: 'm-new',
+  kind: 'income' as const,
+  fromAccountType: null,
+  toAccountType: 'income_bills' as const,
+  amount: money(705),
+  occurredOn: d17Day('2026-09-21'),
+  recordedAt: new Date('2026-09-21T09:00:00Z'),
+  cancelledAt: null,
+  planYear: null,
+  planMonth: null,
+  planSuggestedAmount: null,
+  provisionPart: null,
+  freeSavingsPart: null,
+  incomeNature: 'regular' as const,
+  budgetYear: null,
+  budgetMonth: null,
+  description: null,
+};
+const d17Ledger = (movements: unknown[] = []) => ({
+  ok: true,
+  statements: [d17Previous, d17OfTheDay],
+  movements,
+});
+const nonSelect = () => h.calls.filter((c) => c.op !== 'select');
+
+describe('same-day statement — the question, then the rewrite (D21)', () => {
+  const income = (extra: Record<string, unknown> = {}) => ({
+    toAccountType: 'income_bills',
+    amount: 705,
+    occurredOn: '2026-09-21',
+    nature: 'regular',
+    ...extra,
+  });
+
+  it('refuses, and writes nothing, when the question applies and has no answer', async () => {
+    h.ledger.mockImplementation(async () => d17Ledger());
+    const r = await recordIncomeAction(income());
+    expect(r).toMatchObject({
+      ok: false,
+      errorCode: 'errors.validation.generic',
+      fieldErrors: { statementAnswers: ['operations.sameDay.required'] },
+    });
+    expect(nonSelect()).toHaveLength(0);
+  });
+
+  it('refuses an answer that is not one of the two', async () => {
+    h.ledger.mockImplementation(async () => d17Ledger());
+    const r = await recordIncomeAction(income({ statementAnswers: { income_bills: 'maybe' } }));
+    expect(r.ok).toBe(false);
+    expect(nonSelect()).toHaveLength(0);
+  });
+
+  it('« Non, pas encore » writes the income and leaves the statement alone', async () => {
+    h.ledger.mockImplementation(async () => d17Ledger());
+    script('movements', 'insert', { data: { id: 'm-new' }, error: null });
+    const r = await recordIncomeAction(income({ statementAnswers: { income_bills: 'notYet' } }));
+    expect(r.ok).toBe(true);
+    expect(writes('movements')).toHaveLength(1);
+    expect(writes('account_balance_statements')).toHaveLength(0);
+  });
+
+  it('« Oui » writes the income, a copy of the statement after it, then cancels the old one — and nothing else', async () => {
+    h.ledger
+      .mockImplementationOnce(async () => d17Ledger())
+      .mockImplementationOnce(async () => d17Ledger([d17Income]));
+    script('movements', 'insert', { data: { id: 'm-new' }, error: null });
+    script('account_balance_statements', 'insert', { data: { id: 's-copy' }, error: null });
+    script('account_balance_statements', 'update', { data: [{ id: D21_SID }], error: null });
+
+    const r = await recordIncomeAction(income({ statementAnswers: { income_bills: 'included' } }));
+    expect(r.ok).toBe(true);
+
+    const [copy, cancel] = writes('account_balance_statements');
+    // Same account, same day, same amount; the ids come from the session. The
+    // expected balance is measured WITHOUT the rewritten statement: the one
+    // before it (200) plus the income of the day (705).
+    expect(copy).toMatchObject({ op: 'insert' });
+    expect(copy!.payload).toStrictEqual({
+      workspace_id: 'ws-1',
+      created_by: 'user-1',
+      account_type: 'income_bills',
+      balance: 905,
+      stated_on: '2026-09-21',
+      derived_balance: 905,
+    });
+    expect(cancel).toMatchObject({
+      op: 'update',
+      filters: { id: D21_SID, workspace_id: 'ws-1', cancelled_at: null },
+    });
+    expect(Object.keys(cancel!.payload as object)).toEqual(['cancelled_at']);
+    // accounts.balance does not move: the balance is the same.
+    expect(h.calls.map((c) => `${c.table}.${c.op}`)).toEqual([
+      'movements.insert',
+      'account_balance_statements.insert',
+      'account_balance_statements.update',
+    ]);
+  });
+
+  it('ignores an answer for an account whose statement is not of that day', async () => {
+    h.ledger.mockImplementation(async () => ({
+      ok: true,
+      statements: [d17Previous],
+      movements: [],
+    }));
+    script('movements', 'insert', { data: { id: 'm-new' }, error: null });
+    const r = await recordIncomeAction(income({ statementAnswers: { income_bills: 'included' } }));
+    expect(r.ok).toBe(true);
+    expect(writes('account_balance_statements')).toHaveLength(0);
+  });
+
+  it('does not ask on the day of the starting balance, which is never rewritten', async () => {
+    h.ledger.mockImplementation(async () => ({
+      ok: true,
+      statements: [d17OfTheDay],
+      movements: [],
+    }));
+    script('movements', 'insert', { data: { id: 'm-new' }, error: null });
+    const r = await recordIncomeAction(income());
+    expect(r.ok).toBe(true);
+    expect(writes('account_balance_statements')).toHaveLength(0);
+  });
+
+  it('cancels the income it just wrote when the copy of the statement fails, and says so', async () => {
+    h.ledger
+      .mockImplementationOnce(async () => d17Ledger())
+      .mockImplementationOnce(async () => d17Ledger([d17Income]));
+    script('movements', 'insert', { data: { id: 'm-new' }, error: null });
+    script('account_balance_statements', 'insert', { data: null, error: { message: 'x' } });
+    script('movements', 'update', { data: [{ id: 'm-new' }], error: null });
+
+    const r = await recordIncomeAction(income({ statementAnswers: { income_bills: 'included' } }));
+    expect(r).toEqual({ ok: false, errorCode: 'errors.operations.writeFailed' });
+    expect(writes('movements')[1]).toMatchObject({
+      op: 'update',
+      filters: { id: 'm-new', workspace_id: 'ws-1' },
+    });
+    // The old statement was never touched.
+    expect(writes('account_balance_statements').filter((c) => c.op === 'update')).toHaveLength(0);
+  });
+
+  it('undoes the copy and the income when the old statement refuses to be cancelled', async () => {
+    h.ledger
+      .mockImplementationOnce(async () => d17Ledger())
+      .mockImplementationOnce(async () => d17Ledger([d17Income]));
+    script('movements', 'insert', { data: { id: 'm-new' }, error: null });
+    script('account_balance_statements', 'insert', { data: { id: 's-copy' }, error: null });
+    script('account_balance_statements', 'update', { data: [], error: null });
+    script('account_balance_statements', 'update', { data: [{ id: 's-copy' }], error: null });
+    script('movements', 'update', { data: [{ id: 'm-new' }], error: null });
+
+    const r = await recordIncomeAction(income({ statementAnswers: { income_bills: 'included' } }));
+    expect(r).toEqual({ ok: false, errorCode: 'errors.operations.writeFailed' });
+    const updates = writes('account_balance_statements').filter((c) => c.op === 'update');
+    expect(updates[1]).toMatchObject({ filters: { id: 's-copy', workspace_id: 'ws-1' } });
+    expect(writes('movements')[1]).toMatchObject({ op: 'update', filters: { id: 'm-new' } });
+  });
+
+  it('asks for the account a transfer LEAVES too', async () => {
+    h.ledger.mockImplementation(async () => d17Ledger());
+    const r = await recordPlannedTransferAction({
+      fromAccountType: 'income_bills',
+      toAccountType: 'daily_card',
+      amount: 505,
+      occurredOn: '2026-09-21',
+      planYear: 2026,
+      planMonth: 10,
+      planSuggestedAmount: 505,
+      plannedProvisions: 0,
+    });
+    expect(r).toMatchObject({
+      ok: false,
+      fieldErrors: { statementAnswers: ['operations.sameDay.required'] },
+    });
+    expect(nonSelect()).toHaveLength(0);
+  });
+});
+
+describe('confirmStatementIncludedAction — the card of the account (D21)', () => {
+  const after = { ...d17Income, id: 'm-after' };
+
+  it('rewrites the statement after the operations of its day, scoped to the session workspace', async () => {
+    h.ledger.mockImplementation(async () => d17Ledger([after]));
+    script('account_balance_statements', 'insert', { data: { id: 's-copy' }, error: null });
+    script('account_balance_statements', 'update', { data: [{ id: D21_SID }], error: null });
+
+    const r = await confirmStatementIncludedAction({ statementId: D21_SID });
+    expect(r.ok).toBe(true);
+    expect(h.calls.map((c) => `${c.table}.${c.op}`)).toEqual([
+      'account_balance_statements.insert',
+      'account_balance_statements.update',
+    ]);
+    expect(writes('account_balance_statements')[0]!.payload).toStrictEqual({
+      workspace_id: 'ws-1',
+      created_by: 'user-1',
+      account_type: 'income_bills',
+      balance: 905,
+      stated_on: '2026-09-21',
+      derived_balance: 905,
+    });
+    expect(h.ledger).toHaveBeenCalledWith(h.client, 'ws-1');
+  });
+
+  it('refuses, writing nothing, a statement absent from the workspace ledger', async () => {
+    h.ledger.mockImplementation(async () => ({
+      ok: true,
+      statements: [d17Previous],
+      movements: [after],
+    }));
+    const r = await confirmStatementIncludedAction({ statementId: D21_SID });
+    expect(r).toEqual({ ok: false, errorCode: 'errors.operations.notFound' });
+    expect(h.calls).toHaveLength(0);
+  });
+
+  it('refuses a cancelled statement, the starting balance, and a day with nothing counted after', async () => {
+    const cancelled = d17Statement(D21_SID, 905, '2026-09-21', '2026-09-21T08:00:00Z', true);
+    for (const ledger of [
+      { statements: [d17Previous, cancelled], movements: [after] },
+      { statements: [d17OfTheDay], movements: [after] },
+      { statements: [d17Previous, d17OfTheDay], movements: [] },
+    ]) {
+      h.ledger.mockImplementation(async () => ({ ok: true, ...ledger }));
+      const r = await confirmStatementIncludedAction({ statementId: D21_SID });
+      expect(r).toEqual({ ok: false, errorCode: 'errors.operations.notFound' });
+    }
+    expect(h.calls).toHaveLength(0);
+  });
+
+  it('refuses anything but one uuid (no workspace, no amount travels)', async () => {
+    for (const input of [{ statementId: 'x' }, { statementId: D21_SID, workspaceId: 'ws-2' }, {}]) {
+      const r = await confirmStatementIncludedAction(input);
+      expect(r.ok).toBe(false);
+    }
+    expect(h.calls).toHaveLength(0);
+  });
+});
+
+describe('D21 — what the security review found (2026-09-28)', () => {
+  const income = (answer: 'included' | 'notYet') => ({
+    toAccountType: 'income_bills',
+    amount: 705,
+    occurredOn: '2026-09-21',
+    nature: 'regular',
+    statementAnswers: { income_bills: answer },
+  });
+  // A transfer of the same day, written AFTER the statement and answered « Non ».
+  const earlierTransfer = {
+    ...d17Income,
+    id: 'm-transfer',
+    kind: 'transfer' as const,
+    fromAccountType: 'income_bills' as const,
+    toAccountType: 'daily_card' as const,
+    amount: money(505),
+    incomeNature: null,
+  };
+
+  it('B1 — refuses « Oui » when another operation of the day already counts after the statement, writing nothing', async () => {
+    h.ledger.mockImplementation(async () => d17Ledger([earlierTransfer]));
+    const r = await recordIncomeAction(income('included'));
+    expect(r).toMatchObject({
+      ok: false,
+      fieldErrors: { statementAnswers: ['operations.sameDay.othersAfter'] },
+    });
+    expect(nonSelect()).toHaveLength(0);
+  });
+
+  it('B1 — « Non » stays possible on such a day', async () => {
+    h.ledger.mockImplementation(async () => d17Ledger([earlierTransfer]));
+    script('movements', 'insert', { data: { id: 'm-new' }, error: null });
+    const r = await recordIncomeAction(income('notYet'));
+    expect(r.ok).toBe(true);
+    expect(writes('account_balance_statements')).toHaveLength(0);
+  });
+
+  it('I1 — a transfer between two accounts read that day: on the second failure, reopens the first original BEFORE cancelling its copy', async () => {
+    const daily = { ...d17OfTheDay, id: 'daily-of-the-day', accountType: 'daily_card' as const };
+    const dailyPrev = { ...d17Previous, id: 'daily-prev', accountType: 'daily_card' as const };
+    const statements = [d17Previous, d17OfTheDay, dailyPrev, daily];
+    const transfer = { ...earlierTransfer, id: 'm-new' };
+    h.ledger
+      .mockImplementationOnce(async () => ({ ok: true, statements, movements: [] }))
+      .mockImplementationOnce(async () => ({ ok: true, statements, movements: [transfer] }));
+    script('movements', 'select', { data: [], error: null });
+    script('movements', 'insert', { data: { id: 'm-new' }, error: null });
+    script('account_balance_statements', 'insert', { data: { id: 'copy-1' }, error: null });
+    script('account_balance_statements', 'update', { data: [{ id: D21_SID }], error: null });
+    script('account_balance_statements', 'insert', { data: null, error: { message: 'x' } });
+    script('account_balance_statements', 'update', { data: [{ id: D21_SID }], error: null });
+    script('account_balance_statements', 'update', { data: [{ id: 'copy-1' }], error: null });
+    script('movements', 'update', { data: [{ id: 'm-new' }], error: null });
+
+    const r = await recordPlannedTransferAction({
+      fromAccountType: 'income_bills',
+      toAccountType: 'daily_card',
+      amount: 505,
+      occurredOn: '2026-09-21',
+      planYear: 2026,
+      planMonth: 10,
+      planSuggestedAmount: 505,
+      plannedProvisions: 0,
+      statementAnswers: { income_bills: 'included', daily_card: 'included' },
+    });
+    expect(r).toEqual({ ok: false, errorCode: 'errors.operations.writeFailed' });
+    const updates = writes('account_balance_statements').filter((c) => c.op === 'update');
+    expect(updates.map((u) => [u.filters.id, u.payload])).toEqual([
+      [D21_SID, { cancelled_at: expect.any(String) }],
+      [D21_SID, { cancelled_at: null }],
+      ['copy-1', { cancelled_at: expect.any(String) }],
+    ]);
+    expect(writes('movements').at(-1)).toMatchObject({ op: 'update', filters: { id: 'm-new' } });
+    // I4 — nothing stood: no statement event was written.
+    expect(
+      h.audit.mock.calls.filter((c) => (c as unknown[])[0] === 'account.balance_updated'),
+    ).toEqual([]);
+  });
+
+  it('I4 — audits the copy and the cancel once the gesture stands, ids and states only', async () => {
+    h.ledger
+      .mockImplementationOnce(async () => d17Ledger())
+      .mockImplementationOnce(async () => d17Ledger([d17Income]));
+    script('movements', 'insert', { data: { id: 'm-new' }, error: null });
+    script('account_balance_statements', 'insert', { data: { id: 's-copy' }, error: null });
+    script('account_balance_statements', 'update', { data: [{ id: D21_SID }], error: null });
+    const r = await recordIncomeAction(income('included'));
+    expect(r.ok).toBe(true);
+    const statementEvents = h.audit.mock.calls
+      .map((c) => c as unknown[])
+      .filter((c) => c[0] === 'account.balance_updated')
+      .map((c) => c[2]);
+    expect(statementEvents).toEqual([
+      { resource_type: 'account_balance_statement', resource_id: 's-copy' },
+      {
+        resource_type: 'account_balance_statement',
+        resource_id: D21_SID,
+        previous_state: 'standing',
+        new_state: 'cancelled',
+      },
+    ]);
+  });
+
+  it('I2 — keeps the copy when the cancel answer is lost but the original is cancelled', async () => {
+    h.ledger.mockImplementation(async () => d17Ledger([{ ...d17Income, id: 'm-after' }]));
+    script('account_balance_statements', 'insert', { data: { id: 's-copy' }, error: null });
+    script('account_balance_statements', 'update', { data: null, error: { message: 'timeout' } });
+    script('account_balance_statements', 'select', {
+      data: { cancelled_at: '2026-09-21T10:00:00Z' },
+      error: null,
+    });
+    const r = await confirmStatementIncludedAction({ statementId: D21_SID });
+    expect(r.ok).toBe(true);
+    expect(writes('account_balance_statements').filter((c) => c.op === 'update')).toHaveLength(1);
   });
 });

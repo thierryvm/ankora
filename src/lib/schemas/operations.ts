@@ -55,6 +55,33 @@ const nonNegativeCopy = z
   .lte(100_000_000, { message: 'operations.amount.outOfRange' })
   .refine(hasAtMostTwoDecimals, { message: 'operations.amount.subCent' });
 
+/**
+ * ADR-045 D21 — the answer to « Ton solde du … contient-il déjà cet argent ? »,
+ * per account touched. Optional here: whether the question APPLIES depends on
+ * the statements in the base, so the server decides, then parses the answers
+ * again with `requiredStatementAnswersSchema`. An unknown account key is
+ * refused, like every unknown key.
+ */
+export const STATEMENT_ANSWERS = ['included', 'notYet'] as const;
+const statementAnswer = z.enum(STATEMENT_ANSWERS, { error: 'operations.sameDay.required' });
+const statementAnswers = z.partialRecord(accountType, statementAnswer).optional();
+
+/**
+ * The answers the server REQUIRES: one per account whose latest standing
+ * statement was read on the day of the operation. No default — an operation
+ * without its answer is not written.
+ */
+export function requiredStatementAnswersSchema(
+  accounts: ReadonlyArray<(typeof ACCOUNT_TYPES)[number]>,
+) {
+  return z.object(Object.fromEntries(accounts.map((a) => [a, statementAnswer])));
+}
+
+/** « Mon solde du … les contenait déjà » — only the statement id travels. */
+export const statementIncludedSchema = z
+  .object({ statementId: z.string().uuid({ message: 'operations.id.invalid' }) })
+  .strict();
+
 export const balanceStatementSchema = z
   .object({
     accountType,
@@ -81,6 +108,7 @@ export const plannedTransferSchema = z
     planMonth: z.number().int().min(1).max(12),
     planSuggestedAmount: nonNegativeCopy,
     plannedProvisions: nonNegativeCopy,
+    statementAnswers,
   })
   .strict()
   .refine((v) => v.fromAccountType !== v.toAccountType, {
@@ -110,6 +138,7 @@ export const incomeReceivedSchema = z
       .string()
       .regex(/^\d{4}-(0[1-9]|1[0-2])$/, { message: 'operations.budgetMonth.invalid' })
       .optional(),
+    statementAnswers,
   })
   .strict()
   .superRefine((v, ctx) => {

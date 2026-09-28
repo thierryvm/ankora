@@ -1645,6 +1645,10 @@
         "id": {
           "invalid": "Operación no encontrada."
         },
+        "sameDay": {
+          "required": "Responde a la pregunta sobre tu saldo de ese día.",
+          "othersAfter": "Otras operaciones de ese día ya están anotadas después de tu saldo. Indica primero, en la tarjeta de la cuenta, si tu saldo las incluía."
+        },
         "budgetMonth": {
           "invalid": "Mes no válido.",
           "outOfRange": "Elige el mes de la fecha, el anterior o el siguiente."
@@ -1949,6 +1953,16 @@
         "warnOther": "Este dinero contará para {month}, no para el mes de su fecha.",
         "undo": "No, para {month}"
       }
+    },
+    "sameDay": {
+      "question": "¿Tu saldo del {date} ({montant}) ya incluye este dinero?",
+      "included": "Sí, ya está incluido",
+      "notYet": "No, todavía no",
+      "missing": "Responde primero a la pregunta sobre tu saldo",
+      "cardIn": "de los que {montant} recibidos el {date}, anotados después de tu saldo del mismo día",
+      "cardOut": "de los que {montant} en transferencias el {date}, anotados después de tu saldo del mismo día",
+      "cardAction": "Mi saldo del {date} ya los incluía",
+      "cardDone": "Anotado: tu saldo del {date} ya los incluía."
     },
     "statement": {
       "open": "Anotar el saldo de hoy",

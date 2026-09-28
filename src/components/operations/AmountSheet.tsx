@@ -40,6 +40,12 @@ export type AmountSheetProps = {
   /** Live line under the amount (e.g. the provisions / free savings split). */
   renderDetail?: (amount: number | null) => ReactNode;
   successMessage: string;
+  /**
+   * What is still missing before the gesture can be saved (ADR-045 D21: the
+   * question on the balance of the day). Set: the button is disabled and SAYS
+   * it, instead of a grey button nobody can explain.
+   */
+  blockedReason?: string | null;
   onSubmit: (amount: number, isoDay: string) => Promise<ActionResult<unknown>>;
 };
 
@@ -68,6 +74,7 @@ export function AmountSheet(props: AmountSheetProps) {
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (props.blockedReason) return;
     if (amount === null || (!props.allowNegative && amount <= 0)) {
       setError(translateError('errors.validation.operations.amount.invalid'));
       return;
@@ -155,8 +162,13 @@ export function AmountSheet(props: AmountSheetProps) {
             {error}
           </p>
         ) : null}
-        <Button type="submit" size="lg" className="min-h-11" disabled={isPending}>
-          {isPending ? t('saving') : t('save')}
+        <Button
+          type="submit"
+          size="lg"
+          className="min-h-11 whitespace-normal"
+          disabled={isPending || Boolean(props.blockedReason)}
+        >
+          {isPending ? t('saving') : (props.blockedReason ?? t('save'))}
         </Button>
       </form>
     </Sheet>

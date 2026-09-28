@@ -91,7 +91,7 @@ function partsAffichees(poste: Poste): PartAffichee[] {
   }));
 }
 
-import { plannedTransferLine } from '@/lib/domain/accounts/operations-view';
+import { plannedTransferLine, rewritableStatements } from '@/lib/domain/accounts/operations-view';
 import {
   TransferDoneControl,
   type TransferLineState,
@@ -233,6 +233,15 @@ export default async function DashboardPage({
   // PR D — the journal is read ONCE, by `loadMonthSituation`, which feeds
   // « Il te reste » with it and throws when it cannot be read: the gestures
   // below and the figure above can no longer disagree on what was done.
+  // ADR-045 D21 — the statement a same-day transfer could be counted twice against.
+  const transferStatements = Object.fromEntries(
+    Object.entries(
+      rewritableStatements(ledger.statements, ['income_bills', 'provisions', 'daily_card']),
+    ).map(([a, st]) => [
+      a,
+      { statedOn: st.statedOn.toISOString().slice(0, 10), balance: st.balance.toNumber() },
+    ]),
+  );
   const lineState = (from: LedgerAccountType, to: LedgerAccountType): TransferLineState => {
     const l = plannedTransferLine({
       movements: ledger.movements,
@@ -579,6 +588,7 @@ export default async function DashboardPage({
                       planYear={period.year}
                       planMonth={period.month}
                       today={todayIso}
+                      statements={transferStatements}
                       line={lineState('income_bills', 'daily_card')}
                     />
                   )}
@@ -612,6 +622,7 @@ export default async function DashboardPage({
                       planYear={period.year}
                       planMonth={period.month}
                       today={todayIso}
+                      statements={transferStatements}
                       line={lineState(epargneFrom, epargneTo)}
                     />
                   )}

@@ -98,6 +98,8 @@ Deux conséquences, décidées ici pour ne pas l'être au call-site :
 
 ## D16 — La règle de l'heure
 
+> Amendée par D21 (2026-09-28) : le jour d'un relevé, l'écran demande si le solde contenait déjà l'opération.
+
 Un flux compte dans le solde dérivé d'un relevé si :
 
 - sa date d'événement est **postérieure** à la date du relevé ; **ou**
@@ -292,6 +294,59 @@ cette table, et le trigger partagé ne compare que les colonnes présentes.
 Conséquence : sur un relevé, le gel des lignes **annulées** (D15) n'a plus de
 colonne à protéger — toutes celles qu'il couvrait sont figées d'emblée. Il reste
 prouvé côté opérations (`e2e/journal-mouvements.spec.ts`).
+
+## D21 — le jour d'un relevé, on demande au lieu de deviner (amende D16)
+
+Décidé par @thierry le 2026-09-28, sur un défaut vu en usage réel.
+
+**Le cas.** Le salaire arrive ; la personne lit son solde, qui le contient déjà, et
+l'écrit. Puis elle enregistre l'argent reçu, daté du même jour, pour le budget du mois
+suivant. D16 le compte après le relevé — il a été écrit après lui — et « Calculé depuis
+tes opérations » affiche le salaire deux fois. D16 suppose qu'on écrit dans l'ordre de la
+banque ; or l'argent reçu sert d'abord au budget, et l'ordre de saisie ne dit rien de ce
+que le solde contenait. Ce double compte invente de l'argent, là où D16 elle-même préfère
+sous-compter.
+
+**Ce qui reste vrai de D16.** La règle de calcul ne change pas : un flux du jour du relevé
+compte quand il a été écrit après lui. Aucune colonne, aucune table, aucune migration.
+
+**Ce qui change.** Quand une opération (argent reçu, virement fait) est datée du jour du
+dernier relevé actif d'un compte qu'elle touche, l'écran pose une question obligatoire,
+sans réponse par défaut : « Ton solde du {date} ({montant}) contient-il déjà cet
+argent ? ». Le serveur refuse l'opération sans réponse (Zod, construit sur les relevés
+de la base, jamais sur ce que le client affirme).
+
+- « Non, pas encore » : rien d'autre ne s'écrit, D16 s'applique.
+- « Oui, déjà dedans » : dans la même action, après l'opération, le relevé est **réécrit
+  à l'identique** (même compte, même jour, même montant) puis l'original est annulé. La
+  copie est postérieure à l'opération, qui ne compte donc plus contre elle ; son écart se
+  mesure contre le relevé précédent, opération comprise — ce qui est juste. C'est le
+  geste de D20 (un relevé s'annule et se réécrit), fait pour la personne.
+
+Pour les données déjà écrites, la carte du compte nomme les opérations du jour du relevé
+comptées après lui (jamais celles d'un jour postérieur, qui comptent à bon droit) et
+propose « Mon solde du {date} les contenait déjà », qui fait la même réécriture.
+
+**Ordre des écritures, et ce qui reste sans RPC.** Opération, puis copie, puis
+annulation de l'original. Copie avant annulation : si l'annulation échoue, deux relevés
+identiques disent le même solde, rien n'est inventé, et la copie est annulée. Un échec
+défait ce que le geste a écrit (copie, original rouvert, opération annulée — jamais
+effacée, D15) et l'action rend une erreur. Ces écritures ne sont pas atomiques : une
+annulation compensatoire qui échoue elle-même est journalisée par identifiant, sans
+montant. L'atomicité viendra avec une fonction en base, dans une migration.
+
+**« Oui » est refusé quand d'autres opérations du jour comptent déjà après le relevé.**
+La copie passe après **toutes** les opérations de son jour : une opération répondue
+« Non » plus tôt cesserait de compter, et de l'argent serait inventé (relecture
+Sécurité, 2026-09-28). Ce jour-là se règle depuis la carte du compte, qui les nomme.
+
+**Le relevé de départ n'est jamais réécrit.** `startingStatementId` lit aussi les relevés
+annulés : une copie ne deviendrait pas le relevé de départ, et deviendrait annulable. La
+question ne se pose donc pas ce jour-là, et le serveur refuse la réécriture.
+
+**Limite connue.** Défaire une réécriture (rétablir l'original, annuler la copie) n'a pas
+encore de geste à un clic : rouvrir l'original laisse la copie devant lui. À arbitrer.
+Les dépenses qui débitent un compte (J4) ne sont pas couvertes.
 
 ## Constat — les privilèges hérités par `authenticated` (relecture Sécurité, 2026-09-21)
 

@@ -1645,6 +1645,10 @@
         "id": {
           "invalid": "Operation not found."
         },
+        "sameDay": {
+          "required": "Answer the question about your balance of that day.",
+          "othersAfter": "Other operations of that day are already written after your balance. First say, on the account card, whether your balance included them."
+        },
         "budgetMonth": {
           "invalid": "Invalid month.",
           "outOfRange": "Choose the month of the date, the one before or the one after."
@@ -1949,6 +1953,16 @@
         "warnOther": "This money will count for {month}, not for the month of its date.",
         "undo": "No, for {month}"
       }
+    },
+    "sameDay": {
+      "question": "Does your {date} balance ({montant}) already include this money?",
+      "included": "Yes, already in it",
+      "notYet": "No, not yet",
+      "missing": "Answer the question about your balance first",
+      "cardIn": "of which {montant} received on {date}, written after your balance of the same day",
+      "cardOut": "of which {montant} in transfers on {date}, written after your balance of the same day",
+      "cardAction": "My {date} balance already included them",
+      "cardDone": "Noted: your {date} balance already included them."
     },
     "statement": {
       "open": "Write today’s balance",
