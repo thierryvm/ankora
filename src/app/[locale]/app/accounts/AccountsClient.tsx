@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useState, useTransition } from 'react';
+import { useEffect, useId, useState, useTransition } from 'react';
 import { Landmark, PiggyBank, Wallet } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
@@ -71,8 +71,11 @@ export type AccountBalanceProps = {
       lines: ExpectedLinesProps;
     } | null;
     reopenable: { id: string; statedOn: string } | null;
-    /** ADR-045 D21 — signed total of the same-day operations written after the read balance. */
-    sameDayAfter?: { total: number } | null;
+    /**
+     * ADR-045 D21 — the same-day operations written after the read balance,
+     * one by one (rule 10): a net under a single verb hid a +505 / −110 day.
+     */
+    sameDayAfter?: { flows: SameDayFlowProps[] } | null;
   } | null;
   incomes?: IncomeLineProps[];
 };
@@ -335,6 +338,108 @@ function ExpectedLines({ lines, fmt }: { lines: ExpectedLinesProps; fmt: (n: num
   );
 }
 
+export type SameDayFlowProps = {
+  id: string;
+  direction: 'in' | 'out';
+  amount: number;
+  origin: 'income' | 'transfer' | 'bill' | 'expense';
+};
+
+/**
+ * « Non, fait après » is remembered on THIS device only (tour 55, no
+ * migration): a reader's comfort, never a figure. The key holds the statement
+ * AND the operations, so a new operation of that day asks again. Storage that
+ * throws (private mode, quota) only means the question comes back.
+ */
+function sameDayKey(readId: string, flows: readonly SameDayFlowProps[]): string {
+  return `ankora.sameDay.after.${readId}.${flows
+    .map((f) => f.id)
+    .sort()
+    .join(',')}`;
+}
+
+function readDismissed(key: string): boolean {
+  try {
+    return window.localStorage.getItem(key) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function SameDayLine({
+  readId,
+  statedOn,
+  flows,
+  disabled,
+  onIncluded,
+}: {
+  readId: string;
+  statedOn: string;
+  flows: readonly SameDayFlowProps[];
+  disabled: boolean;
+  onIncluded: () => void;
+}) {
+  const t = useTranslations('operations.sameDay');
+  const locale = useLocale() as Locale;
+  const fmt = (n: number) => formatCurrency(n, locale);
+  const key = sameDayKey(readId, flows);
+  // Read after mount: the server render has no storage, and a line that
+  // appears then vanishes is better than a hydration mismatch.
+  const [dismissed, setDismissed] = useState(false);
+  useEffect(() => {
+    setDismissed(readDismissed(key));
+  }, [key]);
+  if (dismissed) return null;
+
+  function dismiss() {
+    try {
+      window.localStorage.setItem(key, '1');
+    } catch {
+      // Not remembered: the question simply comes back next time.
+    }
+    setDismissed(true);
+  }
+
+  return (
+    <div className="mt-2 flex flex-col gap-2" data-testid="meme-jour">
+      <p className="text-muted-foreground text-xs">{t('cardHead', { date: statedOn })}</p>
+      <ul className="flex flex-col gap-0.5 font-mono text-xs tabular-nums">
+        {flows.map((f) => (
+          <li key={f.id}>
+            {t(f.direction === 'in' ? 'cardFlowIn' : 'cardFlowOut', {
+              montant: fmt(f.amount),
+              origine: f.origin,
+            })}
+          </li>
+        ))}
+      </ul>
+      <p className="text-sm">{t('cardQuestion', { date: statedOn })}</p>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="min-h-11 whitespace-normal"
+          disabled={disabled}
+          onClick={onIncluded}
+        >
+          {t('cardYes')}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="min-h-11 whitespace-normal"
+          disabled={disabled}
+          onClick={dismiss}
+        >
+          {t('cardNo')}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function AccountBalanceCard({ row, today }: { row: AccountBalanceProps; today: string }) {
   const tKind = useTranslations('app.accounts.kind');
   const tBalance = useTranslations('app.accounts.balance');
@@ -398,25 +503,16 @@ function AccountBalanceCard({ row, today }: { row: AccountBalanceProps; today: s
             <p className="text-muted-foreground text-xs">{tS('computed')}</p>
             <p className="text-foreground font-mono tabular-nums">{fmt(view.computed)}</p>
             <p className="text-muted-foreground text-xs">{tS('computedHint')}</p>
-            {view.sameDayAfter ? (
-              <div className="mt-2 flex flex-col gap-1" data-testid="meme-jour">
-                <p className="text-xs">
-                  {tSameDay(view.sameDayAfter.total >= 0 ? 'cardIn' : 'cardOut', {
-                    montant: fmt(Math.abs(view.sameDayAfter.total)),
-                    date: formatDay(view.readStatedOn, locale),
-                  })}
-                </p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="min-h-11 self-start whitespace-normal"
-                  disabled={isPending}
-                  onClick={() => confirmIncluded(view.readId, formatDay(view.readStatedOn, locale))}
-                >
-                  {tSameDay('cardAction', { date: formatDay(view.readStatedOn, locale) })}
-                </Button>
-              </div>
+            {view.sameDayAfter && view.sameDayAfter.flows.length > 0 ? (
+              <SameDayLine
+                readId={view.readId}
+                statedOn={formatDay(view.readStatedOn, locale)}
+                flows={view.sameDayAfter.flows}
+                disabled={isPending}
+                onIncluded={() =>
+                  confirmIncluded(view.readId, formatDay(view.readStatedOn, locale))
+                }
+              />
             ) : null}
           </div>
         ) : null}

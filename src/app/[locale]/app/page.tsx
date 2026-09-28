@@ -344,9 +344,23 @@ export default async function DashboardPage({
   const comptesVisibles = ACCOUNT_TYPE_ORDER.filter((tp) => accountByType.has(tp));
   const cleComptes = String(comptesVisibles.length);
   const cleDepenses = tc('replis.cleDepenses', { count: monthlyExpenseCount });
+  // Tour 55 — the key says what is LEFT to transfer, not the plan: once every
+  // line is done it says so, instead of still asking for the daily transfer.
+  const lignesVirement = [
+    {
+      amount: plan.vieCouranteTransfer,
+      done: lineState('income_bills', 'daily_card').state === 'done',
+    },
+    { amount: epargneNetAbs, done: lineState(epargneFrom, epargneTo).state === 'done' },
+  ];
+  const virementsAFaire = Transfer.virementsRestants(lignesVirement);
+  // « Tout est fait » only once something WAS done: with nothing to transfer
+  // at all, it would announce an action nobody took.
   const cleVirements = missingSetup
     ? tc('replis.cleVirementsIncomplet')
-    : tc('replis.cleVirements', { montant: fmtMoney(plan.vieCouranteTransfer) });
+    : virementsAFaire.isZero() && lignesVirement.some((l) => l.done)
+      ? tc('replis.cleVirementsFaits')
+      : tc('replis.cleVirements', { montant: fmtMoney(virementsAFaire) });
   const cleEngagements = String(commitments.length);
 
   const cascade =
@@ -643,7 +657,7 @@ export default async function DashboardPage({
                       fromAccountType={epargneFrom}
                       toAccountType={epargneTo}
                       suggested={epargneNetAbs.toDecimalPlaces(2).toNumber()}
-                      plannedProvisions={plan.epargneProvisionTarget.toDecimalPlaces(2).toNumber()}
+                      plannedProvisions={plan.epargneProvisionPart.toNumber()}
                       planYear={period.year}
                       planMonth={period.month}
                       today={todayIso}

@@ -137,7 +137,13 @@ test.describe.serial('Opérations de compte — trois gestes, un chiffre qui ne 
       'feuille-virement',
     );
     const feuilleVirement = page.getByTestId('feuille-virement');
-    await expect(feuilleVirement.getByLabel('Combien as-tu viré ?')).toHaveValue('505');
+    // Tour 55 — the field starts EMPTY; the target is an indication, and the
+    // amount is typed key by key like a person would.
+    const champVirement = feuilleVirement.getByLabel('Combien as-tu viré ?');
+    await expect(champVirement).toHaveValue('');
+    await expect(feuilleVirement.getByText(/505,00\s€ prévus/)).toBeVisible();
+    await champVirement.pressSequentially('505');
+    await expect(champVirement).toHaveValue('505');
     await feuilleVirement.getByRole('button', { name: /^enregistrer$/i }).click();
     await expect(page.getByText('Virement enregistré').first()).toBeVisible({
       timeout: ECRITURE_MS,

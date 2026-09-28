@@ -30,8 +30,16 @@ export type MonthlyTransferPlan = {
   /** Total monthly provision target for smoothed charges — the baseline before
    *  netting against bills due. Useful for "healthy flow" UI. */
   epargneProvisionTarget: Money;
+  /**
+   * The PROVISIONS share of a transfer to the provisions account: the net of
+   * the month, never the target (`provisionPartOfMonth`). The line, the sheet,
+   * the server write and « Mis de côté » all read this one figure.
+   */
+  epargneProvisionPart: Money;
   /** Residual on Principal after salary - vieCouranteTransfer - epargneNet
-   *  - principalBillsDue - commitmentsDue. Negative = the month does not break
+   *  - principalBillsDue - epargneBillsDue - commitmentsDue. A smoothed bill
+   *  is paid FROM the main account (ADR-045 D22): only its net reaches the
+   *  provisions, the bill itself leaves Principal. Negative = the month does not break
    *  even. */
   netPrincipalAfterPlan: Money;
 };
@@ -78,7 +86,7 @@ export function computeMonthlyTransferPlan({
     throw new RangeError('vieCouranteMonthlyTransfer must be >= 0');
   if (commitmentsDue.lt(0)) throw new RangeError('commitmentsDue must be >= 0');
 
-  const smoothed = charges.filter((c) => c.isActive && c.paidFrom === 'epargne');
+  const smoothed = smoothedCharges(charges);
   const principalCharges = charges.filter((c) => c.isActive && c.paidFrom === 'principal');
 
   const epargneProvisionTarget = monthlyProvisionTotal(smoothed);
@@ -104,6 +112,7 @@ export function computeMonthlyTransferPlan({
     .minus(vieCouranteMonthlyTransfer)
     .minus(epargneTransferNet)
     .minus(principalBillsDue)
+    .minus(epargneBillsDue)
     .minus(commitmentsDue);
 
   return {
@@ -115,8 +124,44 @@ export function computeMonthlyTransferPlan({
     commitmentsDue,
     epargneBillsDue,
     epargneProvisionTarget,
+    epargneProvisionPart: provisionPartOfMonth(charges, month),
     netPrincipalAfterPlan,
   };
+}
+
+function smoothedCharges(charges: readonly Charge[]): Charge[] {
+  return charges.filter((c) => c.isActive && c.paidFrom === 'epargne');
+}
+
+/**
+ * The provisions share of the month's transfer to the provisions account:
+ * monthly target − smoothed bills due this month, floored at 0.
+ *
+ * A smoothed bill is paid from the MAIN account (ADR-045 D22), so the
+ * provisions only receive the net: the line « X à mettre de côté − Y de
+ * factures ce mois » proposes exactly this figure. Splitting a transfer with
+ * the target instead counted Y twice — once as provisions, once as a bill —
+ * and « Mis de côté » lost Y. The server recomputes it from the charges when it
+ * writes a transfer; the screen only displays it.
+ */
+export function provisionPartOfMonth(charges: readonly Charge[], month: number): Money {
+  if (month < 1 || month > 12) throw new RangeError(`month must be 1..12, received ${month}`);
+  const smoothed = smoothedCharges(charges);
+  const net = monthlyProvisionTotal(smoothed).minus(
+    smoothed.reduce((acc, c) => (isChargeDueInMonth(c, month) ? acc.plus(c.amount) : acc), zero()),
+  );
+  // Rounded to the cent (ADR-045 D19): 280/12 + 70/3 is 46.666…, and a part
+  // with a third decimal is refused by the write it is meant for.
+  return net.lt(0) ? zero() : net.toDecimalPlaces(2);
+}
+
+/**
+ * What is still to transfer this month: the lines not done yet, in absolute
+ * value (« À reprendre » is a transfer to make too). Zero once all are done —
+ * the header then says so instead of repeating the plan.
+ */
+export function virementsRestants(lines: readonly { amount: Money; done: boolean }[]): Money {
+  return lines.reduce((acc, l) => (l.done ? acc : acc.plus(l.amount.abs())), zero());
 }
 
 /**

@@ -29,6 +29,10 @@ type Props = {
   fromAccountType: AccountType;
   toAccountType: AccountType;
   suggested: number;
+  /**
+   * The provisions share of the month (`provisionPartOfMonth`), for DISPLAY:
+   * the server recomputes it from the charges and never takes this copy.
+   */
   plannedProvisions: number;
   planYear: number;
   planMonth: number;
@@ -131,9 +135,12 @@ export function TransferDoneControl(props: Props) {
           testId="feuille-virement"
           title={t('done')}
           question={t('question')}
-          hint={t('hint')}
+          hint={t('hintPrevu', { montant: fmt(suggested) })}
           dateLabel={t('date')}
-          initialAmount={suggested}
+          // Tour 55 — empty on purpose: a prefilled target was saved as it
+          // stood by someone who had transferred much more.
+          initialAmount={null}
+          requireTypedAmount
           initialDate={props.today}
           onDateChange={setDay}
           allowNegative={false}
@@ -170,7 +177,6 @@ export function TransferDoneControl(props: Props) {
               planYear: props.planYear,
               planMonth: props.planMonth,
               planSuggestedAmount: suggested,
-              plannedProvisions: props.plannedProvisions,
               ...answersToSend(accountsAsked(statements, touched, occurredOn), answers),
             })
           }

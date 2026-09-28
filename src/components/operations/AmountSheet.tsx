@@ -39,6 +39,12 @@ export type AmountSheetProps = {
   extraFields?: ReactNode;
   /** Live line under the amount (e.g. the provisions / free savings split). */
   renderDetail?: (amount: number | null) => ReactNode;
+  /**
+   * Tour 55 — « Enregistrer » stays disabled while the amount is empty. Used
+   * where a prefilled figure was validated without being read: the field
+   * starts empty and the person has to type what the bank really moved.
+   */
+  requireTypedAmount?: boolean;
   successMessage: string;
   /**
    * What is still missing before the gesture can be saved (ADR-045 D21: the
@@ -166,7 +172,11 @@ export function AmountSheet(props: AmountSheetProps) {
           type="submit"
           size="lg"
           className="min-h-11 whitespace-normal"
-          disabled={isPending || Boolean(props.blockedReason)}
+          disabled={
+            isPending ||
+            Boolean(props.blockedReason) ||
+            (Boolean(props.requireTypedAmount) && raw.trim() === '')
+          }
         >
           {isPending ? t('saving') : (props.blockedReason ?? t('save'))}
         </Button>

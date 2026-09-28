@@ -106,7 +106,21 @@ export default async function AccountsPage() {
           statedOn: day(view.reopenable.statedOn),
         },
         // ADR-045 D21 — same-day operations counted after the read balance.
-        sameDayAfter: view.sameDayAfter && { total: view.sameDayAfter.total.toNumber() },
+        // Each operation with its sign and its kind (rule 10), never the net.
+        sameDayAfter: view.sameDayAfter && {
+          flows: view.sameDayAfter.flows.map((f) => ({
+            id: f.id,
+            direction: f.direction,
+            amount: f.amount.toNumber(),
+            // Every ledger flow is named (operations-view `lineOf` throws the
+            // same way): a guessed kind would name an operation wrongly.
+            origin:
+              f.origin ??
+              (() => {
+                throw new RangeError('a same-day flow has no origin');
+              })(),
+          })),
+        },
       },
     };
   });

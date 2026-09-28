@@ -5,6 +5,7 @@ import { getTranslations } from 'next-intl/server';
 import { authorizedWorkspace } from '@/lib/actions/authorized-workspace';
 import { revalidateAppPath, revalidateDashboard } from '@/lib/actions/revalidate';
 import type { ActionResult } from '@/lib/actions/types';
+import { loadWorkspaceCharges } from '@/lib/data/charge-row';
 import { loadAccountLedger } from '@/lib/data/operations';
 import { todayIsoInBrussels } from '@/lib/data/month-situation';
 import {
@@ -23,6 +24,7 @@ import {
 } from '@/lib/domain/accounts/solde';
 import { validateTransferAllocation } from '@/lib/domain/accounts/virement';
 import type { AccountType } from '@/lib/domain/cockpit/types';
+import { provisionPartOfMonth } from '@/lib/domain/transfer';
 import { money } from '@/lib/domain/types';
 import {
   balanceStatementSchema,
@@ -629,10 +631,17 @@ export async function recordPlannedTransferAction(
   if (already) return { ok: false, errorCode: 'errors.operations.alreadyDone' };
 
   const amount = money(v.amount);
-  const split =
-    v.toAccountType === 'provisions'
-      ? splitTransferToProvisions(amount, money(v.plannedProvisions))
-      : null;
+  // Tour 55 — the provisions share is computed HERE, from the workspace's
+  // charges and the plan month, with the same domain rule the screen shows
+  // (`provisionPartOfMonth`). `v.plannedProvisions` is never written: a client
+  // could otherwise move any euro between provisions and free savings, and
+  // « Mis de côté » would say whatever it was sent.
+  let split: ReturnType<typeof splitTransferToProvisions> | null = null;
+  if (v.toAccountType === 'provisions') {
+    const charges = await loadWorkspaceCharges(ctx.supabase, ctx.workspaceId);
+    if (charges === null) return { ok: false, errorCode: 'errors.operations.writeFailed' };
+    split = splitTransferToProvisions(amount, provisionPartOfMonth(charges, v.planMonth));
+  }
   const allocation = validateTransferAllocation({
     toAccountType: v.toAccountType,
     amount,

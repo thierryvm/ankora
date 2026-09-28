@@ -136,6 +136,8 @@ describe('TransferDoneControl — the question for each account touched', () => 
       ).disabled,
     ).toBe(true);
     await userEvent.click(within(sheet).getByRole('radio', { name: 'Non, pas encore' }));
+    // Tour 55 — the amount starts empty and must be typed before saving.
+    await userEvent.type(within(sheet).getByLabelText('Combien as-tu viré ?'), '505');
     await userEvent.click(within(sheet).getByRole('button', { name: 'Enregistrer' }));
     expect(actions.transfer).toHaveBeenCalledWith(
       expect.objectContaining({ statementAnswers: { income_bills: 'notYet' } }),

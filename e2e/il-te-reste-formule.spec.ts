@@ -193,12 +193,19 @@ test.describe.serial('« Il te reste » — la formule de la PR D, geste par ges
     );
     const feuille = page.getByTestId('feuille-virement');
     const champ = feuille.getByLabel('Combien as-tu viré ?');
-    const propose = Number((await champ.inputValue()).replace(',', '.'));
+    // Tour 55 — the field starts empty; the proposal is read from its
+    // indication (« 150,00 € prévus »), never taken as a typed value.
+    await expect(champ).toHaveValue('');
+    const indication =
+      (await feuille
+        .getByText(/prévus/)
+        .first()
+        .textContent()) ?? '';
+    const lu = /([\d\s\u00a0\u202f.]+,\d{2})\s*€\s*prévus/.exec(indication)?.[1] ?? '';
+    const propose = Number(lu.replace(/[\s\u00a0\u202f.]/g, '').replace(',', '.'));
     expect(propose).toBeGreaterThan(0);
     const vire = (propose + 50).toFixed(2).replace('.', ',');
     await champ.click();
-    await champ.press('Control+a');
-    await champ.press('Backspace');
     await champ.pressSequentially(vire);
     await expect(champ).toHaveValue(vire);
     await feuille.getByRole('button', { name: /^enregistrer$/i }).click();

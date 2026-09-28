@@ -47,7 +47,11 @@ beforeEach(() => {
 });
 
 describe('TransferDoneControl — « J’ai fait ce virement »', () => {
-  it('prefills the suggested amount rounded to the cent, never with more decimals', async () => {
+  // Tour 55 — was « prefills the suggested amount ». A prefilled target got
+  // validated as it stood by someone who had transferred far more: the field
+  // now starts empty, the target is an indication, and nothing can be saved
+  // before an amount has been typed.
+  it('starts empty, shows the target rounded to the cent as an indication, and waits for a typed amount', async () => {
     renderControl({ state: 'todo', cancelledId: null });
     await userEvent.click(
       screen.getByRole('button', {
@@ -56,7 +60,15 @@ describe('TransferDoneControl — « J’ai fait ce virement »', () => {
     );
     const sheet = screen.getByTestId('feuille-virement');
     const amount = within(sheet).getByLabelText('Combien as-tu viré ?') as HTMLInputElement;
-    expect(amount.value).toBe('46.67');
+    expect(amount.value).toBe('');
+    expect(sheet.textContent).toMatch(/46,67\s€ prévus/);
+    const save = within(sheet).getByRole('button', { name: 'Enregistrer' });
+    expect(save).toBeDisabled();
+    await userEvent.click(save);
+    expect(actions.record).not.toHaveBeenCalled();
+
+    await userEvent.type(amount, '46.67');
+    expect(save).toBeEnabled();
   });
 
   it('shows the provisions / free savings split of the amount typed, then writes it', async () => {
@@ -64,7 +76,6 @@ describe('TransferDoneControl — « J’ai fait ce virement »', () => {
     await userEvent.click(screen.getByRole('button', { name: /J’ai fait ce virement/ }));
     const sheet = screen.getByTestId('feuille-virement');
     const amount = within(sheet).getByLabelText('Combien as-tu viré ?');
-    await userEvent.clear(amount);
     await userEvent.type(amount, '50');
     expect(sheet.textContent).toMatch(/23,33\s€ de provisions \+ 26,67\s€ d’épargne libre/);
 
@@ -77,7 +88,6 @@ describe('TransferDoneControl — « J’ai fait ce virement »', () => {
       planYear: 2026,
       planMonth: 9,
       planSuggestedAmount: 46.67,
-      plannedProvisions: 23.33,
     });
   });
 
