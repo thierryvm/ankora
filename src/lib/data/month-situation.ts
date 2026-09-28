@@ -239,6 +239,8 @@ function soldeDuQuotidien(input: MonthSituationInputs, todayIso: string) {
     accountType: 'daily_card',
     statements: input.ledger.statements,
     movements: input.ledger.movements,
+    // ADR-045 D22 — the daily account goes down with its expenses and bills.
+    debits: input.ledger.debits,
     today: new Date(`${todayIso}T00:00:00Z`),
   });
   if (view === null) return null;
@@ -279,7 +281,7 @@ export async function loadMonthSituation(
     snapshot,
     commitments,
     paidKeysByCommitment,
-    ledger: { statements: ledger.statements, movements: ledger.movements },
+    ledger: { statements: ledger.statements, movements: ledger.movements, debits: ledger.debits },
     ...(other && activity ? { viewed: { ref: other, ...activity } } : {}),
   };
   return { ...inputs, ...computeMonthSituation(inputs) };

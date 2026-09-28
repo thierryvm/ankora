@@ -346,7 +346,63 @@ question ne se pose donc pas ce jour-là, et le serveur refuse la réécriture.
 
 **Limite connue.** Défaire une réécriture (rétablir l'original, annuler la copie) n'a pas
 encore de geste à un clic : rouvrir l'original laisse la copie devant lui. À arbitrer.
-Les dépenses qui débitent un compte (J4) ne sont pas couvertes.
+Les dépenses qui débitent un compte (J4) ne sont pas couvertes — elles le sont depuis D22.
+
+## D22 — les dépenses et les factures payées sont des flux du solde dérivé (J4)
+
+Décidé par @thierry le 2026-09-28, sur ce qu'il a vu en production : l'écart d'un compte
+mesurait surtout ce qu'Ankora ne suivait pas. « Calculé depuis tes opérations » ne
+retirait ni les dépenses ni les factures payées ; l'écart avec le solde lu les
+contenait toutes, et ne disait donc rien de ce qui manque vraiment.
+
+**La règle.** Trois sources de plus entrent dans les flux d'un compte, toujours en
+sortie, sur le compte d'où l'argent part :
+
+- une dépense (`expenses`) sur `accountTypeFromKind(paid_from)`, datée de
+  `occurred_on`, écrite à `created_at` ;
+- une facture payée (`charge_payments`) et une échéance payée
+  (`commitment_payments`) sur **le compte des factures (`income_bills`), toujours**,
+  datées du jour bruxellois de `paid_at`, écrites à `created_at`.
+
+**Pourquoi pas `paid_from_account_type`** (choisi par @thierry le 2026-09-28, sur
+relecture). La colonne est `NOT NULL`, mais elle désigne le compte qui PROVISIONNE la
+facture, pas celui qui la paie : ADR-041, et le commentaire de colonne de
+`20260810000002`. Rien ne l'avait lue avant ce lot. La prendre pour le payeur
+débiterait les provisions, puis le virement de reprise vers le compte des factures les
+baisserait une seconde fois. Le modèle ne connaît pas le payeur réel ; le compte qui
+paie les factures est la lecture honnête. Une attribution vraie demandera une colonne à
+elle, dans une migration, hors de ce lot.
+
+Elles suivent D16 comme tout flux : le jour d'un relevé, elles comptent quand elles ont
+été écrites après lui. Aucune de ces tables n'a `cancelled_at` : supprimer une dépense ou
+décocher une facture efface la ligne, qui cesse donc de compter d'elle-même. Un montant
+nul est écarté (rien n'est sorti). Aucune migration.
+
+**Une seule liste.** `ledgerFlows` réunit le journal et ces sorties ; le solde calculé,
+l'écart d'un relevé, la question du jour (D21), le geste « Mon solde du … les contenait
+déjà » et le `derived_balance` écrit avec un nouveau relevé lisent tous cette liste. La
+carte du compte nomme donc aussi les dépenses et factures du jour du relevé écrites
+après lui, et le geste de D21 les couvre — sans nouvelle question dans la feuille de
+dépense : la carte suffit à réparer.
+
+**L'attendu s'ouvre sur ses lignes (règle 10).** `expectedLines` regroupe les
+contributions que l'écart a DÉJÀ additionnées — le relevé d'où l'on part, l'argent reçu,
+les virements reçus et faits, les factures payées, les dépenses — et refuse de rendre des
+lignes dont la somme ne serait pas l'attendu. L'écran ne recalcule rien.
+
+**Le signe se lit comme une personne le lit.** L'écart affiché est `lu − attendu` :
+négatif quand le compte a moins que prévu (« une sortie pas encore notée ? »), positif
+quand il a plus. `measureStatementGap.gap` garde son sens interne (`attendu − lu`) ; seul
+l'affichage change de convention, par un champ distinct (`difference`).
+
+**Limite connue, acceptée par @thierry.** `paid_at` est l'instant où la case a été
+cochée, pas le jour du débit en banque. Une facture cochée en rattrapage, après un solde
+qui la contenait déjà, est comptée une fois de trop, et l'écart le montrera. Aucun filtre
+n'est inventé pour le cacher.
+
+**Ce qui ne change pas.** « Il te reste » ne lit pas le solde dérivé : il reste identique.
+Le cockpit, lui, affiche le solde du compte du quotidien depuis ce même calcul, qui baisse
+donc avec les dépenses de ce compte.
 
 ## Constat — les privilèges hérités par `authenticated` (relecture Sécurité, 2026-09-21)
 

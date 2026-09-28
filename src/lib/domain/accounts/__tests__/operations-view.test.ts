@@ -79,6 +79,7 @@ describe('accountBalanceView', () => {
       accountType: 'daily_card',
       statements: [start],
       movements: [],
+      debits: [],
       today: d('2026-09-21'),
     });
     expect(first!.readIsStartingBalance).toBe(true);
@@ -88,6 +89,7 @@ describe('accountBalanceView', () => {
       accountType: 'daily_card',
       statements: [start, statement('b', 480, '2026-09-15')],
       movements: [],
+      debits: [],
       today: d('2026-09-21'),
     });
     expect(later!.readIsStartingBalance).toBe(false);
@@ -99,6 +101,7 @@ describe('accountBalanceView', () => {
       accountType: 'daily_card',
       statements: [statement('a', 100, '2026-09-01')],
       movements: [],
+      debits: [],
       today: d('2026-09-21'),
     });
     expect(none!.computed).toBeNull();
@@ -107,6 +110,7 @@ describe('accountBalanceView', () => {
       accountType: 'daily_card',
       statements: [statement('a', -20, '2026-09-01')],
       movements: [transfer('m', 505), transfer('x', 50, { cancelledAt: at('2026-09-11') })],
+      debits: [],
       today: d('2026-09-21'),
     });
     expect(some!.computed!.balance.toNumber()).toBe(485);
@@ -118,6 +122,7 @@ describe('accountBalanceView', () => {
       accountType: 'daily_card',
       statements: [statement('a', 100, '2026-09-01'), statement('b', 550, '2026-09-15')],
       movements: [transfer('m', 505)],
+      debits: [],
       today: d('2026-09-21'),
     });
     // expected 100 + 505 = 605, read 550 → 55 of spending Ankora does not follow yet
@@ -133,6 +138,7 @@ describe('accountBalanceView', () => {
         statement('c', 80, '2026-09-15'),
       ],
       movements: [],
+      debits: [],
       today: d('2026-09-21'),
     });
     expect(view!.read.id).toBe('c');
@@ -147,6 +153,7 @@ describe('accountBalanceView', () => {
         statement('b', 90, '2026-09-15', { cancelled: true }),
       ],
       movements: [],
+      debits: [],
       today: d('2026-09-21'),
     });
     expect(view!.read.id).toBe('a');
@@ -161,6 +168,7 @@ describe('expectedBalanceOn', () => {
       accountType: 'daily_card',
       statements: [statement('a', 100, '2026-09-01'), statement('z', 999, '2026-09-30')],
       movements: [transfer('m', 505)],
+      debits: [],
       statedOn: d('2026-09-21'),
     });
     // The statement of the 30th is AFTER the day asked: it must not anchor.
@@ -170,6 +178,7 @@ describe('expectedBalanceOn', () => {
         accountType: 'daily_card',
         statements: [],
         movements: [],
+        debits: [],
         statedOn: d('2026-09-21'),
       }),
     ).toBeNull();
@@ -231,6 +240,7 @@ describe('the balance stays at the date of an income assigned to the next month'
       accountType: 'daily_card',
       statements: [statement('a', 505, '2026-09-01')],
       movements: [salaire],
+      debits: [],
       today: d(today),
     });
 

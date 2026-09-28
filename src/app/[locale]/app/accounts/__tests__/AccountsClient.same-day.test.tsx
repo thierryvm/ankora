@@ -75,10 +75,10 @@ describe('AccountBalanceCard — same-day operations after the read balance', ()
     expect(actions.confirm).toHaveBeenCalledWith({ statementId: SID });
   });
 
-  it('says « de virements » when the day only took money out', () => {
+  it('says « de sorties » when the day only took money out (transfers, bills or spending — D22)', () => {
     renderWith(row({ total: -505 }));
     expect(screen.getByTestId('meme-jour').textContent).toMatch(
-      /dont 505[\u00a0\u202f]€ de virements/,
+      /dont 505[\u00a0\u202f]€ de sorties/,
     );
   });
 

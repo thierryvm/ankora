@@ -51,7 +51,21 @@ const READ_NEGATIVE: AccountBalanceProps = {
     readStatedOn: '2026-09-17',
     readIsStartingBalance: false,
     computed: 462.5,
-    gap: { expected: 520, read: -42.5, amount: 562.5 },
+    gap: {
+      expected: 520,
+      read: -42.5,
+      amount: -562.5,
+      lines: {
+        fromStatedOn: '2026-09-10',
+        fromBalance: 705,
+        fromIsStart: true,
+        received: 0,
+        transfersIn: 0,
+        transfersOut: 0,
+        bills: 60,
+        expenses: 125,
+      },
+    },
     reopenable: null,
   },
 };
@@ -115,13 +129,76 @@ describe('AccountsClient — un solde lu, daté, et nommé pour ce qu’il est',
     expect(within(card('income_bills')).getAllByText(/705/)).toHaveLength(1);
   });
 
-  it('dit l’écart sans accuser : il nomme ce qu’Ankora ne suit pas encore', () => {
+  it('ouvre « Attendu » sur ses lignes, dont la somme est l’attendu (règle 10)', async () => {
     renderClient();
     const repli = screen.getByTestId('ecart-daily_card');
-    expect(repli.textContent).toMatch(/Écart avec tes opérations/);
-    const explication = messages.operations.statement.gapExplain;
-    expect(explication).toMatch(/ne suit pas encore/);
-    expect(explication).not.toMatch(/tu as oublié(?! quelque chose\.)|erreur|faute/);
+    await userEvent.click(within(repli).getByRole('button'));
+    const lignes = within(repli).getByTestId('attendu-lignes');
+    expect(lignes.querySelector('[data-line="from"]')).toHaveTextContent(
+      /Solde de départ, le 10 septembre.*705/,
+    );
+    expect(lignes.querySelector('[data-line="bills"]')).toHaveTextContent(/Factures payées.*-60/);
+    expect(lignes.querySelector('[data-line="expenses"]')).toHaveTextContent(/Dépenses.*-125/);
+    // A zero line says nothing: it is not shown.
+    expect(lignes.querySelector('[data-line="received"]')).toBeNull();
+    expect(repli).toHaveTextContent(/Attendu d’après tes opérations.*520/);
+  });
+
+  it('signe l’écart comme on le lit : de l’argent en moins est négatif, et la phrase le dit', async () => {
+    renderClient();
+    const repli = screen.getByTestId('ecart-daily_card');
+    expect(repli.textContent).toMatch(/-\s*562,50|−\s*562,50/);
+    await userEvent.click(within(repli).getByRole('button'));
+    expect(repli.textContent).toMatch(/Ton compte a 562,50[\u00a0\u202f]€ de moins que prévu/);
+    expect(repli.textContent).not.toMatch(/ne suit pas encore|n’y sont pas encore/);
+  });
+
+  it('dit « de plus que prévu » quand le compte a plus que l’attendu', async () => {
+    const plus: AccountBalanceProps = {
+      ...READ_NEGATIVE,
+      view: {
+        ...READ_NEGATIVE.view!,
+        gap: {
+          expected: 500,
+          read: 505,
+          amount: 5,
+          lines: {
+            fromStatedOn: '2026-09-10',
+            fromBalance: 500,
+            fromIsStart: false,
+            received: 0,
+            transfersIn: 0,
+            transfersOut: 0,
+            bills: 0,
+            expenses: 0,
+          },
+        },
+      },
+    };
+    render(
+      <NextIntlClientProvider locale="fr-BE" messages={messages} timeZone="Europe/Brussels">
+        <AccountsClient
+          monthlyIncome={2000}
+          vieCouranteMonthlyTransfer={505}
+          balances={[plus]}
+          today="2026-09-21"
+        />
+      </NextIntlClientProvider>,
+    );
+    const repli = screen.getByTestId('ecart-daily_card');
+    expect(repli.textContent).toMatch(/\+5[\u00a0\u202f]€/);
+    await userEvent.click(within(repli).getByRole('button'));
+    expect(repli.textContent).toMatch(/Ton compte a 5[\u00a0\u202f]€ de plus que prévu/);
+    expect(
+      within(repli).getByTestId('attendu-lignes').querySelector('[data-line="from"]'),
+    ).toHaveTextContent(/Solde lu le 10 septembre/);
+  });
+
+  it('ne dit plus que les dépenses manquent au solde calculé', () => {
+    renderClient();
+    const calcule = within(card('daily_card')).getByTestId('solde-calcule');
+    expect(calcule.textContent).not.toMatch(/n’y sont pas encore/);
+    expect(calcule).toHaveTextContent(/dépenses/);
   });
 
   it('ne laisse pas annuler un solde de départ, mais bien un solde lu', () => {

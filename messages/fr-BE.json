@@ -1960,7 +1960,7 @@
       "notYet": "Non, pas encore",
       "missing": "Réponds d’abord à la question sur ton solde",
       "cardIn": "dont {montant} reçus le {date}, écrits après ton solde du même jour",
-      "cardOut": "dont {montant} de virements le {date}, écrits après ton solde du même jour",
+      "cardOut": "dont {montant} de sorties le {date}, écrites après ton solde du même jour",
       "cardAction": "Mon solde du {date} les contenait déjà",
       "cardDone": "C’est noté : ton solde du {date} les contenait déjà."
     },
@@ -1975,7 +1975,7 @@
       "read": "Solde lu le {date}",
       "start": "Solde de départ, le {date}",
       "computed": "Calculé depuis tes opérations",
-      "computedHint": "Le dernier solde connu, plus les virements et l’argent reçu écrits depuis. Tes dépenses n’y sont pas encore.",
+      "computedHint": "Le dernier solde connu, plus l’argent reçu et les virements, moins les factures payées et les dépenses écrites depuis.",
       "none": "Aucun solde pour ce compte.",
       "cancel": "Annuler ce solde",
       "cancelled": "Solde annulé",
@@ -1984,7 +1984,13 @@
       "gapExpected": "Attendu d’après tes opérations",
       "gapRead": "Lu sur ton compte",
       "gapAmount": "Écart",
-      "gapExplain": "Un écart est normal : Ankora ne suit pas encore tes dépenses ni tes prélèvements. Il ne dit pas que tu as oublié quelque chose.",
+      "gapReceived": "Argent reçu",
+      "gapTransfersIn": "Virements reçus",
+      "gapTransfersOut": "Virements faits",
+      "gapBills": "Factures payées",
+      "gapExpenses": "Dépenses",
+      "gapLess": "Ton compte a {montant} de moins que prévu : une sortie pas encore notée ?",
+      "gapMore": "Ton compte a {montant} de plus que prévu : de l’argent reçu pas encore noté ?",
       "overdraft": "Ce compte est à découvert"
     },
     "transfer": {
