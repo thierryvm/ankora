@@ -1960,7 +1960,7 @@
       "notYet": "No, not yet",
       "missing": "Answer the question about your balance first",
       "cardIn": "of which {montant} received on {date}, written after your balance of the same day",
-      "cardOut": "of which {montant} in transfers on {date}, written after your balance of the same day",
+      "cardOut": "of which {montant} going out on {date}, written after your balance of the same day",
       "cardAction": "My {date} balance already included them",
       "cardDone": "Noted: your {date} balance already included them."
     },
@@ -1975,7 +1975,7 @@
       "read": "Balance read on {date}",
       "start": "Starting balance, on {date}",
       "computed": "Worked out from your operations",
-      "computedHint": "The last known balance, plus the transfers and money received written since. Your spending is not in it yet.",
+      "computedHint": "The last known balance, plus money received and transfers, minus bills paid and spending written since.",
       "none": "No balance for this account.",
       "cancel": "Cancel this balance",
       "cancelled": "Balance cancelled",
@@ -1984,7 +1984,13 @@
       "gapExpected": "Expected from your operations",
       "gapRead": "Read on your account",
       "gapAmount": "Difference",
-      "gapExplain": "A difference is normal: Ankora does not follow your spending or direct debits yet. It does not mean you forgot something.",
+      "gapReceived": "Money received",
+      "gapTransfersIn": "Transfers in",
+      "gapTransfersOut": "Transfers out",
+      "gapBills": "Bills paid",
+      "gapExpenses": "Spending",
+      "gapLess": "Your account has {montant} less than expected: an outgoing payment not written down yet?",
+      "gapMore": "Your account has {montant} more than expected: money received not written down yet?",
       "overdraft": "This account is overdrawn"
     },
     "transfer": {

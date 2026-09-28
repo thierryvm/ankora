@@ -58,7 +58,13 @@ vi.mock('@/lib/log', () => ({
   log: { error: h.logError, warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }));
 vi.mock('@/lib/supabase/server', () => ({ createClient: async () => h.client }));
-vi.mock('@/lib/data/operations', () => ({ loadAccountLedger: h.ledger }));
+// ADR-045 D22 — the loader also returns the debits; these cases have none.
+vi.mock('@/lib/data/operations', () => ({
+  loadAccountLedger: async (...args: unknown[]) => ({
+    debits: [],
+    ...(await (h.ledger as unknown as (...a: unknown[]) => Promise<object>)(...args)),
+  }),
+}));
 vi.mock('@/lib/data/month-situation', () => ({ todayIsoInBrussels: () => '2026-09-21' }));
 vi.mock('@/lib/actions/revalidate', () => ({
   revalidateDashboard: vi.fn(),

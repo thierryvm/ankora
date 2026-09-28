@@ -86,6 +86,7 @@ describe('« Non, pas encore » — the hour rule as it stands (D16)', () => {
       accountType: 'income_bills',
       statements: [previous, readAfterSalary],
       movements: [salary],
+      debits: [],
       today,
     });
     expect(view?.computed?.balance.toFixed(2)).toBe('1610.00');
@@ -99,6 +100,7 @@ describe('« Non, pas encore » — the hour rule as it stands (D16)', () => {
       accountType: 'income_bills',
       statements: [previous, readAfterSalary],
       movements: [salary],
+      debits: [],
       today,
     });
     expect(view?.sameDayAfter?.total.toFixed(2)).toBe('705.00');
@@ -114,6 +116,7 @@ describe('« Oui, déjà dedans » — the statement written again after the ope
       accountType: 'income_bills',
       statements,
       movements: [salary],
+      debits: [],
       today,
     });
     expect(view?.read.id).toBe('s-28-bis');
@@ -127,6 +130,7 @@ describe('« Oui, déjà dedans » — the statement written again after the ope
       accountType: 'income_bills',
       statements,
       movements: [salary],
+      debits: [],
       today,
     });
     // 200 + 705 = 905 : nothing unexplained.
@@ -148,6 +152,7 @@ describe('sameDayFlowsAfter', () => {
       accountType: 'income_bills',
       statements: [previous, readAfterSalary],
       movements: [later],
+      debits: [],
       today: d('2026-09-29'),
     });
     expect(view?.computed?.balance.toFixed(2)).toBe('1410.00');
@@ -180,6 +185,7 @@ describe('sameDayFlowsAfter', () => {
       accountType: 'income_bills',
       statements: [previous, readAfterSalary],
       movements: [out],
+      debits: [],
       today,
     });
     expect(view?.sameDayAfter?.total.toFixed(2)).toBe('-505.00');
@@ -206,6 +212,7 @@ describe('sameDayStatement — when the question applies', () => {
       accountType: 'income_bills',
       statements: [start],
       movements: [income('m-1', 705, '2026-09-28', '2026-09-28T09:00:00Z')],
+      debits: [],
       today,
     });
     expect(view?.sameDayAfter).toBeNull();

@@ -1960,7 +1960,7 @@
       "notYet": "Nee, nog niet",
       "missing": "Beantwoord eerst de vraag over je saldo",
       "cardIn": "waarvan {montant} ontvangen op {date}, geschreven na je saldo van dezelfde dag",
-      "cardOut": "waarvan {montant} aan overschrijvingen op {date}, geschreven na je saldo van dezelfde dag",
+      "cardOut": "waarvan {montant} aan uitgaande bedragen op {date}, genoteerd na je saldo van dezelfde dag",
       "cardAction": "Mijn saldo van {date} bevatte ze al",
       "cardDone": "Genoteerd: je saldo van {date} bevatte ze al."
     },
@@ -1975,7 +1975,7 @@
       "read": "Saldo gelezen op {date}",
       "start": "Beginsaldo, op {date}",
       "computed": "Berekend uit je verrichtingen",
-      "computedHint": "Het laatst bekende saldo, plus de overschrijvingen en het ontvangen geld die sindsdien zijn ingevuld. Je uitgaven zitten er nog niet in.",
+      "computedHint": "Het laatst gekende saldo, plus het ontvangen geld en de overschrijvingen, min de betaalde facturen en de uitgaven die sindsdien zijn genoteerd.",
       "none": "Geen saldo voor deze rekening.",
       "cancel": "Dit saldo annuleren",
       "cancelled": "Saldo geannuleerd",
@@ -1984,7 +1984,13 @@
       "gapExpected": "Verwacht volgens je verrichtingen",
       "gapRead": "Gelezen op je rekening",
       "gapAmount": "Verschil",
-      "gapExplain": "Een verschil is normaal: Ankora volgt je uitgaven en domiciliëringen nog niet. Het betekent niet dat je iets vergeten bent.",
+      "gapReceived": "Ontvangen geld",
+      "gapTransfersIn": "Ontvangen overschrijvingen",
+      "gapTransfersOut": "Gedane overschrijvingen",
+      "gapBills": "Betaalde facturen",
+      "gapExpenses": "Uitgaven",
+      "gapLess": "Je rekening heeft {montant} minder dan verwacht: een uitgave die nog niet is genoteerd?",
+      "gapMore": "Je rekening heeft {montant} meer dan verwacht: ontvangen geld dat nog niet is genoteerd?",
       "overdraft": "Deze rekening staat in het rood"
     },
     "transfer": {

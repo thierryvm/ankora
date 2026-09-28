@@ -17,7 +17,11 @@ const loadAccountLedger = vi.fn();
 const readMonthActivity = vi.fn();
 
 vi.mock('@/lib/data/operations', () => ({
-  loadAccountLedger: (...args: unknown[]) => loadAccountLedger(...args),
+  // ADR-045 D22 — the loader also returns the debits; a case sets them when it needs them.
+  loadAccountLedger: async (...args: unknown[]) => ({
+    debits: [],
+    ...(await loadAccountLedger(...args)),
+  }),
 }));
 vi.mock('@/lib/supabase/server', () => ({ createClient: async () => ({}) }));
 const commitmentsRead = vi.fn(() => ({ commitments: [] as unknown[], paidKeysByCommitment: {} }));
@@ -311,6 +315,37 @@ describe('loadMonthSituation — the viewed month (ADR-046, lot 2)', () => {
 
     expect((await loadMonthSituation(null)).soldeQuotidien?.toFixed(2)).toBe('400.00');
     expect((await loadMonthSituation(null, october)).soldeQuotidien).toBeNull();
+  });
+
+  it('the daily balance goes down with the spending of that account only (ADR-045 D22)', async () => {
+    const { expenseToFlow } = await import('@/lib/domain/accounts/debits');
+    const { money } = await import('@/lib/domain/types');
+    const day = releveQuotidien.statedOn.toISOString().slice(0, 10);
+    const later = new Date(releveQuotidien.recordedAt.getTime() + 60_000);
+    const spent = (id: string, paidFrom: 'vie_courante' | 'principal') =>
+      expenseToFlow({ id, amount: money(45), occurredOn: day, createdAt: later, paidFrom })!;
+    loadAccountLedger.mockResolvedValue({
+      ok: true,
+      statements: [releveQuotidien],
+      movements: [],
+      debits: [spent('daily', 'vie_courante'), spent('other', 'principal')],
+    });
+    const { loadMonthSituation } = await import('@/lib/data/month-situation');
+
+    const withSpending = await loadMonthSituation(null);
+    expect(withSpending.soldeQuotidien?.toFixed(2)).toBe('355.00');
+    // « Il te reste » never reads the derived balance: identical without the debits.
+    loadAccountLedger.mockResolvedValue({
+      ok: true,
+      statements: [releveQuotidien],
+      movements: [],
+      debits: [],
+    });
+    const without = await loadMonthSituation(null);
+    expect(without.soldeQuotidien?.toFixed(2)).toBe('400.00');
+    expect(withSpending.situation.ilTeReste.toFixed(2)).toBe(
+      without.situation.ilTeReste.toFixed(2),
+    );
   });
 
   it('the current month reads nothing more than before', async () => {

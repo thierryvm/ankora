@@ -36,6 +36,18 @@ export type IncomeLineProps = {
   countsFor?: string | null;
 };
 
+/** The lines of an expected balance, as plain numbers (all positive). */
+export type ExpectedLinesProps = {
+  fromStatedOn: string;
+  fromBalance: number;
+  fromIsStart: boolean;
+  received: number;
+  transfersIn: number;
+  transfersOut: number;
+  bills: number;
+  expenses: number;
+};
+
 /** Plain values only — computed by the server page, never a Decimal. */
 export type AccountBalanceProps = {
   kind: AccountKind;
@@ -47,7 +59,17 @@ export type AccountBalanceProps = {
     readStatedOn: string;
     readIsStartingBalance: boolean;
     computed: number | null;
-    gap: { expected: number; read: number; amount: number } | null;
+    /**
+     * `amount` is `read - expected` (ADR-045 D22): negative when the account
+     * holds less than expected. `lines` are the domain's decomposition of
+     * `expected` — summed there, never here.
+     */
+    gap: {
+      expected: number;
+      read: number;
+      amount: number;
+      lines: ExpectedLinesProps;
+    } | null;
     reopenable: { id: string; statedOn: string } | null;
     /** ADR-045 D21 — signed total of the same-day operations written after the read balance. */
     sameDayAfter?: { total: number } | null;
@@ -274,6 +296,45 @@ function formatDay(iso: string, locale: string): string {
  * A negative balance is shown as it is, in the ordinary text colour: an
  * overdraft is a fact, not a fault.
  */
+/**
+ * « Attendu d'après tes opérations », opened on what makes it (rule 10): the
+ * balance it starts from, then each kind of operation. A zero line says
+ * nothing and is not shown; the starting balance always is.
+ */
+function ExpectedLines({ lines, fmt }: { lines: ExpectedLinesProps; fmt: (n: number) => string }) {
+  const tS = useTranslations('operations.statement');
+  const locale = useLocale() as Locale;
+  const rows: Array<{ key: string; label: string; amount: number }> = [
+    { key: 'received', label: tS('gapReceived'), amount: lines.received },
+    { key: 'transfersIn', label: tS('gapTransfersIn'), amount: lines.transfersIn },
+    { key: 'transfersOut', label: tS('gapTransfersOut'), amount: -lines.transfersOut },
+    { key: 'bills', label: tS('gapBills'), amount: -lines.bills },
+    { key: 'expenses', label: tS('gapExpenses'), amount: -lines.expenses },
+  ].filter((r) => r.amount !== 0);
+  const date = formatDay(lines.fromStatedOn, locale);
+  return (
+    <dd className="col-span-2">
+      <ul
+        data-testid="attendu-lignes"
+        className="text-muted-foreground border-border mb-1 flex flex-col gap-0.5 border-l pl-3 text-xs"
+      >
+        <li data-line="from" className="flex justify-between gap-3">
+          <span>{lines.fromIsStart ? tS('start', { date }) : tS('read', { date })}</span>
+          <span className="font-mono tabular-nums">{fmt(lines.fromBalance)}</span>
+        </li>
+        {rows.map((r) => (
+          <li key={r.key} data-line={r.key} className="flex justify-between gap-3">
+            <span>{r.label}</span>
+            <span className="font-mono tabular-nums">
+              {r.amount > 0 ? `+${fmt(r.amount)}` : fmt(r.amount)}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </dd>
+  );
+}
+
 function AccountBalanceCard({ row, today }: { row: AccountBalanceProps; today: string }) {
   const tKind = useTranslations('app.accounts.kind');
   const tBalance = useTranslations('app.accounts.balance');
@@ -285,6 +346,8 @@ function AccountBalanceCard({ row, today }: { row: AccountBalanceProps; today: s
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const fmt = (n: number) => formatCurrency(n, locale);
+  // A gap is read with its sign: « + » says the account holds more.
+  const signed = (n: number) => (n > 0 ? `+${fmt(n)}` : fmt(n));
   const view = row.view;
 
   function setCancelled(id: string, cancelled: boolean) {
@@ -361,18 +424,23 @@ function AccountBalanceCard({ row, today }: { row: AccountBalanceProps; today: s
         {view?.gap ? (
           <Repli
             titre={tS('gapTitle')}
-            cle={fmt(view.gap.amount)}
+            cle={signed(view.gap.amount)}
             testId={`ecart-${row.accountType}`}
           >
             <dl className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 text-sm">
               <dt>{tS('gapExpected')}</dt>
               <dd className="font-mono tabular-nums">{fmt(view.gap.expected)}</dd>
+              <ExpectedLines lines={view.gap.lines} fmt={fmt} />
               <dt>{tS('gapRead')}</dt>
               <dd className="font-mono tabular-nums">{fmt(view.gap.read)}</dd>
               <dt>{tS('gapAmount')}</dt>
-              <dd className="font-mono tabular-nums">{fmt(view.gap.amount)}</dd>
+              <dd className="font-mono tabular-nums">{signed(view.gap.amount)}</dd>
             </dl>
-            <p className="text-muted-foreground mt-2 text-xs">{tS('gapExplain')}</p>
+            <p className="text-muted-foreground mt-2 text-xs">
+              {tS(view.gap.amount < 0 ? 'gapLess' : 'gapMore', {
+                montant: fmt(Math.abs(view.gap.amount)),
+              })}
+            </p>
           </Repli>
         ) : null}
 

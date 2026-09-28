@@ -44,7 +44,15 @@ export type AccountFlow = {
   occurredOn: Date;
   recordedAt: Date | null;
   cancelledAt: Date | null;
+  /**
+   * Where the flow comes from (ADR-045 D22) — only to NAME it in a
+   * decomposition; no rule of this module reads it.
+   */
+  origin?: FlowOrigin;
 };
+
+/** The four kinds of operation a derived balance adds up (ADR-045 D22). */
+export type FlowOrigin = 'income' | 'transfer' | 'bill' | 'expense';
 
 /** One line of the decomposition of a derived balance. */
 export type FlowContribution = {

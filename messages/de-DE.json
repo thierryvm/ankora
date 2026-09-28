@@ -1960,7 +1960,7 @@
       "notYet": "Nein, noch nicht",
       "missing": "Beantworte zuerst die Frage zu deinem Kontostand",
       "cardIn": "davon {montant} erhalten am {date}, nach deinem Kontostand desselben Tages eingetragen",
-      "cardOut": "davon {montant} an Überweisungen am {date}, nach deinem Kontostand desselben Tages eingetragen",
+      "cardOut": "davon {montant} an Abgängen am {date}, eingetragen nach deinem Kontostand desselben Tages",
       "cardAction": "Mein Kontostand vom {date} enthielt sie schon",
       "cardDone": "Notiert: Dein Kontostand vom {date} enthielt sie schon."
     },
@@ -1975,7 +1975,7 @@
       "read": "Kontostand gelesen am {date}",
       "start": "Anfangssaldo, am {date}",
       "computed": "Aus deinen Vorgängen berechnet",
-      "computedHint": "Der letzte bekannte Kontostand plus die seitdem eingetragenen Überweisungen und Geldeingänge. Deine Ausgaben sind noch nicht enthalten.",
+      "computedHint": "Der letzte bekannte Kontostand, plus erhaltenes Geld und Überweisungen, minus bezahlte Rechnungen und Ausgaben, die seitdem eingetragen wurden.",
       "none": "Kein Kontostand für dieses Konto.",
       "cancel": "Diesen Kontostand stornieren",
       "cancelled": "Kontostand storniert",
@@ -1984,7 +1984,13 @@
       "gapExpected": "Erwartet laut deinen Vorgängen",
       "gapRead": "Auf deinem Konto gelesen",
       "gapAmount": "Abweichung",
-      "gapExplain": "Eine Abweichung ist normal: Ankora verfolgt deine Ausgaben und Lastschriften noch nicht. Sie bedeutet nicht, dass du etwas vergessen hast.",
+      "gapReceived": "Erhaltenes Geld",
+      "gapTransfersIn": "Eingehende Überweisungen",
+      "gapTransfersOut": "Ausgehende Überweisungen",
+      "gapBills": "Bezahlte Rechnungen",
+      "gapExpenses": "Ausgaben",
+      "gapLess": "Dein Konto hat {montant} weniger als erwartet: eine noch nicht eingetragene Ausgabe?",
+      "gapMore": "Dein Konto hat {montant} mehr als erwartet: noch nicht eingetragenes erhaltenes Geld?",
       "overdraft": "Dieses Konto ist überzogen"
     },
     "transfer": {

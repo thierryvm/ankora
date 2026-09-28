@@ -1960,7 +1960,7 @@
       "notYet": "No, todavía no",
       "missing": "Responde primero a la pregunta sobre tu saldo",
       "cardIn": "de los que {montant} recibidos el {date}, anotados después de tu saldo del mismo día",
-      "cardOut": "de los que {montant} en transferencias el {date}, anotados después de tu saldo del mismo día",
+      "cardOut": "de los cuales {montant} en salidas el {date}, anotadas después de tu saldo del mismo día",
       "cardAction": "Mi saldo del {date} ya los incluía",
       "cardDone": "Anotado: tu saldo del {date} ya los incluía."
     },
@@ -1975,7 +1975,7 @@
       "read": "Saldo leído el {date}",
       "start": "Saldo inicial, el {date}",
       "computed": "Calculado a partir de tus operaciones",
-      "computedHint": "El último saldo conocido, más las transferencias y el dinero recibido anotados desde entonces. Tus gastos aún no están incluidos.",
+      "computedHint": "El último saldo conocido, más el dinero recibido y las transferencias, menos las facturas pagadas y los gastos anotados desde entonces.",
       "none": "No hay saldo para esta cuenta.",
       "cancel": "Anular este saldo",
       "cancelled": "Saldo anulado",
@@ -1984,7 +1984,13 @@
       "gapExpected": "Esperado según tus operaciones",
       "gapRead": "Leído en tu cuenta",
       "gapAmount": "Diferencia",
-      "gapExplain": "Una diferencia es normal: Ankora aún no sigue tus gastos ni tus domiciliaciones. No significa que hayas olvidado algo.",
+      "gapReceived": "Dinero recibido",
+      "gapTransfersIn": "Transferencias recibidas",
+      "gapTransfersOut": "Transferencias hechas",
+      "gapBills": "Facturas pagadas",
+      "gapExpenses": "Gastos",
+      "gapLess": "Tu cuenta tiene {montant} menos de lo previsto: ¿una salida aún no anotada?",
+      "gapMore": "Tu cuenta tiene {montant} más de lo previsto: ¿dinero recibido aún no anotado?",
       "overdraft": "Esta cuenta está en descubierto"
     },
     "transfer": {

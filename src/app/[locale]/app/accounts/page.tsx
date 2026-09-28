@@ -70,6 +70,8 @@ export default async function AccountsPage() {
       accountType: account.accountType,
       statements: ledger.statements,
       movements: ledger.movements,
+      // ADR-045 D22 — expenses and paid bills leave their account too.
+      debits: ledger.debits,
       today: new Date(`${today}T00:00:00Z`),
     });
     return {
@@ -86,7 +88,18 @@ export default async function AccountsPage() {
         gap: view.gap && {
           expected: view.gap.derived.toNumber(),
           read: view.gap.declared.toNumber(),
-          amount: view.gap.gap.toNumber(),
+          // read - expected: negative when the account holds less (D22).
+          amount: view.gap.difference.toNumber(),
+          lines: {
+            fromStatedOn: day(view.gap.lines.from.statedOn),
+            fromBalance: view.gap.lines.from.balance.toNumber(),
+            fromIsStart: view.gap.lines.from.isStart,
+            received: view.gap.lines.received.toNumber(),
+            transfersIn: view.gap.lines.transfersIn.toNumber(),
+            transfersOut: view.gap.lines.transfersOut.toNumber(),
+            bills: view.gap.lines.bills.toNumber(),
+            expenses: view.gap.lines.expenses.toNumber(),
+          },
         },
         reopenable: view.reopenable && {
           id: view.reopenable.id,

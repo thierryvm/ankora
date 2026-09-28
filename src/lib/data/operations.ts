@@ -3,13 +3,23 @@ import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { AccountType } from '@/lib/domain/cockpit/types';
-import type { AccountBalanceStatement } from '@/lib/domain/accounts/solde';
+import type { AccountBalanceStatement, AccountFlow } from '@/lib/domain/accounts/solde';
+import { billPaymentToFlow, expenseToFlow } from '@/lib/domain/accounts/debits';
 import { toMoney, type MovementRecord } from '@/lib/domain/accounts/operations-view';
+import type { AccountKind } from '@/lib/domain/types';
 import type { Database } from '@/lib/supabase/types';
 
 type Client = SupabaseClient<Database>;
 type MovementRow = Database['public']['Tables']['movements']['Row'];
 type StatementRow = Database['public']['Tables']['account_balance_statements']['Row'];
+type ExpenseDebitRow = Pick<
+  Database['public']['Tables']['expenses']['Row'],
+  'id' | 'amount' | 'occurred_on' | 'created_at' | 'paid_from'
+>;
+type PaymentDebitRow = Pick<
+  Database['public']['Tables']['charge_payments']['Row'],
+  'id' | 'paid_amount' | 'paid_at' | 'created_at'
+>;
 
 /** `date` columns are days: read at UTC midnight, the convention of `solde.ts` tests. */
 function day(value: string): Date {
@@ -53,6 +63,11 @@ export function movementRowToDomain(row: MovementRow): MovementRecord {
 export type AccountLedger = {
   statements: AccountBalanceStatement[];
   movements: MovementRecord[];
+  /**
+   * ADR-045 D22 — expenses and paid bills (charges and commitment
+   * instalments) as outflows of the account they were paid from.
+   */
+  debits: AccountFlow[];
 };
 
 /**
@@ -116,11 +131,97 @@ export async function loadAccountLedger(
   ]);
 
   if (statements === null || movements === null) {
-    return { ok: false, statements: [], movements: [] };
+    return { ok: false, statements: [], movements: [], debits: [] };
+  }
+  const debits = await loadDebits(supabase, workspaceId, statements);
+  if (debits === null) {
+    return { ok: false, statements: [], movements: [], debits: [] };
   }
   return {
     ok: true,
     statements: statements.map(statementRowToDomain),
     movements: movements.map(movementRowToDomain),
+    debits,
   };
+}
+
+/**
+ * ADR-045 D22 — the expenses and paid bills that can move a derived balance:
+ * those of the day of the EARLIEST statement onwards (cancelled ones included,
+ * a cancelled statement can be reopened). Nothing before it can count against
+ * any statement, so nothing before it is read. No statement: nothing to read.
+ *
+ * `paid_at` is an instant, and its Brussels day starts up to two hours before
+ * UTC midnight (CEST): the bound is taken a whole day earlier, which can only
+ * read MORE rows, never fewer, and the domain's hour rule decides.
+ * Every read is scoped to the session workspace, like the journal's.
+ */
+async function loadDebits(
+  supabase: Client,
+  workspaceId: string,
+  statements: readonly StatementRow[],
+): Promise<AccountFlow[] | null> {
+  if (statements.length === 0) return [];
+  // Ordered by (stated_on, recorded_at, id): the first row is the earliest.
+  const since = statements[0]!.stated_on;
+  const sinceInstant = new Date(`${since}T00:00:00Z`);
+  sinceInstant.setUTCDate(sinceInstant.getUTCDate() - 1);
+  const sinceIso = sinceInstant.toISOString();
+
+  const [expenses, charges, commitments] = await Promise.all([
+    readAllPages<ExpenseDebitRow>((from, to) =>
+      supabase
+        .from('expenses')
+        .select('id, amount, occurred_on, created_at, paid_from')
+        .eq('workspace_id', workspaceId)
+        .gte('occurred_on', since)
+        .order('occurred_on', { ascending: true })
+        .order('created_at', { ascending: true })
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
+    readAllPages<PaymentDebitRow>((from, to) =>
+      supabase
+        .from('charge_payments')
+        .select('id, paid_amount, paid_at, created_at')
+        .eq('workspace_id', workspaceId)
+        .gte('paid_at', sinceIso)
+        .order('paid_at', { ascending: true })
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
+    readAllPages<PaymentDebitRow>((from, to) =>
+      supabase
+        .from('commitment_payments')
+        .select('id, paid_amount, paid_at, created_at')
+        .eq('workspace_id', workspaceId)
+        .gte('paid_at', sinceIso)
+        .order('paid_at', { ascending: true })
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
+  ]);
+  if (expenses === null || charges === null || commitments === null) return null;
+
+  const payment = (source: 'charge' | 'commitment') => (row: PaymentDebitRow) =>
+    billPaymentToFlow({
+      id: row.id,
+      source,
+      amount: toMoney(row.paid_amount),
+      paidAt: new Date(row.paid_at),
+      createdAt: new Date(row.created_at),
+    });
+  return [
+    ...expenses.map((row) =>
+      expenseToFlow({
+        id: row.id,
+        amount: toMoney(row.amount),
+        occurredOn: row.occurred_on,
+        createdAt: new Date(row.created_at),
+        paidFrom: row.paid_from as AccountKind,
+      }),
+    ),
+    ...charges.map(payment('charge')),
+    ...commitments.map(payment('commitment')),
+  ].filter((f): f is AccountFlow => f !== null);
 }

@@ -9,6 +9,7 @@ import {
   type AccountBalanceStatement,
   type AccountFlow,
   type FlowContribution,
+  type FlowOrigin,
   type StatementGap,
 } from './solde';
 
@@ -50,6 +51,7 @@ export type MovementRecord = {
  */
 export function movementToFlows(movement: MovementRecord): AccountFlow[] {
   const base = {
+    origin: movement.kind,
     amount: movement.amount,
     occurredOn: movement.occurredOn,
     recordedAt: movement.recordedAt,
@@ -113,8 +115,12 @@ export type AccountBalanceView = {
   readIsStartingBalance: boolean;
   /** Read balance + operations since. Null when no operation happened since. */
   computed: { balance: Money; contributions: readonly FlowContribution[] } | null;
-  /** Latest statement versus the one before it, when both exist. */
-  gap: StatementGap | null;
+  /**
+   * Latest statement versus the one before it, when both exist. `lines` opens
+   * the expected balance (rule 10); `difference` is `read - expected`, the way
+   * a person reads it: negative when the account holds LESS than expected.
+   */
+  gap: (StatementGap & { lines: ExpectedLines; difference: Money }) | null;
   /** The most recent cancelled statement, offered for reopening (rule 11). */
   reopenable: AccountBalanceStatement | null;
   /**
@@ -130,13 +136,15 @@ export function accountBalanceView(input: {
   accountType: AccountType;
   statements: readonly AccountBalanceStatement[];
   movements: readonly MovementRecord[];
+  /** ADR-045 D22 — expenses and paid bills, already turned into outflows. */
+  debits: readonly AccountFlow[];
   today: Date;
 }): AccountBalanceView | null {
   const { accountType, statements, today } = input;
   const read = selectLatestStatement(statements, accountType);
   if (read === null) return null;
 
-  const flows = input.movements.flatMap(movementToFlows);
+  const flows = ledgerFlows(input.movements, input.debits);
   const asOf = today.getTime() < read.statedOn.getTime() ? read.statedOn : today;
   const derived = deriveAccountBalance({ statement: read, flows, asOf });
 
@@ -163,7 +171,14 @@ export function accountBalanceView(input: {
       derived.contributions.length > 0
         ? { balance: derived.balance, contributions: derived.contributions }
         : null,
-    gap: gap && !gap.gap.isZero() ? gap : null,
+    gap:
+      gap && !gap.gap.isZero()
+        ? {
+            ...gap,
+            lines: expectedLines(gap, startingStatementId(statements, accountType)),
+            difference: gap.declared.minus(gap.derived),
+          }
+        : null,
     reopenable,
     sameDayAfter: sameDayAfterView(statements, read, flows),
   };
@@ -247,6 +262,7 @@ export function expectedBalanceOn(input: {
   accountType: AccountType;
   statements: readonly AccountBalanceStatement[];
   movements: readonly MovementRecord[];
+  debits: readonly AccountFlow[];
   statedOn: Date;
 }): Money | null {
   const anchor = selectLatestStatement(
@@ -256,9 +272,81 @@ export function expectedBalanceOn(input: {
   if (anchor === null) return null;
   return deriveAccountBalance({
     statement: anchor,
-    flows: input.movements.flatMap(movementToFlows),
+    flows: ledgerFlows(input.movements, input.debits),
     asOf: input.statedOn,
   }).balance;
+}
+
+/**
+ * Every flow of the ledger (ADR-045 D22): the journal's movements, and the
+ * expenses and paid bills that leave an account. One list, so that the
+ * balance, the gap, the same-day question and the stored `derived_balance`
+ * can never read two different sets.
+ */
+export function ledgerFlows(
+  movements: readonly MovementRecord[],
+  debits: readonly AccountFlow[],
+): AccountFlow[] {
+  return [...movements.flatMap(movementToFlows), ...debits];
+}
+
+/** The expected balance of a gap, opened on its lines (rule 10). */
+export type ExpectedLines = {
+  from: { statedOn: Date; balance: Money; isStart: boolean };
+  received: Money;
+  transfersIn: Money;
+  transfersOut: Money;
+  bills: Money;
+  expenses: Money;
+  /** `from + received + transfersIn - transfersOut - bills - expenses`. */
+  expected: Money;
+};
+
+type LineKey = 'received' | 'transfersIn' | 'transfersOut' | 'bills' | 'expenses';
+
+function lineOf(origin: FlowOrigin | undefined, direction: 'in' | 'out'): LineKey {
+  if (origin === 'income' && direction === 'in') return 'received';
+  if (origin === 'transfer') return direction === 'in' ? 'transfersIn' : 'transfersOut';
+  if (origin === 'bill' && direction === 'out') return 'bills';
+  if (origin === 'expense' && direction === 'out') return 'expenses';
+  throw new RangeError(`a flow of origin ${String(origin)} (${direction}) has no line`);
+}
+
+/**
+ * Groups the contributions the gap ALREADY summed — never a second read — so
+ * the lines cannot drift from the figure they explain. A flow no line can name
+ * throws, and so does a sum that would not add up: loud beats plausible.
+ */
+export function expectedLines(gap: StatementGap, startingId: string | null): ExpectedLines {
+  const sums: Record<LineKey, Money> = {
+    received: zero(),
+    transfersIn: zero(),
+    transfersOut: zero(),
+    bills: zero(),
+    expenses: zero(),
+  };
+  for (const c of gap.contributions) {
+    const key = lineOf(c.flow.origin, c.flow.direction);
+    sums[key] = sums[key].plus(c.flow.amount);
+  }
+  const expected = gap.anchor.balance
+    .plus(sums.received)
+    .plus(sums.transfersIn)
+    .minus(sums.transfersOut)
+    .minus(sums.bills)
+    .minus(sums.expenses);
+  if (!expected.eq(gap.derived)) {
+    throw new RangeError('the lines of the expected balance do not add up to it');
+  }
+  return {
+    from: {
+      statedOn: gap.anchor.statedOn,
+      balance: gap.anchor.balance,
+      isStart: gap.anchor.id === startingId,
+    },
+    ...sums,
+    expected,
+  };
 }
 
 export type PlannedTransferLine =

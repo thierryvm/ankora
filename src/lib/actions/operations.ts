@@ -9,14 +9,18 @@ import { loadAccountLedger } from '@/lib/data/operations';
 import { todayIsoInBrussels } from '@/lib/data/month-situation';
 import {
   expectedBalanceOn,
-  movementToFlows,
+  ledgerFlows,
   sameDayFlowsAfter,
   sameDayStatement,
   splitTransferToProvisions,
   startingStatementId,
   type MovementRecord,
 } from '@/lib/domain/accounts/operations-view';
-import { selectLatestStatement, type AccountBalanceStatement } from '@/lib/domain/accounts/solde';
+import {
+  selectLatestStatement,
+  type AccountBalanceStatement,
+  type AccountFlow,
+} from '@/lib/domain/accounts/solde';
 import { validateTransferAllocation } from '@/lib/domain/accounts/virement';
 import type { AccountType } from '@/lib/domain/cockpit/types';
 import { money } from '@/lib/domain/types';
@@ -220,6 +224,8 @@ type StatementAnswers = Partial<Record<AccountType, 'included' | 'notYet'>> | un
 type Ledger = {
   statements: readonly AccountBalanceStatement[];
   movements: readonly MovementRecord[];
+  /** ADR-045 D22 — expenses and paid bills of the same day count too. */
+  debits: readonly AccountFlow[];
 };
 
 /**
@@ -255,7 +261,7 @@ function sameDayAnswers(
   // an operation already counted after the statement (answered « Non », or
   // written before D21) would silently stop counting — money invented. Such a
   // day is settled from the card of the account, which names them all.
-  const flows = ledger.movements.flatMap(movementToFlows);
+  const flows = ledgerFlows(ledger.movements, ledger.debits);
   if (toRewrite.some((st) => sameDayFlowsAfter(st, flows).length > 0)) {
     return {
       ok: false,
@@ -311,6 +317,7 @@ async function rewriteSameDayStatement(
     accountType: statement.accountType,
     statements: ledger.statements.filter((s) => s.id !== statement.id),
     movements: ledger.movements,
+    debits: ledger.debits,
     statedOn: statement.statedOn,
   });
 
@@ -393,7 +400,7 @@ async function rewriteAfterOperation(
   const done: Array<{ original: string; copy: string }> = [];
   let failed = !ledger.ok;
   if (ledger.ok) {
-    const flows = ledger.movements.flatMap(movementToFlows);
+    const flows = ledgerFlows(ledger.movements, ledger.debits);
     for (const statement of toRewrite) {
       // Still the statement the answer was given for, and nothing else of its
       // day written after it meanwhile (a second tab): otherwise, stop.
@@ -452,7 +459,7 @@ export async function confirmStatementIncludedAction(input: unknown): Promise<Ac
   if (
     !target ||
     target.id !== statementId ||
-    sameDayFlowsAfter(target, ledger.movements.flatMap(movementToFlows)).length === 0
+    sameDayFlowsAfter(target, ledgerFlows(ledger.movements, ledger.debits)).length === 0
   ) {
     return { ok: false, errorCode: 'errors.operations.notFound' };
   }
@@ -486,6 +493,7 @@ export async function recordBalanceStatementAction(
     accountType,
     statements: ledger.statements,
     movements: ledger.movements,
+    debits: ledger.debits,
     statedOn: isoDayToDate(statedOn),
   });
 
