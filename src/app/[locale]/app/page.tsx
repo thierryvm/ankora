@@ -551,6 +551,7 @@ export default async function DashboardPage({
           year={fenetre.calendaire ? period.year : debutY}
           month={fenetre.calendaire ? period.month : debutM}
           decalage={decalage}
+          moisDeBudget={period.month}
           joursDuMois={daysInMonth}
           joursEcoules={joursEcoules}
           serie={serieDuMois}

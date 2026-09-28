@@ -43,6 +43,11 @@ export type RythmeDuMoisProps = Readonly<{
    * Absent: the calendar month.
    */
   decalage?: number;
+  /**
+   * ADR-047 — the budget month (1–12) the window belongs to. It differs from
+   * `month` when the window opened in the previous month. Absent: `month`.
+   */
+  moisDeBudget?: number;
   /** `depensesParJour`: one point per day, with its running total. */
   serie: ReadonlyArray<Readonly<{ jour: number; duJour: number; cumule: number }>>;
   /** The month's expenses, for the lines of each day. */
@@ -81,11 +86,47 @@ type Tiroir = { a: number; b: number; mois: boolean };
 
 // Literal class tables: Tailwind reads sources as text, a class built at run
 // time would never be generated.
+/**
+ * Literal class names, so Tailwind generates them. A budget month runs from
+ * one day of the previous month (ADR-047) to the last day of its own: up to
+ * 31 + 31 days.
+ */
 const GRILLE: Record<number, string> = {
   28: 'grid-cols-28',
   29: 'grid-cols-29',
   30: 'grid-cols-30',
   31: 'grid-cols-31',
+  32: 'grid-cols-32',
+  33: 'grid-cols-33',
+  34: 'grid-cols-34',
+  35: 'grid-cols-35',
+  36: 'grid-cols-36',
+  37: 'grid-cols-37',
+  38: 'grid-cols-38',
+  39: 'grid-cols-39',
+  40: 'grid-cols-40',
+  41: 'grid-cols-41',
+  42: 'grid-cols-42',
+  43: 'grid-cols-43',
+  44: 'grid-cols-44',
+  45: 'grid-cols-45',
+  46: 'grid-cols-46',
+  47: 'grid-cols-47',
+  48: 'grid-cols-48',
+  49: 'grid-cols-49',
+  50: 'grid-cols-50',
+  51: 'grid-cols-51',
+  52: 'grid-cols-52',
+  53: 'grid-cols-53',
+  54: 'grid-cols-54',
+  55: 'grid-cols-55',
+  56: 'grid-cols-56',
+  57: 'grid-cols-57',
+  58: 'grid-cols-58',
+  59: 'grid-cols-59',
+  60: 'grid-cols-60',
+  61: 'grid-cols-61',
+  62: 'grid-cols-62',
 };
 const DEBUT = [
   '',
@@ -120,6 +161,37 @@ const DEBUT = [
   'col-start-29',
   'col-start-30',
   'col-start-31',
+  'col-start-32',
+  'col-start-33',
+  'col-start-34',
+  'col-start-35',
+  'col-start-36',
+  'col-start-37',
+  'col-start-38',
+  'col-start-39',
+  'col-start-40',
+  'col-start-41',
+  'col-start-42',
+  'col-start-43',
+  'col-start-44',
+  'col-start-45',
+  'col-start-46',
+  'col-start-47',
+  'col-start-48',
+  'col-start-49',
+  'col-start-50',
+  'col-start-51',
+  'col-start-52',
+  'col-start-53',
+  'col-start-54',
+  'col-start-55',
+  'col-start-56',
+  'col-start-57',
+  'col-start-58',
+  'col-start-59',
+  'col-start-60',
+  'col-start-61',
+  'col-start-62',
 ];
 const ETENDUE = [
   '',
@@ -147,13 +219,18 @@ export function tranchesDeJours(jE: number): Array<[number, number]> {
   return t;
 }
 
+/** ADR-047 — the window opened in the month before its budget month. */
+function horsDuMois(p: Readonly<{ month: number; moisDeBudget?: number }>): boolean {
+  return (p.moisDeBudget ?? p.month) !== p.month;
+}
+
 /**
  * Axis ticks, as day indexes. A calendar month keeps 1, 5, 10… and its last
  * day. Shifted (ADR-047), dates are wider than numbers: one tick a week from
  * the first day, and the last day, dropping a weekly tick too close to it.
  */
-export function reperesDeLAxe(jM: number, decalage: number): number[] {
-  if (!decalage)
+export function reperesDeLAxe(jM: number, enDates: boolean): number[] {
+  if (!enDates)
     return [1, 5, 10, 15, 20, 25, jM].filter((j, i, a) => j <= jM && a.indexOf(j) === i);
   const t: number[] = [];
   for (let j = 1; j <= jM - 4; j += 7) t.push(j);
@@ -216,12 +293,12 @@ export function RythmeDuMois(props: RythmeDuMoisProps) {
   const rythme = rythmeAuJour(budget, jE, jM);
   const ecart = rythme ? ecartAuRythme(new Decimal(depense), rythme) : null;
   const enCours = jE < jM;
-  // ADR-047 — a budget month opens on the 1st or before it, never after: shifted,
-  // it is the month that follows the one its first day falls in.
-  const mois = moisDansLaPhrase(props.decalage ? (month % 12) + 1 : month, locale);
+  // ADR-047 — the savings line names the budget month, never the calendar one.
+  const mois = moisDansLaPhrase(props.moisDeBudget ?? month, locale);
   const jourMois = (d: number) => f.jourMois(year, month, d);
-  // Shifted, an index is not a day of any month: the last day is named by its date.
-  const jourFin = props.decalage ? f.jourMoisCourt(year, month, jM) : jM;
+  // Opened in the previous month, an index is not a day of the budget month:
+  // the last day is named by its date.
+  const jourFin = horsDuMois(props) ? f.jourMoisCourt(year, month, jM) : jM;
 
   const motEcart = (e: Decimal, montant: (v: number) => string) => {
     const sens = sensDeLEcart(e);
@@ -450,9 +527,20 @@ function Trace(
   const pts = Array.from({ length: jE + 1 }, (_, j) => `${j},${y(cumul(j))}`);
   const tranches = tranchesDeJours(jE);
   const jourMois = (d: number) => f.jourMois(year, month, d);
-  const axe = reperesDeLAxe(jM, props.decalage ?? 0);
-  // ADR-047 — shifted, an index is not a day of any month: the axis names dates.
-  const repere = (j: number) => (props.decalage ? f.jourMoisCourt(year, month, j) : String(j));
+  const hors = horsDuMois(props);
+  const axe = reperesDeLAxe(jM, hors);
+  // ADR-047 — opened in the previous month, the axis names dates, not indexes.
+  const repere = (j: number) => (hors ? f.jourMoisCourt(year, month, j) : String(j));
+  // A date is wider than a column: centred on the first or last one, it would
+  // spill out of the card. The ends align inward.
+  const cale = (j: number) =>
+    !hors
+      ? 'justify-self-center'
+      : j === 1
+        ? 'justify-self-start'
+        : j === jM
+          ? 'justify-self-end'
+          : 'justify-self-center';
   const suite = `${aB ? t('grapheAriaBudget', { budget: f.euro(budget) }) : ''}${
     proj !== null ? t('grapheAriaProjection', { projection: f.euro(proj), jour: jourMois(jM) }) : ''
   }`;
@@ -573,7 +661,7 @@ function Trace(
         className={`text-muted-foreground mt-1 grid ${GRILLE[jM] ?? 'grid-cols-31'} text-xs tabular-nums`}
       >
         {axe.map((j) => (
-          <span key={j} className={`${DEBUT[j]} row-start-1 justify-self-center whitespace-nowrap`}>
+          <span key={j} className={`${DEBUT[j]} row-start-1 ${cale(j)} whitespace-nowrap`}>
             {repere(j)}
           </span>
         ))}
@@ -642,7 +730,7 @@ function TiroirRythme(
   const libTotal =
     a === b
       ? t('totalJour', { jour: jourMois(a) })
-      : a === 1 && !props.decalage
+      : a === 1 && !horsDuMois(props)
         ? t('totalDepuis1er', { jour: jourMois(b) })
         : t('totalTranche', { debut: f.numJour(year, month, a), fin: jourMois(b) });
   const lignesDu = (j: number) => depenses.filter((d) => d.date === f.iso(year, month, j));
