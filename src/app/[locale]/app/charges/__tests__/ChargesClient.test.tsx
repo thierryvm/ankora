@@ -874,6 +874,39 @@ describe('<ChargesClient /> — chantier 3: obligations in one list', () => {
     installmentsTotal: 11,
   };
 
+  // Reported by @thierry on 28 Sept. 2026: « Encore à payer » counted the
+  // SPF instalment while the lists he could see did not add up to it — the
+  // commitments group sat below the annual bills and had no remaining line.
+  it('says how « Encore à payer » splits between bills and instalments', () => {
+    renderCharges([monthly], { commitmentInstalments: [instalment] });
+    const split = screen.getByTestId('charges-remaining-split');
+    expect(split).toHaveTextContent(/1[\s\u202f\u00a0]?200/);
+    expect(split).toHaveTextContent(/220/);
+    expect(screen.getByTestId('charges-remaining-amount')).toHaveTextContent(
+      /1[\s\u202f\u00a0]?420/,
+    );
+  });
+
+  it('gives the commitments group its « Reste à payer », like every other group', () => {
+    renderCharges([monthly], { commitmentInstalments: [instalment] });
+    const footer = screen.getByTestId('charges-group-subtotal-commitments');
+    expect(footer).toHaveTextContent(/Reste à payer/);
+    expect(footer).toHaveTextContent(/220/);
+  });
+
+  it('puts the commitments group right after the monthly bills, before the rarer ones', () => {
+    renderCharges(sampleCharges, { commitmentInstalments: [instalment] });
+    const groupes = Array.from(document.querySelectorAll('[data-testid^="charges-group-"]')).filter(
+      (el) => el.tagName === 'SECTION',
+    );
+    const ordre = groupes.map((el) => el.getAttribute('data-testid'));
+    expect(ordre.slice(0, 3)).toEqual([
+      'charges-group-monthly',
+      'charges-group-commitments',
+      'charges-group-annual',
+    ]);
+  });
+
   it('renders commitment instalments in their own group, with their position', () => {
     renderCharges([monthly], { commitmentInstalments: [instalment] });
     expect(screen.getByTestId('charges-group-commitments')).toBeInTheDocument();
