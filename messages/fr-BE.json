@@ -1032,6 +1032,7 @@
       "title": "Mes dépenses",
       "rowPaidFrom": "Payé depuis {account}",
       "subtitle": "Les sorties hors factures récurrentes — courses, resto, loisirs…",
+      "budgetPeriod": "Ce budget va du {debut} au {fin} : il commence à l’arrivée de ton revenu.",
       "addSheet": {
         "title": "Nouvelle dépense",
         "cancel": "Annuler",
@@ -1355,6 +1356,9 @@
         "detailOrigine": "{montant} {cycleMois, plural, =3 {tous les 3 mois} =6 {tous les 6 mois} =12 {une fois par an} other {tous les # mois}}",
         "recuEnPlus": "Reçus en plus",
         "misDeCote": "Mis de côté",
+        "revenuPrevu": "Revenu prévu",
+        "revenuPrevuNote": "Aucun argent reçu noté pour ce mois : ce montant est le revenu prévu dans tes réglages.",
+        "revenuPrevuLien": "Noter l’argent reçu",
         "revenuRecuSurPrevu": "Reçu ce mois-ci {recu} sur {prevu} prévus",
         "revenuRecuPlusQuePrevu": "Reçu ce mois-ci {recu}, plus que les {prevu} prévus",
         "auDela": "Ce mois-ci tu as mis de côté {montant} de plus que ce que ton revenu laissait : la différence vient de ton compte principal.",
@@ -1765,6 +1769,7 @@
       "titreAVenir": "Il te restera",
       "titrePasse": "Il t’est resté",
       "baseMois": "sur ton budget {voyelle, select, oui {d’{month}} other {de {month}}}",
+      "termeRevenuPrevu": "Revenu prévu",
       "termeRevenusMois": "Reçu pour {month}"
     },
     "encoreAPayer": {
@@ -1901,6 +1906,7 @@
       "depenseAu": "Dépensé au {jour}",
       "projectionAu": "= Projection au {jour}",
       "projectionOp": "{depense} × {jours} jours ÷ {ecoules} jours",
+      "revenuPrevu": "Revenu prévu",
       "budgetEtiquette": "Budget du mois · calculé",
       "revenus": "Argent reçu",
       "factures": "Tes factures du mois",

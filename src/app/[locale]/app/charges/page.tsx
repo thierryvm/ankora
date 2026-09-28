@@ -69,9 +69,13 @@ export default async function ChargesPage({
       getLocale() as Promise<Locale>,
     ]);
 
-  const current = snapshot.currentPeriod;
+  // ADR-047 — the month opened by default is the budget month running now, as
+  // on the cockpit: on 28 September with October's salary written, October.
+  const current = snapshot.moisDeBudget;
   const viewed = parseViewedPeriod(params.period, current);
   const isCurrent = isSamePeriod(viewed, current);
+  // The snapshot's bills paid are the CALENDAR month's.
+  const paymentsInSnapshot = isSamePeriod(viewed, snapshot.currentPeriod);
 
   // Chantier 3 — the month's obligations are ONE list. Commitments are read
   // here for the same reason they are read on the cockpit: their instalments
@@ -85,7 +89,7 @@ export default async function ChargesPage({
   // re-verifies workspace ownership before any write — these ids are only
   // optimistic-UI seed data the user already owns.
   let paidChargeIds = snapshot.currentMonthPayments.map((p) => p.chargeId);
-  if (!isCurrent) {
+  if (!paymentsInSnapshot) {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from('charge_payments')

@@ -423,3 +423,5 @@ hors ligne.
 - Handoffs de session : dans le dépôt privé `claude-config` depuis le 24 août 2026 (#452) ;
   [`docs/handoffs/`](./handoffs/) garde les passations antérieures
 - Runbooks (e2e, migrations, Upstash, iPhone) : [`docs/runbooks/`](./runbooks/)
+
+- **Tour 49 — le mois de budget (ADR-047)** : le mois de budget commence à l'arrivée de l'argent reçu « pour » ce mois ; « Dépensé », Rythme, Catégories, Six mois, page Dépenses, feuille de dépense et mois ouvert par défaut (cockpit, Dépenses, Factures) suivent une seule fonction de domaine. Sans migration. PR brouillon `feat/mois-de-budget`.

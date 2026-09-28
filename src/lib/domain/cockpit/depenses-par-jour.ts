@@ -67,11 +67,21 @@ function jourDansLaPeriode(
   occurredOn: string,
   ref: { year: number; month: number },
   joursDuMois: number,
+  debut: string | undefined,
 ): number | null {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(occurredOn);
   if (!m) return null;
 
   const [annee, mois, jour] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  // ADR-047 — a budget month that opened on the salary day: the day index
+  // counts from that first day, and the list is already the month's own
+  // (`depensesDuMoisDeBudget`), so no calendar filter applies.
+  if (debut !== undefined) {
+    const ecart = Math.round(
+      (Date.UTC(annee, mois - 1, jour) - Date.parse(`${debut}T00:00:00Z`)) / 86_400_000,
+    );
+    return Math.min(Math.max(ecart + 1, 1), joursDuMois);
+  }
   if (annee !== ref.year || mois !== ref.month) return null;
 
   // Un jour hors des bornes est RATTACHÉ au bord, jamais écarté — et c'est
@@ -94,6 +104,11 @@ export function depensesParJour(
   expenses: readonly DepenseDatee[],
   ref: { year: number; month: number },
   joursDuMois: number,
+  /**
+   * ADR-047 — first day of the budget month (`YYYY-MM-DD`) when it is not the
+   * calendar month; `expenses` is then the month's own list.
+   */
+  debut?: string,
 ): JourDeDepense[] {
   // `<= 0` ne suffisait PAS, et ça se mesure : `NaN <= 0` vaut `false`, donc le
   // garde laissait passer — puis `Math.min(Math.max(jour, 1), NaN)` rendait
@@ -110,7 +125,7 @@ export function depensesParJour(
   const parJour = Array.from({ length: joursDuMois }, () => new Decimal(0));
 
   for (const depense of expenses) {
-    const jour = jourDansLaPeriode(depense.occurredOn, ref, joursDuMois);
+    const jour = jourDansLaPeriode(depense.occurredOn, ref, joursDuMois, debut);
     if (jour === null) continue;
     parJour[jour - 1] = parJour[jour - 1]!.plus(depense.amount);
   }

@@ -1032,6 +1032,7 @@
       "title": "My expenses",
       "rowPaidFrom": "Paid from {account}",
       "subtitle": "Spending outside recurring bills — groceries, dining, leisure…",
+      "budgetPeriod": "This budget runs from {debut} to {fin}: it starts when your income arrives.",
       "addSheet": {
         "title": "New expense",
         "cancel": "Cancel",
@@ -1355,6 +1356,9 @@
         "detailOrigine": "{montant} {cycleMois, plural, =3 {every 3 months} =6 {every 6 months} =12 {once a year} other {every # months}}",
         "recuEnPlus": "Received on top",
         "misDeCote": "Set aside",
+        "revenuPrevu": "Expected income",
+        "revenuPrevuNote": "No money received noted for this month: this amount is the income set in your settings.",
+        "revenuPrevuLien": "Note the money received",
         "revenuRecuSurPrevu": "Received this month {recu} of {prevu} planned",
         "revenuRecuPlusQuePrevu": "Received this month {recu}, more than the {prevu} planned",
         "auDela": "This month you set aside {montant} more than your income left: the difference comes from your main account.",
@@ -1765,6 +1769,7 @@
       "titreAVenir": "You will have left",
       "titrePasse": "You had left",
       "baseMois": "on your {month} budget",
+      "termeRevenuPrevu": "Expected income",
       "termeRevenusMois": "Received for {month}"
     },
     "encoreAPayer": {
@@ -1901,6 +1906,7 @@
       "depenseAu": "Spent by {jour}",
       "projectionAu": "= Projection by {jour}",
       "projectionOp": "{depense} × {jours} days ÷ {ecoules} days",
+      "revenuPrevu": "Expected income",
       "budgetEtiquette": "Month budget · calculated",
       "revenus": "Money received",
       "factures": "Your bills of the month",

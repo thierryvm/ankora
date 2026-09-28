@@ -84,6 +84,11 @@ export type IlTeResteCardProps = Readonly<{
    * (« Reçu pour octobre »). `null`: the current month, today's wording.
    */
   moisVu?: MoisVu | null;
+  /**
+   * The figure is the written income of the settings (issue #504: nothing
+   * received, or less than planned), and says so (« Revenu prévu »).
+   */
+  revenuPrevu?: boolean;
 }>;
 
 export async function IlTeResteCard({
@@ -102,6 +107,7 @@ export async function IlTeResteCard({
   locale,
   cascade,
   moisVu = null,
+  revenuPrevu = false,
 }: IlTeResteCardProps) {
   const t = await getTranslations('cockpit.ilTeReste');
   const fmt = (v: number) => formatCurrency(v, locale);
@@ -171,7 +177,11 @@ export async function IlTeResteCard({
                 })
           }
           termes={{
-            revenus: moisVu ? t('termeRevenusMois', { month: moisVu.month }) : t('termeRevenus'),
+            revenus: revenuPrevu
+              ? t('termeRevenuPrevu')
+              : moisVu
+                ? t('termeRevenusMois', { month: moisVu.month })
+                : t('termeRevenus'),
             retenu: t('termeRetenu'),
             depense: t('termeDepense'),
             misDeCote: t('termeMisDeCote'),

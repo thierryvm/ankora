@@ -3,6 +3,8 @@ import type { MonthObligation, NamedCommitment } from '@/lib/domain/obligations'
 import { computeMonthlyTransferPlan } from '@/lib/domain/transfer';
 import type { Charge, Expense, Money } from '@/lib/domain/types';
 
+import { depensesDuMoisDeBudget, type RevenuDuJournal } from '@/lib/domain/budget/mois-de-budget';
+
 import { depensesDuMois } from './depenses-du-mois';
 import { paymentKey, type CockpitCharge, type PaymentLedger, type ReferencePeriod } from './types';
 
@@ -45,8 +47,13 @@ export type SixMoisInput = Readonly<{
   paidKeysByCommitment: ReadonlyMap<string, ReadonlySet<string>>;
   monthlyIncome: Money;
   vieCouranteMonthlyTransfer: Money;
-  /** The recorded payments and the expenses of one month. */
+  /**
+   * The recorded payments of one month, and the expenses that MAY belong to it
+   * (its calendar month and the one before): ranged here by the budget month.
+   */
   activite: (ref: ReferencePeriod) => MonthActivity;
+  /** The live month incomes of the journal (ADR-047). Absent: the calendar. */
+  revenus?: readonly RevenuDuJournal[];
 }>;
 
 export type StatutMois = 'passe' | 'en-cours' | 'a-venir';
@@ -109,8 +116,13 @@ function unMois(input: SixMoisInput, ref: ReferencePeriod) {
     commitmentsDue: Obligations.aPayerCeMois(lignes.filter((o) => o.source === 'commitment')),
   });
   const factures = Obligations.aPayerCeMois(lignes);
+  // ADR-047 — the same ranging as « Il te reste »: the lines and their total
+  // come from ONE filtered list, so the row always decomposes its figure.
+  const duMois = depensesDuMoisDeBudget(expenses, ref, input.revenus ?? []);
   const depenses =
-    statut === 'a-venir' ? null : { total: depensesDuMois(expenses, ref), lignes: expenses };
+    statut === 'a-venir'
+      ? null
+      : { total: depensesDuMois(duMois, ref, input.revenus), lignes: duMois };
   const total = factures.plus(depenses?.total ?? 0).plus(plan.epargneTransferNet);
   return {
     ref,

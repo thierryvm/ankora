@@ -16,6 +16,7 @@ import type { Page } from '@playwright/test';
 
 import { test, expect } from './helpers/test';
 import { adminClientOrNull, deleteSeededUser, seedOnboardedUser } from './helpers/seed';
+import { ouvrirRepli } from './helpers/cockpit';
 
 const admin = adminClientOrNull();
 type SeededUser = Awaited<ReturnType<typeof seedOnboardedUser>>;
@@ -33,6 +34,7 @@ function moisDuJourEtSuivant() {
       .format(new Date(Date.UTC(2000, month - 1, 1)))
       .toLowerCase();
   return {
+    nom,
     courant: { year: y, month: m },
     suivant,
     nomSuivant: suivant.year === y ? nom(suivant.month) : `${nom(suivant.month)} ${suivant.year}`,
@@ -189,21 +191,31 @@ test.describe.serial('Le mois concerné d’un argent reçu', () => {
     const cascade = page.getByTestId('cascade-du-mois');
     const encore = page.getByTestId('cockpit-encore-a-payer');
 
-    // This month: only the first income (705) counts; the bill of next month is not paid here.
-    await expect(titre).not.toContainText('mois à venir');
-    await expect(cascade).toContainText(/Reçu ce mois-ci 705\s€ sur 2\s505\s€ prévus/);
-    await expect(encore).toContainText('0 payées sur 1');
+    // ADR-047 (tour 49) — declared change of this spec (issue #504). The salary
+    // « for next month » arrived today, so the budget month running IS next
+    // month, and the cockpit opens on it. Until ADR-047 this step expected the
+    // calendar month (« Reçu ce mois-ci 705 € »), then › to next month as a
+    // month « à venir ». The same three months are now walked from the running
+    // one: its own income and bill, › the month after (à venir), ‹‹ the
+    // calendar month, now past, with the first income.
+    const { courant, nom } = moisDuJourEtSuivant();
+    const apres =
+      suivant.month === 12
+        ? { year: suivant.year + 1, month: 1 }
+        : { year: suivant.year, month: suivant.month + 1 };
+    const enParam = (p: { year: number; month: number }) =>
+      `${p.year}-${String(p.month).padStart(2, '0')}`;
 
-    // › : the next month, said in the title, with its own income and its own bill paid.
+    // The running budget month: only the salary for it (505) counts, and its bill is paid.
+    await expect(titre).not.toContainText('mois à venir');
+    await expect(cascade).toContainText(/Reçu ce mois-ci 505\s€ sur 2\s505\s€ prévus/);
+    await expect(encore).toContainText('1 payées sur 1');
+
+    // › : the month after, said in the title as a month not begun.
     await page.getByTestId('cockpit-period-next').click();
-    await expect(page).toHaveURL(new RegExp(`period=${param}`));
+    await expect(page).toHaveURL(new RegExp(`period=${enParam(apres)}`));
     await expect(titre).toContainText('mois à venir');
-    await expect(titre).toContainText(String(suivant.year));
-    // Tour 42 ter — another month speaks in its tense: same sums, « pour <mois> ».
-    const nomMois = moisDuJourEtSuivant().nomSuivant.split(' ')[0];
-    await expect(cascade).toContainText(
-      new RegExp(`Reçu pour ${nomMois} : 505\\s€ sur 2\\s505\\s€ prévus`),
-    );
+    await expect(titre).toContainText(String(apres.year));
     await expect(page.getByTestId('cockpit-title-etiquette')).toHaveText('mois à venir');
     // The title names the month; the selector no longer repeats it.
     await expect(page.getByTestId('cockpit-period-label')).toHaveCount(0);
@@ -211,19 +223,41 @@ test.describe.serial('Le mois concerné d’un argent reçu', () => {
     // A month not begun has no estimate: « — », never the whole budget.
     await expect(page.getByTestId('situation-epargne-estimee')).toHaveText('—');
     await expect(page.getByTestId('repli-reserve')).toContainText('Soldes d’aujourd’hui');
+    // Nothing received for it: the income is the one planned, and the card says so.
+    await ouvrirRepli(page, 'cockpit-repli-cascade');
+    await expect(page.getByTestId('situation-revenu-prevu')).toBeVisible();
     // « Revenir à … » is a target of at least 44 px, measured in the page.
     const retour = page.getByTestId('cockpit-period-back');
     expect((await retour.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
-    await expect(encore).toContainText('1 payées sur 1');
+    await expect(encore).toContainText('0 payées sur 1');
     // Today's balance of the daily account never sits next to another month's figure.
     await expect(page.getByText(/Sur ton compte du quotidien/)).toHaveCount(0);
     const lien = page.getByTestId('cockpit-voir-factures');
-    await expect(lien).toHaveAttribute('href', new RegExp(`/app/charges\\?period=${param}$`));
+    await expect(lien).toHaveAttribute(
+      'href',
+      new RegExp(`/app/charges\\?period=${enParam(apres)}$`),
+    );
     await expect(lien).toContainText(/^Voir les factures d/);
 
-    // ‹ : back to this month.
+    // ‹ : back to the running month, with its own income.
     await page.getByTestId('cockpit-period-prev').click();
+    await expect(page).toHaveURL(new RegExp(`period=${param}`));
     await expect(titre).not.toContainText('mois à venir');
-    await expect(cascade).toContainText(/Reçu ce mois-ci 705\s€ sur 2\s505\s€ prévus/);
+    await expect(cascade).toContainText(/Reçu ce mois-ci 505\s€ sur 2\s505\s€ prévus/);
+
+    // ‹ : the calendar month, now past — only the first income (705) counts there,
+    // and next month's bill is not paid there. Another month speaks « pour <mois> ».
+    await page.getByTestId('cockpit-period-prev').click();
+    await expect(page).toHaveURL(new RegExp(`period=${enParam(courant)}`));
+    await expect(titre).not.toContainText('mois à venir');
+    await expect(page.getByTestId('cockpit-title-etiquette')).toHaveText('mois passé');
+    await expect(page.getByTestId('cockpit-il-te-reste')).toContainText('Il t’est resté');
+    await expect(page.getByTestId('encore-a-payer-deja-retire')).toContainText(
+      'Déjà retiré de ce qu’il t’est resté.',
+    );
+    await expect(cascade).toContainText(
+      new RegExp(`Reçu pour ${nom(courant.month)} : 705\\s€ sur 2\\s505\\s€ prévus`),
+    );
+    await expect(encore).toContainText('0 payées sur 1');
   });
 });

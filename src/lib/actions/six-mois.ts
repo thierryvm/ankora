@@ -4,6 +4,8 @@ import { z } from 'zod';
 
 import { commitmentRowToDomain } from '@/lib/data/commitment-row';
 import { getCommitmentsWithLedger } from '@/lib/data/commitments';
+import { loadAccountLedger } from '@/lib/data/operations';
+import { createClient } from '@/lib/supabase/server';
 import {
   getSnapshotWith,
   readMonthActivity,
@@ -45,23 +47,36 @@ export async function getSixMoisAction(
   const fin = parsed.data;
 
   try {
-    const [snapshot, { commitments, paidKeysByCommitment }] = await getSnapshotWith(
+    const [snapshot, [{ commitments, paidKeysByCommitment }, ledger]] = await getSnapshotWith(
       null,
-      getCommitmentsWithLedger,
+      async (workspaceId) =>
+        Promise.all([
+          getCommitmentsWithLedger(workspaceId),
+          loadAccountLedger(await createClient(), workspaceId),
+        ]),
     );
-    const courant = snapshot.currentPeriod;
+    // Six months back need the incomes of six months back: the snapshot only
+    // reads the recent ones. An unreadable journal is a read failure, never a
+    // silent fall back on the calendar for some months and not others.
+    if (!ledger.ok) throw new DataReadUnavailableError('six-mois.ledger', null);
+    const revenus = ledger.movements;
+    // ADR-047 — the running month is the budget month; each month's expenses
+    // are ranged by the same function as « Il te reste ».
+    const courant = snapshot.moisDeBudget;
+    const memeQueLeSnapshot = (p: { year: number; month: number }) =>
+      p.year === snapshot.currentPeriod.year && p.month === snapshot.currentPeriod.month;
     const fenetre = moisDeLaFenetre(fin);
     const cle = (p: { year: number; month: number }) => `${p.year}-${p.month}`;
     // The current month is already in the snapshot: only the five others are read.
     const lues = await Promise.all(
       fenetre.map(async (ref): Promise<[string, MonthActivity]> => {
-        if (ref.year === courant.year && ref.month === courant.month) {
+        if (ref.year === courant.year && ref.month === courant.month && memeQueLeSnapshot(ref)) {
           return [
             cle(ref),
             { payments: snapshot.currentMonthPayments, expenses: snapshot.monthlyExpenses },
           ];
         }
-        return [cle(ref), await readMonthActivity(snapshot.workspaceId, ref)];
+        return [cle(ref), await readMonthActivity(snapshot.workspaceId, ref, revenus)];
       }),
     );
     const activites = new Map(lues);
@@ -74,6 +89,7 @@ export async function getSixMoisAction(
     const serie = sixMois({
       fin,
       moisCourant: courant,
+      revenus,
       charges: snapshot.charges,
       cockpitCharges: toCockpitCharges(snapshot.charges),
       commitments: commitments.map((c) => ({ ...commitmentRowToDomain(c), label: c.label })),

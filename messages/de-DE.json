@@ -1032,6 +1032,7 @@
       "title": "Meine Ausgaben",
       "rowPaidFrom": "Bezahlt von {account}",
       "subtitle": "Die Ausgaben abseits wiederkehrender Rechnungen — Einkäufe, Restaurant, Freizeit…",
+      "budgetPeriod": "Dieses Budget läuft vom {debut} bis zum {fin}: Es beginnt, wenn dein Einkommen eingeht.",
       "addSheet": {
         "title": "Neue Ausgabe",
         "cancel": "Abbrechen",
@@ -1355,6 +1356,9 @@
         "detailOrigine": "{montant} {cycleMois, plural, =3 {every 3 months} =6 {every 6 months} =12 {once a year} other {every # months}}",
         "recuEnPlus": "Zusätzlich erhalten",
         "misDeCote": "Zurückgelegt",
+        "revenuPrevu": "Erwartetes Einkommen",
+        "revenuPrevuNote": "Für diesen Monat ist kein erhaltenes Geld notiert: Dieser Betrag ist das Einkommen aus deinen Einstellungen.",
+        "revenuPrevuLien": "Erhaltenes Geld notieren",
         "revenuRecuSurPrevu": "Diesen Monat erhalten {recu} von {prevu} geplant",
         "revenuRecuPlusQuePrevu": "Diesen Monat erhalten {recu}, mehr als die {prevu} geplant",
         "auDela": "Diesen Monat hast du {montant} mehr zurückgelegt, als dein Einkommen übrig ließ: Die Differenz kommt von deinem Hauptkonto.",
@@ -1765,6 +1769,7 @@
       "titreAVenir": "Dir wird bleiben",
       "titrePasse": "Dir blieb",
       "baseMois": "von deinem Budget für {month}",
+      "termeRevenuPrevu": "Erwartetes Einkommen",
       "termeRevenusMois": "Erhalten für {month}"
     },
     "encoreAPayer": {
@@ -1901,6 +1906,7 @@
       "depenseAu": "Ausgegeben bis {jour}",
       "projectionAu": "= Hochrechnung bis {jour}",
       "projectionOp": "{depense} × {jours} Tage ÷ {ecoules} Tage",
+      "revenuPrevu": "Erwartetes Einkommen",
       "budgetEtiquette": "Monatsbudget · berechnet",
       "revenus": "Erhaltenes Geld",
       "factures": "Deine Rechnungen des Monats",

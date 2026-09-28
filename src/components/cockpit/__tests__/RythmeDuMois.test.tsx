@@ -182,3 +182,82 @@ describe('RythmeDuMois — ÉPARGNE block and « Trop tôt pour projeter » (G-1
     expect(document.querySelector('[data-rythme="projection"]')).toBeNull();
   });
 });
+
+// ADR-047 — October's budget month opened on 28 September (fictitious payday)
+// and November's income is not noted yet: the window runs 28 September –
+// 31 October, 34 days. Index 1 is 28 September, index 34 is 31 October.
+describe('RythmeDuMois — budget month that opened before the 1st (ADR-047)', () => {
+  const OCTOBRE = {
+    year: 2026,
+    month: 9,
+    moisDeBudget: 10,
+    decalage: 27,
+    joursDuMois: 34,
+    joursEcoules: 10,
+    serie: serie(DEPENSES, 34),
+    depenses: DEPENSES,
+  };
+  const reperes = () => Array.from(screen.getByTestId('rythme-axe').querySelectorAll('span'));
+
+  it('the axis names dates of the budget window, never raw day indexes', () => {
+    monter(OCTOBRE);
+    const r = reperes().map((s) => s.textContent);
+    expect(r[0]).toBe('28 sept.');
+    expect(r).toContain('5 oct.');
+    expect(r[r.length - 1]).toBe('31 oct.');
+    // No bare number: « 1 », « 5 », « 10 » would read as days of September.
+    for (const x of r) expect(x).toMatch(/\D/);
+  });
+
+  it('every tick of a 34-day window has a real grid column', () => {
+    monter(OCTOBRE);
+    expect(screen.getByTestId('rythme-axe').className).toContain('grid-cols-34');
+    const derniere = reperes().at(-1)!;
+    expect(derniere.className).toContain('col-start-34');
+    for (const s of reperes()) expect(s.className).not.toContain('undefined');
+  });
+
+  it('dates at both ends stay inside the card: first aligned left, last aligned right', () => {
+    // Centred on column 1, « 28 sept. » overflowed and read « 8 sept. » (seen at 1440).
+    monter(OCTOBRE);
+    const r = reperes();
+    expect(r[0]!.className).toContain('justify-self-start');
+    expect(r.at(-1)!.className).toContain('justify-self-end');
+  });
+
+  it('the savings line calls the end by the budget month, not the calendar one', () => {
+    monter(OCTOBRE);
+    const epargne = screen.getByTestId('rythme-epargne');
+    expect(epargne).toHaveTextContent('Fin octobre');
+    expect(epargne).not.toHaveTextContent('septembre');
+    expect(epargne).toHaveTextContent('31 oct.');
+  });
+
+  it('a window opened on the 1st of the previous month still names the budget month', () => {
+    // October's income dated 1 September (±1 month allowed): no day offset, yet
+    // the window is not October's calendar.
+    monter({ ...OCTOBRE, decalage: 0, joursDuMois: 61, serie: serie(DEPENSES, 61) });
+    expect(screen.getByTestId('rythme-epargne')).toHaveTextContent('Fin octobre');
+    const r = reperes().map((s) => s.textContent);
+    expect(r[0]).toBe('1 sept.');
+    expect(r[r.length - 1]).toBe('31 oct.');
+  });
+
+  it('a window closed early by the next income keeps the name of its own month', () => {
+    // October's window cut on 27 October by November's income: 1 – 27 October.
+    monter({
+      month: 10,
+      moisDeBudget: 10,
+      joursDuMois: 27,
+      joursEcoules: 10,
+      serie: serie(DEPENSES, 27),
+      depenses: DEPENSES,
+    });
+    expect(screen.getByTestId('rythme-epargne')).toHaveTextContent('Fin octobre');
+  });
+
+  it('a calendar month keeps its numbered axis', () => {
+    monter();
+    expect(reperes().map((s) => s.textContent)).toEqual(['1', '5', '10', '15', '20', '25', '30']);
+  });
+});

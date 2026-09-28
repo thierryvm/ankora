@@ -32,6 +32,15 @@ vi.mock('next-intl/server', () => ({
   },
 }));
 
+vi.mock('@/i18n/navigation', () => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Link: ({ href, children, ...rest }: any) => (
+    <a href={typeof href === 'string' ? href : href.pathname} {...rest}>
+      {children}
+    </a>
+  ),
+}));
+
 /**
  * Décomposition par défaut : une part par poste, dont la somme vaut le total du
  * poste. Les cas qui testent la décomposition elle-même la remplacent ; les
@@ -213,6 +222,40 @@ describe('<CascadeDuMois /> — décomposition des postes', () => {
  * terms: base income + received on top − the three items − set aside = budget.
  * Fictitious amounts (505 € / 705 € family).
  */
+describe('<CascadeDuMois /> — ADR-047, revenu prévu', () => {
+  it('sans argent reçu noté, la ligne dit « Revenu prévu » et propose de le noter', async () => {
+    await renderCascade({ revenuPrevu: true });
+    expect(screen.getByText('Revenu prévu')).toBeInTheDocument();
+    const note = screen.getByTestId('situation-revenu-prevu');
+    const lien = note.querySelector('a');
+    expect(lien).toHaveAttribute('href', '/app/accounts');
+    expect(lien).toHaveTextContent('Noter l’argent reçu');
+  });
+
+  it('avec de l’argent reçu noté, la ligne reste « Revenus » et rien n’est proposé', async () => {
+    await renderCascade({ revenuPrevu: false });
+    expect(screen.queryByText('Revenu prévu')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('situation-revenu-prevu')).not.toBeInTheDocument();
+  });
+
+  // Issue #504 — part of the written income received: the figure is still the
+  // one planned, so the row says « Revenu prévu », the sentence says what came
+  // in, and « Aucun argent reçu noté » would be false, so it is not written.
+  it('reçu partiel : « Revenu prévu », « Reçu ce mois-ci X sur Y », sans la note « aucun argent reçu »', async () => {
+    const { container } = await renderCascade({
+      revenuPrevu: true,
+      revenus: 2505,
+      revenuRecu: 705,
+      revenuEcrit: 2505,
+    });
+    expect(screen.getByText('Revenu prévu')).toBeInTheDocument();
+    expect(container.querySelector('[data-revenu-recu-differe]')?.textContent).toMatch(
+      /^Reçu ce mois-ci 705[\s  ]€ sur 2[\s  ]?505[\s  ]€ prévus$/u,
+    );
+    expect(screen.queryByTestId('situation-revenu-prevu')).not.toBeInTheDocument();
+  });
+});
+
 describe('<CascadeDuMois /> — PR D, set aside and received on top', () => {
   const flow = messages.dashboard.situation.flow;
   // 2 120 (of which 120 on top) − 1 500 − 338 − 200 set aside = 82 ; − 200 spent = −118

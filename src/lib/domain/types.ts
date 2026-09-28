@@ -64,6 +64,12 @@ export type Expense = {
   categoryId: string | null;
   note: string | null;
   paidFrom: AccountKind;
+  /**
+   * ISO timestamp of the write (`expenses.created_at`). Only the budget month
+   * reads it (ADR-047): on the day the income lands, an expense written after
+   * it belongs to the next month. Optional: fixtures and older payloads omit it.
+   */
+  createdAt?: string;
 };
 
 export type MonthKey =

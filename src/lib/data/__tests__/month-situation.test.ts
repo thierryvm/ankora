@@ -61,6 +61,9 @@ const snapshot = {
   currentMonthPayments: [],
   monthlyExpenses: [],
   currentPeriod: { year: 2026, month: 9 },
+  // ADR-047 — no income for October written: the budget month is the calendar's.
+  moisDeBudget: { year: 2026, month: 9 },
+  revenus: [],
 };
 
 const day = (iso: string) => new Date(`${iso}T00:00:00Z`);
@@ -264,7 +267,8 @@ describe('loadMonthSituation — the viewed month (ADR-046, lot 2)', () => {
     const out = await loadMonthSituation(null, october);
 
     // The month's payments are read for the VIEWED month, in the session's workspace.
-    expect(readMonthActivity).toHaveBeenCalledWith('ws-fictif', october);
+    // ADR-047: with the journal, which ranges that month's expenses.
+    expect(readMonthActivity).toHaveBeenCalledWith('ws-fictif', october, []);
     expect(out.ref).toEqual(october);
     expect(out.paymentsLedger.get(paymentKey('c-assurance', 2026, 10))).toBe(true);
     expect(out.isCurrentMonth).toBe(false);
@@ -284,6 +288,37 @@ describe('loadMonthSituation — the viewed month (ADR-046, lot 2)', () => {
     const sept = await loadMonthSituation(null);
     expect(sept.situation.revenuRecu).toBeNull();
     expect(sept.ref).toEqual({ year: 2026, month: 9 });
+  });
+
+  it('ADR-047 — October salary written on 28 September: the cockpit opens October, with the evening spending', async () => {
+    const { DEPENSES, IDS_OCTOBRE, SALAIRE_OCTOBRE } =
+      await import('@/lib/domain/budget/__tests__/fixture-mois-de-budget');
+    const salaire = { ...salairePourOctobre, recordedAt: SALAIRE_OCTOBRE.recordedAt };
+    loadAccountLedger.mockResolvedValue({ ok: true, statements: [], movements: [salaire] });
+    // The read hands the calendar month and the one before; the ranging is done here.
+    readMonthActivity.mockResolvedValue({ payments: [], expenses: DEPENSES });
+    snapshot.moisDeBudget = { year: 2026, month: 10 };
+    try {
+      const { loadMonthSituation } = await import('@/lib/data/month-situation');
+      const oct = await loadMonthSituation(null);
+      expect(oct.ref).toEqual(october);
+      expect(oct.isCurrentMonth).toBe(true);
+      expect(readMonthActivity).toHaveBeenCalledWith('ws-fictif', october, [salaire]);
+      expect(oct.situation.depensesDuMois.toFixed(2)).toBe('65.00');
+      expect(oct.monthlyExpenses.map((e) => e.id)).toEqual(IDS_OCTOBRE);
+      expect(oct.fenetre).toMatchObject({ debut: '2026-09-28', fin: '2026-10-31', jours: 34 });
+      expect(oct.joursDuMois).toBe(34);
+
+      // September, opened by its arrow: its own 55, spoken of in the past, and
+      // no money received « for September » — the October salary never counts twice.
+      const sept = await loadMonthSituation(null, { year: 2026, month: 9 });
+      expect(sept.situation.depensesDuMois.toFixed(2)).toBe('55.00');
+      expect(sept.isCurrentMonth).toBe(false);
+      expect(sept.situation.revenuRecu).toBeNull();
+      expect(sept.joursDuMois).toBe(27);
+    } finally {
+      snapshot.moisDeBudget = { year: 2026, month: 9 };
+    }
   });
 
   it('the spending of the viewed month is the one subtracted', async () => {

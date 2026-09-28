@@ -2,6 +2,7 @@ import { ChevronDown } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Link } from '@/i18n/navigation';
 import { formatCurrency } from '@/lib/i18n/formatters';
 import type { Locale } from '@/i18n/routing';
 
@@ -63,6 +64,12 @@ type Props = {
    * et seulement alors — un écart qui ne se dit pas est un défaut.
    */
   revenuRecu: number | null;
+  /**
+   * The base figure is the written income (issue #504: nothing received, or
+   * less than planned): the row says « Revenu prévu ». When nothing at all was
+   * received (`revenuRecu === null`), the card also offers to note it.
+   */
+  revenuPrevu?: boolean;
   revenuEcrit: number | null;
   /** L'argent reçu « en plus du revenu ». 0 = la ligne n'apparaît pas. */
   recuEnPlus: number;
@@ -253,7 +260,10 @@ export async function CascadeDuMois(props: Props) {
               base + reçu en plus − les trois postes − mis de côté = budget du
               mois. Le revenu de base est le total moins son seul autre
               composant, pour que les deux lignes refassent toujours le total. */}
-          <FlowRow label={t('flow.revenus')} value={fmt(props.revenus - props.recuEnPlus)} />
+          <FlowRow
+            label={props.revenuPrevu ? t('flow.revenuPrevu') : t('flow.revenus')}
+            value={fmt(props.revenus - props.recuEnPlus)}
+          />
           {props.recuEnPlus > 0 && (
             <FlowRow label={t('flow.recuEnPlus')} value={`+ ${fmt(props.recuEnPlus)}`} />
           )}
@@ -348,6 +358,16 @@ export async function CascadeDuMois(props: Props) {
         {aVenir && (
           <p className="text-muted-foreground pl-3 text-xs" data-testid="situation-epargne-a-venir">
             {t('flow.epargneEstimeeAVenir')}
+          </p>
+        )}
+        {/* Issue #504 — only when NOTHING was received: with part of the income
+            received, the sentence below says it, and this one would be false. */}
+        {props.revenuPrevu && props.revenuRecu === null && (
+          <p className="text-muted-foreground pl-3 text-xs" data-testid="situation-revenu-prevu">
+            {t('flow.revenuPrevuNote')}{' '}
+            <Link href="/app/accounts" className="text-foreground underline underline-offset-2">
+              {t('flow.revenuPrevuLien')}
+            </Link>
           </p>
         )}
         {/* Outside the <dl>: a <p> is not a valid child of a definition list.

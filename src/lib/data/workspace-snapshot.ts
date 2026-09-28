@@ -9,6 +9,11 @@ import { ANKORA_TIMEZONE } from '@/lib/date/tz';
 import { redirect } from '@/i18n/navigation';
 
 import { assertReadable } from '@/lib/data/read-failure';
+import {
+  depensesDuMoisDeBudget,
+  moisDeBudgetEnCours,
+  type RevenuDuJournal,
+} from '@/lib/domain/budget/mois-de-budget';
 import { createClient } from '@/lib/supabase/server';
 import { log } from '@/lib/log';
 import {
@@ -48,7 +53,37 @@ export function toCockpitCharges(charges: readonly Charge[]): readonly CockpitCh
   }));
 }
 
-const EXPENSE_COLUMNS = 'id, label, amount, occurred_on, category_id, note, paid_from';
+const EXPENSE_COLUMNS = 'id, label, amount, occurred_on, category_id, note, paid_from, created_at';
+/** The month incomes the budget month reads (ADR-047) — nothing else of the journal. */
+const INCOME_COLUMNS =
+  'kind, occurred_on, recorded_at, cancelled_at, income_nature, budget_year, budget_month';
+
+type IncomeRow = {
+  kind: string;
+  occurred_on: string;
+  recorded_at: string;
+  cancelled_at: string | null;
+  income_nature: string | null;
+  budget_year: number | null;
+  budget_month: number | null;
+};
+
+function toRevenu(r: IncomeRow): RevenuDuJournal {
+  return {
+    kind: r.kind as RevenuDuJournal['kind'],
+    occurredOn: new Date(`${r.occurred_on}T00:00:00Z`),
+    recordedAt: new Date(r.recorded_at),
+    cancelledAt: r.cancelled_at ? new Date(r.cancelled_at) : null,
+    incomeNature: (r.income_nature as RevenuDuJournal['incomeNature']) ?? null,
+    budgetYear: r.budget_year,
+    budgetMonth: r.budget_month,
+  };
+}
+
+const firstDay = (p: { year: number; month: number }, shift = 0) => {
+  const total = p.year * 12 + (p.month - 1) + shift;
+  return `${Math.floor(total / 12)}-${String((total % 12) + 1).padStart(2, '0')}-01`;
+};
 const PAYMENT_COLUMNS = 'charge_id, period_year, period_month, paid_amount, paid_at';
 
 type ExpenseRow = {
@@ -59,6 +94,7 @@ type ExpenseRow = {
   category_id: string | null;
   note: string | null;
   paid_from: string | null;
+  created_at?: string | null;
 };
 type PaymentRow = {
   charge_id: string;
@@ -77,6 +113,7 @@ function toExpense(e: ExpenseRow): Expense {
     categoryId: e.category_id,
     note: e.note,
     paidFrom: e.paid_from as AccountKind,
+    ...(e.created_at ? { createdAt: e.created_at } : {}),
   };
 }
 
@@ -100,15 +137,19 @@ function toMonthPayment(p: PaymentRow): WorkspaceSnapshot['currentMonthPayments'
 export async function readMonthActivity(
   workspaceId: string,
   ref: { year: number; month: number },
+  /**
+   * ADR-047 — the month incomes of the journal: the expenses returned are the
+   * BUDGET month's, read from the calendar month before `ref` to the end of
+   * `ref` and ranged by `depensesDuMoisDeBudget`. Empty: the calendar month.
+   */
+  revenus: readonly RevenuDuJournal[],
 ): Promise<{
   payments: WorkspaceSnapshot['currentMonthPayments'];
   expenses: Expense[];
 }> {
   const supabase = await createClient();
-  const start = `${ref.year}-${String(ref.month).padStart(2, '0')}-01`;
-  const nextYear = ref.month === 12 ? ref.year + 1 : ref.year;
-  const nextMonth = ref.month === 12 ? 1 : ref.month + 1;
-  const nextStart = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
+  const start = firstDay(ref, -1);
+  const nextStart = firstDay(ref, 1);
 
   const [expensesRes, paymentsRes] = await Promise.all([
     supabase
@@ -132,8 +173,22 @@ export async function readMonthActivity(
   assertReadable(paymentsRes.error, 'workspace-snapshot: viewed-month charge payments');
   return {
     payments: ((paymentsRes.data ?? []) as PaymentRow[]).map(toMonthPayment),
-    expenses: ((expensesRes.data ?? []) as ExpenseRow[]).map(toExpense),
+    expenses: depensesDuMoisDeBudget(
+      ((expensesRes.data ?? []) as ExpenseRow[]).map(toExpense),
+      ref,
+      revenus,
+    ),
   };
+}
+
+/** Today in Europe/Brussels, `YYYY-MM-DD` — the day the budget month is read at. */
+function todayInBrussels(): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: ANKORA_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
 }
 
 function getCurrentMonthBoundariesISO(): { startISO: string; nextStartISO: string } {
@@ -193,8 +248,21 @@ export type WorkspaceSnapshot = {
     notes: string | null;
     paidFrom: ChargePaidFrom;
   }>;
-  /** Expenses occurring in the current calendar month (server-filtered). */
+  /**
+   * The expenses of the RUNNING BUDGET MONTH (`moisDeBudget`, ADR-047): read
+   * from the calendar month before to the end of the month after, ranged by
+   * `depensesDuMoisDeBudget`. Equal to the calendar month while no income for
+   * the next month has arrived.
+   */
   monthlyExpenses: Expense[];
+  /**
+   * ADR-047 — the budget month running now: the calendar month, or the next
+   * one once its income has arrived. The default month of the cockpit, of the
+   * Expenses and Bills pages and of the expense sheet.
+   */
+  moisDeBudget: { year: number; month: number };
+  /** The live and cancelled month incomes read to decide `moisDeBudget`. */
+  revenus: RevenuDuJournal[];
   /**
    * Charge payments for the current `(year, month)` only — drives the
    * "À payer / Payé" toggle UI and the Santé Provisions algorithm.
@@ -339,7 +407,7 @@ async function timedSnapshot(workspaceId: string): Promise<WorkspaceSnapshot> {
 async function readWorkspaceSnapshot(workspaceId: string): Promise<WorkspaceSnapshot> {
   const supabase = await createClient();
 
-  const { startISO: startOfMonth, nextStartISO: startOfNextMonth } = getCurrentMonthBoundariesISO();
+  const { startISO: startOfMonth } = getCurrentMonthBoundariesISO();
 
   // Derive current (year, month) from the same TZ as the cashflow boundaries
   // so `currentMonthPayments` and `monthlyExpenses` always agree on "this month".
@@ -360,6 +428,7 @@ async function readWorkspaceSnapshot(workspaceId: string): Promise<WorkspaceSnap
     monthlyExpensesRes,
     currentMonthPaymentsRes,
     previousMonthPaymentsRes,
+    incomesRes,
   ] = await Promise.all([
     supabase
       .from('workspaces')
@@ -397,10 +466,12 @@ async function readWorkspaceSnapshot(workspaceId: string): Promise<WorkspaceSnap
       .eq('workspace_id', workspaceId),
     supabase
       .from('expenses')
-      .select('id, label, amount, occurred_on, category_id, note, paid_from')
+      .select(EXPENSE_COLUMNS)
       .eq('workspace_id', workspaceId)
-      .gte('occurred_on', startOfMonth)
-      .lt('occurred_on', startOfNextMonth)
+      // ADR-047 — the running budget month is this calendar month or the next
+      // one; its expenses can be dated from the month before to the month after.
+      .gte('occurred_on', firstDay({ year: currentYear, month: currentMonth }, -1))
+      .lt('occurred_on', firstDay({ year: currentYear, month: currentMonth }, 2))
       .order('occurred_on', { ascending: false }),
     supabase
       .from('charge_payments')
@@ -414,6 +485,14 @@ async function readWorkspaceSnapshot(workspaceId: string): Promise<WorkspaceSnap
       .eq('workspace_id', workspaceId)
       .eq('period_year', previousYear)
       .eq('period_month', previousMonth),
+    // ADR-047 — the month incomes that can open this month or the next one.
+    supabase
+      .from('movements')
+      .select(INCOME_COLUMNS)
+      .eq('workspace_id', workspaceId)
+      .eq('kind', 'income')
+      .eq('income_nature', 'regular')
+      .gte('occurred_on', firstDay({ year: currentYear, month: currentMonth }, -1)),
   ]);
 
   // The workspace row is reached through a membership we just read successfully,
@@ -483,7 +562,21 @@ async function readWorkspaceSnapshot(workspaceId: string): Promise<WorkspaceSnap
     });
   }
 
-  const monthlyExpenses: Expense[] = (monthlyExpensesRes.data ?? []).map(toExpense);
+  // Unreadable month incomes: the calendar month, as before ADR-047 — never
+  // a month the user did not open. The failure is logged, not hidden.
+  if (incomesRes.error) {
+    log.warn('Failed to load month incomes for the budget month', {
+      workspace_id: workspaceId,
+      error_code: incomesRes.error.code ?? 'unknown',
+    });
+  }
+  const revenus = ((incomesRes.data ?? []) as IncomeRow[]).map(toRevenu);
+  const moisDeBudget = moisDeBudgetEnCours(revenus, todayInBrussels(), new Date());
+  const monthlyExpenses: Expense[] = depensesDuMoisDeBudget(
+    ((monthlyExpensesRes.data ?? []) as ExpenseRow[]).map(toExpense),
+    moisDeBudget,
+    revenus,
+  );
 
   if (currentMonthPaymentsRes.error) {
     log.warn('Failed to load current-month charge payments for dashboard', {
@@ -522,6 +615,8 @@ async function readWorkspaceSnapshot(workspaceId: string): Promise<WorkspaceSnap
     monthlyExpenses,
     currentMonthPayments,
     currentPeriod: { year: currentYear, month: currentMonth },
+    moisDeBudget,
+    revenus,
     previousPeriod: { year: previousYear, month: previousMonth },
     previousMonthPaidChargeIds,
   };
