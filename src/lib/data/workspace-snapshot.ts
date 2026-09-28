@@ -8,6 +8,7 @@ import { ANKORA_TIMEZONE } from '@/lib/date/tz';
 
 import { redirect } from '@/i18n/navigation';
 
+import { chargeFromRow } from '@/lib/data/charge-row';
 import { assertReadable } from '@/lib/data/read-failure';
 import {
   depensesDuMoisDeBudget,
@@ -533,19 +534,8 @@ async function readWorkspaceSnapshot(workspaceId: string): Promise<WorkspaceSnap
     paidFrom: c.paid_from as ChargePaidFrom,
   }));
 
-  const charges: Charge[] = rawCharges.map((c) => ({
-    id: c.id,
-    label: c.label,
-    amount: money(c.amount),
-    frequency: c.frequency as Charge['frequency'],
-    dueMonth: c.dueMonth,
-    paymentDay: c.paymentDay,
-    paymentMonths: c.paymentMonths,
-    categoryId: c.categoryId,
-    isActive: c.isActive,
-    isWatched: c.isWatched,
-    paidFrom: c.paidFrom,
-  }));
+  // One mapping with the server actions (tour 55), never a second one here.
+  const charges: Charge[] = (chargesRes.data ?? []).map(chargeFromRow);
 
   const accounts: AccountSnapshot[] = (accountsRes.data ?? []).map((a) => ({
     kind: a.kind as AccountKind,

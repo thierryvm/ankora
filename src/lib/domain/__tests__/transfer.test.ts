@@ -1,7 +1,12 @@
 import { describe, it, expect } from 'vitest';
 
 import { money, type Charge } from '@/lib/domain/types';
-import { computeMonthlyTransferPlan, projectedEpargneBalance } from '@/lib/domain/transfer';
+import {
+  computeMonthlyTransferPlan,
+  projectedEpargneBalance,
+  provisionPartOfMonth,
+  virementsRestants,
+} from '@/lib/domain/transfer';
 
 // THI-192: `paymentMonths` + `paymentDay` were added to `Charge`. For these
 // transfer tests (PR-D1 era) the schedule precision is irrelevant — the
@@ -143,8 +148,10 @@ describe('computeMonthlyTransferPlan — heavy-bill month', () => {
     expect(plan.epargneProvisionTarget.toNumber()).toBe(100);
     expect(plan.epargneBillsDue.toNumber()).toBe(1200);
     expect(plan.epargneTransferNet.toNumber()).toBe(-1100);
-    // Principal recovers 1100 from Épargne, pays the bill (already on Épargne side).
-    expect(plan.netPrincipalAfterPlan.toNumber()).toBe(2500 - 500 - -1100);
+    // Principal recovers 1100 from Épargne and pays the 1200 bill itself:
+    // a paid bill always debits the main account (ADR-045 D22).
+    expect(plan.netPrincipalAfterPlan.toNumber()).toBe(2500 - 500 - -1100 - 1200);
+    expect(plan.epargneProvisionPart.toNumber()).toBe(0);
   });
 });
 
@@ -194,8 +201,10 @@ describe('computeMonthlyTransferPlan — full mix', () => {
     expect(plan.epargneTransferNet.toNumber()).toBe(40);
     // Principal bills this month = rent 900 only
     expect(plan.principalBillsDue.toNumber()).toBe(900);
-    // Principal remainder = 2500 - 500 - 40 - 900 = 1060
-    expect(plan.netPrincipalAfterPlan.toNumber()).toBe(1060);
+    // Principal remainder = 2500 - 500 - 40 - 900 - 90 = 970: the 90 water
+    // bill leaves the main account (ADR-045 D22), only the net 40 is transferred.
+    expect(plan.netPrincipalAfterPlan.toNumber()).toBe(970);
+    expect(plan.epargneProvisionPart.toNumber()).toBe(40);
   });
 });
 
@@ -344,5 +353,89 @@ describe('projectedEpargneBalance', () => {
       commitmentsDue: money(0),
     });
     expect(projectedEpargneBalance(money(1500), plan).toNumber()).toBe(400);
+  });
+});
+
+/**
+ * Tour 55 — one rule for the provisions share of a transfer. A smoothed bill
+ * paid this month leaves the MAIN account (ADR-045 D22), so the transfer to the
+ * provisions only carries the net: the line « 70 à mettre de côté − 55 de
+ * factures = 15 » and the split of a 505 transfer must both read 15, never 70.
+ */
+describe('provisionPartOfMonth — the net, never the target', () => {
+  const smoothed = (amount: number, frequency: Charge['frequency'], dueMonth: number): Charge =>
+    annualSmoothed({ id: `s${amount}`, amount: money(amount), frequency, dueMonth });
+  // An annual 60 (5 a month, due in January) and a quarterly 165 (55 a month).
+  const charges = [smoothed(60, 'annual', 1), smoothed(165, 'quarterly', 3)];
+
+  it('is the monthly target minus the smoothed bills due, as the line says', () => {
+    const plan = computeMonthlyTransferPlan({
+      charges,
+      month: 1,
+      monthlyIncome: money(2505),
+      vieCouranteMonthlyTransfer: money(505),
+      commitmentsDue: money(0),
+    });
+    // target 5 + 55 = 60 ; due in month 1: the 60 annual → net 0
+    expect(plan.epargneProvisionTarget.toNumber()).toBe(60);
+    expect(plan.epargneBillsDue.toNumber()).toBe(60);
+    expect(plan.epargneProvisionPart.toNumber()).toBe(0);
+    expect(provisionPartOfMonth(charges, 1).toNumber()).toBe(0);
+  });
+
+  it('is what the server and the sheet split a transfer with', () => {
+    const plan = computeMonthlyTransferPlan({
+      charges: [smoothed(840, 'annual', 9), smoothed(15, 'monthly', 1)],
+      month: 2,
+      monthlyIncome: money(2505),
+      vieCouranteMonthlyTransfer: money(505),
+      commitmentsDue: money(0),
+    });
+    // target 70 + 15 = 85 ; the monthly 15 is due in month 2 → net 70
+    expect(plan.epargneProvisionPart.toNumber()).toBe(70);
+    expect(
+      provisionPartOfMonth([smoothed(840, 'annual', 9), smoothed(15, 'monthly', 1)], 2).toNumber(),
+    ).toBe(70);
+  });
+
+  it('« Après tes sorties » deducts the smoothed bill that leaves the main account', () => {
+    const plan = computeMonthlyTransferPlan({
+      charges: [smoothed(840, 'annual', 9), smoothed(15, 'monthly', 1)],
+      month: 2,
+      monthlyIncome: money(2505),
+      vieCouranteMonthlyTransfer: money(505),
+      commitmentsDue: money(0),
+    });
+    // 2505 − 505 − 70 (net transfer) − 15 (bill paid from the main account)
+    expect(plan.netPrincipalAfterPlan.toNumber()).toBe(1915);
+  });
+});
+
+describe('virementsRestants — what is still to do, not what was planned', () => {
+  it('adds the lines not done yet, in absolute value', () => {
+    expect(
+      virementsRestants([
+        { amount: money(505), done: false },
+        { amount: money(-70), done: false },
+      ]).toNumber(),
+    ).toBe(575);
+  });
+
+  it('is zero once every line is done', () => {
+    expect(
+      virementsRestants([
+        { amount: money(505), done: true },
+        { amount: money(70), done: true },
+      ]).toNumber(),
+    ).toBe(0);
+  });
+
+  it('only counts the lines left', () => {
+    expect(
+      virementsRestants([
+        { amount: money(505), done: true },
+        { amount: money(70), done: false },
+      ]).toNumber(),
+    ).toBe(70);
   });
 });

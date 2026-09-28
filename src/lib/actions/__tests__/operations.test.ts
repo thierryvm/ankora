@@ -36,6 +36,7 @@ const h = vi.hoisted(() => {
     rate: vi.fn(async () => ({ success: true })),
     audit: vi.fn(async () => {}),
     logError: vi.fn(),
+    charges: vi.fn(async (): Promise<unknown[] | null> => []),
     ledger: vi.fn(async () => ({
       ok: true,
       statements: [] as unknown[],
@@ -65,6 +66,11 @@ vi.mock('@/lib/data/operations', () => ({
     ...(await (h.ledger as unknown as (...a: unknown[]) => Promise<object>)(...args)),
   }),
 }));
+// Tour 55 — the provisions share is recomputed from the charges on the server.
+vi.mock('@/lib/data/charge-row', () => ({
+  loadWorkspaceCharges: (...a: unknown[]) =>
+    (h.charges as unknown as (...x: unknown[]) => Promise<unknown>)(...a),
+}));
 vi.mock('@/lib/data/month-situation', () => ({ todayIsoInBrussels: () => '2026-09-21' }));
 vi.mock('@/lib/actions/revalidate', () => ({
   revalidateDashboard: vi.fn(),
@@ -75,7 +81,7 @@ vi.mock('next-intl/server', () => ({
     key === 'defaultRegular' ? 'Revenu du mois' : 'En plus du revenu',
 }));
 
-import { money } from '@/lib/domain/types';
+import { money, type Charge } from '@/lib/domain/types';
 import {
   confirmStatementIncludedAction,
   recordBalanceStatementAction,
@@ -288,6 +294,19 @@ describe('dates in the future are refused', () => {
   });
 });
 
+const smoothed = (amount: number, frequency: Charge['frequency'], dueMonth: number): Charge => ({
+  id: `c-${amount}-${frequency}`,
+  label: 'Facture fictive',
+  amount: money(amount),
+  frequency,
+  dueMonth,
+  paymentMonths: [dueMonth],
+  paymentDay: 1,
+  categoryId: null,
+  isActive: true,
+  paidFrom: 'epargne',
+});
+
 describe('recordPlannedTransferAction', () => {
   const base = {
     fromAccountType: 'income_bills',
@@ -329,6 +348,7 @@ describe('recordPlannedTransferAction', () => {
   });
 
   it('accepts the figures of a real plan, once rounded to the cent (280/12 + 70/3)', async () => {
+    h.charges.mockResolvedValueOnce([smoothed(280, 'annual', 1), smoothed(70, 'quarterly', 1)]);
     script('movements', 'select', { data: [], error: null });
     script('movements', 'insert', { data: { id: 'm-3' }, error: null });
     const r = await recordPlannedTransferAction({
@@ -346,6 +366,7 @@ describe('recordPlannedTransferAction', () => {
   });
 
   it('splits a transfer to provisions: provisions first, the rest is free savings', async () => {
+    h.charges.mockResolvedValueOnce([smoothed(708, 'annual', 1)]);
     script('movements', 'select', { data: [], error: null });
     script('movements', 'insert', { data: { id: 'm-1' }, error: null });
     const r = await recordPlannedTransferAction({
@@ -365,6 +386,58 @@ describe('recordPlannedTransferAction', () => {
       provision_part: 59,
       free_savings_part: 301,
     });
+  });
+
+  it('splits with the NET of the month, not the target: a smoothed bill due leaves the main account', async () => {
+    // 840 a year (70 a month) + a monthly smoothed 15, due this month: the line
+    // proposes 70 + 15 − 15 = 70, so a 505 transfer is 70 + 435 — never 85 + 420.
+    h.charges.mockResolvedValueOnce([smoothed(840, 'annual', 1), smoothed(15, 'monthly', 1)]);
+    script('movements', 'select', { data: [], error: null });
+    script('movements', 'insert', { data: { id: 'm-net' }, error: null });
+    const r = await recordPlannedTransferAction({
+      ...base,
+      toAccountType: 'provisions',
+      amount: 505,
+      planSuggestedAmount: 70,
+      plannedProvisions: 70,
+    });
+    expect(r).toEqual({ ok: true, data: { id: 'm-net' } });
+    expect(writes('movements')[0]!.payload).toMatchObject({
+      provision_part: 70,
+      free_savings_part: 435,
+    });
+  });
+
+  it('ignores a provisions share sent by the client: the server computes it', async () => {
+    h.charges.mockResolvedValueOnce([smoothed(840, 'annual', 1)]);
+    script('movements', 'select', { data: [], error: null });
+    script('movements', 'insert', { data: { id: 'm-forged' }, error: null });
+    const r = await recordPlannedTransferAction({
+      ...base,
+      toAccountType: 'provisions',
+      amount: 505,
+      planSuggestedAmount: 70,
+      plannedProvisions: 505,
+    });
+    expect(r).toEqual({ ok: true, data: { id: 'm-forged' } });
+    expect(writes('movements')[0]!.payload).toMatchObject({
+      provision_part: 70,
+      free_savings_part: 435,
+    });
+  });
+
+  it('writes nothing when the charges cannot be read', async () => {
+    h.charges.mockResolvedValueOnce(null);
+    script('movements', 'select', { data: [], error: null });
+    const r = await recordPlannedTransferAction({
+      ...base,
+      toAccountType: 'provisions',
+      amount: 505,
+      planSuggestedAmount: 70,
+      plannedProvisions: 70,
+    });
+    expect(r).toEqual({ ok: false, errorCode: 'errors.operations.writeFailed' });
+    expect(writes('movements')).toHaveLength(0);
   });
 
   it('writes no split elsewhere, and never touches accounts.balance', async () => {

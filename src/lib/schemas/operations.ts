@@ -94,9 +94,9 @@ export type BalanceStatementInput = z.infer<typeof balanceStatementSchema>;
 
 /**
  * « J'ai fait ce virement ». The three plan figures are a COPY of what the
- * screen showed (ADR-045: never a reference). `plannedProvisions` is the
- * month's provision share, used only to split a transfer TO the provisions
- * account into its two parts.
+ * screen showed (ADR-045: never a reference). `plannedProvisions` is still
+ * accepted from a screen loaded before tour 55, and IGNORED: the server splits
+ * a transfer to the provisions with its own `provisionPartOfMonth`.
  */
 export const plannedTransferSchema = z
   .object({
@@ -107,7 +107,7 @@ export const plannedTransferSchema = z
     planYear: z.number().int().min(2000).max(2100),
     planMonth: z.number().int().min(1).max(12),
     planSuggestedAmount: nonNegativeCopy,
-    plannedProvisions: nonNegativeCopy,
+    plannedProvisions: nonNegativeCopy.optional(),
     statementAnswers,
   })
   .strict()
