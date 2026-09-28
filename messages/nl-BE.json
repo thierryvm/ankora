@@ -1116,6 +1116,34 @@
         "fermer": "Sluiten",
         "vide": "Geen uitgave in {month}: niets te ordenen.",
         "videAide": "Elke uitgave krijgt haar categorie: tik op ⊕ na een aankoop."
+      },
+      "mergeOpen": "Categorieën samenvoegen",
+      "merge": {
+        "titre": "Categorieën samenvoegen",
+        "fermer": "Sluiten",
+        "intro": "De categorie zegt waarvoor het geld dient (Boodschappen), de omschrijving zegt waar (Intermarché). Kies de categorieën die in één post samengaan.",
+        "chargement": "Categorieën laden…",
+        "tropPeu": "Je hebt minstens twee uitgavencategorieën nodig om ze samen te voegen.",
+        "sources": "Samen te voegen categorieën",
+        "cible": "In welke categorie?",
+        "nouvelle": "Nieuwe categorie",
+        "nouveauNom": "Naam van de nieuwe categorie",
+        "nouveauNomExemple": "Bv. Boodschappen",
+        "nbDepenses": "{count, plural, =0 {geen uitgave} one {# uitgave} other {# uitgaven}}",
+        "resume": "{count, plural, =0 {Geen uitgave gaat} one {# uitgave gaat} other {# uitgaven gaan}} naar „{cible}”.",
+        "resumeFactures": "{count, plural, one {# factuur of verbintenis volgt} other {# facturen of verbintenissen volgen}} ook.",
+        "resumeDescriptions": "Elke uitgave houdt haar omschrijving; wie er geen had, krijgt de naam van haar oude categorie. Geen enkel bedrag verandert.",
+        "resumeVide": "Vink minstens één categorie aan en kies waar ze samengaan.",
+        "continuer": "Samenvoegen…",
+        "confirmation": "{count, plural, one {# uitgave} other {# uitgaven}} verplaatsen naar „{cible}”?",
+        "confirmer": "Ja, samenvoegen",
+        "annuler": "Annuleren",
+        "fait": "{count, plural, =0 {Geen uitgave verplaatst} one {# uitgave ondergebracht} other {# uitgaven ondergebracht}} in „{cible}”.",
+        "vides": "{count, plural, one {# categorie is nu leeg} other {# categorieën zijn nu leeg}} — verwijderen?",
+        "videsAide": "Ze bevatten niets meer: verwijderen kost geen enkele uitgave.",
+        "supprimerVides": "Lege categorieën verwijderen",
+        "garderVides": "Behouden",
+        "videsSupprimees": "{count, plural, one {# categorie verwijderd} other {# categorieën verwijderd}}."
       }
     },
     "settings": {
@@ -1729,7 +1757,12 @@
     "categories": {
       "createFailed": "Impossible de créer la catégorie.",
       "duplicate": "Tu as déjà une catégorie qui porte ce nom.",
-      "duplicateBill": "Ce nom est déjà pris par une catégorie de facture. Elle ne s’affiche pas ici parce qu’une facture n’est pas une dépense — elle est déjà déduite de ton budget."
+      "duplicateBill": "Ce nom est déjà pris par une catégorie de facture. Elle ne s’affiche pas ici parce qu’une facture n’est pas une dépense — elle est déjà déduite de ton budget.",
+      "mergeInvalid": "Een van de gekozen categorieën is niet meer beschikbaar. Herlaad de pagina en probeer opnieuw.",
+      "mergeStale": "Er zijn intussen uitgaven gewijzigd. Controleer het getoonde aantal en probeer opnieuw.",
+      "mergePartial": "Het samenvoegen is halverwege gestopt. Geen enkel bedrag is gewijzigd; start het opnieuw om af te ronden.",
+      "mergeFailed": "De categorieën kunnen nu niet worden samengevoegd.",
+      "notEmpty": "Deze categorie bevat nog uitgaven of facturen: ze is niet verwijderd."
     },
     "operations": {
       "writeFailed": "De verrichting kon niet worden opgeslagen. Probeer opnieuw.",

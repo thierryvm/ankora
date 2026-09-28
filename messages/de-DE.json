@@ -1116,6 +1116,34 @@
         "fermer": "Schließen",
         "vide": "Keine Ausgabe im {month}: nichts einzuordnen.",
         "videAide": "Jede Ausgabe kommt in ihre Kategorie: tippe nach einem Kauf auf ⊕."
+      },
+      "mergeOpen": "Kategorien zusammenfassen",
+      "merge": {
+        "titre": "Kategorien zusammenfassen",
+        "fermer": "Schließen",
+        "intro": "Die Kategorie sagt, wofür das Geld ist (Lebensmittel), die Beschreibung sagt, wo (Intermarché). Wähle die Kategorien, die zu einem Posten werden.",
+        "chargement": "Kategorien werden geladen…",
+        "tropPeu": "Du brauchst mindestens zwei Ausgabenkategorien, um sie zusammenzufassen.",
+        "sources": "Zusammenzufassende Kategorien",
+        "cible": "In welche Kategorie?",
+        "nouvelle": "Neue Kategorie",
+        "nouveauNom": "Name der neuen Kategorie",
+        "nouveauNomExemple": "Z. B. Lebensmittel",
+        "nbDepenses": "{count, plural, =0 {keine Ausgabe} one {# Ausgabe} other {# Ausgaben}}",
+        "resume": "{count, plural, =0 {Keine Ausgabe wandert} one {# Ausgabe wandert} other {# Ausgaben wandern}} nach „{cible}“.",
+        "resumeFactures": "{count, plural, one {# Rechnung oder Verpflichtung folgt} other {# Rechnungen oder Verpflichtungen folgen}} ebenfalls.",
+        "resumeDescriptions": "Jede Ausgabe behält ihre Beschreibung; Ausgaben ohne Beschreibung erhalten den Namen ihrer alten Kategorie. Kein Betrag ändert sich.",
+        "resumeVide": "Wähle mindestens eine Kategorie und dann das Ziel.",
+        "continuer": "Zusammenfassen…",
+        "confirmation": "{count, plural, one {# Ausgabe} other {# Ausgaben}} nach „{cible}“ verschieben?",
+        "confirmer": "Ja, zusammenfassen",
+        "annuler": "Abbrechen",
+        "fait": "{count, plural, =0 {Keine Ausgabe verschoben} one {# Ausgabe eingeordnet} other {# Ausgaben eingeordnet}} unter „{cible}“.",
+        "vides": "{count, plural, one {# Kategorie ist jetzt leer} other {# Kategorien sind jetzt leer}} — löschen?",
+        "videsAide": "Sie enthalten nichts mehr: Löschen kostet keine Ausgabe.",
+        "supprimerVides": "Leere Kategorien löschen",
+        "garderVides": "Behalten",
+        "videsSupprimees": "{count, plural, one {# Kategorie gelöscht} other {# Kategorien gelöscht}}."
       }
     },
     "settings": {
@@ -1729,7 +1757,12 @@
     "categories": {
       "createFailed": "Impossible de créer la catégorie.",
       "duplicate": "Tu as déjà une catégorie qui porte ce nom.",
-      "duplicateBill": "Ce nom est déjà pris par une catégorie de facture. Elle ne s’affiche pas ici parce qu’une facture n’est pas une dépense — elle est déjà déduite de ton budget."
+      "duplicateBill": "Ce nom est déjà pris par une catégorie de facture. Elle ne s’affiche pas ici parce qu’une facture n’est pas une dépense — elle est déjà déduite de ton budget.",
+      "mergeInvalid": "Eine der gewählten Kategorien ist nicht mehr verfügbar. Lade die Seite neu und versuche es erneut.",
+      "mergeStale": "Inzwischen haben sich Ausgaben geändert. Prüfe die angezeigte Zahl und versuche es erneut.",
+      "mergePartial": "Das Zusammenfassen wurde unterwegs unterbrochen. Kein Betrag hat sich geändert; starte es erneut, um es abzuschließen.",
+      "mergeFailed": "Die Kategorien können gerade nicht zusammengefasst werden.",
+      "notEmpty": "Diese Kategorie enthält noch Ausgaben oder Rechnungen: Sie wurde nicht gelöscht."
     },
     "operations": {
       "writeFailed": "Der Vorgang konnte nicht gespeichert werden. Versuche es erneut.",

@@ -73,6 +73,15 @@ export const AuditEvent = {
    * plutôt que de compter sur elle.
    */
   CATEGORY_CREATED: 'category.created',
+  /**
+   * Several expense categories regrouped into one. The trace that makes an
+   * « undo » possible later: `resource_id` = the target, `moved` = per source,
+   * the ids of the expenses, bills and commitments it gave up. Identifiers
+   * only — never a name, a description or an amount.
+   */
+  CATEGORY_MERGED: 'category.merged',
+  /** An empty category deleted after a merge: one row per category (`resource_id`). */
+  CATEGORY_DELETED: 'category.deleted',
   EXPENSE_CREATED: 'expense.created',
   EXPENSE_UPDATED: 'expense.updated',
   EXPENSE_DELETED: 'expense.deleted',
@@ -149,6 +158,8 @@ const SAFE_METADATA_KEYS = new Set([
   // (`YYYY-MM`). No amount stored — amounts are PII-adjacent in financial
   // software (same rule as charge_payments which excludes `paid_amount`).
   'period_yyyymm',
+  // Category merge — per source, the ids of what moved (identifiers only).
+  'moved',
 ]);
 
 function sanitizeMetadata(metadata: Record<string, unknown> | undefined): Record<string, unknown> {
