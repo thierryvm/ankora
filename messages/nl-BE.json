@@ -1645,6 +1645,10 @@
         "id": {
           "invalid": "Verrichting niet gevonden."
         },
+        "sameDay": {
+          "required": "Beantwoord de vraag over je saldo van die dag.",
+          "othersAfter": "Andere verrichtingen van die dag staan al na je saldo. Zeg eerst op de kaart van de rekening of je saldo ze al bevatte."
+        },
         "budgetMonth": {
           "invalid": "Ongeldige maand.",
           "outOfRange": "Kies de maand van de datum, de vorige of de volgende."
@@ -1949,6 +1953,16 @@
         "warnOther": "Dit geld telt mee voor {month}, niet voor de maand van de datum.",
         "undo": "Nee, voor {month}"
       }
+    },
+    "sameDay": {
+      "question": "Bevat je saldo van {date} ({montant}) dit geld al?",
+      "included": "Ja, zit er al in",
+      "notYet": "Nee, nog niet",
+      "missing": "Beantwoord eerst de vraag over je saldo",
+      "cardIn": "waarvan {montant} ontvangen op {date}, geschreven na je saldo van dezelfde dag",
+      "cardOut": "waarvan {montant} aan overschrijvingen op {date}, geschreven na je saldo van dezelfde dag",
+      "cardAction": "Mijn saldo van {date} bevatte ze al",
+      "cardDone": "Genoteerd: je saldo van {date} bevatte ze al."
     },
     "statement": {
       "open": "Saldo van vandaag invullen",

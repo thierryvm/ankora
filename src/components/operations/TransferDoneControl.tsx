@@ -4,6 +4,13 @@ import { useState, useTransition } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { AmountSheet } from '@/components/operations/AmountSheet';
+import {
+  accountsAsked,
+  answersToSend,
+  SameDayStatementQuestion,
+  type RewritableStatements,
+  type StatementAnswer,
+} from '@/components/operations/SameDayStatementQuestion';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/toast';
 import { recordPlannedTransferAction, setMovementCancelledAction } from '@/lib/actions/operations';
@@ -27,6 +34,8 @@ type Props = {
   planMonth: number;
   today: string;
   line: TransferLineState;
+  /** ADR-045 D21 — per account, the statement a same-day transfer could double. */
+  statements?: RewritableStatements;
 };
 
 function formatDay(iso: string, locale: string): string {
@@ -39,8 +48,21 @@ export function TransferDoneControl(props: Props) {
   const t = useTranslations('operations.transfer');
   const locale = useLocale() as Locale;
   const translateError = useActionErrorTranslator();
+  const tSameDay = useTranslations('operations.sameDay');
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [day, setDay] = useState(props.today);
+  const [answers, setAnswers] = useState<Partial<Record<AccountType, StatementAnswer>>>({});
+  const statements = props.statements ?? {};
+  const touched = [props.fromAccountType, props.toAccountType];
+  const asked = accountsAsked(statements, touched, day || props.today);
+  const unanswered = asked.some((a) => answers[a] === undefined);
+
+  function closeSheet() {
+    setOpen(false);
+    setDay(props.today);
+    setAnswers({});
+  }
   const fmt = (n: number) => formatCurrency(n, locale);
   // The cent is the smallest unit (ADR-045 D19): a plan figure such as
   // 280/12 + 70/3 would prefill 46.666… and be refused by the sheet itself.
@@ -105,7 +127,7 @@ export function TransferDoneControl(props: Props) {
       {open ? (
         <AmountSheet
           open={open}
-          onClose={() => setOpen(false)}
+          onClose={closeSheet}
           testId="feuille-virement"
           title={t('done')}
           question={t('question')}
@@ -113,8 +135,20 @@ export function TransferDoneControl(props: Props) {
           dateLabel={t('date')}
           initialAmount={suggested}
           initialDate={props.today}
+          onDateChange={setDay}
           allowNegative={false}
           successMessage={t('saved')}
+          blockedReason={unanswered ? tSameDay('missing') : null}
+          extraFields={
+            asked.length > 0 ? (
+              <SameDayStatementQuestion
+                asked={asked}
+                statements={statements}
+                answers={answers}
+                onAnswer={(a, v) => setAnswers((prev) => ({ ...prev, [a]: v }))}
+              />
+            ) : undefined
+          }
           renderDetail={
             props.toAccountType === 'provisions'
               ? (amount) => {
@@ -137,6 +171,7 @@ export function TransferDoneControl(props: Props) {
               planMonth: props.planMonth,
               planSuggestedAmount: suggested,
               plannedProvisions: props.plannedProvisions,
+              ...answersToSend(accountsAsked(statements, touched, occurredOn), answers),
             })
           }
         />

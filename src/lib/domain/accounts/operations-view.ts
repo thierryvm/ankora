@@ -3,6 +3,7 @@ import { money, zero, type Money } from '@/lib/domain/types';
 import {
   compareStatementOrder,
   deriveAccountBalance,
+  flowCountsAfterStatement,
   measureStatementGap,
   selectLatestStatement,
   type AccountBalanceStatement,
@@ -116,6 +117,13 @@ export type AccountBalanceView = {
   gap: StatementGap | null;
   /** The most recent cancelled statement, offered for reopening (rule 11). */
   reopenable: AccountBalanceStatement | null;
+  /**
+   * ADR-045 D21 — the operations of the READ statement's own day, written after
+   * it, that the hour rule counts on top of it. Null when there are none, or
+   * when the statement is the starting balance (never rewritten). `total` is
+   * signed: an outgoing transfer lowers it.
+   */
+  sameDayAfter: { total: Money; flows: readonly AccountFlow[] } | null;
 };
 
 export function accountBalanceView(input: {
@@ -157,7 +165,77 @@ export function accountBalanceView(input: {
         : null,
     gap: gap && !gap.gap.isZero() ? gap : null,
     reopenable,
+    sameDayAfter: sameDayAfterView(statements, read, flows),
   };
+}
+
+function sameDayAfterView(
+  statements: readonly AccountBalanceStatement[],
+  read: AccountBalanceStatement,
+  flows: readonly AccountFlow[],
+): AccountBalanceView['sameDayAfter'] {
+  if (sameDayStatement(statements, read.accountType, read.statedOn) === null) return null;
+  const sameDay = sameDayFlowsAfter(read, flows);
+  if (sameDay.length === 0) return null;
+  const total = sameDay.reduce(
+    (sum, f) => (f.direction === 'in' ? sum.plus(f.amount) : sum.minus(f.amount)),
+    zero(),
+  );
+  return { total, flows: sameDay };
+}
+
+/**
+ * ADR-045 D21 — the statement a same-day operation can be counted twice
+ * against: the latest standing statement of the account, when it was read on
+ * `day`. Null otherwise, and null for the starting balance: `startingStatementId`
+ * reads cancelled rows too, so a rewritten copy would lose that status and
+ * become cancellable — the one statement an account must always keep.
+ */
+export function sameDayStatement(
+  statements: readonly AccountBalanceStatement[],
+  accountType: AccountType,
+  day: Date,
+): AccountBalanceStatement | null {
+  const latest = selectLatestStatement(statements, accountType);
+  if (latest === null || latest.statedOn.getTime() !== day.getTime()) return null;
+  if (startingStatementId(statements, accountType) === latest.id) return null;
+  return latest;
+}
+
+/**
+ * Per account, the statement a same-day operation can be counted twice
+ * against — the latest standing one, unless it is the starting balance. The
+ * screens ask their D21 question when the operation's date equals its day.
+ */
+export function rewritableStatements(
+  statements: readonly AccountBalanceStatement[],
+  accountTypes: readonly AccountType[],
+): Partial<Record<AccountType, AccountBalanceStatement>> {
+  const out: Partial<Record<AccountType, AccountBalanceStatement>> = {};
+  for (const a of accountTypes) {
+    const latest = selectLatestStatement(statements, a);
+    const s = latest ? sameDayStatement(statements, a, latest.statedOn) : null;
+    if (s) out[a] = s;
+  }
+  return out;
+}
+
+/**
+ * The flows of the statement's own day that the hour rule (D16) counts after
+ * it — written later the same day, not cancelled. A flow of a LATER day is
+ * never here: that one counts, and rightly.
+ */
+export function sameDayFlowsAfter(
+  statement: AccountBalanceStatement,
+  flows: readonly AccountFlow[],
+): AccountFlow[] {
+  return flows.filter(
+    (f) =>
+      f.accountType === statement.accountType &&
+      f.cancelledAt === null &&
+      f.occurredOn.getTime() === statement.statedOn.getTime() &&
+      flowCountsAfterStatement(statement, f),
+  );
 }
 
 /**

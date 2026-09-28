@@ -13,6 +13,7 @@ import { updateMonthlyIncomeAction, updateVieCouranteTransferAction } from '@/li
 import {
   recordBalanceStatementAction,
   setMovementCancelledAction,
+  confirmStatementIncludedAction,
   setStatementCancelledAction,
 } from '@/lib/actions/operations';
 import { AmountSheet } from '@/components/operations/AmountSheet';
@@ -48,6 +49,8 @@ export type AccountBalanceProps = {
     computed: number | null;
     gap: { expected: number; read: number; amount: number } | null;
     reopenable: { id: string; statedOn: string } | null;
+    /** ADR-045 D21 — signed total of the same-day operations written after the read balance. */
+    sameDayAfter?: { total: number } | null;
   } | null;
   incomes?: IncomeLineProps[];
 };
@@ -101,6 +104,18 @@ export function AccountsClient({
             <IncomeButton
               today={today}
               moisServis={moisServis}
+              statements={Object.fromEntries(
+                balances.flatMap((b) =>
+                  b.view && !b.view.readIsStartingBalance
+                    ? [
+                        [
+                          b.accountType,
+                          { statedOn: b.view.readStatedOn, balance: b.view.readBalance },
+                        ],
+                      ]
+                    : [],
+                ),
+              )}
               accounts={ACCOUNT_ORDER.flatMap((kind) => {
                 const row = accountByKind.get(kind);
                 return row ? [{ accountType: row.accountType, label: row.label }] : [];
@@ -263,6 +278,7 @@ function AccountBalanceCard({ row, today }: { row: AccountBalanceProps; today: s
   const tKind = useTranslations('app.accounts.kind');
   const tBalance = useTranslations('app.accounts.balance');
   const tS = useTranslations('operations.statement');
+  const tSameDay = useTranslations('operations.sameDay');
   const locale = useLocale() as Locale;
   const translateError = useActionErrorTranslator();
   const Icon = ACCOUNT_ICONS[row.kind];
@@ -275,6 +291,14 @@ function AccountBalanceCard({ row, today }: { row: AccountBalanceProps; today: s
     startTransition(async () => {
       const r = await setStatementCancelledAction({ id, cancelled });
       if (r.ok) toast.success(cancelled ? tS('cancelled') : tS('saved'));
+      else toast.error(translateError(r.errorCode));
+    });
+  }
+
+  function confirmIncluded(statementId: string, date: string) {
+    startTransition(async () => {
+      const r = await confirmStatementIncludedAction({ statementId });
+      if (r.ok) toast.success(tSameDay('cardDone', { date }));
       else toast.error(translateError(r.errorCode));
     });
   }
@@ -311,6 +335,26 @@ function AccountBalanceCard({ row, today }: { row: AccountBalanceProps; today: s
             <p className="text-muted-foreground text-xs">{tS('computed')}</p>
             <p className="text-foreground font-mono tabular-nums">{fmt(view.computed)}</p>
             <p className="text-muted-foreground text-xs">{tS('computedHint')}</p>
+            {view.sameDayAfter ? (
+              <div className="mt-2 flex flex-col gap-1" data-testid="meme-jour">
+                <p className="text-xs">
+                  {tSameDay(view.sameDayAfter.total >= 0 ? 'cardIn' : 'cardOut', {
+                    montant: fmt(Math.abs(view.sameDayAfter.total)),
+                    date: formatDay(view.readStatedOn, locale),
+                  })}
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="min-h-11 self-start whitespace-normal"
+                  disabled={isPending}
+                  onClick={() => confirmIncluded(view.readId, formatDay(view.readStatedOn, locale))}
+                >
+                  {tSameDay('cardAction', { date: formatDay(view.readStatedOn, locale) })}
+                </Button>
+              </div>
+            ) : null}
           </div>
         ) : null}
 

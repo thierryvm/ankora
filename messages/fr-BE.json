@@ -1645,6 +1645,10 @@
         "id": {
           "invalid": "Opération introuvable."
         },
+        "sameDay": {
+          "required": "Réponds à la question sur ton solde du jour.",
+          "othersAfter": "D’autres opérations de ce jour sont déjà écrites après ton solde. Dis d’abord, sur la carte du compte, si ton solde les contenait."
+        },
         "budgetMonth": {
           "invalid": "Mois invalide.",
           "outOfRange": "Choisis le mois de la date, le précédent ou le suivant."
@@ -1949,6 +1953,16 @@
         "warnOther": "Cet argent comptera pour {month}, pas pour le mois de sa date.",
         "undo": "Non, pour {month}"
       }
+    },
+    "sameDay": {
+      "question": "Ton solde du {date} ({montant}) contient-il déjà cet argent ?",
+      "included": "Oui, déjà dedans",
+      "notYet": "Non, pas encore",
+      "missing": "Réponds d’abord à la question sur ton solde",
+      "cardIn": "dont {montant} reçus le {date}, écrits après ton solde du même jour",
+      "cardOut": "dont {montant} de virements le {date}, écrits après ton solde du même jour",
+      "cardAction": "Mon solde du {date} les contenait déjà",
+      "cardDone": "C’est noté : ton solde du {date} les contenait déjà."
     },
     "statement": {
       "open": "Écrire le solde du jour",

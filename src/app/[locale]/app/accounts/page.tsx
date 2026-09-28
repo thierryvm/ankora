@@ -92,6 +92,8 @@ export default async function AccountsPage() {
           id: view.reopenable.id,
           statedOn: day(view.reopenable.statedOn),
         },
+        // ADR-045 D21 — same-day operations counted after the read balance.
+        sameDayAfter: view.sameDayAfter && { total: view.sameDayAfter.total.toNumber() },
       },
     };
   });

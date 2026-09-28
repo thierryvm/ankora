@@ -9,10 +9,14 @@ import { loadAccountLedger } from '@/lib/data/operations';
 import { todayIsoInBrussels } from '@/lib/data/month-situation';
 import {
   expectedBalanceOn,
+  movementToFlows,
+  sameDayFlowsAfter,
+  sameDayStatement,
   splitTransferToProvisions,
   startingStatementId,
+  type MovementRecord,
 } from '@/lib/domain/accounts/operations-view';
-import { selectLatestStatement } from '@/lib/domain/accounts/solde';
+import { selectLatestStatement, type AccountBalanceStatement } from '@/lib/domain/accounts/solde';
 import { validateTransferAllocation } from '@/lib/domain/accounts/virement';
 import type { AccountType } from '@/lib/domain/cockpit/types';
 import { money } from '@/lib/domain/types';
@@ -21,6 +25,8 @@ import {
   incomeReceivedSchema,
   operationCancellationSchema,
   plannedTransferSchema,
+  requiredStatementAnswersSchema,
+  statementIncludedSchema,
 } from '@/lib/schemas/operations';
 import { log } from '@/lib/log';
 import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
@@ -207,6 +213,259 @@ async function syncBalanceColumn(ctx: Ctx, accountType: AccountType): Promise<bo
 }
 
 // =========================================================================
+// ADR-045 D21 — « Ton solde du … contient-il déjà cet argent ? »
+// =========================================================================
+
+type StatementAnswers = Partial<Record<AccountType, 'included' | 'notYet'>> | undefined;
+type Ledger = {
+  statements: readonly AccountBalanceStatement[];
+  movements: readonly MovementRecord[];
+};
+
+/**
+ * The statements an operation of `day` touching `accounts` could be counted
+ * twice against, and the ones the person said already held it. The answer is
+ * REQUIRED for each such statement (Zod, never a default): an operation sent
+ * without it is refused before anything is written. An answer for an account
+ * whose statement is not of that day is ignored — a statement cancelled
+ * between the screen and the click must not block the write.
+ */
+function sameDayAnswers(
+  ledger: Ledger,
+  accounts: readonly AccountType[],
+  day: string,
+  answers: StatementAnswers,
+): Fail | { toRewrite: AccountBalanceStatement[] } {
+  const asked = accounts.flatMap((a) => {
+    const s = sameDayStatement(ledger.statements, a, isoDayToDate(day));
+    return s ? [s] : [];
+  });
+  const parsed = requiredStatementAnswersSchema(asked.map((s) => s.accountType)).safeParse(
+    answers ?? {},
+  );
+  if (!parsed.success) {
+    return {
+      ok: false,
+      errorCode: 'errors.validation.generic',
+      fieldErrors: { statementAnswers: ['operations.sameDay.required'] },
+    };
+  }
+  const toRewrite = asked.filter((s) => answers?.[s.accountType] === 'included');
+  // The copy is written after EVERY operation of its day, not only this one:
+  // an operation already counted after the statement (answered « Non », or
+  // written before D21) would silently stop counting — money invented. Such a
+  // day is settled from the card of the account, which names them all.
+  const flows = ledger.movements.flatMap(movementToFlows);
+  if (toRewrite.some((st) => sameDayFlowsAfter(st, flows).length > 0)) {
+    return {
+      ok: false,
+      errorCode: 'errors.validation.generic',
+      fieldErrors: { statementAnswers: ['operations.sameDay.othersAfter'] },
+    };
+  }
+  return { toRewrite };
+}
+
+/** Sets `cancelled_at` on one row of the workspace; logs ids only when it fails. */
+async function setOwnCancelled(
+  ctx: Ctx,
+  table: 'movements' | 'account_balance_statements',
+  id: string,
+  cancelled: boolean,
+): Promise<void> {
+  const { data, error } = await ctx.supabase
+    .from(table)
+    .update({ cancelled_at: cancelled ? new Date().toISOString() : null })
+    .eq('id', id)
+    .eq('workspace_id', ctx.workspaceId)
+    .select('id');
+  if (error || (data?.length ?? 0) !== 1) {
+    // Ids only — never an amount nor a description.
+    log.error('Same-day statement rewrite: undo failed, a row stands alone', {
+      table,
+      row_id: id,
+      gesture: cancelled ? 'cancel' : 'reopen',
+      error_code: error ? (error.code ?? 'no_code') : 'no_row',
+    });
+  }
+}
+
+/**
+ * Writes the statement again, identical (account, day, balance), AFTER the
+ * operations of its day, then cancels the original. Copy first: if the cancel
+ * then fails, two identical standing statements say the same balance and the
+ * newest wins — a state that invents nothing — and the copy is undone. The
+ * reverse order would, on failure, leave the account on its PREVIOUS
+ * statement: a wrong balance. The balance column does not move (same amount).
+ *
+ * The expected balance of the copy is measured WITHOUT the original: the
+ * statement before it plus the operations up to that day — which is exactly
+ * what D21 changes.
+ */
+async function rewriteSameDayStatement(
+  ctx: Ctx,
+  statement: AccountBalanceStatement,
+  ledger: Ledger,
+): Promise<{ ok: true; copyId: string } | { ok: false }> {
+  const expected = expectedBalanceOn({
+    accountType: statement.accountType,
+    statements: ledger.statements.filter((s) => s.id !== statement.id),
+    movements: ledger.movements,
+    statedOn: statement.statedOn,
+  });
+
+  const { data: copy, error: copyError } = await ctx.supabase
+    .from('account_balance_statements')
+    .insert({
+      workspace_id: ctx.workspaceId,
+      created_by: ctx.userId,
+      account_type: statement.accountType,
+      balance: statement.balance.toNumber(),
+      stated_on: statement.statedOn.toISOString().slice(0, 10),
+      derived_balance: expected === null ? null : expected.toNumber(),
+    })
+    .select('id')
+    .single();
+  if (copyError || !copy) return { ok: false };
+
+  const { data: cancelled, error: cancelError } = await ctx.supabase
+    .from('account_balance_statements')
+    .update({ cancelled_at: new Date().toISOString() })
+    .eq('id', statement.id)
+    .eq('workspace_id', ctx.workspaceId)
+    .is('cancelled_at', null)
+    .select('id');
+  if (cancelError || (cancelled?.length ?? 0) !== 1) {
+    // A lost answer is not a refusal: when the cancel may have passed, read
+    // the original before undoing the copy — undoing it then would leave both
+    // cancelled, and the account on its PREVIOUS statement.
+    if (cancelError && (await isCancelled(ctx, statement.id)) !== false) {
+      return { ok: true, copyId: copy.id };
+    }
+    await setOwnCancelled(ctx, 'account_balance_statements', copy.id, true);
+    return { ok: false };
+  }
+  return { ok: true, copyId: copy.id };
+}
+
+/** True / false as read; null when the read itself fails (then nothing is undone). */
+async function isCancelled(ctx: Ctx, id: string): Promise<boolean | null> {
+  const { data, error } = await ctx.supabase
+    .from('account_balance_statements')
+    .select('cancelled_at')
+    .eq('id', id)
+    .eq('workspace_id', ctx.workspaceId)
+    .maybeSingle();
+  if (error || !data) return null;
+  return data.cancelled_at !== null;
+}
+
+/** One event per statement written or cancelled — emitted once the whole gesture stands. */
+async function auditRewrites(ctx: Ctx, done: ReadonlyArray<{ original: string; copy: string }>) {
+  const who = { userId: ctx.userId, workspaceId: ctx.workspaceId };
+  for (const d of done) {
+    await logAuditEvent(AuditEvent.ACCOUNT_BALANCE_UPDATED, who, {
+      resource_type: 'account_balance_statement',
+      resource_id: d.copy,
+    });
+    await logAuditEvent(AuditEvent.ACCOUNT_BALANCE_UPDATED, who, {
+      resource_type: 'account_balance_statement',
+      resource_id: d.original,
+      ...cancellationStates(true),
+    });
+  }
+}
+
+/**
+ * « Oui, déjà dedans », once the operation is written: rewrites each
+ * statement in turn. On a failure, what this gesture wrote is undone — the
+ * statements already rewritten, then the operation — so the person finds the
+ * state of before and an error, never half a gesture. Without an RPC this is
+ * not atomic: an undo that fails itself is logged by row id.
+ */
+async function rewriteAfterOperation(
+  ctx: Ctx,
+  movementId: string,
+  toRewrite: readonly AccountBalanceStatement[],
+): Promise<boolean> {
+  if (toRewrite.length === 0) return true;
+  const ledger = await loadAccountLedger(ctx.supabase, ctx.workspaceId);
+  const done: Array<{ original: string; copy: string }> = [];
+  let failed = !ledger.ok;
+  if (ledger.ok) {
+    const flows = ledger.movements.flatMap(movementToFlows);
+    for (const statement of toRewrite) {
+      // Still the statement the answer was given for, and nothing else of its
+      // day written after it meanwhile (a second tab): otherwise, stop.
+      const still = sameDayStatement(ledger.statements, statement.accountType, statement.statedOn);
+      const others = still
+        ? sameDayFlowsAfter(still, flows).filter((f) => !f.id.startsWith(`${movementId}:`))
+        : [];
+      if (still?.id !== statement.id || others.length > 0) {
+        failed = true;
+        break;
+      }
+      const r = await rewriteSameDayStatement(ctx, statement, ledger);
+      if (!r.ok) {
+        failed = true;
+        break;
+      }
+      done.push({ original: statement.id, copy: r.copyId });
+    }
+  }
+  if (!failed) {
+    await auditRewrites(ctx, done);
+    return true;
+  }
+
+  // Original reopened FIRST: if cancelling the copy then fails, two identical
+  // statements stand — nothing invented. The reverse order could leave both
+  // cancelled.
+  for (const d of done.reverse()) {
+    await setOwnCancelled(ctx, 'account_balance_statements', d.original, false);
+    await setOwnCancelled(ctx, 'account_balance_statements', d.copy, true);
+  }
+  await setOwnCancelled(ctx, 'movements', movementId, true);
+  return false;
+}
+
+// =========================================================================
+// « Mon solde du … les contenait déjà » — the card of the account
+// =========================================================================
+export async function confirmStatementIncludedAction(input: unknown): Promise<ActionResult> {
+  const ctx = await gate();
+  if (!ctx.ok) return ctx;
+
+  const parsed = statementIncludedSchema.safeParse(input);
+  if (!parsed.success) return invalid(parsed.error);
+  const { statementId } = parsed.data;
+
+  // The ledger is read for the SESSION workspace: a statement of another
+  // workspace is absent from it, and so not found.
+  const ledger = await loadAccountLedger(ctx.supabase, ctx.workspaceId);
+  if (!ledger.ok) return { ok: false, errorCode: 'errors.operations.writeFailed' };
+  const row = ledger.statements.find((s) => s.id === statementId);
+  // Only the latest standing statement, never the starting balance, and only
+  // when an operation of its own day is counted after it: anything else is a
+  // stale screen, and rewriting it would change nothing true.
+  const target = row ? sameDayStatement(ledger.statements, row.accountType, row.statedOn) : null;
+  if (
+    !target ||
+    target.id !== statementId ||
+    sameDayFlowsAfter(target, ledger.movements.flatMap(movementToFlows)).length === 0
+  ) {
+    return { ok: false, errorCode: 'errors.operations.notFound' };
+  }
+
+  const r = await rewriteSameDayStatement(ctx, target, ledger);
+  if (!r.ok) return { ok: false, errorCode: 'errors.operations.writeFailed' };
+  await auditRewrites(ctx, [{ original: target.id, copy: r.copyId }]);
+
+  revalidateOperationPaths();
+  return { ok: true };
+}
+
+// =========================================================================
 // « Quel est le solde de ce compte aujourd'hui ? »
 // =========================================================================
 export async function recordBalanceStatementAction(
@@ -342,6 +601,16 @@ export async function recordPlannedTransferAction(
   const future = futureDay('occurredOn', v.occurredOn);
   if (future) return future;
 
+  const ledger = await loadAccountLedger(ctx.supabase, ctx.workspaceId);
+  if (!ledger.ok) return { ok: false, errorCode: 'errors.operations.writeFailed' };
+  const sameDay = sameDayAnswers(
+    ledger,
+    [v.fromAccountType, v.toAccountType],
+    v.occurredOn,
+    v.statementAnswers,
+  );
+  if ('ok' in sameDay) return sameDay;
+
   const already = await planLineAlreadyDone(ctx, {
     from: v.fromAccountType,
     to: v.toAccountType,
@@ -385,6 +654,10 @@ export async function recordPlannedTransferAction(
 
   if (error || !data) return { ok: false, errorCode: 'errors.operations.writeFailed' };
 
+  if (!(await rewriteAfterOperation(ctx, data.id, sameDay.toRewrite))) {
+    return { ok: false, errorCode: 'errors.operations.writeFailed' };
+  }
+
   await auditMovement(ctx, 'transfer', data.id);
   revalidateOperationPaths();
   return { ok: true, data: { id: data.id } };
@@ -408,6 +681,11 @@ export async function recordIncomeAction(input: unknown): Promise<ActionResult<{
   const v = parsed.data;
   const future = futureDay('occurredOn', v.occurredOn);
   if (future) return future;
+
+  const ledger = await loadAccountLedger(ctx.supabase, ctx.workspaceId);
+  if (!ledger.ok) return { ok: false, errorCode: 'errors.operations.writeFailed' };
+  const sameDay = sameDayAnswers(ledger, [v.toAccountType], v.occurredOn, v.statementAnswers);
+  if ('ok' in sameDay) return sameDay;
 
   // The base requires a description on an income; the screen does not. Empty
   // → a default by nature, in the person's language, stored as written.
@@ -437,6 +715,10 @@ export async function recordIncomeAction(input: unknown): Promise<ActionResult<{
     .single();
 
   if (error || !data) return { ok: false, errorCode: 'errors.operations.writeFailed' };
+
+  if (!(await rewriteAfterOperation(ctx, data.id, sameDay.toRewrite))) {
+    return { ok: false, errorCode: 'errors.operations.writeFailed' };
+  }
 
   await auditMovement(ctx, 'income', data.id);
   revalidateOperationPaths();

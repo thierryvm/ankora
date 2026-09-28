@@ -1645,6 +1645,10 @@
         "id": {
           "invalid": "Vorgang nicht gefunden."
         },
+        "sameDay": {
+          "required": "Beantworte die Frage zu deinem Kontostand dieses Tages.",
+          "othersAfter": "Andere Vorgänge dieses Tages sind schon nach deinem Kontostand eingetragen. Sag zuerst auf der Kontokarte, ob dein Kontostand sie enthielt."
+        },
         "budgetMonth": {
           "invalid": "Ungültiger Monat.",
           "outOfRange": "Wähle den Monat des Datums, den davor oder den danach."
@@ -1949,6 +1953,16 @@
         "warnOther": "Dieses Geld zählt für {month}, nicht für den Monat seines Datums.",
         "undo": "Nein, für {month}"
       }
+    },
+    "sameDay": {
+      "question": "Enthält dein Kontostand vom {date} ({montant}) dieses Geld schon?",
+      "included": "Ja, schon enthalten",
+      "notYet": "Nein, noch nicht",
+      "missing": "Beantworte zuerst die Frage zu deinem Kontostand",
+      "cardIn": "davon {montant} erhalten am {date}, nach deinem Kontostand desselben Tages eingetragen",
+      "cardOut": "davon {montant} an Überweisungen am {date}, nach deinem Kontostand desselben Tages eingetragen",
+      "cardAction": "Mein Kontostand vom {date} enthielt sie schon",
+      "cardDone": "Notiert: Dein Kontostand vom {date} enthielt sie schon."
     },
     "statement": {
       "open": "Heutigen Kontostand eintragen",

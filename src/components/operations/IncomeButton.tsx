@@ -4,6 +4,13 @@ import { useId, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { AmountSheet } from '@/components/operations/AmountSheet';
+import {
+  accountsAsked,
+  answersToSend,
+  SameDayStatementQuestion,
+  type RewritableStatements,
+  type StatementAnswer,
+} from '@/components/operations/SameDayStatementQuestion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,6 +39,8 @@ export type IncomeButtonProps = {
    * from them, never from a fixed day of the month.
    */
   moisServis?: readonly MoisIso[];
+  /** ADR-045 D21 — per account, the statement a same-day income could double. */
+  statements?: RewritableStatements;
 };
 
 /**
@@ -46,8 +55,14 @@ export type IncomeButtonProps = {
  *
  * It never touches `accounts.balance` (voie A, 2026-09-21).
  */
-export function IncomeButton({ accounts, today, moisServis = [] }: IncomeButtonProps) {
+export function IncomeButton({
+  accounts,
+  today,
+  moisServis = [],
+  statements = {},
+}: IncomeButtonProps) {
   const t = useTranslations('operations.income');
+  const tSameDay = useTranslations('operations.sameDay');
   const locale = useLocale() as Locale;
   const ids = useId();
   const [open, setOpen] = useState(false);
@@ -59,6 +74,9 @@ export function IncomeButton({ accounts, today, moisServis = [] }: IncomeButtonP
   const [day, setDay] = useState(today);
   // null = follow the proposal; a month = the person's own choice.
   const [choix, setChoix] = useState<MoisIso | null>(null);
+  const [answers, setAnswers] = useState<Partial<Record<AccountType, StatementAnswer>>>({});
+  const asked = accountsAsked(statements, [accountType], day || today);
+  const unanswered = asked.some((a) => answers[a] === undefined);
 
   const moisDate = moisDeLaDate(day || today);
   const propose = moisProposePourArgentRecu({ dateIso: day || today, nature, moisServis });
@@ -87,6 +105,7 @@ export function IncomeButton({ accounts, today, moisServis = [] }: IncomeButtonP
     setDescription('');
     setDay(today);
     setChoix(null);
+    setAnswers({});
   }
 
   return (
@@ -111,6 +130,7 @@ export function IncomeButton({ accounts, today, moisServis = [] }: IncomeButtonP
           }}
           allowNegative={false}
           successMessage={t('saved')}
+          blockedReason={unanswered ? tSameDay('missing') : null}
           extraFields={
             <>
               <fieldset className="flex flex-col gap-1.5">
@@ -178,6 +198,12 @@ export function IncomeButton({ accounts, today, moisServis = [] }: IncomeButtonP
                   ))}
                 </select>
               </div>
+              <SameDayStatementQuestion
+                asked={asked}
+                statements={statements}
+                answers={answers}
+                onAnswer={(a, v) => setAnswers((prev) => ({ ...prev, [a]: v }))}
+              />
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor={`${ids}-description`}>{t('description')}</Label>
                 <Input
@@ -201,6 +227,7 @@ export function IncomeButton({ accounts, today, moisServis = [] }: IncomeButtonP
               // Sent only when it says something the date does not (ADR-046).
               ...(occurredOn && mois !== moisDeLaDate(occurredOn) ? { budgetMonth: mois } : {}),
               ...(description.trim() ? { description: description.trim() } : {}),
+              ...answersToSend(accountsAsked(statements, [accountType], occurredOn), answers),
             })
           }
         />
