@@ -1130,7 +1130,7 @@
         "confirmDelete": "„{label}“ — {amount} löschen? Diese Ausgabe wird endgültig entfernt.",
         "confirmDeleteAction": "Ja, löschen"
       },
-      "perDayElapsed": "≈ {amount}/Tag über {days} Tage",
+      "perDayElapsed": "≈ {amount}/Tag über {days, plural, one {# Tag} other {# Tage}}",
       "earlierToggle": "Frühere Monate ({count})",
       "categories": {
         "etiquette": "Kategorien",
@@ -1983,7 +1983,7 @@
       "projectionEtiquette": "Hochrechnung bei diesem Tempo · berechnet",
       "depenseAu": "Ausgegeben bis {jour}",
       "projectionAu": "= Hochrechnung bis {jour}",
-      "projectionOp": "{depense} × {jours} Tage ÷ {ecoules} Tage",
+      "projectionOp": "{depense} × {jours} Tage ÷ {ecoules, plural, one {# Tag} other {# Tage}}",
       "revenuPrevu": "Erwartetes Einkommen",
       "budgetEtiquette": "Monatsbudget · berechnet",
       "revenus": "Erhaltenes Geld",

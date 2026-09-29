@@ -1130,7 +1130,7 @@
         "confirmDelete": "¿Eliminar «{label}» — {amount}? Este gasto se borrará definitivamente.",
         "confirmDeleteAction": "Sí, eliminar"
       },
-      "perDayElapsed": "≈ {amount}/día en {days} días",
+      "perDayElapsed": "≈ {amount}/día en {days, plural, one {# día} other {# días}}",
       "earlierToggle": "Meses anteriores ({count})",
       "categories": {
         "etiquette": "Categorías",
@@ -1983,7 +1983,7 @@
       "projectionEtiquette": "Proyección a este ritmo · calculado",
       "depenseAu": "Gastado hasta el {jour}",
       "projectionAu": "= Proyección al {jour}",
-      "projectionOp": "{depense} × {jours} días ÷ {ecoules} días",
+      "projectionOp": "{depense} × {jours} días ÷ {ecoules, plural, one {# día} other {# días}}",
       "revenuPrevu": "Ingreso previsto",
       "budgetEtiquette": "Presupuesto del mes · calculado",
       "revenus": "Dinero recibido",

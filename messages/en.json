@@ -1130,7 +1130,7 @@
         "confirmDelete": "Delete “{label}” — {amount}? This expense will be permanently erased.",
         "confirmDeleteAction": "Yes, delete"
       },
-      "perDayElapsed": "≈ {amount}/day over {days} days",
+      "perDayElapsed": "≈ {amount}/day over {days, plural, one {# day} other {# days}}",
       "earlierToggle": "Earlier months ({count})",
       "categories": {
         "etiquette": "Categories",
@@ -1983,7 +1983,7 @@
       "projectionEtiquette": "Projection at this pace · calculated",
       "depenseAu": "Spent by {jour}",
       "projectionAu": "= Projection by {jour}",
-      "projectionOp": "{depense} × {jours} days ÷ {ecoules} days",
+      "projectionOp": "{depense} × {jours} days ÷ {ecoules, plural, one {# day} other {# days}}",
       "revenuPrevu": "Expected income",
       "budgetEtiquette": "Month budget · calculated",
       "revenus": "Money received",

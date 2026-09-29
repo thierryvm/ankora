@@ -1130,7 +1130,7 @@
         "confirmDelete": "“{label}” — {amount} verwijderen? Deze uitgave wordt definitief gewist.",
         "confirmDeleteAction": "Ja, verwijderen"
       },
-      "perDayElapsed": "≈ {amount}/dag over {days} dagen",
+      "perDayElapsed": "≈ {amount}/dag over {days, plural, one {# dag} other {# dagen}}",
       "earlierToggle": "Vorige maanden ({count})",
       "categories": {
         "etiquette": "Categorieën",
@@ -1983,7 +1983,7 @@
       "projectionEtiquette": "Projectie aan dit ritme · berekend",
       "depenseAu": "Uitgegeven tot {jour}",
       "projectionAu": "= Projectie op {jour}",
-      "projectionOp": "{depense} × {jours} dagen ÷ {ecoules} dagen",
+      "projectionOp": "{depense} × {jours} dagen ÷ {ecoules, plural, one {# dag} other {# dagen}}",
       "revenuPrevu": "Verwacht inkomen",
       "budgetEtiquette": "Budget van de maand · berekend",
       "revenus": "Ontvangen geld",

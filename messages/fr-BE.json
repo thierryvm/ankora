@@ -1130,7 +1130,7 @@
         "confirmDelete": "Supprimer « {label} » — {amount} ? Cette dépense sera définitivement effacée.",
         "confirmDeleteAction": "Oui, supprimer"
       },
-      "perDayElapsed": "≈ {amount}/jour sur {days} jours",
+      "perDayElapsed": "≈ {amount}/jour sur {days, plural, one {# jour} other {# jours}}",
       "earlierToggle": "Mois précédents ({count})",
       "categories": {
         "etiquette": "Catégories",
@@ -1983,7 +1983,7 @@
       "projectionEtiquette": "Projection à ce rythme · calculé",
       "depenseAu": "Dépensé au {jour}",
       "projectionAu": "= Projection au {jour}",
-      "projectionOp": "{depense} × {jours} jours ÷ {ecoules} jours",
+      "projectionOp": "{depense} × {jours} jours ÷ {ecoules, plural, one {# jour} other {# jours}}",
       "revenuPrevu": "Revenu prévu",
       "budgetEtiquette": "Budget du mois · calculé",
       "revenus": "Argent reçu",
