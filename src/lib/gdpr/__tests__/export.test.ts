@@ -351,6 +351,7 @@ describe('exportUserData — the tables art. 20 was missing', () => {
     rows.workspaces = [{ id: WS_A }];
     rows.movements = [{ id: 'mv-1', amount: '95.00', cancelled_at: '2026-09-04T10:00:00.000Z' }];
     rows.account_balance_statements = [{ id: 'st-1', balance: '1250.05' }];
+    rows.statement_included_flows = [{ id: 'sif-1', statement_id: 'st-1', flow_id: 'x' }];
 
     const bundle = await exportUserData(USER_ID);
 
@@ -358,6 +359,11 @@ describe('exportUserData — the tables art. 20 was missing', () => {
     // personne, et son annulation en fait partie (ADR-045 D15).
     expect(bundle.movements).toEqual(rows.movements);
     expect(bundle.accountBalanceStatements).toEqual(rows.account_balance_statements);
+    expect(bundle.statementIncludedFlows).toEqual(rows.statement_included_flows);
+    expect(
+      filtersOn('statement_included_flows').length,
+      'statement_included_flows has no filter',
+    ).toBeGreaterThan(0);
     expect(filtersOn('movements').length, 'movements has no filter').toBeGreaterThan(0);
     expect(
       filtersOn('account_balance_statements').length,
@@ -374,6 +380,7 @@ describe('exportUserData — the tables art. 20 was missing', () => {
     'charge_payments',
     'movements',
     'account_balance_statements',
+    'statement_included_flows',
   ])('reads every %s row past the server cap, ordered by id', async (table) => {
     // A cap BELOW the page size: advancing by the page size would skip rows.
     serverMaxRows = 700;
@@ -390,6 +397,7 @@ describe('exportUserData — the tables art. 20 was missing', () => {
         charge_payments: 'chargePayments',
         movements: 'movements',
         account_balance_statements: 'accountBalanceStatements',
+        statement_included_flows: 'statementIncludedFlows',
       } as const
     )[table as 'charges'];
     const got = bundle[key] as Array<{ id: string }>;

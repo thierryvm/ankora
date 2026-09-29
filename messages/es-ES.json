@@ -1716,8 +1716,7 @@
           "invalid": "Operación no encontrada."
         },
         "sameDay": {
-          "required": "Responde a la pregunta sobre tu saldo de ese día.",
-          "othersAfter": "Otras operaciones de ese día ya están anotadas después de tu saldo. Indica primero, en la tarjeta de la cuenta, si tu saldo las incluía."
+          "required": "Responde a la pregunta sobre tu saldo de ese día."
         },
         "budgetMonth": {
           "invalid": "Mes no válido.",
@@ -2059,9 +2058,10 @@
       "cardQuestion": "¿Tu saldo del {date} ya incluía estas operaciones?",
       "cardFlowIn": "+ {montant} · {origine, select, income {dinero recibido} transfer {transferencia} bill {factura} other {gasto}}",
       "cardFlowOut": "− {montant} · {origine, select, income {dinero recibido} transfer {transferencia} bill {factura} other {gasto}}",
-      "cardYes": "Sí, ya estaba",
-      "cardNo": "No, hecho después",
-      "cardDone": "Anotado: tu saldo del {date} ya los incluía."
+      "flowIncluded": "Ya estaba",
+      "flowAfter": "Hecho después",
+      "flowIncludedDone": "Anotado: tu saldo del {date} ya incluía esta operación.",
+      "flowAfterDone": "Anotado: esta operación cuenta después de tu saldo del {date}."
     },
     "statement": {
       "open": "Anotar el saldo de hoy",

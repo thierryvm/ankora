@@ -16,6 +16,8 @@ const h = vi.hoisted(() => {
     const b: Record<string, unknown> = {
       insert: vi.fn((p: unknown) => ((call.op = 'insert'), (call.payload = p), b)),
       update: vi.fn((p: unknown) => ((call.op = 'update'), (call.payload = p), b)),
+      // ADR-045 D23 — an answer « already inside » is withdrawn by a delete.
+      delete: vi.fn(() => ((call.op = 'delete'), b)),
       select: vi.fn(() => b),
       eq: vi.fn((c: string, v: unknown) => ((call.filters[c] = v), b)),
       is: vi.fn((c: string, v: unknown) => ((call.filters[c] = v), b)),
@@ -83,12 +85,12 @@ vi.mock('next-intl/server', () => ({
 
 import { money, type Charge } from '@/lib/domain/types';
 import {
-  confirmStatementIncludedAction,
   correctIncomeAmountAction,
   recordBalanceStatementAction,
   recordIncomeAction,
   recalculateTransferSplitAction,
   recordPlannedTransferAction,
+  setFlowIncludedAction,
   setMovementCancelledAction,
   setStatementCancelledAction,
 } from '../operations';
@@ -857,7 +859,37 @@ const d17Ledger = (movements: unknown[] = []) => ({
 });
 const nonSelect = () => h.calls.filter((c) => c.op !== 'select');
 
-describe('same-day statement — the question, then the rewrite (D21)', () => {
+// ADR-045 D23 — ids shaped like the base's: the CHECK on
+// `statement_included_flows.flow_id` wants a uuid-like movement id.
+const M_NEW = '5d2a7f10-3c4b-4d5e-9f60-718293a4b5c6';
+const M_AFTER = '6e3b8a21-4d5c-4e6f-8a71-8293a4b5c6d7';
+const EXPENSE_ID = 'expense:8a5dac43-6f7e-4a81-8c93-a4b5c6d7e8f9';
+/** Money received on `income_bills`, the statement's day, written after it (09:00). */
+const d23Income = (id: string, patch: Record<string, unknown> = {}) => ({
+  ...d17Income,
+  id,
+  ...patch,
+});
+/** A transfer of that day leaving `income_bills` for `daily_card`. */
+const d23Transfer = (id: string, patch: Record<string, unknown> = {}) => ({
+  ...d17Income,
+  id,
+  kind: 'transfer' as const,
+  fromAccountType: 'income_bills' as const,
+  toAccountType: 'daily_card' as const,
+  amount: money(505),
+  incomeNature: null,
+  ...patch,
+});
+const inclusions = () => h.calls.filter((c) => c.table === 'statement_included_flows');
+const trail = () => h.calls.map((c) => `${c.table}.${c.op}`);
+const statementEvents = () =>
+  h.audit.mock.calls
+    .map((c) => c as unknown[])
+    .filter((c) => c[0] === 'account.balance_updated')
+    .map((c) => c[2]);
+
+describe('same-day statement — the question, then one answer per operation (D23)', () => {
   const income = (extra: Record<string, unknown> = {}) => ({
     toAccountType: 'income_bills',
     amount: 705,
@@ -884,50 +916,71 @@ describe('same-day statement — the question, then the rewrite (D21)', () => {
     expect(nonSelect()).toHaveLength(0);
   });
 
-  it('« Non, pas encore » writes the income and leaves the statement alone', async () => {
+  it('« Non, pas encore » writes the income and nothing else', async () => {
     h.ledger.mockImplementation(async () => d17Ledger());
-    script('movements', 'insert', { data: { id: 'm-new' }, error: null });
+    script('movements', 'insert', { data: { id: M_NEW }, error: null });
     const r = await recordIncomeAction(income({ statementAnswers: { income_bills: 'notYet' } }));
     expect(r.ok).toBe(true);
-    expect(writes('movements')).toHaveLength(1);
+    expect(trail()).toEqual(['movements.insert']);
+  });
+
+  it('« Oui » writes the income, then ONE answer for THIS operation — no statement written or rewritten', async () => {
+    h.ledger
+      .mockImplementationOnce(async () => d17Ledger())
+      .mockImplementationOnce(async () => d17Ledger([d23Income(M_NEW)]));
+    script('movements', 'insert', { data: { id: M_NEW }, error: null });
+    script('statement_included_flows', 'insert', { data: [{ id: 'inc-1' }], error: null });
+
+    const r = await recordIncomeAction(income({ statementAnswers: { income_bills: 'included' } }));
+
+    expect(r).toEqual({ ok: true, data: { id: M_NEW } });
+    expect(trail()).toEqual(['movements.insert', 'statement_included_flows.insert']);
+    // The ids come from the session; the flow is the income's own half.
+    expect(inclusions()[0]!.payload).toStrictEqual({
+      workspace_id: 'ws-1',
+      created_by: 'user-1',
+      statement_id: D21_SID,
+      flow_id: `${M_NEW}:in`,
+    });
+    expect(writes('account_balance_statements')).toHaveLength(0);
+    expect(h.calls.some((c) => c.table === 'accounts')).toBe(false);
+    // Audited once the gesture stands: which row, never an amount.
+    expect(statementEvents()).toEqual([
+      { resource_type: 'statement_included_flow', resource_id: 'inc-1' },
+    ]);
+    expect(JSON.stringify(h.audit.mock.calls)).not.toMatch(/705|905/);
+  });
+
+  // Expected result CHANGED (ADR-045 D23). Under D21 this was REFUSED with
+  // `operations.sameDay.othersAfter`: rewriting the statement after the new
+  // operation would have silently stopped counting the other one. An answer
+  // now touches its own operation only, so the other one keeps counting and
+  // nothing forbids the answer any more.
+  it('« Oui » is accepted when another operation of the day already counts after the statement, and leaves that one counted', async () => {
+    const other = d23Transfer(M_AFTER, { recordedAt: new Date('2026-09-21T08:30:00Z') });
+    h.ledger
+      .mockImplementationOnce(async () => d17Ledger([other]))
+      .mockImplementationOnce(async () => d17Ledger([other, d23Income(M_NEW)]));
+    script('movements', 'insert', { data: { id: M_NEW }, error: null });
+    script('statement_included_flows', 'insert', { data: [{ id: 'inc-1' }], error: null });
+
+    const r = await recordIncomeAction(income({ statementAnswers: { income_bills: 'included' } }));
+
+    expect(r.ok).toBe(true);
+    expect(inclusions().map((c) => (c.payload as { flow_id: string }).flow_id)).toEqual([
+      `${M_NEW}:in`,
+    ]);
     expect(writes('account_balance_statements')).toHaveLength(0);
   });
 
-  it('« Oui » writes the income, a copy of the statement after it, then cancels the old one — and nothing else', async () => {
-    h.ledger
-      .mockImplementationOnce(async () => d17Ledger())
-      .mockImplementationOnce(async () => d17Ledger([d17Income]));
-    script('movements', 'insert', { data: { id: 'm-new' }, error: null });
-    script('account_balance_statements', 'insert', { data: { id: 's-copy' }, error: null });
-    script('account_balance_statements', 'update', { data: [{ id: D21_SID }], error: null });
-
-    const r = await recordIncomeAction(income({ statementAnswers: { income_bills: 'included' } }));
+  it('« Non » stays possible on such a day', async () => {
+    h.ledger.mockImplementation(async () =>
+      d17Ledger([d23Transfer(M_AFTER, { recordedAt: new Date('2026-09-21T08:30:00Z') })]),
+    );
+    script('movements', 'insert', { data: { id: M_NEW }, error: null });
+    const r = await recordIncomeAction(income({ statementAnswers: { income_bills: 'notYet' } }));
     expect(r.ok).toBe(true);
-
-    const [copy, cancel] = writes('account_balance_statements');
-    // Same account, same day, same amount; the ids come from the session. The
-    // expected balance is measured WITHOUT the rewritten statement: the one
-    // before it (200) plus the income of the day (705).
-    expect(copy).toMatchObject({ op: 'insert' });
-    expect(copy!.payload).toStrictEqual({
-      workspace_id: 'ws-1',
-      created_by: 'user-1',
-      account_type: 'income_bills',
-      balance: 905,
-      stated_on: '2026-09-21',
-      derived_balance: 905,
-    });
-    expect(cancel).toMatchObject({
-      op: 'update',
-      filters: { id: D21_SID, workspace_id: 'ws-1', cancelled_at: null },
-    });
-    expect(Object.keys(cancel!.payload as object)).toEqual(['cancelled_at']);
-    // accounts.balance does not move: the balance is the same.
-    expect(h.calls.map((c) => `${c.table}.${c.op}`)).toEqual([
-      'movements.insert',
-      'account_balance_statements.insert',
-      'account_balance_statements.update',
-    ]);
+    expect(inclusions()).toHaveLength(0);
   });
 
   it('ignores an answer for an account whose statement is not of that day', async () => {
@@ -936,57 +989,148 @@ describe('same-day statement — the question, then the rewrite (D21)', () => {
       statements: [d17Previous],
       movements: [],
     }));
-    script('movements', 'insert', { data: { id: 'm-new' }, error: null });
+    script('movements', 'insert', { data: { id: M_NEW }, error: null });
     const r = await recordIncomeAction(income({ statementAnswers: { income_bills: 'included' } }));
     expect(r.ok).toBe(true);
+    expect(inclusions()).toHaveLength(0);
     expect(writes('account_balance_statements')).toHaveLength(0);
   });
 
-  it('does not ask on the day of the starting balance, which is never rewritten', async () => {
+  it('does not ask on the day of the starting balance, and writes no answer there', async () => {
     h.ledger.mockImplementation(async () => ({
       ok: true,
       statements: [d17OfTheDay],
       movements: [],
     }));
-    script('movements', 'insert', { data: { id: 'm-new' }, error: null });
-    const r = await recordIncomeAction(income());
+    script('movements', 'insert', { data: { id: M_NEW }, error: null });
+    expect((await recordIncomeAction(income())).ok).toBe(true);
+    script('movements', 'insert', { data: { id: M_NEW }, error: null });
+    const r = await recordIncomeAction(income({ statementAnswers: { income_bills: 'included' } }));
     expect(r.ok).toBe(true);
+    expect(inclusions()).toHaveLength(0);
     expect(writes('account_balance_statements')).toHaveLength(0);
   });
 
-  it('cancels the income it just wrote when the copy of the statement fails, and says so', async () => {
+  it.each<[string, Result]>([
+    ['an error', { data: null, error: { message: 'x' } }],
+    ['zero row and no error (RLS)', { data: [], error: null }],
+  ])(
+    'cancels the income it just wrote when the answer is refused (%s), and says so',
+    async (_label, refused) => {
+      h.ledger
+        .mockImplementationOnce(async () => d17Ledger())
+        .mockImplementationOnce(async () => d17Ledger([d23Income(M_NEW)]));
+      script('movements', 'insert', { data: { id: M_NEW }, error: null });
+      script('statement_included_flows', 'insert', refused);
+      script('movements', 'update', { data: [{ id: M_NEW }], error: null });
+
+      const r = await recordIncomeAction(
+        income({ statementAnswers: { income_bills: 'included' } }),
+      );
+
+      expect(r).toEqual({ ok: false, errorCode: 'errors.operations.writeFailed' });
+      const undo = writes('movements')[1]!;
+      expect(undo).toMatchObject({ op: 'update', filters: { id: M_NEW, workspace_id: 'ws-1' } });
+      expect((undo.payload as { cancelled_at: string | null }).cancelled_at).not.toBeNull();
+      expect(writes('account_balance_statements')).toHaveLength(0);
+      expect(h.audit).not.toHaveBeenCalled();
+    },
+  );
+
+  it('writes no answer, and cancels the income, when the statement changed between the question and the write', async () => {
+    // A second tab read a newer balance of that day meanwhile.
+    const newer = d17Statement('s-newer', 1000, '2026-09-21', '2026-09-21T08:45:00Z');
     h.ledger
       .mockImplementationOnce(async () => d17Ledger())
-      .mockImplementationOnce(async () => d17Ledger([d17Income]));
-    script('movements', 'insert', { data: { id: 'm-new' }, error: null });
-    script('account_balance_statements', 'insert', { data: null, error: { message: 'x' } });
-    script('movements', 'update', { data: [{ id: 'm-new' }], error: null });
+      .mockImplementationOnce(async () => ({
+        ok: true,
+        statements: [d17Previous, d17OfTheDay, newer],
+        movements: [d23Income(M_NEW)],
+      }));
+    script('movements', 'insert', { data: { id: M_NEW }, error: null });
+    script('movements', 'update', { data: [{ id: M_NEW }], error: null });
 
     const r = await recordIncomeAction(income({ statementAnswers: { income_bills: 'included' } }));
+
     expect(r).toEqual({ ok: false, errorCode: 'errors.operations.writeFailed' });
-    expect(writes('movements')[1]).toMatchObject({
-      op: 'update',
-      filters: { id: 'm-new', workspace_id: 'ws-1' },
-    });
-    // The old statement was never touched.
-    expect(writes('account_balance_statements').filter((c) => c.op === 'update')).toHaveLength(0);
+    expect(inclusions()).toHaveLength(0);
+    expect(writes('movements')[1]).toMatchObject({ op: 'update', filters: { id: M_NEW } });
   });
 
-  it('undoes the copy and the income when the old statement refuses to be cancelled', async () => {
-    h.ledger
-      .mockImplementationOnce(async () => d17Ledger())
-      .mockImplementationOnce(async () => d17Ledger([d17Income]));
-    script('movements', 'insert', { data: { id: 'm-new' }, error: null });
-    script('account_balance_statements', 'insert', { data: { id: 's-copy' }, error: null });
-    script('account_balance_statements', 'update', { data: [], error: null });
-    script('account_balance_statements', 'update', { data: [{ id: 's-copy' }], error: null });
-    script('movements', 'update', { data: [{ id: 'm-new' }], error: null });
+  describe('a transfer between two accounts read that day', () => {
+    const daily = { ...d17OfTheDay, id: 'daily-of-the-day', accountType: 'daily_card' as const };
+    const dailyPrev = { ...d17Previous, id: 'daily-prev', accountType: 'daily_card' as const };
+    const statements = [d17Previous, d17OfTheDay, dailyPrev, daily];
+    const transfer = {
+      fromAccountType: 'income_bills',
+      toAccountType: 'daily_card',
+      amount: 505,
+      occurredOn: '2026-09-21',
+      planYear: 2026,
+      planMonth: 10,
+      planSuggestedAmount: 505,
+      statementAnswers: { income_bills: 'included', daily_card: 'included' },
+    };
+    const scriptLedger = () =>
+      h.ledger
+        .mockImplementationOnce(async () => ({ ok: true, statements, movements: [] }))
+        .mockImplementationOnce(async () => ({
+          ok: true,
+          statements,
+          movements: [d23Transfer(M_NEW)],
+        }));
 
-    const r = await recordIncomeAction(income({ statementAnswers: { income_bills: 'included' } }));
-    expect(r).toEqual({ ok: false, errorCode: 'errors.operations.writeFailed' });
-    const updates = writes('account_balance_statements').filter((c) => c.op === 'update');
-    expect(updates[1]).toMatchObject({ filters: { id: 's-copy', workspace_id: 'ws-1' } });
-    expect(writes('movements')[1]).toMatchObject({ op: 'update', filters: { id: 'm-new' } });
+    it('writes one answer per account, each for its own half of the transfer', async () => {
+      scriptLedger();
+      script('movements', 'select', { data: [], error: null });
+      script('movements', 'insert', { data: { id: M_NEW }, error: null });
+      script('statement_included_flows', 'insert', { data: [{ id: 'inc-1' }], error: null });
+      script('statement_included_flows', 'insert', { data: [{ id: 'inc-2' }], error: null });
+
+      const r = await recordPlannedTransferAction(transfer);
+
+      expect(r).toEqual({ ok: true, data: { id: M_NEW } });
+      expect(
+        inclusions().map((c) => {
+          const p = c.payload as { statement_id: string; flow_id: string };
+          return [p.statement_id, p.flow_id];
+        }),
+      ).toEqual([
+        [D21_SID, `${M_NEW}:out`],
+        ['daily-of-the-day', `${M_NEW}:in`],
+      ]);
+      expect(statementEvents()).toEqual([
+        { resource_type: 'statement_included_flow', resource_id: 'inc-1' },
+        { resource_type: 'statement_included_flow', resource_id: 'inc-2' },
+      ]);
+    });
+
+    it('on the second answer refused, withdraws the first one, THEN cancels the transfer', async () => {
+      scriptLedger();
+      script('movements', 'select', { data: [], error: null });
+      script('movements', 'insert', { data: { id: M_NEW }, error: null });
+      script('statement_included_flows', 'insert', { data: [{ id: 'inc-1' }], error: null });
+      script('statement_included_flows', 'insert', { data: null, error: { message: 'x' } });
+      script('statement_included_flows', 'delete', { data: [{ id: 'inc-1' }], error: null });
+      script('movements', 'update', { data: [{ id: M_NEW }], error: null });
+
+      const r = await recordPlannedTransferAction(transfer);
+
+      expect(r).toEqual({ ok: false, errorCode: 'errors.operations.writeFailed' });
+      expect(trail()).toEqual([
+        'movements.select',
+        'movements.insert',
+        'statement_included_flows.insert',
+        'statement_included_flows.insert',
+        'statement_included_flows.delete',
+        'movements.update',
+      ]);
+      const withdrawn = inclusions().find((c) => c.op === 'delete')!;
+      expect(withdrawn.filters).toEqual({ id: 'inc-1', workspace_id: 'ws-1' });
+      expect(writes('movements').at(-1)).toMatchObject({ op: 'update', filters: { id: M_NEW } });
+      // Nothing stood: no answer was audited.
+      expect(statementEvents()).toEqual([]);
+    });
   });
 
   it('asks for the account a transfer LEAVES too', async () => {
@@ -1009,179 +1153,186 @@ describe('same-day statement — the question, then the rewrite (D21)', () => {
   });
 });
 
-describe('confirmStatementIncludedAction — the card of the account (D21)', () => {
-  const after = { ...d17Income, id: 'm-after' };
+describe('setFlowIncludedAction — the card of the account, one operation at a time (D23)', () => {
+  const answer = (flowId: string, included: unknown = true) => ({
+    statementId: D21_SID,
+    flowId,
+    included,
+  });
+  const notFound = { ok: false, errorCode: 'errors.operations.notFound' };
+  const writeFailed = { ok: false, errorCode: 'errors.operations.writeFailed' };
+  /** The statement of the day, once « already inside » was answered for M_AFTER. */
+  const answered = { ...d17OfTheDay, includedFlowIds: [`${M_AFTER}:in`] };
+  const answeredLedger = () => ({
+    ok: true,
+    statements: [d17Previous, answered],
+    movements: [d23Income(M_AFTER)],
+  });
 
-  it('rewrites the statement after the operations of its day, scoped to the session workspace', async () => {
-    h.ledger.mockImplementation(async () => d17Ledger([after]));
-    script('account_balance_statements', 'insert', { data: { id: 's-copy' }, error: null });
-    script('account_balance_statements', 'update', { data: [{ id: D21_SID }], error: null });
+  it('writes one answer for an operation of the day written after the statement, in the session workspace', async () => {
+    h.ledger.mockImplementation(async () => d17Ledger([d23Income(M_AFTER)]));
+    script('statement_included_flows', 'insert', { data: [{ id: 'inc-1' }], error: null });
 
-    const r = await confirmStatementIncludedAction({ statementId: D21_SID });
-    expect(r.ok).toBe(true);
-    expect(h.calls.map((c) => `${c.table}.${c.op}`)).toEqual([
-      'account_balance_statements.insert',
-      'account_balance_statements.update',
-    ]);
-    expect(writes('account_balance_statements')[0]!.payload).toStrictEqual({
+    const r = await setFlowIncludedAction(answer(`${M_AFTER}:in`));
+
+    expect(r).toEqual({ ok: true });
+    expect(trail()).toEqual(['statement_included_flows.insert']);
+    expect(inclusions()[0]!.payload).toStrictEqual({
       workspace_id: 'ws-1',
       created_by: 'user-1',
-      account_type: 'income_bills',
-      balance: 905,
-      stated_on: '2026-09-21',
-      derived_balance: 905,
+      statement_id: D21_SID,
+      flow_id: `${M_AFTER}:in`,
     });
     expect(h.ledger).toHaveBeenCalledWith(h.client, 'ws-1');
+    expect(statementEvents()).toEqual([
+      { resource_type: 'statement_included_flow', resource_id: 'inc-1' },
+    ]);
+    expect(JSON.stringify(h.audit.mock.calls)).not.toMatch(/705/);
   });
 
-  it('refuses, writing nothing, a statement absent from the workspace ledger', async () => {
-    h.ledger.mockImplementation(async () => ({
-      ok: true,
-      statements: [d17Previous],
-      movements: [after],
-    }));
-    const r = await confirmStatementIncludedAction({ statementId: D21_SID });
-    expect(r).toEqual({ ok: false, errorCode: 'errors.operations.notFound' });
-    expect(h.calls).toHaveLength(0);
+  it('accepts an expense of that day too (ADR-045 D22 flow ids)', async () => {
+    const expense = {
+      id: EXPENSE_ID,
+      accountType: 'income_bills' as const,
+      direction: 'out' as const,
+      amount: money(2.99),
+      occurredOn: d17Day('2026-09-21'),
+      recordedAt: new Date('2026-09-21T09:30:00Z'),
+      cancelledAt: null,
+      origin: 'expense' as const,
+    };
+    h.ledger.mockImplementation(
+      async () => ({ ...d17Ledger(), debits: [expense] }) as ReturnType<typeof d17Ledger>,
+    );
+    script('statement_included_flows', 'insert', { data: [{ id: 'inc-5' }], error: null });
+
+    expect(await setFlowIncludedAction(answer(EXPENSE_ID))).toEqual({ ok: true });
+    expect((inclusions()[0]!.payload as { flow_id: string }).flow_id).toBe(EXPENSE_ID);
   });
 
-  it('refuses a cancelled statement, the starting balance, and a day with nothing counted after', async () => {
-    const cancelled = d17Statement(D21_SID, 905, '2026-09-21', '2026-09-21T08:00:00Z', true);
-    for (const ledger of [
-      { statements: [d17Previous, cancelled], movements: [after] },
-      { statements: [d17OfTheDay], movements: [after] },
-      { statements: [d17Previous, d17OfTheDay], movements: [] },
+  it('refuses, writing nothing, an operation of another account, of another day, written BEFORE the statement, cancelled, or absent from the session workspace', async () => {
+    const flowId = `${M_AFTER}:in`;
+    for (const movements of [
+      // Another account: money received on the daily card.
+      [d23Income(M_AFTER, { toAccountType: 'daily_card' })],
+      // The arriving half of a transfer: it lands on another account.
+      [d23Transfer(M_AFTER)],
+      // Another day, though written after the statement.
+      [d23Income(M_AFTER, { occurredOn: d17Day('2026-09-20') })],
+      // The statement's day, written BEFORE it: the hour rule already has it inside.
+      [d23Income(M_AFTER, { recordedAt: new Date('2026-09-21T07:00:00Z') })],
+      // Cancelled: it counts nowhere.
+      [d23Income(M_AFTER, { cancelledAt: new Date('2026-09-21T10:00:00Z') })],
+      // Absent from the ledger read for the SESSION workspace.
+      [],
     ]) {
-      h.ledger.mockImplementation(async () => ({ ok: true, ...ledger }));
-      const r = await confirmStatementIncludedAction({ statementId: D21_SID });
-      expect(r).toEqual({ ok: false, errorCode: 'errors.operations.notFound' });
+      h.ledger.mockImplementation(async () => d17Ledger(movements));
+      expect(await setFlowIncludedAction(answer(flowId))).toEqual(notFound);
+    }
+    expect(h.calls).toHaveLength(0);
+    expect(h.audit).not.toHaveBeenCalled();
+  });
+
+  it('refuses the starting balance, a stale statement, a cancelled one, and one absent from the workspace', async () => {
+    const newer = d17Statement('s-newer', 1000, '2026-09-21', '2026-09-21T08:45:00Z');
+    const cancelled = d17Statement(D21_SID, 905, '2026-09-21', '2026-09-21T08:00:00Z', true);
+    for (const statements of [
+      [d17OfTheDay], // the starting balance: never answered for
+      [d17Previous, d17OfTheDay, newer], // another balance was read since
+      [d17Previous, cancelled],
+      [d17Previous], // not in the session workspace
+    ]) {
+      h.ledger.mockImplementation(async () => ({
+        ok: true,
+        statements,
+        movements: [d23Income(M_AFTER)],
+      }));
+      expect(await setFlowIncludedAction(answer(`${M_AFTER}:in`))).toEqual(notFound);
     }
     expect(h.calls).toHaveLength(0);
   });
 
-  it('refuses anything but one uuid (no workspace, no amount travels)', async () => {
-    for (const input of [{ statementId: 'x' }, { statementId: D21_SID, workspaceId: 'ws-2' }, {}]) {
-      const r = await confirmStatementIncludedAction(input);
-      expect(r.ok).toBe(false);
-    }
+  it('withdraws an answer (included: false): one delete, scoped to the workspace, the statement and the operation', async () => {
+    h.ledger.mockImplementation(async () => answeredLedger());
+    script('statement_included_flows', 'delete', { data: [{ id: 'inc-1' }], error: null });
+
+    const r = await setFlowIncludedAction(answer(`${M_AFTER}:in`, false));
+
+    expect(r).toEqual({ ok: true });
+    expect(trail()).toEqual(['statement_included_flows.delete']);
+    expect(inclusions()[0]!.filters).toEqual({
+      workspace_id: 'ws-1',
+      statement_id: D21_SID,
+      flow_id: `${M_AFTER}:in`,
+    });
+    expect(statementEvents()).toEqual([
+      { resource_type: 'statement_included_flow', resource_id: 'inc-1' },
+    ]);
+  });
+
+  it('refuses to withdraw an answer never given, and to give the same answer twice', async () => {
+    h.ledger.mockImplementation(async () => d17Ledger([d23Income(M_AFTER)]));
+    expect(await setFlowIncludedAction(answer(`${M_AFTER}:in`, false))).toEqual(notFound);
+    h.ledger.mockImplementation(async () => answeredLedger());
+    expect(await setFlowIncludedAction(answer(`${M_AFTER}:in`, true))).toEqual(notFound);
     expect(h.calls).toHaveLength(0);
   });
-});
 
-describe('D21 — what the security review found (2026-09-28)', () => {
-  const income = (answer: 'included' | 'notYet') => ({
-    toAccountType: 'income_bills',
-    amount: 705,
-    occurredOn: '2026-09-21',
-    nature: 'regular',
-    statementAnswers: { income_bills: answer },
+  it('says writeFailed when the ledger cannot be read, or the write is refused or touches no row — and audits nothing', async () => {
+    h.ledger.mockImplementation(async () => ({ ok: false, statements: [], movements: [] }));
+    expect(await setFlowIncludedAction(answer(`${M_AFTER}:in`))).toEqual(writeFailed);
+
+    h.ledger.mockImplementation(async () => d17Ledger([d23Income(M_AFTER)]));
+    for (const refused of [
+      { data: null, error: { message: 'x' } },
+      { data: [], error: null },
+    ]) {
+      script('statement_included_flows', 'insert', refused);
+      expect(await setFlowIncludedAction(answer(`${M_AFTER}:in`))).toEqual(writeFailed);
+    }
+
+    h.ledger.mockImplementation(async () => answeredLedger());
+    for (const refused of [
+      { data: null, error: { message: 'x' } },
+      { data: [], error: null },
+    ]) {
+      script('statement_included_flows', 'delete', refused);
+      expect(await setFlowIncludedAction(answer(`${M_AFTER}:in`, false))).toEqual(writeFailed);
+    }
+    expect(h.audit).not.toHaveBeenCalled();
   });
-  // A transfer of the same day, written AFTER the statement and answered « Non ».
-  const earlierTransfer = {
-    ...d17Income,
-    id: 'm-transfer',
-    kind: 'transfer' as const,
-    fromAccountType: 'income_bills' as const,
-    toAccountType: 'daily_card' as const,
-    amount: money(505),
-    incomeNature: null,
-  };
 
-  it('B1 — refuses « Oui » when another operation of the day already counts after the statement, writing nothing', async () => {
-    h.ledger.mockImplementation(async () => d17Ledger([earlierTransfer]));
-    const r = await recordIncomeAction(income('included'));
-    expect(r).toMatchObject({
+  it('refuses anything but a statement uuid, a flow id of the base’s form and a boolean — before any read', async () => {
+    h.ledger.mockClear();
+    for (const input of [
+      { ...answer(`${M_AFTER}:in`), workspaceId: 'ws-2' },
+      { ...answer(`${M_AFTER}:in`), amount: 5 },
+      answer('m-after:in'),
+      answer(`${M_AFTER}:sideways`),
+      answer(`${M_AFTER.toUpperCase()}:in`),
+      answer(`income:${M_AFTER}`),
+      answer(`${M_AFTER}:in;x`),
+      answer(`${M_AFTER}:in`, 'yes'),
+      { statementId: 'x', flowId: `${M_AFTER}:in`, included: true },
+      { statementId: D21_SID, flowId: `${M_AFTER}:in` },
+      {},
+    ]) {
+      expect(await setFlowIncludedAction(input)).toMatchObject({
+        ok: false,
+        errorCode: 'errors.validation.generic',
+      });
+    }
+    expect(h.ledger).not.toHaveBeenCalled();
+    expect(h.calls).toHaveLength(0);
+  });
+
+  it('refuses without a session, before any read', async () => {
+    h.auth.mockImplementation(async () => ({ ok: false, errorCode: 'errors.session.expired' }));
+    expect(await setFlowIncludedAction(answer(`${M_AFTER}:in`))).toEqual({
       ok: false,
-      fieldErrors: { statementAnswers: ['operations.sameDay.othersAfter'] },
+      errorCode: 'errors.session.expired',
     });
-    expect(nonSelect()).toHaveLength(0);
-  });
-
-  it('B1 — « Non » stays possible on such a day', async () => {
-    h.ledger.mockImplementation(async () => d17Ledger([earlierTransfer]));
-    script('movements', 'insert', { data: { id: 'm-new' }, error: null });
-    const r = await recordIncomeAction(income('notYet'));
-    expect(r.ok).toBe(true);
-    expect(writes('account_balance_statements')).toHaveLength(0);
-  });
-
-  it('I1 — a transfer between two accounts read that day: on the second failure, reopens the first original BEFORE cancelling its copy', async () => {
-    const daily = { ...d17OfTheDay, id: 'daily-of-the-day', accountType: 'daily_card' as const };
-    const dailyPrev = { ...d17Previous, id: 'daily-prev', accountType: 'daily_card' as const };
-    const statements = [d17Previous, d17OfTheDay, dailyPrev, daily];
-    const transfer = { ...earlierTransfer, id: 'm-new' };
-    h.ledger
-      .mockImplementationOnce(async () => ({ ok: true, statements, movements: [] }))
-      .mockImplementationOnce(async () => ({ ok: true, statements, movements: [transfer] }));
-    script('movements', 'select', { data: [], error: null });
-    script('movements', 'insert', { data: { id: 'm-new' }, error: null });
-    script('account_balance_statements', 'insert', { data: { id: 'copy-1' }, error: null });
-    script('account_balance_statements', 'update', { data: [{ id: D21_SID }], error: null });
-    script('account_balance_statements', 'insert', { data: null, error: { message: 'x' } });
-    script('account_balance_statements', 'update', { data: [{ id: D21_SID }], error: null });
-    script('account_balance_statements', 'update', { data: [{ id: 'copy-1' }], error: null });
-    script('movements', 'update', { data: [{ id: 'm-new' }], error: null });
-
-    const r = await recordPlannedTransferAction({
-      fromAccountType: 'income_bills',
-      toAccountType: 'daily_card',
-      amount: 505,
-      occurredOn: '2026-09-21',
-      planYear: 2026,
-      planMonth: 10,
-      planSuggestedAmount: 505,
-      plannedProvisions: 0,
-      statementAnswers: { income_bills: 'included', daily_card: 'included' },
-    });
-    expect(r).toEqual({ ok: false, errorCode: 'errors.operations.writeFailed' });
-    const updates = writes('account_balance_statements').filter((c) => c.op === 'update');
-    expect(updates.map((u) => [u.filters.id, u.payload])).toEqual([
-      [D21_SID, { cancelled_at: expect.any(String) }],
-      [D21_SID, { cancelled_at: null }],
-      ['copy-1', { cancelled_at: expect.any(String) }],
-    ]);
-    expect(writes('movements').at(-1)).toMatchObject({ op: 'update', filters: { id: 'm-new' } });
-    // I4 — nothing stood: no statement event was written.
-    expect(
-      h.audit.mock.calls.filter((c) => (c as unknown[])[0] === 'account.balance_updated'),
-    ).toEqual([]);
-  });
-
-  it('I4 — audits the copy and the cancel once the gesture stands, ids and states only', async () => {
-    h.ledger
-      .mockImplementationOnce(async () => d17Ledger())
-      .mockImplementationOnce(async () => d17Ledger([d17Income]));
-    script('movements', 'insert', { data: { id: 'm-new' }, error: null });
-    script('account_balance_statements', 'insert', { data: { id: 's-copy' }, error: null });
-    script('account_balance_statements', 'update', { data: [{ id: D21_SID }], error: null });
-    const r = await recordIncomeAction(income('included'));
-    expect(r.ok).toBe(true);
-    const statementEvents = h.audit.mock.calls
-      .map((c) => c as unknown[])
-      .filter((c) => c[0] === 'account.balance_updated')
-      .map((c) => c[2]);
-    expect(statementEvents).toEqual([
-      { resource_type: 'account_balance_statement', resource_id: 's-copy' },
-      {
-        resource_type: 'account_balance_statement',
-        resource_id: D21_SID,
-        previous_state: 'standing',
-        new_state: 'cancelled',
-      },
-    ]);
-  });
-
-  it('I2 — keeps the copy when the cancel answer is lost but the original is cancelled', async () => {
-    h.ledger.mockImplementation(async () => d17Ledger([{ ...d17Income, id: 'm-after' }]));
-    script('account_balance_statements', 'insert', { data: { id: 's-copy' }, error: null });
-    script('account_balance_statements', 'update', { data: null, error: { message: 'timeout' } });
-    script('account_balance_statements', 'select', {
-      data: { cancelled_at: '2026-09-21T10:00:00Z' },
-      error: null,
-    });
-    const r = await confirmStatementIncludedAction({ statementId: D21_SID });
-    expect(r.ok).toBe(true);
-    expect(writes('account_balance_statements').filter((c) => c.op === 'update')).toHaveLength(1);
+    expect(h.calls).toHaveLength(0);
   });
 });
 

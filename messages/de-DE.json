@@ -1716,8 +1716,7 @@
           "invalid": "Vorgang nicht gefunden."
         },
         "sameDay": {
-          "required": "Beantworte die Frage zu deinem Kontostand dieses Tages.",
-          "othersAfter": "Andere Vorgänge dieses Tages sind schon nach deinem Kontostand eingetragen. Sag zuerst auf der Kontokarte, ob dein Kontostand sie enthielt."
+          "required": "Beantworte die Frage zu deinem Kontostand dieses Tages."
         },
         "budgetMonth": {
           "invalid": "Ungültiger Monat.",
@@ -2059,9 +2058,10 @@
       "cardQuestion": "Enthielt dein Kontostand vom {date} diese Vorgänge schon?",
       "cardFlowIn": "+ {montant} · {origine, select, income {erhaltenes Geld} transfer {Überweisung} bill {Rechnung} other {Ausgabe}}",
       "cardFlowOut": "− {montant} · {origine, select, income {erhaltenes Geld} transfer {Überweisung} bill {Rechnung} other {Ausgabe}}",
-      "cardYes": "Ja, schon enthalten",
-      "cardNo": "Nein, danach gemacht",
-      "cardDone": "Notiert: Dein Kontostand vom {date} enthielt sie schon."
+      "flowIncluded": "Schon enthalten",
+      "flowAfter": "Danach gemacht",
+      "flowIncludedDone": "Notiert: Dein Kontostand vom {date} enthielt diesen Vorgang schon.",
+      "flowAfterDone": "Notiert: Dieser Vorgang zählt nach deinem Kontostand vom {date}."
     },
     "statement": {
       "open": "Heutigen Kontostand eintragen",

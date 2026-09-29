@@ -7,12 +7,14 @@ import { getSnapshotWith } from '@/lib/data/workspace-snapshot';
 import { argentRecuParMois } from '@/lib/domain/accounts/argent-recu-par-mois';
 import { moisConcerneDe, moisServisParRevenu } from '@/lib/domain/accounts/mois-concerne';
 import { accountBalanceView } from '@/lib/domain/accounts/operations-view';
+import type { AccountFlow } from '@/lib/domain/accounts/solde';
 import { soldeAffiche } from '@/lib/domain/accounts/solde-affiche';
 import { createClient } from '@/lib/supabase/server';
 import {
   AccountsClient,
   type AccountBalanceProps,
   type PastIncomeMonthProps,
+  type SameDayFlowProps,
 } from './AccountsClient';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -21,6 +23,21 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const day = (d: Date) => d.toISOString().slice(0, 10);
+
+function sameDayFlowProps(f: AccountFlow): SameDayFlowProps {
+  return {
+    id: f.id,
+    direction: f.direction,
+    amount: f.amount.toNumber(),
+    // Every ledger flow is named (operations-view `lineOf` throws the same
+    // way): a guessed kind would name an operation wrongly.
+    origin:
+      f.origin ??
+      (() => {
+        throw new RangeError('a same-day flow has no origin');
+      })(),
+  };
+}
 
 export default async function AccountsPage() {
   const [snapshot, ledger] = await getSnapshotWith('/app/accounts', async (workspaceId) =>
@@ -126,21 +143,12 @@ export default async function AccountsPage() {
           id: view.reopenable.id,
           statedOn: day(view.reopenable.statedOn),
         },
-        // ADR-045 D21 — same-day operations counted after the read balance.
-        // Each operation with its sign and its kind (rule 10), never the net.
+        // ADR-045 D21/D23 — the operations of the read balance's day written
+        // after it: those counted after it, and those answered « already
+        // inside ». Each with its sign and its kind (rule 10), never the net.
         sameDayAfter: view.sameDayAfter && {
-          flows: view.sameDayAfter.flows.map((f) => ({
-            id: f.id,
-            direction: f.direction,
-            amount: f.amount.toNumber(),
-            // Every ledger flow is named (operations-view `lineOf` throws the
-            // same way): a guessed kind would name an operation wrongly.
-            origin:
-              f.origin ??
-              (() => {
-                throw new RangeError('a same-day flow has no origin');
-              })(),
-          })),
+          flows: view.sameDayAfter.flows.map(sameDayFlowProps),
+          included: view.sameDayAfter.included.map(sameDayFlowProps),
         },
       },
     };
