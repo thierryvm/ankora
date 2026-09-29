@@ -7,6 +7,7 @@ import type { AccountBalanceStatement, AccountFlow } from '@/lib/domain/accounts
 import { billPaymentToFlow, expenseToFlow } from '@/lib/domain/accounts/debits';
 import {
   toMoney,
+  ledgerFlows,
   withIncludedFlows,
   type MovementRecord,
 } from '@/lib/domain/accounts/operations-view';
@@ -151,11 +152,17 @@ export async function loadAccountLedger(
   if (debits === null || included === null) {
     return { ok: false, statements: [], movements: [], debits: [] };
   }
-  // ADR-045 D23 — the per-operation answers travel WITH their statement.
+  // ADR-045 D23 — the per-operation answers travel WITH their statement. The
+  // flows let the reading lend an answer only where the card can name it.
+  const domainMovements = movements.map(movementRowToDomain);
   return {
     ok: true,
-    statements: withIncludedFlows(statements.map(statementRowToDomain), included),
-    movements: movements.map(movementRowToDomain),
+    statements: withIncludedFlows(
+      statements.map(statementRowToDomain),
+      included,
+      ledgerFlows(domainMovements, debits),
+    ),
+    movements: domainMovements,
     debits,
   };
 }

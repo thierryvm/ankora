@@ -2042,15 +2042,16 @@
       "correctTitle": "Correct the amount",
       "correctQuestion": "How much did you receive, exactly?",
       "correctHint": "Only the amount changes: the date, the account and the month stay as written.",
-      "correctedAnchored": "Amount corrected. Your balance does not change: it starts from your statement of {date}; the gap with that statement is explained otherwise.",
-      "correctedChanged": "Amount corrected. Your balance goes from {avant} to {apres}.",
+      "correctedAnchored": "Amount corrected. The balance of {compte} does not change: it starts from your statement of {date}; the gap with that statement is explained otherwise.",
+      "correctedAnchoredStart": "Amount corrected. The balance of {compte} does not change: it starts from your starting balance of {date}.",
+      "correctedChanged": "Amount corrected. The balance of {compte} goes from {avant} to {apres}.",
       "correctedNoBalance": "Amount corrected.",
       "correctedSame": "Same amount: nothing changed.",
       "pastHeading": "Money received in past months",
       "pastMonthKey": "{total} · {count, plural, one {# operation} other {# operations}}",
       "pastOnAccount": "into {account}",
       "pastTotalNote": "The total counts the money received, not cancelled, of this budget month.",
-      "correctedAnchoredGap": "Amount corrected. Your balance does not change: it starts from your statement of {date}. The gap with that statement goes from {avant} to {apres}."
+      "correctedAnchoredGap": "Amount corrected. The balance of {compte} does not change: it starts from your statement of {date}. The gap with that statement goes from {avant} to {apres}."
     },
     "sameDay": {
       "question": "Does your {date} balance ({montant}) already include this money?",

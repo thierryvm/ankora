@@ -4,7 +4,7 @@ import { getTranslations } from 'next-intl/server';
 import { loadAccountLedger } from '@/lib/data/operations';
 import { todayIsoInBrussels } from '@/lib/data/month-situation';
 import { getSnapshotWith } from '@/lib/data/workspace-snapshot';
-import { argentRecuParMois } from '@/lib/domain/accounts/argent-recu-par-mois';
+import { argentRecuHorsCarte, surLaCarteDuMois } from '@/lib/domain/accounts/argent-recu-par-mois';
 import { moisConcerneDe, moisServisParRevenu } from '@/lib/domain/accounts/mois-concerne';
 import { accountBalanceView } from '@/lib/domain/accounts/operations-view';
 import type { AccountFlow } from '@/lib/domain/accounts/solde';
@@ -54,21 +54,14 @@ export default async function AccountsPage() {
   // today must stay on screen, where it can be cancelled (rule 11).
   const brusselsMonth = (d: Date) =>
     new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Brussels' }).format(d).slice(0, 7);
-  const countsIn = (m: (typeof ledger.movements)[number]) => {
-    const p = moisConcerneDe(m);
-    return `${p.year}-${String(p.month).padStart(2, '0')}`;
-  };
   const incomesOf = (accountType: string) =>
     ledger.movements
+      // Tour 58 — one rule decides the card, and the past months take only
+      // what it does not show: a line is never listed twice (rules 10/11).
       .filter(
         (m) =>
-          m.kind === 'income' &&
           m.toAccountType === accountType &&
-          (day(m.occurredOn).slice(0, 7) === month ||
-            brusselsMonth(m.recordedAt) === month ||
-            // ADR-046 — an income counted in this month's budget stays
-            // visible (and cancellable) here, whatever its date (rule 10/11).
-            countsIn(m) === month),
+          surLaCarteDuMois(m, month, brusselsMonth(m.recordedAt)),
       )
       .sort(
         (a, b) =>
@@ -160,21 +153,22 @@ export default async function AccountsPage() {
   const labelOf = new Map(
     snapshot.accounts.map((a) => [a.accountType as string, a.displayName ?? a.label]),
   );
-  const pastIncomes: PastIncomeMonthProps[] = argentRecuParMois(ledger.movements, month).map(
-    (m) => ({
-      month: m.mois,
-      total: m.total.toNumber(),
-      lines: m.lignes.map((l) => ({
-        id: l.id,
-        amount: l.amount.toNumber(),
-        occurredOn: day(l.occurredOn),
-        description: l.description,
-        cancelled: l.cancelled,
-        countsFor: l.countsFor,
-        accountLabel: labelOf.get(l.accountType) ?? l.accountType,
-      })),
-    }),
-  );
+  const pastIncomes: PastIncomeMonthProps[] = argentRecuHorsCarte(ledger.movements, month, (m) =>
+    brusselsMonth(m.recordedAt),
+  ).map((m) => ({
+    month: m.mois,
+    total: m.total.toNumber(),
+    count: m.nombre,
+    lines: m.lignes.map((l) => ({
+      id: l.id,
+      amount: l.amount.toNumber(),
+      occurredOn: day(l.occurredOn),
+      description: l.description,
+      cancelled: l.cancelled,
+      countsFor: l.countsFor,
+      accountLabel: labelOf.get(l.accountType) ?? l.accountType,
+    })),
+  }));
 
   return (
     <AccountsClient

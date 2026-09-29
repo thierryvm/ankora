@@ -2042,15 +2042,16 @@
       "correctTitle": "Corregir el importe",
       "correctQuestion": "¿Cuánto has recibido exactamente?",
       "correctHint": "Solo cambia el importe: la fecha, la cuenta y el mes se quedan como se anotaron.",
-      "correctedAnchored": "Importe corregido. Tu saldo no cambia: parte de tu extracto del {date}; la diferencia con ese extracto se explica de otro modo.",
-      "correctedChanged": "Importe corregido. Tu saldo pasa de {avant} a {apres}.",
+      "correctedAnchored": "Importe corregido. El saldo de {compte} no cambia: parte de tu extracto del {date}; la diferencia con ese extracto se explica de otro modo.",
+      "correctedAnchoredStart": "Importe corregido. El saldo de {compte} no cambia: parte de tu saldo inicial del {date}.",
+      "correctedChanged": "Importe corregido. El saldo de {compte} pasa de {avant} a {apres}.",
       "correctedNoBalance": "Importe corregido.",
       "correctedSame": "Mismo importe: no ha cambiado nada.",
       "pastHeading": "Dinero recibido en meses anteriores",
       "pastMonthKey": "{total} · {count, plural, one {# operación} other {# operaciones}}",
       "pastOnAccount": "en {account}",
       "pastTotalNote": "El total cuenta el dinero recibido no anulado de este mes de presupuesto.",
-      "correctedAnchoredGap": "Importe corregido. Tu saldo no cambia: parte de tu extracto del {date}. La diferencia con ese extracto pasa de {avant} a {apres}."
+      "correctedAnchoredGap": "Importe corregido. El saldo de {compte} no cambia: parte de tu extracto del {date}. La diferencia con ese extracto pasa de {avant} a {apres}."
     },
     "sameDay": {
       "question": "¿Tu saldo del {date} ({montant}) ya incluye este dinero?",

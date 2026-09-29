@@ -2042,15 +2042,16 @@
       "correctTitle": "Betrag korrigieren",
       "correctQuestion": "Wie viel hast du genau erhalten?",
       "correctHint": "Nur der Betrag ändert sich: Datum, Konto und Monat bleiben wie notiert.",
-      "correctedAnchored": "Betrag korrigiert. Dein Kontostand ändert sich nicht: Er geht von deinem Kontoauszug vom {date} aus; die Abweichung davon hat einen anderen Grund.",
-      "correctedChanged": "Betrag korrigiert. Dein Kontostand geht von {avant} auf {apres}.",
+      "correctedAnchored": "Betrag korrigiert. Der Kontostand von {compte} ändert sich nicht: Er geht von deinem Kontoauszug vom {date} aus; die Abweichung davon hat einen anderen Grund.",
+      "correctedAnchoredStart": "Betrag korrigiert. Der Kontostand von {compte} ändert sich nicht: Er geht von deinem Anfangssaldo vom {date} aus.",
+      "correctedChanged": "Betrag korrigiert. Der Kontostand von {compte} geht von {avant} auf {apres}.",
       "correctedNoBalance": "Betrag korrigiert.",
       "correctedSame": "Gleicher Betrag: Nichts hat sich geändert.",
       "pastHeading": "Erhaltenes Geld der Vormonate",
       "pastMonthKey": "{total} · {count, plural, one {# Vorgang} other {# Vorgänge}}",
       "pastOnAccount": "auf {account}",
       "pastTotalNote": "Die Summe zählt das nicht stornierte erhaltene Geld dieses Budgetmonats.",
-      "correctedAnchoredGap": "Betrag korrigiert. Dein Kontostand ändert sich nicht: Er geht von deinem Kontoauszug vom {date} aus. Die Abweichung davon geht von {avant} auf {apres}."
+      "correctedAnchoredGap": "Betrag korrigiert. Der Kontostand von {compte} ändert sich nicht: Er geht von deinem Kontoauszug vom {date} aus. Die Abweichung davon geht von {avant} auf {apres}."
     },
     "sameDay": {
       "question": "Enthält dein Kontostand vom {date} ({montant}) dieses Geld schon?",

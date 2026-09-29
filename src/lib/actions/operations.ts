@@ -16,6 +16,7 @@ import {
   sameDayFlowsAfter,
   sameDayFlowsIncluded,
   sameDayStatement,
+  sameDayStatementIds,
   splitTransferToProvisions,
   startingStatementId,
   toMoney,
@@ -437,14 +438,24 @@ export async function setFlowIncludedAction(input: unknown): Promise<ActionResul
   if (included) {
     rowId = await insertInclusion(ctx, statementId, flowId);
   } else {
+    // Point 9: the answer holds for every standing statement of the account
+    // that day, whichever one it is stored on — the withdrawal reaches them all.
+    // Cancelled readings of the day too, so reopening one cannot bring back an
+    // answer withdrawn here.
+    const dayIds = sameDayStatementIds(ledger.statements, target.accountType, target.statedOn, {
+      includeCancelled: true,
+    });
     const { data, error } = await ctx.supabase
       .from('statement_included_flows')
       .delete()
       .eq('workspace_id', ctx.workspaceId)
-      .eq('statement_id', statementId)
+      .in('statement_id', dayIds)
       .eq('flow_id', flowId)
       .select('id');
-    rowId = !error && data && data.length === 1 ? data[0]!.id : null;
+    rowId = !error && data && data.length >= 1 ? data[0]!.id : null;
+    // More than one row (the same answer given on two readings of the day):
+    // every withdrawn row leaves its own trace.
+    for (const extra of !error && data ? data.slice(1) : []) await auditInclusion(ctx, extra.id);
   }
   if (rowId === null) return { ok: false, errorCode: 'errors.operations.writeFailed' };
 
@@ -802,6 +813,7 @@ export async function correctIncomeAmountAction(
       data: {
         effet: 'ancre',
         releveLe: effet.releveLe.toISOString().slice(0, 10),
+        depart: effet.depart,
         ecart: effet.ecart && {
           avant: effet.ecart.avant.toNumber(),
           apres: effet.ecart.apres.toNumber(),
