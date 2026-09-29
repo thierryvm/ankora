@@ -12,6 +12,7 @@ import { toast } from '@/components/ui/toast';
 import { updateMonthlyIncomeAction, updateVieCouranteTransferAction } from '@/lib/actions/accounts';
 import {
   recordBalanceStatementAction,
+  correctIncomeAmountAction,
   setMovementCancelledAction,
   confirmStatementIncludedAction,
   setStatementCancelledAction,
@@ -19,6 +20,7 @@ import {
 import { AmountSheet } from '@/components/operations/AmountSheet';
 import { IncomeButton } from '@/components/operations/IncomeButton';
 import { Repli } from '@/components/cockpit/Repli';
+import type { IncomeCorrectionEffect } from '@/lib/actions/operations.types';
 import type { AccountType } from '@/lib/domain/cockpit/types';
 import { ACCOUNT_KIND_I18N_KEY, type AccountKind } from '@/lib/schemas/account';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
@@ -107,6 +109,8 @@ type Props = {
   /** Tour 42 — months already served by a « mon revenu du mois », for the entry proposal. */
   moisServis?: readonly string[];
   ledgerFailed?: boolean;
+  /** Tour 57 — the money received of past budget months, most recent first. */
+  pastIncomes?: PastIncomeMonthProps[];
 };
 
 const ACCOUNT_ICONS: Record<AccountKind, typeof Landmark> = {
@@ -137,6 +141,7 @@ export function AccountsClient({
   today,
   moisServis = [],
   ledgerFailed = false,
+  pastIncomes = [],
 }: Props) {
   const t = useTranslations('app.accounts');
   const tOps = useTranslations('operations');
@@ -195,6 +200,8 @@ export function AccountsClient({
           })}
         </div>
       </section>
+
+      {ledgerFailed || pastIncomes.length === 0 ? null : <PastIncomes months={pastIncomes} />}
     </div>
   );
 }
@@ -710,63 +717,177 @@ function AccountBalanceCard({ row, today }: { row: AccountBalanceProps; today: s
 
 /**
  * The month's « argent reçu » on one account, behind a fold (its count in the
- * title): each line says when it was received, and offers « Annuler » — or,
- * once cancelled, « Rétablir ». Nothing is deleted (rule 11).
+ * title): each line says when it was received, and offers « Corriger le
+ * montant » and « Annuler » — or, once cancelled, « Rétablir ». Nothing is
+ * deleted (rule 11).
  */
 function IncomeLines({ lines }: { lines: IncomeLineProps[] }) {
   const t = useTranslations('operations.income');
+  return (
+    <Repli titre={t('heading')} cle={t('count', { count: lines.length })} testId="argent-recu">
+      <ul className="flex flex-col gap-3">
+        {lines.map((line) => (
+          <IncomeLine key={line.id} line={line} />
+        ))}
+      </ul>
+    </Repli>
+  );
+}
+
+/**
+ * Tour 57 — one line of money received, wherever it is listed (the card of
+ * its account, or a past month): its figures, and the same gestures.
+ */
+function IncomeLine({ line, accountLabel }: { line: IncomeLineProps; accountLabel?: string }) {
+  const t = useTranslations('operations.income');
   const locale = useLocale() as Locale;
   const translateError = useActionErrorTranslator();
-  const ids = useId();
+  const textId = useId();
   const [isPending, startTransition] = useTransition();
+  const [correcting, setCorrecting] = useState(false);
 
-  function setCancelled(id: string, cancelled: boolean) {
+  function setCancelled(cancelled: boolean) {
     startTransition(async () => {
-      const r = await setMovementCancelledAction({ id, cancelled });
+      const r = await setMovementCancelledAction({ id: line.id, cancelled });
       if (r.ok) toast.success(cancelled ? t('cancelled') : t('saved'));
       else toast.error(translateError(r.errorCode));
     });
   }
 
+  // The confirmation says what the balance on screen did — the server measured
+  // it with the function the cards use (never guessed here).
+  function correctedMessage(data: unknown): string {
+    const effect = data as IncomeCorrectionEffect | undefined;
+    if (effect?.effet === 'ancre') {
+      return t('correctedAnchored', { date: formatDay(effect.releveLe, locale) });
+    }
+    if (effect?.effet === 'change') {
+      return t('correctedChanged', {
+        avant: formatCurrency(effect.avant, locale),
+        apres: formatCurrency(effect.apres, locale),
+      });
+    }
+    if (effect?.effet === 'identique') return t('correctedSame');
+    return t('correctedNoBalance');
+  }
+
   return (
-    <Repli titre={t('heading')} cle={t('count', { count: lines.length })} testId="argent-recu">
-      <ul className="flex flex-col gap-3">
-        {lines.map((line) => {
-          const textId = `${ids}-${line.id}`;
-          return (
-            <li key={line.id} data-income-line={line.id} className="flex flex-col gap-1">
-              <div id={textId} className="flex items-baseline justify-between gap-3">
-                <span className="min-w-0 text-sm break-words">
-                  {line.description}
-                  <span className="text-muted-foreground block text-xs">
-                    {t('receivedOn', { date: formatDay(line.occurredOn, locale) })}
-                    {line.countsFor
-                      ? ` · ${t('countsFor', { month: formatMonthInSentence(Number(line.countsFor.slice(5, 7)), locale) })}`
-                      : ''}
-                    {line.cancelled ? ` · ${t('cancelled')}` : ''}
-                  </span>
-                </span>
-                <span
-                  className={`font-mono text-sm tabular-nums ${line.cancelled ? 'text-muted-foreground line-through' : ''}`}
-                >
-                  {formatCurrency(line.amount, locale)}
-                </span>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="min-h-11 self-start"
-                disabled={isPending}
-                aria-describedby={textId}
-                onClick={() => setCancelled(line.id, !line.cancelled)}
-              >
-                {line.cancelled ? t('reopen') : t('cancel')}
-              </Button>
-            </li>
-          );
-        })}
-      </ul>
-    </Repli>
+    <li data-income-line={line.id} className="flex flex-col gap-1">
+      <div id={textId} className="flex items-baseline justify-between gap-3">
+        <span className="min-w-0 text-sm break-words">
+          {line.description}
+          <span className="text-muted-foreground block text-xs">
+            {t('receivedOn', { date: formatDay(line.occurredOn, locale) })}
+            {accountLabel ? ` · ${t('pastOnAccount', { account: accountLabel })}` : ''}
+            {line.countsFor
+              ? ` · ${t('countsFor', { month: formatMonthInSentence(Number(line.countsFor.slice(5, 7)), locale) })}`
+              : ''}
+            {line.cancelled ? ` · ${t('cancelled')}` : ''}
+          </span>
+        </span>
+        <span
+          data-testid="argent-recu-montant"
+          className={`font-mono text-sm tabular-nums ${line.cancelled ? 'text-muted-foreground line-through' : ''}`}
+        >
+          {formatCurrency(line.amount, locale)}
+        </span>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {line.cancelled ? null : (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="min-h-11"
+            disabled={isPending}
+            aria-describedby={textId}
+            data-testid="argent-recu-corriger"
+            onClick={() => setCorrecting(true)}
+          >
+            {t('correct')}
+          </Button>
+        )}
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="min-h-11"
+          disabled={isPending}
+          aria-describedby={textId}
+          onClick={() => setCancelled(!line.cancelled)}
+        >
+          {line.cancelled ? t('reopen') : t('cancel')}
+        </Button>
+      </div>
+      {correcting ? (
+        <AmountSheet
+          open={correcting}
+          onClose={() => setCorrecting(false)}
+          testId="feuille-corriger-argent-recu"
+          title={t('correctTitle')}
+          question={t('correctQuestion')}
+          hint={t('correctHint')}
+          dateLabel={t('date')}
+          dateReadOnly
+          initialAmount={line.amount}
+          initialDate={line.occurredOn}
+          allowNegative={false}
+          successMessage={t('correctedNoBalance')}
+          successMessageOf={correctedMessage}
+          onSubmit={(amount) => correctIncomeAmountAction({ id: line.id, amount })}
+        />
+      ) : null}
+    </li>
+  );
+}
+
+/** Plain values only — one past budget month of money received. */
+export type PastIncomeMonthProps = {
+  /** `YYYY-MM`, the budget month. */
+  month: string;
+  /** Sum of the standing lines, summed by the domain (rule 10). */
+  total: number;
+  lines: Array<IncomeLineProps & { accountLabel: string }>;
+};
+
+/**
+ * Tour 57 — « chaque centime doit pouvoir être retrouvé »: the money received
+ * of past budget months, one fold per month, its total opening on its lines.
+ */
+function PastIncomes({ months }: { months: PastIncomeMonthProps[] }) {
+  const t = useTranslations('operations.income');
+  const locale = useLocale() as Locale;
+  const monthName = (m: string) =>
+    new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(
+      new Date(`${m}-01T00:00:00Z`),
+    );
+  return (
+    <section
+      aria-labelledby="argent-recu-passe-titre"
+      className="flex flex-col gap-3"
+      data-testid="argent-recu-passe"
+    >
+      <h2 id="argent-recu-passe-titre" className="text-lg font-semibold">
+        {t('pastHeading')}
+      </h2>
+      <p className="text-muted-foreground text-xs">{t('pastTotalNote')}</p>
+      {months.map((m) => (
+        <Repli
+          key={m.month}
+          titre={monthName(m.month)}
+          cle={t('pastMonthKey', {
+            total: formatCurrency(m.total, locale),
+            count: m.lines.length,
+          })}
+          testId={`argent-recu-${m.month}`}
+        >
+          <ul className="flex flex-col gap-3">
+            {m.lines.map((line) => (
+              <IncomeLine key={line.id} line={line} accountLabel={line.accountLabel} />
+            ))}
+          </ul>
+        </Repli>
+      ))}
+    </section>
   );
 }
