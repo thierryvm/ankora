@@ -77,9 +77,26 @@ export function requiredStatementAnswersSchema(
   return z.object(Object.fromEntries(accounts.map((a) => [a, statementAnswer])));
 }
 
-/** « Mon solde du … les contenait déjà » — only the statement id travels. */
-export const statementIncludedSchema = z
-  .object({ statementId: z.string().uuid({ message: 'operations.id.invalid' }) })
+/**
+ * ADR-045 D23 — the flow ids the domain builds (`<movement>:in|out`,
+ * `expense:<id>`, `charge_payment:<id>`, `commitment_payment:<id>`). The SAME
+ * pattern as the CHECK of `statement_included_flows.flow_id`: an id the base
+ * would refuse is refused here first, with a readable error.
+ */
+export const FLOW_ID_PATTERN =
+  /^((expense|charge_payment|commitment_payment):[0-9a-f-]{36}|[0-9a-f-]{36}:(in|out))$/;
+
+/**
+ * « Déjà dedans » / « Fait après », for ONE operation of the statement's day.
+ * Only the two ids and the answer travel: the workspace and the author come
+ * from the session.
+ */
+export const flowIncludedSchema = z
+  .object({
+    statementId: z.string().uuid({ message: 'operations.id.invalid' }),
+    flowId: z.string().regex(FLOW_ID_PATTERN, { message: 'operations.id.invalid' }),
+    included: z.boolean(),
+  })
   .strict();
 
 export const balanceStatementSchema = z

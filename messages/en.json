@@ -1708,8 +1708,7 @@
           "invalid": "Operation not found."
         },
         "sameDay": {
-          "required": "Answer the question about your balance of that day.",
-          "othersAfter": "Other operations of that day are already written after your balance. First say, on the account card, whether your balance included them."
+          "required": "Answer the question about your balance of that day."
         },
         "budgetMonth": {
           "invalid": "Invalid month.",
@@ -2049,9 +2048,10 @@
       "cardQuestion": "Did your {date} balance already include these operations?",
       "cardFlowIn": "+ {montant} · {origine, select, income {money received} transfer {transfer} bill {bill} other {expense}}",
       "cardFlowOut": "− {montant} · {origine, select, income {money received} transfer {transfer} bill {bill} other {expense}}",
-      "cardYes": "Yes, already in it",
-      "cardNo": "No, done afterwards",
-      "cardDone": "Noted: your {date} balance already included them."
+      "flowIncluded": "Already in it",
+      "flowAfter": "Done afterwards",
+      "flowIncludedDone": "Noted: your {date} balance already included this operation.",
+      "flowAfterDone": "Noted: this operation counts after your {date} balance."
     },
     "statement": {
       "open": "Write today’s balance",

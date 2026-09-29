@@ -133,13 +133,31 @@ export async function loadAccountLedger(
   if (statements === null || movements === null) {
     return { ok: false, statements: [], movements: [], debits: [] };
   }
-  const debits = await loadDebits(supabase, workspaceId, statements);
-  if (debits === null) {
+  const [debits, included] = await Promise.all([
+    loadDebits(supabase, workspaceId, statements),
+    readAllPages<{ statement_id: string; flow_id: string }>((from, to) =>
+      supabase
+        .from('statement_included_flows')
+        .select('statement_id, flow_id')
+        .eq('workspace_id', workspaceId)
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
+  ]);
+  if (debits === null || included === null) {
     return { ok: false, statements: [], movements: [], debits: [] };
+  }
+  // ADR-045 D23 — the per-operation answers travel WITH their statement.
+  const byStatement = new Map<string, string[]>();
+  for (const r of included) {
+    byStatement.set(r.statement_id, [...(byStatement.get(r.statement_id) ?? []), r.flow_id]);
   }
   return {
     ok: true,
-    statements: statements.map(statementRowToDomain),
+    statements: statements.map((row) => ({
+      ...statementRowToDomain(row),
+      includedFlowIds: byStatement.get(row.id) ?? [],
+    })),
     movements: movements.map(movementRowToDomain),
     debits,
   };

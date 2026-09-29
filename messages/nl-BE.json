@@ -1708,8 +1708,7 @@
           "invalid": "Verrichting niet gevonden."
         },
         "sameDay": {
-          "required": "Beantwoord de vraag over je saldo van die dag.",
-          "othersAfter": "Andere verrichtingen van die dag staan al na je saldo. Zeg eerst op de kaart van de rekening of je saldo ze al bevatte."
+          "required": "Beantwoord de vraag over je saldo van die dag."
         },
         "budgetMonth": {
           "invalid": "Ongeldige maand.",
@@ -2049,9 +2048,10 @@
       "cardQuestion": "Bevatte je saldo van {date} deze verrichtingen al?",
       "cardFlowIn": "+ {montant} · {origine, select, income {ontvangen geld} transfer {overschrijving} bill {factuur} other {uitgave}}",
       "cardFlowOut": "− {montant} · {origine, select, income {ontvangen geld} transfer {overschrijving} bill {factuur} other {uitgave}}",
-      "cardYes": "Ja, zat er al in",
-      "cardNo": "Nee, daarna gedaan",
-      "cardDone": "Genoteerd: je saldo van {date} bevatte ze al."
+      "flowIncluded": "Zat er al in",
+      "flowAfter": "Daarna gedaan",
+      "flowIncludedDone": "Genoteerd: je saldo van {date} bevatte deze verrichting al.",
+      "flowAfterDone": "Genoteerd: deze verrichting telt na je saldo van {date}."
     },
     "statement": {
       "open": "Saldo van vandaag invullen",

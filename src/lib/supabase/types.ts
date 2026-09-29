@@ -99,6 +99,33 @@ export type Database = {
           },
         ];
       };
+      statement_included_flows: {
+        Row: {
+          created_at: string;
+          created_by: string;
+          flow_id: string;
+          id: string;
+          statement_id: string;
+          workspace_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          created_by: string;
+          flow_id: string;
+          id?: string;
+          statement_id: string;
+          workspace_id: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string;
+          flow_id?: string;
+          id?: string;
+          statement_id?: string;
+          workspace_id?: string;
+        };
+        Relationships: [];
+      };
       accounts: {
         Row: {
           account_type: string;

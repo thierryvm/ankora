@@ -129,7 +129,12 @@ export type AccountBalanceView = {
    * when the statement is the starting balance (never rewritten). `total` is
    * signed: an outgoing transfer lowers it.
    */
-  sameDayAfter: { total: Money; flows: readonly AccountFlow[] } | null;
+  sameDayAfter: {
+    total: Money;
+    flows: readonly AccountFlow[];
+    /** ADR-045 D23 — same day, written after, answered « already inside »: not counted. */
+    included: readonly AccountFlow[];
+  } | null;
 };
 
 export function accountBalanceView(input: {
@@ -191,12 +196,34 @@ function sameDayAfterView(
 ): AccountBalanceView['sameDayAfter'] {
   if (sameDayStatement(statements, read.accountType, read.statedOn) === null) return null;
   const sameDay = sameDayFlowsAfter(read, flows);
-  if (sameDay.length === 0) return null;
+  const included = sameDayFlowsIncluded(read, flows);
+  if (sameDay.length === 0 && included.length === 0) return null;
   const total = sameDay.reduce(
     (sum, f) => (f.direction === 'in' ? sum.plus(f.amount) : sum.minus(f.amount)),
     zero(),
   );
-  return { total, flows: sameDay };
+  return { total, flows: sameDay, included };
+}
+
+/**
+ * ADR-045 D23 — the flows of the statement's own day, written after it, that
+ * the person answered « already inside ». Listed so the card can undo the
+ * answer in one click (rule 11).
+ */
+export function sameDayFlowsIncluded(
+  statement: AccountBalanceStatement,
+  flows: readonly AccountFlow[],
+): AccountFlow[] {
+  const ids = statement.includedFlowIds ?? [];
+  return flows.filter(
+    (f) =>
+      ids.includes(f.id) &&
+      f.accountType === statement.accountType &&
+      f.cancelledAt === null &&
+      f.occurredOn.getTime() === statement.statedOn.getTime() &&
+      f.recordedAt !== null &&
+      f.recordedAt.getTime() > statement.recordedAt.getTime(),
+  );
 }
 
 /**
