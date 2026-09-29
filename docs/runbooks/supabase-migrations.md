@@ -1,10 +1,20 @@
 # Runbook — Déploiement des migrations Supabase
 
-> **Trou process documenté le 3 mai 2026** : les migrations Supabase **ne sont pas auto-appliquées** par les déploiements Vercel. Toute PR qui contient un fichier dans `supabase/migrations/` exige une étape manuelle après merge.
+> **Remplacé le 29 septembre 2026 (décision @thierry).** Les migrations additives sont
+> appliquées **par la CI** à la fusion sur `main` (`.github/workflows/migrations-production.yml`).
+> Le pilote n'applique plus rien : il sauvegarde avant la fusion et vérifie en lecture
+> après. La procédure manuelle ci-dessous ne sert plus qu'à **Thierry**, pour une
+> migration destructive que la CI refuse. Règles, ordre avec Vercel et mise en place :
+> [`docs/contributing/migrations.md`](../contributing/migrations.md).
+>
+> _Historique_ — trou process documenté le 3 mai 2026 : les migrations Supabase ne sont pas
+> auto-appliquées par les déploiements Vercel.
 
 ## Quand exécuter ce runbook
 
-À chaque merge sur `main` d'une PR qui ajoute, modifie ou supprime un fichier dans `supabase/migrations/`. La signature CI (Vercel deploy READY) ne suffit **pas** : Vercel ne touche que le bundle Next.js, pas le schéma DB Supabase.
+Quand le workflow « Migrations — production » a **refusé** une migration (destructive, ou
+en attente depuis un refus précédent). Seul Thierry l'exécute. Vercel ne touche que le
+bundle Next.js, jamais le schéma.
 
 **Symptôme typique du non-déploiement** : code merge sur `main`, deploy Vercel READY, mais le rendu prod n'utilise pas les nouvelles colonnes / tables. Les Server Components Next.js lisent du `undefined` sur les nouvelles colonnes et fallbackent silencieusement (pas d'erreur 500, juste un rendu incomplet).
 
@@ -76,9 +86,13 @@ Si une migration push prod produit un effet inattendu :
 
 Pour les cas de panique (corruption de données) : restore depuis le backup automatique Supabase via le dashboard `Database > Backups`. RPO ~24h.
 
-## Plan d'automatisation future
+## Plan d'automatisation — FAIT le 29 septembre 2026
 
-Le push manuel après merge est une dette process. Options pour automatiser :
+Livré sous une forme plus stricte que l'option A ci-dessous : garde « additive seulement »,
+une seule chaîne de connexion en secret d'environnement (pas de jeton d'accès Supabase),
+contrôle des migrations en attente, dry-run, puis vérification Local = Remote. Voir
+`docs/contributing/migrations.md`. Les options d'origine restent ci-dessous pour
+l'historique.
 
 ### Option A — GitHub Action post-merge `main`
 
@@ -119,7 +133,8 @@ Option A en CI dédiée, exécutée seulement sur push `main` (pas en PR), avec 
 
 - [ ] Migration testée localement avec `supabase db reset` (zéro erreur)
 - [ ] Migration idempotente (DO bloc avec `if not exists` sur policies/constraints)
-- [ ] **Après merge `main`** : exécuter `supabase db push --linked` et vérifier `supabase migration list --linked` (Local = Remote pour la nouvelle migration)
+- [ ] **Avant merge `main`** : sauvegarde du pilote (`db dump --linked`, hors dépôt)
+- [ ] **Après merge `main`** : workflow « Migrations — production » vert, puis `supabase migration list --linked` relu (Local = Remote pour la nouvelle migration). Migration refusée par la garde → Thierry la pousse lui-même (`docs/contributing/migrations.md`)
 - [ ] Smoke test prod du parcours user qui dépend de la migration
 
 ## Historique des incidents traités
