@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useOptimistic, useState, useSyncExternalStore, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   AlertTriangle,
   Check,
@@ -199,6 +200,7 @@ export function ChargesClient({
   periodNav,
 }: ChargesClientProps) {
   const t = useTranslations('app.charges');
+  const router = useRouter();
   const tFreq = useTranslations('common.frequency');
   const tFreqAbbr = useTranslations('common.frequencyAbbr');
   const tAmount = useTranslations('ui.amountField');
@@ -405,7 +407,7 @@ export function ChargesClient({
    */
   function onTogglePaid(c: RawCharge) {
     if (optimisticPaid.has(c.id)) {
-      sendToggle(c.id);
+      sendPayment(c.id, { intent: 'unpay' });
       return;
     }
     const due = currentPeriodDueDate(
@@ -428,7 +430,15 @@ export function ChargesClient({
     });
   }
 
-  function sendToggle(chargeId: string, paidOn?: string) {
+  /**
+   * The request says what the row showed when it was pressed: `pay` with its
+   * day, or `unpay`. If another tab got there first, the server answers by
+   * name (« déjà payée » / « pas payée ») and the page fetches the real state.
+   */
+  function sendPayment(
+    chargeId: string,
+    intent: { intent: 'pay'; paidOn: string } | { intent: 'unpay' },
+  ) {
     startTransition(async () => {
       applyOptimisticPaid(chargeId);
       try {
@@ -436,12 +446,18 @@ export function ChargesClient({
           chargeId,
           periodYear: viewedPeriod.year,
           periodMonth: viewedPeriod.month,
-          ...(paidOn !== undefined ? { paidOn } : {}),
+          ...intent,
         });
         if (result.ok) {
           toast.success(result.data.paid ? t('toastMarkedPaid') : t('toastMarkedUnpaid'));
         } else {
           toast.error(translateError(result.errorCode));
+          if (
+            result.errorCode === 'errors.charges.payments.alreadyPaid' ||
+            result.errorCode === 'errors.charges.payments.notPaid'
+          ) {
+            router.refresh();
+          }
         }
       } catch (err) {
         if (isNextControlFlowError(err)) throw err;
@@ -1374,7 +1390,7 @@ export function ChargesClient({
         onClose={() => setPayingCharge(null)}
         onConfirm={(target, day) => {
           setPayingCharge(null);
-          sendToggle(target.id, day);
+          sendPayment(target.id, { intent: 'pay', paidOn: day });
         }}
       />
     </div>

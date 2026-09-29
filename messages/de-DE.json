@@ -1733,7 +1733,9 @@
       "payments": {
         "toggleFailed": "Rechnung konnte nicht als bezahlt markiert werden.",
         "dateFuture": "Dieses Datum liegt in der Zukunft. Wähle den Tag, an dem die Rechnung bezahlt wurde.",
-        "dateOutOfPeriod": "Dieses Datum liegt zu weit vom Monat der Rechnung entfernt."
+        "dateOutOfPeriod": "Dieses Datum liegt zu weit vom Monat der Rechnung entfernt.",
+        "alreadyPaid": "Diese Rechnung ist bereits bezahlt. Die Seite wird aktualisiert.",
+        "notPaid": "Diese Rechnung ist nicht bezahlt. Die Seite wird aktualisiert."
       }
     },
     "accounts": {

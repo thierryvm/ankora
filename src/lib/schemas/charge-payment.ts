@@ -13,7 +13,7 @@ import { isCalendarDay } from '@/lib/domain/charges/payment-date';
  * defaults it to `charges.amount` at the moment of the toggle (Phase 1 UX).
  * Phase 2 UI will expose an override (e.g. user paid 95€ for a 100€ rent).
  */
-export const chargePaymentToggleSchema = z.object({
+const paymentPeriodSchema = z.object({
   chargeId: z.string().uuid({ message: 'chargePayment.chargeId.invalid' }),
   periodYear: z
     .number({ error: 'chargePayment.periodYear.range' })
@@ -33,16 +33,30 @@ export const chargePaymentToggleSchema = z.object({
     .max(1_000_000, { message: 'chargePayment.paidAmount.tooHigh' })
     .optional(),
   note: z.string().max(500).optional().nullable(),
-  /**
-   * The day the bill was paid (`YYYY-MM-DD`). Optional: absent, `paid_at` is
-   * left to the database default (the moment of the tick), as before. The
-   * future and period-window checks need today and the period, so they live
-   * in the action.
-   */
-  paidOn: z
-    .string({ error: 'chargePayment.paidOn.invalid' })
-    .refine(isCalendarDay, { message: 'chargePayment.paidOn.invalid' })
-    .optional(),
 });
+
+/**
+ * The request says what it wants — the server never flips the stored state.
+ * A toggle let a stale tab « un-tick » a bill already un-ticked elsewhere and
+ * mark it paid at the moment of the click.
+ *
+ *   - `pay`   carries the day the bill was paid (`YYYY-MM-DD`). The future and
+ *             period-window checks need today and the period, so they live in
+ *             the action.
+ *   - `unpay` carries no day; one sent anyway is dropped by the parse.
+ */
+export const chargePaymentToggleSchema = z.discriminatedUnion(
+  'intent',
+  [
+    paymentPeriodSchema.extend({
+      intent: z.literal('pay'),
+      paidOn: z
+        .string({ error: 'chargePayment.paidOn.invalid' })
+        .refine(isCalendarDay, { message: 'chargePayment.paidOn.invalid' }),
+    }),
+    paymentPeriodSchema.extend({ intent: z.literal('unpay') }),
+  ],
+  { error: 'chargePayment.intent.invalid' },
+);
 
 export type ChargePaymentToggleInput = z.infer<typeof chargePaymentToggleSchema>;

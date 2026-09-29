@@ -1733,7 +1733,9 @@
       "payments": {
         "toggleFailed": "Kan de factuur niet als betaald markeren.",
         "dateFuture": "Deze datum ligt in de toekomst. Kies de dag waarop de factuur betaald is.",
-        "dateOutOfPeriod": "Deze datum ligt te ver van de maand van de factuur."
+        "dateOutOfPeriod": "Deze datum ligt te ver van de maand van de factuur.",
+        "alreadyPaid": "Deze factuur is al betaald. De pagina wordt bijgewerkt.",
+        "notPaid": "Deze factuur is niet betaald. De pagina wordt bijgewerkt."
       }
     },
     "accounts": {

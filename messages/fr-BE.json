@@ -1733,7 +1733,9 @@
       "payments": {
         "toggleFailed": "Impossible de marquer la facture comme payée.",
         "dateFuture": "Cette date est dans le futur. Choisis le jour où la facture a été payée.",
-        "dateOutOfPeriod": "Cette date est trop loin du mois de la facture."
+        "dateOutOfPeriod": "Cette date est trop loin du mois de la facture.",
+        "alreadyPaid": "Cette facture est déjà payée. La page se met à jour.",
+        "notPaid": "Cette facture n'est pas payée. La page se met à jour."
       }
     },
     "accounts": {

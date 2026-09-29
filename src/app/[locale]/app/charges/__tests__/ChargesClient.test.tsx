@@ -547,10 +547,51 @@ describe('Factures Phase 2 — Payé toggle', () => {
         chargeId: monthlyCharge.id,
         periodYear: 2026,
         periodMonth: 3,
+        intent: 'pay',
         paidOn: '2026-03-09',
       }),
     );
     await waitFor(() => expect(toastSuccessMock).toHaveBeenCalled());
+  });
+
+  // Tour 61 ter — another tab paid it first: the server says so by name, and
+  // the page fetches the real state instead of guessing it.
+  it('"already paid" is shown by name and refreshes the page', async () => {
+    togglePaymentMock.mockResolvedValue({
+      ok: false,
+      errorCode: 'errors.charges.payments.alreadyPaid',
+    });
+    routerRefreshMock.mockClear();
+    renderCharges([monthlyCharge], { viewedPeriod: { year: 2026, month: 3 } });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`charges-row-paid-${monthlyCharge.id}`));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('charge-pay-submit'));
+    });
+    await waitFor(() =>
+      expect(toastErrorMock).toHaveBeenCalledWith(messages.errors.charges.payments.alreadyPaid),
+    );
+    expect(routerRefreshMock).toHaveBeenCalled();
+  });
+
+  it('"not paid" is shown by name and refreshes the page', async () => {
+    togglePaymentMock.mockResolvedValue({
+      ok: false,
+      errorCode: 'errors.charges.payments.notPaid',
+    });
+    routerRefreshMock.mockClear();
+    renderCharges([monthlyCharge], {
+      paidChargeIds: [monthlyCharge.id],
+      viewedPeriod: { year: 2026, month: 3 },
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`charges-row-paid-${monthlyCharge.id}`));
+    });
+    await waitFor(() =>
+      expect(toastErrorMock).toHaveBeenCalledWith(messages.errors.charges.payments.notPaid),
+    );
+    expect(routerRefreshMock).toHaveBeenCalled();
   });
 
   it('pre-fills today when the due date is still ahead', async () => {
@@ -581,6 +622,7 @@ describe('Factures Phase 2 — Payé toggle', () => {
         chargeId: monthlyCharge.id,
         periodYear: 2026,
         periodMonth: 3,
+        intent: 'unpay',
       }),
     );
   });

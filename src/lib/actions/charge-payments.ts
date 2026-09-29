@@ -41,12 +41,15 @@ async function authorizedWorkspace(): Promise<
 }
 
 /**
- * Toggle a charge payment for a given (year, month) period:
- *   - if no row exists → INSERT (mark as paid)
- *   - if a row exists  → DELETE (mark as unpaid)
+ * Mark a charge paid or unpaid for a given (year, month) period, as the
+ * request's `intent` says:
+ *   - `pay`   + no row → INSERT, `paid_at` at noon UTC of `paidOn`
+ *   - `unpay` + a row  → DELETE
+ *   - `pay` on a paid bill, `unpay` on an unpaid one → named refusal
+ *     (`alreadyPaid` / `notPaid`), nothing written.
  *
- * Idempotence: the DB UNIQUE (charge_id, period_year, period_month) constraint
- * prevents double-INSERT. Concurrent toggles converge to the latest state.
+ * The DB UNIQUE (charge_id, period_year, period_month) constraint still
+ * refuses a double INSERT that races past the read.
  *
  * Authz: the charge must belong to the caller's workspace. We check this
  * BEFORE writing — never trust a `chargeId` from the client.
@@ -72,7 +75,9 @@ export async function togglePaymentAction(
     };
   }
 
-  const { chargeId, periodYear, periodMonth, paidAmount, note, paidOn } = parsed.data;
+  const request = parsed.data;
+  const { chargeId, periodYear, periodMonth, paidAmount, note } = request;
+  const paidOn = request.intent === 'pay' ? request.paidOn : undefined;
 
   // The day the bill was paid is checked BEFORE any read: a day in the future
   // (Brussels) or far from its period is a typo that would move the payment
@@ -113,7 +118,7 @@ export async function togglePaymentAction(
   }
 
   // 2. Look up an existing payment for this (charge, year, month).
-  const { data: existing } = await supabase
+  const { data: existing, error: existingError } = await supabase
     .from('charge_payments')
     .select('id')
     .eq('charge_id', chargeId)
@@ -121,26 +126,40 @@ export async function togglePaymentAction(
     .eq('period_year', periodYear)
     .eq('period_month', periodMonth)
     .maybeSingle();
+  // A read that failed says nothing about the bill: never answer « déjà
+  // payée » / « pas payée » on it.
+  if (existingError) {
+    return { ok: false, errorCode: 'errors.charges.payments.toggleFailed' };
+  }
 
   let nextPaid: boolean;
   let nextAmount: number | null;
 
-  if (existing && paidOn !== undefined) {
-    // A day is only ever sent by « Marquer payée ». If the bill is already
-    // paid (another tab, a double submit), that request must not UNPAY it:
-    // nothing is written, and the answer says it is paid.
-    return { ok: true, data: { paid: true, paidAmount: null } };
+  // The server applies the intent it received, never the opposite of what it
+  // stored: a stale tab or a double submit gets a named answer, nothing is
+  // written, and the page refreshes to the real state.
+  if (request.intent === 'pay' && existing) {
+    return { ok: false, errorCode: 'errors.charges.payments.alreadyPaid' };
+  }
+  if (request.intent === 'unpay' && !existing) {
+    return { ok: false, errorCode: 'errors.charges.payments.notPaid' };
   }
 
   if (existing) {
     // 3a. Toggle OFF — DELETE the row.
-    const { error: deleteError } = await supabase
+    const { data: deleted, error: deleteError } = await supabase
       .from('charge_payments')
       .delete()
       .eq('id', existing.id)
-      .eq('workspace_id', ctx.workspaceId);
+      .eq('workspace_id', ctx.workspaceId)
+      .select('id');
     if (deleteError) {
       return { ok: false, errorCode: 'errors.charges.payments.toggleFailed' };
+    }
+    // Another tab removed it between the read and the delete: nothing was
+    // un-ticked here, so nothing is audited.
+    if (!deleted || deleted.length === 0) {
+      return { ok: false, errorCode: 'errors.charges.payments.notPaid' };
     }
     nextPaid = false;
     nextAmount = null;
@@ -156,11 +175,17 @@ export async function togglePaymentAction(
       paid_from_account_type: accountTypeFromKind(charge.paid_from as ChargePaidFrom),
       note: note ?? null,
       created_by: ctx.userId,
-      // Without a day, `paid_at` stays the database default (the tick).
       ...(paidOn !== undefined ? { paid_at: paidAtForDay(paidOn) } : {}),
     });
     if (insertError) {
-      return { ok: false, errorCode: 'errors.charges.payments.toggleFailed' };
+      // 23505 = the UNIQUE (charge, year, month) row appeared after the read.
+      return {
+        ok: false,
+        errorCode:
+          insertError.code === '23505'
+            ? 'errors.charges.payments.alreadyPaid'
+            : 'errors.charges.payments.toggleFailed',
+      };
     }
     nextPaid = true;
     nextAmount = amountToPersist;

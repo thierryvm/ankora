@@ -1733,7 +1733,9 @@
       "payments": {
         "toggleFailed": "Unable to mark the bill as paid.",
         "dateFuture": "This date is in the future. Pick the day the bill was paid.",
-        "dateOutOfPeriod": "This date is too far from the bill's month."
+        "dateOutOfPeriod": "This date is too far from the bill's month.",
+        "alreadyPaid": "This bill is already paid. The page is updating.",
+        "notPaid": "This bill is not paid. The page is updating."
       }
     },
     "accounts": {
