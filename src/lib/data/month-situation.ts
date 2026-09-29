@@ -1,9 +1,9 @@
 import { ANKORA_TIMEZONE } from '@/lib/date/tz';
 import { money } from '@/lib/domain/types';
+import { totalAmount } from '@/lib/domain/expenses/helpers';
 import {
   calculerSituationDuMois,
   chargesFixesDuMois,
-  depensesDuMois,
   engagementsDuMois,
   lissageDuMois,
   paymentKey,
@@ -20,6 +20,7 @@ import type { AccountType } from '@/lib/schemas/account';
 import {
   depensesDuMoisDeBudget,
   fenetreDuMoisDeBudget,
+  joursEntre,
   type FenetreDuMois,
 } from '@/lib/domain/budget/mois-de-budget';
 import { operationsDuMois } from '@/lib/domain/cockpit/operations-du-mois';
@@ -215,17 +216,14 @@ export function computeMonthSituation(input: MonthSituationInputs): MonthSituati
   // snapshot's budget month, not the calendar one.
   const fenetre = fenetreDuMoisDeBudget(ref, input.ledger.movements);
   const joursDuMois = fenetre.jours;
-  const ecoules =
-    Math.round(
-      (Date.parse(`${todayIso}T00:00:00Z`) - Date.parse(`${fenetre.debut}T00:00:00Z`)) / 86_400_000,
-    ) + 1;
+  const ecoules = joursEntre(fenetre.debut, todayIso) + 1;
   const joursEcoules = isCurrentMonth ? Math.min(joursDuMois, Math.max(1, ecoules)) : joursDuMois;
   const joursRestants = isCurrentMonth ? Math.max(1, joursDuMois - joursEcoules + 1) : 0;
 
-  // ADR-035 — « Dépensé ce mois ». `monthlyExpenses` is already server-filtered
-  // to the reference month; running the domain filter over it again is cheap
-  // and keeps the figure correct if that guarantee ever moves.
-  const depenses = depensesDuMois(monthlyExpenses, ref, input.ledger.movements);
+  // ADR-035 — « Dépensé ce mois ». `monthlyExpenses` is ranged ONCE, above, by
+  // the whole journal: « Dépensé » sums that very list (tour 57, Reviewer of
+  // tour 49: the same filter ran twice).
+  const depenses = totalAmount(monthlyExpenses);
 
   const situation = calculerSituationDuMois({
     // Distinct from the Transfer plan's income (which coerces null → 0): the

@@ -166,6 +166,21 @@ export const operationCancellationSchema = z
 export type OperationCancellationInput = z.infer<typeof operationCancellationSchema>;
 
 /**
+ * Tour 57 — « Corriger le montant » of money received. Only the id and the new
+ * amount travel: the date, the account, the write time and the month it counts
+ * for stay as written (the base freezes the account and the write time,
+ * ADR-045 D17). The amount follows the same rule as at entry.
+ */
+export const incomeAmountCorrectionSchema = z
+  .object({
+    id: z.string().uuid({ message: 'operations.id.invalid' }),
+    amount: positiveAmount,
+  })
+  .strict();
+
+export type IncomeAmountCorrectionInput = z.infer<typeof incomeAmountCorrectionSchema>;
+
+/**
  * « Recalculer le découpage » — only the id travels. The split is the
  * server's (`splitByRule`): an amount or a share sent here is refused.
  */

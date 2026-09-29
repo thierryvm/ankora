@@ -494,7 +494,10 @@ async function readWorkspaceSnapshot(workspaceId: string): Promise<WorkspaceSnap
       .eq('workspace_id', workspaceId)
       .eq('kind', 'income')
       .eq('income_nature', 'regular')
-      .gte('occurred_on', firstDay({ year: currentYear, month: currentMonth }, -1)),
+      .gte('occurred_on', firstDay({ year: currentYear, month: currentMonth }, -1))
+      // Tour 57 — bounded above like the expenses read beside it: an income
+      // dated two months ahead cannot open this month nor the next one.
+      .lt('occurred_on', firstDay({ year: currentYear, month: currentMonth }, 2)),
   ]);
 
   // The workspace row is reached through a membership we just read successfully,

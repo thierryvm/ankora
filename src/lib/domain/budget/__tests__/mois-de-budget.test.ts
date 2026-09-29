@@ -113,6 +113,22 @@ describe('depensesDuMoisDeBudget', () => {
 });
 
 describe('fenetreDuMoisDeBudget', () => {
+  // Tour 57 (Reviewer, tour 49) — two month incomes for the same month: the
+  // first to arrive opens it, whatever the order they were written in.
+  it('the first of two incomes for October opens October', () => {
+    const second = {
+      ...SALAIRE_OCTOBRE,
+      occurredOn: new Date('2026-09-30T00:00:00Z'),
+      recordedAt: new Date('2026-09-26T08:00:00Z'),
+    };
+    const premier = {
+      ...SALAIRE_OCTOBRE,
+      occurredOn: new Date('2026-09-25T00:00:00Z'),
+      recordedAt: new Date('2026-09-30T08:00:00Z'),
+    };
+    expect(fenetreDuMoisDeBudget(OCT, [second, premier]).debut).toBe('2026-09-25');
+    expect(fenetreDuMoisDeBudget(SEPT, [second, premier]).fin).toBe('2026-09-24');
+  });
   it('October runs from the salary day to the end of October while November is not written', () => {
     expect(fenetreDuMoisDeBudget(OCT, [SALAIRE_OCTOBRE])).toEqual({
       debut: '2026-09-28',

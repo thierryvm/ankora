@@ -1799,7 +1799,8 @@
       "notFound": "This operation no longer exists or is not yours.",
       "alreadyDone": "This transfer is already marked as done for this month.",
       "startingBalance": "The starting balance cannot be cancelled: write today’s balance instead.",
-      "planMonthNotAllowed": "This transfer can only be recorded for the current month or the next one."
+      "planMonthNotAllowed": "This transfer can only be recorded for the current month or the next one.",
+      "cancelledRow": "This money received is cancelled: restore it before correcting its amount."
     }
   },
   "opengraphImage": {
@@ -2024,7 +2025,19 @@
         "warnPrevious": "Last month's salary: it will count for {month}.",
         "warnOther": "This money will count for {month}, not for the month of its date.",
         "undo": "No, for {month}"
-      }
+      },
+      "correct": "Correct the amount",
+      "correctTitle": "Correct the amount",
+      "correctQuestion": "How much did you receive, exactly?",
+      "correctHint": "Only the amount changes: the date, the account and the month stay as written.",
+      "correctedAnchored": "Amount corrected. Your balance does not change: it starts from your statement of {date}; the gap with that statement is explained otherwise.",
+      "correctedChanged": "Amount corrected. Your balance goes from {avant} to {apres}.",
+      "correctedNoBalance": "Amount corrected.",
+      "correctedSame": "Same amount: nothing changed.",
+      "pastHeading": "Money received in past months",
+      "pastMonthKey": "{total} · {count, plural, one {# operation} other {# operations}}",
+      "pastOnAccount": "into {account}",
+      "pastTotalNote": "The total counts the money received, not cancelled, of this budget month."
     },
     "sameDay": {
       "question": "Does your {date} balance ({montant}) already include this money?",

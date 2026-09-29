@@ -84,6 +84,7 @@ vi.mock('next-intl/server', () => ({
 import { money, type Charge } from '@/lib/domain/types';
 import {
   confirmStatementIncludedAction,
+  correctIncomeAmountAction,
   recordBalanceStatementAction,
   recordIncomeAction,
   recalculateTransferSplitAction,
@@ -1411,5 +1412,142 @@ describe('recalculateTransferSplitAction', () => {
       errorCode: 'errors.session.expired',
     });
     expect(h.calls).toHaveLength(0);
+  });
+});
+
+// =========================================================================
+// Tour 57 — « Corriger le montant » of money received
+// =========================================================================
+describe('correctIncomeAmountAction', () => {
+  const row = (over: Record<string, unknown> = {}) => ({
+    id: ID,
+    kind: 'income',
+    to_account_type: 'income_bills',
+    amount: 505,
+    cancelled_at: null,
+    ...over,
+  });
+  const recu = {
+    id: ID,
+    kind: 'income' as const,
+    fromAccountType: null,
+    toAccountType: 'income_bills' as const,
+    amount: money(505),
+    occurredOn: new Date('2026-09-10T00:00:00Z'),
+    recordedAt: new Date('2026-09-10T09:00:00Z'),
+    cancelledAt: null,
+    planYear: null,
+    planMonth: null,
+    planSuggestedAmount: null,
+    provisionPart: null,
+    freeSavingsPart: null,
+    incomeNature: 'regular' as const,
+    budgetYear: null,
+    budgetMonth: null,
+    description: 'Revenu du mois',
+  };
+  const releve = (statedOn: string, balance: number) => ({
+    ...stmt(balance, statedOn),
+    accountType: 'income_bills' as const,
+  });
+
+  it.each([0, -5, 12.345, Number.NaN])(
+    'refuses the amount %s before any read or write',
+    async (amount) => {
+      const r = await correctIncomeAmountAction({ id: ID, amount });
+      expect(r.ok).toBe(false);
+      if (!r.ok) {
+        expect(r.errorCode).toBe('errors.validation.generic');
+        expect(r.fieldErrors?.amount?.[0]).toMatch(/^operations\.amount\./);
+      }
+      expect(h.calls).toHaveLength(0);
+    },
+  );
+
+  it('refuses a workspaceId or any other field sent by the client', async () => {
+    const r = await correctIncomeAmountAction({ id: ID, amount: 550, workspaceId: 'ws-2' });
+    expect(r.ok).toBe(false);
+    expect(h.calls).toHaveLength(0);
+  });
+
+  it('a row outside the session workspace is not found, and nothing is written', async () => {
+    script('movements', 'select', { data: null, error: null });
+    expect(await correctIncomeAmountAction({ id: ID, amount: 550 })).toEqual({
+      ok: false,
+      errorCode: 'errors.operations.notFound',
+    });
+    expect(h.calls[0]!.filters).toMatchObject({ id: ID, workspace_id: 'ws-1' });
+    expect(writes('movements')).toHaveLength(0);
+  });
+
+  it('a transfer is not money received: refused, nothing written', async () => {
+    script('movements', 'select', { data: row({ kind: 'transfer' }), error: null });
+    const r = await correctIncomeAmountAction({ id: ID, amount: 550 });
+    expect(r).toEqual({ ok: false, errorCode: 'errors.operations.notFound' });
+    expect(writes('movements')).toHaveLength(0);
+  });
+
+  it('a cancelled row is not corrected (reopen it first)', async () => {
+    script('movements', 'select', {
+      data: row({ cancelled_at: '2026-09-12T10:00:00Z' }),
+      error: null,
+    });
+    const r = await correctIncomeAmountAction({ id: ID, amount: 550 });
+    expect(r).toEqual({ ok: false, errorCode: 'errors.operations.cancelledRow' });
+    expect(writes('movements')).toHaveLength(0);
+  });
+
+  it('writes the amount and ONLY the amount, in the session workspace, on a standing row', async () => {
+    h.ledger.mockImplementation(async () => ({
+      ok: true,
+      statements: [releve('2026-09-01', 100)],
+      movements: [recu],
+    }));
+    script('movements', 'select', { data: row(), error: null });
+    script('movements', 'update', { data: [{ id: ID }], error: null });
+    const r = await correctIncomeAmountAction({ id: ID, amount: 550 });
+    const [w] = writes('movements');
+    expect(w!.payload).toEqual({ amount: 550 });
+    expect(w!.filters).toMatchObject({ id: ID, workspace_id: 'ws-1', cancelled_at: null });
+    // No statement after the operation: the balance moves, and the screen says from what to what.
+    expect(r).toEqual({ ok: true, data: { effet: 'change', avant: 605, apres: 650 } });
+    expect(h.audit).toHaveBeenCalledTimes(1);
+    const meta = JSON.stringify(h.audit.mock.calls[0]);
+    expect(meta).not.toContain('550');
+    expect(meta).not.toContain('505');
+  });
+
+  it('a statement read after the operation: says the balance does not move, and names its day', async () => {
+    h.ledger.mockImplementation(async () => ({
+      ok: true,
+      statements: [releve('2026-09-01', 100), releve('2026-09-15', 705)],
+      movements: [recu],
+    }));
+    script('movements', 'select', { data: row(), error: null });
+    script('movements', 'update', { data: [{ id: ID }], error: null });
+    expect(await correctIncomeAmountAction({ id: ID, amount: 550 })).toEqual({
+      ok: true,
+      data: { effet: 'ancre', releveLe: '2026-09-15' },
+    });
+  });
+
+  it('zero row updated (RLS: not the author) → not found, no audit', async () => {
+    h.ledger.mockImplementation(async () => ({ ok: true, statements: [], movements: [recu] }));
+    script('movements', 'select', { data: row(), error: null });
+    script('movements', 'update', { data: [], error: null });
+    expect(await correctIncomeAmountAction({ id: ID, amount: 550 })).toEqual({
+      ok: false,
+      errorCode: 'errors.operations.notFound',
+    });
+    expect(h.audit).not.toHaveBeenCalled();
+  });
+
+  it('the same amount again writes nothing', async () => {
+    script('movements', 'select', { data: row(), error: null });
+    expect(await correctIncomeAmountAction({ id: ID, amount: 505 })).toEqual({
+      ok: true,
+      data: { effet: 'identique' },
+    });
+    expect(writes('movements')).toHaveLength(0);
   });
 });

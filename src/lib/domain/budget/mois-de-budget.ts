@@ -140,6 +140,17 @@ export function moisDeBudgetEnCours(
   return moisDuMoment(todayIso, now, revenus);
 }
 
+/**
+ * Whole days from `debut` to `fin` (`YYYY-MM-DD`, UTC midnights): 0 for the
+ * same day. The one place a budget month counts its days (tour 57, Reviewer
+ * of tour 49: the count was written twice).
+ */
+export function joursEntre(debut: string, fin: string): number {
+  return Math.round(
+    (Date.parse(`${fin}T00:00:00Z`) - Date.parse(`${debut}T00:00:00Z`)) / 86_400_000,
+  );
+}
+
 function jourSuivant(jour: string, n: number): string {
   const d = new Date(`${jour}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + n);
@@ -170,10 +181,6 @@ export function fenetreDuMoisDeBudget(
 
   const debut = ouverture ?? premier;
   const fin = cloture !== undefined && cloture > debut ? jourSuivant(cloture, -1) : dernier;
-  const jours =
-    Math.round(
-      (new Date(`${fin}T00:00:00Z`).getTime() - new Date(`${debut}T00:00:00Z`).getTime()) /
-        86_400_000,
-    ) + 1;
+  const jours = joursEntre(debut, fin) + 1;
   return { debut, fin, jours, calendaire: debut === premier && fin === dernier };
 }

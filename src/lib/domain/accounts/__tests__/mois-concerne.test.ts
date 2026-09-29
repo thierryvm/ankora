@@ -31,6 +31,44 @@ describe('moisProposePourArgentRecu', () => {
     },
   );
 
+  // Tour 57 — two salaries in one household (tour 49 ter). The next month is
+  // proposed only in the last ten days of the month AND when the month of the
+  // date is already served; the person can always choose another month.
+  it('proposes the running month for a second salary received on the 5th', () => {
+    expect(
+      moisProposePourArgentRecu({
+        dateIso: '2026-10-05',
+        nature: 'regular',
+        moisServis: ['2026-09', '2026-10'],
+      }),
+    ).toBe('2026-10');
+  });
+
+  it('proposes October for the second salary of a couple both paid on 28 September', () => {
+    expect(
+      moisProposePourArgentRecu({
+        dateIso: '2026-09-28',
+        nature: 'regular',
+        moisServis: ['2026-09', '2026-10'],
+      }),
+    ).toBe('2026-10');
+  });
+
+  it.each([
+    ['2026-09-20', '2026-09'],
+    ['2026-09-21', '2026-10'],
+    ['2026-10-21', '2026-10'],
+    ['2026-10-22', '2026-11'],
+  ])('with the month served, %s proposes %s (the last ten days only)', (dateIso, attendu) => {
+    expect(
+      moisProposePourArgentRecu({
+        dateIso,
+        nature: 'regular',
+        moisServis: [moisDeLaDateTest(dateIso)],
+      }),
+    ).toBe(attendu);
+  });
+
   it('keeps a late September salary, received on 2 October, for September', () => {
     expect(
       moisProposePourArgentRecu({
@@ -77,14 +115,17 @@ describe('moisProposePourArgentRecu', () => {
     ).toBe('2027-01');
   });
 
-  it('does not re-propose a month already served: it goes one further, within the window', () => {
+  // Tour 57 — this case proposed October until then: a second salary of the
+  // household on the 10th pushed the cockpit to the next month. Changed on
+  // purpose (brief of tour 57, point 3), declared in the PR.
+  it('keeps a month income of the 10th in its month, even when the month is served', () => {
     expect(
       moisProposePourArgentRecu({
         dateIso: '2026-09-10',
         nature: 'regular',
         moisServis: ['2026-09'],
       }),
-    ).toBe('2026-10');
+    ).toBe('2026-09');
   });
 });
 
@@ -165,3 +206,7 @@ describe('choixDeMois', () => {
     expect(moisDeLaDate('2026-12-31')).toBe('2026-12');
   });
 });
+
+function moisDeLaDateTest(dateIso: string): string {
+  return dateIso.slice(0, 7);
+}
