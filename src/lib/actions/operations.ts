@@ -802,6 +802,7 @@ export async function correctIncomeAmountAction(
       data: {
         effet: 'ancre',
         releveLe: effet.releveLe.toISOString().slice(0, 10),
+        depart: effet.depart,
         ecart: effet.ecart && {
           avant: effet.ecart.avant.toNumber(),
           apres: effet.ecart.apres.toNumber(),

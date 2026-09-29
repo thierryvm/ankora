@@ -32,6 +32,8 @@ export type LigneArgentRecu = {
 export type MoisArgentRecu = {
   mois: MoisIso;
   total: Decimal;
+  /** How many lines the total sums: the standing ones, never the cancelled (tour 58). */
+  nombre: number;
   lignes: LigneArgentRecu[];
 };
 
@@ -67,9 +69,24 @@ export function argentRecuParMois(
           cancelled: m.cancelledAt !== null,
           countsFor: m.budgetYear !== null && m.budgetMonth !== null ? mois : null,
         }));
-      const total = lignes
-        .filter((l) => !l.cancelled)
-        .reduce((s, l) => s.plus(l.amount), new Decimal(0));
-      return { mois, total, lignes };
+      const debout = lignes.filter((l) => !l.cancelled);
+      const total = debout.reduce((s, l) => s.plus(l.amount), new Decimal(0));
+      return { mois, total, nombre: debout.length, lignes };
     });
+}
+
+/**
+ * Tour 58 — does money received sit on the card of the running month `mois`?
+ * The card keeps the lines dated or written this month (they can be cancelled
+ * where they were typed, rule 11) and the lines counted for this month or a
+ * later one. A line counted for an EARLIER month belongs to the past months
+ * above, and only there: the two lists never show the same line twice.
+ * `moisEcrit` is the Brussels month of the write instant, computed by the
+ * caller (this module has no time zone).
+ */
+export function surLaCarteDuMois(m: MovementRecord, mois: MoisIso, moisEcrit: MoisIso): boolean {
+  if (m.kind !== 'income' || m.toAccountType === null) return false;
+  const compte = iso(moisConcerneDe(m));
+  if (compte < mois) return false;
+  return m.occurredOn.toISOString().slice(0, 7) === mois || moisEcrit === mois || compte === mois;
 }

@@ -16,6 +16,8 @@ import { soldeAffiche } from './solde-affiche';
  *   before, the GAP the card shows moves (security review, tour 57): `ecart`
  *   carries it, before and after, so the confirmation never says the gap is
  *   explained elsewhere while the correction just moved it.
+ *   `depart` says the anchor is the STARTING balance, which nobody read on a
+ *   bank extract: the message must not call it a statement (tour 58).
  * - `change`: the operation counts after the latest statement; the balance
  *   shown moves from `avant` to `apres`.
  * - `aucunSolde`: no statement on the account, so no balance is shown.
@@ -25,7 +27,12 @@ import { soldeAffiche } from './solde-affiche';
  * drift from the figure on screen.
  */
 export type EffetDeLaCorrection =
-  | { effet: 'ancre'; releveLe: Date; ecart: { avant: Decimal; apres: Decimal } | null }
+  | {
+      effet: 'ancre';
+      releveLe: Date;
+      depart: boolean;
+      ecart: { avant: Decimal; apres: Decimal } | null;
+    }
   | { effet: 'change'; avant: Decimal; apres: Decimal }
   | { effet: 'aucunSolde' };
 
@@ -54,7 +61,8 @@ export function effetDeLaCorrection(input: {
     const g1 = vueAvant?.gap?.difference;
     const g2 = vueApres?.gap?.difference;
     const ecart = g1 && g2 && !g1.equals(g2) ? { avant: g1, apres: g2 } : null;
-    return { effet: 'ancre', releveLe: avant.luLe, ecart };
+    const depart = vueAvant?.readIsStartingBalance ?? false;
+    return { effet: 'ancre', releveLe: avant.luLe, depart, ecart };
   }
   return { effet: 'change', avant: avant.montant, apres: apres.montant };
 }

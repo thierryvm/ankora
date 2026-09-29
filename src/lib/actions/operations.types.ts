@@ -13,6 +13,8 @@ export type IncomeCorrectionEffect =
   | {
       effet: 'ancre';
       releveLe: string;
+      /** The anchor is the starting balance: never called a statement (tour 58). */
+      depart: boolean;
       /** The gap with that statement (read − expected), when the correction moves it. */
       ecart: { avant: number; apres: number } | null;
     }

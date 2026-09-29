@@ -466,6 +466,7 @@ describe('AccountsClient — tour 57, « Corriger le montant » and the past mon
             {
               month: '2026-08',
               total: 705,
+              count: 1,
               lines: [
                 {
                   id: 'p1',
@@ -491,7 +492,8 @@ describe('AccountsClient — tour 57, « Corriger le montant » and the past mon
     );
     const month = screen.getByTestId('argent-recu-2026-08');
     expect(month.textContent).toContain('août 2026');
-    expect(month.textContent).toMatch(/705\s€ · 2 opérations/);
+    // Tour 58 — the count follows the total: the cancelled line is listed, not counted.
+    expect(month.textContent).toMatch(/705\s€ · 1 opération(?!s)/);
     await userEvent.click(within(month).getByRole('button', { expanded: false }));
     const standing = month.querySelector('[data-income-line="p1"]') as HTMLElement;
     const cancelled = month.querySelector('[data-income-line="p2"]') as HTMLElement;

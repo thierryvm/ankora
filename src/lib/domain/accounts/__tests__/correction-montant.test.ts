@@ -112,6 +112,12 @@ describe('effetDeLaCorrection', () => {
       statements: [releve('2026-09-15')],
       nouveauMontant: new Decimal(550),
     });
-    expect(effet).toEqual({ effet: 'ancre', releveLe: day('2026-09-15'), ecart: null });
+    // The only statement of the account is its starting balance (tour 58).
+    expect(effet).toEqual({
+      effet: 'ancre',
+      releveLe: day('2026-09-15'),
+      depart: true,
+      ecart: null,
+    });
   });
 });

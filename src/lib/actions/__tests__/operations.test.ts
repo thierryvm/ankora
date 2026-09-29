@@ -1678,7 +1678,13 @@ describe('correctIncomeAmountAction', () => {
     script('movements', 'update', { data: [{ id: ID }], error: null });
     expect(await correctIncomeAmountAction({ id: ID, amount: 550 })).toEqual({
       ok: true,
-      data: { effet: 'ancre', releveLe: '2026-09-15', ecart: { avant: 100, apres: 55 } },
+      // A gap exists, so a statement precedes this one: not the starting balance.
+      data: {
+        effet: 'ancre',
+        releveLe: '2026-09-15',
+        depart: false,
+        ecart: { avant: 100, apres: 55 },
+      },
     });
   });
 

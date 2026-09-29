@@ -2042,15 +2042,16 @@
       "correctTitle": "Bedrag corrigeren",
       "correctQuestion": "Hoeveel heb je precies ontvangen?",
       "correctHint": "Alleen het bedrag verandert: de datum, de rekening en de maand blijven zoals genoteerd.",
-      "correctedAnchored": "Bedrag gecorrigeerd. Je saldo verandert niet: het vertrekt van je afschrift van {date}; het verschil met dat afschrift heeft een andere verklaring.",
-      "correctedChanged": "Bedrag gecorrigeerd. Je saldo gaat van {avant} naar {apres}.",
+      "correctedAnchored": "Bedrag gecorrigeerd. Het saldo van {compte} verandert niet: het vertrekt van je afschrift van {date}; het verschil met dat afschrift heeft een andere verklaring.",
+      "correctedAnchoredStart": "Bedrag gecorrigeerd. Het saldo van {compte} verandert niet: het vertrekt van je beginsaldo van {date}.",
+      "correctedChanged": "Bedrag gecorrigeerd. Het saldo van {compte} gaat van {avant} naar {apres}.",
       "correctedNoBalance": "Bedrag gecorrigeerd.",
       "correctedSame": "Zelfde bedrag: er is niets veranderd.",
       "pastHeading": "Ontvangen geld van vorige maanden",
       "pastMonthKey": "{total} · {count, plural, one {# verrichting} other {# verrichtingen}}",
       "pastOnAccount": "op {account}",
       "pastTotalNote": "Het totaal telt het niet-geannuleerde ontvangen geld van deze budgetmaand.",
-      "correctedAnchoredGap": "Bedrag gecorrigeerd. Je saldo verandert niet: het vertrekt van je afschrift van {date}. Het verschil met dat afschrift gaat van {avant} naar {apres}."
+      "correctedAnchoredGap": "Bedrag gecorrigeerd. Het saldo van {compte} verandert niet: het vertrekt van je afschrift van {date}. Het verschil met dat afschrift gaat van {avant} naar {apres}."
     },
     "sameDay": {
       "question": "Bevat je saldo van {date} ({montant}) dit geld al?",

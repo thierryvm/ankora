@@ -693,7 +693,9 @@ function AccountBalanceCard({ row, today }: { row: AccountBalanceProps; today: s
           ) : null}
         </div>
 
-        {row.incomes && row.incomes.length > 0 ? <IncomeLines lines={row.incomes} /> : null}
+        {row.incomes && row.incomes.length > 0 ? (
+          <IncomeLines lines={row.incomes} compte={row.label} />
+        ) : null}
 
         <p className="text-muted-foreground text-xs">
           {tBalance('manualNotice')} {tKind(`${ACCOUNT_KIND_I18N_KEY[row.kind]}.usage`)}
@@ -728,13 +730,13 @@ function AccountBalanceCard({ row, today }: { row: AccountBalanceProps; today: s
  * montant » and « Annuler » — or, once cancelled, « Rétablir ». Nothing is
  * deleted (rule 11).
  */
-function IncomeLines({ lines }: { lines: IncomeLineProps[] }) {
+function IncomeLines({ lines, compte }: { lines: IncomeLineProps[]; compte: string }) {
   const t = useTranslations('operations.income');
   return (
     <Repli titre={t('heading')} cle={t('count', { count: lines.length })} testId="argent-recu">
       <ul className="flex flex-col gap-3">
         {lines.map((line) => (
-          <IncomeLine key={line.id} line={line} />
+          <IncomeLine key={line.id} line={line} compte={compte} />
         ))}
       </ul>
     </Repli>
@@ -745,7 +747,16 @@ function IncomeLines({ lines }: { lines: IncomeLineProps[] }) {
  * Tour 57 — one line of money received, wherever it is listed (the card of
  * its account, or a past month): its figures, and the same gestures.
  */
-function IncomeLine({ line, accountLabel }: { line: IncomeLineProps; accountLabel?: string }) {
+function IncomeLine({
+  line,
+  accountLabel,
+  compte,
+}: {
+  line: IncomeLineProps;
+  accountLabel?: string;
+  /** The account the money went to, named in the correction message (tour 58). */
+  compte: string;
+}) {
   const t = useTranslations('operations.income');
   const locale = useLocale() as Locale;
   const translateError = useActionErrorTranslator();
@@ -767,16 +778,21 @@ function IncomeLine({ line, accountLabel }: { line: IncomeLineProps; accountLabe
     const effect = data as IncomeCorrectionEffect | undefined;
     if (effect?.effet === 'ancre' && effect.ecart) {
       return t('correctedAnchoredGap', {
+        compte,
         date: formatDay(effect.releveLe, locale),
         avant: formatCurrency(effect.ecart.avant, locale),
         apres: formatCurrency(effect.ecart.apres, locale),
       });
     }
     if (effect?.effet === 'ancre') {
-      return t('correctedAnchored', { date: formatDay(effect.releveLe, locale) });
+      return t(effect.depart ? 'correctedAnchoredStart' : 'correctedAnchored', {
+        compte,
+        date: formatDay(effect.releveLe, locale),
+      });
     }
     if (effect?.effet === 'change') {
       return t('correctedChanged', {
+        compte,
         avant: formatCurrency(effect.avant, locale),
         apres: formatCurrency(effect.apres, locale),
       });
@@ -861,6 +877,8 @@ export type PastIncomeMonthProps = {
   month: string;
   /** Sum of the standing lines, summed by the domain (rule 10). */
   total: number;
+  /** How many lines the total sums — cancelled ones excluded, like the total. */
+  count: number;
   lines: Array<IncomeLineProps & { accountLabel: string }>;
 };
 
@@ -891,13 +909,18 @@ function PastIncomes({ months }: { months: PastIncomeMonthProps[] }) {
           titre={monthName(m.month)}
           cle={t('pastMonthKey', {
             total: formatCurrency(m.total, locale),
-            count: m.lines.length,
+            count: m.count,
           })}
           testId={`argent-recu-${m.month}`}
         >
           <ul className="flex flex-col gap-3">
             {m.lines.map((line) => (
-              <IncomeLine key={line.id} line={line} accountLabel={line.accountLabel} />
+              <IncomeLine
+                key={line.id}
+                line={line}
+                accountLabel={line.accountLabel}
+                compte={line.accountLabel}
+              />
             ))}
           </ul>
         </Repli>

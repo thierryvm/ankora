@@ -11,7 +11,10 @@
  *
  * The proposal made at entry is never read from a fixed day of the month: the
  * salary lands on the 26th, the 30th, or the 2nd of the next month. It is read
- * from the last month already served by a « mon revenu du mois ».
+ * from the last month already served by a « mon revenu du mois », and from
+ * the last ten days of the month (`DERNIERS_JOURS_DU_MOIS`): money received
+ * in those days is proposed for the NEXT month when the month of its date is
+ * already served (`moisProposePourArgentRecu`).
  *
  * Pure: no framework, no float. Months travel as `YYYY-MM` strings, which sort
  * in calendar order.
