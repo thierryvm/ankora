@@ -28,10 +28,13 @@ import { DATA_READ_UNAVAILABLE_DIGEST } from '@/lib/data/read-failure';
 
 import ErrorBoundary from '../error';
 
-const renderBoundary = (resetFn = vi.fn()) =>
+const renderBoundary = (
+  resetFn = vi.fn(),
+  error: Error & { digest?: string } = new Error('boom'),
+) =>
   render(
     <NextIntlClientProvider locale="fr-BE" messages={messagesFrBE}>
-      <ErrorBoundary error={new Error('boom')} reset={resetFn} />
+      <ErrorBoundary error={error} reset={resetFn} />
     </NextIntlClientProvider>,
   );
 
@@ -55,9 +58,12 @@ describe('<ErrorBoundary /> — error.tsx route-level', () => {
     expect(screen.getByRole('alert')).toBeInTheDocument();
   });
 
-  it('calls reset() when the retry button is clicked', () => {
+  // Since the version-skew fix, reset() is the retry for a SERVER error only
+  // (digest present). A browser-born error reloads the page instead — covered
+  // in src/app/__tests__/error-boundary-reload.test.tsx.
+  it('calls reset() when the retry button is clicked on a server error (digest)', () => {
     const reset = vi.fn();
-    renderBoundary(reset);
+    renderBoundary(reset, Object.assign(new Error('boom'), { digest: 'd-9' }));
     fireEvent.click(screen.getByRole('button', { name: 'Réessayer' }));
     expect(reset).toHaveBeenCalledTimes(1);
   });

@@ -2,6 +2,8 @@
 
 import { useEffect } from 'react';
 
+import { useErrorRecovery } from '@/lib/browser/use-error-recovery';
+
 import './globals.css';
 
 type GlobalErrorProps = {
@@ -46,6 +48,10 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
     }
   }, [error.digest]);
 
+  // Report, reload once on a stale build, and pick the right « Réessayer ».
+  // Cf. src/lib/browser/use-error-recovery.ts.
+  const retry = useErrorRecovery(error, reset, 'global');
+
   const locale = pickLocale();
   const copy = COPY[locale];
 
@@ -62,7 +68,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <button
-                onClick={reset}
+                onClick={retry}
                 className="bg-brand-700 hover:bg-brand-600 inline-flex h-12 items-center justify-center rounded-lg px-6 text-base font-medium text-white shadow-sm transition-colors"
               >
                 {copy.retry}
