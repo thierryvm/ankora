@@ -23,7 +23,7 @@ function extract(): {
   max: number;
   version: string;
 } {
-  const fn = SW.match(/async function trimBuildAssets\([\s\S]*?\n}\n/);
+  const fn = SW.match(/async function trimBuildAssets\([\s\S]*?\r?\n}\r?\n/);
   const re = SW.match(/const BUILD_ASSET = (\/[^\n]*\/);/);
   const max = SW.match(/const MAX_BUILD_ASSETS = (\d+);/);
   const version = SW.match(/const CACHE_VERSION = '([^']+)';/);
@@ -88,6 +88,25 @@ describe('public/sw.js — the static cache stays bounded across builds (point 8
     for (let i = 0; i < 100; i++) expect(kept).toContain(chunk(3, i));
     expect(kept).not.toContain(chunk(1, 0));
     for (const p of PRECACHE) expect(kept).toContain(`${ORIGIN}${p}`);
+  });
+
+  it('the cap is wired: every asset put in the static cache is followed by a trim', () => {
+    const code = SW.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+    expect(code).toMatch(
+      /cache\.put\(request, copy\)\.then\(\(\) => trimBuildAssets\(cache, MAX_BUILD_ASSETS\)\)/,
+    );
+  });
+
+  it('the offline page keeps its stylesheets in a cache the cap never touches', () => {
+    // Raw source: stripping comments with a regex eats code after the `/*` of
+    // a line comment that spells a glob, so these names are asserted as shipped.
+    const code = SW;
+    expect(code).toContain('const OFFLINE_CACHE = `${CACHE_VERSION}-offline`;');
+    expect(code).toMatch(/caches\.open\(OFFLINE_CACHE\)[\s\S]*precacheOffline\(offline\)/);
+    // The hashed stylesheets referenced by the offline document are cached with it.
+    expect(code).toMatch(/matchAll\(\/href="\(\\\/_next\\\/static\\\/\[\^"\]\+\\\.css\)"\/g\)/);
+    // The trim only ever runs on the static cache.
+    expect(code.match(/trimBuildAssets\(/g)).toHaveLength(2);
   });
 
   it('below the cap, nothing is removed', async () => {

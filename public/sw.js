@@ -27,6 +27,8 @@
 // below keeps it from piling up again.
 const CACHE_VERSION = 'ankora-v6-20260929';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
+// The offline document and its stylesheets, never trimmed (see precacheOffline).
+const OFFLINE_CACHE = `${CACHE_VERSION}-offline`;
 
 // Build assets only: the offline shell (PRECACHE_URLS) is never trimmed.
 const BUILD_ASSET = /^\/_next\/static\//;
@@ -73,12 +75,18 @@ const PRECACHE_URLS = [
 async function precacheOffline(cache) {
   const res = await fetch(OFFLINE_URL, { credentials: 'same-origin' });
   if (!res.ok) return;
+  const html = await res.clone().text();
   const clean = new Response(await res.blob(), {
     status: res.status,
     statusText: res.statusText,
     headers: res.headers,
   });
   await cache.put(OFFLINE_URL, clean);
+  // Point 8 (security review): the offline page is styled only by its hashed
+  // stylesheets. They live in OFFLINE_CACHE with the document, out of reach of
+  // the build-asset cap, so the fallback keeps its styling after any deploy.
+  const sheets = [...html.matchAll(/href="(\/_next\/static\/[^"]+\.css)"/g)].map((m) => m[1]);
+  await cache.addAll(sheets).catch(() => undefined);
 }
 
 self.addEventListener('install', (event) => {
@@ -88,7 +96,8 @@ self.addEventListener('install', (event) => {
       .then(async (cache) => {
         // Assets are independent: one 404 must not abort the whole precache.
         await cache.addAll(PRECACHE_URLS.filter((u) => u !== OFFLINE_URL)).catch(() => undefined);
-        await precacheOffline(cache).catch(() => undefined);
+        const offline = await caches.open(OFFLINE_CACHE);
+        await precacheOffline(offline).catch(() => undefined);
       })
       // PAS de `self.skipWaiting()` ici, et c'est le cœur du correctif du
       // 2026-08-05. Un worker qui s'active tout seul ne passe jamais par l'état
