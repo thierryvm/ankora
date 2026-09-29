@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import Decimal from 'decimal.js';
 
-import { argentRecuParMois, surLaCarteDuMois } from '@/lib/domain/accounts/argent-recu-par-mois';
+import {
+  argentRecuHorsCarte,
+  argentRecuParMois,
+  surLaCarteDuMois,
+} from '@/lib/domain/accounts/argent-recu-par-mois';
 import { effetDeLaCorrection } from '@/lib/domain/accounts/correction-montant';
 import type { MovementRecord } from '@/lib/domain/accounts/operations-view';
 import type { AccountBalanceStatement } from '@/lib/domain/accounts/solde';
@@ -58,10 +62,32 @@ describe('a line is on the card of the month OR in the past months, never both',
     budgetMonth: 10,
   });
 
-  it.each([tardive, courante, avance])('line $id appears exactly once', (m) => {
-    const passes = argentRecuParMois([m], '2026-09').flatMap((x) => x.lignes.map((l) => l.id));
-    const carte = surLaCarteDuMois(m, '2026-09', '2026-09') ? [m.id] : [];
+  // A late salary typed on 2 September FOR August (relecture tour 58 bis):
+  // it stays on the card where it was typed, cancellable there (rule 11).
+  const enRetard = op({
+    id: 'r',
+    occurredOn: day('2026-09-02'),
+    recordedAt: day('2026-09-02'),
+    budgetYear: 2026,
+    budgetMonth: 8,
+  });
+  // Dated, counted and written in August: the past months only.
+  const ancienne = op({ id: 'o', occurredOn: day('2026-08-10'), recordedAt: day('2026-08-10') });
+  const moisEcrit = (m: MovementRecord) => m.recordedAt.toISOString().slice(0, 7);
+
+  it.each([
+    [tardive, 'carte'],
+    [courante, 'carte'],
+    [avance, 'carte'],
+    [enRetard, 'carte'],
+    [ancienne, 'passe'],
+  ] as const)('line %# appears exactly once, on the %s', (m, ou) => {
+    const passes = argentRecuHorsCarte([m], '2026-09', moisEcrit).flatMap((x) =>
+      x.lignes.map((l) => l.id),
+    );
+    const carte = surLaCarteDuMois(m, '2026-09', moisEcrit(m)) ? [m.id] : [];
     expect([...passes, ...carte]).toEqual([m.id]);
+    expect(ou === 'carte' ? carte : passes).toEqual([m.id]);
   });
 });
 

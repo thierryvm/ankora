@@ -4,7 +4,7 @@ import { getTranslations } from 'next-intl/server';
 import { loadAccountLedger } from '@/lib/data/operations';
 import { todayIsoInBrussels } from '@/lib/data/month-situation';
 import { getSnapshotWith } from '@/lib/data/workspace-snapshot';
-import { argentRecuParMois, surLaCarteDuMois } from '@/lib/domain/accounts/argent-recu-par-mois';
+import { argentRecuHorsCarte, surLaCarteDuMois } from '@/lib/domain/accounts/argent-recu-par-mois';
 import { moisConcerneDe, moisServisParRevenu } from '@/lib/domain/accounts/mois-concerne';
 import { accountBalanceView } from '@/lib/domain/accounts/operations-view';
 import type { AccountFlow } from '@/lib/domain/accounts/solde';
@@ -56,8 +56,8 @@ export default async function AccountsPage() {
     new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Brussels' }).format(d).slice(0, 7);
   const incomesOf = (accountType: string) =>
     ledger.movements
-      // Tour 58 — one rule decides the card, and the past months take the
-      // rest: a line is never listed twice (ADR-046, rules 10/11).
+      // Tour 58 — one rule decides the card, and the past months take only
+      // what it does not show: a line is never listed twice (rules 10/11).
       .filter(
         (m) =>
           m.toAccountType === accountType &&
@@ -153,22 +153,22 @@ export default async function AccountsPage() {
   const labelOf = new Map(
     snapshot.accounts.map((a) => [a.accountType as string, a.displayName ?? a.label]),
   );
-  const pastIncomes: PastIncomeMonthProps[] = argentRecuParMois(ledger.movements, month).map(
-    (m) => ({
-      month: m.mois,
-      total: m.total.toNumber(),
-      count: m.nombre,
-      lines: m.lignes.map((l) => ({
-        id: l.id,
-        amount: l.amount.toNumber(),
-        occurredOn: day(l.occurredOn),
-        description: l.description,
-        cancelled: l.cancelled,
-        countsFor: l.countsFor,
-        accountLabel: labelOf.get(l.accountType) ?? l.accountType,
-      })),
-    }),
-  );
+  const pastIncomes: PastIncomeMonthProps[] = argentRecuHorsCarte(ledger.movements, month, (m) =>
+    brusselsMonth(m.recordedAt),
+  ).map((m) => ({
+    month: m.mois,
+    total: m.total.toNumber(),
+    count: m.nombre,
+    lines: m.lignes.map((l) => ({
+      id: l.id,
+      amount: l.amount.toNumber(),
+      occurredOn: day(l.occurredOn),
+      description: l.description,
+      cancelled: l.cancelled,
+      countsFor: l.countsFor,
+      accountLabel: labelOf.get(l.accountType) ?? l.accountType,
+    })),
+  }));
 
   return (
     <AccountsClient

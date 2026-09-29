@@ -77,16 +77,32 @@ export function argentRecuParMois(
 
 /**
  * Tour 58 — does money received sit on the card of the running month `mois`?
- * The card keeps the lines dated or written this month (they can be cancelled
- * where they were typed, rule 11) and the lines counted for this month or a
- * later one. A line counted for an EARLIER month belongs to the past months
- * above, and only there: the two lists never show the same line twice.
- * `moisEcrit` is the Brussels month of the write instant, computed by the
- * caller (this module has no time zone).
+ * The card keeps the lines dated or written this month (they are cancelled
+ * where they were typed, rule 11 — a late salary written on the 2nd for the
+ * month before included) and the lines counted for this month. `moisEcrit`
+ * is the Brussels month of the write instant, computed by the caller (this
+ * module has no time zone).
  */
 export function surLaCarteDuMois(m: MovementRecord, mois: MoisIso, moisEcrit: MoisIso): boolean {
   if (m.kind !== 'income' || m.toAccountType === null) return false;
-  const compte = iso(moisConcerneDe(m));
-  if (compte < mois) return false;
-  return m.occurredOn.toISOString().slice(0, 7) === mois || moisEcrit === mois || compte === mois;
+  return (
+    m.occurredOn.toISOString().slice(0, 7) === mois ||
+    moisEcrit === mois ||
+    iso(moisConcerneDe(m)) === mois
+  );
+}
+
+/**
+ * The past months, minus what the card of the running month already shows:
+ * a line is listed once, never twice, and never nowhere (tour 58).
+ */
+export function argentRecuHorsCarte(
+  movements: readonly MovementRecord[],
+  mois: MoisIso,
+  moisEcritDe: (m: MovementRecord) => MoisIso,
+): MoisArgentRecu[] {
+  return argentRecuParMois(
+    movements.filter((m) => !surLaCarteDuMois(m, mois, moisEcritDe(m))),
+    mois,
+  );
 }
