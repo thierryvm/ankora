@@ -207,9 +207,13 @@ test.describe.serial('Opérations de compte — trois gestes, un chiffre qui ne 
     await feuilleReleve.getByRole('checkbox', { name: 'Ce compte est à découvert' }).check();
     await feuilleReleve.getByRole('button', { name: /^enregistrer$/i }).click();
     await expect(page.getByText('Solde enregistré').first()).toBeVisible({ timeout: ECRITURE_MS });
-    await expect(
-      page.locator('[data-account-balance="daily_card"]').getByTestId('solde-lu'),
-    ).toContainText(/[-−]42,50/);
+    // The big figure of the card (PR #510): the statement plus the operations
+    // since. With no operation after this statement, it is the statement itself;
+    // the small "solde-lu" line only exists when operations follow it.
+    const carteQuotidien = page.locator('[data-account-balance="daily_card"]');
+    await expect(carteQuotidien.getByTestId('solde-affiche-montant')).toContainText(/[-−]42,50/);
+    // Locks the premise: no operation follows the statement.
+    await expect(carteQuotidien.getByTestId('solde-lu')).toHaveCount(0);
 
     // La ligne d'argent reçu : Annuler, puis Rétablir — depuis l'écran.
     const carte = page.locator('[data-account-balance="income_bills"]');
