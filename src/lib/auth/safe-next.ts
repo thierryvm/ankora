@@ -31,12 +31,20 @@ export function safeNextPath(raw: unknown): string | null {
     return null;
   }
   if (url.origin !== SENTINEL) return null;
+  // A value the parser REWRITES is refused, not trusted after the rewrite:
+  // dot segments (`/.//host`, `/%2e//host`) resolve into `//host`, which
+  // passes the origin check here and leaves the site once redirected.
+  const rawPath = raw.split(/[?#]/, 1)[0];
+  if (url.pathname !== rawPath) return null;
 
   let pathname = url.pathname;
   const first = pathname.split('/')[1] ?? '';
   if ((LOCALES as readonly string[]).includes(first)) {
     pathname = pathname.slice(first.length + 1) || '/';
   }
+
+  // Dropping the locale drops a segment: `/en//host` would become `//host`.
+  if (!/^\/(?![/\\])/.test(pathname)) return null;
 
   if (AUTH_PAGES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) return null;
 

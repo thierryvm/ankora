@@ -138,5 +138,10 @@ export async function GET(request: NextRequest) {
   }
 
   const target = readFailed || profile?.onboarded_at ? next : '/onboarding';
-  return NextResponse.redirect(new URL(localiseTarget(locale, target), request.url));
+  const destination = new URL(localiseTarget(locale, target), request.url);
+  // Defence in depth behind `safeNextPath`: never leave our own origin.
+  if (destination.origin !== new URL(request.url).origin) {
+    return NextResponse.redirect(new URL(localiseTarget(locale, '/app'), request.url));
+  }
+  return NextResponse.redirect(destination);
 }

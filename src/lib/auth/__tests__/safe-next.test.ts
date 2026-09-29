@@ -25,6 +25,15 @@ describe('safeNextPath — where a sign-in may send you back to', () => {
     ['encoded protocol-relative', '/%2F%2Fevil.example.com'],
     ['tab inside the host', '/\t/evil.example.com'],
     ['empty', ''],
+    // Values the URL parser REWRITES into a protocol-relative path: dot
+    // segments are resolved, and stripping the locale drops a segment.
+    ['dot segment then //', '/.//evil.example.com'],
+    ['dot-dot segment then //', '/..//evil.example.com'],
+    ['path, dot-dot, then //', '/app/..//evil.example.com'],
+    ['encoded dot then //', '/%2e//evil.example.com'],
+    ['encoded dot-dot then //', '/%2E%2E//evil.example.com'],
+    ['locale then //', '/en//evil.example.com'],
+    ['default locale then //', '/fr-BE//evil.example.com'],
   ])('refuses %s', (_label, raw) => {
     expect(safeNextPath(raw)).toBeNull();
   });
