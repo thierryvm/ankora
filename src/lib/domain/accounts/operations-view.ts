@@ -118,6 +118,7 @@ export function startingStatementId(
 export function withIncludedFlows(
   statements: readonly AccountBalanceStatement[],
   rows: ReadonlyArray<{ statement_id: string; flow_id: string }>,
+  flows: readonly AccountFlow[] = [],
 ): AccountBalanceStatement[] {
   const starting = new Set<string>();
   for (const s of statements) {
@@ -129,43 +130,62 @@ export function withIncludedFlows(
     if (starting.has(r.statement_id)) continue;
     byStatement.set(r.statement_id, [...(byStatement.get(r.statement_id) ?? []), r.flow_id]);
   }
-  // Tour 58 ter, point 9 (decided by @thierry): an answer holds for EVERY
-  // standing statement of the same account and the same day — the bank had
-  // debited the operation before each of those readings. The row stays on its
-  // own statement; the reading lends it to the day. A cancelled statement keeps
-  // its rows and lends them to nobody. Per flow id: an answer still never
-  // changes how another operation counts.
-  const byDay = new Map<string, Set<string>>();
-  const dayKey = (s: AccountBalanceStatement) => `${s.accountType}|${s.statedOn.getTime()}`;
-  for (const s of statements) {
-    if (s.cancelledAt !== null || starting.has(s.id)) continue;
-    const set = byDay.get(dayKey(s)) ?? new Set<string>();
-    for (const id of byStatement.get(s.id) ?? []) set.add(id);
-    byDay.set(dayKey(s), set);
+  // Tour 58 ter, point 9 (decided by @thierry): an answer holds for every
+  // standing statement of the same account, the same day AND the same balance —
+  // the bank had debited the operation before each of those readings. Two
+  // readings of the day that DIFFER may straddle the debit: lending the answer
+  // to the earlier one would drop the operation from the gap between them and
+  // leave an unexplained difference no gesture can fix (security review,
+  // 2026-09-29). The row stays on its own statement; the reading lends it.
+  // Only a row the card can name is lent: its flow written after its own
+  // statement (a row inert where it stands never becomes active elsewhere). A
+  // cancelled statement keeps its rows and lends them to nobody. Per flow id:
+  // an answer still never changes how another operation counts.
+  const standing = (s: AccountBalanceStatement) => s.cancelledAt === null && !starting.has(s.id);
+  const recordedAtOf = new Map(flows.map((f) => [f.id, f.recordedAt] as const));
+  const lent = new Map<string, string[]>();
+  for (const carrier of statements) {
+    if (!standing(carrier)) continue;
+    for (const flowId of byStatement.get(carrier.id) ?? []) {
+      const writtenAt = recordedAtOf.get(flowId);
+      if (!writtenAt || writtenAt.getTime() <= carrier.recordedAt.getTime()) continue;
+      for (const other of statements) {
+        if (
+          other.id !== carrier.id &&
+          standing(other) &&
+          other.accountType === carrier.accountType &&
+          other.statedOn.getTime() === carrier.statedOn.getTime() &&
+          other.balance.equals(carrier.balance)
+        ) {
+          lent.set(other.id, [...(lent.get(other.id) ?? []), flowId]);
+        }
+      }
+    }
   }
   return statements.map((s) => {
     const own = byStatement.get(s.id) ?? [];
-    if (s.cancelledAt !== null || starting.has(s.id)) return { ...s, includedFlowIds: own };
-    return { ...s, includedFlowIds: [...(byDay.get(dayKey(s)) ?? own)] };
+    return { ...s, includedFlowIds: [...new Set([...own, ...(lent.get(s.id) ?? [])])] };
   });
 }
 
 /**
- * Point 9 — the standing statements of an account on a day, starting balance
- * excluded, in reading order: those a « Déjà dedans » answer holds for, and so
- * those its withdrawal must reach.
+ * Point 9 — the statements of an account on a day, starting balance excluded,
+ * in reading order: those a « Déjà dedans » answer may stand on, and so those
+ * its withdrawal must reach. Cancelled ones included on request: a withdrawn
+ * answer must not come back when a cancelled reading of the day is reopened.
  */
 export function sameDayStatementIds(
   statements: readonly AccountBalanceStatement[],
   accountType: AccountType,
   day: Date,
+  { includeCancelled = false }: { includeCancelled?: boolean } = {},
 ): string[] {
   const startingId = startingStatementId(statements, accountType);
   return statements
     .filter(
       (s) =>
         s.accountType === accountType &&
-        s.cancelledAt === null &&
+        (includeCancelled || s.cancelledAt === null) &&
         s.id !== startingId &&
         s.statedOn.getTime() === day.getTime(),
     )

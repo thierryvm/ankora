@@ -1297,6 +1297,26 @@ describe('setFlowIncludedAction — the card of the account, one operation at a 
     ]);
   });
 
+  it('withdraws the answer from every reading of the day, cancelled ones included, one trace per row', async () => {
+    const earlier = d17Statement('s-earlier', 905, '2026-09-21', '2026-09-21T07:30:00Z', true);
+    h.ledger.mockImplementation(async () => ({
+      ok: true,
+      statements: [d17Previous, earlier, answered],
+      movements: [d23Income(M_AFTER)],
+    }));
+    script('statement_included_flows', 'delete', {
+      data: [{ id: 'inc-0' }, { id: 'inc-1' }],
+      error: null,
+    });
+
+    expect(await setFlowIncludedAction(answer(`${M_AFTER}:in`, false))).toEqual({ ok: true });
+    expect(inclusions()[0]!.filters.statement_id).toEqual(['s-earlier', D21_SID]);
+    expect(statementEvents()).toEqual([
+      { resource_type: 'statement_included_flow', resource_id: 'inc-1' },
+      { resource_type: 'statement_included_flow', resource_id: 'inc-0' },
+    ]);
+  });
+
   it('refuses to withdraw an answer never given, and to give the same answer twice', async () => {
     h.ledger.mockImplementation(async () => d17Ledger([d23Income(M_AFTER)]));
     expect(await setFlowIncludedAction(answer(`${M_AFTER}:in`, false))).toEqual(notFound);

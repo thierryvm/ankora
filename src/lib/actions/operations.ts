@@ -440,7 +440,11 @@ export async function setFlowIncludedAction(input: unknown): Promise<ActionResul
   } else {
     // Point 9: the answer holds for every standing statement of the account
     // that day, whichever one it is stored on — the withdrawal reaches them all.
-    const dayIds = sameDayStatementIds(ledger.statements, target.accountType, target.statedOn);
+    // Cancelled readings of the day too, so reopening one cannot bring back an
+    // answer withdrawn here.
+    const dayIds = sameDayStatementIds(ledger.statements, target.accountType, target.statedOn, {
+      includeCancelled: true,
+    });
     const { data, error } = await ctx.supabase
       .from('statement_included_flows')
       .delete()
