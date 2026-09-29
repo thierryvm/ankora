@@ -129,7 +129,48 @@ export function withIncludedFlows(
     if (starting.has(r.statement_id)) continue;
     byStatement.set(r.statement_id, [...(byStatement.get(r.statement_id) ?? []), r.flow_id]);
   }
-  return statements.map((s) => ({ ...s, includedFlowIds: byStatement.get(s.id) ?? [] }));
+  // Tour 58 ter, point 9 (decided by @thierry): an answer holds for EVERY
+  // standing statement of the same account and the same day — the bank had
+  // debited the operation before each of those readings. The row stays on its
+  // own statement; the reading lends it to the day. A cancelled statement keeps
+  // its rows and lends them to nobody. Per flow id: an answer still never
+  // changes how another operation counts.
+  const byDay = new Map<string, Set<string>>();
+  const dayKey = (s: AccountBalanceStatement) => `${s.accountType}|${s.statedOn.getTime()}`;
+  for (const s of statements) {
+    if (s.cancelledAt !== null || starting.has(s.id)) continue;
+    const set = byDay.get(dayKey(s)) ?? new Set<string>();
+    for (const id of byStatement.get(s.id) ?? []) set.add(id);
+    byDay.set(dayKey(s), set);
+  }
+  return statements.map((s) => {
+    const own = byStatement.get(s.id) ?? [];
+    if (s.cancelledAt !== null || starting.has(s.id)) return { ...s, includedFlowIds: own };
+    return { ...s, includedFlowIds: [...(byDay.get(dayKey(s)) ?? own)] };
+  });
+}
+
+/**
+ * Point 9 — the standing statements of an account on a day, starting balance
+ * excluded, in reading order: those a « Déjà dedans » answer holds for, and so
+ * those its withdrawal must reach.
+ */
+export function sameDayStatementIds(
+  statements: readonly AccountBalanceStatement[],
+  accountType: AccountType,
+  day: Date,
+): string[] {
+  const startingId = startingStatementId(statements, accountType);
+  return statements
+    .filter(
+      (s) =>
+        s.accountType === accountType &&
+        s.cancelledAt === null &&
+        s.id !== startingId &&
+        s.statedOn.getTime() === day.getTime(),
+    )
+    .sort(compareStatementOrder)
+    .map((s) => s.id);
 }
 
 export type AccountBalanceView = {

@@ -16,6 +16,7 @@ import {
   sameDayFlowsAfter,
   sameDayFlowsIncluded,
   sameDayStatement,
+  sameDayStatementIds,
   splitTransferToProvisions,
   startingStatementId,
   toMoney,
@@ -437,14 +438,20 @@ export async function setFlowIncludedAction(input: unknown): Promise<ActionResul
   if (included) {
     rowId = await insertInclusion(ctx, statementId, flowId);
   } else {
+    // Point 9: the answer holds for every standing statement of the account
+    // that day, whichever one it is stored on — the withdrawal reaches them all.
+    const dayIds = sameDayStatementIds(ledger.statements, target.accountType, target.statedOn);
     const { data, error } = await ctx.supabase
       .from('statement_included_flows')
       .delete()
       .eq('workspace_id', ctx.workspaceId)
-      .eq('statement_id', statementId)
+      .in('statement_id', dayIds)
       .eq('flow_id', flowId)
       .select('id');
-    rowId = !error && data && data.length === 1 ? data[0]!.id : null;
+    rowId = !error && data && data.length >= 1 ? data[0]!.id : null;
+    // More than one row (the same answer given on two readings of the day):
+    // every withdrawn row leaves its own trace.
+    for (const extra of !error && data ? data.slice(1) : []) await auditInclusion(ctx, extra.id);
   }
   if (rowId === null) return { ok: false, errorCode: 'errors.operations.writeFailed' };
 

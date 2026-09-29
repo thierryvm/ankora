@@ -451,5 +451,6 @@ la carte et le `derived_balance`.
 - Le relevé de départ reste hors question. Un flux d'un autre compte, d'un autre jour,
   écrit avant le relevé, annulé ou hors du workspace est refusé par l'action serveur ; la
   base garantit la forme de l'identifiant, le workspace du relevé et l'unicité.
+- **Une réponse « déjà dedans » vaut pour tous les relevés non annulés du même compte et du même jour** (@thierry, 29 septembre 2026, tour 58 ter) : la banque avait débité l'opération avant chacune de ces lectures. La ligne reste rattachée à son relevé ; c'est la lecture (`withIncludedFlows`) qui l'étend au jour, et le retrait l'enlève de tous ces relevés.
 - Les relevés déjà réécrits par D21 restent tels quels. La table entre dans l'export art. 20.
 - La migration est appliquée en production par le pilote, après sauvegarde, avant fusion.

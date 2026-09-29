@@ -21,6 +21,7 @@ const h = vi.hoisted(() => {
       select: vi.fn(() => b),
       eq: vi.fn((c: string, v: unknown) => ((call.filters[c] = v), b)),
       is: vi.fn((c: string, v: unknown) => ((call.filters[c] = v), b)),
+      in: vi.fn((c: string, v: unknown) => ((call.filters[c] = v), b)),
       maybeSingle: vi.fn(async () => (calls.push(call), take(table, call.op))),
       single: vi.fn(async () => (calls.push(call), take(table, call.op))),
       then: (ok: (r: Result) => unknown) => {
@@ -1260,13 +1261,39 @@ describe('setFlowIncludedAction — the card of the account, one operation at a 
 
     expect(r).toEqual({ ok: true });
     expect(trail()).toEqual(['statement_included_flows.delete']);
+    // Point 9 (tour 58 ter): the answer holds for every standing statement of
+    // the account that day, so the withdrawal targets all of them.
     expect(inclusions()[0]!.filters).toEqual({
       workspace_id: 'ws-1',
-      statement_id: D21_SID,
+      statement_id: [D21_SID],
       flow_id: `${M_AFTER}:in`,
     });
     expect(statementEvents()).toEqual([
       { resource_type: 'statement_included_flow', resource_id: 'inc-1' },
+    ]);
+  });
+
+  it('withdraws an answer given on an EARLIER statement of the same day (point 9)', async () => {
+    // Two readings on the 21st; the answer was stored on the first one, and
+    // holds for the latest (the ledger reads it that way).
+    const earlier = d17Statement('s-earlier', 905, '2026-09-21', '2026-09-21T07:30:00Z');
+    h.ledger.mockImplementation(async () => ({
+      ok: true,
+      statements: [d17Previous, { ...earlier, includedFlowIds: [`${M_AFTER}:in`] }, answered],
+      movements: [d23Income(M_AFTER)],
+    }));
+    script('statement_included_flows', 'delete', { data: [{ id: 'inc-0' }], error: null });
+
+    const r = await setFlowIncludedAction(answer(`${M_AFTER}:in`, false));
+
+    expect(r).toEqual({ ok: true });
+    expect(inclusions()[0]!.filters).toEqual({
+      workspace_id: 'ws-1',
+      statement_id: ['s-earlier', D21_SID],
+      flow_id: `${M_AFTER}:in`,
+    });
+    expect(statementEvents()).toEqual([
+      { resource_type: 'statement_included_flow', resource_id: 'inc-0' },
     ]);
   });
 
