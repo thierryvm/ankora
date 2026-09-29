@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useOptimistic, useState, useSyncExternalStore, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   AlertTriangle,
   Check,
@@ -30,6 +31,8 @@ import { toggleCommitmentPaymentAction } from '@/lib/actions/commitments';
 import { togglePastDueObligationsAction } from '@/lib/actions/obligations';
 import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
 import { currentPeriodDueDate, paymentMonthsFromFrequency } from '@/lib/domain/charges';
+import { defaultPaymentDay, paymentDayWindow } from '@/lib/domain/charges/payment-date';
+import { MarkPaidSheet, type MarkPaidTarget } from '@/components/charges/MarkPaidSheet';
 import type { SignalDoublon } from '@/lib/domain/obligations';
 import { CHARGE_FREQUENCIES, type ChargeFrequency } from '@/lib/domain/types';
 import { formatCurrency, formatDate, formatMonth } from '@/lib/i18n/formatters';
@@ -197,6 +200,7 @@ export function ChargesClient({
   periodNav,
 }: ChargesClientProps) {
   const t = useTranslations('app.charges');
+  const router = useRouter();
   const tFreq = useTranslations('common.frequency');
   const tFreqAbbr = useTranslations('common.frequencyAbbr');
   const tAmount = useTranslations('ui.amountField');
@@ -220,6 +224,7 @@ export function ChargesClient({
   // (dashboard-ux M1, scope validated @thierry 2026-07-18).
   const [showAddForm, setShowAddForm] = useState(false);
   const [convertingCharge, setConvertingCharge] = useState<ConvertibleCharge | null>(null);
+  const [payingCharge, setPayingCharge] = useState<MarkPaidTarget | null>(null);
 
   // F10 — a disclosure per cadence. Below `md`, « Mensuel » opens and the
   // others fold; from `md` up, everything opens. A tap overrides either way.
@@ -395,19 +400,64 @@ export function ChargesClient({
     });
   }
 
+  /**
+   * Un-ticking stays one press (rule 11: the undo costs what the action cost).
+   * Ticking opens « Marquer payée » with the day the bill was paid, pre-filled
+   * at its due date: the bank debited it then, not on the day of the tick.
+   */
   function onTogglePaid(c: RawCharge) {
+    if (optimisticPaid.has(c.id)) {
+      sendPayment(c.id, { intent: 'unpay' });
+      return;
+    }
+    const due = currentPeriodDueDate(
+      { isActive: c.isActive, paymentMonths: c.paymentMonths, paymentDay: c.paymentDay },
+      viewedPeriod,
+      todayIso,
+      false,
+    );
+    const window = paymentDayWindow(viewedPeriod.year, viewedPeriod.month);
+    const defaultDay = defaultPaymentDay(due?.dueDateIso ?? null, todayIso);
+    setPayingCharge({
+      id: c.id,
+      label: c.label,
+      amount: c.amount,
+      // A period far ahead has no day the server would accept: the pre-filled
+      // day stays visible and the server's named refusal explains why.
+      defaultDay,
+      minDay: window.min,
+      maxDay: todayIso < window.max ? todayIso : window.max,
+    });
+  }
+
+  /**
+   * The request says what the row showed when it was pressed: `pay` with its
+   * day, or `unpay`. If another tab got there first, the server answers by
+   * name (« déjà payée » / « pas payée ») and the page fetches the real state.
+   */
+  function sendPayment(
+    chargeId: string,
+    intent: { intent: 'pay'; paidOn: string } | { intent: 'unpay' },
+  ) {
     startTransition(async () => {
-      applyOptimisticPaid(c.id);
+      applyOptimisticPaid(chargeId);
       try {
         const result = await togglePaymentAction({
-          chargeId: c.id,
+          chargeId,
           periodYear: viewedPeriod.year,
           periodMonth: viewedPeriod.month,
+          ...intent,
         });
         if (result.ok) {
           toast.success(result.data.paid ? t('toastMarkedPaid') : t('toastMarkedUnpaid'));
         } else {
           toast.error(translateError(result.errorCode));
+          if (
+            result.errorCode === 'errors.charges.payments.alreadyPaid' ||
+            result.errorCode === 'errors.charges.payments.notPaid'
+          ) {
+            router.refresh();
+          }
         }
       } catch (err) {
         if (isNextControlFlowError(err)) throw err;
@@ -1332,6 +1382,16 @@ export function ChargesClient({
         charge={convertingCharge}
         onClose={() => setConvertingCharge(null)}
         locale={locale}
+      />
+      <MarkPaidSheet
+        target={payingCharge}
+        locale={locale}
+        pending={isPending}
+        onClose={() => setPayingCharge(null)}
+        onConfirm={(target, day) => {
+          setPayingCharge(null);
+          sendPayment(target.id, { intent: 'pay', paidOn: day });
+        }}
       />
     </div>
   );

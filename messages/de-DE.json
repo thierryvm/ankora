@@ -906,7 +906,15 @@
       "posteMonthlyLabel": "Monatliche Rechnungen",
       "posteMonthlyHint": "Was jeden Monat abgeht, Rechnung für Rechnung.",
       "posteCommitmentsLabel": "Raten von Verpflichtungen",
-      "posteCommitmentsHint": "Der Anteil dieses Monats jeder laufenden Verpflichtung."
+      "posteCommitmentsHint": "Der Anteil dieses Monats jeder laufenden Verpflichtung.",
+      "paySheet": {
+        "title": "Als bezahlt markieren",
+        "intro": "{label} · {amount}",
+        "dateLabel": "Bezahlt am",
+        "dateHint": "Der Tag, an dem die Bank den Betrag abgebucht hat. Mit dem Fälligkeitsdatum vorausgefüllt.",
+        "submit": "Als bezahlt markieren",
+        "cancel": "Abbrechen"
+      }
     },
     "accounts": {
       "metaTitle": "Meine Konten",
@@ -1723,7 +1731,11 @@
       "watchFailed": "Die Markierung der Rechnung konnte nicht geändert werden.",
       "notFound": "Diese Rechnung wurde nicht gefunden.",
       "payments": {
-        "toggleFailed": "Rechnung konnte nicht als bezahlt markiert werden."
+        "toggleFailed": "Rechnung konnte nicht als bezahlt markiert werden.",
+        "dateFuture": "Dieses Datum liegt in der Zukunft. Wähle den Tag, an dem die Rechnung bezahlt wurde.",
+        "dateOutOfPeriod": "Dieses Datum liegt zu weit vom Monat der Rechnung entfernt.",
+        "alreadyPaid": "Diese Rechnung ist bereits bezahlt. Die Seite wird aktualisiert.",
+        "notPaid": "Diese Rechnung ist nicht bezahlt. Die Seite wird aktualisiert."
       }
     },
     "accounts": {

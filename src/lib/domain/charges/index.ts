@@ -18,6 +18,13 @@ export {
   type UnpaidCountCharge,
 } from './unpaid-count';
 export { chargeMatchesMonth } from './match-month';
+export {
+  PAYMENT_DAY_SLACK_DAYS,
+  defaultPaymentDay,
+  isCalendarDay,
+  paidAtForDay,
+  paymentDayWindow,
+} from './payment-date';
 export { paymentMonthsFromFrequency } from './payment-months-from-frequency';
 export {
   getUpcomingCharges,

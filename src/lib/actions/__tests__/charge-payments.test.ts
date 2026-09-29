@@ -34,8 +34,9 @@ const { supa, auditSpy, rateLimitSpy } = vi.hoisted(() => {
     const filters: Record<string, unknown> = {};
 
     const builder: Record<string, unknown> = {
+      // `.delete().….select('id')` returns the deleted rows: the op stays a delete.
       select: vi.fn(() => {
-        currentOp = 'select';
+        if (currentOp !== 'delete') currentOp = 'select';
         return builder;
       }),
       insert: vi.fn((payload: Record<string, unknown>) => {
@@ -156,10 +157,21 @@ vi.mock('next/cache', () => ({
 // Import AFTER mocks so the action's deps resolve to mocked versions.
 import { togglePaymentAction } from '../charge-payments';
 
+// Tour 61 ter — the request says what it wants: `pay` with its day, or
+// `unpay`. The server applies that intent and never flips the stored state.
 const VALID_INPUT = {
   chargeId: '10dccda9-7e0f-4b4e-9c7d-23f3c1b7e8a9',
   periodYear: 2026,
   periodMonth: 5,
+  intent: 'pay' as const,
+  paidOn: '2026-05-09',
+};
+
+const UNPAY_INPUT = {
+  chargeId: VALID_INPUT.chargeId,
+  periodYear: 2026,
+  periodMonth: 5,
+  intent: 'unpay' as const,
 };
 
 function programMembership(workspaceId = 'ws-1') {
@@ -360,7 +372,7 @@ describe('togglePaymentAction — toggle ON (insert)', () => {
     });
   });
 
-  it('returns errors.charges.payments.toggleFailed on insert error', async () => {
+  it('answers "already paid" when the insert loses the UNIQUE race', async () => {
     programMembership();
     supa.program({
       table: 'charges',
@@ -386,8 +398,10 @@ describe('togglePaymentAction — toggle ON (insert)', () => {
       result: { data: null, error: { message: 'unique constraint violation', code: '23505' } },
     });
 
+    // Tour 61 quater — was `toggleFailed`. Another tab paid it between the read
+    // and the insert: the answer says so by name, like the read-time refusal.
     const r = await togglePaymentAction(VALID_INPUT);
-    expect(r).toEqual({ ok: false, errorCode: 'errors.charges.payments.toggleFailed' });
+    expect(r).toEqual({ ok: false, errorCode: 'errors.charges.payments.alreadyPaid' });
     expect(auditSpy).not.toHaveBeenCalled();
   });
 });
@@ -418,10 +432,10 @@ describe('togglePaymentAction — toggle OFF (delete)', () => {
     supa.program({
       table: 'charge_payments',
       op: 'delete',
-      result: { data: null, error: null },
+      result: { data: [{ id: 'payment-existing-1' }], error: null },
     });
 
-    const r = await togglePaymentAction(VALID_INPUT);
+    const r = await togglePaymentAction(UNPAY_INPUT);
     expect(r).toEqual({ ok: true, data: { paid: false, paidAmount: null } });
     expect(supa.lastDeleteFilters()).toMatchObject({
       id: 'payment-existing-1',
@@ -452,8 +466,266 @@ describe('togglePaymentAction — toggle OFF (delete)', () => {
       result: { data: null, error: { message: 'rls policy denied' } },
     });
 
-    const r = await togglePaymentAction(VALID_INPUT);
+    const r = await togglePaymentAction(UNPAY_INPUT);
     expect(r).toEqual({ ok: false, errorCode: 'errors.charges.payments.toggleFailed' });
+  });
+
+  // Tour 61 quater — another tab un-ticked it between the read and the delete:
+  // nothing was deleted, so the answer is « pas payée », with no audit entry.
+  it('a delete that removes no row answers "not paid", with no audit', async () => {
+    programMembership();
+    supa.program({
+      table: 'charges',
+      op: 'select',
+      result: {
+        data: { id: VALID_INPUT.chargeId, amount: '800', workspace_id: 'ws-1' },
+        error: null,
+      },
+    });
+    supa.program({
+      table: 'charge_payments',
+      op: 'select',
+      result: { data: { id: 'payment-existing-1' }, error: null },
+    });
+    supa.program({ table: 'charge_payments', op: 'delete', result: { data: [], error: null } });
+
+    const r = await togglePaymentAction(UNPAY_INPUT);
+    expect(r).toEqual({ ok: false, errorCode: 'errors.charges.payments.notPaid' });
+    expect(auditSpy).not.toHaveBeenCalled();
+  });
+});
+
+// Tour 61 quater — the server must not answer « pas payée » / « déjà payée » on
+// a read it could not make: a failed read is a failure, and nothing is written.
+describe('togglePaymentAction — the payment read fails', () => {
+  beforeEach(() => {
+    supa.reset();
+    auditSpy.mockClear();
+    rateLimitSpy.mockClear();
+    rateLimitSpy.mockImplementation(async () => ({ success: true, limit: 60, remaining: 59 }));
+  });
+
+  function programFailedRead() {
+    programMembership();
+    supa.program({
+      table: 'charges',
+      op: 'select',
+      result: {
+        data: {
+          id: VALID_INPUT.chargeId,
+          amount: '505',
+          workspace_id: 'ws-1',
+          paid_from: 'principal',
+        },
+        error: null,
+      },
+    });
+    supa.program({
+      table: 'charge_payments',
+      op: 'select',
+      result: { data: null, error: { message: 'network down' } },
+    });
+  }
+
+  it.each([
+    ['unpay', UNPAY_INPUT],
+    ['pay', VALID_INPUT],
+  ] as const)(
+    '"%s" answers toggleFailed, never a named state, and writes nothing',
+    async (_n, input) => {
+      programFailedRead();
+      const r = await togglePaymentAction(input);
+      expect(r).toEqual({ ok: false, errorCode: 'errors.charges.payments.toggleFailed' });
+      expect(supa.lastInsertPayload()).toBeUndefined();
+      expect(supa.lastDeleteFilters()).toBeUndefined();
+      expect(auditSpy).not.toHaveBeenCalled();
+    },
+  );
+});
+
+describe('togglePaymentAction — the day the bill was paid (paidOn)', () => {
+  // Today is 28 May 2026 in Brussels (10:00 UTC = 12:00 CEST).
+  beforeEach(() => {
+    supa.reset();
+    auditSpy.mockClear();
+    rateLimitSpy.mockClear();
+    rateLimitSpy.mockImplementation(async () => ({ success: true, limit: 60, remaining: 59 }));
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-05-28T10:00:00Z'));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  function programInsertPath() {
+    programMembership();
+    supa.program({
+      table: 'charges',
+      op: 'select',
+      result: {
+        data: {
+          id: VALID_INPUT.chargeId,
+          amount: '505',
+          workspace_id: 'ws-1',
+          paid_from: 'principal',
+        },
+        error: null,
+      },
+    });
+    supa.program({ table: 'charge_payments', op: 'select', result: { data: null, error: null } });
+    supa.program({ table: 'charge_payments', op: 'insert', result: { data: null, error: null } });
+  }
+
+  it('stamps paid_at at noon UTC of the chosen day', async () => {
+    programInsertPath();
+    const r = await togglePaymentAction({ ...VALID_INPUT, paidOn: '2026-05-09' });
+    expect(r.ok).toBe(true);
+    expect(supa.lastInsertPayload()).toMatchObject({ paid_at: '2026-05-09T12:00:00.000Z' });
+  });
+
+  it('accepts today, and the first day of the window', async () => {
+    programInsertPath();
+    expect((await togglePaymentAction({ ...VALID_INPUT, paidOn: '2026-05-28' })).ok).toBe(true);
+    programInsertPath();
+    expect((await togglePaymentAction({ ...VALID_INPUT, paidOn: '2026-03-31' })).ok).toBe(true);
+    expect(supa.lastInsertPayload()).toMatchObject({ paid_at: '2026-03-31T12:00:00.000Z' });
+  });
+
+  it('refuses a "pay" without a day, and writes nothing', async () => {
+    programMembership();
+    const { paidOn: _dropped, ...withoutDay } = VALID_INPUT;
+    const r = await togglePaymentAction(withoutDay);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.fieldErrors?.paidOn).toBeDefined();
+    expect(supa.lastInsertPayload()).toBeUndefined();
+  });
+
+  it('refuses a request that does not say what it wants', async () => {
+    programMembership();
+    const { intent: _dropped, ...withoutIntent } = VALID_INPUT;
+    const r = await togglePaymentAction(withoutIntent);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.fieldErrors?.intent).toBeDefined();
+    expect(supa.lastInsertPayload()).toBeUndefined();
+    expect(supa.lastDeleteFilters()).toBeUndefined();
+  });
+
+  it('refuses a day in the future (Brussels), by name, and writes nothing', async () => {
+    programMembership();
+    const r = await togglePaymentAction({ ...VALID_INPUT, paidOn: '2026-05-29' });
+    expect(r).toMatchObject({ ok: false, errorCode: 'errors.charges.payments.dateFuture' });
+    expect(supa.lastInsertPayload()).toBeUndefined();
+    expect(auditSpy).not.toHaveBeenCalled();
+  });
+
+  it('reads "future" on the Brussels day, not the UTC one', async () => {
+    // 22:30 UTC on 28 May is already 00:30 on 29 May in Brussels.
+    vi.setSystemTime(new Date('2026-05-28T22:30:00Z'));
+    programInsertPath();
+    const r = await togglePaymentAction({ ...VALID_INPUT, paidOn: '2026-05-29' });
+    expect(r.ok).toBe(true);
+  });
+
+  it('refuses a day before the window of the period', async () => {
+    programMembership();
+    const r = await togglePaymentAction({ ...VALID_INPUT, paidOn: '2026-03-30' });
+    expect(r).toMatchObject({ ok: false, errorCode: 'errors.charges.payments.dateOutOfPeriod' });
+    expect(supa.lastInsertPayload()).toBeUndefined();
+  });
+
+  it('refuses a day after the window of the period', async () => {
+    programMembership();
+    // March 2026 closes on 1 May (31 March + 31 days).
+    const r = await togglePaymentAction({
+      ...VALID_INPUT,
+      periodMonth: 3,
+      paidOn: '2026-05-02',
+    });
+    expect(r).toMatchObject({ ok: false, errorCode: 'errors.charges.payments.dateOutOfPeriod' });
+  });
+
+  it('"pay" on a bill already paid answers "already paid", by name, and writes nothing', async () => {
+    programMembership();
+    supa.program({
+      table: 'charges',
+      op: 'select',
+      result: {
+        data: {
+          id: VALID_INPUT.chargeId,
+          amount: '505',
+          workspace_id: 'ws-1',
+          paid_from: 'principal',
+        },
+        error: null,
+      },
+    });
+    supa.program({
+      table: 'charge_payments',
+      op: 'select',
+      result: { data: { id: 'payment-existing-1' }, error: null },
+    });
+    const r = await togglePaymentAction({ ...VALID_INPUT, paidOn: '2026-05-09' });
+    expect(r).toEqual({ ok: false, errorCode: 'errors.charges.payments.alreadyPaid' });
+    expect(supa.lastDeleteFilters()).toBeUndefined();
+    expect(supa.lastInsertPayload()).toBeUndefined();
+    expect(auditSpy).not.toHaveBeenCalled();
+  });
+
+  it('"unpay" on a bill that is not paid answers "not paid", by name, and writes nothing', async () => {
+    // A stale tab un-ticking a bill already un-ticked elsewhere: before, the
+    // toggle would have INSERTED a payment stamped at the moment of the click.
+    programMembership();
+    supa.program({
+      table: 'charges',
+      op: 'select',
+      result: {
+        data: {
+          id: VALID_INPUT.chargeId,
+          amount: '505',
+          workspace_id: 'ws-1',
+          paid_from: 'principal',
+        },
+        error: null,
+      },
+    });
+    supa.program({ table: 'charge_payments', op: 'select', result: { data: null, error: null } });
+    const r = await togglePaymentAction(UNPAY_INPUT);
+    expect(r).toEqual({ ok: false, errorCode: 'errors.charges.payments.notPaid' });
+    expect(supa.lastInsertPayload()).toBeUndefined();
+    expect(supa.lastDeleteFilters()).toBeUndefined();
+    expect(auditSpy).not.toHaveBeenCalled();
+  });
+
+  it('"unpay" ignores a day sent alongside it', async () => {
+    programMembership();
+    supa.program({
+      table: 'charges',
+      op: 'select',
+      result: {
+        data: { id: VALID_INPUT.chargeId, amount: '505', workspace_id: 'ws-1' },
+        error: null,
+      },
+    });
+    supa.program({
+      table: 'charge_payments',
+      op: 'select',
+      result: { data: { id: 'payment-existing-1' }, error: null },
+    });
+    supa.program({
+      table: 'charge_payments',
+      op: 'delete',
+      result: { data: [{ id: 'payment-existing-1' }], error: null },
+    });
+    // A day `pay` would refuse (future, far from the period): `unpay` drops it.
+    const r = await togglePaymentAction({ ...UNPAY_INPUT, paidOn: '2099-01-01' });
+    expect(r).toEqual({ ok: true, data: { paid: false, paidAmount: null } });
+  });
+
+  it('refuses a day that does not exist', async () => {
+    programMembership();
+    const r = await togglePaymentAction({ ...VALID_INPUT, paidOn: '2026-02-30' });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.fieldErrors?.paidOn).toBeDefined();
   });
 });
 

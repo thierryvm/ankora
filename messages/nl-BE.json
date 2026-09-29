@@ -906,7 +906,15 @@
       "posteMonthlyLabel": "Maandelijkse facturen",
       "posteMonthlyHint": "Wat elke maand vertrekt, factuur per factuur.",
       "posteCommitmentsLabel": "Termijnen van verbintenissen",
-      "posteCommitmentsHint": "Het deel van deze maand van elke lopende verbintenis."
+      "posteCommitmentsHint": "Het deel van deze maand van elke lopende verbintenis.",
+      "paySheet": {
+        "title": "Als betaald markeren",
+        "intro": "{label} · {amount}",
+        "dateLabel": "Betaald op",
+        "dateHint": "De dag waarop de bank het bedrag heeft afgeschreven. Vooraf ingevuld met de vervaldag.",
+        "submit": "Als betaald markeren",
+        "cancel": "Annuleren"
+      }
     },
     "accounts": {
       "metaTitle": "Mijn rekeningen",
@@ -1723,7 +1731,11 @@
       "watchFailed": "Kan de markering van de factuur niet bijwerken.",
       "notFound": "Deze factuur is niet gevonden.",
       "payments": {
-        "toggleFailed": "Kan de factuur niet als betaald markeren."
+        "toggleFailed": "Kan de factuur niet als betaald markeren.",
+        "dateFuture": "Deze datum ligt in de toekomst. Kies de dag waarop de factuur betaald is.",
+        "dateOutOfPeriod": "Deze datum ligt te ver van de maand van de factuur.",
+        "alreadyPaid": "Deze factuur is al betaald. De pagina wordt bijgewerkt.",
+        "notPaid": "Deze factuur is niet betaald. De pagina wordt bijgewerkt."
       }
     },
     "accounts": {
