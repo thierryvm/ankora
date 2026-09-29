@@ -1,9 +1,11 @@
 'use server';
 
+import Decimal from 'decimal.js';
 import { getTranslations } from 'next-intl/server';
 
 import { authorizedWorkspace } from '@/lib/actions/authorized-workspace';
 import { revalidateAppPath, revalidateDashboard } from '@/lib/actions/revalidate';
+import type { IncomeCorrectionEffect } from '@/lib/actions/operations.types';
 import type { ActionResult } from '@/lib/actions/types';
 import { loadWorkspaceCharges } from '@/lib/data/charge-row';
 import { loadAccountLedger } from '@/lib/data/operations';
@@ -28,6 +30,7 @@ import {
   splitDiffersFromRule,
   splitRuleApplies,
 } from '@/lib/domain/accounts/split-rule';
+import { effetDeLaCorrection } from '@/lib/domain/accounts/correction-montant';
 import { validateTransferAllocation } from '@/lib/domain/accounts/virement';
 import { moisDeBudgetEnCours } from '@/lib/domain/budget/mois-de-budget';
 import type { AccountType } from '@/lib/domain/cockpit/types';
@@ -36,6 +39,7 @@ import { provisionPartOfMonth } from '@/lib/domain/transfer';
 import { money } from '@/lib/domain/types';
 import {
   balanceStatementSchema,
+  incomeAmountCorrectionSchema,
   incomeReceivedSchema,
   operationCancellationSchema,
   plannedTransferSchema,
@@ -124,7 +128,8 @@ type Ctx = Extract<Awaited<ReturnType<typeof gate>>, { ok: true }>;
  * description. The audit log leaves in the art. 20 export; it must not double
  * the data it points to.
  */
-type MovementChange = { cancelled: boolean } | { splitRecalculated: true };
+type MovementChange =
+  { cancelled: boolean } | { splitRecalculated: true } | { amountCorrected: true };
 
 function auditMovement(ctx: Ctx, kind: 'transfer' | 'income', id: string, change?: MovementChange) {
   const cancellation = change && 'cancelled' in change ? change : null;
@@ -138,6 +143,9 @@ function auditMovement(ctx: Ctx, kind: 'transfer' | 'income', id: string, change
       // Fixed strings under whitelisted keys: the parts themselves never travel.
       ...(change && 'splitRecalculated' in change
         ? { previous_state: 'split_outdated', new_state: 'split_by_rule' }
+        : {}),
+      ...(change && 'amountCorrected' in change
+        ? { previous_state: 'amount_as_written', new_state: 'amount_corrected' }
         : {}),
     },
   );
@@ -764,6 +772,87 @@ export async function recordIncomeAction(input: unknown): Promise<ActionResult<{
   await auditMovement(ctx, 'income', data.id);
   revalidateOperationPaths();
   return { ok: true, data: { id: data.id } };
+}
+
+// =========================================================================
+// Tour 57 — « Corriger le montant » of money received. Cancelling and writing
+// it again is blocked by D21 as soon as another operation of its day follows
+// the statement; the base lets the amount be corrected in place (D17). Same
+// row, same date, same write time, same month, same account: only the amount.
+// =========================================================================
+export async function correctIncomeAmountAction(
+  input: unknown,
+): Promise<ActionResult<IncomeCorrectionEffect>> {
+  const ctx = await gate();
+  if (!ctx.ok) return ctx;
+
+  const parsed = incomeAmountCorrectionSchema.safeParse(input);
+  if (!parsed.success) return invalid(parsed.error);
+  const { id, amount } = parsed.data;
+
+  const { data: row, error: readError } = await ctx.supabase
+    .from('movements')
+    .select('id, kind, to_account_type, amount, cancelled_at')
+    .eq('id', id)
+    .eq('workspace_id', ctx.workspaceId)
+    .maybeSingle();
+  if (readError) return { ok: false, errorCode: 'errors.operations.writeFailed' };
+  if (!row || row.kind !== 'income' || row.to_account_type === null) {
+    return { ok: false, errorCode: 'errors.operations.notFound' };
+  }
+  // A cancelled row is frozen by the base (D15): reopen it first.
+  if (row.cancelled_at !== null) return { ok: false, errorCode: 'errors.operations.cancelledRow' };
+  if (new Decimal(row.amount).equals(amount)) return { ok: true, data: { effet: 'identique' } };
+
+  // What the balance on screen will do, measured BEFORE the write on the
+  // journal the cards read — so the confirmation cannot promise what is false.
+  const ledger = await loadAccountLedger(ctx.supabase, ctx.workspaceId);
+  if (!ledger.ok || !ledger.movements.some((m) => m.id === id)) {
+    return { ok: false, errorCode: 'errors.operations.writeFailed' };
+  }
+  const effet = effetDeLaCorrection({
+    accountType: row.to_account_type as AccountType,
+    statements: ledger.statements,
+    movements: ledger.movements,
+    debits: ledger.debits,
+    today: isoDayToDate(todayIsoInBrussels()),
+    movementId: id,
+    nouveauMontant: new Decimal(amount),
+  });
+
+  const { data, error } = await ctx.supabase
+    .from('movements')
+    .update({ amount })
+    .eq('id', id)
+    .eq('workspace_id', ctx.workspaceId)
+    .is('cancelled_at', null)
+    .select('id');
+  if (error) return { ok: false, errorCode: 'errors.operations.writeFailed' };
+  // RLS lets only the author update: zero row is « not yours », never a success.
+  if (!data || data.length === 0) return { ok: false, errorCode: 'errors.operations.notFound' };
+
+  await auditMovement(ctx, 'income', id, { amountCorrected: true });
+  revalidateOperationPaths();
+  if (effet.effet === 'ancre') {
+    return {
+      ok: true,
+      data: {
+        effet: 'ancre',
+        releveLe: effet.releveLe.toISOString().slice(0, 10),
+        ecart: effet.ecart && {
+          avant: effet.ecart.avant.toNumber(),
+          apres: effet.ecart.apres.toNumber(),
+        },
+      },
+    };
+  }
+  if (effet.effet === 'change') {
+    return {
+      ok: true,
+      data: { effet: 'change', avant: effet.avant.toNumber(), apres: effet.apres.toNumber() },
+    };
+  }
+  return { ok: true, data: { effet: 'aucunSolde' } };
 }
 
 // =========================================================================

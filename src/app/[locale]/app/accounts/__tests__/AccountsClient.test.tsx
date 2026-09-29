@@ -13,6 +13,7 @@ vi.mock('@/lib/actions/operations', () => ({
   recordBalanceStatementAction: vi.fn(async () => ({ ok: true, data: { id: 'x' } })),
   setStatementCancelledAction: vi.fn(async () => ({ ok: true })),
   setMovementCancelledAction: vi.fn(async () => ({ ok: true })),
+  correctIncomeAmountAction: vi.fn(async () => ({ ok: true, data: { effet: 'aucunSolde' } })),
   recordIncomeAction: vi.fn(async () => ({ ok: true, data: { id: 'y' } })),
 }));
 vi.mock('@/components/ui/toast', () => ({
@@ -448,5 +449,67 @@ describe('AccountsClient — « Argent reçu » on its account, cancelled then r
     await userEvent.click(within(cancelled).getByRole('button', { name: 'Rétablir' }));
     expect(ops.setMovementCancelledAction).toHaveBeenCalledWith({ id: 'i2', cancelled: false });
     expect(document.body.textContent).not.toMatch(/reçue/i);
+  });
+});
+
+describe('AccountsClient — tour 57, « Corriger le montant » and the past months', () => {
+  it('offers « Corriger le montant » on a standing line only, and sends the typed amount', async () => {
+    const ops = await import('@/lib/actions/operations');
+    render(
+      <NextIntlClientProvider locale="fr-BE" messages={messages} timeZone="Europe/Brussels">
+        <AccountsClient
+          monthlyIncome={2000}
+          vieCouranteMonthlyTransfer={505}
+          balances={[READ_NEGATIVE, PROVISIONS]}
+          today="2026-09-21"
+          pastIncomes={[
+            {
+              month: '2026-08',
+              total: 705,
+              lines: [
+                {
+                  id: 'p1',
+                  amount: 705,
+                  occurredOn: '2026-08-03',
+                  description: 'Revenu du mois',
+                  cancelled: false,
+                  accountLabel: 'Compte principal',
+                },
+                {
+                  id: 'p2',
+                  amount: 505,
+                  occurredOn: '2026-08-02',
+                  description: 'En plus du revenu',
+                  cancelled: true,
+                  accountLabel: 'Compte principal',
+                },
+              ],
+            },
+          ]}
+        />
+      </NextIntlClientProvider>,
+    );
+    const month = screen.getByTestId('argent-recu-2026-08');
+    expect(month.textContent).toContain('août 2026');
+    expect(month.textContent).toMatch(/705\s€ · 2 opérations/);
+    await userEvent.click(within(month).getByRole('button', { expanded: false }));
+    const standing = month.querySelector('[data-income-line="p1"]') as HTMLElement;
+    const cancelled = month.querySelector('[data-income-line="p2"]') as HTMLElement;
+    expect(standing.textContent).toContain('sur Compte principal');
+    expect(within(cancelled).queryByRole('button', { name: 'Corriger le montant' })).toBeNull();
+
+    await userEvent.click(within(standing).getByRole('button', { name: 'Corriger le montant' }));
+    const sheet = await screen.findByTestId('feuille-corriger-argent-recu');
+    const field = within(sheet).getByLabelText(
+      'Combien as-tu reçu, exactement ?',
+    ) as HTMLInputElement;
+    await userEvent.clear(field);
+    await userEvent.type(field, '712,40');
+    expect(field.value).toBe('712,40');
+    expect((within(sheet).getByLabelText('Reçu le') as HTMLInputElement).readOnly).toBe(true);
+    await userEvent.click(within(sheet).getByRole('button', { name: 'Enregistrer' }));
+    await waitFor(() =>
+      expect(ops.correctIncomeAmountAction).toHaveBeenCalledWith({ id: 'p1', amount: 712.4 }),
+    );
   });
 });

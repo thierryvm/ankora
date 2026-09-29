@@ -1799,7 +1799,8 @@
       "notFound": "Esta operación ya no existe o no es tuya.",
       "alreadyDone": "Esta transferencia ya consta como hecha este mes.",
       "startingBalance": "El saldo inicial no se anula: anota mejor el saldo de hoy.",
-      "planMonthNotAllowed": "Esta transferencia solo se anota para el mes en curso o el siguiente."
+      "planMonthNotAllowed": "Esta transferencia solo se anota para el mes en curso o el siguiente.",
+      "cancelledRow": "Este dinero recibido está anulado: restablécelo antes de corregir el importe."
     }
   },
   "opengraphImage": {
@@ -2024,7 +2025,20 @@
         "warnPrevious": "Sueldo del mes anterior: contará para {month}.",
         "warnOther": "Este dinero contará para {month}, no para el mes de su fecha.",
         "undo": "No, para {month}"
-      }
+      },
+      "correct": "Corregir el importe",
+      "correctTitle": "Corregir el importe",
+      "correctQuestion": "¿Cuánto has recibido exactamente?",
+      "correctHint": "Solo cambia el importe: la fecha, la cuenta y el mes se quedan como se anotaron.",
+      "correctedAnchored": "Importe corregido. Tu saldo no cambia: parte de tu extracto del {date}; la diferencia con ese extracto se explica de otro modo.",
+      "correctedChanged": "Importe corregido. Tu saldo pasa de {avant} a {apres}.",
+      "correctedNoBalance": "Importe corregido.",
+      "correctedSame": "Mismo importe: no ha cambiado nada.",
+      "pastHeading": "Dinero recibido en meses anteriores",
+      "pastMonthKey": "{total} · {count, plural, one {# operación} other {# operaciones}}",
+      "pastOnAccount": "en {account}",
+      "pastTotalNote": "El total cuenta el dinero recibido no anulado de este mes de presupuesto.",
+      "correctedAnchoredGap": "Importe corregido. Tu saldo no cambia: parte de tu extracto del {date}. La diferencia con ese extracto pasa de {avant} a {apres}."
     },
     "sameDay": {
       "question": "¿Tu saldo del {date} ({montant}) ya incluye este dinero?",

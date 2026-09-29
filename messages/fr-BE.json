@@ -1799,7 +1799,8 @@
       "notFound": "Cette opération n’existe plus ou ne t’appartient pas.",
       "alreadyDone": "Ce virement est déjà noté comme fait pour ce mois.",
       "startingBalance": "Le solde de départ ne s’annule pas : écris plutôt le solde du jour.",
-      "planMonthNotAllowed": "Ce virement ne se note que pour le mois en cours ou le suivant."
+      "planMonthNotAllowed": "Ce virement ne se note que pour le mois en cours ou le suivant.",
+      "cancelledRow": "Cet argent reçu est annulé : rétablis-le avant de corriger son montant."
     }
   },
   "opengraphImage": {
@@ -2024,7 +2025,20 @@
         "warnPrevious": "Salaire du mois précédent : il comptera pour {month}.",
         "warnOther": "Cet argent comptera pour {month}, pas pour le mois de sa date.",
         "undo": "Non, pour {month}"
-      }
+      },
+      "correct": "Corriger le montant",
+      "correctTitle": "Corriger le montant",
+      "correctQuestion": "Combien as-tu reçu, exactement ?",
+      "correctHint": "Seul le montant change : la date, le compte et le mois restent ceux notés.",
+      "correctedAnchored": "Montant corrigé. Ton solde ne change pas : il part de ton relevé du {date}, l’écart avec ce relevé s’explique autrement.",
+      "correctedChanged": "Montant corrigé. Ton solde passe de {avant} à {apres}.",
+      "correctedNoBalance": "Montant corrigé.",
+      "correctedSame": "Même montant : rien n’a changé.",
+      "pastHeading": "Argent reçu des mois passés",
+      "pastMonthKey": "{total} · {count, plural, one {# opération} other {# opérations}}",
+      "pastOnAccount": "sur {account}",
+      "pastTotalNote": "Le total compte l’argent reçu non annulé de ce mois de budget.",
+      "correctedAnchoredGap": "Montant corrigé. Ton solde ne change pas : il part de ton relevé du {date}. L’écart avec ce relevé passe de {avant} à {apres}."
     },
     "sameDay": {
       "question": "Ton solde du {date} ({montant}) contient-il déjà cet argent ?",

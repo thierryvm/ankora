@@ -1799,7 +1799,8 @@
       "notFound": "Deze verrichting bestaat niet meer of is niet van jou.",
       "alreadyDone": "Deze overschrijving staat al als gedaan voor deze maand.",
       "startingBalance": "Het beginsaldo wordt niet geannuleerd: vul liever het saldo van vandaag in.",
-      "planMonthNotAllowed": "Deze overschrijving kan alleen voor de lopende of de volgende maand worden genoteerd."
+      "planMonthNotAllowed": "Deze overschrijving kan alleen voor de lopende of de volgende maand worden genoteerd.",
+      "cancelledRow": "Dit ontvangen geld is geannuleerd: herstel het voor je het bedrag corrigeert."
     }
   },
   "opengraphImage": {
@@ -2024,7 +2025,20 @@
         "warnPrevious": "Loon van vorige maand: het telt mee voor {month}.",
         "warnOther": "Dit geld telt mee voor {month}, niet voor de maand van de datum.",
         "undo": "Nee, voor {month}"
-      }
+      },
+      "correct": "Bedrag corrigeren",
+      "correctTitle": "Bedrag corrigeren",
+      "correctQuestion": "Hoeveel heb je precies ontvangen?",
+      "correctHint": "Alleen het bedrag verandert: de datum, de rekening en de maand blijven zoals genoteerd.",
+      "correctedAnchored": "Bedrag gecorrigeerd. Je saldo verandert niet: het vertrekt van je afschrift van {date}; het verschil met dat afschrift heeft een andere verklaring.",
+      "correctedChanged": "Bedrag gecorrigeerd. Je saldo gaat van {avant} naar {apres}.",
+      "correctedNoBalance": "Bedrag gecorrigeerd.",
+      "correctedSame": "Zelfde bedrag: er is niets veranderd.",
+      "pastHeading": "Ontvangen geld van vorige maanden",
+      "pastMonthKey": "{total} · {count, plural, one {# verrichting} other {# verrichtingen}}",
+      "pastOnAccount": "op {account}",
+      "pastTotalNote": "Het totaal telt het niet-geannuleerde ontvangen geld van deze budgetmaand.",
+      "correctedAnchoredGap": "Bedrag gecorrigeerd. Je saldo verandert niet: het vertrekt van je afschrift van {date}. Het verschil met dat afschrift gaat van {avant} naar {apres}."
     },
     "sameDay": {
       "question": "Bevat je saldo van {date} ({montant}) dit geld al?",

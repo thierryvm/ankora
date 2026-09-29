@@ -64,16 +64,29 @@ export function moisServisParRevenu(movements: readonly Rentree[]): MoisIso[] {
   return [...servis].sort();
 }
 
+/** Days at the end of a month in which a month income is proposed for the next month. */
+export const DERNIERS_JOURS_DU_MOIS = 10;
+
+function dansLesDerniersJours(dateIso: string): boolean {
+  const [y, m, d] = dateIso.split('-').map(Number) as [number, number, number];
+  const joursDuMois = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  return d > joursDuMois - DERNIERS_JOURS_DU_MOIS;
+}
+
 /**
  * The month proposed for money received on `dateIso`.
  *
  * - on top of the income (`extra`) → the month of the date;
- * - the month's income (`regular`) → the month after the last one served, when
- *   it falls within one month of the date; otherwise, or with no history at
- *   all, the month of the date.
+ * - the month's income (`regular`):
+ *   - in the last ten days of the month, when the month of the date is already
+ *     served → the next month (the salary of the 28th pays the next month);
+ *   - a late salary (the month before the date follows the last one served)
+ *     → that previous month;
+ *   - otherwise → the month of the date.
  *
- * 28 September with September served → October; 2 October with only August
- * served → September (a late salary stays in its month).
+ * Tour 57 — two salaries in one household: the partner's salary of the 5th
+ * belongs to the running month, never to the next one. The person can always
+ * choose another month at entry (`choixDeMois`).
  */
 export function moisProposePourArgentRecu(input: {
   dateIso: string;
@@ -82,10 +95,12 @@ export function moisProposePourArgentRecu(input: {
 }): MoisIso {
   const moisDate = moisDeLaDate(input.dateIso);
   if (input.nature === 'extra' || input.moisServis.length === 0) return moisDate;
+  if (dansLesDerniersJours(input.dateIso) && input.moisServis.includes(moisDate)) {
+    return decalerMois(moisDate, 1);
+  }
   const dernier = [...input.moisServis].sort().at(-1)!;
-  const suivant = decalerMois(dernier, 1);
-  const fenetre = [decalerMois(moisDate, -1), moisDate, decalerMois(moisDate, 1)];
-  return fenetre.includes(suivant) ? suivant : moisDate;
+  const precedent = decalerMois(moisDate, -1);
+  return decalerMois(dernier, 1) === precedent ? precedent : moisDate;
 }
 
 /**

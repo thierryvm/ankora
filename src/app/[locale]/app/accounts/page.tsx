@@ -4,11 +4,16 @@ import { getTranslations } from 'next-intl/server';
 import { loadAccountLedger } from '@/lib/data/operations';
 import { todayIsoInBrussels } from '@/lib/data/month-situation';
 import { getSnapshotWith } from '@/lib/data/workspace-snapshot';
+import { argentRecuParMois } from '@/lib/domain/accounts/argent-recu-par-mois';
 import { moisConcerneDe, moisServisParRevenu } from '@/lib/domain/accounts/mois-concerne';
 import { accountBalanceView } from '@/lib/domain/accounts/operations-view';
 import { soldeAffiche } from '@/lib/domain/accounts/solde-affiche';
 import { createClient } from '@/lib/supabase/server';
-import { AccountsClient, type AccountBalanceProps } from './AccountsClient';
+import {
+  AccountsClient,
+  type AccountBalanceProps,
+  type PastIncomeMonthProps,
+} from './AccountsClient';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('app.accounts');
@@ -141,8 +146,31 @@ export default async function AccountsPage() {
     };
   });
 
+  // Tour 57 — the money received of the budget months before this one, month
+  // by month, each total summed by the domain WITH its lines (rule 10). The
+  // running month stays on the cards above.
+  const labelOf = new Map(
+    snapshot.accounts.map((a) => [a.accountType as string, a.displayName ?? a.label]),
+  );
+  const pastIncomes: PastIncomeMonthProps[] = argentRecuParMois(ledger.movements, month).map(
+    (m) => ({
+      month: m.mois,
+      total: m.total.toNumber(),
+      lines: m.lignes.map((l) => ({
+        id: l.id,
+        amount: l.amount.toNumber(),
+        occurredOn: day(l.occurredOn),
+        description: l.description,
+        cancelled: l.cancelled,
+        countsFor: l.countsFor,
+        accountLabel: labelOf.get(l.accountType) ?? l.accountType,
+      })),
+    }),
+  );
+
   return (
     <AccountsClient
+      pastIncomes={pastIncomes}
       monthlyIncome={snapshot.monthlyIncome}
       vieCouranteMonthlyTransfer={snapshot.vieCouranteMonthlyTransfer}
       balances={balances}

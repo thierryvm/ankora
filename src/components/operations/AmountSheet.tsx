@@ -46,6 +46,13 @@ export type AmountSheetProps = {
    */
   requireTypedAmount?: boolean;
   successMessage: string;
+  /** Tour 57 — a confirmation that depends on what the server answered (the balance effect). */
+  successMessageOf?: (data: unknown) => string;
+  /**
+   * Tour 57 — the day is shown, not editable: correcting an amount keeps the
+   * date as written.
+   */
+  dateReadOnly?: boolean;
   /**
    * What is still missing before the gesture can be saved (ADR-045 D21: the
    * question on the balance of the day). Set: the button is disabled and SAYS
@@ -89,7 +96,11 @@ export function AmountSheet(props: AmountSheetProps) {
     startTransition(async () => {
       const result = await props.onSubmit(amount, day);
       if (result.ok) {
-        toast.success(props.successMessage);
+        toast.success(
+          props.successMessageOf
+            ? props.successMessageOf('data' in result ? result.data : undefined)
+            : props.successMessage,
+        );
         props.onClose();
       } else {
         const field = result.fieldErrors ? Object.values(result.fieldErrors)[0]?.[0] : undefined;
@@ -155,6 +166,7 @@ export function AmountSheet(props: AmountSheetProps) {
             className="min-h-11"
             type="date"
             max={props.initialDate}
+            readOnly={props.dateReadOnly}
             value={day}
             onChange={(e) => {
               setDay(e.target.value);
