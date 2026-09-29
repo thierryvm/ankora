@@ -237,20 +237,21 @@ export async function ProvisionHealthGaugeCard({
                     {fmt(result.totalEpargneTheorique)}
                   </dd>
                 </div>
-                {/* Tour 59 bis — the line and its link sit at the bottom of a
-                    fold, right above the fixed mobile bar: when scrolled to,
-                    they stop clear of it rather than under it. */}
-                <div className="scroll-mt-24 scroll-mb-24">
+                <div>
                   <dt className="text-muted-foreground">{t('current')}</dt>
                   <dd className="text-foreground mt-0.5 font-semibold tabular-nums">
                     {fmt(result.soldeEpargneActuel)}
                   </dd>
                   {/* Rule 10 — the balance opens on the Accounts page, which
-                      carries its statement and every operation since. */}
+                      carries its statement and every operation since.
+                      Tour 59 ter — the link sits at the bottom of a fold, right
+                      above the fixed mobile bar. Focus scrolls the LINK into
+                      view, and only its own scroll margin counts: it stops
+                      clear of the bar rather than under it. */}
                   <dd>
                     <Link
                       href="/app/accounts"
-                      className="text-muted-foreground hover:text-brand-700 -my-1.5 inline-flex min-h-11 items-center underline underline-offset-2"
+                      className="text-muted-foreground hover:text-brand-700 -my-1.5 inline-flex min-h-11 scroll-mt-24 scroll-mb-24 items-center underline underline-offset-2"
                     >
                       {t('currentDetail')}
                     </Link>

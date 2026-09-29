@@ -941,6 +941,7 @@
         "sourceStart": "Solde de départ, le {date}",
         "readSince": "Lu le {date} : {montant}, plus {count, plural, one {# opération} other {# opérations}} depuis",
         "readSinceStart": "Solde de départ du {date} : {montant}, plus {count, plural, one {# opération} other {# opérations}} depuis",
+        "sinceTitle": "Opérations depuis le {date}",
         "sourceSince": "Lu le {date}, plus {count, plural, one {# opération} other {# opérations}} depuis",
         "none": "Aucun solde pour ce compte.",
         "detail": "Voir le détail",

@@ -89,6 +89,18 @@ export default async function AccountsPage() {
         computed: view.computed ? view.computed.balance.toNumber() : null,
         // Counted by the cockpit's own function, so both screens say the same.
         operations: shown.etat === 'lu' ? shown.operations : 0,
+        // Rule 10 — the computed balance opens on the very contributions the
+        // domain summed into it (never a second read): statement + these = it.
+        since: (view.computed?.contributions ?? []).map((c) => ({
+          id: c.flow.id,
+          occurredOn: day(c.flow.occurredOn),
+          origin:
+            c.flow.origin ??
+            (() => {
+              throw new RangeError('a contribution has no origin');
+            })(),
+          signedAmount: c.signedAmount.toNumber(),
+        })),
         gap: view.gap && {
           expected: view.gap.derived.toNumber(),
           read: view.gap.declared.toNumber(),

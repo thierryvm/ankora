@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 
@@ -52,7 +52,16 @@ const READ_NEGATIVE: AccountBalanceProps = {
     readStatedOn: '2026-09-17',
     readIsStartingBalance: false,
     computed: 462.5,
-    operations: 2,
+    operations: 4,
+    // -42.50 + 610.25 - 50 - 105.25 + 50 = 462.50: the lines add up to the big
+    // figure. Deliberately out of date order, as the ledger hands them over
+    // (movements first, then paid expenses and bills).
+    since: [
+      { id: 'm1', occurredOn: '2026-09-18', origin: 'income', signedAmount: 610.25 },
+      { id: 't2', occurredOn: '2026-09-21', origin: 'transfer', signedAmount: -50 },
+      { id: 'd1', occurredOn: '2026-09-19', origin: 'expense', signedAmount: -105.25 },
+      { id: 't1', occurredOn: '2026-09-20', origin: 'transfer', signedAmount: 50 },
+    ],
     gap: {
       expected: 520,
       read: -42.5,
@@ -117,11 +126,33 @@ describe('AccountsClient — un solde lu, daté, et nommé pour ce qu’il est',
     expect(gros.className).toMatch(/text-xl/);
     const lu = within(c).getByTestId('solde-lu');
     expect(lu.textContent).toMatch(
-      /^Lu le 17 septembre : [-−]\s*42,50\s*€, plus 2 opérations depuis$/,
+      /^Lu le 17 septembre : [-−]\s*42,50\s*€, plus 4 opérations depuis$/,
     );
     expect(lu.querySelector('.text-xl')).toBeNull();
     // One big figure per account, never two.
     expect(c.querySelectorAll('.text-xl')).toHaveLength(1);
+  });
+
+  it('tour 59 ter — règle 10 : le solde calculé s’ouvre sur chaque opération depuis le relevé', () => {
+    renderClient();
+    const c = card('daily_card');
+    const repli = within(c).getByTestId('depuis-releve-daily_card');
+    expect(repli).toHaveTextContent('Opérations depuis le 17 septembre');
+    const lignes = repli.querySelectorAll('[data-since-line]');
+    expect(lignes).toHaveLength(4);
+    // In date order, whatever order the ledger handed them over in.
+    expect(lignes[0]!.textContent).toMatch(/18 septembre.*Argent reçu.*\+610,25\s*€/);
+    expect(lignes[1]!.textContent).toMatch(/19 septembre.*Dépenses.*[-−]\s*105,25\s*€/);
+    // A transfer is named by its direction: in when it adds, out when it takes.
+    expect(lignes[2]!.textContent).toMatch(/20 septembre.*Virements reçus.*\+50(,00)?\s*€/);
+    expect(lignes[3]!.textContent).toMatch(/21 septembre.*Virements faits.*[-−]\s*50(,00)?\s*€/);
+    // Closed on arrival, opens on a click.
+    const bouton = repli.querySelector('button[aria-expanded]') as HTMLButtonElement;
+    expect(bouton.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(bouton);
+    expect(bouton.getAttribute('aria-expanded')).toBe('true');
+    // No operation since the statement: nothing to open.
+    expect(within(card('income_bills')).queryByTestId('depuis-releve-income_bills')).toBeNull();
   });
 
   it('ne dit jamais « calculé » d’un solde lu, ni « relevé » ou « lu » d’un solde calculé', () => {

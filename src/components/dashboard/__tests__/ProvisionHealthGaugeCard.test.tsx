@@ -97,10 +97,13 @@ describe('<ProvisionHealthGaugeCard /> (THI-190 cockpit v3 #2)', () => {
     expect(container.innerHTML).not.toMatch(/success|warning|danger/);
   });
 
-  it('tour 59 bis — the « Solde actuel » line clears a fixed bar when scrolled to', async () => {
+  it('tour 59 ter — the « Voir le détail » link itself clears the fixed bar when scrolled to', async () => {
     await renderCard({ charges: [ANNUAL_CHARGE({})], soldeEpargneActuel: new Decimal(1200) });
     const link = screen.getByRole('link', { name: messages.dashboard.health.currentDetail });
-    expect(link.closest('div')?.className).toMatch(/scroll-m[by]-/);
+    // Focus (Tab) scrolls the LINK into view, and only the scrolled element's
+    // own scroll-margin counts: a margin on its parent block is ignored.
+    expect(link.className).toMatch(/\bscroll-mb-\d+/);
+    expect(link.className).toMatch(/\bscroll-mt-\d+/);
   });
 
   it('renders the FR title from the dashboard.health namespace', async () => {
