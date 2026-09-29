@@ -1708,8 +1708,7 @@
           "invalid": "Opération introuvable."
         },
         "sameDay": {
-          "required": "Réponds à la question sur ton solde du jour.",
-          "othersAfter": "D’autres opérations de ce jour sont déjà écrites après ton solde. Dis d’abord, sur la carte du compte, si ton solde les contenait."
+          "required": "Réponds à la question sur ton solde du jour."
         },
         "budgetMonth": {
           "invalid": "Mois invalide.",
@@ -2049,9 +2048,10 @@
       "cardQuestion": "Ton solde du {date} contenait-il déjà ces opérations ?",
       "cardFlowIn": "+ {montant} · {origine, select, income {argent reçu} transfer {virement} bill {facture} other {dépense}}",
       "cardFlowOut": "− {montant} · {origine, select, income {argent reçu} transfer {virement} bill {facture} other {dépense}}",
-      "cardYes": "Oui, déjà dedans",
-      "cardNo": "Non, fait après",
-      "cardDone": "C’est noté : ton solde du {date} les contenait déjà."
+      "flowIncluded": "Déjà dedans",
+      "flowAfter": "Fait après",
+      "flowIncludedDone": "C’est noté : ton solde du {date} contenait déjà cette opération.",
+      "flowAfterDone": "C’est noté : cette opération compte après ton solde du {date}."
     },
     "statement": {
       "open": "Écrire le solde du jour",

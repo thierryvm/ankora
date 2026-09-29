@@ -14,17 +14,14 @@ import {
   expectedBalanceOn,
   ledgerFlows,
   sameDayFlowsAfter,
+  sameDayFlowsIncluded,
   sameDayStatement,
   splitTransferToProvisions,
   startingStatementId,
   toMoney,
   type MovementRecord,
 } from '@/lib/domain/accounts/operations-view';
-import {
-  selectLatestStatement,
-  type AccountBalanceStatement,
-  type AccountFlow,
-} from '@/lib/domain/accounts/solde';
+import { selectLatestStatement, type AccountBalanceStatement } from '@/lib/domain/accounts/solde';
 import {
   splitByRule,
   splitDiffersFromRule,
@@ -39,12 +36,12 @@ import { provisionPartOfMonth } from '@/lib/domain/transfer';
 import { money } from '@/lib/domain/types';
 import {
   balanceStatementSchema,
+  flowIncludedSchema,
   incomeAmountCorrectionSchema,
   incomeReceivedSchema,
   operationCancellationSchema,
   plannedTransferSchema,
   requiredStatementAnswersSchema,
-  statementIncludedSchema,
   transferSplitRecalculationSchema,
 } from '@/lib/schemas/operations';
 import { log } from '@/lib/log';
@@ -240,16 +237,11 @@ async function syncBalanceColumn(ctx: Ctx, accountType: AccountType): Promise<bo
 }
 
 // =========================================================================
-// ADR-045 D21 — « Ton solde du … contient-il déjà cet argent ? »
+// ADR-045 D21/D23 — « Ton solde du … contient-il déjà cet argent ? »,
+// answered for THIS operation only (D23)
 // =========================================================================
 
 type StatementAnswers = Partial<Record<AccountType, 'included' | 'notYet'>> | undefined;
-type Ledger = {
-  statements: readonly AccountBalanceStatement[];
-  movements: readonly MovementRecord[];
-  /** ADR-045 D22 — expenses and paid bills of the same day count too. */
-  debits: readonly AccountFlow[];
-};
 
 /**
  * The statements an operation of `day` touching `accounts` could be counted
@@ -258,15 +250,19 @@ type Ledger = {
  * without it is refused before anything is written. An answer for an account
  * whose statement is not of that day is ignored — a statement cancelled
  * between the screen and the click must not block the write.
+ *
+ * D23 — an answer only ever concerns the operation being written: the other
+ * operations of that day keep what they were answered, so nothing here
+ * depends on them.
  */
 function sameDayAnswers(
-  ledger: Ledger,
+  statements: readonly AccountBalanceStatement[],
   accounts: readonly AccountType[],
   day: string,
   answers: StatementAnswers,
-): Fail | { toRewrite: AccountBalanceStatement[] } {
+): Fail | { toInclude: AccountBalanceStatement[] } {
   const asked = accounts.flatMap((a) => {
-    const s = sameDayStatement(ledger.statements, a, isoDayToDate(day));
+    const s = sameDayStatement(statements, a, isoDayToDate(day));
     return s ? [s] : [];
   });
   const parsed = requiredStatementAnswersSchema(asked.map((s) => s.accountType)).safeParse(
@@ -279,26 +275,13 @@ function sameDayAnswers(
       fieldErrors: { statementAnswers: ['operations.sameDay.required'] },
     };
   }
-  const toRewrite = asked.filter((s) => answers?.[s.accountType] === 'included');
-  // The copy is written after EVERY operation of its day, not only this one:
-  // an operation already counted after the statement (answered « Non », or
-  // written before D21) would silently stop counting — money invented. Such a
-  // day is settled from the card of the account, which names them all.
-  const flows = ledgerFlows(ledger.movements, ledger.debits);
-  if (toRewrite.some((st) => sameDayFlowsAfter(st, flows).length > 0)) {
-    return {
-      ok: false,
-      errorCode: 'errors.validation.generic',
-      fieldErrors: { statementAnswers: ['operations.sameDay.othersAfter'] },
-    };
-  }
-  return { toRewrite };
+  return { toInclude: asked.filter((s) => answers?.[s.accountType] === 'included') };
 }
 
 /** Sets `cancelled_at` on one row of the workspace; logs ids only when it fails. */
 async function setOwnCancelled(
   ctx: Ctx,
-  table: 'movements' | 'account_balance_statements',
+  table: 'movements',
   id: string,
   cancelled: boolean,
 ): Promise<void> {
@@ -310,7 +293,7 @@ async function setOwnCancelled(
     .select('id');
   if (error || (data?.length ?? 0) !== 1) {
     // Ids only — never an amount nor a description.
-    log.error('Same-day statement rewrite: undo failed, a row stands alone', {
+    log.error('Same-day answer: undo failed, a row stands alone', {
       table,
       row_id: id,
       gesture: cancelled ? 'cancel' : 'reopen',
@@ -319,178 +302,153 @@ async function setOwnCancelled(
   }
 }
 
-/**
- * Writes the statement again, identical (account, day, balance), AFTER the
- * operations of its day, then cancels the original. Copy first: if the cancel
- * then fails, two identical standing statements say the same balance and the
- * newest wins — a state that invents nothing — and the copy is undone. The
- * reverse order would, on failure, leave the account on its PREVIOUS
- * statement: a wrong balance. The balance column does not move (same amount).
- *
- * The expected balance of the copy is measured WITHOUT the original: the
- * statement before it plus the operations up to that day — which is exactly
- * what D21 changes.
- */
-async function rewriteSameDayStatement(
-  ctx: Ctx,
-  statement: AccountBalanceStatement,
-  ledger: Ledger,
-): Promise<{ ok: true; copyId: string } | { ok: false }> {
-  const expected = expectedBalanceOn({
-    accountType: statement.accountType,
-    statements: ledger.statements.filter((s) => s.id !== statement.id),
-    movements: ledger.movements,
-    debits: ledger.debits,
-    statedOn: statement.statedOn,
-  });
+/** One event per answer written or withdrawn: which row, never an amount. */
+function auditInclusion(ctx: Ctx, inclusionId: string) {
+  return logAuditEvent(
+    AuditEvent.ACCOUNT_BALANCE_UPDATED,
+    { userId: ctx.userId, workspaceId: ctx.workspaceId },
+    { resource_type: 'statement_included_flow', resource_id: inclusionId },
+  );
+}
 
-  const { data: copy, error: copyError } = await ctx.supabase
-    .from('account_balance_statements')
+/**
+ * Writes « the balance of `statementId` already held `flowId` ». Returns the
+ * id of the row, or null when the write fails or is refused silently (RLS
+ * returns no error and no row: the rows are counted).
+ */
+async function insertInclusion(
+  ctx: Ctx,
+  statementId: string,
+  flowId: string,
+): Promise<string | null> {
+  const { data, error } = await ctx.supabase
+    .from('statement_included_flows')
     .insert({
       workspace_id: ctx.workspaceId,
       created_by: ctx.userId,
-      account_type: statement.accountType,
-      balance: statement.balance.toNumber(),
-      stated_on: statement.statedOn.toISOString().slice(0, 10),
-      derived_balance: expected === null ? null : expected.toNumber(),
+      statement_id: statementId,
+      flow_id: flowId,
     })
-    .select('id')
-    .single();
-  if (copyError || !copy) return { ok: false };
-
-  const { data: cancelled, error: cancelError } = await ctx.supabase
-    .from('account_balance_statements')
-    .update({ cancelled_at: new Date().toISOString() })
-    .eq('id', statement.id)
-    .eq('workspace_id', ctx.workspaceId)
-    .is('cancelled_at', null)
     .select('id');
-  if (cancelError || (cancelled?.length ?? 0) !== 1) {
-    // A lost answer is not a refusal: when the cancel may have passed, read
-    // the original before undoing the copy — undoing it then would leave both
-    // cancelled, and the account on its PREVIOUS statement.
-    if (cancelError && (await isCancelled(ctx, statement.id)) !== false) {
-      return { ok: true, copyId: copy.id };
-    }
-    await setOwnCancelled(ctx, 'account_balance_statements', copy.id, true);
-    return { ok: false };
-  }
-  return { ok: true, copyId: copy.id };
-}
-
-/** True / false as read; null when the read itself fails (then nothing is undone). */
-async function isCancelled(ctx: Ctx, id: string): Promise<boolean | null> {
-  const { data, error } = await ctx.supabase
-    .from('account_balance_statements')
-    .select('cancelled_at')
-    .eq('id', id)
-    .eq('workspace_id', ctx.workspaceId)
-    .maybeSingle();
-  if (error || !data) return null;
-  return data.cancelled_at !== null;
-}
-
-/** One event per statement written or cancelled — emitted once the whole gesture stands. */
-async function auditRewrites(ctx: Ctx, done: ReadonlyArray<{ original: string; copy: string }>) {
-  const who = { userId: ctx.userId, workspaceId: ctx.workspaceId };
-  for (const d of done) {
-    await logAuditEvent(AuditEvent.ACCOUNT_BALANCE_UPDATED, who, {
-      resource_type: 'account_balance_statement',
-      resource_id: d.copy,
-    });
-    await logAuditEvent(AuditEvent.ACCOUNT_BALANCE_UPDATED, who, {
-      resource_type: 'account_balance_statement',
-      resource_id: d.original,
-      ...cancellationStates(true),
-    });
-  }
+  if (error || !data || data.length !== 1) return null;
+  return data[0]!.id;
 }
 
 /**
- * « Oui, déjà dedans », once the operation is written: rewrites each
- * statement in turn. On a failure, what this gesture wrote is undone — the
- * statements already rewritten, then the operation — so the person finds the
- * state of before and an error, never half a gesture. Without an RPC this is
- * not atomic: an undo that fails itself is logged by row id.
+ * « Oui, déjà dedans », once the operation is written: one answer per
+ * statement, for THIS operation's flow on that statement's account — never a
+ * statement written or rewritten (ADR-045 D23). On a failure, what this
+ * gesture wrote is undone — the answers already written, then the operation —
+ * so the person finds the state of before and an error, never half a gesture.
+ * Without an RPC this is not atomic: an undo that fails itself is logged by
+ * row id.
  */
-async function rewriteAfterOperation(
+async function includeAfterOperation(
   ctx: Ctx,
   movementId: string,
-  toRewrite: readonly AccountBalanceStatement[],
+  toInclude: readonly AccountBalanceStatement[],
 ): Promise<boolean> {
-  if (toRewrite.length === 0) return true;
+  if (toInclude.length === 0) return true;
   const ledger = await loadAccountLedger(ctx.supabase, ctx.workspaceId);
-  const done: Array<{ original: string; copy: string }> = [];
+  const written: string[] = [];
   let failed = !ledger.ok;
   if (ledger.ok) {
     const flows = ledgerFlows(ledger.movements, ledger.debits);
-    for (const statement of toRewrite) {
-      // Still the statement the answer was given for, and nothing else of its
-      // day written after it meanwhile (a second tab): otherwise, stop.
+    for (const statement of toInclude) {
+      // Still the statement the answer was given for (a second tab may have
+      // read another balance meanwhile), and this operation's own flow on its
+      // account, counted after it: otherwise, stop.
       const still = sameDayStatement(ledger.statements, statement.accountType, statement.statedOn);
-      const others = still
-        ? sameDayFlowsAfter(still, flows).filter((f) => !f.id.startsWith(`${movementId}:`))
-        : [];
-      if (still?.id !== statement.id || others.length > 0) {
+      const flow =
+        still?.id === statement.id
+          ? sameDayFlowsAfter(still, flows).find(
+              (f) => f.id.startsWith(`${movementId}:`) && f.accountType === statement.accountType,
+            )
+          : undefined;
+      const inclusionId = flow ? await insertInclusion(ctx, statement.id, flow.id) : null;
+      if (inclusionId === null) {
         failed = true;
         break;
       }
-      const r = await rewriteSameDayStatement(ctx, statement, ledger);
-      if (!r.ok) {
-        failed = true;
-        break;
-      }
-      done.push({ original: statement.id, copy: r.copyId });
+      written.push(inclusionId);
     }
   }
   if (!failed) {
-    await auditRewrites(ctx, done);
+    for (const id of written) await auditInclusion(ctx, id);
     return true;
   }
 
-  // Original reopened FIRST: if cancelling the copy then fails, two identical
-  // statements stand — nothing invented. The reverse order could leave both
-  // cancelled.
-  for (const d of done.reverse()) {
-    await setOwnCancelled(ctx, 'account_balance_statements', d.original, false);
-    await setOwnCancelled(ctx, 'account_balance_statements', d.copy, true);
-  }
+  for (const id of written.reverse()) await deleteOwnInclusion(ctx, id);
   await setOwnCancelled(ctx, 'movements', movementId, true);
   return false;
 }
 
+/** Withdraws one answer written by this gesture; logs ids only when it fails. */
+async function deleteOwnInclusion(ctx: Ctx, id: string): Promise<void> {
+  const { data, error } = await ctx.supabase
+    .from('statement_included_flows')
+    .delete()
+    .eq('id', id)
+    .eq('workspace_id', ctx.workspaceId)
+    .select('id');
+  if (error || (data?.length ?? 0) !== 1) {
+    log.error('Same-day answer: undo failed, a row stands alone', {
+      table: 'statement_included_flows',
+      row_id: id,
+      gesture: 'withdraw',
+      error_code: error ? (error.code ?? 'no_code') : 'no_row',
+    });
+  }
+}
+
 // =========================================================================
-// « Mon solde du … les contenait déjà » — the card of the account
+// « Déjà dedans » / « Fait après » — the card of the account, per operation
 // =========================================================================
-export async function confirmStatementIncludedAction(input: unknown): Promise<ActionResult> {
+export async function setFlowIncludedAction(input: unknown): Promise<ActionResult> {
   const ctx = await gate();
   if (!ctx.ok) return ctx;
 
-  const parsed = statementIncludedSchema.safeParse(input);
+  const parsed = flowIncludedSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
-  const { statementId } = parsed.data;
+  const { statementId, flowId, included } = parsed.data;
 
-  // The ledger is read for the SESSION workspace: a statement of another
-  // workspace is absent from it, and so not found.
+  // The ledger is read for the SESSION workspace: a statement or an operation
+  // of another workspace is absent from it, and so not found.
   const ledger = await loadAccountLedger(ctx.supabase, ctx.workspaceId);
   if (!ledger.ok) return { ok: false, errorCode: 'errors.operations.writeFailed' };
   const row = ledger.statements.find((s) => s.id === statementId);
-  // Only the latest standing statement, never the starting balance, and only
-  // when an operation of its own day is counted after it: anything else is a
-  // stale screen, and rewriting it would change nothing true.
+  // Only the latest standing statement, never the starting balance: anything
+  // else is a stale screen.
   const target = row ? sameDayStatement(ledger.statements, row.accountType, row.statedOn) : null;
-  if (
-    !target ||
-    target.id !== statementId ||
-    sameDayFlowsAfter(target, ledgerFlows(ledger.movements, ledger.debits)).length === 0
-  ) {
+  if (!target || target.id !== statementId) {
     return { ok: false, errorCode: 'errors.operations.notFound' };
   }
 
-  const r = await rewriteSameDayStatement(ctx, target, ledger);
-  if (!r.ok) return { ok: false, errorCode: 'errors.operations.writeFailed' };
-  await auditRewrites(ctx, [{ original: target.id, copy: r.copyId }]);
+  // The flow must be one the card offers for this answer: same account, same
+  // day, written after the statement, standing — counted after it for
+  // « Déjà dedans », already answered for « Fait après ».
+  const flows = ledgerFlows(ledger.movements, ledger.debits);
+  const offered = included ? sameDayFlowsAfter(target, flows) : sameDayFlowsIncluded(target, flows);
+  if (!offered.some((f) => f.id === flowId)) {
+    return { ok: false, errorCode: 'errors.operations.notFound' };
+  }
 
+  let rowId: string | null;
+  if (included) {
+    rowId = await insertInclusion(ctx, statementId, flowId);
+  } else {
+    const { data, error } = await ctx.supabase
+      .from('statement_included_flows')
+      .delete()
+      .eq('workspace_id', ctx.workspaceId)
+      .eq('statement_id', statementId)
+      .eq('flow_id', flowId)
+      .select('id');
+    rowId = !error && data && data.length === 1 ? data[0]!.id : null;
+  }
+  if (rowId === null) return { ok: false, errorCode: 'errors.operations.writeFailed' };
+
+  await auditInclusion(ctx, rowId);
   revalidateOperationPaths();
   return { ok: true };
 }
@@ -646,7 +604,7 @@ export async function recordPlannedTransferAction(
   }
 
   const sameDay = sameDayAnswers(
-    ledger,
+    ledger.statements,
     [v.fromAccountType, v.toAccountType],
     v.occurredOn,
     v.statementAnswers,
@@ -703,7 +661,7 @@ export async function recordPlannedTransferAction(
 
   if (error || !data) return { ok: false, errorCode: 'errors.operations.writeFailed' };
 
-  if (!(await rewriteAfterOperation(ctx, data.id, sameDay.toRewrite))) {
+  if (!(await includeAfterOperation(ctx, data.id, sameDay.toInclude))) {
     return { ok: false, errorCode: 'errors.operations.writeFailed' };
   }
 
@@ -733,7 +691,12 @@ export async function recordIncomeAction(input: unknown): Promise<ActionResult<{
 
   const ledger = await loadAccountLedger(ctx.supabase, ctx.workspaceId);
   if (!ledger.ok) return { ok: false, errorCode: 'errors.operations.writeFailed' };
-  const sameDay = sameDayAnswers(ledger, [v.toAccountType], v.occurredOn, v.statementAnswers);
+  const sameDay = sameDayAnswers(
+    ledger.statements,
+    [v.toAccountType],
+    v.occurredOn,
+    v.statementAnswers,
+  );
   if ('ok' in sameDay) return sameDay;
 
   // The base requires a description on an income; the screen does not. Empty
@@ -765,7 +728,7 @@ export async function recordIncomeAction(input: unknown): Promise<ActionResult<{
 
   if (error || !data) return { ok: false, errorCode: 'errors.operations.writeFailed' };
 
-  if (!(await rewriteAfterOperation(ctx, data.id, sameDay.toRewrite))) {
+  if (!(await includeAfterOperation(ctx, data.id, sameDay.toInclude))) {
     return { ok: false, errorCode: 'errors.operations.writeFailed' };
   }
 
@@ -776,8 +739,8 @@ export async function recordIncomeAction(input: unknown): Promise<ActionResult<{
 
 // =========================================================================
 // Tour 57 — « Corriger le montant » of money received. Cancelling and writing
-// it again is blocked by D21 as soon as another operation of its day follows
-// the statement; the base lets the amount be corrected in place (D17). Same
+// it again was blocked by D21 (until D23) as soon as another operation of its
+// day followed the statement; the base lets the amount be corrected in place (D17). Same
 // row, same date, same write time, same month, same account: only the amount.
 // =========================================================================
 export async function correctIncomeAmountAction(
@@ -911,8 +874,8 @@ export async function setMovementCancelledAction(input: unknown): Promise<Action
 // =========================================================================
 // « Recalculer le découpage » — a transfer to the provisions written before
 // `provisionPartOfMonth` (#505) keeps the target as its provisions share.
-// Cancelling and writing it again is blocked by D21 as soon as another
-// operation of its day follows the statement: this corrects the two parts
+// Cancelling and writing it again was blocked by D21 (until D23) as soon as
+// another operation of its day followed the statement: this corrects the two parts
 // in place, which the base allows (« la ventilation » se corrige, D17).
 // =========================================================================
 export async function recalculateTransferSplitAction(input: unknown): Promise<ActionResult> {

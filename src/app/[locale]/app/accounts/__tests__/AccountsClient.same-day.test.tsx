@@ -6,14 +6,18 @@ import { NextIntlClientProvider } from 'next-intl';
 import messages from '../../../../../../messages/fr-BE.json';
 
 const actions = vi.hoisted(() => ({
-  confirm: vi.fn(async (_input: unknown) => ({ ok: true })),
+  setIncluded: vi.fn(async (_input: unknown) => ({ ok: true })),
+  refresh: vi.fn(),
+}));
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ refresh: actions.refresh, push: vi.fn(), replace: vi.fn() }),
 }));
 vi.mock('@/lib/actions/accounts', () => ({
   updateMonthlyIncomeAction: vi.fn(),
   updateVieCouranteTransferAction: vi.fn(),
 }));
 vi.mock('@/lib/actions/operations', () => ({
-  confirmStatementIncludedAction: actions.confirm,
+  setFlowIncludedAction: actions.setIncluded,
   recordBalanceStatementAction: vi.fn(),
   recordIncomeAction: vi.fn(),
   setMovementCancelledAction: vi.fn(),
@@ -24,44 +28,42 @@ vi.mock('@/components/ui/toast', () => ({ toast: { error: vi.fn(), success: vi.f
 import { AccountsClient, type AccountBalanceProps } from '../AccountsClient';
 
 /*
- * ADR-045 D21 — the card names the same-day operations written after the read
- * balance and ASKS whether that balance already held them, both answers
- * visible (tour 55). It used to show a single net under one verb (« dont 395 €
- * reçus » for +505 and −110) and one button that invited the wrong answer when
- * the operations really happened after the balance was read.
+ * ADR-045 D23 — the card names EACH same-day operation written after the read
+ * balance, and each one gets its own answer: « Déjà dedans » or « Fait après ».
+ * One answer for the whole group (D21) could not say that a bill already
+ * debited was inside the reading while an expense made later was not.
  */
 
 const SID = '4b0f6c1e-2d3a-4e5f-8a9b-0c1d2e3f4a5b';
+const BILL = 'charge_payment:0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d';
+const SPEND = 'expense:1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d';
 type Flow = {
   id: string;
   direction: 'in' | 'out';
   amount: number;
   origin: 'income' | 'transfer' | 'bill' | 'expense';
 };
+
 // Fictional figures (famille 505 € / 705 €).
-const row = (flows: Flow[] | null): AccountBalanceProps => ({
+const row = (flows: Flow[], included: Flow[]): AccountBalanceProps => ({
   kind: 'principal',
   accountType: 'income_bills',
   label: 'Compte revenus',
   view: {
     readId: SID,
-    readBalance: 705,
+    readBalance: 505,
     readStatedOn: '2026-09-28',
     readIsStartingBalance: false,
-    computed: 1100,
-    // Same-day flows come after the statement: each is an operation since.
-    operations: Math.max(1, flows?.length ?? 0),
+    computed: flows.length > 0 ? 500 : null,
+    operations: flows.length,
     gap: null,
     reopenable: null,
-    sameDayAfter: flows && { flows },
+    sameDayAfter: { flows, included },
   },
 });
 
-const NBSP = '[  ]';
-const MIXED: Flow[] = [
-  { id: 'mv-1:in', direction: 'in', amount: 505, origin: 'transfer' },
-  { id: 'ex-1', direction: 'out', amount: 110, origin: 'expense' },
-];
+const bill: Flow = { id: BILL, direction: 'out', amount: 2.99, origin: 'bill' };
+const spend: Flow = { id: SPEND, direction: 'out', amount: 5, origin: 'expense' };
 
 function renderWith(balance: AccountBalanceProps) {
   return render(
@@ -70,63 +72,62 @@ function renderWith(balance: AccountBalanceProps) {
         monthlyIncome={null}
         vieCouranteMonthlyTransfer={null}
         balances={[balance]}
-        today="2026-09-28"
+        today="2026-09-29"
       />
     </NextIntlClientProvider>,
   );
 }
 
 beforeEach(() => {
-  actions.confirm.mockClear();
-  window.localStorage.clear();
+  actions.setIncluded.mockClear();
+  actions.refresh.mockClear();
 });
 
-describe('AccountBalanceCard — same-day operations after the read balance', () => {
-  it('opens on each operation with its sign and its kind, never a net under one verb', () => {
-    renderWith(row(MIXED));
-    const line = screen.getByTestId('meme-jour');
-    expect(within(screen.getByTestId('solde-calcule')).getByTestId('meme-jour')).toBe(line);
-    const items = within(line)
-      .getAllByRole('listitem')
-      .map((li) => li.textContent);
-    expect(items[0]).toMatch(new RegExp(`^[+] 505${NBSP}€ · virement$`));
-    expect(items[1]).toMatch(new RegExp(`^− 110${NBSP}€ · dépense$`));
-    expect(line.textContent).not.toMatch(/395/);
-    expect(line.textContent).not.toMatch(/reçus/);
-  });
-
-  it('asks a question with both answers visible; « Oui » sends the statement id only', async () => {
-    renderWith(row(MIXED));
-    const line = screen.getByTestId('meme-jour');
-    expect(line.textContent).toMatch(
-      /Ton solde du 28 septembre contenait-il déjà ces opérations \?/,
+describe('AccountBalanceCard — one answer per same-day operation (ADR-045 D23)', () => {
+  it('names both operations, each with its own two answers, and shows the current one', () => {
+    renderWith(row([spend], [bill]));
+    const list = screen.getByTestId('sameday-list');
+    expect(within(list).getAllByRole('listitem')).toHaveLength(2);
+    expect(screen.getByTestId(`sameday-included-${BILL}`)).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByTestId(`sameday-after-${BILL}`)).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByTestId(`sameday-included-${SPEND}`)).toHaveAttribute(
+      'aria-pressed',
+      'false',
     );
-    const no = within(line).getByRole('button', { name: 'Non, fait après' });
-    expect(no).toBeVisible();
-    await userEvent.click(within(line).getByRole('button', { name: 'Oui, déjà dedans' }));
-    expect(actions.confirm).toHaveBeenCalledWith({ statementId: SID });
+    expect(screen.getByTestId(`sameday-after-${SPEND}`)).toHaveAttribute('aria-pressed', 'true');
   });
 
-  it('« Non, fait après » puts the line away without writing anything, and it stays away', async () => {
-    const { unmount } = renderWith(row(MIXED));
-    await userEvent.click(screen.getByRole('button', { name: 'Non, fait après' }));
-    expect(screen.queryByTestId('meme-jour')).toBeNull();
-    expect(actions.confirm).not.toHaveBeenCalled();
-    unmount();
-    renderWith(row(MIXED));
-    expect(screen.queryByTestId('meme-jour')).toBeNull();
+  it('« Déjà dedans » on one line sends THAT operation only', async () => {
+    renderWith(row([spend, bill], []));
+    await userEvent.click(screen.getByTestId(`sameday-included-${BILL}`));
+    expect(actions.setIncluded).toHaveBeenCalledTimes(1);
+    expect(actions.setIncluded).toHaveBeenCalledWith({
+      statementId: SID,
+      flowId: BILL,
+      included: true,
+    });
+    expect(actions.refresh).toHaveBeenCalled();
   });
 
-  it('asks again when a new operation of that day arrives after the answer', async () => {
-    const { unmount } = renderWith(row(MIXED));
-    await userEvent.click(screen.getByRole('button', { name: 'Non, fait après' }));
-    unmount();
-    renderWith(row([...MIXED, { id: 'ex-2', direction: 'out', amount: 5, origin: 'expense' }]));
-    expect(screen.getByTestId('meme-jour')).toBeTruthy();
+  it('an answer is undone in one click at the same place (rule 11)', async () => {
+    renderWith(row([spend], [bill]));
+    await userEvent.click(screen.getByTestId(`sameday-after-${BILL}`));
+    expect(actions.setIncluded).toHaveBeenCalledWith({
+      statementId: SID,
+      flowId: BILL,
+      included: false,
+    });
   });
 
-  it('shows nothing when no operation of that day counts after the balance', () => {
-    renderWith(row(null));
-    expect(screen.queryByTestId('meme-jour')).toBeNull();
+  it('clicking the answer already given writes nothing', async () => {
+    renderWith(row([spend], [bill]));
+    await userEvent.click(screen.getByTestId(`sameday-included-${BILL}`));
+    await userEvent.click(screen.getByTestId(`sameday-after-${SPEND}`));
+    expect(actions.setIncluded).not.toHaveBeenCalled();
+  });
+
+  it('stays on screen when every operation is answered « Déjà dedans »', () => {
+    renderWith(row([], [bill, spend]));
+    expect(within(screen.getByTestId('sameday-list')).getAllByRole('listitem')).toHaveLength(2);
   });
 });

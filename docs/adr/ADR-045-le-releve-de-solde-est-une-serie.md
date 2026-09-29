@@ -423,3 +423,33 @@ security` et n'ont aucune policy DELETE, donc un DELETE du client ne voit
 ces deux tables seulement créerait un écart invisible entre tables d'un même
 schéma. C'est une décision globale — resserrer les privilèges par défaut du
 schéma `public`, toutes tables —, suivie par l'issue #478.
+
+## D23 — le jour d'un relevé, une réponse par opération (amende D21)
+
+Décidé par @thierry le 2026-09-29, sur un cas vu en usage réel : le même jour qu'un
+relevé, deux opérations écrites après lui — une facture que la banque avait déjà
+débitée (dans le solde lu) et une dépense faite après la lecture (pas dedans). Une seule
+réponse pour le groupe ne pouvait dire ni « oui » ni « non » sans fausser le solde calculé.
+
+**La règle.** La question de D21 se répond **opération par opération**. Une table
+additive, `statement_included_flows` (relevé, identifiant de flux, auteur), dit « le solde
+de ce relevé contenait déjà ce flux ». La règle de l'heure (D16) devient : un flux du jour
+du relevé compte s'il a été écrit après lui **et** n'est pas répondu « déjà dedans ».
+Une seule fonction (`flowCountsAfterStatement`) le décide, pour le solde calculé, l'écart,
+la carte et le `derived_balance`.
+
+- À la saisie, « Oui, déjà dedans » écrit une réponse pour CETTE opération. Aucun relevé
+  n'est plus réécrit.
+- La carte du compte nomme chaque opération du jour écrite après le relevé, avec « Déjà
+  dedans » / « Fait après » ; changer d'avis se fait au même endroit, d'un clic (règle 11 :
+  retirer la réponse). Une réponse est une réponse, pas une opération : elle se retire
+  (DELETE), elle ne se modifie pas (aucun UPDATE accordé).
+- **L'invariant de la garde du tour 55 est repris à la ligne** : une réponse ne change
+  jamais le compte d'une autre opération (test du domaine). La garde elle-même (« Oui »
+  refusé quand d'autres opérations du jour comptent après) est retirée : elle protégeait
+  la copie de relevé, qui n'existe plus.
+- Le relevé de départ reste hors question. Un flux d'un autre compte, d'un autre jour,
+  écrit avant le relevé, annulé ou hors du workspace est refusé par l'action serveur ; la
+  base garantit la forme de l'identifiant, le workspace du relevé et l'unicité.
+- Les relevés déjà réécrits par D21 restent tels quels. La table entre dans l'export art. 20.
+- La migration est appliquée en production par le pilote, après sauvegarde, avant fusion.

@@ -19,6 +19,12 @@ export type AccountBalanceStatement = {
   recordedAt: Date;
   /** ADR-045 D15: an operation is cancelled, it is never erased. */
   cancelledAt: Date | null;
+  /**
+   * ADR-045 D23 — ids of the flows of the statement's OWN day, written after
+   * it, that the person said the read balance already contained. Answered per
+   * operation, never per statement. Absent means no answer at all.
+   */
+  includedFlowIds?: readonly string[];
 };
 
 /**
@@ -217,7 +223,11 @@ export function flowCountsAfterStatement(
   if (flowDay < statementDay) return false;
 
   if (flow.recordedAt === null) return false;
-  return flow.recordedAt.getTime() > statement.recordedAt.getTime();
+  if (flow.recordedAt.getTime() <= statement.recordedAt.getTime()) return false;
+  // ADR-045 D23 — written after, but answered « already inside »: the reading
+  // saw it. Only the statement's own day reaches here, so an answer can never
+  // remove a flow of a later day.
+  return !(statement.includedFlowIds?.includes(flow.id) ?? false);
 }
 
 /**

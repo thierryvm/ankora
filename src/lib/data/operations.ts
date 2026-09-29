@@ -5,7 +5,11 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AccountType } from '@/lib/domain/cockpit/types';
 import type { AccountBalanceStatement, AccountFlow } from '@/lib/domain/accounts/solde';
 import { billPaymentToFlow, expenseToFlow } from '@/lib/domain/accounts/debits';
-import { toMoney, type MovementRecord } from '@/lib/domain/accounts/operations-view';
+import {
+  toMoney,
+  withIncludedFlows,
+  type MovementRecord,
+} from '@/lib/domain/accounts/operations-view';
 import type { AccountKind } from '@/lib/domain/types';
 import type { Database } from '@/lib/supabase/types';
 
@@ -133,13 +137,24 @@ export async function loadAccountLedger(
   if (statements === null || movements === null) {
     return { ok: false, statements: [], movements: [], debits: [] };
   }
-  const debits = await loadDebits(supabase, workspaceId, statements);
-  if (debits === null) {
+  const [debits, included] = await Promise.all([
+    loadDebits(supabase, workspaceId, statements),
+    readAllPages<{ statement_id: string; flow_id: string }>((from, to) =>
+      supabase
+        .from('statement_included_flows')
+        .select('statement_id, flow_id')
+        .eq('workspace_id', workspaceId)
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
+  ]);
+  if (debits === null || included === null) {
     return { ok: false, statements: [], movements: [], debits: [] };
   }
+  // ADR-045 D23 — the per-operation answers travel WITH their statement.
   return {
     ok: true,
-    statements: statements.map(statementRowToDomain),
+    statements: withIncludedFlows(statements.map(statementRowToDomain), included),
     movements: movements.map(movementRowToDomain),
     debits,
   };

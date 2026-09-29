@@ -51,6 +51,7 @@ export type UserDataExport = {
   // donnée de la personne, et son annulation en fait partie (ADR-045 D15).
   movements: Array<Record<string, unknown>>;
   accountBalanceStatements: Array<Record<string, unknown>>;
+  statementIncludedFlows: Array<Record<string, unknown>>;
 };
 
 /** Every `public` table this export reads. */
@@ -71,6 +72,7 @@ export const EXPORTED_TABLES = [
   'deletion_requests',
   'movements',
   'account_balance_statements',
+  'statement_included_flows',
 ] as const;
 
 /**
@@ -137,7 +139,8 @@ export async function exportUserData(userId: string): Promise<UserDataExport> {
     | 'commitment_payments'
     | 'charge_payments'
     | 'movements'
-    | 'account_balance_statements';
+    | 'account_balance_statements'
+    | 'statement_included_flows';
 
   const readAllCreatedBy = (table: PagedTable): Promise<Result> =>
     readAllPages((from) =>
@@ -197,6 +200,7 @@ export async function exportUserData(userId: string): Promise<UserDataExport> {
     deletionRes,
     movementsRes,
     statementsRes,
+    includedRes,
   ] = await Promise.all([
     supabase.from('users').select('*').eq('id', userId).single(),
     readAllCreatedBy('charges'),
@@ -213,6 +217,7 @@ export async function exportUserData(userId: string): Promise<UserDataExport> {
     supabase.from('deletion_requests').select(DELETION_REQUEST_COLUMNS).eq('user_id', userId),
     readAllCreatedBy('movements'),
     readAllCreatedBy('account_balance_statements'),
+    readAllCreatedBy('statement_included_flows'),
   ]);
 
   if (userRes.error) throw new Error('GDPR export: reading users failed', { cause: userRes.error });
@@ -236,6 +241,8 @@ export async function exportUserData(userId: string): Promise<UserDataExport> {
     deletionRequests: rowsOf('deletion_requests', deletionRes),
     movements: rowsOf('movements', movementsRes),
     accountBalanceStatements: rowsOf('account_balance_statements', statementsRes),
+    // ADR-045 D23 — the per-operation answers « already inside the balance ».
+    statementIncludedFlows: rowsOf('statement_included_flows', includedRes),
   };
 
   await logAuditEvent(

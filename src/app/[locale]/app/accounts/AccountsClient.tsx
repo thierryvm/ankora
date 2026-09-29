@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useId, useState, useTransition } from 'react';
+import { useId, useState, useTransition } from 'react';
 import { Landmark, PiggyBank, Wallet } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,7 @@ import {
   recordBalanceStatementAction,
   correctIncomeAmountAction,
   setMovementCancelledAction,
-  confirmStatementIncludedAction,
+  setFlowIncludedAction,
   setStatementCancelledAction,
 } from '@/lib/actions/operations';
 import { AmountSheet } from '@/components/operations/AmountSheet';
@@ -95,8 +96,10 @@ export type AccountBalanceProps = {
     /**
      * ADR-045 D21 — the same-day operations written after the read balance,
      * one by one (rule 10): a net under a single verb hid a +505 / −110 day.
+     * D23 — `flows` are counted after it, `included` were answered « already
+     * inside » (not counted again); each keeps its own answer.
      */
-    sameDayAfter?: { flows: SameDayFlowProps[] } | null;
+    sameDayAfter?: { flows: SameDayFlowProps[]; included?: SameDayFlowProps[] } | null;
   } | null;
   incomes?: IncomeLineProps[];
 };
@@ -410,96 +413,100 @@ export type SameDayFlowProps = {
 };
 
 /**
- * « Non, fait après » is remembered on THIS device only (tour 55, no
- * migration): a reader's comfort, never a figure. The key holds the statement
- * AND the operations, so a new operation of that day asks again. Storage that
- * throws (private mode, quota) only means the question comes back.
+ * ADR-045 D23 — the operations of the read balance's day written after it,
+ * each with ITS answer: « Déjà dedans » (the balance held it, it is not
+ * counted again) or « Fait après » (it counts on top of the balance). Both
+ * states stay visible and the other button undoes the answer (rule 11). The
+ * answer lives on the server, never on this device.
+ *
+ * Lines are ordered by id, never by answer: a line must not jump away from
+ * the finger that just answered it.
  */
-function sameDayKey(readId: string, flows: readonly SameDayFlowProps[]): string {
-  return `ankora.sameDay.after.${readId}.${flows
-    .map((f) => f.id)
-    .sort()
-    .join(',')}`;
-}
-
-function readDismissed(key: string): boolean {
-  try {
-    return window.localStorage.getItem(key) === '1';
-  } catch {
-    return false;
-  }
-}
-
-function SameDayLine({
-  readId,
+function SameDayList({
+  statementId,
   statedOn,
   flows,
-  disabled,
-  onIncluded,
+  included,
 }: {
-  readId: string;
+  statementId: string;
   statedOn: string;
   flows: readonly SameDayFlowProps[];
-  disabled: boolean;
-  onIncluded: () => void;
+  included: readonly SameDayFlowProps[];
 }) {
   const t = useTranslations('operations.sameDay');
   const locale = useLocale() as Locale;
+  // Mounted only when there is something to answer: a card without same-day
+  // operations never needs the router.
+  const router = useRouter();
+  const translateError = useActionErrorTranslator();
+  const baseId = useId();
+  const [isPending, startTransition] = useTransition();
   const fmt = (n: number) => formatCurrency(n, locale);
-  const key = sameDayKey(readId, flows);
-  // Read after mount: the server render has no storage, and a line that
-  // appears then vanishes is better than a hydration mismatch.
-  const [dismissed, setDismissed] = useState(false);
-  useEffect(() => {
-    setDismissed(readDismissed(key));
-  }, [key]);
-  if (dismissed) return null;
+  const insideIds = new Set(included.map((f) => f.id));
+  const lines = [...flows, ...included].sort((a, b) => a.id.localeCompare(b.id));
 
-  function dismiss() {
-    try {
-      window.localStorage.setItem(key, '1');
-    } catch {
-      // Not remembered: the question simply comes back next time.
-    }
-    setDismissed(true);
+  function answer(flowId: string, inside: boolean) {
+    startTransition(async () => {
+      const r = await setFlowIncludedAction({ statementId, flowId, included: inside });
+      if (r.ok) {
+        toast.success(t(inside ? 'flowIncludedDone' : 'flowAfterDone', { date: statedOn }));
+        router.refresh();
+      } else {
+        toast.error(translateError(r.errorCode));
+      }
+    });
   }
 
   return (
     <div className="mt-2 flex flex-col gap-2" data-testid="meme-jour">
       <p className="text-muted-foreground text-xs">{t('cardHead', { date: statedOn })}</p>
-      <ul className="flex flex-col gap-0.5 font-mono text-xs tabular-nums">
-        {flows.map((f) => (
-          <li key={f.id}>
-            {t(f.direction === 'in' ? 'cardFlowIn' : 'cardFlowOut', {
-              montant: fmt(f.amount),
-              origine: f.origin,
-            })}
-          </li>
-        ))}
-      </ul>
       <p className="text-sm">{t('cardQuestion', { date: statedOn })}</p>
-      <div className="flex flex-wrap gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="min-h-11 whitespace-normal"
-          disabled={disabled}
-          onClick={onIncluded}
-        >
-          {t('cardYes')}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="min-h-11 whitespace-normal"
-          disabled={disabled}
-          onClick={dismiss}
-        >
-          {t('cardNo')}
-        </Button>
-      </div>
+      <ul className="flex flex-col gap-3" data-testid="sameday-list">
+        {lines.map((f, i) => {
+          const inside = insideIds.has(f.id);
+          const textId = `${baseId}-${i}`;
+          return (
+            <li key={f.id} data-sameday-flow={f.id} className="flex flex-col gap-1">
+              <span id={textId} className="font-mono text-xs tabular-nums">
+                {t(f.direction === 'in' ? 'cardFlowIn' : 'cardFlowOut', {
+                  montant: fmt(f.amount),
+                  origine: f.origin,
+                })}
+              </span>
+              <div role="group" aria-labelledby={textId} className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant={inside ? 'default' : 'outline'}
+                  size="sm"
+                  className="min-h-11 whitespace-normal"
+                  aria-pressed={inside}
+                  disabled={isPending}
+                  data-testid={`sameday-included-${f.id}`}
+                  onClick={() => {
+                    if (!inside) answer(f.id, true);
+                  }}
+                >
+                  {t('flowIncluded')}
+                </Button>
+                <Button
+                  type="button"
+                  variant={inside ? 'outline' : 'default'}
+                  size="sm"
+                  className="min-h-11 whitespace-normal"
+                  aria-pressed={!inside}
+                  disabled={isPending}
+                  data-testid={`sameday-after-${f.id}`}
+                  onClick={() => {
+                    if (inside) answer(f.id, false);
+                  }}
+                >
+                  {t('flowAfter')}
+                </Button>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }
@@ -508,7 +515,6 @@ function AccountBalanceCard({ row, today }: { row: AccountBalanceProps; today: s
   const tKind = useTranslations('app.accounts.kind');
   const tBalance = useTranslations('app.accounts.balance');
   const tS = useTranslations('operations.statement');
-  const tSameDay = useTranslations('operations.sameDay');
   const locale = useLocale() as Locale;
   const translateError = useActionErrorTranslator();
   const Icon = ACCOUNT_ICONS[row.kind];
@@ -523,14 +529,6 @@ function AccountBalanceCard({ row, today }: { row: AccountBalanceProps; today: s
     startTransition(async () => {
       const r = await setStatementCancelledAction({ id, cancelled });
       if (r.ok) toast.success(cancelled ? tS('cancelled') : tS('saved'));
-      else toast.error(translateError(r.errorCode));
-    });
-  }
-
-  function confirmIncluded(statementId: string, date: string) {
-    startTransition(async () => {
-      const r = await confirmStatementIncludedAction({ statementId });
-      if (r.ok) toast.success(tSameDay('cardDone', { date }));
       else toast.error(translateError(r.errorCode));
     });
   }
@@ -580,18 +578,20 @@ function AccountBalanceCard({ row, today }: { row: AccountBalanceProps; today: s
               })}
             </p>
             <p className="text-muted-foreground text-xs">{tS('computedHint')}</p>
-            {view.sameDayAfter && view.sameDayAfter.flows.length > 0 ? (
-              <SameDayLine
-                readId={view.readId}
-                statedOn={formatDay(view.readStatedOn, locale)}
-                flows={view.sameDayAfter.flows}
-                disabled={isPending}
-                onIncluded={() =>
-                  confirmIncluded(view.readId, formatDay(view.readStatedOn, locale))
-                }
-              />
-            ) : null}
           </div>
+        ) : null}
+
+        {/* Outside the computed block: once every operation of the day is
+            answered « Déjà dedans », nothing counts after the balance, and the
+            answers must still be reachable to be undone (rule 11). */}
+        {view?.sameDayAfter &&
+        view.sameDayAfter.flows.length + (view.sameDayAfter.included?.length ?? 0) > 0 ? (
+          <SameDayList
+            statementId={view.readId}
+            statedOn={formatDay(view.readStatedOn, locale)}
+            flows={view.sameDayAfter.flows}
+            included={view.sameDayAfter.included ?? []}
+          />
         ) : null}
 
         {view && view.since && view.since.length > 0 ? (
