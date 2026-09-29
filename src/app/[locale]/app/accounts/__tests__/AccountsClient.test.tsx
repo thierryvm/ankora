@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 
@@ -37,6 +37,7 @@ const START: AccountBalanceProps = {
     readStatedOn: '2026-09-21',
     readIsStartingBalance: true,
     computed: null,
+    operations: 0,
     gap: null,
     reopenable: null,
   },
@@ -51,6 +52,16 @@ const READ_NEGATIVE: AccountBalanceProps = {
     readStatedOn: '2026-09-17',
     readIsStartingBalance: false,
     computed: 462.5,
+    operations: 4,
+    // -42.50 + 610.25 - 50 - 105.25 + 50 = 462.50: the lines add up to the big
+    // figure. Deliberately out of date order, as the ledger hands them over
+    // (movements first, then paid expenses and bills).
+    since: [
+      { id: 'm1', occurredOn: '2026-09-18', origin: 'income', signedAmount: 610.25 },
+      { id: 't2', occurredOn: '2026-09-21', origin: 'transfer', signedAmount: -50 },
+      { id: 'd1', occurredOn: '2026-09-19', origin: 'expense', signedAmount: -105.25 },
+      { id: 't1', occurredOn: '2026-09-20', origin: 'transfer', signedAmount: 50 },
+    ],
     gap: {
       expected: 520,
       read: -42.5,
@@ -95,33 +106,69 @@ const card = (type: string) =>
 describe('AccountsClient — un solde lu, daté, et nommé pour ce qu’il est', () => {
   it('appelle le premier relevé « solde de départ », jamais « relevé » ni « lu »', () => {
     renderClient();
-    const lu = within(card('income_bills')).getByTestId('solde-lu');
-    expect(lu).toHaveTextContent(/Solde de départ, le 21 septembre/);
-    expect(lu.textContent).not.toMatch(/relev|lu le/i);
+    const affiche = within(card('income_bills')).getByTestId('solde-affiche');
+    expect(affiche).toHaveTextContent(/Solde de départ, le 21 septembre/);
+    expect(affiche.textContent).not.toMatch(/relev|lu le/i);
   });
 
   it('date un solde lu par stated_on, pas par la fin du mois', () => {
     renderClient();
     const lu = within(card('daily_card')).getByTestId('solde-lu');
-    expect(lu).toHaveTextContent('Solde lu le 17 septembre');
+    expect(lu).toHaveTextContent('Lu le 17 septembre');
     expect(lu.textContent).not.toMatch(/30 septembre/);
+  });
+
+  it('tour 59 bis — le gros chiffre est le solde calculé, comme au cockpit ; le relevé est sa source, en petit', () => {
+    renderClient();
+    const c = card('daily_card');
+    const gros = within(c).getByTestId('solde-affiche-montant');
+    expect(gros.textContent).toMatch(/462,50/);
+    expect(gros.className).toMatch(/text-xl/);
+    const lu = within(c).getByTestId('solde-lu');
+    expect(lu.textContent).toMatch(
+      /^Lu le 17 septembre : [-−]\s*42,50\s*€, plus 4 opérations depuis$/,
+    );
+    expect(lu.querySelector('.text-xl')).toBeNull();
+    // One big figure per account, never two.
+    expect(c.querySelectorAll('.text-xl')).toHaveLength(1);
+  });
+
+  it('tour 59 ter — règle 10 : le solde calculé s’ouvre sur chaque opération depuis le relevé', () => {
+    renderClient();
+    const c = card('daily_card');
+    const repli = within(c).getByTestId('depuis-releve-daily_card');
+    expect(repli).toHaveTextContent('Opérations depuis le 17 septembre');
+    const lignes = repli.querySelectorAll('[data-since-line]');
+    expect(lignes).toHaveLength(4);
+    // In date order, whatever order the ledger handed them over in.
+    expect(lignes[0]!.textContent).toMatch(/18 septembre.*Argent reçu.*\+610,25\s*€/);
+    expect(lignes[1]!.textContent).toMatch(/19 septembre.*Dépenses.*[-−]\s*105,25\s*€/);
+    // A transfer is named by its direction: in when it adds, out when it takes.
+    expect(lignes[2]!.textContent).toMatch(/20 septembre.*Virements reçus.*\+50(,00)?\s*€/);
+    expect(lignes[3]!.textContent).toMatch(/21 septembre.*Virements faits.*[-−]\s*50(,00)?\s*€/);
+    // Closed on arrival, opens on a click.
+    const bouton = repli.querySelector('button[aria-expanded]') as HTMLButtonElement;
+    expect(bouton.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(bouton);
+    expect(bouton.getAttribute('aria-expanded')).toBe('true');
+    // No operation since the statement: nothing to open.
+    expect(within(card('income_bills')).queryByTestId('depuis-releve-income_bills')).toBeNull();
   });
 
   it('ne dit jamais « calculé » d’un solde lu, ni « relevé » ou « lu » d’un solde calculé', () => {
     renderClient();
     const c = card('daily_card');
     expect(within(c).getByTestId('solde-lu').textContent).not.toMatch(/calcul/i);
-    const calcule = within(c).getByTestId('solde-calcule');
+    const calcule = within(c).getByTestId('solde-affiche');
     expect(calcule).toHaveTextContent('Calculé depuis tes opérations');
-    expect(calcule.textContent).not.toMatch(/relev|\blu\b/i);
+    expect(calcule.textContent).not.toMatch(/relev|lu/i);
   });
 
   it('affiche un solde négatif tel quel, sans couleur d’alarme', () => {
     renderClient();
     const lu = within(card('daily_card')).getByTestId('solde-lu');
-    const montant = lu.querySelector('p.font-mono') as HTMLElement;
-    expect(montant.textContent).toMatch(/-\s*42,50|−\s*42,50/);
-    expect(montant.className).not.toMatch(/danger|destructive|red|warning/);
+    expect(lu.textContent).toMatch(/-\s*42,50|−\s*42,50/);
+    expect(lu.innerHTML).not.toMatch(/danger|destructive|red|warning/);
   });
 
   it('ne rend chaque solde qu’une fois', () => {
@@ -196,9 +243,10 @@ describe('AccountsClient — un solde lu, daté, et nommé pour ce qu’il est',
 
   it('ne dit plus que les dépenses manquent au solde calculé', () => {
     renderClient();
-    const calcule = within(card('daily_card')).getByTestId('solde-calcule');
-    expect(calcule.textContent).not.toMatch(/n’y sont pas encore/);
-    expect(calcule).toHaveTextContent(/dépenses/);
+    // Tour 59 bis — the explanation sits under the big figure, with its source.
+    const c = card('daily_card');
+    expect(c.textContent).not.toMatch(/n’y sont pas encore/);
+    expect(c).toHaveTextContent(/moins les factures payées et les dépenses écrites depuis/);
   });
 
   it('ne laisse pas annuler un solde de départ, mais bien un solde lu', () => {
@@ -228,13 +276,21 @@ describe('AccountsClient — un solde lu, daté, et nommé pour ce qu’il est',
     expect(within(feuille).queryByDisplayValue('Provisions pour tes factures')).toBeNull();
   });
 
-  it('garde une phrase d’usage vraie : deux comptes n’entrent dans aucun calcul, les provisions servent la jauge', () => {
+  it('tour 59 bis — dit à quoi sert chaque solde, et qu’il suit les opérations', () => {
     renderClient();
-    expect(card('income_bills')).toHaveTextContent("N'entre dans aucun calcul pour l'instant.");
-    expect(card('provisions')).toHaveTextContent(
-      'Sert à la jauge de provisions du tableau de bord.',
+    expect(card('income_bills')).toHaveTextContent(
+      'Sert au tableau de bord : « Sur ton compte principal après tes factures ».',
     );
-    expect(document.body.textContent).not.toMatch(/Saisi à la main/);
+    expect(card('daily_card')).toHaveTextContent(
+      'Sert au tableau de bord : ce qu’il y a sur ton compte du quotidien, sous « Il te reste ».',
+    );
+    expect(card('provisions')).toHaveTextContent(
+      'Sert à la santé des provisions du tableau de bord.',
+    );
+    expect(document.body.textContent).toMatch(/Ce solde suit tes opérations\./);
+    expect(document.body.textContent).not.toMatch(
+      /Saisi à la main|aucun calcul|ne change que|ne les met pas à jour|Soldes saisis/i,
+    );
   });
 });
 

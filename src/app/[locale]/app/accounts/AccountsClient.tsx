@@ -49,6 +49,14 @@ export type ExpectedLinesProps = {
   expenses: number;
 };
 
+/** One operation since the statement, signed: `+` in, `−` out. */
+export type SinceLineProps = {
+  id: string;
+  occurredOn: string;
+  origin: 'income' | 'transfer' | 'bill' | 'expense';
+  signedAmount: number;
+};
+
 /** Plain values only — computed by the server page, never a Decimal. */
 export type AccountBalanceProps = {
   kind: AccountKind;
@@ -60,6 +68,16 @@ export type AccountBalanceProps = {
     readStatedOn: string;
     readIsStartingBalance: boolean;
     computed: number | null;
+    /**
+     * Tour 59 bis — the operations counted since the statement, as the cockpit
+     * counts them (`soldeAffiche`). 0 = the statement alone.
+     */
+    operations: number;
+    /**
+     * Tour 59 ter — rule 10: the operations since the statement, one by one,
+     * as the domain summed them into `computed` (statement + these = computed).
+     */
+    since?: SinceLineProps[];
     /**
      * `amount` is `read - expected` (ADR-045 D22): negative when the account
      * holds less than expected. `lines` are the domain's decomposition of
@@ -361,6 +379,22 @@ function ExpectedLines({ lines, fmt }: { lines: ExpectedLinesProps; fmt: (n: num
   );
 }
 
+/**
+ * The name of one operation since the statement: the same words as the lines
+ * of an expected balance, so an operation is called the same thing on both.
+ */
+const SINCE_LABEL: Record<
+  SinceLineProps['origin'],
+  (
+    signed: number,
+  ) => 'gapReceived' | 'gapTransfersIn' | 'gapTransfersOut' | 'gapBills' | 'gapExpenses'
+> = {
+  income: () => 'gapReceived',
+  transfer: (signed) => (signed > 0 ? 'gapTransfersIn' : 'gapTransfersOut'),
+  bill: () => 'gapBills',
+  expense: () => 'gapExpenses',
+};
+
 export type SameDayFlowProps = {
   id: string;
   direction: 'in' | 'out';
@@ -506,25 +540,38 @@ function AccountBalanceCard({ row, today }: { row: AccountBalanceProps; today: s
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
+        {/* Tour 59 bis — one big figure per account, the one the cockpit shows
+            (`soldeAffiche`): the latest statement plus the operations since.
+            The statement is its source, written small underneath. */}
         {view ? (
-          <div data-testid="solde-lu">
+          <div data-testid="solde-affiche">
             <p className="text-muted-foreground text-xs">
-              {view.readIsStartingBalance
-                ? tS('start', { date: formatDay(view.readStatedOn, locale) })
-                : tS('read', { date: formatDay(view.readStatedOn, locale) })}
+              {view.operations > 0
+                ? tS('computed')
+                : view.readIsStartingBalance
+                  ? tS('start', { date: formatDay(view.readStatedOn, locale) })
+                  : tS('read', { date: formatDay(view.readStatedOn, locale) })}
             </p>
-            <p className="text-foreground font-mono text-xl tabular-nums">
-              {fmt(view.readBalance)}
+            <p
+              className="text-foreground font-mono text-xl tabular-nums"
+              data-testid="solde-affiche-montant"
+            >
+              {fmt(view.computed ?? view.readBalance)}
             </p>
           </div>
         ) : (
           <p className="text-muted-foreground text-sm">{tS('none')}</p>
         )}
 
-        {view?.computed !== null && view?.computed !== undefined ? (
-          <div data-testid="solde-calcule">
-            <p className="text-muted-foreground text-xs">{tS('computed')}</p>
-            <p className="text-foreground font-mono tabular-nums">{fmt(view.computed)}</p>
+        {view && view.operations > 0 ? (
+          <div className="flex flex-col gap-1" data-testid="solde-calcule">
+            <p className="text-muted-foreground text-xs tabular-nums" data-testid="solde-lu">
+              {tBalance(view.readIsStartingBalance ? 'readSinceStart' : 'readSince', {
+                date: formatDay(view.readStatedOn, locale),
+                montant: fmt(view.readBalance),
+                count: view.operations,
+              })}
+            </p>
             <p className="text-muted-foreground text-xs">{tS('computedHint')}</p>
             {view.sameDayAfter && view.sameDayAfter.flows.length > 0 ? (
               <SameDayLine
@@ -538,6 +585,38 @@ function AccountBalanceCard({ row, today }: { row: AccountBalanceProps; today: s
               />
             ) : null}
           </div>
+        ) : null}
+
+        {view && view.since && view.since.length > 0 ? (
+          <Repli
+            titre={tBalance('sinceTitle', { date: formatDay(view.readStatedOn, locale) })}
+            cle={fmt(view.computed ?? view.readBalance)}
+            testId={`depuis-releve-${row.accountType}`}
+          >
+            <ul className="flex flex-col gap-1 text-sm">
+              {/* Date order, then id for a stable tie: the ledger hands the
+                  movements first and the paid expenses and bills after. */}
+              {[...view.since]
+                .sort(
+                  (a, b) => a.occurredOn.localeCompare(b.occurredOn) || a.id.localeCompare(b.id),
+                )
+                .map((line) => (
+                  <li
+                    key={line.id}
+                    data-since-line={line.id}
+                    className="flex items-baseline justify-between gap-3"
+                  >
+                    <span className="min-w-0 break-words">
+                      <span className="text-muted-foreground block text-xs">
+                        {formatDay(line.occurredOn, locale)}
+                      </span>
+                      {tS(SINCE_LABEL[line.origin](line.signedAmount))}
+                    </span>
+                    <span className="font-mono tabular-nums">{signed(line.signedAmount)}</span>
+                  </li>
+                ))}
+            </ul>
+          </Repli>
         ) : null}
 
         {view?.gap ? (

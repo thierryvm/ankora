@@ -912,8 +912,8 @@
       "metaTitle": "Mis cuentas",
       "metaDescription": "Sigue los saldos de tus cuentas Principal, Día a Día y Ahorro. Ajusta tu ingreso mensual y tu transferencia a Día a Día.",
       "title": "Mis cuentas",
-      "subtitle": "Set your income and monthly transfer. The balances below are entered by hand: Ankora does not update them on its own.",
-      "balancesHeading": "Entered balances",
+      "subtitle": "Ajusta tus ingresos y tu transferencia mensual. Los saldos de abajo siguen tus operaciones: anota tu saldo real cuando quieras reajustarlos.",
+      "balancesHeading": "Saldos de tus cuentas",
       "amountLabel": "Importe (€)",
       "saveButton": "Guardar",
       "saving": "Guardando…",
@@ -936,9 +936,12 @@
         "saveLabel": "Actualizar",
         "srLabel": "Saldo actual de {label}",
         "toastSaved": "{name} actualizado",
-        "manualNotice": "Este saldo solo cambia cuando anotas uno nuevo.",
+        "manualNotice": "Este saldo sigue tus operaciones. Anota tu saldo real para reajustarlo.",
         "sourceRead": "Saldo leído el {date}",
         "sourceStart": "Saldo inicial, el {date}",
+        "readSince": "Leído el {date}: {montant}, más {count, plural, one {# operación} other {# operaciones}} desde entonces",
+        "readSinceStart": "Saldo inicial del {date}: {montant}, más {count, plural, one {# operación} other {# operaciones}} desde entonces",
+        "sinceTitle": "Operaciones desde el {date}",
         "sourceSince": "Leído el {date}, más {count, plural, one {# operación} other {# operaciones}} desde entonces",
         "none": "No hay saldo para esta cuenta.",
         "detail": "Ver el detalle",
@@ -948,15 +951,15 @@
       "kind": {
         "principal": {
           "description": "Recibe el salario, paga las facturas mensuales.",
-          "usage": "Not used in any calculation yet."
+          "usage": "Sirve al panel: lo que queda en tu cuenta principal después de tus facturas."
         },
         "vieCourante": {
           "description": "Presupuesto del día a día (compra, gasolina, restaurantes).",
-          "usage": "Not used in any calculation yet."
+          "usage": "Sirve al panel: lo que hay en tu cuenta del día a día, bajo lo que te queda."
         },
         "epargne": {
           "description": "Distribuye las facturas trimestrales y anuales.",
-          "usage": "Feeds the provisions gauge on the dashboard."
+          "usage": "Sirve a la salud de las provisiones del panel."
         }
       },
       "types": {
@@ -1452,7 +1455,8 @@
       "projectionDeficit": "En {month}, el fondo baja de cero.",
       "projectionHolds": "El fondo aguanta durante los próximos 12 meses.",
       "projectionNegative": "saldo negativo",
-      "noStatement": "No hay saldo anotado para esta cuenta: la reserva parte de 0.",
+      "noStatement": "No hay saldo anotado para esta cuenta: la reserva no se puede medir.",
+      "noStatementLink": "Anota el saldo real de tus ahorros en Mis cuentas",
       "currentDetail": "Ver el detalle"
     },
     "upcomingBills": {
@@ -1812,17 +1816,17 @@
   },
   "cockpit": {
     "ilTeReste": {
-      "etiquette": "Situation",
-      "titre": "You have left",
-      "termeRevenus": "Money in",
-      "termeRetenu": "Already set aside for your bills",
-      "termeDepense": "Spent",
-      "retenuDetail": "Already set aside for your bills: this month’s bills ({factures}) + the monthly share of your large bills ({parts}) + your instalments ({echeances}).",
-      "jaugeAria": "{depense} spent out of a {budget} budget.",
-      "ouvrirCascade": "Where this figure comes from",
-      "incompletTitre": "Complete your setup",
-      "incompletPhrase": "No money in for {month} and no monthly income on file: “You have left” cannot be worked out without it.",
-      "incompletCta": "Add money in",
+      "etiquette": "Situación",
+      "titre": "Te queda",
+      "termeRevenus": "Dinero recibido",
+      "termeRetenu": "Ya contado para tus facturas",
+      "termeDepense": "Gastado",
+      "retenuDetail": "Ya contado para tus facturas: tus facturas del mes ({factures}) + la parte mensual de tus facturas grandes ({parts}) + tus cuotas ({echeances}).",
+      "jaugeAria": "{depense} gastados de un presupuesto de {budget}.",
+      "ouvrirCascade": "De dónde sale esta cifra",
+      "incompletTitre": "Completa tu situación",
+      "incompletPhrase": "Ningún dinero recibido para {month} y ningún ingreso mensual anotado: «Te queda» no se puede calcular sin él.",
+      "incompletCta": "Añadir dinero recibido",
       "termeMisDeCote": "Apartado",
       "quotidien": "En tu cuenta del día a día: {montant} · calculado a partir de tus operaciones",
       "quotidienAria": "En tu cuenta del día a día: {montant}, calculado a partir de tus operaciones, de dónde viene este saldo",

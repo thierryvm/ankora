@@ -912,8 +912,8 @@
       "metaTitle": "Mijn rekeningen",
       "metaDescription": "Volg de saldi van je Hoofdrekening, Dagelijks Leven en Spaarrekening. Stel je maandelijks nettoloon en je overschrijving naar Dagelijks Leven in.",
       "title": "Mijn rekeningen",
-      "subtitle": "Set your income and monthly transfer. The balances below are entered by hand: Ankora does not update them on its own.",
-      "balancesHeading": "Entered balances",
+      "subtitle": "Stel je inkomen en je maandelijkse overschrijving in. De saldi hieronder volgen je verrichtingen: noteer je echte saldo wanneer je ze wilt bijstellen.",
+      "balancesHeading": "Saldi van je rekeningen",
       "amountLabel": "Bedrag (€)",
       "saveButton": "Opslaan",
       "saving": "Opslaan…",
@@ -936,9 +936,12 @@
         "saveLabel": "Bijwerken",
         "srLabel": "Huidig saldo van {label}",
         "toastSaved": "{name} bijgewerkt",
-        "manualNotice": "Dit saldo verandert pas als je een nieuw invult.",
+        "manualNotice": "Dit saldo volgt je verrichtingen. Noteer je echte saldo om het bij te stellen.",
         "sourceRead": "Saldo gelezen op {date}",
         "sourceStart": "Beginsaldo, op {date}",
+        "readSince": "Gelezen op {date}: {montant}, plus {count, plural, one {# verrichting} other {# verrichtingen}} sindsdien",
+        "readSinceStart": "Beginsaldo van {date}: {montant}, plus {count, plural, one {# verrichting} other {# verrichtingen}} sindsdien",
+        "sinceTitle": "Verrichtingen sinds {date}",
         "sourceSince": "Gelezen op {date}, plus {count, plural, one {# verrichting} other {# verrichtingen}} sindsdien",
         "none": "Geen saldo voor deze rekening.",
         "detail": "Details bekijken",
@@ -948,15 +951,15 @@
       "kind": {
         "principal": {
           "description": "Ontvangt het loon, betaalt de maandelijkse facturen.",
-          "usage": "Not used in any calculation yet."
+          "usage": "Gebruikt op het dashboard: wat er na je facturen op je hoofdrekening overblijft."
         },
         "vieCourante": {
           "description": "Dagelijks budget (boodschappen, benzine, uit eten).",
-          "usage": "Not used in any calculation yet."
+          "usage": "Gebruikt op het dashboard: wat er op je dagelijkse rekening staat, onder wat je overhoudt."
         },
         "epargne": {
           "description": "Spreidt de driemaandelijkse en jaarlijkse facturen.",
-          "usage": "Feeds the provisions gauge on the dashboard."
+          "usage": "Gebruikt voor de gezondheid van de voorzieningen op het dashboard."
         }
       },
       "types": {
@@ -1452,7 +1455,8 @@
       "projectionDeficit": "In {month} zakt het fonds onder nul.",
       "projectionHolds": "Het fonds houdt stand over de volgende 12 maanden.",
       "projectionNegative": "negatief saldo",
-      "noStatement": "Geen saldo genoteerd voor deze rekening: de reserve start bij 0.",
+      "noStatement": "Geen saldo genoteerd voor deze rekening: de reserve kan niet worden gemeten.",
+      "noStatementLink": "Noteer het echte saldo van je spaargeld in Mijn rekeningen",
       "currentDetail": "Details bekijken"
     },
     "upcomingBills": {
@@ -1812,17 +1816,17 @@
   },
   "cockpit": {
     "ilTeReste": {
-      "etiquette": "Situation",
-      "titre": "You have left",
-      "termeRevenus": "Money in",
-      "termeRetenu": "Already set aside for your bills",
-      "termeDepense": "Spent",
-      "retenuDetail": "Already set aside for your bills: this month’s bills ({factures}) + the monthly share of your large bills ({parts}) + your instalments ({echeances}).",
-      "jaugeAria": "{depense} spent out of a {budget} budget.",
-      "ouvrirCascade": "Where this figure comes from",
-      "incompletTitre": "Complete your setup",
-      "incompletPhrase": "No money in for {month} and no monthly income on file: “You have left” cannot be worked out without it.",
-      "incompletCta": "Add money in",
+      "etiquette": "Situatie",
+      "titre": "Je houdt over",
+      "termeRevenus": "Ontvangen geld",
+      "termeRetenu": "Al meegeteld voor je facturen",
+      "termeDepense": "Uitgegeven",
+      "retenuDetail": "Al meegeteld voor je facturen: je facturen van de maand ({factures}) + het maandelijkse deel van je grote facturen ({parts}) + je aflossingen ({echeances}).",
+      "jaugeAria": "{depense} uitgegeven van een budget van {budget}.",
+      "ouvrirCascade": "Waar dit bedrag vandaan komt",
+      "incompletTitre": "Vervolledig je situatie",
+      "incompletPhrase": "Geen ontvangen geld voor {month} en geen maandinkomen genoteerd: “Je houdt over” kan zonder dat niet berekend worden.",
+      "incompletCta": "Ontvangen geld toevoegen",
       "termeMisDeCote": "Opzijgezet",
       "quotidien": "Op je rekening voor elke dag: {montant} · berekend uit je verrichtingen",
       "quotidienAria": "Op je rekening voor elke dag: {montant}, berekend uit je verrichtingen, waar dit saldo vandaan komt",
