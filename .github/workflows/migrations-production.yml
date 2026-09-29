@@ -1,0 +1,110 @@
+name: Migrations — production
+
+# Applies Supabase migrations to production when they reach main.
+# Decision @thierry, 29 Sept 2026: the pilot session cannot push to production,
+# so every migration waited for him. CI now applies them, ONLY when they are
+# additive (scripts/ci/migrations-additives.mjs). Anything that destroys,
+# rewrites or widens access is refused here and pushed by hand by Thierry.
+# Rules and order with Vercel: docs/contributing/migrations.md.
+#
+# Who can trigger this: a push to main only, i.e. a merge by someone with write
+# access. No workflow_dispatch, no pull_request(_target): a fork or an external
+# PR cannot reach this job, and the secret lives in the
+# `supabase-production` environment, restricted to the main branch.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/**'
+
+permissions:
+  contents: read
+
+# Never cancel a run that may be halfway through applying migrations; a second
+# merge waits for the first.
+concurrency:
+  group: migrations-production
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  apply:
+    name: Apply additive migrations
+    if: github.repository == 'thierryvm/ankora'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Dedicated environment, NOT `production`: GitHub environment names ignore
+    # case, so `production` would be the environment Vercel deploys to, and
+    # the Lighthouse job (ci.yml) reads the first deployment of that
+    # environment for this commit. Restricted to main (docs/contributing).
+    environment: supabase-production
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+
+      # The guard that judges a push is the one main had BEFORE it: a PR that
+      # loosens the guard and adds a destructive migration is judged by the
+      # old guard. A change to the guard takes effect one push later.
+      # It reads only built-in modules: no `npm ci`, no dependency code runs
+      # in the job that holds the database secret.
+      - name: Take the guard as it was before this push
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: git show "$BEFORE:scripts/ci/migrations-additives.mjs" > "$RUNNER_TEMP/garde.mjs"
+
+      - name: Additive guard on this push
+        env:
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: node "$RUNNER_TEMP/garde.mjs" --base "$BEFORE" --head "$AFTER"
+
+      # GitHub masks the whole secret, not its parts. The CLI quotes host and
+      # user in a connection error (measured with 2.84.2, password never
+      # printed); those parts are registered as masks before any CLI call.
+      - name: Mask the connection string parts
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: node "$RUNNER_TEMP/garde.mjs" --masquer-url
+
+      - uses: supabase/setup-cli@1dedf2c611547ede7232d26866dd3c56ab903bbb # v1
+        with:
+          version: 2.84.2
+
+      # db push applies EVERY pending migration: the ones waiting in the
+      # database must be exactly the ones this push added and the guard saw.
+      - name: Pending migrations were all seen by the guard
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          supabase migration list --db-url "$SUPABASE_DB_URL" > "$RUNNER_TEMP/before.txt"
+          cat "$RUNNER_TEMP/before.txt"
+          node "$RUNNER_TEMP/garde.mjs" --verifier-attente "$RUNNER_TEMP/before.txt" --base "$BEFORE" --head "$AFTER"
+
+      - name: Dry run
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: supabase db push --db-url "$SUPABASE_DB_URL" --dry-run
+
+      - name: Apply
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: supabase db push --db-url "$SUPABASE_DB_URL" --yes
+
+      - name: Remote list equals local list
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          supabase migration list --db-url "$SUPABASE_DB_URL" > "$RUNNER_TEMP/after.txt"
+          cat "$RUNNER_TEMP/after.txt"
+          node "$RUNNER_TEMP/garde.mjs" --verifier-liste "$RUNNER_TEMP/after.txt"

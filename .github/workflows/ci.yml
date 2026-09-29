@@ -263,6 +263,32 @@ jobs:
           path: playwright-report/
           retention-days: 7
 
+  # Same guard as .github/workflows/migrations-production.yml, run on the PR so
+  # that a destructive migration is refused BEFORE the merge, not after it.
+  # No secret. When supabase/migrations/ is untouched, the guard finds no added
+  # migration and passes in a few seconds.
+  migrations-guard:
+    name: Additive migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+      - name: Additive guard against the target branch
+        shell: bash
+        env:
+          TARGET: ${{ github.base_ref || 'main' }}
+        run: |
+          base="$(git merge-base "origin/$TARGET" HEAD)"
+          node scripts/ci/migrations-additives.mjs --base "$base" --head HEAD
+
   lighthouse:
     name: Lighthouse CI
     runs-on: ubuntu-latest
