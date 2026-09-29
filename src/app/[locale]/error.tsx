@@ -8,6 +8,7 @@ import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { AUTH_BACKEND_UNAVAILABLE_DIGEST } from '@/lib/auth/auth-error';
 import { DATA_READ_UNAVAILABLE_DIGEST } from '@/lib/data/read-failure';
+import { useErrorRecovery } from '@/lib/browser/use-error-recovery';
 
 /**
  * Digest → (namespace, icon). Order is irrelevant, exhaustiveness is not: an
@@ -63,6 +64,10 @@ export default function ErrorBoundary({ error, reset }: ErrorProps) {
     }
   }, [error.digest]);
 
+  // Report, reload once on a stale build, and pick the right « Réessayer ».
+  // Cf. src/lib/browser/use-error-recovery.ts.
+  const retry = useErrorRecovery(error, reset, 'boundary');
+
   const Icon = degraded?.Icon ?? AlertTriangle;
 
   return (
@@ -82,7 +87,7 @@ export default function ErrorBoundary({ error, reset }: ErrorProps) {
         </h1>
         <p className="text-muted-foreground mt-4 text-base leading-relaxed">{t('description')}</p>
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Button onClick={reset} size="lg">
+          <Button onClick={retry} size="lg">
             {t('ctaRetry')}
           </Button>
           <Button asChild variant="outline" size="lg">
