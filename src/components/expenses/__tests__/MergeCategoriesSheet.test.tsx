@@ -95,7 +95,13 @@ describe('MergeCategoriesSheet', () => {
     suppression.mockResolvedValue({ ok: true, data: { deleted: 2 } });
     const vides = await screen.findByTestId('merge-vides');
     expect(vides.textContent).toContain('2 catégories sont maintenant vides');
-    fireEvent.click(screen.getByTestId('merge-supprimer-vides'));
+    // The « fait » step renders while the merge transition is still pending, and
+    // its button stays disabled until the next commit. A click in that window is
+    // ignored (CI, 29 Sept. 2026: failed on both runs, passed locally). Click
+    // once it is enabled, as a person would.
+    const supprimer = screen.getByTestId('merge-supprimer-vides');
+    await waitFor(() => expect(supprimer).toBeEnabled());
+    fireEvent.click(supprimer);
     await waitFor(() =>
       expect(suppression).toHaveBeenCalledWith({ ids: ['c-inter', 'c-colruyt'] }),
     );
