@@ -2037,7 +2037,8 @@
       "pastHeading": "Ontvangen geld van vorige maanden",
       "pastMonthKey": "{total} · {count, plural, one {# verrichting} other {# verrichtingen}}",
       "pastOnAccount": "op {account}",
-      "pastTotalNote": "Het totaal telt het niet-geannuleerde ontvangen geld van deze budgetmaand."
+      "pastTotalNote": "Het totaal telt het niet-geannuleerde ontvangen geld van deze budgetmaand.",
+      "correctedAnchoredGap": "Bedrag gecorrigeerd. Je saldo verandert niet: het vertrekt van je afschrift van {date}. Het verschil met dat afschrift gaat van {avant} naar {apres}."
     },
     "sameDay": {
       "question": "Bevat je saldo van {date} ({montant}) dit geld al?",

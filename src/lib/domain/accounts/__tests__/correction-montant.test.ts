@@ -56,7 +56,14 @@ describe('effetDeLaCorrection', () => {
   it('a statement read after the operation: the balance shown does not move, and its day is named', () => {
     const statements = [releve('2026-09-01', 100), releve('2026-09-15')];
     const effet = effetDeLaCorrection({ ...base, statements, nouveauMontant: new Decimal(550) });
-    expect(effet).toEqual({ effet: 'ancre', releveLe: day('2026-09-15') });
+    expect(effet.effet).toBe('ancre');
+    // Between the two statements: the gap of the card moves (read 705, expected
+    // 100 + 505 = 605 → 650): 100 → 55. The confirmation must say so.
+    if (effet.effet === 'ancre') {
+      expect(effet.releveLe).toEqual(day('2026-09-15'));
+      expect(effet.ecart?.avant.toFixed(2)).toBe('100.00');
+      expect(effet.ecart?.apres.toFixed(2)).toBe('55.00');
+    }
 
     // The very figure the card shows, before and after the new amount.
     const shown = (m: MovementRecord[]) =>
@@ -97,5 +104,14 @@ describe('effetDeLaCorrection', () => {
         nouveauMontant: new Decimal(1),
       }),
     ).toThrow(RangeError);
+  });
+
+  it('a statement after it and none between: anchored, and no gap moves', () => {
+    const effet = effetDeLaCorrection({
+      ...base,
+      statements: [releve('2026-09-15')],
+      nouveauMontant: new Decimal(550),
+    });
+    expect(effet).toEqual({ effet: 'ancre', releveLe: day('2026-09-15'), ecart: null });
   });
 });

@@ -2037,7 +2037,8 @@
       "pastHeading": "Dinero recibido en meses anteriores",
       "pastMonthKey": "{total} · {count, plural, one {# operación} other {# operaciones}}",
       "pastOnAccount": "en {account}",
-      "pastTotalNote": "El total cuenta el dinero recibido no anulado de este mes de presupuesto."
+      "pastTotalNote": "El total cuenta el dinero recibido no anulado de este mes de presupuesto.",
+      "correctedAnchoredGap": "Importe corregido. Tu saldo no cambia: parte de tu extracto del {date}. La diferencia con ese extracto pasa de {avant} a {apres}."
     },
     "sameDay": {
       "question": "¿Tu saldo del {date} ({montant}) ya incluye este dinero?",

@@ -2037,7 +2037,8 @@
       "pastHeading": "Erhaltenes Geld der Vormonate",
       "pastMonthKey": "{total} · {count, plural, one {# Vorgang} other {# Vorgänge}}",
       "pastOnAccount": "auf {account}",
-      "pastTotalNote": "Die Summe zählt das nicht stornierte erhaltene Geld dieses Budgetmonats."
+      "pastTotalNote": "Die Summe zählt das nicht stornierte erhaltene Geld dieses Budgetmonats.",
+      "correctedAnchoredGap": "Betrag korrigiert. Dein Kontostand ändert sich nicht: Er geht von deinem Kontoauszug vom {date} aus. Die Abweichung davon geht von {avant} auf {apres}."
     },
     "sameDay": {
       "question": "Enthält dein Kontostand vom {date} ({montant}) dieses Geld schon?",

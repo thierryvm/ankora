@@ -836,7 +836,14 @@ export async function correctIncomeAmountAction(
   if (effet.effet === 'ancre') {
     return {
       ok: true,
-      data: { effet: 'ancre', releveLe: effet.releveLe.toISOString().slice(0, 10) },
+      data: {
+        effet: 'ancre',
+        releveLe: effet.releveLe.toISOString().slice(0, 10),
+        ecart: effet.ecart && {
+          avant: effet.ecart.avant.toNumber(),
+          apres: effet.ecart.apres.toNumber(),
+        },
+      },
     };
   }
   if (effet.effet === 'change') {

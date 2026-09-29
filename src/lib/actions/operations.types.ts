@@ -10,7 +10,12 @@
  * - `identique`: the same amount was sent again; nothing was written.
  */
 export type IncomeCorrectionEffect =
-  | { effet: 'ancre'; releveLe: string }
+  | {
+      effet: 'ancre';
+      releveLe: string;
+      /** The gap with that statement (read − expected), when the correction moves it. */
+      ecart: { avant: number; apres: number } | null;
+    }
   | { effet: 'change'; avant: number; apres: number }
   | { effet: 'aucunSolde' }
   | { effet: 'identique' };

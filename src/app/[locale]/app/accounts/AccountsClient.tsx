@@ -758,6 +758,13 @@ function IncomeLine({ line, accountLabel }: { line: IncomeLineProps; accountLabe
   // it with the function the cards use (never guessed here).
   function correctedMessage(data: unknown): string {
     const effect = data as IncomeCorrectionEffect | undefined;
+    if (effect?.effet === 'ancre' && effect.ecart) {
+      return t('correctedAnchoredGap', {
+        date: formatDay(effect.releveLe, locale),
+        avant: formatCurrency(effect.ecart.avant, locale),
+        apres: formatCurrency(effect.ecart.apres, locale),
+      });
+    }
     if (effect?.effet === 'ancre') {
       return t('correctedAnchored', { date: formatDay(effect.releveLe, locale) });
     }

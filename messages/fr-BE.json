@@ -2037,7 +2037,8 @@
       "pastHeading": "Argent reçu des mois passés",
       "pastMonthKey": "{total} · {count, plural, one {# opération} other {# opérations}}",
       "pastOnAccount": "sur {account}",
-      "pastTotalNote": "Le total compte l’argent reçu non annulé de ce mois de budget."
+      "pastTotalNote": "Le total compte l’argent reçu non annulé de ce mois de budget.",
+      "correctedAnchoredGap": "Montant corrigé. Ton solde ne change pas : il part de ton relevé du {date}. L’écart avec ce relevé passe de {avant} à {apres}."
     },
     "sameDay": {
       "question": "Ton solde du {date} ({montant}) contient-il déjà cet argent ?",
