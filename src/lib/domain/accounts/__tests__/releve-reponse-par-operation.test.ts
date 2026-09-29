@@ -122,3 +122,18 @@ describe('accountBalanceView — two operations of the day, two different answer
     expect(gap.contributions.map((c) => c.flow.id)).toEqual([bill.id]);
   });
 });
+
+describe('withIncludedFlows — answers travel only with a statement that can hold them', () => {
+  const rows = [
+    { statement_id: 's0', flow_id: bill.id },
+    { statement_id: 's1', flow_id: spend.id },
+  ];
+
+  it('never attaches an answer to the starting balance (security review, 2026-09-29)', async () => {
+    const { withIncludedFlows } = await import('../operations-view');
+    const s1 = statement('s1', 505, '2026-09-28', '2026-09-28T09:00:00Z');
+    const out = withIncludedFlows([start, s1], rows);
+    expect(out.find((s) => s.id === 's0')?.includedFlowIds).toEqual([]);
+    expect(out.find((s) => s.id === 's1')?.includedFlowIds).toEqual([spend.id]);
+  });
+});

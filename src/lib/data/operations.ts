@@ -5,7 +5,11 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AccountType } from '@/lib/domain/cockpit/types';
 import type { AccountBalanceStatement, AccountFlow } from '@/lib/domain/accounts/solde';
 import { billPaymentToFlow, expenseToFlow } from '@/lib/domain/accounts/debits';
-import { toMoney, type MovementRecord } from '@/lib/domain/accounts/operations-view';
+import {
+  toMoney,
+  withIncludedFlows,
+  type MovementRecord,
+} from '@/lib/domain/accounts/operations-view';
 import type { AccountKind } from '@/lib/domain/types';
 import type { Database } from '@/lib/supabase/types';
 
@@ -148,16 +152,9 @@ export async function loadAccountLedger(
     return { ok: false, statements: [], movements: [], debits: [] };
   }
   // ADR-045 D23 — the per-operation answers travel WITH their statement.
-  const byStatement = new Map<string, string[]>();
-  for (const r of included) {
-    byStatement.set(r.statement_id, [...(byStatement.get(r.statement_id) ?? []), r.flow_id]);
-  }
   return {
     ok: true,
-    statements: statements.map((row) => ({
-      ...statementRowToDomain(row),
-      includedFlowIds: byStatement.get(row.id) ?? [],
-    })),
+    statements: withIncludedFlows(statements.map(statementRowToDomain), included),
     movements: movements.map(movementRowToDomain),
     debits,
   };
