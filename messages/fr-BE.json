@@ -920,8 +920,9 @@
       "metaTitle": "Mes comptes",
       "metaDescription": "Suis les soldes de tes comptes Principal, Vie Courante et Épargne. Règle ton revenu mensuel et ton virement vers Vie Courante.",
       "title": "Mes comptes",
-      "subtitle": "Règle ton revenu et ton virement mensuel. Les soldes plus bas suivent tes opérations : note ton solde réel quand tu veux les recaler.",
+      "subtitle": "Les soldes suivent tes opérations : note ton solde réel quand tu veux les recaler. Ton revenu et ton virement mensuel se règlent plus bas.",
       "balancesHeading": "Soldes de tes comptes",
+      "settingsHeading": "Réglages du mois",
       "amountLabel": "Montant (€)",
       "saveButton": "Enregistrer",
       "saving": "Enregistrement…",
@@ -1130,7 +1131,7 @@
         "confirmDelete": "Supprimer « {label} » — {amount} ? Cette dépense sera définitivement effacée.",
         "confirmDeleteAction": "Oui, supprimer"
       },
-      "perDayElapsed": "≈ {amount}/jour sur {days} jours",
+      "perDayElapsed": "≈ {amount}/jour sur {days, plural, one {# jour} other {# jours}}",
       "earlierToggle": "Mois précédents ({count})",
       "categories": {
         "etiquette": "Catégories",
@@ -1983,7 +1984,7 @@
       "projectionEtiquette": "Projection à ce rythme · calculé",
       "depenseAu": "Dépensé au {jour}",
       "projectionAu": "= Projection au {jour}",
-      "projectionOp": "{depense} × {jours} jours ÷ {ecoules} jours",
+      "projectionOp": "{depense} × {jours} jours ÷ {ecoules, plural, one {# jour} other {# jours}}",
       "revenuPrevu": "Revenu prévu",
       "budgetEtiquette": "Budget du mois · calculé",
       "revenus": "Argent reçu",

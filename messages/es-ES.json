@@ -920,8 +920,9 @@
       "metaTitle": "Mis cuentas",
       "metaDescription": "Sigue los saldos de tus cuentas Principal, Día a Día y Ahorro. Ajusta tu ingreso mensual y tu transferencia a Día a Día.",
       "title": "Mis cuentas",
-      "subtitle": "Ajusta tus ingresos y tu transferencia mensual. Los saldos de abajo siguen tus operaciones: anota tu saldo real cuando quieras reajustarlos.",
+      "subtitle": "Los saldos siguen tus operaciones: anota tu saldo real cuando quieras reajustarlos. Tus ingresos y tu transferencia mensual se ajustan más abajo.",
       "balancesHeading": "Saldos de tus cuentas",
+      "settingsHeading": "Ajustes del mes",
       "amountLabel": "Importe (€)",
       "saveButton": "Guardar",
       "saving": "Guardando…",
@@ -1130,7 +1131,7 @@
         "confirmDelete": "¿Eliminar «{label}» — {amount}? Este gasto se borrará definitivamente.",
         "confirmDeleteAction": "Sí, eliminar"
       },
-      "perDayElapsed": "≈ {amount}/día en {days} días",
+      "perDayElapsed": "≈ {amount}/día en {days, plural, one {# día} other {# días}}",
       "earlierToggle": "Meses anteriores ({count})",
       "categories": {
         "etiquette": "Categorías",
@@ -1983,7 +1984,7 @@
       "projectionEtiquette": "Proyección a este ritmo · calculado",
       "depenseAu": "Gastado hasta el {jour}",
       "projectionAu": "= Proyección al {jour}",
-      "projectionOp": "{depense} × {jours} días ÷ {ecoules} días",
+      "projectionOp": "{depense} × {jours} días ÷ {ecoules, plural, one {# día} other {# días}}",
       "revenuPrevu": "Ingreso previsto",
       "budgetEtiquette": "Presupuesto del mes · calculado",
       "revenus": "Dinero recibido",

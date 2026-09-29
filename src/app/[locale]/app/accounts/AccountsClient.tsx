@@ -183,9 +183,8 @@ export function AccountsClient({
         )}
       </header>
 
-      <MonthlyIncomeCard initialValue={monthlyIncome} />
-      <VieCouranteTransferCard initialValue={vieCouranteMonthlyTransfer} />
-
+      {/* What one comes to see first: the balances (pilot decision, 29 Sept.
+          2026). The two monthly settings follow, under their own heading. */}
       <section aria-labelledby="soldes-heading" className="flex flex-col gap-4">
         <h2 id="soldes-heading" className="text-xl font-semibold">
           {t('balancesHeading')}
@@ -205,6 +204,14 @@ export function AccountsClient({
       </section>
 
       {ledgerFailed || pastIncomes.length === 0 ? null : <PastIncomes months={pastIncomes} />}
+
+      <section aria-labelledby="reglages-heading" className="flex flex-col gap-4">
+        <h2 id="reglages-heading" className="text-xl font-semibold">
+          {t('settingsHeading')}
+        </h2>
+        <MonthlyIncomeCard initialValue={monthlyIncome} />
+        <VieCouranteTransferCard initialValue={vieCouranteMonthlyTransfer} />
+      </section>
     </div>
   );
 }

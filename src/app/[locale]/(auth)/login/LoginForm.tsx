@@ -10,7 +10,8 @@ import { loginAction } from '@/lib/actions/auth';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 import { useFieldErrorTranslator } from '@/lib/i18n/zod-errors';
 
-export function LoginForm() {
+/** `next` is the raw `?next=` of the page; the server validates it (`safeNextPath`). */
+export function LoginForm({ next }: { next?: string } = {}) {
   const t = useTranslations('auth.login');
   const translateError = useActionErrorTranslator();
   const { translateField } = useFieldErrorTranslator();
@@ -36,6 +37,7 @@ export function LoginForm() {
 
   return (
     <form action={onSubmit} className="flex flex-col gap-4" noValidate>
+      {next ? <input type="hidden" name="next" value={next} /> : null}
       <div className="flex flex-col gap-2">
         <Label htmlFor="email">{t('emailLabel')}</Label>
         <Input

@@ -920,8 +920,9 @@
       "metaTitle": "Meine Konten",
       "metaDescription": "Verfolge die Salden deiner Konten Hauptkonto, Alltag und Sparen. Stelle dein monatliches Einkommen und deine Überweisung auf Alltag ein.",
       "title": "Meine Konten",
-      "subtitle": "Lege dein Einkommen und deine monatliche Überweisung fest. Die Kontostände unten folgen deinen Buchungen: Notiere deinen echten Kontostand, wenn du sie abgleichen willst.",
+      "subtitle": "Die Kontostände folgen deinen Buchungen: Notiere deinen echten Kontostand, wenn du sie abgleichen willst. Einkommen und monatliche Überweisung legst du weiter unten fest.",
       "balancesHeading": "Deine Kontostände",
+      "settingsHeading": "Einstellungen des Monats",
       "amountLabel": "Betrag (€)",
       "saveButton": "Speichern",
       "saving": "Speichern…",
@@ -1130,7 +1131,7 @@
         "confirmDelete": "„{label}“ — {amount} löschen? Diese Ausgabe wird endgültig entfernt.",
         "confirmDeleteAction": "Ja, löschen"
       },
-      "perDayElapsed": "≈ {amount}/Tag über {days} Tage",
+      "perDayElapsed": "≈ {amount}/Tag über {days, plural, one {# Tag} other {# Tage}}",
       "earlierToggle": "Frühere Monate ({count})",
       "categories": {
         "etiquette": "Kategorien",
@@ -1983,7 +1984,7 @@
       "projectionEtiquette": "Hochrechnung bei diesem Tempo · berechnet",
       "depenseAu": "Ausgegeben bis {jour}",
       "projectionAu": "= Hochrechnung bis {jour}",
-      "projectionOp": "{depense} × {jours} Tage ÷ {ecoules} Tage",
+      "projectionOp": "{depense} × {jours} Tage ÷ {ecoules, plural, one {# Tag} other {# Tage}}",
       "revenuPrevu": "Erwartetes Einkommen",
       "budgetEtiquette": "Monatsbudget · berechnet",
       "revenus": "Erhaltenes Geld",

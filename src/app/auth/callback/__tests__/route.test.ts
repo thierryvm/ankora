@@ -189,6 +189,29 @@ describe('auth/callback — locale preservation (PR-BETA-CLEANUP / THI-279)', ()
     expect(response.headers.get('location')).toBe('https://ankora.be/en/app');
   });
 
+  it('rejects a backslash `next` (browsers read `/\\` as `//`) and falls back to /app', async () => {
+    setLocaleCookie('en');
+    const response = await GET(buildRequest('?code=test-code&next=/%5Cevil.example.com'));
+    expect(response.headers.get('location')).toBe('https://ankora.be/en/app');
+  });
+
+  it.each([
+    '//evil.example.com',
+    '/%5Cevil.example.com',
+    '/.//evil.example.com',
+    '/en//evil.example.com',
+  ])('default locale (no prefix to neutralise it): refuses `next=%s`', async (raw) => {
+    setLocaleCookie('fr-BE');
+    const response = await GET(buildRequest(`?code=test-code&next=${raw}`));
+    expect(response.headers.get('location')).toBe('https://ankora.be/app');
+  });
+
+  it('does not double the locale when `next` already carries one', async () => {
+    setLocaleCookie('en');
+    const response = await GET(buildRequest('?code=test-code&next=/en/app/accounts'));
+    expect(response.headers.get('location')).toBe('https://ankora.be/en/app/accounts');
+  });
+
   it('prefixes the /login error redirect when the code is missing', async () => {
     setLocaleCookie('en');
     const response = await GET(buildRequest(''));

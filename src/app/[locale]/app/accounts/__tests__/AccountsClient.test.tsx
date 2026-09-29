@@ -513,3 +513,24 @@ describe('AccountsClient — tour 57, « Corriger le montant » and the past mon
     );
   });
 });
+
+/**
+ * Pilot decision, 29 Sept. 2026: the page opened on two settings (income,
+ * transfer) and pushed the balances — what one comes to see — below the fold,
+ * even at 1440. Balances first; the settings follow under their own heading.
+ */
+describe('AccountsClient — the balances come first, the settings after', () => {
+  const before = (a: Element, b: Element) =>
+    Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+
+  it('renders « Soldes de tes comptes » before « Réglages du mois » and its two fields', () => {
+    renderClient();
+    const balances = screen.getByRole('heading', { level: 2, name: 'Soldes de tes comptes' });
+    const settings = screen.getByRole('heading', { level: 2, name: 'Réglages du mois' });
+    expect(before(balances, settings)).toBe(true);
+    expect(before(settings, screen.getByLabelText('Revenu mensuel net (€)'))).toBe(true);
+    expect(before(settings, screen.getByLabelText('Virement mensuel vers Vie Courante (€)'))).toBe(
+      true,
+    );
+  });
+});

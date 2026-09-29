@@ -608,7 +608,9 @@ describe('app.expenses — i18n parity (5 locales, PR-BETA-CLEANUP-3)', () => {
       // « Dépensé ce mois » gave way to the « Catégories » card (G-cat), whose
       // keys live under `categories`: the old label has no reader any more.
       expect(e['depenseMoisLabel']).toBeUndefined();
-      has('perDayElapsed', ['{amount}', '{days}']);
+      // `{days}` became an ICU plural (« sur 1 jour ») — the argument is still
+      // required, only its form changed. Cf. src/i18n/__tests__/day-count-plurals.test.ts.
+      has('perDayElapsed', ['{amount}', '{days, plural,']);
       // ADR-035 — these five keys described the envelope and are gone. Pinning
       // their absence stops a copy-paste from resurrecting the vocabulary.
       for (const gone of ['resteAVivreLabel', 'overBudget', 'spentOfBudget', 'perDay', 'barAria']) {
