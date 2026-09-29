@@ -13,7 +13,13 @@ const { rateLimitSpy, warnSpy } = vi.hoisted(() => ({
   warnSpy: vi.fn(),
 }));
 
-vi.mock('@/lib/security/rate-limit', () => ({ rateLimit: rateLimitSpy }));
+vi.mock('@/lib/env', () => ({ env: { NODE_ENV: 'test' }, clientEnv: {} }));
+// Only the limiter is replaced: identifierFromRequest stays real, so the key
+// format asserted below is the production one.
+vi.mock('@/lib/security/rate-limit', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/security/rate-limit')>()),
+  rateLimit: rateLimitSpy,
+}));
 vi.mock('@/lib/log', () => ({
   log: { warn: warnSpy, error: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }));
@@ -51,7 +57,7 @@ describe('POST /api/client-error', () => {
   it('accepts a valid report, answers 204 and writes exactly one log line', async () => {
     const res = await POST(req(JSON.stringify(valid)));
     expect(res.status).toBe(204);
-    expect(rateLimitSpy).toHaveBeenCalledWith('api', 'client-error:203.0.113.7');
+    expect(rateLimitSpy).toHaveBeenCalledWith('api', 'client-error:ip:203.0.113.7');
     expect(warnSpy).toHaveBeenCalledTimes(1);
     const [message, fields] = warnSpy.mock.calls[0] as [string, Record<string, unknown>];
     expect(message).toBe('client_error_reported');
@@ -59,6 +65,67 @@ describe('POST /api/client-error', () => {
     expect(fields).toMatchObject({ ...rest, clientBuild: 'dpl_OLD' });
     expect(fields).toHaveProperty('serverBuild');
     expect(fields).not.toHaveProperty('build');
+  });
+
+  // Cross-site forgery: a third-party page could post fake reports from each
+  // of its visitors' IPs, bypassing the per-IP limit and spending Upstash
+  // commands. Refused BEFORE the limiter, so forged traffic costs nothing.
+  it.each<[string, Record<string, string>]>([
+    ['a cross-site fetch', { 'sec-fetch-site': 'cross-site' }],
+    ['a same-site but other-origin fetch', { 'sec-fetch-site': 'same-site' }],
+    ['a foreign Origin', { origin: 'https://evil.example', host: 'localhost' }],
+  ])('refuses %s with 403, before the limiter', async (_label, headers) => {
+    const res = await POST(req(JSON.stringify(valid), headers));
+    expect(res.status).toBe(403);
+    expect(rateLimitSpy).not.toHaveBeenCalled();
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
+
+  it('accepts a same-origin beacon (Sec-Fetch-Site and Origin matching the host)', async () => {
+    const res = await POST(
+      req(JSON.stringify(valid), {
+        'sec-fetch-site': 'same-origin',
+        origin: 'http://localhost',
+        host: 'localhost',
+        'content-type': 'text/plain;charset=UTF-8',
+      }),
+    );
+    expect(res.status).toBe(204);
+  });
+
+  it('enforces the cap on a body streamed in several chunks', async () => {
+    const encoder = new TextEncoder();
+    const piece = encoder.encode('a'.repeat(400));
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        for (let i = 0; i < 4; i += 1) controller.enqueue(piece);
+        controller.close();
+      },
+    });
+    const request = new Request('http://localhost/api/client-error', {
+      method: 'POST',
+      body: stream,
+      // @ts-expect-error -- undici needs it for a stream body; not in lib.dom's RequestInit
+      duplex: 'half',
+    });
+    const res = await POST(request);
+    expect(res.status).toBe(413);
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
+
+  it('refuses invalid UTF-8 with 400', async () => {
+    const request = new Request('http://localhost/api/client-error', {
+      method: 'POST',
+      body: new Uint8Array([0x7b, 0xff, 0xfe, 0x7d]),
+    });
+    const res = await POST(request);
+    expect(res.status).toBe(400);
+  });
+
+  it('refuses a __proto__ key like any unknown field', async () => {
+    const res = await POST(req(`{"__proto__":{"x":1},${JSON.stringify(valid).slice(1)}`));
+    expect(res.status).toBe(400);
+    expect(warnSpy).not.toHaveBeenCalled();
   });
 
   it('accepts a digest', async () => {

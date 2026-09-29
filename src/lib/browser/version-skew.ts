@@ -19,8 +19,10 @@
 
 /**
  * The wordings each engine uses for a chunk or module that did not load, plus
- * the Server Action one (an action id from the old build is unknown to the new
- * server). Only matched on errors WITHOUT a digest: a digest means the error was
+ * the Server Action one: an action id from the old build is unknown to the new
+ * server, and the browser throws `UnrecognizedActionError` (next 16.3.5,
+ * server-action-reducer.js:104; the « Failed to find Server Action » wording is
+ * the server's and never reaches the browser). Only matched on errors WITHOUT a digest: a digest means the error was
  * thrown on the server, which is never a missing browser chunk.
  */
 const SKEW_PATTERNS: readonly RegExp[] = [
@@ -29,13 +31,12 @@ const SKEW_PATTERNS: readonly RegExp[] = [
   /Failed to fetch dynamically imported module/i,
   /error loading dynamically imported module/i,
   /Importing a module script failed/i,
-  /Failed to find Server Action/i,
 ];
 
 export function isVersionSkewError(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
   if ((error as Error & { digest?: unknown }).digest) return false;
-  if (error.name === 'ChunkLoadError') return true;
+  if (error.name === 'ChunkLoadError' || error.name === 'UnrecognizedActionError') return true;
   const message = typeof error.message === 'string' ? error.message : '';
   return SKEW_PATTERNS.some((pattern) => pattern.test(message));
 }

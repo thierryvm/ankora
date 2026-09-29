@@ -8,7 +8,7 @@ import {
   TOKEN_PATTERN,
 } from '@/lib/browser/client-error-report';
 import { log } from '@/lib/log';
-import { rateLimit } from '@/lib/security/rate-limit';
+import { identifierFromRequest, rateLimit } from '@/lib/security/rate-limit';
 
 /**
  * Receives the crash reports sent by the two error boundaries.
@@ -35,9 +35,24 @@ const reportSchema = z
 
 const empty = (status: number) => new Response(null, { status });
 
-function clientIp(request: Request): string {
-  const forwarded = request.headers.get('x-forwarded-for');
-  return forwarded?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || 'unknown';
+/**
+ * Only the app's own pages may report. Without this, a third-party page could
+ * post forged reports from each of its visitors' IPs, bypassing the per-IP
+ * limit and spending a Redis command per request. Checked BEFORE the limiter so
+ * forged traffic costs nothing. `Sec-Fetch-Site` is sent by every current
+ * engine; `Origin` covers the older ones.
+ */
+function isCrossOrigin(request: Request): boolean {
+  const site = request.headers.get('sec-fetch-site');
+  if (site && site !== 'same-origin') return true;
+  const origin = request.headers.get('origin');
+  if (!origin) return false;
+  const host = request.headers.get('host') ?? new URL(request.url).host;
+  try {
+    return new URL(origin).host !== host;
+  } catch {
+    return true;
+  }
 }
 
 /**
@@ -81,7 +96,9 @@ export async function POST(request: Request): Promise<Response> {
   const declared = Number(request.headers.get('content-length'));
   if (Number.isFinite(declared) && declared > MAX_REPORT_BYTES) return empty(413);
 
-  const verdict = await rateLimit('api', `client-error:${clientIp(request)}`);
+  if (isCrossOrigin(request)) return empty(403);
+
+  const verdict = await rateLimit('api', `client-error:${identifierFromRequest(request)}`);
   if (!verdict.success) return empty(429);
 
   const text = await readCapped(request);
@@ -92,6 +109,12 @@ export async function POST(request: Request): Promise<Response> {
   try {
     json = JSON.parse(text);
   } catch {
+    return empty(400);
+  }
+
+  // JSON.parse turns a "__proto__" key into an own property that the strict
+  // schema does not see as unknown; refuse it explicitly.
+  if (json !== null && typeof json === 'object' && Object.hasOwn(json, '__proto__')) {
     return empty(400);
   }
 

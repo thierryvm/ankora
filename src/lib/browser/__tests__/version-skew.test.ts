@@ -25,11 +25,24 @@ describe('isVersionSkewError', () => {
     ],
     ['WebKit dynamic import', new TypeError('Importing a module script failed.')],
     ['Firefox dynamic import', new TypeError('error loading dynamically imported module: /x.js')],
+    // The browser-side form, as thrown by next 16.3.5
+    // (client/components/router-reducer/reducers/server-action-reducer.js:104).
+    // « Failed to find Server Action » is the SERVER's wording and never
+    // reaches the browser — caught by the Security review of PR #512.
     [
       'stale Server Action id',
-      new Error(
-        'Failed to find Server Action "abc". This request might be from an older or newer deployment.',
+      Object.assign(
+        new Error(
+          'Server Action "abc" was not found on the server. \nRead more: https://nextjs.org/docs/messages/failed-to-find-server-action',
+        ),
+        { name: 'UnrecognizedActionError' },
       ),
+    ],
+    [
+      'Turbopack chunk (named ChunkLoadError)',
+      Object.assign(new Error('Failed to load chunk /_next/static/chunks/a.js from module 1'), {
+        name: 'ChunkLoadError',
+      }),
     ],
   ];
 

@@ -24,6 +24,7 @@ export const REPORT_ERROR_NAMES = [
   'SyntaxError',
   'RangeError',
   'ChunkLoadError',
+  'UnrecognizedActionError',
   'AbortError',
   'NotFoundError',
   'SecurityError',
@@ -110,6 +111,10 @@ export function currentBuild(): string {
 }
 
 /**
+ * Sent as text/plain, a CORS-safelisted type: some engines refuse sendBeacon
+ * with an application/json Blob, and the report would be dropped in silence.
+ * The route parses the body as JSON whatever its declared type.
+ *
  * Fire and forget. `sendBeacon` survives the automatic reload that may follow
  * immediately, which a plain `fetch` would not reliably do. A report that
  * cannot be sent is dropped: the error screen must never fail because of it.
@@ -117,7 +122,7 @@ export function currentBuild(): string {
 export function sendClientErrorReport(report: ClientErrorReport): void {
   try {
     if (typeof navigator === 'undefined' || typeof navigator.sendBeacon !== 'function') return;
-    const body = new Blob([JSON.stringify(report)], { type: 'application/json' });
+    const body = new Blob([JSON.stringify(report)], { type: 'text/plain;charset=utf-8' });
     navigator.sendBeacon(CLIENT_ERROR_ENDPOINT, body);
   } catch {
     // Dropped on purpose — see above.

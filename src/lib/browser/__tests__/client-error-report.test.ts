@@ -87,7 +87,9 @@ describe('sendClientErrorReport', () => {
     expect(beacon).toHaveBeenCalledTimes(1);
     const [url, body] = beacon.mock.calls[0] as unknown as [string, Blob];
     expect(url).toBe('/api/client-error');
-    expect(body.type).toBe('application/json');
+    // A CORS-safelisted type: some engines refuse sendBeacon with an
+    // application/json Blob, and the report would then be dropped silently.
+    expect(body.type).toBe('text/plain;charset=utf-8');
     expect(JSON.parse(await body.text())).toEqual(report);
   });
 

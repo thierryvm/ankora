@@ -36,7 +36,14 @@ export function useErrorRecovery(
         build: currentBuild(),
       }),
     );
-    if (isVersionSkewError(error) && shouldAutoReload(sessionStorageOrNull(), Date.now())) {
+    // Offline, a failed chunk is the network, not a new build, and the reload
+    // would land on the service worker's /offline page, losing this one.
+    const online = typeof navigator === 'undefined' || navigator.onLine !== false;
+    if (
+      online &&
+      isVersionSkewError(error) &&
+      shouldAutoReload(sessionStorageOrNull(), Date.now())
+    ) {
       reloadPage();
     }
   }, [error, source]);

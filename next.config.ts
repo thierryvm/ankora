@@ -27,15 +27,15 @@ const nextConfig: NextConfig = {
   },
 
   /**
-   * Version skew (a tab opened before a deployment). Next already compares the
-   * build id of every RSC response with the client's and does a full reload on
-   * a mismatch; tying it to the Vercel deployment id adds the `?dpl=` cache key
-   * on static assets and the deployment-id header on navigations. The project
-   * is on Vercel Hobby, without Skew Protection, so old assets are NOT kept
-   * online: the missing-chunk case is caught by the error boundaries instead
-   * (src/lib/browser/use-error-recovery.ts). Undefined locally → no effect.
+   * Version skew (a tab opened before a deployment). `deploymentId` is left
+   * unset ON PURPOSE. Next already compares the build id of every RSC response
+   * with the client's and reloads on a mismatch (next 16.3.5,
+   * fetch-server-response.js:175). On Vercel Hobby, without Skew Protection,
+   * nothing routes on `?dpl=`, so its only effect would be a new query string
+   * on every static asset at each deployment — a new, never-purged entry per
+   * chunk in public/sw.js's cache-first store. The missing-chunk case is caught
+   * by the error boundaries (src/lib/browser/use-error-recovery.ts).
    */
-  deploymentId: process.env.VERCEL_DEPLOYMENT_ID,
   env: {
     // The build the tab runs, sent in crash reports to spot skew.
     NEXT_PUBLIC_BUILD_ID: process.env.VERCEL_DEPLOYMENT_ID ?? 'local',

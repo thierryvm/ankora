@@ -70,6 +70,12 @@ describe.each(boundaries)('%s — recovery from a browser-side error', (_name, C
     expect(reloadSpy).toHaveBeenCalledTimes(1);
   });
 
+  it('does not reload by itself while offline (the reload would land on /offline)', () => {
+    vi.spyOn(window.navigator, 'onLine', 'get').mockReturnValue(false);
+    mount(Component, chunkError());
+    expect(reloadSpy).not.toHaveBeenCalled();
+  });
+
   it('does not reload by itself on an ordinary bug', () => {
     mount(Component, plainError());
     expect(reloadSpy).not.toHaveBeenCalled();
