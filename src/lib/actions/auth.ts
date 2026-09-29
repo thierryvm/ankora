@@ -7,6 +7,7 @@ import { getLocale } from 'next-intl/server';
 import { redirect } from '@/i18n/navigation';
 
 import { env } from '@/lib/env';
+import { safeNextPath } from '@/lib/auth/safe-next';
 import { describeReadFailure } from '@/lib/data/read-failure';
 import { createClient } from '@/lib/supabase/server';
 import {
@@ -180,9 +181,12 @@ export async function loginAction(formData: FormData): Promise<ActionResult> {
   }
 
   const onboarded = readFailed || profile?.onboarded_at != null;
+  // `?next=` from the login URL, carried by a hidden field. Same-origin only,
+  // locale stripped: the locale-aware `redirect` re-applies the current one.
+  const next = safeNextPath(formData.get('next')) ?? '/app';
 
   return redirect({
-    href: onboarded ? '/app' : '/onboarding',
+    href: onboarded ? next : '/onboarding',
     locale: await getLocale(),
   });
 }

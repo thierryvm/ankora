@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 import { NextResponse, type NextRequest } from 'next/server';
 
 import { elevationDue } from '@/lib/auth/require-elevated';
+import { safeNextPath } from '@/lib/auth/safe-next';
 import { describeReadFailure } from '@/lib/data/read-failure';
 import { createClient } from '@/lib/supabase/server';
 import { log } from '@/lib/log';
@@ -62,7 +63,9 @@ export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
   const rawNext = url.searchParams.get('next');
-  const next = rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/app';
+  // One rule for every sign-in path: same origin, locale stripped (re-applied
+  // below), auth pages refused. Cf. `safeNextPath`.
+  const next = safeNextPath(rawNext) ?? '/app';
   const locale = await resolveLocale();
 
   if (!code) {

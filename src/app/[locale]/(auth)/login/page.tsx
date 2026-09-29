@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 type LoginPageProps = {
-  searchParams: Promise<{ reset?: string; error?: string }>;
+  searchParams: Promise<{ reset?: string; error?: string; next?: string | string[] }>;
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
@@ -50,7 +50,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <span className="bg-border h-px flex-1" />
           </div>
         </div>
-        <LoginForm />
+        <LoginForm next={typeof params.next === 'string' ? params.next : undefined} />
         <div className="mt-6 flex flex-col gap-2 text-center text-sm">
           {/* PR-D5 a11y: hover-only affordances are invisible on iOS touch
               devices (no hover state). Underline made permanent so the link
