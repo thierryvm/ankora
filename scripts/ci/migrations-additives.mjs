@@ -48,6 +48,17 @@ const MESSAGES = {
   grant: 'ouvre un accès à anon ou public (grant … to anon/public)',
   'default-privileges': 'change les droits par défaut (alter default privileges)',
   'create-or-replace': 'remplace un objet qui existe déjà (create or replace)',
+  'trigger-off': 'désactive des déclencheurs (disable trigger, session_replication_role)',
+  'grant-role': 'donne un rôle à un autre (grant <rôle> to …)',
+  definer: 'crée ou modifie une fonction security definer',
+  vue: 'crée une vue sans security_invoker (elle contournerait la RLS)',
+  policy: 'ajoute une règle d’accès à une table existante (create policy)',
+  'objet-sensible': 'crée une règle, une extension, ou change un propriétaire',
+  'alter-routine': 'modifie une fonction ou une vue existante (alter function/view)',
+  dynamique: 'exécute du SQL dynamique (execute)',
+  appel: 'exécute du code à l’application (do, select, call)',
+  'rls-absente': 'crée une table sans activer la sécurité par ligne dans le même fichier',
+  nom: 'porte un nom de fichier que la garde ne sait pas dater (AAAAMMJJhhmmss_nom.sql)',
   modifiee: 'modifie une migration déjà dans l’historique',
   supprimee: 'supprime une migration déjà dans l’historique',
   renommee: 'renomme une migration déjà dans l’historique',
@@ -64,6 +75,20 @@ export function instructions(sql) {
   while (i < n) {
     const c = sql[i];
     const d = sql[i + 1];
+    // Inside a $tag$ body Postgres looks for the closing tag and nothing else:
+    // no comment, no string. Deciding the bounds any other way lets a `--`
+    // swallow the closing tag and hide what follows it (review, 29 Sept 2026).
+    if (dollar !== null) {
+      if (sql.startsWith(dollar, i)) {
+        i += dollar.length;
+        dollar = null;
+        cur += ' ';
+      } else {
+        cur += c;
+        i++;
+      }
+      continue;
+    }
     if (c === '-' && d === '-') {
       while (i < n && sql[i] !== '\n') i++;
       cur += ' ';
@@ -105,13 +130,7 @@ export function instructions(sql) {
       i = j + 1;
       continue;
     }
-    if (dollar !== null && sql.startsWith(dollar, i)) {
-      i += dollar.length;
-      dollar = null;
-      cur += ' ';
-      continue;
-    }
-    if (c === '$' && dollar === null && !/[\w$]$/.test(cur)) {
+    if (c === '$' && !/[\w$]$/.test(cur)) {
       const m = /^\$([a-z_][\w]*)?\$/i.exec(sql.slice(i, i + 64));
       if (m) {
         dollar = m[0];
@@ -140,15 +159,20 @@ export function nom(brut) {
 }
 
 const CREATION_OBJET = new RegExp(
-  String.raw`\bcreate\s+(?:or\s+replace\s+)?(?:constraint\s+)?(?:function|procedure|view|trigger|rule)\s+(?:if\s+not\s+exists\s+)?(${IDENT})`,
+  String.raw`\bcreate\s+(?:or\s+replace\s+)?(?:constraint\s+|recursive\s+|materialized\s+)?(?:function|procedure|view|trigger|rule)\s+(?:if\s+not\s+exists\s+)?(${IDENT})`,
   'g',
 );
+const CREATION_TABLE = new RegExp(
+  String.raw`^create\s+(?:unlogged\s+)?table\s+(if\s+not\s+exists\s+)?(${IDENT})`,
+);
 
-/** Names of functions, procedures, views, triggers and rules a migration creates. */
+/** Names of tables, functions, procedures, views, triggers and rules a migration creates. */
 export function objetsCrees(sql) {
   const noms = new Set();
   for (const s of instructions(sql)) {
     for (const m of s.matchAll(CREATION_OBJET)) noms.add(nom(m[1]));
+    const t = CREATION_TABLE.exec(s);
+    if (t) noms.add(nom(t[2]));
   }
   return noms;
 }
@@ -163,16 +187,17 @@ export function analyserMigration(sql, { objetsExistants = new Set() } = {}) {
   const colonnes = new Set();
   const routines = new Set();
   for (const s of stmts) {
-    const t = new RegExp(
-      String.raw`^create\s+(?:unlogged\s+)?table\s+(?:if\s+not\s+exists\s+)?(${IDENT})`,
-    ).exec(s);
-    if (t) tables.add(nom(t[1]));
+    // `if not exists` is a no-op on an object that already exists: it only
+    // counts as created here when history does not know the table, and never
+    // for a column (history does not list columns).
+    const t = CREATION_TABLE.exec(s);
+    if (t && !(t[1] && objetsExistants.has(nom(t[2])))) tables.add(nom(t[2]));
     const a = new RegExp(
       String.raw`^alter\s+table\s+(?:if\s+exists\s+)?(?:only\s+)?(${IDENT})`,
     ).exec(s);
     if (a) {
       for (const c of s.matchAll(
-        /\badd\s+(?:column\s+)?(?:if\s+not\s+exists\s+)?("[^"]+"|[a-z_][\w$]*)/g,
+        /\badd\s+(?:column\s+)?(?!if\s+not\s+exists)("[^"]+"|[a-z_][\w$]*)/g,
       )) {
         if (!/^(constraint|primary|unique|foreign|check|exclude)$/.test(c[1])) {
           colonnes.add(`${nom(a[1])}.${c[1].replace(/"/g, '')}`);
@@ -199,9 +224,10 @@ export function analyserMigration(sql, { objetsExistants = new Set() } = {}) {
     if (/\bdelete\s+from\b/.test(s)) refuser('delete', s0);
     if (
       new RegExp(
-        String.raw`(?<!\bon\s)\bupdate\s+(?:only\s+)?${IDENT}(?:\s+(?:as\s+)?[a-z_][\w$]*)?\s+set\b`,
+        String.raw`(?<!\bon\s)\bupdate\s+(?:only\s+)?${IDENT}(?:\s+(?:as\s+)?(?:"[^"]+"|[a-z_][\w$]*))?\s+set\b`,
       ).test(s) ||
-      /\bdo\s+update\s+set\b/.test(s)
+      /\bdo\s+update\s+set\b/.test(s) ||
+      /\bmerge\s+into\b/.test(s)
     ) {
       refuser('update', s0);
     }
@@ -240,16 +266,54 @@ export function analyserMigration(sql, { objetsExistants = new Set() } = {}) {
       if (/(?:^|[\s,])"?(?:anon|public)"?(?![\w$."])/.test(m[1])) refuser('grant', s0);
     }
     if (/\balter\s+default\s+privileges\b/.test(s)) refuser('default-privileges', s0);
+    if (/\bdisable\s+trigger\b|\bsession_replication_role\b/.test(s)) refuser('trigger-off', s0);
+
+    // What opens access by ADDING: default privileges give anon every right on
+    // a new table and EXECUTE on a new function (measured in 20260920000001
+    // and 20260729000002), so a new object is only safe when it closes itself.
+    for (const m of s.matchAll(/\bgrant\b((?:(?!\bon\b)[^;])*?)\bto\b/g)) {
+      if (!/\bon\b/.test(m[1])) refuser('grant-role', s0);
+    }
+    if (/\bsecurity\s+definer\b/.test(s)) refuser('definer', s0);
+    if (
+      /\bcreate\s+(?:or\s+replace\s+)?(?:recursive\s+)?view\b/.test(s) &&
+      !/\bsecurity_invoker\s*=\s*(?:true|on)\b/.test(s)
+    )
+      refuser('vue', s0);
+    if (/\bcreate\s+materialized\s+view\b/.test(s)) refuser('vue', s0);
+    for (const m of s.matchAll(
+      new RegExp(String.raw`\bcreate\s+policy\s+(?:"[^"]+"|[\w$]+)\s+on\s+(${IDENT})`, 'g'),
+    )) {
+      if (!tables.has(nom(m[1]))) refuser('policy', s0);
+    }
+    if (/\bcreate\s+(?:or\s+replace\s+)?rule\b|\bcreate\s+extension\b|\bowner\s+to\b/.test(s))
+      refuser('objet-sensible', s0);
+    if (/\balter\s+(?:function|procedure|routine|view|materialized\s+view)\b/.test(s))
+      refuser('alter-routine', s0);
+
+    // Destruction without the word: dynamic SQL, or a call to a function that
+    // exists already (a purge, say). Never automatic.
+    if (/\bexecute\b(?!\s+(?:function|procedure)\b)/.test(s)) refuser('dynamique', s0);
+    if (/^(?:do|select|call|perform)\b/.test(s)) refuser('appel', s0);
 
     for (const m of s.matchAll(
       new RegExp(
-        String.raw`\bcreate\s+or\s+replace\s+(?:constraint\s+)?(?:function|procedure|view|trigger|rule)\s+(${IDENT})`,
+        String.raw`\bcreate\s+or\s+replace\s+(?:constraint\s+|recursive\s+)?(?:function|procedure|view|trigger|rule)\s+(${IDENT})`,
         'g',
       ),
     )) {
       if (objetsExistants.has(nom(m[1]))) refuser('create-or-replace', s0);
     }
   }
+
+  const rlsActivee = new Set();
+  for (const s of stmts) {
+    const m = new RegExp(
+      String.raw`^alter\s+table\s+(?:if\s+exists\s+)?(?:only\s+)?(${IDENT})\s+enable\s+row\s+level\s+security\b`,
+    ).exec(s);
+    if (m) rlsActivee.add(nom(m[1]));
+  }
+  for (const t of tables) if (!rlsActivee.has(t)) refus.push({ regle: 'rls-absente', extrait: t });
   return refus;
 }
 
@@ -261,7 +325,8 @@ export function analyserStatuts(nameStatus, derniereVersion) {
     const fichier = chemins[chemins.length - 1];
     if (statut.startsWith('A')) {
       const v = VERSION.exec(path.posix.basename(fichier));
-      if (v && derniereVersion && v[1] <= derniereVersion)
+      if (!v) refus.push({ regle: 'nom', extrait: fichier });
+      else if (derniereVersion && v[1] <= derniereVersion)
         refus.push({ regle: 'horodatage', extrait: fichier });
     } else if (statut.startsWith('D')) refus.push({ regle: 'supprimee', extrait: fichier });
     else if (statut.startsWith('R'))
@@ -275,7 +340,7 @@ export function analyserStatuts(nameStatus, derniereVersion) {
 function lignesListe(sortie) {
   const rows = [];
   for (const l of sortie.split(/\r?\n/)) {
-    const m = /^\s*(\d{14})?\s*[|│]\s*(\d{14})?\s*[|│]/.exec(l);
+    const m = /^\s*(\d+)?\s*[|│]\s*(\d+)?\s*[|│]/.exec(l);
     if (m && (m[1] || m[2])) rows.push([m[1], m[2]]);
   }
   return rows;
@@ -312,7 +377,12 @@ export function comparerListeMigrations(sortie, versionsLocales) {
 // ---------------------------------------------------------------- CLI
 
 function git(...args) {
-  return execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  // quotePath=false: an accented file name would otherwise come back quoted
+  // and escaped, fail every `.sql` / version match, and never be analysed.
+  return execFileSync('git', ['-c', 'core.quotePath=false', ...args], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
 }
 
 function echec(lignes) {
