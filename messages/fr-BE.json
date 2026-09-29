@@ -906,7 +906,15 @@
       "posteMonthlyLabel": "Factures mensuelles",
       "posteMonthlyHint": "Ce qui part chaque mois, facture par facture.",
       "posteCommitmentsLabel": "Échéances d’engagement",
-      "posteCommitmentsHint": "La part de ce mois de chaque engagement en cours."
+      "posteCommitmentsHint": "La part de ce mois de chaque engagement en cours.",
+      "paySheet": {
+        "title": "Marquer payée",
+        "intro": "{label} · {amount}",
+        "dateLabel": "Payée le",
+        "dateHint": "Le jour où la banque l'a débitée. Prérempli à l'échéance.",
+        "submit": "Marquer payée",
+        "cancel": "Annuler"
+      }
     },
     "accounts": {
       "metaTitle": "Mes comptes",
@@ -1724,7 +1732,9 @@
       "watchFailed": "Impossible de modifier la surveillance de la facture.",
       "notFound": "Cette facture est introuvable.",
       "payments": {
-        "toggleFailed": "Impossible de marquer la facture comme payée."
+        "toggleFailed": "Impossible de marquer la facture comme payée.",
+        "dateFuture": "Cette date est dans le futur. Choisis le jour où la facture a été payée.",
+        "dateOutOfPeriod": "Cette date est trop loin du mois de la facture."
       }
     },
     "accounts": {

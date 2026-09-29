@@ -457,6 +457,129 @@ describe('togglePaymentAction — toggle OFF (delete)', () => {
   });
 });
 
+describe('togglePaymentAction — the day the bill was paid (paidOn)', () => {
+  // Today is 28 May 2026 in Brussels (10:00 UTC = 12:00 CEST).
+  beforeEach(() => {
+    supa.reset();
+    auditSpy.mockClear();
+    rateLimitSpy.mockClear();
+    rateLimitSpy.mockImplementation(async () => ({ success: true, limit: 60, remaining: 59 }));
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-05-28T10:00:00Z'));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  function programInsertPath() {
+    programMembership();
+    supa.program({
+      table: 'charges',
+      op: 'select',
+      result: {
+        data: {
+          id: VALID_INPUT.chargeId,
+          amount: '505',
+          workspace_id: 'ws-1',
+          paid_from: 'principal',
+        },
+        error: null,
+      },
+    });
+    supa.program({ table: 'charge_payments', op: 'select', result: { data: null, error: null } });
+    supa.program({ table: 'charge_payments', op: 'insert', result: { data: null, error: null } });
+  }
+
+  it('stamps paid_at at noon UTC of the chosen day', async () => {
+    programInsertPath();
+    const r = await togglePaymentAction({ ...VALID_INPUT, paidOn: '2026-05-09' });
+    expect(r.ok).toBe(true);
+    expect(supa.lastInsertPayload()).toMatchObject({ paid_at: '2026-05-09T12:00:00.000Z' });
+  });
+
+  it('accepts today, and the first day of the window', async () => {
+    programInsertPath();
+    expect((await togglePaymentAction({ ...VALID_INPUT, paidOn: '2026-05-28' })).ok).toBe(true);
+    programInsertPath();
+    expect((await togglePaymentAction({ ...VALID_INPUT, paidOn: '2026-03-31' })).ok).toBe(true);
+    expect(supa.lastInsertPayload()).toMatchObject({ paid_at: '2026-03-31T12:00:00.000Z' });
+  });
+
+  it('without a day, keeps the old behaviour: paid_at is left to the database', async () => {
+    programInsertPath();
+    const r = await togglePaymentAction(VALID_INPUT);
+    expect(r.ok).toBe(true);
+    expect(supa.lastInsertPayload()).not.toHaveProperty('paid_at');
+  });
+
+  it('refuses a day in the future (Brussels), by name, and writes nothing', async () => {
+    programMembership();
+    const r = await togglePaymentAction({ ...VALID_INPUT, paidOn: '2026-05-29' });
+    expect(r).toMatchObject({ ok: false, errorCode: 'errors.charges.payments.dateFuture' });
+    expect(supa.lastInsertPayload()).toBeUndefined();
+    expect(auditSpy).not.toHaveBeenCalled();
+  });
+
+  it('reads "future" on the Brussels day, not the UTC one', async () => {
+    // 22:30 UTC on 28 May is already 00:30 on 29 May in Brussels.
+    vi.setSystemTime(new Date('2026-05-28T22:30:00Z'));
+    programInsertPath();
+    const r = await togglePaymentAction({ ...VALID_INPUT, paidOn: '2026-05-29' });
+    expect(r.ok).toBe(true);
+  });
+
+  it('refuses a day before the window of the period', async () => {
+    programMembership();
+    const r = await togglePaymentAction({ ...VALID_INPUT, paidOn: '2026-03-30' });
+    expect(r).toMatchObject({ ok: false, errorCode: 'errors.charges.payments.dateOutOfPeriod' });
+    expect(supa.lastInsertPayload()).toBeUndefined();
+  });
+
+  it('refuses a day after the window of the period', async () => {
+    programMembership();
+    // March 2026 closes on 1 May (31 March + 31 days).
+    const r = await togglePaymentAction({
+      ...VALID_INPUT,
+      periodMonth: 3,
+      paidOn: '2026-05-02',
+    });
+    expect(r).toMatchObject({ ok: false, errorCode: 'errors.charges.payments.dateOutOfPeriod' });
+  });
+
+  it('never unpays: a day sent for a bill already paid writes nothing', async () => {
+    programMembership();
+    supa.program({
+      table: 'charges',
+      op: 'select',
+      result: {
+        data: {
+          id: VALID_INPUT.chargeId,
+          amount: '505',
+          workspace_id: 'ws-1',
+          paid_from: 'principal',
+        },
+        error: null,
+      },
+    });
+    supa.program({
+      table: 'charge_payments',
+      op: 'select',
+      result: { data: { id: 'payment-existing-1' }, error: null },
+    });
+    const r = await togglePaymentAction({ ...VALID_INPUT, paidOn: '2026-05-09' });
+    expect(r).toEqual({ ok: true, data: { paid: true, paidAmount: null } });
+    expect(supa.lastDeleteFilters()).toBeUndefined();
+    expect(supa.lastInsertPayload()).toBeUndefined();
+  });
+
+  it('refuses a day that does not exist', async () => {
+    programMembership();
+    const r = await togglePaymentAction({ ...VALID_INPUT, paidOn: '2026-02-30' });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.fieldErrors?.paidOn).toBeDefined();
+  });
+});
+
 afterEach(() => {
   vi.restoreAllMocks();
 });

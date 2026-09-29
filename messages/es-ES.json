@@ -906,7 +906,15 @@
       "posteMonthlyLabel": "Facturas mensuales",
       "posteMonthlyHint": "Lo que sale cada mes, factura por factura.",
       "posteCommitmentsLabel": "Plazos de compromisos",
-      "posteCommitmentsHint": "La parte de este mes de cada compromiso en curso."
+      "posteCommitmentsHint": "La parte de este mes de cada compromiso en curso.",
+      "paySheet": {
+        "title": "Marcar como pagada",
+        "intro": "{label} · {amount}",
+        "dateLabel": "Pagada el",
+        "dateHint": "El día en que el banco la cargó. Rellenado con la fecha de vencimiento.",
+        "submit": "Marcar como pagada",
+        "cancel": "Cancelar"
+      }
     },
     "accounts": {
       "metaTitle": "Mis cuentas",
@@ -1724,7 +1732,9 @@
       "watchFailed": "No se ha podido actualizar el marcador de la factura.",
       "notFound": "No se ha encontrado esta factura.",
       "payments": {
-        "toggleFailed": "No se ha podido marcar la factura como pagada."
+        "toggleFailed": "No se ha podido marcar la factura como pagada.",
+        "dateFuture": "Esta fecha es futura. Elige el día en que se pagó la factura.",
+        "dateOutOfPeriod": "Esta fecha está demasiado lejos del mes de la factura."
       }
     },
     "accounts": {

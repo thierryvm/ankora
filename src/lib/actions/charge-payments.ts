@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { revalidateAppPath, revalidateDashboard } from '@/lib/actions/revalidate';
 import { accountTypeFromKind } from '@/lib/domain/accounts/account-type';
 import type { ChargePaidFrom } from '@/lib/domain/types';
+import { paidAtForDay, paymentDayWindow } from '@/lib/domain/charges/payment-date';
+import { todayInAnkoraTz } from '@/lib/date/tz';
 import { chargePaymentToggleSchema } from '@/lib/schemas/charge-payment';
 import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
 import { rateLimit } from '@/lib/security/rate-limit';
@@ -70,7 +72,28 @@ export async function togglePaymentAction(
     };
   }
 
-  const { chargeId, periodYear, periodMonth, paidAmount, note } = parsed.data;
+  const { chargeId, periodYear, periodMonth, paidAmount, note, paidOn } = parsed.data;
+
+  // The day the bill was paid is checked BEFORE any read: a day in the future
+  // (Brussels) or far from its period is a typo that would move the payment
+  // across a statement it has nothing to do with.
+  if (paidOn !== undefined) {
+    if (paidOn > todayInAnkoraTz()) {
+      return {
+        ok: false,
+        errorCode: 'errors.charges.payments.dateFuture',
+        fieldErrors: { paidOn: ['chargePayment.paidOn.future'] },
+      };
+    }
+    const window = paymentDayWindow(periodYear, periodMonth);
+    if (paidOn < window.min || paidOn > window.max) {
+      return {
+        ok: false,
+        errorCode: 'errors.charges.payments.dateOutOfPeriod',
+        fieldErrors: { paidOn: ['chargePayment.paidOn.outOfPeriod'] },
+      };
+    }
+  }
 
   const supabase = await createClient();
 
@@ -102,6 +125,13 @@ export async function togglePaymentAction(
   let nextPaid: boolean;
   let nextAmount: number | null;
 
+  if (existing && paidOn !== undefined) {
+    // A day is only ever sent by « Marquer payée ». If the bill is already
+    // paid (another tab, a double submit), that request must not UNPAY it:
+    // nothing is written, and the answer says it is paid.
+    return { ok: true, data: { paid: true, paidAmount: null } };
+  }
+
   if (existing) {
     // 3a. Toggle OFF — DELETE the row.
     const { error: deleteError } = await supabase
@@ -126,6 +156,8 @@ export async function togglePaymentAction(
       paid_from_account_type: accountTypeFromKind(charge.paid_from as ChargePaidFrom),
       note: note ?? null,
       created_by: ctx.userId,
+      // Without a day, `paid_at` stays the database default (the tick).
+      ...(paidOn !== undefined ? { paid_at: paidAtForDay(paidOn) } : {}),
     });
     if (insertError) {
       return { ok: false, errorCode: 'errors.charges.payments.toggleFailed' };

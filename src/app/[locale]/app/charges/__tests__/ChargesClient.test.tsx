@@ -16,6 +16,7 @@ import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 
 import messages from '../../../../../../messages/fr-BE.json';
+import { todayInAnkoraTz } from '@/lib/date/tz';
 
 const createChargeMock = vi.hoisted(() => vi.fn());
 const updateChargeMock = vi.hoisted(() => vi.fn());
@@ -519,7 +520,10 @@ describe('Factures Phase 2 — Payé toggle', () => {
     );
   });
 
-  it('toggles paid optimistically and calls the action with the current period', async () => {
+  // Tour 61 bis — ticking an unpaid bill no longer writes at once: it opens
+  // « Marquer payée » with the day it was paid, pre-filled at the due date.
+  // The bank debited it on that day, not on the day of the tick.
+  it('opens the sheet with the due date, then sends the chosen day with the period', async () => {
     togglePaymentMock.mockResolvedValue({ ok: true, data: { paid: true, paidAmount: 1200 } });
     renderCharges([monthlyCharge], { viewedPeriod: { year: 2026, month: 3 } });
     const toggle = screen.getByTestId(`charges-row-paid-${monthlyCharge.id}`);
@@ -527,6 +531,51 @@ describe('Factures Phase 2 — Payé toggle', () => {
     await act(async () => {
       fireEvent.click(toggle);
     });
+    expect(togglePaymentMock).not.toHaveBeenCalled();
+    const day = screen.getByTestId('charge-pay-date') as HTMLInputElement;
+    // paymentDay 5, March 2026 — already past, so the due date itself.
+    expect(day.value).toBe('2026-03-05');
+    // The window of March 2026 closes on 1 May (31 March + 31 days), before today.
+    expect(day.min).toBe('2026-01-29');
+    expect(day.max).toBe('2026-05-01');
+    fireEvent.change(day, { target: { value: '2026-03-09' } });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('charge-pay-submit'));
+    });
+    await waitFor(() =>
+      expect(togglePaymentMock).toHaveBeenCalledWith({
+        chargeId: monthlyCharge.id,
+        periodYear: 2026,
+        periodMonth: 3,
+        paidOn: '2026-03-09',
+      }),
+    );
+    await waitFor(() => expect(toastSuccessMock).toHaveBeenCalled());
+  });
+
+  it('pre-fills today when the due date is still ahead', async () => {
+    const today = todayInAnkoraTz();
+    const [y, m] = today.split('-').map(Number);
+    // Due on the 28th of a month two years ahead: always in the future.
+    renderCharges([{ ...monthlyCharge, paymentDay: 28 }], {
+      viewedPeriod: { year: (y ?? 2026) + 2, month: m ?? 1 },
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`charges-row-paid-${monthlyCharge.id}`));
+    });
+    expect((screen.getByTestId('charge-pay-date') as HTMLInputElement).value).toBe(today);
+  });
+
+  it('un-ticking a paid bill stays one press, without a sheet and without a day', async () => {
+    togglePaymentMock.mockResolvedValue({ ok: true, data: { paid: false, paidAmount: null } });
+    renderCharges([monthlyCharge], {
+      paidChargeIds: [monthlyCharge.id],
+      viewedPeriod: { year: 2026, month: 3 },
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`charges-row-paid-${monthlyCharge.id}`));
+    });
+    expect(screen.queryByTestId('charge-pay-sheet')).toBeNull();
     await waitFor(() =>
       expect(togglePaymentMock).toHaveBeenCalledWith({
         chargeId: monthlyCharge.id,
@@ -534,19 +583,23 @@ describe('Factures Phase 2 — Payé toggle', () => {
         periodMonth: 3,
       }),
     );
-    await waitFor(() => expect(toastSuccessMock).toHaveBeenCalled());
   });
 
-  it('shows an error toast when the toggle fails', async () => {
+  it('shows the named refusal when the server refuses the day', async () => {
     togglePaymentMock.mockResolvedValue({
       ok: false,
-      errorCode: 'errors.charges.payments.toggleFailed',
+      errorCode: 'errors.charges.payments.dateFuture',
     });
     renderCharges([monthlyCharge], { viewedPeriod: { year: 2026, month: 1 } });
     await act(async () => {
       fireEvent.click(screen.getByTestId(`charges-row-paid-${monthlyCharge.id}`));
     });
-    await waitFor(() => expect(toastErrorMock).toHaveBeenCalled());
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('charge-pay-submit'));
+    });
+    await waitFor(() =>
+      expect(toastErrorMock).toHaveBeenCalledWith(messages.errors.charges.payments.dateFuture),
+    );
   });
 
   it('renders the "ce mois" paid summary when charges are due', () => {

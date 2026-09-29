@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { isCalendarDay } from '@/lib/domain/charges/payment-date';
+
 /**
  * Toggle a charge as paid / unpaid for a given (year, month) period.
  *
@@ -31,6 +33,16 @@ export const chargePaymentToggleSchema = z.object({
     .max(1_000_000, { message: 'chargePayment.paidAmount.tooHigh' })
     .optional(),
   note: z.string().max(500).optional().nullable(),
+  /**
+   * The day the bill was paid (`YYYY-MM-DD`). Optional: absent, `paid_at` is
+   * left to the database default (the moment of the tick), as before. The
+   * future and period-window checks need today and the period, so they live
+   * in the action.
+   */
+  paidOn: z
+    .string({ error: 'chargePayment.paidOn.invalid' })
+    .refine(isCalendarDay, { message: 'chargePayment.paidOn.invalid' })
+    .optional(),
 });
 
 export type ChargePaymentToggleInput = z.infer<typeof chargePaymentToggleSchema>;
