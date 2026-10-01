@@ -51,7 +51,7 @@ describe('ExpenseEditDrawer — a refused date', () => {
     updateExpenseMock.mockReset();
     updateExpenseMock.mockResolvedValue({
       ok: false,
-      errorCode: 'errors.validation.invalid',
+      errorCode: 'errors.validation.generic',
       fieldErrors: { occurredOn: ['operations.date.future'] },
     });
   });
@@ -73,6 +73,20 @@ describe('ExpenseEditDrawer — a refused date', () => {
     expect(alert).toHaveAttribute('role', 'alert');
     expect(date).toHaveAttribute('aria-invalid', 'true');
     expect(date.getAttribute('aria-describedby')).toBe(alert.id);
+  });
+
+  it('forgets the message when the drawer is closed and reopened', async () => {
+    const { rerender } = renderDrawer();
+    await submitFutureDate();
+    await screen.findByTestId('expense-edit-date-error');
+    const withDrawer = (expense: ExpenseEditDrawerExpense | null) => (
+      <NextIntlClientProvider locale="fr-BE" messages={messages} timeZone="Europe/Brussels">
+        <ExpenseEditDrawer expense={expense} accounts={[]} onClose={() => {}} />
+      </NextIntlClientProvider>
+    );
+    rerender(withDrawer(null));
+    rerender(withDrawer(EXPENSE));
+    expect(screen.queryByTestId('expense-edit-date-error')).toBeNull();
   });
 
   it('clears the message as soon as the date is touched again', async () => {

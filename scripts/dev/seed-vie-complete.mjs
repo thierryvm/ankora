@@ -175,7 +175,7 @@ const paiements = charges.map((c) => ({
 // (ADR-046). `Date.UTC` gère le passage de janvier à décembre.
 // seed-profil-test.mjs pose déjà ce salaire : l'ajouter deux fois doublerait
 // l'argent reçu du mois.
-const { count: salairesDuMois } = await db
+const { count: salairesDuMois, error: salairesErr } = await db
   .from('movements')
   .select('id', { count: 'exact', head: true })
   .eq('workspace_id', ws)
@@ -183,6 +183,7 @@ const { count: salairesDuMois } = await db
   .eq('income_nature', 'regular')
   .eq('budget_year', AN)
   .eq('budget_month', MOIS);
+if (salairesErr) throw new Error(`salaires: ${salairesErr.message}`);
 if (salairesDuMois === 0) {
   const { error } = await db.from('movements').insert({
     workspace_id: ws,
