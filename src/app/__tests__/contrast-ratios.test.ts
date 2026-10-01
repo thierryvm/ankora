@@ -411,6 +411,51 @@ describe('globals.css — le mode clair porte la direction « Le relevé corrig�
       ).toBeGreaterThanOrEqual(AA_NORMAL_TEXT);
     });
   });
+
+  /**
+   * La carte doit se détacher du fond même quand l'écran délave les blancs
+   * (luminosité forte, contenu SDR rehaussé par le HDR, dalle bon marché, plein soleil).
+   *
+   * Fond/carte ne vaut que 1,13 et ne peut pas monter sans faire passer
+   * `--color-success` et `--color-accent-text` sous AA : c'est donc le CONTOUR
+   * qui porte la séparation. Seuil de conception de 1,5:1, contre le fond ET
+   * contre la carte (le contour touche les deux). WCAG 1.4.11 (3:1) vise les
+   * composants d'interface ; un contour de carte n'en est pas un, d'où un
+   * seuil choisi plutôt qu'imposé, mais ce seuil ne descend pas sans décision.
+   */
+  describe('la carte se détache du fond en clair', () => {
+    const SEUIL_CONTOUR = 1.5;
+    const contour = tokenIn(THEME_BLOCK, 'color-border-card');
+
+    it.each([
+      ['le fond de page', 'color-background'],
+      ['la carte', 'color-card'],
+    ] as const)('le contour de carte tient %s à 1,5:1 au moins', (_label, bgToken) => {
+      const bg = tokenIn(THEME_BLOCK, bgToken);
+      const ratio = contrastRatio(contour, bg);
+      expect(
+        ratio,
+        `--color-border-card (${contour}) sur --${bgToken} (${bg}) → ${ratio.toFixed(2)}:1, sous ${SEUIL_CONTOUR}:1`,
+      ).toBeGreaterThanOrEqual(SEUIL_CONTOUR);
+    });
+
+    it('le contour reste un filet, pas un trait noir (au plus 2,5:1 contre le fond)', () => {
+      const ratio = contrastRatio(contour, tokenIn(THEME_BLOCK, 'color-background'));
+      expect(ratio, `contour à ${ratio.toFixed(2)}:1`).toBeLessThanOrEqual(2.5);
+    });
+
+    it('la carte a une ombre propre en clair, distincte de celle des boutons et des champs', () => {
+      const valeur = (bloc: string, nom: string) =>
+        bloc.match(new RegExp(`--${nom}\s*:\s*([^;]+);`))?.[1]?.trim();
+      const carte = valeur(THEME_BLOCK, 'shadow-card');
+      expect(carte).toBeDefined();
+      expect(carte).not.toBe(valeur(THEME_BLOCK, 'shadow-sm'));
+    });
+
+    it('en sombre la carte garde exactement l’ombre qu’elle avait (--shadow-sm)', () => {
+      expect(DARK_BLOCK).toMatch(/--shadow-card\s*:\s*var\(--shadow-sm\)/);
+    });
+  });
 });
 
 /**

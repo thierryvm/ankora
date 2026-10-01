@@ -185,7 +185,11 @@
      alias unique mentirait. `--color-border-control` est la limite d'un champ
      au repos, et elle seule — elle doit tenir 3:1 (WCAG 1.4.11), ce que
      `--color-border` ne fait pas. */
-  --color-border-card: #dcd8ce;
+  /* 28 sept. 2026 : #dcd8ce ne tenait que 1,26 contre le fond et 1,42 contre la
+     carte ; un écran qui délave les blancs l'effaçait. #c4bfb2 tient 1,62 / 1,84,
+     toujours un filet tiède. Le FOND ne bouge pas : l'assombrir fait passer
+     `--color-success` et `--color-accent-text` sous AA. */
+  --color-border-card: #c4bfb2;
   --color-border-bar: var(--color-border-card);
   --color-border-control: #7f7c75;
 
@@ -365,10 +369,15 @@
   /* ---------- Elevation (Light mode) ---------- */
   --shadow-xs: 0 1px 2px rgb(15 23 42 / 0.04);
   /* v3 `--ombre-repos` : deux couches, flou ≤ 2 px, opacité ≤ 0,06. Discrète
-     PAR CONSIGNE (@thierry) — c'est `--color-border-card` qui sépare, l'ombre
+     PAR CONSIGNE (@thierry) pour ce cran-ci, qui habille aussi boutons et
+     champs (la carte a le sien : `--shadow-card`) — c'est `--color-border-card` qui sépare, l'ombre
      ne fait que confirmer. Descendre l'ombre SANS poser le bord reproduirait
      la platitude que `card.tsx` documente : les deux vont ensemble. */
   --shadow-sm: 0 1px 2px rgb(23 29 38 / 0.06), 0 1px 1px rgb(23 29 38 / 0.04);
+  /* L'ombre de la CARTE, propre à elle : `--shadow-sm` habille aussi boutons et
+     champs, qu'on ne durcit pas. Elle porte même quand les blancs sont écrasés,
+     le contour la précède. */
+  --shadow-card: 0 1px 2px rgb(23 29 38 / 0.08), 0 2px 6px rgb(23 29 38 / 0.06);
   --shadow-md: 0 4px 12px rgb(15 23 42 / 0.06), 0 2px 4px rgb(15 23 42 / 0.04);
   --shadow-lg: 0 12px 32px rgb(15 23 42 / 0.08), 0 4px 12px rgb(15 23 42 / 0.06);
   /* L'anneau intérieur d'un contrôle au repos (puce non choisie, segment,
@@ -536,6 +545,7 @@
      lignes claires sur le même bord haut se lisent comme un défaut. */
   --shadow-xs: inset 0 1px 0 rgb(255 255 255 / 0.04);
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.45), 0 1px 1px rgb(0 0 0 / 0.3);
+  --shadow-card: var(--shadow-sm); /* le sombre n'a pas ce défaut : inchangé */
   --shadow-md: inset 0 1px 0 rgb(255 255 255 / 0.07), 0 6px 16px rgb(0 0 0 / 0.45);
   --shadow-lg: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 20px 40px rgb(0 0 0 / 0.55);
 }
