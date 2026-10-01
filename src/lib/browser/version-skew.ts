@@ -3,7 +3,7 @@
  *
  * Next.js already handles the navigation half of it. Each RSC response carries
  * the server's build (or deployment) id, and on a mismatch the router does a
- * full-page navigation instead of a soft one (read in next 16.3.5,
+ * full-page navigation instead of a soft one (read in next 16.3.5, re-read in 16.3.8,
  * `client/components/router-reducer/fetch-server-response.js`).
  *
  * What it does not handle is the asset half. A host that only serves the latest
@@ -20,7 +20,7 @@
 /**
  * The wordings each engine uses for a chunk or module that did not load, plus
  * the Server Action one: an action id from the old build is unknown to the new
- * server, and the browser throws `UnrecognizedActionError` (next 16.3.5,
+ * server, and the browser throws `UnrecognizedActionError` (next 16.3.5, re-read in 16.3.8,
  * server-action-reducer.js:104; the « Failed to find Server Action » wording is
  * the server's and never reaches the browser). Only matched on errors WITHOUT a digest: a digest means the error was
  * thrown on the server, which is never a missing browser chunk.

@@ -29,7 +29,7 @@ const nextConfig: NextConfig = {
   /**
    * Version skew (a tab opened before a deployment). `deploymentId` is left
    * unset ON PURPOSE. Next already compares the build id of every RSC response
-   * with the client's and reloads on a mismatch (next 16.3.5,
+   * with the client's and reloads on a mismatch (next 16.3.5, re-read in 16.3.8,
    * fetch-server-response.js:175). On Vercel Hobby, without Skew Protection,
    * nothing routes on `?dpl=`, so its only effect would be a new query string
    * on every static asset at each deployment — a new, never-purged entry per
