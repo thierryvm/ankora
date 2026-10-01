@@ -128,11 +128,11 @@ describe('property: card XOR past months, never both, never nowhere', () => {
         fc.integer({ min: 1, max: 12 }),
         fc.array(
           fc.record({
-            // Date: from two months before the running month to its end.
-            jourDate: fc.integer({ min: -62, max: 30 }),
-            // Written between the date and up to 40 days later, at any minute;
-            // half of them within two hours of a midnight.
-            delaiJours: fc.integer({ min: 0, max: 40 }),
+            // Date: from two months before the running month to three after.
+            jourDate: fc.integer({ min: -62, max: 100 }),
+            // Written up to 100 days before the date (dated ahead) or 40 after,
+            // at any minute; many within two hours of a midnight.
+            delaiJours: fc.integer({ min: -100, max: 40 }),
             minute: fc.oneof(
               fc.integer({ min: 0, max: 24 * 60 - 1 }),
               fc.integer({ min: 22 * 60, max: 24 * 60 - 1 }),

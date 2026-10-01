@@ -255,12 +255,12 @@ export const LARGEUR_AXE_PAR_DEFAUT = 280;
 /** Free space kept between two labels, in px. */
 export const ECART_REPERES = 6;
 /**
- * Upper bound of a label's width at text-xs (12 px): a date (« 28 sept. »,
- * « 28 Sept. », « 28 sep ») is at most eight characters, a day number two.
- * A character is at most 7 px in this font size.
+ * Upper bound of a label's width at text-xs (12 px): a date is at most nine
+ * characters in the five locales (« 28. Sept. » in German, « 28 sept. » in
+ * French), a day number two. A character is at most 7 px in this font size.
  */
 export function largeurDuRepere(enDates: boolean): number {
-  return (enDates ? 8 : 2) * 7;
+  return (enDates ? 9 : 2) * 7;
 }
 
 /**

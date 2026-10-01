@@ -124,7 +124,11 @@ export function repartirArgentRecu(
   const reste: MovementRecord[] = [];
   for (const m of movements) {
     if (m.kind !== 'income' || m.toAccountType === null) continue;
-    (surLaCarteDuMois(m, mois, moisABruxelles(m.recordedAt)) ? carte : reste).push(m);
+    // A line counted for this month or a later one is never a past month: it
+    // stays on the card, even dated ahead and written before (review, tour 64).
+    const surLaCarte =
+      surLaCarteDuMois(m, mois, moisABruxelles(m.recordedAt)) || iso(moisConcerneDe(m)) >= mois;
+    (surLaCarte ? carte : reste).push(m);
   }
   return { carte, moisPasses: argentRecuParMois(reste, mois) };
 }
