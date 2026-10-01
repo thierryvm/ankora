@@ -539,7 +539,7 @@ describe('IlTeResteCard — PR D, the set-aside term and the daily account', () 
   it('shows the daily account balance with its source, and opens the Accounts page', async () => {
     render(await IlTeResteCard({ ...base, soldeQuotidien: 460 }));
     const lien = screen.getByTestId('cockpit-solde-quotidien');
-    expect(lien).toHaveTextContent('Sur ton compte du quotidien');
+    expect(lien).toHaveTextContent('Sur Vie courante');
     expect(lien).toHaveTextContent('calculé depuis tes opérations');
     expect(lien.textContent).toMatch(/460/u);
     expect(lien.getAttribute('href')).toMatch(/\/app\/accounts$/u);

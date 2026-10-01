@@ -9,7 +9,12 @@ import { Repli } from '@/components/cockpit/Repli';
 import { Sheet } from '@/components/primitives/Sheet';
 import { Link } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
-import { ecartAuRythme, rythmeAuJour, sensDeLEcart } from '@/lib/domain/cockpit/rythme';
+import {
+  ecartAuRythme,
+  ecartDuMois,
+  rythmeAuJour,
+  sensDeLEcart,
+} from '@/lib/domain/cockpit/rythme';
 import { formatCurrency } from '@/lib/i18n/formatters';
 
 import { moisDansLaPhrase } from './mois-vu';
@@ -334,8 +339,17 @@ export function RythmeDuMois(props: RythmeDuMoisProps) {
   const depense = cumul(jE);
   const budget = new Decimal(props.budget.montant);
   const aB = budget.gt(0);
-  const rythme = rythmeAuJour(budget, jE, jM);
-  const ecart = rythme ? ecartAuRythme(new Decimal(depense), rythme) : null;
+  // H3 (tour 65 bis): the gap reads the same spending as « Il te reste » —
+  // the month's whole recorded spending, a post-dated line included — so the
+  // two blocks never disagree on the sign. The big figure stays « spent up to
+  // today »; one sentence says what was recorded for later days.
+  const ecart = ecartDuMois({
+    budget,
+    depensesDuMois: new Decimal(props.depensesDuMois),
+    jour: jE,
+    joursDuMois: jM,
+  });
+  const dateApres = new Decimal(props.depensesDuMois).minus(depense);
   const enCours = jE < jM;
   // ADR-047 — the savings line names the budget month, never the calendar one.
   const mois = moisDansLaPhrase(props.moisDeBudget ?? month, locale);
@@ -405,6 +419,11 @@ export function RythmeDuMois(props: RythmeDuMoisProps) {
               {ecart && (
                 <span className="bg-surface-muted rounded-full px-2.5 py-0.5 text-sm font-medium">
                   {motEcart(ecart, f.euro)}
+                </span>
+              )}
+              {dateApres.gte(0.01) && (
+                <span className="text-muted-foreground text-sm" data-testid="rythme-date-apres">
+                  {t('dateApres', { montant: f.centime(dateApres.toNumber()) })}
                 </span>
               )}
               {aB && enCours && projection !== null && (
@@ -780,7 +799,19 @@ function TiroirRythme(
   const tot = new Decimal(cumul(b)).minus(cumul(a - 1)).toNumber();
   const budget = new Decimal(props.budget.montant);
   const r = rythmeAuJour(budget, b, jM);
-  const ec = r ? ecartAuRythme(new Decimal(cumul(b)), r) : null;
+  // A past day keeps its own gap (spent up to that day). From today on, the
+  // gap is the header's: the month's whole recorded spending (H3).
+  const ec =
+    b >= jE
+      ? ecartDuMois({
+          budget,
+          depensesDuMois: new Decimal(props.depensesDuMois),
+          jour: b,
+          joursDuMois: jM,
+        })
+      : r
+        ? ecartAuRythme(new Decimal(cumul(b)), r)
+        : null;
   const titre =
     a === b ? jourMois(a) : t('periode', { debut: f.numJour(year, month, a), fin: jourMois(b) });
   const libTotal =
@@ -790,6 +821,17 @@ function TiroirRythme(
         ? t('totalDepuis1er', { jour: jourMois(b) })
         : t('totalTranche', { debut: f.numJour(year, month, a), fin: jourMois(b) });
   const lignesDu = (j: number) => depenses.filter((d) => d.date === f.iso(year, month, j));
+  // H3 — the operation shows the operand the gap was computed from: from
+  // today on, the month's whole recorded spending, so its terms add up.
+  const depOp = b >= jE ? props.depensesDuMois : cumul(b);
+  // The lines dated after today, each with its day: the sentence of the
+  // header opens on them (rule 10).
+  const apres =
+    b >= jE
+      ? Array.from({ length: Math.max(0, jM - jE) }, (_, i) => jE + 1 + i).flatMap((j) =>
+          lignesDu(j).map((l) => ({ ...l, jour: j })),
+        )
+      : [];
   const sens = ec ? sensDeLEcart(ec) : null;
   const b1 = props.budget;
   const postes: Array<[string, number]> = (
@@ -846,12 +888,12 @@ function TiroirRythme(
                   ec.lte(0)
                     ? t('opEcartMarge', {
                         rythme: f.centime(r.toNumber()),
-                        depense: f.centime(cumul(b)),
+                        depense: f.centime(depOp),
                         ecart: f.centime(ec.abs().toNumber()),
                       })
                     : t('opEcartDessus', {
                         rythme: f.centime(r.toNumber()),
-                        depense: f.centime(cumul(b)),
+                        depense: f.centime(depOp),
                         ecart: f.centime(ec.abs().toNumber()),
                       })
                 }
@@ -862,6 +904,18 @@ function TiroirRythme(
             <p className="text-muted-foreground py-2 text-sm">{t('sansRythme')}</p>
           )}
         </Bloc>
+        {apres.length > 0 && (
+          <Bloc etiquette={t('dateApresEtiquette')} testId="rythme-date-apres-lignes">
+            {apres.map((l) => (
+              <Ligne
+                key={l.id}
+                libelle={l.label}
+                sous={jourMois(l.jour)}
+                montant={f.centime(l.montant)}
+              />
+            ))}
+          </Bloc>
+        )}
         {tiroir.mois && jE < jM && projection !== null && (
           <Bloc etiquette={t('projectionEtiquette')} testId="rythme-projection">
             <Ligne

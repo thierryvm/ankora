@@ -46,14 +46,14 @@ test.describe('Dashboard — typed account cards + inline rename (PR-D2)', () =>
 
       // Default name comes from the i18n default (Compte Principal in fr-BE).
       await expect(card.getByRole('button', { name: /Renommer le compte/i })).toContainText(
-        'Compte Principal',
+        'Compte principal',
       );
 
       // Click the title → input appears prefilled.
       await card.getByRole('button', { name: /Renommer le compte/i }).click();
       const input = card.getByRole('textbox');
       await expect(input).toBeFocused();
-      await expect(input).toHaveValue('Compte Principal');
+      await expect(input).toHaveValue('Compte principal');
 
       // Replace the value and submit with Enter.
       //
@@ -146,7 +146,7 @@ test.describe('Dashboard — typed account cards + inline rename (PR-D2)', () =>
 
       // Back to button with the original (i18n default) name.
       await expect(
-        card.getByRole('button', { name: /Renommer le compte « Compte Épargne »/i }),
+        card.getByRole('button', { name: /Renommer le compte « Compte épargne »/i }),
       ).toBeVisible();
 
       // DB unchanged.

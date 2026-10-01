@@ -283,7 +283,7 @@ describe('AccountsClient — un solde lu, daté, et nommé pour ce qu’il est',
       'Sert au tableau de bord : « Sur ton compte principal après tes factures ».',
     );
     expect(card('daily_card')).toHaveTextContent(
-      'Sert au tableau de bord : ce qu’il y a sur ton compte du quotidien, sous « Il te reste ».',
+      'Sert au tableau de bord : ce qu’il y a sur Vie courante, sous « Il te reste ».',
     );
     expect(card('provisions')).toHaveTextContent(
       'Sert à la santé des provisions du tableau de bord.',
@@ -306,7 +306,7 @@ describe('AccountsClient — un solde lu, daté, et nommé pour ce qu’il est',
 describe('AccountsClient — income and transfer read « 5,90 » as 5.9', () => {
   const INVALID_AMOUNT = 'Écris un montant de 0 ou plus, avec une virgule ou un point.';
   const INCOME = 'Revenu mensuel net (€)';
-  const TRANSFER = 'Virement mensuel vers Vie Courante (€)';
+  const TRANSFER = 'Virement mensuel vers Vie courante (€)';
 
   async function actions() {
     const mod = await import('@/lib/actions/accounts');
@@ -531,7 +531,7 @@ describe('AccountsClient — the balances come first, the settings after', () =>
     const settings = screen.getByRole('heading', { level: 2, name: 'Réglages du mois' });
     expect(before(balances, settings)).toBe(true);
     expect(before(settings, screen.getByLabelText('Revenu mensuel net (€)'))).toBe(true);
-    expect(before(settings, screen.getByLabelText('Virement mensuel vers Vie Courante (€)'))).toBe(
+    expect(before(settings, screen.getByLabelText('Virement mensuel vers Vie courante (€)'))).toBe(
       true,
     );
   });

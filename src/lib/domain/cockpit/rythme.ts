@@ -33,6 +33,21 @@ export function ecartAuRythme(depenseCumule: Decimal, rythme: Decimal): Decimal 
   return depenseCumule.minus(rythme);
 }
 
+/**
+ * The gap the card ANNOUNCES (H3, tour 65 bis): the month's whole recorded
+ * spending against the rhythm of `jour`. It reads the same spending as « Il te
+ * reste » (`depensesDuMois`, a post-dated line included) and, given the same
+ * budget (`resteDisponible`), it can never call a margin what « Il te reste »
+ * calls an overspend: `ilTeReste < 0` means spending above the budget, hence
+ * above any rhythm. The day curve still places each line on its own date.
+ */
+export function ecartDuMois(
+  input: Readonly<{ budget: Decimal; depensesDuMois: Decimal; jour: number; joursDuMois: number }>,
+): Decimal | null {
+  const rythme = rythmeAuJour(input.budget, input.jour, input.joursDuMois);
+  return rythme ? ecartAuRythme(input.depensesDuMois, rythme) : null;
+}
+
 export type SensDeLEcart = 'pile' | 'marge' | 'dessus';
 
 /** The gap in words: « pile » when it rounds to 0 € either way (under 0.50 €). */

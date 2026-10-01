@@ -56,6 +56,27 @@ export function accountTypeFromKind(kind: AccountKind): AccountType {
   return type;
 }
 
+/**
+ * The names the database writes when it creates a workspace (migration
+ * 20260503000001), before the person renames anything. They are not names the
+ * person chose: the interface shows its own translated default instead, so
+ * each account has ONE name on every screen (« Vie courante », not « Carte
+ * Quotidien » on one card and « Vie Courante » in a sentence). A name the
+ * person typed is never in this list and is shown as typed.
+ */
+const SEEDED_DEFAULT_NAMES: Readonly<Record<AccountType, readonly string[]>> = Object.freeze({
+  income_bills: ['Compte Principal'],
+  daily_card: ['Carte Quotidien', 'Vie Courante'],
+  // « Épargne & Provisions »: label seeded on 2026-04-17, copied into
+  // display_name for existing workspaces on 2026-05-03 (relecture tour 65).
+  provisions: ['Compte Épargne', 'Épargne & Provisions'],
+});
+
+/** True when `name` is the database's seeded default for this account type. */
+export function isSeededDefaultName(type: AccountType, name: string): boolean {
+  return SEEDED_DEFAULT_NAMES[type]?.includes(name) ?? false;
+}
+
 /** `income_bills` → `principal`. Throws on anything else. */
 export function accountKindFromType(type: AccountType): AccountKind {
   const kind = TYPE_TO_KIND[type];

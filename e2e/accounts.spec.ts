@@ -88,8 +88,11 @@ test.describe('Accounts — 3-comptes saisie + Plan du mois', () => {
       // Aucune assertion n'est retirée ni élargie : ce sont les mêmes trois
       // lignes et les mêmes deux montants, aux mots que la page affiche
       // vraiment (`messages/fr-BE.json`, `cockpit.virements.*`).
+      // ATTENDU MODIFIÉ PAR LA PR #521 : le compte du quotidien porte un seul
+      // nom partout, « Vie courante » (décision @thierry du 1er octobre 2026).
+      // Même ligne, même montant ; seul le nom du compte change.
       await ouvrirRepli(page, 'repli-virements');
-      await expect(page.getByText(/virement à faire vers dépenses du quotidien/i)).toBeVisible();
+      await expect(page.getByText(/virement à faire vers vie courante/i)).toBeVisible();
       // The épargne line is BIDIRECTIONAL — « Virement à faire vers Provisions
       // pour tes factures » or « À reprendre sur Provisions pour tes factures »
       // depending on sign. Here the direction is deterministic by construction:
