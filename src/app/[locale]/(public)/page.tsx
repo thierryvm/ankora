@@ -1,5 +1,6 @@
 import type { Metadata, ResolvingMetadata } from 'next';
 import { getNonce } from '@/lib/security/nonce';
+import { serializeJsonLd } from '@/lib/seo/serialize-json-ld';
 import { getTranslations } from 'next-intl/server';
 
 import type { Locale } from '@/i18n/routing';
@@ -117,12 +118,13 @@ export default async function HomePage({ params }: LocaleParams) {
   // JSON-LD: native <script type="application/ld+json"> rendered server-side
   // (was `next/script` with afterInteractive strategy, which injects post-
   // hydration — invisible to crawlers and to Playwright mobile-safari).
-  // Content is `JSON.stringify(...)` of locally-built objects (constants
-  // + i18n translations + locale string), no user input — safe.
+  // Content is built locally (constants + i18n translations + locale string)
+  // and serialised by serializeJsonLd, which escapes `<` so no value can
+  // close the script element.
   // This is the canonical Next.js + React pattern for JSON-LD; see
   // https://nextjs.org/docs/app/guides/json-ld
-  const softwareLdHtml = JSON.stringify(softwareJsonLd);
-  const faqLdHtml = JSON.stringify(faqJsonLd);
+  const softwareLdHtml = serializeJsonLd(softwareJsonLd);
+  const faqLdHtml = serializeJsonLd(faqJsonLd);
 
   return (
     <>
