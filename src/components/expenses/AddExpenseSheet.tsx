@@ -137,6 +137,10 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
   const t = useTranslations('app.expenses.addSheet');
   const locale = useLocale() as Locale;
   const translateError = useActionErrorTranslator();
+  const tDate = useTranslations('errors.validation.operations.date');
+  // H2: a day after today is refused by the server; the refusal is named on
+  // the date field, not only in a toast that disappears.
+  const [dateError, setDateError] = useState<string | null>(null);
   const fmt = (value: number) => formatCurrency(value, locale);
 
   const amountRef = useRef<HTMLInputElement>(null);
@@ -548,6 +552,9 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
         // round-trip delay it exists to hide.
         if (affectsHero) settleSpend();
         setPendingLocal((current) => Math.max(0, current - value));
+        if (result.fieldErrors?.occurredOn?.includes('operations.date.future')) {
+          setDateError(tDate('future'));
+        }
         toast.error(translateError(result.errorCode));
       } catch (err) {
         if (isNextControlFlowError(err)) throw err;
@@ -1162,8 +1169,14 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
                 id="add-expense-date"
                 type="date"
                 value={occurredOn}
-                onChange={(e) => setOccurredOn(e.target.value)}
+                max={todayInAnkoraTz()}
+                onChange={(e) => {
+                  setOccurredOn(e.target.value);
+                  setDateError(null);
+                }}
                 onFocus={closeDescriptionList}
+                aria-invalid={dateError !== null}
+                aria-describedby={dateError ? 'add-expense-date-error' : undefined}
                 data-testid="add-expense-date"
                 className={[
                   'ankora-text-16 min-h-[26px] w-full border-0 bg-transparent p-0 tabular-nums outline-none',
@@ -1180,6 +1193,16 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
                 </span>
               )}
             </div>
+            {dateError && (
+              <p
+                id="add-expense-date-error"
+                role="alert"
+                data-testid="add-expense-date-error"
+                className="text-danger text-xs"
+              >
+                {dateError}
+              </p>
+            )}
           </div>
           {/*
             F-18 — the note, folded behind a link: most expenses need none, and

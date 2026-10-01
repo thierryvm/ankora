@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import frMessages from '../../../../messages/fr-BE.json';
@@ -222,6 +222,31 @@ describe('the 2-tap promise', () => {
     await user.clear(screen.getByTestId('add-expense-amount'));
     await user.type(screen.getByTestId('add-expense-amount'), '18,50');
     expect(screen.getByTestId('add-expense-submit')).toBeEnabled();
+  });
+});
+
+describe('a day after today (H2)', () => {
+  it('names the refusal on the date field, and clears it when the date changes', async () => {
+    createExpenseAction.mockResolvedValueOnce({
+      ok: false,
+      errorCode: 'errors.validation.generic',
+      fieldErrors: { occurredOn: ['operations.date.future'] },
+    });
+    const user = userEvent.setup();
+    await openSheet();
+
+    const date = screen.getByTestId('add-expense-date');
+    expect(date).toHaveAttribute('max');
+    await user.type(screen.getByTestId('add-expense-amount'), '12');
+    await user.click(screen.getByTestId('add-expense-submit'));
+
+    const alert = await screen.findByTestId('add-expense-date-error');
+    expect(alert).toHaveTextContent('La date ne peut pas être dans le futur.');
+    expect(date).toHaveAttribute('aria-invalid', 'true');
+    expect(date).toHaveAttribute('aria-describedby', 'add-expense-date-error');
+
+    fireEvent.change(date, { target: { value: '2026-07-01' } });
+    expect(screen.queryByTestId('add-expense-date-error')).toBeNull();
   });
 });
 

@@ -10,8 +10,23 @@ import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
 import { rateLimit } from '@/lib/security/rate-limit';
 import type { ActionResult } from '@/lib/actions/types';
 import { MFA_REQUISE, elevationDue } from '@/lib/auth/require-elevated';
+import { todayInAnkoraTz } from '@/lib/date/tz';
 
 const uuidSchema = z.string().uuid();
+
+/**
+ * An expense dated after today (Brussels) is refused, as an income is
+ * (operations.ts `futureDay`): it would count in a month that has not started
+ * and in « Dépensé » before the money has left (H2, tour 65).
+ */
+function futureDay(occurredOn: string | undefined): ActionResult | null {
+  if (occurredOn === undefined || occurredOn <= todayInAnkoraTz()) return null;
+  return {
+    ok: false,
+    errorCode: 'errors.validation.generic',
+    fieldErrors: { occurredOn: ['operations.date.future'] },
+  };
+}
 
 async function authorizedWorkspace(): Promise<
   { ok: true; userId: string; workspaceId: string } | { ok: false; errorCode: string }
@@ -56,6 +71,9 @@ export async function createExpenseAction(input: unknown): Promise<ActionResult>
       fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
     };
   }
+
+  const future = futureDay(parsed.data.occurredOn);
+  if (future) return future;
 
   const supabase = await createClient();
   if (!(await isCategoryWritable(supabase, ctx.workspaceId, parsed.data.categoryId, 'expense'))) {
@@ -108,6 +126,9 @@ export async function updateExpenseAction(id: string, input: unknown): Promise<A
       fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
     };
   }
+
+  const future = futureDay(parsed.data.occurredOn);
+  if (future) return future;
 
   const supabase = await createClient();
   if (!(await isCategoryWritable(supabase, ctx.workspaceId, parsed.data.categoryId, 'expense'))) {

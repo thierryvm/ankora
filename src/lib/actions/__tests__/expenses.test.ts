@@ -219,6 +219,17 @@ describe('updateExpenseAction — validation', () => {
     expect(r.ok).toBe(false);
   });
 
+  it('refuses to move an expense to a day after today (H2)', async () => {
+    programMembership();
+    const r = await updateExpenseAction(EXPENSE_ID, { occurredOn: '2999-01-01' });
+    expect(r).toEqual({
+      ok: false,
+      errorCode: 'errors.validation.generic',
+      fieldErrors: { occurredOn: ['operations.date.future'] },
+    });
+    expect(supa.client.from).not.toHaveBeenCalledWith('expenses');
+  });
+
   it('rejects empty label after trim', async () => {
     programMembership();
     const r = await updateExpenseAction(EXPENSE_ID, { label: '   ' });
@@ -344,6 +355,15 @@ describe('updateExpenseAction — happy path + audit', () => {
 // the action ever reaches the INSERT. A v4-shaped uuid: Zod 4 checks the
 // version and variant digits.
 const CATEGORY_ID = '3f6c1a52-8e1b-4c3d-9a7e-2b5d6f8a9c01';
+
+function todayInBrussels(): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Brussels' }).format(new Date());
+}
+function tomorrowInBrussels(): string {
+  const d = new Date(`${todayInBrussels()}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString().slice(0, 10);
+}
 const VALID_EXPENSE = {
   label: 'Delhaize',
   amount: 42.3,
@@ -402,6 +422,31 @@ describe('createExpenseAction — validation', () => {
     programMembership();
     const r = await createExpenseAction({ ...VALID_EXPENSE, label: '   ' });
     expect(r.ok).toBe(false);
+  });
+
+  // H2 (tour 65): an expense dated after today, in Brussels, is a typo — the
+  // same rule as an income. It is refused on the date field, and nothing is written.
+  it.each([
+    ['tomorrow in Brussels', tomorrowInBrussels()],
+    ['a far-future day', '2999-01-01'],
+  ])('refuses an expense dated %s, on the date field, and writes nothing', async (_c, day) => {
+    programMembership();
+    const r = await createExpenseAction({ ...VALID_EXPENSE, occurredOn: day });
+    expect(r).toEqual({
+      ok: false,
+      errorCode: 'errors.validation.generic',
+      fieldErrors: { occurredOn: ['operations.date.future'] },
+    });
+    expect(supa.client.from).not.toHaveBeenCalledWith('expenses');
+  });
+
+  it('accepts an expense dated today in Brussels', async () => {
+    programOwnCategory();
+    programMembership();
+    supa.program({ table: 'expenses', op: 'insert', result: { data: null, error: null } });
+    const r = await createExpenseAction({ ...VALID_EXPENSE, occurredOn: todayInBrussels() });
+    expect(r).toEqual({ ok: true });
+    expect(supa.lastInsertPayload()).toMatchObject({ occurred_on: todayInBrussels() });
   });
 
   it.each([
