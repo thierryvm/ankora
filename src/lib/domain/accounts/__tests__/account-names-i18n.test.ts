@@ -78,6 +78,7 @@ describe('isSeededDefaultName', () => {
     expect(isSeededDefaultName('daily_card', 'Vie Courante')).toBe(true);
     expect(isSeededDefaultName('income_bills', 'Compte Principal')).toBe(true);
     expect(isSeededDefaultName('provisions', 'Compte Épargne')).toBe(true);
+    expect(isSeededDefaultName('provisions', 'Épargne & Provisions')).toBe(true);
   });
 
   it('never replaces a name the person typed, nor a default of another type', () => {

@@ -67,7 +67,9 @@ export function accountTypeFromKind(kind: AccountKind): AccountType {
 const SEEDED_DEFAULT_NAMES: Readonly<Record<AccountType, readonly string[]>> = Object.freeze({
   income_bills: ['Compte Principal'],
   daily_card: ['Carte Quotidien', 'Vie Courante'],
-  provisions: ['Compte Épargne'],
+  // « Épargne & Provisions »: label seeded on 2026-04-17, copied into
+  // display_name for existing workspaces on 2026-05-03 (relecture tour 65).
+  provisions: ['Compte Épargne', 'Épargne & Provisions'],
 });
 
 /** True when `name` is the database's seeded default for this account type. */

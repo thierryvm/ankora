@@ -254,6 +254,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
     setNoteOpen(false);
     setShowAllCategories(false);
     setOccurredOn(todayInAnkoraTz());
+    setDateError(null);
     // Back to the pre-selection — which may be null (F-6): a choice made in
     // one opening must not silently carry over to the next expense.
     setCategoryId(context?.preselectedId ?? null);
