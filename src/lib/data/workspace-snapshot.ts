@@ -1,4 +1,5 @@
-import { getLocale } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
+import { isSeededDefaultName } from '@/lib/domain/accounts/account-type';
 import { cache } from 'react';
 
 import { elevationDue } from '@/lib/auth/require-elevated';
@@ -541,12 +542,20 @@ async function readWorkspaceSnapshot(workspaceId: string): Promise<WorkspaceSnap
   // One mapping with the server actions (tour 55), never a second one here.
   const charges: Charge[] = (chargesRes.data ?? []).map(chargeFromRow);
 
-  const accounts: AccountSnapshot[] = (accountsRes.data ?? []).map((a) => ({
-    kind: a.kind as AccountKind,
-    label: a.label,
-    accountType: a.account_type as AccountType,
-    displayName: a.display_name,
-  }));
+  // A seeded default name is replaced by the interface's own name for that
+  // account, so the card and every sentence say the same thing (H1, tour 65).
+  const tDefaults = await getTranslations('app.accounts.defaults');
+  const accounts: AccountSnapshot[] = (accountsRes.data ?? []).map((a) => {
+    const accountType = a.account_type as AccountType;
+    return {
+      kind: a.kind as AccountKind,
+      label: a.label,
+      accountType,
+      displayName: isSeededDefaultName(accountType, a.display_name)
+        ? tDefaults(accountType)
+        : a.display_name,
+    };
+  });
 
   if (monthlyExpensesRes.error) {
     log.warn('Failed to load monthly expenses for dashboard', {

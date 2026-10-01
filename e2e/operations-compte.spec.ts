@@ -132,7 +132,7 @@ test.describe.serial('Opérations de compte — trois gestes, un chiffre qui ne 
     await ouvrirFeuille(
       page,
       page.getByRole('button', {
-        name: 'J’ai fait ce virement : Virement à faire vers Dépenses du quotidien',
+        name: 'J’ai fait ce virement : Virement à faire vers Vie courante',
       }),
       'feuille-virement',
     );

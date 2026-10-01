@@ -744,9 +744,9 @@
       "planDescription": "The transfers to run at the start of the month across your three accounts.",
       "planAdjustAccounts": "Adjust my accounts",
       "missingSetupTitle": "Set up your accounts first",
-      "missingSetupDescription": "To calculate your Smart Transfer, Ankora needs your monthly income and the fixed amount you send to Daily Spending.",
+      "missingSetupDescription": "To calculate your Smart Transfer, Ankora needs your monthly income and the fixed amount you send to your Everyday account.",
       "missingSetupCta": "Set up my accounts",
-      "transferPrincipalToVieCourante": "Main → Daily Spending",
+      "transferPrincipalToVieCourante": "Main account → Everyday account",
       "transferVieCouranteHint": "Envelope for groceries, fuel, dining.",
       "transferPrincipalToEpargne": "To transfer into savings",
       "transferEpargneToPrincipal": "To take back from savings",
@@ -918,7 +918,7 @@
     },
     "accounts": {
       "metaTitle": "My accounts",
-      "metaDescription": "Track the balances of your Main, Daily Spending and Savings accounts. Set your monthly income and your transfer to Daily Spending.",
+      "metaDescription": "Track the balances of your Main account, Everyday account and Savings account. Set your monthly income and your transfer to your Everyday account.",
       "title": "My accounts",
       "subtitle": "Your balances follow your operations: note your real balance whenever you want to realign them. Your income and monthly transfer are set further down.",
       "balancesHeading": "Your account balances",
@@ -928,17 +928,17 @@
       "saving": "Saving…",
       "income": {
         "title": "Net monthly income",
-        "description": "The salary that lands every month in your Main account. Used to calculate what's left after bills and the transfer to Daily Spending.",
+        "description": "The salary that lands every month in your Main account. Used to calculate what's left after bills and the transfer to your Everyday account.",
         "placeholder": "e.g. 2500",
         "toastSaved": "Monthly income updated",
         "amountLabel": "Net monthly income (€)"
       },
       "transfer": {
-        "title": "Monthly transfer to Daily Spending",
-        "description": "Fixed amount transferred every month from Main to your Daily Spending account. This is what covers groceries, fuel and dining.",
+        "title": "Monthly transfer to Everyday account",
+        "description": "Fixed amount transferred every month from your Main account to your Everyday account. This is what covers groceries, fuel and dining.",
         "placeholder": "e.g. 500",
         "toastSaved": "Monthly transfer updated",
-        "amountLabel": "Monthly transfer to Daily Spending (€)"
+        "amountLabel": "Monthly transfer to Everyday account (€)"
       },
       "balance": {
         "invalidAmount": "Enter a valid amount.",
@@ -964,7 +964,7 @@
         },
         "vieCourante": {
           "description": "Day-to-day budget (groceries, fuel, dining).",
-          "usage": "Used on the dashboard: what is on your everyday account, shown under what you have left."
+          "usage": "Used on the dashboard: what is on your Everyday account, shown under what you have left."
         },
         "epargne": {
           "description": "Smooths quarterly and annual bills.",
@@ -977,9 +977,9 @@
         "daily_card": "Groceries, Gas & Leisure"
       },
       "defaults": {
-        "income_bills": "Main Account",
-        "provisions": "Savings Account",
-        "daily_card": "Daily Card"
+        "income_bills": "Main account",
+        "provisions": "Savings account",
+        "daily_card": "Everyday account"
       },
       "rename": {
         "placeholder": "E.g. Belfius, Revolut, ING…",
@@ -1841,8 +1841,8 @@
       "incompletPhrase": "No money in for {month} and no monthly income on file: “You have left” cannot be worked out without it.",
       "incompletCta": "Add money in",
       "termeMisDeCote": "Set aside",
-      "quotidien": "On your everyday account: {montant} · calculated from your operations",
-      "quotidienAria": "On your everyday account: {montant}, calculated from your operations, where this balance comes from",
+      "quotidien": "On your Everyday account: {montant} · calculated from your operations",
+      "quotidienAria": "On your Everyday account: {montant}, calculated from your operations, where this balance comes from",
       "titreAVenir": "You will have left",
       "titrePasse": "You had left",
       "baseMois": "on your {month} budget",
@@ -1889,7 +1889,7 @@
       "sixMois": "Six months"
     },
     "virements": {
-      "versQuotidien": "Transfer to make to Everyday spending",
+      "versQuotidien": "Transfer to make to your Everyday account",
       "versProvisions": "Transfer to make to Provisions for your bills",
       "depuisProvisions": "To take back from Provisions for your bills"
     },

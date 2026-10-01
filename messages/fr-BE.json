@@ -744,9 +744,9 @@
       "planDescription": "Les virements à exécuter en début de mois sur tes trois comptes.",
       "planAdjustAccounts": "Ajuster mes comptes",
       "missingSetupTitle": "Renseigne d'abord tes comptes",
-      "missingSetupDescription": "Pour calculer ton Virement Intelligent, Ankora a besoin de ton revenu mensuel et du montant fixe que tu envoies sur Vie Courante.",
+      "missingSetupDescription": "Pour calculer ton Virement Intelligent, Ankora a besoin de ton revenu mensuel et du montant fixe que tu envoies sur Vie courante.",
       "missingSetupCta": "Configurer mes comptes",
-      "transferPrincipalToVieCourante": "Principal → Vie Courante",
+      "transferPrincipalToVieCourante": "Compte principal → Vie courante",
       "transferVieCouranteHint": "Enveloppe courses, essence, restos.",
       "transferPrincipalToEpargne": "À virer vers l’épargne",
       "transferEpargneToPrincipal": "À reprendre sur l’épargne",
@@ -918,7 +918,7 @@
     },
     "accounts": {
       "metaTitle": "Mes comptes",
-      "metaDescription": "Suis les soldes de tes comptes Principal, Vie Courante et Épargne. Règle ton revenu mensuel et ton virement vers Vie Courante.",
+      "metaDescription": "Suis les soldes de ton compte principal, de Vie courante et de ton compte épargne. Règle ton revenu mensuel et ton virement vers Vie courante.",
       "title": "Mes comptes",
       "subtitle": "Les soldes suivent tes opérations : note ton solde réel quand tu veux les recaler. Ton revenu et ton virement mensuel se règlent plus bas.",
       "balancesHeading": "Soldes de tes comptes",
@@ -928,17 +928,17 @@
       "saving": "Enregistrement…",
       "income": {
         "title": "Revenu mensuel net",
-        "description": "Le salaire qui arrive chaque mois sur ton compte Principal. Sert à calculer ce qu'il te reste après les factures et le virement vers Vie Courante.",
+        "description": "Le salaire qui arrive chaque mois sur ton compte principal. Sert à calculer ce qu'il te reste après les factures et le virement vers Vie courante.",
         "placeholder": "Ex. 2500",
         "toastSaved": "Revenu mensuel mis à jour",
         "amountLabel": "Revenu mensuel net (€)"
       },
       "transfer": {
-        "title": "Virement mensuel vers Vie Courante",
-        "description": "Somme fixe transférée chaque mois du Principal vers ton compte Vie Courante. C'est ce qui servira aux courses, à l'essence et aux restos.",
+        "title": "Virement mensuel vers Vie courante",
+        "description": "Somme fixe transférée chaque mois du compte principal vers Vie courante. C'est ce qui servira aux courses, à l'essence et aux restos.",
         "placeholder": "Ex. 500",
         "toastSaved": "Virement mensuel mis à jour",
-        "amountLabel": "Virement mensuel vers Vie Courante (€)"
+        "amountLabel": "Virement mensuel vers Vie courante (€)"
       },
       "balance": {
         "invalidAmount": "Entre un montant valide.",
@@ -964,7 +964,7 @@
         },
         "vieCourante": {
           "description": "Budget du quotidien (courses, essence, restos).",
-          "usage": "Sert au tableau de bord : ce qu’il y a sur ton compte du quotidien, sous « Il te reste »."
+          "usage": "Sert au tableau de bord : ce qu’il y a sur Vie courante, sous « Il te reste »."
         },
         "epargne": {
           "description": "Lisse les factures trimestrielles et annuelles.",
@@ -977,9 +977,9 @@
         "daily_card": "Courses, Essence, Loisirs"
       },
       "defaults": {
-        "income_bills": "Compte Principal",
-        "provisions": "Compte Épargne",
-        "daily_card": "Carte Quotidien"
+        "income_bills": "Compte principal",
+        "provisions": "Compte épargne",
+        "daily_card": "Vie courante"
       },
       "rename": {
         "placeholder": "Ex: Belfius, Revolut, ING…",
@@ -1345,7 +1345,7 @@
         "statutAJour": "À jour ✨",
         "deficit": "Déficit détecté :",
         "rattrapageDescription": "Inclut +{amount} € pour rattraper le déficit sur 3 mois.",
-        "tooltip": "L'algorithme calcule ce que ton compte Épargne devrait contenir aujourd'hui pour absorber sereinement toutes tes factures périodiques à venir."
+        "tooltip": "L'algorithme calcule ce que ton compte épargne devrait contenir aujourd'hui pour absorber sereinement toutes tes factures périodiques à venir."
       },
       "virements": {
         "title": "Assistant Virements",
@@ -1841,8 +1841,8 @@
       "incompletPhrase": "Aucun argent reçu en {month} et aucun revenu mensuel écrit : « Il te reste » ne se calcule pas sans lui.",
       "incompletCta": "Ajouter de l’argent reçu",
       "termeMisDeCote": "Mis de côté",
-      "quotidien": "Sur ton compte du quotidien : {montant} · calculé depuis tes opérations",
-      "quotidienAria": "Sur ton compte du quotidien : {montant}, calculé depuis tes opérations, d'où vient ce solde",
+      "quotidien": "Sur Vie courante : {montant} · calculé depuis tes opérations",
+      "quotidienAria": "Sur Vie courante : {montant}, calculé depuis tes opérations, d'où vient ce solde",
       "titreAVenir": "Il te restera",
       "titrePasse": "Il t’est resté",
       "baseMois": "sur ton budget {voyelle, select, oui {d’{month}} other {de {month}}}",
@@ -1889,7 +1889,7 @@
       "sixMois": "Six mois"
     },
     "virements": {
-      "versQuotidien": "Virement à faire vers Dépenses du quotidien",
+      "versQuotidien": "Virement à faire vers Vie courante",
       "versProvisions": "Virement à faire vers Provisions pour tes factures",
       "depuisProvisions": "À reprendre sur Provisions pour tes factures"
     },

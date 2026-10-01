@@ -257,7 +257,7 @@ test.describe.serial('Le mois concerné d’un argent reçu', () => {
     expect((await retour.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await expect(encore).toContainText('0 payées sur 1');
     // Today's balance of the daily account never sits next to another month's figure.
-    await expect(page.getByText(/Sur ton compte du quotidien/)).toHaveCount(0);
+    await expect(page.getByText(/Sur Vie courante/)).toHaveCount(0);
     const lien = page.getByTestId('cockpit-voir-factures');
     await expect(lien).toHaveAttribute(
       'href',

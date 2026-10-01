@@ -81,7 +81,11 @@ vi.mock('@/lib/env', () => ({ env: {} }));
 vi.mock('@/lib/log', () => ({
   log: { info: h.logInfo, error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
-vi.mock('next-intl/server', () => ({ getLocale: async () => 'fr-BE' }));
+vi.mock('next-intl/server', () => ({
+  getLocale: async () => 'fr-BE',
+  // The snapshot names seeded accounts by their translated default (H1).
+  getTranslations: async () => (key: string) => key,
+}));
 vi.mock('@/i18n/navigation', () => ({
   redirect: ({ href }: { href: string }) => {
     throw new Error(`REDIRECT ${href}`);
