@@ -13,9 +13,9 @@ test.describe('Security headers', () => {
   });
 
   test('style-src allow-lists no third-party style hash', async ({ page }) => {
-    // Deliberate absence, not an oversight. Allow-listing the hash of the
-    // <style> sonner injects at runtime would silence its two console
-    // violations, but allowing a <style> also APPLIES it — and that copy is
+    // Deliberate absence, not an oversight. Upstream sonner injects a runtime
+    // <style> (our vendored copy in src/vendor/sonner/ no longer does).
+    // Allowing that <style> would also APPLY it — and the injected copy is
     // unlayered, so it would outrank the layered `@import` in globals.css and
     // every Tailwind utility, painting a white toast in dark mode. The
     // stylesheet is served from 'self' instead. Cf. docs/prs/PR-csp-sonner-report.md.

@@ -33,17 +33,16 @@ This file lists all open-source and third-party dependencies used in this projec
 | `react` | 19.2.4 | MIT |
 | `react-dom` | 19.2.4 | MIT |
 | `server-only` | 0.0.1 | MIT |
-| `sonner` | 2.0.7 | MIT |
 | `tailwind-merge` | 3.5.0 | MIT |
 | `zod` | 4.4.3 | MIT |
 
 ## Licences de l'arbre de production complet
 
-Arbre complet : **183** paquets, transitives comprises. Ankora est un service hébergé — aucune copie du logiciel n'est remise aux personnes qui l'utilisent, donc l'obligation de redistribution des licences permissives n'est pas déclenchée. Le décompte par licence suffit ; les attributions nominatives sont listées séparément ci-dessous.
+Arbre complet : **182** paquets, transitives comprises. Ankora est un service hébergé — aucune copie du logiciel n'est remise aux personnes qui l'utilisent, donc l'obligation de redistribution des licences permissives n'est pas déclenchée. Le décompte par licence suffit ; les attributions nominatives sont listées séparément ci-dessous.
 
 | Licence | Paquets |
 | --- | --- |
-| MIT | 128 |
+| MIT | 127 |
 | Apache-2.0 | 22 |
 | Apache-2.0 AND MIT | 11 |
 | LGPL-3.0-or-later | 10 |
@@ -131,6 +130,15 @@ In addition to open-source software, Ankora™ uses the following third-party se
 
 All third-party components are used in their original form as distributed through
 npm. No modifications have been made to their source code unless explicitly noted.
+
+### Vendored and modified
+
+- **sonner** 2.0.8 — MIT, © Emil Kowalski. Copied into `src/vendor/sonner/`
+  with its license (`src/vendor/sonner/LICENSE.md`). It is no longer an npm
+  dependency, so the generated inventory above does not list it. Modification:
+  the runtime stylesheet injection is removed (its `<style>` element broke our
+  CSP); the same stylesheet is served from `src/vendor/sonner/styles.css`.
+  Details in `src/vendor/sonner/README.md`.
 
 ## Contact
 

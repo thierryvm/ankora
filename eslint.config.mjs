@@ -47,6 +47,9 @@ const eslintConfig = defineConfig([
     // not meant to ship — gitignored, but ESLint scans the filesystem so we
     // exclude them explicitly to keep `npm run lint` clean):
     'design_handoff_ankora_v1/**',
+    // Vendored third-party code, kept byte-close to upstream so a version bump
+    // stays a readable diff (see src/vendor/sonner/README.md).
+    'src/vendor/**',
   ]),
 ]);
 

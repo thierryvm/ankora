@@ -76,7 +76,6 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "server-only": "^0.0.1",
-    "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",
     "zod": "^4.4.3"
   },
@@ -113,7 +112,7 @@
     "tmp": "^0.2.6",
     "postcss": "^8.5.18",
     "uuid": "^14.0.0",
-    "basic-ftp": "^6.0.1",
+    "basic-ftp": "^6.2.1",
     "ip-address": "^10.2.0",
     "sharp": "^0.35.4"
   }

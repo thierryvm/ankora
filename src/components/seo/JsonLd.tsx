@@ -1,6 +1,7 @@
 import { createElement } from 'react';
 
 import { getNonce } from '@/lib/security/nonce';
+import { serializeJsonLd } from '@/lib/seo/serialize-json-ld';
 
 /**
  * Server-rendered JSON-LD injector with CSP nonce.
@@ -9,7 +10,8 @@ import { getNonce } from '@/lib/security/nonce';
  * approaches (ref/useEffect) won't work. We inject via React's property spread
  * using a dynamically-assembled key so over-eager security linters don't flag
  * the standard React prop name. The payload is always a server-built object
- * we control — JSON.stringify never emits executable script content.
+ * we control, serialised by serializeJsonLd, which escapes `<` so no value
+ * can close the script element.
  *
  * The nonce is read from the `x-nonce` request header set by `src/proxy.ts`
  * so strict-dynamic CSP continues to allow this script in production.
@@ -25,6 +27,6 @@ export async function JsonLd({ data }: { data: object }) {
     type: 'application/ld+json',
     nonce,
     suppressHydrationWarning: true,
-    [propKey]: { __html: JSON.stringify(data) },
+    [propKey]: { __html: serializeJsonLd(data) },
   });
 }

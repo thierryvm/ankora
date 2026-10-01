@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -40,6 +40,11 @@ function sansCommentaires(src: string): string {
   // Last significant character emitted: decides whether `/` opens a regex.
   let prec = '';
   const avantRegex = '(,=:[!&|?{};+-*%<>~^';
+  // After these keywords an expression starts, so `/` opens a regex even
+  // though the last significant character is a letter (`return /x/.test(u)`).
+  // `(?<![\w$.])` keeps `foo.return` or `myreturn` out.
+  const apresMotCle =
+    /(?<![\w$.])(?:return|typeof|instanceof|in|of|new|delete|void|throw|case|do|else|yield|await)\s*$/;
   while (i < src.length) {
     const c = src[i]!;
     const n = src[i + 1];
@@ -57,7 +62,7 @@ function sansCommentaires(src: string): string {
       c === "'" ||
       c === '"' ||
       c === '`' ||
-      (c === '/' && (prec === '' || avantRegex.includes(prec)))
+      (c === '/' && (prec === '' || avantRegex.includes(prec) || apresMotCle.test(out)))
     ) {
       let j = i + 1;
       let classe = false;
@@ -111,6 +116,30 @@ describe('sansCommentaires — the probe strips comments, never code', () => {
     expect(code).not.toContain('trailing');
   });
 
+  it('a regex literal right after return is read as a regex, not a comment', () => {
+    // Tour 64 leftover: after `return` the last significant character is a
+    // letter, so `/` was read as a division and the `/*` inside the regex
+    // below opened a block comment that swallowed the code after it.
+    const src = [
+      'function isFont(u) {',
+      '  return /^\\/fonts\\/*x/.test(u); // trailing',
+      '}',
+      'const apres = 1; /* fin */',
+    ].join('\n');
+    const code = sansCommentaires(src);
+    expect(code).toContain('return /^\\/fonts\\/*x/.test(u);');
+    expect(code).toContain('const apres = 1;');
+    expect(code).not.toContain('trailing');
+    expect(code).not.toContain('fin');
+  });
+
+  it('a division after an identifier is still a division', () => {
+    const code = sansCommentaires('const r = total / parts; // half\nconst s = 2;');
+    expect(code).toContain('const r = total / parts;');
+    expect(code).toContain('const s = 2;');
+    expect(code).not.toContain('half');
+  });
+
   it('the real sw.js keeps every handler after its comments', () => {
     for (const h of ['install', 'activate', 'message', 'fetch'])
       expect(CODE).toContain(`addEventListener('${h}'`);
@@ -131,6 +160,81 @@ describe('public/sw.js — runtime caching lives inside the event lifetime', () 
     expect(attente, 'aucun event.waitUntil dans fetch').toBeGreaterThanOrEqual(0);
     expect(fetchHandler.indexOf('cache.put(', attente)).toBeGreaterThan(attente);
     expect(fetchHandler.slice(attente)).toContain('trimBuildAssets(');
+  });
+});
+
+describe('public/sw.js — a simulated fetch event', () => {
+  // Runs the real worker source against a fake `self`, `caches` and `fetch`.
+  // The fake event behaves like the browser: `waitUntil` throws once the
+  // promise given to `respondWith` has settled (InvalidStateError).
+  function demarrer() {
+    const handlers: Record<string, (e: unknown) => void> = {};
+    const puts: string[] = [];
+    const cache = {
+      put: async (req: { url: string }) => {
+        puts.push(req.url);
+      },
+      keys: async () => [],
+      delete: async () => true,
+      match: async () => undefined,
+    };
+    const fakeSelf = {
+      location: { origin: 'https://ankora.test' },
+      clients: { claim: async () => undefined },
+      skipWaiting: () => undefined,
+      addEventListener: (type: string, h: (e: unknown) => void) => {
+        handlers[type] = h;
+      },
+    };
+    const fakeCaches = {
+      match: async () => undefined,
+      open: async () => cache,
+      keys: async () => [],
+      delete: async () => true,
+    };
+    const reseau = async () => ({ ok: true, clone: () => ({ copie: true }) });
+    new Function('self', 'caches', 'fetch', SW)(fakeSelf, fakeCaches, reseau);
+    return { handlers, puts };
+  }
+
+  it('writes the asset to the cache through event.waitUntil, without throwing', async () => {
+    const { handlers, puts } = demarrer();
+    expect(handlers.fetch, "no 'fetch' handler registered").toBeTypeOf('function');
+
+    let reglee = false;
+    let reponse: Promise<unknown> | undefined;
+    const attentes: Promise<unknown>[] = [];
+    const url = 'https://ankora.test/_next/static/chunks/app-505.js';
+    const event = {
+      request: { method: 'GET', url, mode: 'no-cors' },
+      respondWith: (p: Promise<unknown>) => {
+        reponse = Promise.resolve(p).finally(() => {
+          reglee = true;
+        });
+      },
+      waitUntil: (p: Promise<unknown>) => {
+        if (reglee) throw new Error('InvalidStateError: waitUntil after respondWith settled');
+        attentes.push(p);
+      },
+    };
+
+    handlers.fetch!(event);
+    expect(reponse, 'a cacheable asset must be answered by the worker').toBeDefined();
+    await expect(reponse).resolves.toMatchObject({ ok: true });
+    expect(attentes, 'the cache write must be handed to waitUntil').toHaveLength(1);
+    await Promise.all(attentes);
+    expect(puts).toEqual([url]);
+  });
+
+  it('leaves a non-asset request to the browser (no respondWith)', () => {
+    const { handlers } = demarrer();
+    const respondWith = vi.fn();
+    handlers.fetch!({
+      request: { method: 'GET', url: 'https://ankora.test/fr-BE/app?_rsc=1', mode: 'cors' },
+      respondWith,
+      waitUntil: vi.fn(),
+    });
+    expect(respondWith).not.toHaveBeenCalled();
   });
 });
 
