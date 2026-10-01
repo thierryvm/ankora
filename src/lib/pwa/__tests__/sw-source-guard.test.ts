@@ -26,7 +26,113 @@ const SW = readFileSync(join(process.cwd(), 'public', 'sw.js'), 'utf8');
  * sinon elle juge la prose. Même leçon que la classe Tailwind épelée dans une
  * JSDoc (cf. `CLAUDE.md`, porte du 29/07).
  */
-const CODE = SW.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+const CODE = sansCommentaires(SW);
+
+/**
+ * Tour 64 — a two-regex strip (block comments, then line comments) read the
+ * `/*` inside « // /fonts/*.ttf » as the start of a block comment and swallowed
+ * every line of code down to the next `*\/`. This reader walks the source once
+ * and knows when it is inside a string, a template or a regex literal.
+ */
+function sansCommentaires(src: string): string {
+  let out = '';
+  let i = 0;
+  // Last significant character emitted: decides whether `/` opens a regex.
+  let prec = '';
+  const avantRegex = '(,=:[!&|?{};+-*%<>~^';
+  while (i < src.length) {
+    const c = src[i]!;
+    const n = src[i + 1];
+    if (c === '/' && n === '/') {
+      while (i < src.length && src[i] !== '\n') i++;
+      continue;
+    }
+    if (c === '/' && n === '*') {
+      const fin = src.indexOf('*/', i + 2);
+      i = fin === -1 ? src.length : fin + 2;
+      out += ' ';
+      continue;
+    }
+    if (
+      c === "'" ||
+      c === '"' ||
+      c === '`' ||
+      (c === '/' && (prec === '' || avantRegex.includes(prec)))
+    ) {
+      let j = i + 1;
+      let classe = false;
+      while (j < src.length) {
+        const d = src[j]!;
+        if (d === '\\') {
+          j += 2;
+          continue;
+        }
+        if (c === '/' && d === '[') classe = true;
+        else if (c === '/' && d === ']') classe = false;
+        else if (d === c && !classe) break;
+        j++;
+      }
+      out += src.slice(i, j + 1);
+      prec = c;
+      i = j + 1;
+      continue;
+    }
+    out += c;
+    if (!/\s/.test(c)) prec = c;
+    i++;
+  }
+  return out;
+}
+
+describe('sansCommentaires — the probe strips comments, never code', () => {
+  it('a line comment spelling /fonts/*.ttf does not swallow the code after it', () => {
+    const src = [
+      '// /fonts/*.ttf HTML-404 poison.)',
+      "const garde = 'gardé';",
+      '/* fin */ const apres = 1;',
+    ].join('\n');
+    const code = sansCommentaires(src);
+    expect(code).toContain("const garde = 'gardé';");
+    expect(code).toContain('const apres = 1;');
+    expect(code).not.toContain('poison');
+    expect(code).not.toContain('fin');
+  });
+
+  it('keeps strings and regex literals that contain // or /*', () => {
+    const src = [
+      "const u = 'https://ankora.be/*';",
+      'const r = /^\\/(?:fonts\\/)|\\.(?:ttf)$/; // trailing',
+      'const s = "a/*b";',
+    ].join('\n');
+    const code = sansCommentaires(src);
+    expect(code).toContain("'https://ankora.be/*'");
+    expect(code).toContain('/^\\/(?:fonts\\/)|\\.(?:ttf)$/;');
+    expect(code).toContain('"a/*b"');
+    expect(code).not.toContain('trailing');
+  });
+
+  it('the real sw.js keeps every handler after its comments', () => {
+    for (const h of ['install', 'activate', 'message', 'fetch'])
+      expect(CODE).toContain(`addEventListener('${h}'`);
+    expect(CODE).toContain('const CACHEABLE_ASSET');
+    // Declared right after the « /fonts/*.ttf » line comment.
+    expect(CODE).toContain('const MAX_BUILD_ASSETS');
+  });
+});
+
+describe('public/sw.js — runtime caching lives inside the event lifetime', () => {
+  it('the fetch handler hands its cache write to event.waitUntil', () => {
+    // Without it the browser may stop the worker once the response is
+    // returned, before cache.put and the trim have run.
+    const debut = CODE.indexOf("addEventListener('fetch'");
+    expect(debut, "le gestionnaire 'fetch' est introuvable").toBeGreaterThanOrEqual(0);
+    const fetchHandler = CODE.slice(debut);
+    const attente = fetchHandler.indexOf('event.waitUntil(');
+    expect(attente, 'aucun event.waitUntil dans fetch').toBeGreaterThanOrEqual(0);
+    expect(fetchHandler.indexOf('cache.put(', attente)).toBeGreaterThan(attente);
+    expect(fetchHandler.slice(attente)).toContain('trimBuildAssets(');
+  });
+});
 
 describe('public/sw.js — garde source du mécanisme de mise à jour', () => {
   it("n'active PAS le worker automatiquement à l'installation", () => {

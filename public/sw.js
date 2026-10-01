@@ -217,12 +217,17 @@ self.addEventListener('fetch', (event) => {
         fetch(request).then((res) => {
           if (res.ok) {
             const copy = res.clone();
-            caches
-              .open(STATIC_CACHE)
-              .then((cache) =>
-                cache.put(request, copy).then(() => trimBuildAssets(cache, MAX_BUILD_ASSETS)),
-              )
-              .catch(() => undefined);
+            // The write and the trim run inside the event's lifetime: without
+            // waitUntil the browser may stop the worker once `res` is returned.
+            // Called while respondWith's promise is still pending, as required.
+            event.waitUntil(
+              caches
+                .open(STATIC_CACHE)
+                .then((cache) =>
+                  cache.put(request, copy).then(() => trimBuildAssets(cache, MAX_BUILD_ASSETS)),
+                )
+                .catch(() => undefined),
+            );
           }
           return res;
         }),

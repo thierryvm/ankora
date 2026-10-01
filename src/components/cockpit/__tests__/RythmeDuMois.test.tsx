@@ -17,7 +17,7 @@ import Decimal from 'decimal.js';
 
 import { epargneEstimee } from '@/lib/domain/cockpit/epargne-estimee';
 
-import { RythmeDuMois, type RythmeDuMoisProps } from '../RythmeDuMois';
+import { RythmeDuMois, reperesDeLAxe, type RythmeDuMoisProps } from '../RythmeDuMois';
 
 // Fictitious household (public repo): the 505 € budget family. September 2026,
 // day 10 of 30. Income 1 705 − bills 705 − monthly share 300 − instalments 195 = 505.
@@ -200,7 +200,13 @@ describe('RythmeDuMois — budget month that opened before the 1st (ADR-047)', (
   const reperes = () => Array.from(screen.getByTestId('rythme-axe').querySelectorAll('span'));
 
   it('the axis names dates of the budget window, never raw day indexes', () => {
+    // Tour 64: ticks follow the measured axis; jsdom measures 0, so this case
+    // pins a desktop-wide axis (1000 px) where a weekly date fits.
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+      width: 1000,
+    } as DOMRect);
     monter(OCTOBRE);
+    vi.restoreAllMocks();
     const r = reperes().map((s) => s.textContent);
     expect(r[0]).toBe('28 sept.');
     expect(r).toContain('5 oct.');
@@ -259,5 +265,53 @@ describe('RythmeDuMois — budget month that opened before the 1st (ADR-047)', (
   it('a calendar month keeps its numbered axis', () => {
     monter();
     expect(reperes().map((s) => s.textContent)).toEqual(['1', '5', '10', '15', '20', '25', '30']);
+  });
+});
+
+// Tour 64 — at 375 px the axis of a 34-day window is ~311 px for 34 columns:
+// « 26 oct. » centred on column 29 ran into « 31 oct. » aligned on the right.
+// Geometry rebuilt here on its own (label widths as rendered at text-xs,
+// first tick aligned left, last aligned right, others centred).
+describe('reperesDeLAxe — ticks derived from the width of the axis', () => {
+  const LARGEUR_DATE = 50; // « 28 sept. » at 12 px
+  const LARGEUR_NOMBRE = 14; // « 31 » at 12 px
+  const boites = (t: number[], jM: number, enDates: boolean, L: number) => {
+    const w = enDates ? LARGEUR_DATE : LARGEUR_NOMBRE;
+    return t.map((j) => {
+      if (j === 1) return [0, w] as const;
+      if (j === jM) return [L - w, L] as const;
+      const c = ((j - 0.5) * L) / jM;
+      return [c - w / 2, c + w / 2] as const;
+    });
+  };
+  const verifie = (jM: number, enDates: boolean, L: number) => {
+    const t = reperesDeLAxe(jM, enDates, L);
+    expect(t[0]).toBe(1);
+    expect(t.at(-1)).toBe(jM);
+    const b = boites(t, jM, enDates, L);
+    for (const [g, d] of b) {
+      expect(g, `${jM} j, ${L} px`).toBeGreaterThanOrEqual(0);
+      expect(d, `${jM} j, ${L} px`).toBeLessThanOrEqual(L);
+    }
+    for (let i = 1; i < b.length; i++)
+      expect(b[i]![0], `${jM} j, ${L} px, ticks ${t.join(',')}`).toBeGreaterThan(b[i - 1]![1]);
+  };
+
+  it('a 34-day window at 375 px: no two labels touch, none leaves the frame', () => {
+    verifie(34, true, 311);
+  });
+
+  it('holds for every window length and every width from 280 to 1440 px', () => {
+    for (let L = 280; L <= 1440; L += 10)
+      for (let jM = 27; jM <= 62; jM++) {
+        verifie(jM, true, L);
+        if (jM <= 31) verifie(jM, false, L);
+      }
+  });
+
+  it('a wider axis keeps more ticks: the count is not fixed for one width', () => {
+    expect(reperesDeLAxe(61, true, 1200).length).toBeGreaterThan(
+      reperesDeLAxe(61, true, 280).length,
+    );
   });
 });

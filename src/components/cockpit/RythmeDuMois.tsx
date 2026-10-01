@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Decimal from 'decimal.js';
 import { ChevronRight } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
@@ -229,13 +229,57 @@ function horsDuMois(p: Readonly<{ month: number; moisDeBudget?: number }>): bool
  * day. Shifted (ADR-047), dates are wider than numbers: one tick a week from
  * the first day, and the last day, dropping a weekly tick too close to it.
  */
-export function reperesDeLAxe(jM: number, enDates: boolean): number[] {
-  if (!enDates)
-    return [1, 5, 10, 15, 20, 25, jM].filter((j, i, a) => j <= jM && a.indexOf(j) === i);
+export function reperesDeLAxe(
+  jM: number,
+  enDates: boolean,
+  largeur: number = LARGEUR_AXE_PAR_DEFAUT,
+): number[] {
+  const candidats: number[] = [];
+  if (enDates) for (let j = 1; j < jM; j += 7) candidats.push(j);
+  else for (const j of [1, 5, 10, 15, 20, 25]) if (j < jM) candidats.push(j);
+  // Greedy left to right, then the last day, which always stays: any kept
+  // tick whose label would touch the last one's is dropped.
+  const etendue = (j: number) => etendueDuRepere(j, jM, enDates, largeur);
   const t: number[] = [];
-  for (let j = 1; j <= jM - 4; j += 7) t.push(j);
+  for (const j of candidats) {
+    const prec = t.at(-1);
+    if (prec === undefined || etendue(j)[0] >= etendue(prec)[1] + ECART_REPERES) t.push(j);
+  }
+  while (t.length > 0 && etendue(t.at(-1)!)[1] + ECART_REPERES > etendue(jM)[0]) t.pop();
   t.push(jM);
   return t;
+}
+
+/** Width assumed before the axis is measured: the narrowest phone, mobile first. */
+export const LARGEUR_AXE_PAR_DEFAUT = 280;
+/** Free space kept between two labels, in px. */
+export const ECART_REPERES = 6;
+/**
+ * Upper bound of a label's width at text-xs (12 px): a date (« 28 sept. »,
+ * « 28 Sept. », « 28 sep ») is at most eight characters, a day number two.
+ * A character is at most 7 px in this font size.
+ */
+export function largeurDuRepere(enDates: boolean): number {
+  return (enDates ? 8 : 2) * 7;
+}
+
+/**
+ * Horizontal extent [left, right] of tick `j` in px, on an axis `largeur` px
+ * wide split into `jM` columns. Same alignment as the rendered axis: the
+ * first and last ticks align inward, everything else is centred on its column.
+ */
+export function etendueDuRepere(
+  j: number,
+  jM: number,
+  enDates: boolean,
+  largeur: number,
+): [number, number] {
+  const w = largeurDuRepere(enDates);
+  const col = largeur / jM;
+  if (j === 1) return [0, w];
+  if (j === jM) return [largeur - w, largeur];
+  const centre = (j - 0.5) * col;
+  return [centre - w / 2, centre + w / 2];
 }
 
 function useFormats(decalage = 0) {
@@ -528,19 +572,30 @@ function Trace(
   const tranches = tranchesDeJours(jE);
   const jourMois = (d: number) => f.jourMois(year, month, d);
   const hors = horsDuMois(props);
-  const axe = reperesDeLAxe(jM, hors);
+  const [largeurAxe, setLargeurAxe] = useState(LARGEUR_AXE_PAR_DEFAUT);
+  const refAxe = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = refAxe.current;
+    if (!el) return;
+    const mesure = () => {
+      const w = el.getBoundingClientRect().width;
+      if (w > 0) setLargeurAxe(w);
+    };
+    mesure();
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(mesure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  // The ticks follow the measured width of the axis, never a fixed count.
+  const axe = reperesDeLAxe(jM, hors, largeurAxe);
   // ADR-047 — opened in the previous month, the axis names dates, not indexes.
   const repere = (j: number) => (hors ? f.jourMoisCourt(year, month, j) : String(j));
   // A date is wider than a column: centred on the first or last one, it would
   // spill out of the card. The ends align inward.
+  // At 375 px a column is ~9 px, narrower than « 31 »: day numbers do the same.
   const cale = (j: number) =>
-    !hors
-      ? 'justify-self-center'
-      : j === 1
-        ? 'justify-self-start'
-        : j === jM
-          ? 'justify-self-end'
-          : 'justify-self-center';
+    j === 1 ? 'justify-self-start' : j === jM ? 'justify-self-end' : 'justify-self-center';
   const suite = `${aB ? t('grapheAriaBudget', { budget: f.euro(budget) }) : ''}${
     proj !== null ? t('grapheAriaProjection', { projection: f.euro(proj), jour: jourMois(jM) }) : ''
   }`;
@@ -657,6 +712,7 @@ function Trace(
       </div>
       <div
         aria-hidden
+        ref={refAxe}
         data-testid="rythme-axe"
         className={`text-muted-foreground mt-1 grid ${GRILLE[jM] ?? 'grid-cols-31'} text-xs tabular-nums`}
       >

@@ -80,8 +80,7 @@ export function argentRecuParMois(
  * The card keeps the lines dated or written this month (they are cancelled
  * where they were typed, rule 11 — a late salary written on the 2nd for the
  * month before included) and the lines counted for this month. `moisEcrit`
- * is the Brussels month of the write instant, computed by the caller (this
- * module has no time zone).
+ * is the Brussels month of the write instant (moisABruxelles).
  */
 export function surLaCarteDuMois(m: MovementRecord, mois: MoisIso, moisEcrit: MoisIso): boolean {
   if (m.kind !== 'income' || m.toAccountType === null) return false;
@@ -92,17 +91,40 @@ export function surLaCarteDuMois(m: MovementRecord, mois: MoisIso, moisEcrit: Mo
   );
 }
 
+const MOIS_BRUXELLES = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'Europe/Brussels',
+  year: 'numeric',
+  month: '2-digit',
+});
+
+/** `YYYY-MM` of an instant, read in Brussels like production (tour 64). */
+export function moisABruxelles(instant: Date): MoisIso {
+  const p = MOIS_BRUXELLES.formatToParts(instant);
+  const v = (t: string) => p.find((x) => x.type === t)!.value;
+  return `${v('year')}-${v('month')}` as MoisIso;
+}
+
+export type ArgentRecuReparti = {
+  /** The money received the card of the running month shows. */
+  carte: MovementRecord[];
+  /** The past months, minus what the card shows. */
+  moisPasses: MoisArgentRecu[];
+};
+
 /**
- * The past months, minus what the card of the running month already shows:
- * a line is listed once, never twice, and never nowhere (tour 58).
+ * Tour 64 — ONE partition of the money received for the running month `mois`:
+ * each line lands on the card or in the past months, never both, never
+ * nowhere (tour 58). The write month is read once per line, in Brussels.
  */
-export function argentRecuHorsCarte(
+export function repartirArgentRecu(
   movements: readonly MovementRecord[],
   mois: MoisIso,
-  moisEcritDe: (m: MovementRecord) => MoisIso,
-): MoisArgentRecu[] {
-  return argentRecuParMois(
-    movements.filter((m) => !surLaCarteDuMois(m, mois, moisEcritDe(m))),
-    mois,
-  );
+): ArgentRecuReparti {
+  const carte: MovementRecord[] = [];
+  const reste: MovementRecord[] = [];
+  for (const m of movements) {
+    if (m.kind !== 'income' || m.toAccountType === null) continue;
+    (surLaCarteDuMois(m, mois, moisABruxelles(m.recordedAt)) ? carte : reste).push(m);
+  }
+  return { carte, moisPasses: argentRecuParMois(reste, mois) };
 }

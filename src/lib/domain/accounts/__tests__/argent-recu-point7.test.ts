@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import Decimal from 'decimal.js';
+import fc from 'fast-check';
 
 import {
-  argentRecuHorsCarte,
   argentRecuParMois,
-  surLaCarteDuMois,
+  moisABruxelles,
+  repartirArgentRecu,
 } from '@/lib/domain/accounts/argent-recu-par-mois';
 import { effetDeLaCorrection } from '@/lib/domain/accounts/correction-montant';
 import type { MovementRecord } from '@/lib/domain/accounts/operations-view';
@@ -73,7 +74,19 @@ describe('a line is on the card of the month OR in the past months, never both',
   });
   // Dated, counted and written in August: the past months only.
   const ancienne = op({ id: 'o', occurredOn: day('2026-08-10'), recordedAt: day('2026-08-10') });
-  const moisEcrit = (m: MovementRecord) => m.recordedAt.toISOString().slice(0, 7);
+  // Tour 64 — written at 00:30 in Brussels on 1 September (22:30 UTC on
+  // 31 August, summer time): production reads September, UTC read August.
+  const minuit = op({
+    id: 'm',
+    occurredOn: day('2026-08-31'),
+    recordedAt: new Date('2026-08-31T22:30:00Z'),
+  });
+  // Written at 23:30 in Brussels on 31 August (21:30 UTC): still August.
+  const avantMinuit = op({
+    id: 'n',
+    occurredOn: day('2026-08-31'),
+    recordedAt: new Date('2026-08-31T21:30:00Z'),
+  });
 
   it.each([
     [tardive, 'carte'],
@@ -81,13 +94,90 @@ describe('a line is on the card of the month OR in the past months, never both',
     [avance, 'carte'],
     [enRetard, 'carte'],
     [ancienne, 'passe'],
+    [minuit, 'carte'],
+    [avantMinuit, 'passe'],
   ] as const)('line %# appears exactly once, on the %s', (m, ou) => {
-    const passes = argentRecuHorsCarte([m], '2026-09', moisEcrit).flatMap((x) =>
-      x.lignes.map((l) => l.id),
-    );
-    const carte = surLaCarteDuMois(m, '2026-09', moisEcrit(m)) ? [m.id] : [];
+    const r = repartirArgentRecu([m], '2026-09');
+    const passes = r.moisPasses.flatMap((x) => x.lignes.map((l) => l.id));
+    const carte = r.carte.map((x) => x.id);
     expect([...passes, ...carte]).toEqual([m.id]);
     expect(ou === 'carte' ? carte : passes).toEqual([m.id]);
+  });
+
+  it('reads the write month in Brussels, winter time too', () => {
+    expect(moisABruxelles(new Date('2026-08-31T22:30:00Z'))).toBe('2026-09');
+    expect(moisABruxelles(new Date('2026-08-31T21:59:59Z'))).toBe('2026-08');
+    // CET (+1) on 31 December.
+    expect(moisABruxelles(new Date('2026-12-31T23:00:00Z'))).toBe('2027-01');
+    expect(moisABruxelles(new Date('2026-12-31T22:59:59Z'))).toBe('2026-12');
+  });
+});
+
+// Tour 64 — property: over many running months, dates, write instants (around
+// midnight included) and counted-for months (none, or the date's month ±1, as
+// the form allows), every line lands exactly once: card XOR past months.
+describe('property: card XOR past months, never both, never nowhere', () => {
+  const H = 3_600_000;
+  const J = 24 * H;
+  const debutDuMois = (y: number, m: number) => Date.UTC(y, m - 1, 1);
+
+  it('holds on random ledgers', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 2025, max: 2028 }),
+        fc.integer({ min: 1, max: 12 }),
+        fc.array(
+          fc.record({
+            // Date: from two months before the running month to its end.
+            jourDate: fc.integer({ min: -62, max: 30 }),
+            // Written between the date and up to 40 days later, at any minute;
+            // half of them within two hours of a midnight.
+            delaiJours: fc.integer({ min: 0, max: 40 }),
+            minute: fc.oneof(
+              fc.integer({ min: 0, max: 24 * 60 - 1 }),
+              fc.integer({ min: 22 * 60, max: 24 * 60 - 1 }),
+              fc.integer({ min: 0, max: 2 * 60 }),
+            ),
+            compte: fc.integer({ min: -1, max: 1 }).map((d) => (d === 0 ? null : d)),
+            annulee: fc.boolean(),
+          }),
+          { maxLength: 12 },
+        ),
+        fc.integer({ min: 0, max: 31 }),
+        (annee, mois, specs, jourCourant) => {
+          const debut = debutDuMois(annee, mois);
+          const fin = debutDuMois(annee, mois + 1);
+          const maintenant = Math.min(debut + jourCourant * J, fin - 1);
+          // The running month is today's month in Brussels, as the page reads it.
+          const courant = moisABruxelles(new Date(maintenant));
+          const ops = specs.map((s, i) => {
+            const date = new Date(debut + s.jourDate * J);
+            const ecrit = new Date(
+              Math.min(date.getTime() + s.delaiJours * J + s.minute * 60_000 - 2 * H, maintenant),
+            );
+            const pour =
+              s.compte === null
+                ? null
+                : new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + s.compte, 1));
+            return op({
+              id: `op${i}`,
+              occurredOn: date,
+              recordedAt: ecrit,
+              cancelledAt: s.annulee ? ecrit : null,
+              budgetYear: pour ? pour.getUTCFullYear() : null,
+              budgetMonth: pour ? pour.getUTCMonth() + 1 : null,
+            });
+          });
+          const r = repartirArgentRecu(ops, courant);
+          const vus = [
+            ...r.carte.map((m) => m.id),
+            ...r.moisPasses.flatMap((x) => x.lignes.map((l) => l.id)),
+          ].sort();
+          expect(vus).toEqual(ops.map((m) => m.id).sort());
+        },
+      ),
+      { numRuns: 2000 },
+    );
   });
 });
 
