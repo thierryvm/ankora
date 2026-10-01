@@ -219,7 +219,8 @@ En plus des interdictions historiques, vérifiée par `plan-reviewer` :
 Avant toute compaction ou fin de session : handoff
 `Athenaeum/10_Projects/ankora/cc-handoffs/YYYY-MM-DD-HHMM-<slug>.md` (template
 `_template-handoff.md`, 8 sections), en double : vault Obsidian + miroir commité dans le dépôt
-**privé** `claude-config` (`handoffs/ankora/`), jamais dans ce dépôt public (24 août 2026).
+**privé** `claude-config` (`handoffs/ankora/`), jamais dans ce dépôt public (24 août 2026). Si l'iCloud n'a pas
+synchronisé (crash PC), le dépôt reste la source de vérité.
 R#handoff
 
 ## Trio d'agents & handoff design (verrouillé 2026-04-24, amendé 2026-05-27)
@@ -286,6 +287,8 @@ présentation historique : R#agents-qa
 ## Variables d'environnement
 
 `.env.example` ; toutes validées par Zod dans `src/lib/env.ts` (le build échoue tôt).
+
+<!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know
 
