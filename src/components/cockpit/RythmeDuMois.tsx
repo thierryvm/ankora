@@ -423,7 +423,7 @@ export function RythmeDuMois(props: RythmeDuMoisProps) {
               )}
               {dateApres.gte(0.01) && (
                 <span className="text-muted-foreground text-sm" data-testid="rythme-date-apres">
-                  {t('dateApres', { montant: f.euro(dateApres.toNumber()) })}
+                  {t('dateApres', { montant: f.centime(dateApres.toNumber()) })}
                 </span>
               )}
               {aB && enCours && projection !== null && (
@@ -821,6 +821,17 @@ function TiroirRythme(
         ? t('totalDepuis1er', { jour: jourMois(b) })
         : t('totalTranche', { debut: f.numJour(year, month, a), fin: jourMois(b) });
   const lignesDu = (j: number) => depenses.filter((d) => d.date === f.iso(year, month, j));
+  // H3 — the operation shows the operand the gap was computed from: from
+  // today on, the month's whole recorded spending, so its terms add up.
+  const depOp = b >= jE ? props.depensesDuMois : cumul(b);
+  // The lines dated after today, each with its day: the sentence of the
+  // header opens on them (rule 10).
+  const apres =
+    b >= jE
+      ? Array.from({ length: Math.max(0, jM - jE) }, (_, i) => jE + 1 + i).flatMap((j) =>
+          lignesDu(j).map((l) => ({ ...l, jour: j })),
+        )
+      : [];
   const sens = ec ? sensDeLEcart(ec) : null;
   const b1 = props.budget;
   const postes: Array<[string, number]> = (
@@ -877,12 +888,12 @@ function TiroirRythme(
                   ec.lte(0)
                     ? t('opEcartMarge', {
                         rythme: f.centime(r.toNumber()),
-                        depense: f.centime(cumul(b)),
+                        depense: f.centime(depOp),
                         ecart: f.centime(ec.abs().toNumber()),
                       })
                     : t('opEcartDessus', {
                         rythme: f.centime(r.toNumber()),
-                        depense: f.centime(cumul(b)),
+                        depense: f.centime(depOp),
                         ecart: f.centime(ec.abs().toNumber()),
                       })
                 }
@@ -893,6 +904,18 @@ function TiroirRythme(
             <p className="text-muted-foreground py-2 text-sm">{t('sansRythme')}</p>
           )}
         </Bloc>
+        {apres.length > 0 && (
+          <Bloc etiquette={t('dateApresEtiquette')} testId="rythme-date-apres-lignes">
+            {apres.map((l) => (
+              <Ligne
+                key={l.id}
+                libelle={l.label}
+                sous={jourMois(l.jour)}
+                montant={f.centime(l.montant)}
+              />
+            ))}
+          </Bloc>
+        )}
         {tiroir.mois && jE < jM && projection !== null && (
           <Bloc etiquette={t('projectionEtiquette')} testId="rythme-projection">
             <Ligne

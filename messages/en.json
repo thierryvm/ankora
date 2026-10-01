@@ -1950,6 +1950,7 @@
       "ecartDessus": "{montant} over the pace",
       "ecartPile": "right on pace",
       "dateApres": "Plus {montant} dated after today, already counted in “You have left”",
+      "dateApresEtiquette": "Dated after today",
       "sensMarge": "Margin on the pace",
       "sensDessus": "Over the pace",
       "sensPile": "Right on pace",

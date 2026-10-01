@@ -103,6 +103,21 @@ describe('RythmeDuMois — same story as « Il te reste » (H3, tour 65 bis)', (
     );
   });
 
+  it('the header drawer adds up: its operation uses the same spending, and lists the later lines', () => {
+    monter(props);
+    fireEvent.click(screen.getByTestId('rythme-entete'));
+    const ecart = screen.getByTestId('rythme-ecart').textContent ?? '';
+    // 712 − 168.33 = 543.67: the terms shown give the result shown (whole
+    // euros print without cents).
+    expect(ecart).toMatch(eur('712 €'));
+    expect(ecart).toMatch(eur('168,33 €'));
+    expect(ecart).toMatch(eur('543,67 €'));
+    expect(ecart).not.toMatch(eur('112 €'));
+    const lignes = screen.getByTestId('rythme-date-apres-lignes');
+    expect(lignes.textContent).toMatch(/Loyer garage/);
+    expect(lignes.textContent).toMatch(eur('600 €'));
+  });
+
   it('has no such sentence when nothing is dated after today', () => {
     monter();
     expect(screen.queryByTestId('rythme-date-apres')).toBeNull();

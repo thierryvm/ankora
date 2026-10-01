@@ -1950,6 +1950,7 @@
       "ecartDessus": "{montant} boven het ritme",
       "ecartPile": "precies op ritme",
       "dateApres": "Plus {montant} gedateerd na vandaag, al meegeteld in „Je houdt over”",
+      "dateApresEtiquette": "Gedateerd na vandaag",
       "sensMarge": "Marge op het ritme",
       "sensDessus": "Boven het ritme",
       "sensPile": "Precies op ritme",
