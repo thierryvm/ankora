@@ -8,6 +8,6 @@
  * reader while making it inert for the HTML parser. This is the form the
  * Next.js JSON-LD guide recommends.
  */
-export function serializeJsonLd(data: unknown): string {
+export function serializeJsonLd(data: object): string {
   return JSON.stringify(data).replace(/</g, '\\u003c');
 }
