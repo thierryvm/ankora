@@ -129,7 +129,7 @@ for (let m = 1; m <= 7; m++) {
     workspace_id: ws,
     commitment_id: plan.id,
     created_by: userId,
-    paid_amount: 220,
+    paid_amount: 190,
     paid_from_account_type: typeDeCompte(plan.paid_from),
     period_year: 2026,
     period_month: m,
@@ -149,7 +149,7 @@ const { data: charges } = await db
   .from('charges')
   .select('id,label,amount,paid_from')
   .eq('workspace_id', ws)
-  .in('label', ['Loyer', 'Orange', 'Belfius']);
+  .in('label', ['Loyer', 'Téléphonie', 'Frais bancaires']);
 const paiements = charges.map((c) => ({
   workspace_id: ws,
   charge_id: c.id,
@@ -217,13 +217,13 @@ console.log(
       soldes: Object.fromEntries(SOLDES),
       chargesPrincipalParMois: Number(principal.toFixed(2)),
       provisionsParMois: Number(provisions.toFixed(2)),
-      engagementsParMois: 220 + 180,
+      engagementsParMois: 190 + 180,
       depensesDuMois: Number(depenses.toFixed(2)),
       echeancesCochees: echeances.length,
       facturesCochees: paiements.length,
       // Ce que le cockpit DEVRAIT afficher comme reste, si transfer.ts dit vrai :
       resteAttendu: Number(
-        (2500 - VIREMENT_VIE_COURANTE - provisions - principal - (220 + 180)).toFixed(2),
+        (2500 - VIREMENT_VIE_COURANTE - provisions - principal - (190 + 180)).toFixed(2),
       ),
     },
     null,

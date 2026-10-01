@@ -26,18 +26,18 @@ supabase status -o env
 
 ## Totaux de contrôle du profil de test
 
-Ils viennent des données réelles de @thierry et servent d'étalon : **si
+Les valeurs sont **fictives** (dépôt public) et servent d'étalon : **si
 l'application affiche autre chose, c'est un défaut à documenter, pas un chiffre à
 ajuster.**
 
 | Fréquence        |      Somme |  Lissé mensuel |
 | ---------------- | ---------: | -------------: |
-| mensuelles       | 1 804,21 € |     1 804,21 € |
-| trimestrielle    |       45 € |           15 € |
-| annuelles        |      528 € |           44 € |
-| **effort lissé** |            | **1 863,21 €** |
+| mensuelles       | 1 455,37 € |     1 455,37 € |
+| trimestrielle    |       60 € |           20 € |
+| annuelles        |      456 € |           38 € |
+| **effort lissé** |            | **1 513,37 €** |
 
-Équivalent annuel : **22 358,52 €**. Vérifiable sans l'application :
+Équivalent annuel : **18 160,44 €**. Vérifiable sans l'application :
 
 ```sql
 select sum(amount / (case frequency
@@ -48,8 +48,8 @@ from charges where workspace_id = '<ws>';
 
 ## Le doublon est volontaire
 
-`seed-profil-test.mjs` crée **à dessein** une charge mensuelle « Impôt 220 € » et
-un plan d'apurement « SPF Impôt » de 220 €/mois désignant la même dette. C'est le
+`seed-profil-test.mjs` crée **à dessein** une charge mensuelle « Impôt 190 € » et
+un plan d'apurement « SPF Impôt » de 190 €/mois désignant la même dette. C'est le
 cas d'essai du double comptage documenté dans
 [`docs/specs/2026-07-31-engagement-source-unique-mensualite.md`](../../docs/specs/2026-07-31-engagement-source-unique-mensualite.md).
 Ne pas le « corriger » sans lire cette note.

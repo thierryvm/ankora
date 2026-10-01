@@ -1,5 +1,6 @@
 // Profil de test à valeurs contrôlées — stack LOCALE uniquement.
-// Totaux attendus : chargesFixes 1804,21 · provisions 59 · engagements 220.
+// Totaux attendus : chargesFixes 1455,37 · provisions 58 · engagements 190.
+// Valeurs FICTIVES (dépôt public) : aucun libellé ni montant d'un budget réel.
 import { createClient } from '@supabase/supabase-js';
 
 import { moisDePaiement } from './lib/payment-months.mjs';
@@ -17,27 +18,27 @@ const PASSWORD = 'TestProfil!2026';
 
 // 14 mensuelles — le nombre entre parenthèses est le jour de prélèvement.
 const MENSUELLES = [
-  ['Charges immeuble', 120, 1],
-  ['Pension alimentaire', 120, 1],
-  ['Loyer', 740, 1],
-  ['Assurance auto', 150, 3],
-  ['Orange', 89, 3],
-  ['Belfius', 6, 4],
-  ['Impôt', 220, 5],
-  ['Solidaris', 14, 5],
-  ['EnergyVision', 42.21, 8],
-  ['PlayStation', 9, 9],
-  ['FGTB', 19, 10],
-  ['Solidaris (2)', 22, 11],
-  ['Crédit voiture', 250, 15],
-  ['Apple One', 3, 16],
+  ['Charges communes', 95, 1],
+  ['Loyer', 690, 1],
+  ['Assurance habitation', 28, 2],
+  ['Assurance auto', 64, 3],
+  ['Téléphonie', 35, 3],
+  ['Frais bancaires', 4, 4],
+  ['Impôt', 190, 5],
+  ['Mutuelle', 12, 5],
+  ['Énergie', 61.37, 8],
+  ['Abonnement jeux', 8, 9],
+  ['Cotisation syndicale', 17, 10],
+  ['Mutuelle (2)', 18, 11],
+  ['Crédit auto', 230, 15],
+  ['Stockage en ligne', 3, 16],
 ];
-const TRIMESTRIELLE = [['S.W.D.E', 45, 1]];
+const TRIMESTRIELLE = [['Eau', 60, 1]];
 const ANNUELLES = [
-  ['Taxe voiture', 300, 3],
-  ['Taxe égout', 55, 6],
-  ['Taxe poubelle', 120, 9],
-  ['Dashlane', 53, 11],
+  ['Taxe de circulation', 260, 3],
+  ['Taxe égouts', 48, 6],
+  ['Collecte des déchets', 110, 9],
+  ['Gestionnaire de mots de passe', 38, 11],
 ];
 
 // Purge d'un éventuel passage précédent.
@@ -137,15 +138,15 @@ const { error: chErr } = await db.from('charges').insert(rows);
 if (chErr) throw chErr;
 
 // LE CAS À TRANCHER : un plan d'apurement qui désigne la MÊME dette que la
-// charge mensuelle « Impôt 220 € » ci-dessus. Si l'app déduit 440 €, elle
+// charge mensuelle « Impôt 190 € » ci-dessus. Si l'app déduit 380 €, elle
 // compte deux fois.
 const { error: coErr } = await db.from('commitments').insert({
   workspace_id: ws,
   created_by: userId,
   label: 'SPF Impôt — plan d apurement',
   kind: 'installment_plan',
-  total_amount: 2640,
-  installment_amount: 220,
+  total_amount: 2280,
+  installment_amount: 190,
   installments_total: 12,
   start_year: 2026,
   start_month: 1,
