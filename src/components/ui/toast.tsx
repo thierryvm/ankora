@@ -1,6 +1,6 @@
 'use client';
 
-import { Toaster as Sonner, toast } from 'sonner';
+import { Toaster as Sonner, toast } from '@/vendor/sonner/index.mjs';
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;
 

@@ -12,3 +12,4 @@ package-lock.json
 public/brand/*.svg
 src/app/icon.svg
 src/app/apple-icon.svg
+src/vendor/
