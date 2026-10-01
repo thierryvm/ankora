@@ -88,15 +88,23 @@ export async function semerCockpit(admin: AdminClient): Promise<Seme> {
   );
   if (nonMensuellesError) throw new Error(`semis non mensuelles: ${nonMensuellesError.message}`);
 
-  // Un engagement en cours : douze mensualités, la prochaine ce mois-ci.
+  // Un engagement en cours, la prochaine mensualité ce mois-ci, la DERNIÈRE
+  // toujours en mai de l'année suivante. /app/commitments écrit ce mois de fin
+  // en toutes lettres (« se termine en … », « dernière : 12 … »), et à 375 px la
+  // page tient à une ligne près dans la fenêtre : avec douze mensualités fixes,
+  // la fin suivait le calendrier, et « septembre » (semis d'octobre) renvoyait
+  // deux lignes à la ligne — 31 px de défilement sur une page courte, le
+  // 1er octobre 2026 (tour 63 bis). Le nombre de mensualités (6 à 17) suit donc
+  // le mois courant, pour que le texte de la page, lui, ne le suive pas.
+  const mensualites = 18 - (aujourdhui.getMonth() + 1);
   const { error: engagementError } = await admin.from('commitments').insert({
     workspace_id: user.workspaceId,
     created_by: user.userId,
     label: 'Plan de paiement',
     kind: 'installment_plan',
-    total_amount: 1440,
+    total_amount: 120 * mensualites,
     installment_amount: 120,
-    installments_total: 12,
+    installments_total: mensualites,
     start_year: aujourdhui.getFullYear(),
     start_month: aujourdhui.getMonth() + 1,
     payment_day: 12,

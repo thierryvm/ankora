@@ -25,7 +25,7 @@ describe('isVersionSkewError', () => {
     ],
     ['WebKit dynamic import', new TypeError('Importing a module script failed.')],
     ['Firefox dynamic import', new TypeError('error loading dynamically imported module: /x.js')],
-    // The browser-side form, as thrown by next 16.3.5
+    // The browser-side form, as thrown by next 16.3.5 (unchanged in 16.3.8)
     // (client/components/router-reducer/reducers/server-action-reducer.js:104).
     // « Failed to find Server Action » is the SERVER's wording and never
     // reaches the browser — caught by the Security review of PR #512.

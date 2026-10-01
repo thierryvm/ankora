@@ -9,10 +9,14 @@
  *   the sheet says so before saving, the base stores that month, and the line
  *   on Mes comptes reads « · pour <mois suivant> ».
  *
- * Dates are relative to today (a date after today is refused), so the spec
- * holds on any day. Fictitious figures only (the 505 / 705 family).
+ * Both incomes are dated the 25th of LAST month: always within the last ten
+ * days of its month (DERNIERS_JOURS_DU_MOIS, the only window where « the next
+ * month » is proposed) and never after today (a future date is refused). Until
+ * tour 63 bis they were dated today, so the spec only passed from the 21st to
+ * the end of a month and broke on the 1st of October 2026. Fictitious figures
+ * only (the 505 / 705 family).
  */
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 
 import { test, expect } from './helpers/test';
 import { adminClientOrNull, deleteSeededUser, seedOnboardedUser } from './helpers/seed';
@@ -24,10 +28,17 @@ const ECRITURE_MS = 15_000;
 
 test.use({ viewport: { width: 375, height: 812 } });
 
-/** Today's month and the next one, in Europe/Brussels, as the app reads them. */
-function moisDuJourEtSuivant() {
+/**
+ * The date both incomes are received on — the 25th of the month before today's,
+ * in Europe/Brussels as the app reads it — its month (`courant`) and the month
+ * after (`suivant`, which is today's calendar month). Never derived from today's
+ * day of the month: the proposal of the next month depends on it.
+ */
+function moisDeLArgentEtSuivant() {
   const iso = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Brussels' }).format(new Date());
-  const [y, m] = iso.split('-').map(Number) as [number, number];
+  const [ty, tm] = iso.split('-').map(Number) as [number, number];
+  const [y, m] = tm === 1 ? [ty - 1, 12] : [ty, tm - 1];
+  const dateRecue = `${y}-${String(m).padStart(2, '0')}-25`;
   const suivant = m === 12 ? { year: y + 1, month: 1 } : { year: y, month: m + 1 };
   const nom = (month: number) =>
     new Intl.DateTimeFormat('fr-BE', { month: 'long', timeZone: 'UTC' })
@@ -35,6 +46,7 @@ function moisDuJourEtSuivant() {
       .toLowerCase();
   return {
     nom,
+    dateRecue,
     courant: { year: y, month: m },
     suivant,
     nomSuivant: suivant.year === y ? nom(suivant.month) : `${nom(suivant.month)} ${suivant.year}`,
@@ -56,6 +68,16 @@ async function ouvrirFeuilleArgentRecu(page: Page) {
     await expect(feuille).toBeVisible({ timeout: 2_000 });
   }).toPass({ timeout: 20_000 });
   return feuille;
+}
+
+/**
+ * Sets « Reçu le ». A native date input takes its value whole (`fill`): typed key
+ * by key, its segments follow the browser locale, which this spec does not test.
+ */
+async function dater(feuille: Locator, dateIso: string): Promise<void> {
+  const date = feuille.getByLabel('Reçu le');
+  await date.fill(dateIso);
+  await expect(date).toHaveValue(dateIso);
 }
 
 test.describe.serial('Le mois concerné d’un argent reçu', () => {
@@ -91,12 +113,13 @@ test.describe.serial('Le mois concerné d’un argent reçu', () => {
   }) => {
     if (!admin || !a) return;
     test.setTimeout(120_000);
-    const { suivant, nomSuivant } = moisDuJourEtSuivant();
+    const { dateRecue, suivant, nomSuivant } = moisDeLArgentEtSuivant();
     await seConnecter(page, a);
     await page.goto('/app/accounts');
 
     // 1. First « mon revenu du mois »: nothing served yet → the month of its date.
     let feuille = await ouvrirFeuilleArgentRecu(page);
+    await dater(feuille, dateRecue);
     let montant = feuille.getByLabel('Combien as-tu reçu ?');
     await montant.click();
     await montant.pressSequentially('705');
@@ -111,6 +134,7 @@ test.describe.serial('Le mois concerné d’un argent reçu', () => {
     // 2. Second one: this month is served → proposed for the next, said BEFORE saving.
     await page.reload();
     feuille = await ouvrirFeuilleArgentRecu(page);
+    await dater(feuille, dateRecue);
     montant = feuille.getByLabel('Combien as-tu reçu ?');
     await montant.click();
     await montant.pressSequentially('505');
@@ -162,10 +186,11 @@ test.describe.serial('Le mois concerné d’un argent reçu', () => {
   }) => {
     if (!admin || !a) return;
     test.setTimeout(120_000);
-    const { suivant } = moisDuJourEtSuivant();
+    const { suivant } = moisDeLArgentEtSuivant();
     const param = `${suivant.year}-${String(suivant.month).padStart(2, '0')}`;
 
-    // A bill of NEXT month ticked today (lot 2: it belongs to that month).
+    // A bill of `suivant` (the month the salary counts for, today's calendar
+    // month) ticked today (lot 2: it belongs to that month).
     const { data: loyer, error: loyerError } = await admin
       .from('charges')
       .select('id')
@@ -192,13 +217,14 @@ test.describe.serial('Le mois concerné d’un argent reçu', () => {
     const encore = page.getByTestId('cockpit-encore-a-payer');
 
     // ADR-047 (tour 49) — declared change of this spec (issue #504). The salary
-    // « for next month » arrived today, so the budget month running IS next
-    // month, and the cockpit opens on it. Until ADR-047 this step expected the
+    // « for next month » arrived (on the 25th of last month, see
+    // moisDeLArgentEtSuivant), so the budget month running IS that next month,
+    // and the cockpit opens on it. Until ADR-047 this step expected the
     // calendar month (« Reçu ce mois-ci 705 € »), then › to next month as a
     // month « à venir ». The same three months are now walked from the running
-    // one: its own income and bill, › the month after (à venir), ‹‹ the
-    // calendar month, now past, with the first income.
-    const { courant, nom } = moisDuJourEtSuivant();
+    // one: its own income and bill, › the month after (à venir), ‹‹ last
+    // month (the date of both incomes), now past, with the first income.
+    const { courant, nom } = moisDeLArgentEtSuivant();
     const apres =
       suivant.month === 12
         ? { year: suivant.year + 1, month: 1 }
@@ -245,7 +271,7 @@ test.describe.serial('Le mois concerné d’un argent reçu', () => {
     await expect(titre).not.toContainText('mois à venir');
     await expect(cascade).toContainText(/Reçu ce mois-ci 505\s€ sur 2\s505\s€ prévus/);
 
-    // ‹ : the calendar month, now past — only the first income (705) counts there,
+    // ‹ : last month (the date of both incomes), now past — only the first income (705) counts there,
     // and next month's bill is not paid there. Another month speaks « pour <mois> ».
     await page.getByTestId('cockpit-period-prev').click();
     await expect(page).toHaveURL(new RegExp(`period=${enParam(courant)}`));

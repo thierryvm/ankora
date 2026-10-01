@@ -27,7 +27,7 @@ This file lists all open-source and third-party dependencies used in this projec
 | `decimal.js` | 10.6.0 | MIT |
 | `lucide-react` | 1.8.0 | ISC |
 | `nanoid` | 5.1.16 | MIT |
-| `next` | 16.3.5 | MIT |
+| `next` | 16.3.8 | MIT |
 | `next-intl` | 4.13.7 | MIT |
 | `pino` | 10.3.1 | MIT |
 | `react` | 19.2.4 | MIT |
