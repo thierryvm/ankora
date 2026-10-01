@@ -224,7 +224,7 @@ Arbitrage éditorial dû à @cowork, pas à la session code ; passe
 `i18n-translator` nl/de/es (les 6 items L3 sont FR-verbatim, dette trackée) ;
 tickets Lighthouse
 [#377](https://github.com/thierryvm/ankora/issues/377) (LCP bannière
-consentement) et [#378](https://github.com/thierryvm/ankora/issues/378) (style
+consentement) et [#378](https://github.com/thierryvm/ankora/issues/378) (corrigé par la PR #522 : sonner copié sans injection) (style
 runtime sonner sans nonce) ; contrôles iPhone réel dus par @thierry (rapports
 L2 §Agents QA et L3 §Agents QA).
 
