@@ -206,4 +206,4 @@ Toute PR qui modifie une surface UI doit passer l'agent QA dédié AVANT merge :
 - **`i18n-auditor`** — toute édition `messages/*.json`, `src/i18n/`, ou Server Components avec `getTranslations`/`useTranslations`.
 - **`lighthouse-auditor`** — avant release candidate.
 
-Voir [`CLAUDE.md` §"Workflow agents"](../../../CLAUDE.md) pour la liste complète des 13 agents QA Ankora + leurs scopes respectifs.
+Voir `.claude/agents/` (le champ `description` de chaque fichier dit quand l'invoquer) et [`docs/conventions/regles-et-raisons.md` §agents-qa](../../../docs/conventions/regles-et-raisons.md#agents-qa) pour la présentation des agents QA Ankora et leurs scopes respectifs.
