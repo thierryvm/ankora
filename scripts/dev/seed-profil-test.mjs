@@ -157,8 +157,12 @@ if (coErr) throw coErr;
 // Quelques dépenses du mois pour que « Dépensé ce mois » ne soit pas vide.
 const now = new Date();
 // `expenses.occurred_on` est une DATE, pas un horodatage — on lui donne une date.
+// Jamais après aujourd'hui : l'app refuse une dépense future. Le jour UTC n'est
+// jamais après le jour de Bruxelles, donc la borne est sûre.
 const d = (day) =>
-  new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), day)).toISOString().slice(0, 10);
+  new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), Math.min(day, now.getUTCDate())))
+    .toISOString()
+    .slice(0, 10);
 const { data: cat } = await db
   .from('categories')
   .select('id')
@@ -198,6 +202,24 @@ const { error: exErr } = await db.from('expenses').insert([
 // exactement ce qui s'est produit le 8 août 2026, quand la colonne s'appelait
 // encore `spent_at` ici alors qu'elle avait été renommée `occurred_on`.
 if (exErr) throw new Error(`seed dépenses: ${exErr.message}`);
+
+// Le salaire fictif du mois en cours : reçu le 28 du mois PRÉCÉDENT, rattaché au
+// mois en cours par son mois de budget (ADR-046).
+const { error: incErr } = await db.from('movements').insert({
+  workspace_id: ws,
+  created_by: userId,
+  kind: 'income',
+  to_account_type: 'income_bills',
+  amount: 2500,
+  occurred_on: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 28))
+    .toISOString()
+    .slice(0, 10),
+  income_nature: 'regular',
+  description: 'Salaire fictif',
+  budget_year: now.getUTCFullYear(),
+  budget_month: now.getUTCMonth() + 1,
+});
+if (incErr) throw new Error(`seed salaire: ${incErr.message}`);
 
 console.log(
   JSON.stringify(

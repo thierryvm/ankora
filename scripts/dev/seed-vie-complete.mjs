@@ -145,6 +145,11 @@ for (let m = 1; m <= 7; m++) {
 const maintenant = new Date();
 const AN = maintenant.getUTCFullYear();
 const MOIS = maintenant.getUTCMonth() + 1;
+// Rien n'est daté après aujourd'hui : l'app refuse une dépense future, et un
+// jeu de données qui en contient montre un état que personne ne peut produire.
+// Le jour UTC n'est jamais après le jour de Bruxelles, donc la borne est sûre.
+const AUJOURDHUI = maintenant.getUTCDate();
+const jourBorne = (d) => Math.min(d, AUJOURDHUI);
 const { data: charges } = await db
   .from('charges')
   .select('id,label,amount,paid_from')
@@ -158,17 +163,46 @@ const paiements = charges.map((c) => ({
   paid_from_account_type: typeDeCompte(c.paid_from),
   period_year: AN,
   period_month: MOIS,
-  paid_at: new Date(Date.UTC(AN, MOIS - 1, 4)).toISOString(),
+  paid_at: new Date(Date.UTC(AN, MOIS - 1, jourBorne(4))).toISOString(),
 }));
 {
   const { error } = await db.from('charge_payments').insert(paiements);
   if (error) throw new Error(`paiements: ${error.message}`);
 }
 
+// Le salaire fictif du mois en cours : reçu le 28 du mois PRÉCÉDENT, donc daté
+// avant aujourd'hui, et rattaché au mois en cours par son mois de budget
+// (ADR-046). `Date.UTC` gère le passage de janvier à décembre.
+// seed-profil-test.mjs pose déjà ce salaire : l'ajouter deux fois doublerait
+// l'argent reçu du mois.
+const { count: salairesDuMois } = await db
+  .from('movements')
+  .select('id', { count: 'exact', head: true })
+  .eq('workspace_id', ws)
+  .eq('kind', 'income')
+  .eq('income_nature', 'regular')
+  .eq('budget_year', AN)
+  .eq('budget_month', MOIS);
+if (salairesDuMois === 0) {
+  const { error } = await db.from('movements').insert({
+    workspace_id: ws,
+    created_by: userId,
+    kind: 'income',
+    to_account_type: 'income_bills',
+    amount: 2500,
+    occurred_on: new Date(Date.UTC(AN, MOIS - 2, 28)).toISOString().slice(0, 10),
+    income_nature: 'regular',
+    description: 'Salaire fictif',
+    budget_year: AN,
+    budget_month: MOIS,
+  });
+  if (error) throw new Error(`salaire: ${error.message}`);
+}
+
 // ------------------------------------------ 6. Des dépenses réparties sur le mois
 const { data: cats } = await db.from('categories').select('id,name').eq('workspace_id', ws);
 const cat = (n) => cats.find((c) => new RegExp(n, 'i').test(c.name))?.id ?? cats[0]?.id ?? null;
-const jour = (d) => new Date(Date.UTC(AN, MOIS - 1, d)).toISOString().slice(0, 10);
+const jour = (d) => new Date(Date.UTC(AN, MOIS - 1, jourBorne(d))).toISOString().slice(0, 10);
 const DEPENSES = [
   ['Pharmacie', 23.4, 2],
   ['Boulangerie', 8.6, 5],
