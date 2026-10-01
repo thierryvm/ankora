@@ -120,25 +120,23 @@ export default async function HomePage({ params }: LocaleParams) {
   // hydration — invisible to crawlers and to Playwright mobile-safari).
   // Content is built locally (constants + i18n translations + locale string)
   // and serialised by serializeJsonLd, which escapes `<` so no value can
-  // close the script element.
+  // close the script element. The call sits inline in `__html` so a reader
+  // (or the Sentinel's raw-HTML probe) sees the escaping at the sink itself.
   // This is the canonical Next.js + React pattern for JSON-LD; see
   // https://nextjs.org/docs/app/guides/json-ld
-  const softwareLdHtml = serializeJsonLd(softwareJsonLd);
-  const faqLdHtml = serializeJsonLd(faqJsonLd);
-
   return (
     <>
       <script
         id="ld-software"
         type="application/ld+json"
         nonce={nonce}
-        dangerouslySetInnerHTML={{ __html: softwareLdHtml }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(softwareJsonLd) }}
       />
       <script
         id="ld-faq"
         type="application/ld+json"
         nonce={nonce}
-        dangerouslySetInnerHTML={{ __html: faqLdHtml }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(faqJsonLd) }}
       />
 
       {/* Marketing paper scope (ADR-039). The wrapper lives HERE, in the page,
