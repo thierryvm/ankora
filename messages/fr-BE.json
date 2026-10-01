@@ -1949,6 +1949,7 @@
       "ecartMarge": "{montant} de marge sur le rythme",
       "ecartDessus": "{montant} au-dessus du rythme",
       "ecartPile": "pile sur le rythme",
+      "dateApres": "Plus {montant} datés après aujourd’hui, déjà comptés dans « Il te reste »",
       "sensMarge": "Marge sur le rythme",
       "sensDessus": "Au-dessus du rythme",
       "sensPile": "Pile sur le rythme",

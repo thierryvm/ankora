@@ -73,6 +73,42 @@ function monter(props: Partial<RythmeDuMoisProps> = {}) {
 // Money is formatted with narrow / regular no-break spaces: \s matches both.
 const eur = (s: string) => new RegExp(s.replace(/ /g, '\\s').replace(',', ','));
 
+describe('RythmeDuMois — same story as « Il te reste » (H3, tour 65 bis)', () => {
+  // A 600 € line dated on the 20th: « Il te reste » counts it (505 − 712 =
+  // −207), the curve only on its day. Before H3 the card said « 56 € de
+  // marge » next to a negative « Il te reste ».
+  const futur = [
+    ...DEPENSES,
+    { id: 'e5', label: 'Loyer garage', montant: 600, date: '2026-09-20' },
+  ];
+  const props = { depenses: futur, serie: serie(futur), depensesDuMois: 712 };
+
+  it('announces no margin when « Il te reste » is negative', () => {
+    monter(props);
+    const repli = screen.getByTestId('repli-rythme');
+    const cle = repli.querySelector('[data-repli-cle]')?.textContent ?? '';
+    expect(cle).not.toMatch(/marge/);
+    // 712 − 505 × 10 ÷ 30 (168.33) = 543.67 over the rhythm, shown to the euro.
+    expect(cle).toMatch(eur('544 € au-dessus'));
+    const entete = screen.getByTestId('rythme-entete');
+    expect(entete.textContent).not.toMatch(/marge/);
+    // The big figure stays « spent up to today »: 112 €.
+    expect(entete.querySelector('strong')?.textContent).toMatch(eur('112 €'));
+  });
+
+  it('says in one sentence what was recorded for later days', () => {
+    monter(props);
+    expect(screen.getByTestId('rythme-date-apres').textContent).toMatch(
+      eur('Plus 600 € datés après aujourd’hui, déjà comptés dans « Il te reste »'),
+    );
+  });
+
+  it('has no such sentence when nothing is dated after today', () => {
+    monter();
+    expect(screen.queryByTestId('rythme-date-apres')).toBeNull();
+  });
+});
+
 describe('RythmeDuMois', () => {
   it('renders the month: the gap in words in the fold key, the spent figure, the projection', () => {
     monter();

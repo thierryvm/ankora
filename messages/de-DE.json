@@ -1949,6 +1949,7 @@
       "ecartMarge": "{montant} Spielraum zum Tempo",
       "ecartDessus": "{montant} über dem Tempo",
       "ecartPile": "genau im Tempo",
+      "dateApres": "Dazu {montant} mit Datum nach heute, bereits in „Dir bleibt“ gezählt",
       "sensMarge": "Spielraum zum Tempo",
       "sensDessus": "Über dem Tempo",
       "sensPile": "Genau im Tempo",

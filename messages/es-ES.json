@@ -1949,6 +1949,7 @@
       "ecartMarge": "{montant} de margen sobre el ritmo",
       "ecartDessus": "{montant} por encima del ritmo",
       "ecartPile": "justo en el ritmo",
+      "dateApres": "Más {montant} con fecha posterior a hoy, ya contados en «Te queda»",
       "sensMarge": "Margen sobre el ritmo",
       "sensDessus": "Por encima del ritmo",
       "sensPile": "Justo en el ritmo",
