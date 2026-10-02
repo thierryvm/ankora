@@ -806,6 +806,7 @@
       "toastCreated": "Factuur toegevoegd",
       "toastUpdated": "Factuur bijgewerkt",
       "paymentKept": "De betaling voor {month}, {amount}, is niet gewijzigd.",
+      "paymentFollowed": "De betaling voor {month} volgt: {amount}",
       "toastDeleted": "Factuur verwijderd",
       "toastMarkedPaid": "Factuur als betaald gemarkeerd",
       "toastMarkedUnpaid": "Factuur als te betalen gemarkeerd",
