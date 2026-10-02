@@ -53,6 +53,7 @@ type Props = {
 export function ExpenseEditDrawer({ expense, accounts, onClose }: Props) {
   const t = useTranslations('app.expenses');
   const tAmount = useTranslations('ui.amountField');
+  const tDate = useTranslations('errors.validation.operations.date');
   const translateError = useActionErrorTranslator();
   const router = useRouter();
 
@@ -60,6 +61,7 @@ export function ExpenseEditDrawer({ expense, accounts, onClose }: Props) {
   const amountId = useId();
   const amountErrorId = useId();
   const occurredOnId = useId();
+  const dateErrorId = useId();
   const titleId = useId();
 
   // Seed synchronously so we don't trip `react-hooks/set-state-in-effect`
@@ -70,6 +72,7 @@ export function ExpenseEditDrawer({ expense, accounts, onClose }: Props) {
   const [amount, setAmount] = useState(expense?.amount.toString() ?? '');
   const [occurredOn, setOccurredOn] = useState(expense?.occurredOn ?? '');
   const [paidFrom, setPaidFrom] = useState<AccountKind>(expense?.paidFrom ?? 'vie_courante');
+  const [dateError, setDateError] = useState<string | null>(null);
   const locale = useLocale() as Locale;
   const [isPending, startTransition] = useTransition();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -84,6 +87,7 @@ export function ExpenseEditDrawer({ expense, accounts, onClose }: Props) {
     setAmount(expense.amount.toString());
     setOccurredOn(expense.occurredOn);
     setPaidFrom(expense.paidFrom);
+    setDateError(null);
     // Reset the confirmation too: reopening on another expense must never
     // inherit an armed delete from the previous one.
     setConfirmingDelete(false);
@@ -141,6 +145,11 @@ export function ExpenseEditDrawer({ expense, accounts, onClose }: Props) {
           onClose();
           router.refresh();
         } else {
+          // Say WHICH field is refused, as the add sheet does: a generic toast
+          // leaves the person hunting for what to change.
+          if (result.fieldErrors?.occurredOn?.includes('operations.date.future')) {
+            setDateError(tDate('future'));
+          }
           toast.error(translateError(result.errorCode) || t('drawer.errorGeneric'));
         }
       } catch (err) {
@@ -272,9 +281,24 @@ export function ExpenseEditDrawer({ expense, accounts, onClose }: Props) {
               id={occurredOnId}
               type="date"
               value={occurredOn}
-              onChange={(e) => setOccurredOn(e.target.value)}
+              onChange={(e) => {
+                setOccurredOn(e.target.value);
+                setDateError(null);
+              }}
+              aria-invalid={dateError !== null || undefined}
+              aria-describedby={dateError ? dateErrorId : undefined}
               data-testid="expense-edit-occurred-on"
             />
+            {dateError && (
+              <p
+                id={dateErrorId}
+                role="alert"
+                data-testid="expense-edit-date-error"
+                className="text-danger text-xs font-medium"
+              >
+                {dateError}
+              </p>
+            )}
           </div>
           {accounts.length > 1 && (
             <PaidFromChips
