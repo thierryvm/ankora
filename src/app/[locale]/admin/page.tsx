@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import * as React from 'react';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { readAdminMetrics } from '@/lib/admin/metrics';
 import { requireAdminOnce } from '@/lib/auth/require-admin-once';
+
+import { AdminDashboard } from './_components/AdminDashboard';
 
 export const metadata: Metadata = {
   title: 'Admin · Ankora',
@@ -12,96 +13,17 @@ export const metadata: Metadata = {
 };
 
 /**
- * Admin home. Until now a pure placeholder with no query at all — this is the
- * first one.
+ * Admin home: the v1 panel (audit of 1 October 2026, §3.3), four tabs fed by
+ * `readAdminMetrics` only. The screen is `AdminDashboard`; why the read uses
+ * the privileged client, and why each block fails on its own, is written in
+ * `src/lib/admin/metrics.ts`.
  *
- * ## Why this reads with the privileged client
- *
- * `deletion_requests` carries FORCE ROW LEVEL SECURITY with self-only policies,
- * so @thierry's own session sees ONLY @thierry's rows. Counting the queue is
- * therefore impossible from a normal session, and a founder-only screen that
- * silently showed `0` would be worse than no screen at all.
- *
- * The read is SEALED: `count: 'exact', head: true` selects zero columns, so no
- * identifier can reach this page — not a user id, not an email, not a request
- * id. `requireAdmin()` guards the whole segment (admin/layout.tsx), and the
- * page awaits the same verdict before any read (`requireAdminOnce`).
- *
- * ## Why the second counter is wider than the first
- *
- * Counter 1 answers "what should I look at". Counter 2 answers "what is about
- * to become a breach", and it covers EVERY non-terminal row — not just the
- * failed ones. A request starved by influx never becomes `failed`, and anyone
- * relaunching their own erasure every four days keeps it out of quarantine
- * indefinitely: in both cases counter 1 reads 0 while the art. 12(3) clock
- * keeps running. Narrowing counter 2 to `failed` would re-open that blind spot
- * without anyone noticing. See ADR-042 G6.
+ * `requireAdmin()` guards the whole segment (admin/layout.tsx), and the page
+ * awaits the same verdict before any read (`requireAdminOnce`): the layout
+ * does not hold the page back, they render in parallel.
  */
 export default async function AdminHomePage(): Promise<React.JSX.Element> {
-  // Each block is read independently, and a failure is DISPLAYED rather than
-  // folded into a zero: an alarm that cannot distinguish "nothing to see" from
-  // "I could not look" is the mute mechanism these counters exist to remove.
-  // The other blocks of `readAdminMetrics` get their screen in the next PR.
-  // The layout's guard does not hold the page back (they render in parallel):
-  // no privileged read starts before the verdict.
   await requireAdminOnce();
-  const { deletions } = (await readAdminMetrics()).gdpr;
-  const stuck = deletions?.stuck ?? null;
-  const nearBreach = deletions?.nearBreach ?? null;
-
-  const display = (value: number | null) => (value === null ? '—' : String(value));
-
-  return (
-    <section className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-semibold">Admin</h1>
-        <p className="text-muted-foreground text-sm">
-          Zone admin · réservée fondateur. Panel V1 livré dans une PR ultérieure.
-        </p>
-      </header>
-
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">File de suppression (RGPD art. 17)</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Demandes en quarantaine</CardTitle>
-              <CardDescription>
-                Cinq tentatives sur au moins cinq jours. Elles ne sont plus reprises automatiquement
-                — la personne concernée peut annuler ou relancer.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p
-                className={`text-3xl font-semibold tabular-nums ${
-                  stuck && stuck > 0 ? 'text-danger' : ''
-                }`}
-              >
-                {display(stuck)}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">À moins de 5 jours du manquement</CardTitle>
-              <CardDescription>
-                Toute demande non terminée déposée il y a plus de 25 jours, quel que soit son
-                statut. L&apos;échéance légale est d&apos;un mois et elle ne s&apos;arrête jamais.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p
-                className={`text-3xl font-semibold tabular-nums ${
-                  nearBreach && nearBreach > 0 ? 'text-danger' : ''
-                }`}
-              >
-                {display(nearBreach)}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-    </section>
-  );
+  const metrics = await readAdminMetrics();
+  return <AdminDashboard metrics={metrics} />;
 }

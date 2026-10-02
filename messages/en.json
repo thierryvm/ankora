@@ -2120,5 +2120,61 @@
       "splitRecalculated": "Split recalculated"
     },
     "readFailed": "Your balances could not be read. Reload the page."
+  },
+  "admin": {
+    "title": "Admin dashboard",
+    "intro": "Aggregated figures only: no name, no address. A number between 1 and 4 shows as « < 5 » and the others are rounded to 5, except the deletion queue, which is exact. « masked » hides a cell that could otherwise be worked out from the others.",
+    "tabsLabel": "Admin sections",
+    "masked": "masked",
+    "alert": "alert",
+    "pill": "Admin",
+    "zone": "Founder-only area",
+    "tabs": {
+      "users": "Users",
+      "activity": "Activity",
+      "security": "Security",
+      "gdpr": "GDPR and health"
+    },
+    "users": {
+      "title": "Accounts",
+      "source": "From the accounts table, when the page opens.",
+      "total": "Accounts created",
+      "onboarded": "Onboarding finished",
+      "weeklyTitle": "Sign-ups per week",
+      "weeklySource": "From the accounts’ creation date, last 12 weeks (weeks starting Monday, Brussels time).",
+      "weekHeader": "Week of",
+      "countHeader": "Sign-ups"
+    },
+    "activity": {
+      "title": "Active workspaces",
+      "source": "From the audit log: workspaces that recorded at least one change.",
+      "day1": "Last 24 hours",
+      "days7": "Last 7 days",
+      "days30": "Last 30 days"
+    },
+    "security": {
+      "title": "Security events",
+      "source": "From the audit log, last 7 days.",
+      "events": {
+        "mfaFailed": "Rejected 2FA codes",
+        "authRateLimited": "Slowed sign-ins (too many attempts)",
+        "adminDenied": "Denied admin access",
+        "adminRateLimited": "Slowed admin access"
+      }
+    },
+    "gdpr": {
+      "deletionsTitle": "Deletion queue (GDPR art. 17)",
+      "deletionsSource": "From the deletion queue, exact count.",
+      "stuck": "Requests in quarantine",
+      "nearBreach": "Less than 5 days from a breach",
+      "deletionsHelp": "Quarantine: five attempts over at least five days, no longer retried automatically. Breach: any unfinished request filed more than 25 days ago, whatever its status; the legal deadline is one month.",
+      "consentTitle": "Audience measurement consent",
+      "consentSource": "From the recorded consents: each person’s latest choice.",
+      "granted": "Accepted",
+      "refused": "Refused",
+      "neverChosen": "Never chosen",
+      "buildTitle": "Deployed version",
+      "buildSource": "From the Vercel build identifier; « local » outside a deployment."
+    }
   }
 }

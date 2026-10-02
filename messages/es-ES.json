@@ -2120,5 +2120,61 @@
       "splitRecalculated": "Reparto recalculado"
     },
     "readFailed": "No se pudieron leer tus saldos. Recarga la página."
+  },
+  "admin": {
+    "title": "Panel de administración",
+    "intro": "Solo cifras agregadas: ningún nombre, ninguna dirección. Un número entre 1 y 4 se muestra como « < 5 » y los demás se redondean a 5, salvo la cola de supresión, que es exacta. « oculto » esconde una casilla que, si no, podría deducirse de las demás.",
+    "tabsLabel": "Secciones de administración",
+    "masked": "oculto",
+    "alert": "alerta",
+    "pill": "Admin",
+    "zone": "Zona reservada al fundador",
+    "tabs": {
+      "users": "Usuarios",
+      "activity": "Actividad",
+      "security": "Seguridad",
+      "gdpr": "RGPD y salud"
+    },
+    "users": {
+      "title": "Cuentas",
+      "source": "Desde la tabla de cuentas, al abrir la página.",
+      "total": "Cuentas creadas",
+      "onboarded": "Bienvenida completada",
+      "weeklyTitle": "Altas por semana",
+      "weeklySource": "Desde la fecha de creación de las cuentas, últimas 12 semanas (semanas desde el lunes, hora de Bruselas).",
+      "weekHeader": "Semana del",
+      "countHeader": "Altas"
+    },
+    "activity": {
+      "title": "Espacios activos",
+      "source": "Desde el registro de auditoría: espacios que guardaron al menos un cambio.",
+      "day1": "Últimas 24 horas",
+      "days7": "Últimos 7 días",
+      "days30": "Últimos 30 días"
+    },
+    "security": {
+      "title": "Eventos de seguridad",
+      "source": "Desde el registro de auditoría, últimos 7 días.",
+      "events": {
+        "mfaFailed": "Códigos 2FA rechazados",
+        "authRateLimited": "Inicios de sesión frenados (demasiados intentos)",
+        "adminDenied": "Accesos de administración denegados",
+        "adminRateLimited": "Accesos de administración frenados"
+      }
+    },
+    "gdpr": {
+      "deletionsTitle": "Cola de supresión (RGPD art. 17)",
+      "deletionsSource": "Desde la cola de supresión, recuento exacto.",
+      "stuck": "Solicitudes en cuarentena",
+      "nearBreach": "A menos de 5 días del incumplimiento",
+      "deletionsHelp": "Cuarentena: cinco intentos durante al menos cinco días, ya no se reanudan automáticamente. Incumplimiento: toda solicitud sin terminar presentada hace más de 25 días, sea cual sea su estado; el plazo legal es de un mes.",
+      "consentTitle": "Consentimiento a la medición de audiencia",
+      "consentSource": "Desde los consentimientos registrados: la última elección de cada persona.",
+      "granted": "Aceptados",
+      "refused": "Rechazados",
+      "neverChosen": "Nunca elegido",
+      "buildTitle": "Versión desplegada",
+      "buildSource": "Desde el identificador del build de Vercel; « local » fuera de un despliegue."
+    }
   }
 }

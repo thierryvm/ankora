@@ -2120,5 +2120,61 @@
       "splitRecalculated": "Aufteilung neu berechnet"
     },
     "readFailed": "Deine Kontostände konnten nicht gelesen werden. Lade die Seite neu."
+  },
+  "admin": {
+    "title": "Admin-Dashboard",
+    "intro": "Nur zusammengefasste Zahlen: kein Name, keine Adresse. Eine Zahl zwischen 1 und 4 erscheint als « < 5 », die übrigen sind auf 5 gerundet, außer der Löschwarteschlange, die genau ist. « verborgen » verdeckt ein Feld, das sich sonst aus den anderen ableiten ließe.",
+    "tabsLabel": "Admin-Bereiche",
+    "masked": "verborgen",
+    "alert": "Warnung",
+    "pill": "Admin",
+    "zone": "Nur für den Gründer",
+    "tabs": {
+      "users": "Nutzer",
+      "activity": "Aktivität",
+      "security": "Sicherheit",
+      "gdpr": "DSGVO und Zustand"
+    },
+    "users": {
+      "title": "Konten",
+      "source": "Aus der Kontentabelle, beim Öffnen der Seite.",
+      "total": "Erstellte Konten",
+      "onboarded": "Einführung abgeschlossen",
+      "weeklyTitle": "Registrierungen pro Woche",
+      "weeklySource": "Aus dem Erstellungsdatum der Konten, letzte 12 Wochen (Wochen ab Montag, Brüsseler Zeit).",
+      "weekHeader": "Woche vom",
+      "countHeader": "Registrierungen"
+    },
+    "activity": {
+      "title": "Aktive Bereiche",
+      "source": "Aus dem Audit-Protokoll: Bereiche mit mindestens einer gespeicherten Änderung.",
+      "day1": "Letzte 24 Stunden",
+      "days7": "Letzte 7 Tage",
+      "days30": "Letzte 30 Tage"
+    },
+    "security": {
+      "title": "Sicherheitsereignisse",
+      "source": "Aus dem Audit-Protokoll, letzte 7 Tage.",
+      "events": {
+        "mfaFailed": "Abgelehnte 2FA-Codes",
+        "authRateLimited": "Gebremste Anmeldungen (zu viele Versuche)",
+        "adminDenied": "Verweigerter Admin-Zugang",
+        "adminRateLimited": "Gebremster Admin-Zugang"
+      }
+    },
+    "gdpr": {
+      "deletionsTitle": "Löschwarteschlange (DSGVO Art. 17)",
+      "deletionsSource": "Aus der Löschwarteschlange, genaue Anzahl.",
+      "stuck": "Anfragen in Quarantäne",
+      "nearBreach": "Weniger als 5 Tage bis zum Verstoß",
+      "deletionsHelp": "Quarantäne: fünf Versuche über mindestens fünf Tage, nicht mehr automatisch wiederholt. Verstoß: jede unerledigte Anfrage, die vor mehr als 25 Tagen gestellt wurde, unabhängig vom Status; die gesetzliche Frist beträgt einen Monat.",
+      "consentTitle": "Einwilligung in die Reichweitenmessung",
+      "consentSource": "Aus den gespeicherten Einwilligungen: die letzte Wahl jeder Person.",
+      "granted": "Angenommen",
+      "refused": "Abgelehnt",
+      "neverChosen": "Nie gewählt",
+      "buildTitle": "Bereitgestellte Version",
+      "buildSource": "Aus der Vercel-Build-Kennung; « local » außerhalb einer Bereitstellung."
+    }
   }
 }

@@ -2120,5 +2120,61 @@
       "splitRecalculated": "Découpage recalculé"
     },
     "readFailed": "Tes soldes n’ont pas pu être lus. Recharge la page."
+  },
+  "admin": {
+    "title": "Tableau de bord admin",
+    "intro": "Chiffres agrégés seulement : aucun nom, aucune adresse. Un nombre entre 1 et 4 s’affiche « < 5 » et les autres sont arrondis à 5, sauf la file de suppression, exacte. « masqué » cache une case qu’on pourrait sinon déduire des autres.",
+    "tabsLabel": "Sections de l’admin",
+    "masked": "masqué",
+    "alert": "alerte",
+    "pill": "Admin",
+    "zone": "Zone réservée au fondateur",
+    "tabs": {
+      "users": "Utilisateurs",
+      "activity": "Activité",
+      "security": "Sécurité",
+      "gdpr": "RGPD et santé"
+    },
+    "users": {
+      "title": "Comptes",
+      "source": "Depuis la table des comptes, à l’ouverture de la page.",
+      "total": "Comptes créés",
+      "onboarded": "Accueil terminé",
+      "weeklyTitle": "Inscriptions par semaine",
+      "weeklySource": "Depuis la date de création des comptes, 12 dernières semaines (semaines du lundi, heure de Bruxelles).",
+      "weekHeader": "Semaine du",
+      "countHeader": "Inscriptions"
+    },
+    "activity": {
+      "title": "Espaces actifs",
+      "source": "Depuis le journal d’audit : espaces qui ont enregistré au moins une modification.",
+      "day1": "Dernières 24 heures",
+      "days7": "7 derniers jours",
+      "days30": "30 derniers jours"
+    },
+    "security": {
+      "title": "Événements de sécurité",
+      "source": "Depuis le journal d’audit, 7 derniers jours.",
+      "events": {
+        "mfaFailed": "Codes 2FA refusés",
+        "authRateLimited": "Connexions freinées (trop d’essais)",
+        "adminDenied": "Accès admin refusés",
+        "adminRateLimited": "Accès admin freinés"
+      }
+    },
+    "gdpr": {
+      "deletionsTitle": "File de suppression (RGPD art. 17)",
+      "deletionsSource": "Depuis la file de suppression, compte exact.",
+      "stuck": "Demandes en quarantaine",
+      "nearBreach": "À moins de 5 jours du manquement",
+      "deletionsHelp": "Quarantaine : cinq tentatives sur au moins cinq jours, plus reprises automatiquement. Manquement : toute demande non terminée déposée il y a plus de 25 jours, quel que soit son statut ; l’échéance légale est d’un mois.",
+      "consentTitle": "Consentement aux mesures d’audience",
+      "consentSource": "Depuis les consentements enregistrés : le dernier choix de chaque personne.",
+      "granted": "Acceptées",
+      "refused": "Refusées",
+      "neverChosen": "Jamais choisi",
+      "buildTitle": "Version déployée",
+      "buildSource": "Depuis l’identifiant du build Vercel ; « local » hors déploiement."
+    }
   }
 }

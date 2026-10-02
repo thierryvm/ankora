@@ -37,7 +37,7 @@ test.describe('Admin topbar consumer (PR-D4-PHASE2-B)', () => {
 
     // Hard contract — independent of which path the request took:
     // AdminTopbar must not render its two distinctive text markers.
-    await expect(page.getByText('Ankora · Admin')).toHaveCount(0);
-    await expect(page.getByText('Zone admin · réservée fondateur')).toHaveCount(0);
+    await expect(page.getByText('Zone réservée au fondateur')).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Tableau de bord admin' })).toHaveCount(0);
   });
 });

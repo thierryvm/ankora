@@ -2120,5 +2120,61 @@
       "splitRecalculated": "Verdeling herberekend"
     },
     "readFailed": "Je saldi konden niet worden gelezen. Laad de pagina opnieuw."
+  },
+  "admin": {
+    "title": "Admin-dashboard",
+    "intro": "Alleen samengevoegde cijfers: geen naam, geen adres. Een getal tussen 1 en 4 verschijnt als « < 5 » en de andere zijn afgerond op 5, behalve de verwijderingswachtrij, die exact is. « verborgen » verbergt een vak dat anders uit de andere af te leiden zou zijn.",
+    "tabsLabel": "Admin-onderdelen",
+    "masked": "verborgen",
+    "alert": "waarschuwing",
+    "pill": "Admin",
+    "zone": "Zone alleen voor de oprichter",
+    "tabs": {
+      "users": "Gebruikers",
+      "activity": "Activiteit",
+      "security": "Beveiliging",
+      "gdpr": "AVG en gezondheid"
+    },
+    "users": {
+      "title": "Accounts",
+      "source": "Uit de accounttabel, bij het openen van de pagina.",
+      "total": "Aangemaakte accounts",
+      "onboarded": "Onboarding voltooid",
+      "weeklyTitle": "Inschrijvingen per week",
+      "weeklySource": "Uit de aanmaakdatum van de accounts, laatste 12 weken (weken vanaf maandag, Brusselse tijd).",
+      "weekHeader": "Week van",
+      "countHeader": "Inschrijvingen"
+    },
+    "activity": {
+      "title": "Actieve ruimtes",
+      "source": "Uit het auditlogboek: ruimtes die minstens één wijziging hebben vastgelegd.",
+      "day1": "Laatste 24 uur",
+      "days7": "Laatste 7 dagen",
+      "days30": "Laatste 30 dagen"
+    },
+    "security": {
+      "title": "Beveiligingsgebeurtenissen",
+      "source": "Uit het auditlogboek, laatste 7 dagen.",
+      "events": {
+        "mfaFailed": "Geweigerde 2FA-codes",
+        "authRateLimited": "Afgeremde aanmeldingen (te veel pogingen)",
+        "adminDenied": "Geweigerde admin-toegang",
+        "adminRateLimited": "Afgeremde admin-toegang"
+      }
+    },
+    "gdpr": {
+      "deletionsTitle": "Verwijderingswachtrij (AVG art. 17)",
+      "deletionsSource": "Uit de verwijderingswachtrij, exact aantal.",
+      "stuck": "Verzoeken in quarantaine",
+      "nearBreach": "Minder dan 5 dagen voor een inbreuk",
+      "deletionsHelp": "Quarantaine: vijf pogingen over minstens vijf dagen, niet meer automatisch hervat. Inbreuk: elk onafgewerkt verzoek dat meer dan 25 dagen geleden werd ingediend, ongeacht de status; de wettelijke termijn is een maand.",
+      "consentTitle": "Toestemming voor publieksmeting",
+      "consentSource": "Uit de geregistreerde toestemmingen: de laatste keuze van elke persoon.",
+      "granted": "Aanvaard",
+      "refused": "Geweigerd",
+      "neverChosen": "Nooit gekozen",
+      "buildTitle": "Uitgerolde versie",
+      "buildSource": "Uit de Vercel-build-ID; « local » buiten een uitrol."
+    }
   }
 }
