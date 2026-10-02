@@ -60,7 +60,7 @@ statut = deficitEpargne > 0 ? 'deficit' : 'a_jour'
 - **Cible théorique idéale** affichée (`totalEpargneTheorique`).
 - **Solde actuel** affiché (`soldeEpargneActuel`).
 - **Plan rattrapage 3 mois** : si `rattrapageMensuel > 0`, libellé `Inclut +X € pour rattraper le déficit sur 3 mois`.
-- **Détail item-par-item** : liste des charges périodiques avec leur `epargneRequise` (Dashlane +4.42 €, S.W.D.E +15 €, etc.).
+- **Détail item-par-item** : liste des charges périodiques avec leur `epargneRequise` (abonnement annuel +4 €, eau trimestrielle +12 €, etc.).
 - **Placement initial spec** : sub-card de "Assistant Virements" (section 2 col droite). Linear THI-190 dit "section 2 sur 8 cockpit v3" → peut-être promotion en section autonome.
 
 ### 1.3 Seuils visuels — extrapolation justifiée

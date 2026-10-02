@@ -271,7 +271,7 @@ Ancrage + pas en mois pour les charges (débloque 9 mois et toute autre cadence)
 
 ### Ce que le prototype HTML fait mieux — et pourquoi
 
-J'ai lu `gestion-budget.html` (1 386 lignes, autonome, tes vraies données : 19 charges, effort lissé 1 863,21 €/mois). Tu as raison de le trouver plus lisible. Quatre raisons précises, toutes transposables **[V]** :
+J'ai lu `gestion-budget.html` (1 386 lignes, autonome, le profil de test : 19 charges, effort lissé recalculé hors application). Tu as raison de le trouver plus lisible. Quatre raisons précises, toutes transposables **[V]** :
 
 **1. Un mot, un nombre.** « Reste à vivre » apparaît exactement une fois, comme `revenus − effort lissé`. Ta définition, un seul endroit, aucune ambiguïté. C'est _la_ chose à copier.
 

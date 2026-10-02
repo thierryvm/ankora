@@ -53,7 +53,7 @@ applicatives aussi. `/login` et `/signup` redirigent vers `/app` quand la sessio
 comportement attendu.
 
 **Zéro action anonyme sur 510.** Chaque bouton d'icône porte son intitulé complet
-(« Marquer _Charges immeuble_ comme payée », « Annuler la dernière échéance payée pour… »),
+(« Marquer _Charges communes_ comme payée », « Annuler la dernière échéance payée pour… »),
 y compris les 4 × 19 boutons de la liste des factures. C'est rare et ça mérite d'être dit :
 la plupart des interfaces perdent leurs noms accessibles exactement là, dans les listes
 générées.
@@ -85,11 +85,11 @@ Les deux blocs de `/app/charges` sont **visibles sur la même page**, 1 764 px d
   l'indice publié dit « Factures du mois encore à payer » : **les engagements en sont
   exclus**.
 
-**Piège d'analyse, et je suis tombé dedans.** L'écart vaut exactement 400 €, soit le total
+**Piège d'analyse, et je suis tombé dedans.** L'écart vaut exactement 370 €, soit le total
 des engagements — j'en ai conclu « l'un les inclut, l'autre non ». C'est faux : le second
 nombre est un sous-total de groupe. L'égalité n'est vraie **qu'en août**, où seules les
-charges mensuelles échoient. En octobre, la S.W.D.E trimestrielle rejoint le mois et les
-deux nombres cesseront de différer de 400 € — sans que rien ne change au code. Une
+charges mensuelles échoient. En octobre, la facture d'eau trimestrielle rejoint le mois et les
+deux nombres cesseront de différer de 370 € — sans que rien ne change au code. Une
 coïncidence de calendrier qui ressemble à une règle est la pire forme de fausse piste :
 elle se vérifie.
 
@@ -169,13 +169,13 @@ La page qui reçoit le plus de visiteurs est donc celle qui cache le plus la con
 **La règle « un chiffre qu'on ne peut pas ouvrir est une injonction » est réellement
 appliquée**, et vérifiée au centime :
 
-| Total affiché              | Décomposition offerte                                         | Vérification           |
-| -------------------------- | ------------------------------------------------------------- | ---------------------- |
-| Charges fixes − 1 804,21 € | les 14 lignes, chacune avec son montant                       | somme = 1 804,21 ✅    |
-| Lissage − 59 €             | 15 € (« 45 € tous les 3 mois »), 25 €, 4,58 €, 10 €, 4,42 €   | somme = 59,00 ✅       |
-| Engagements − 400 €        | 220 € + 180 €                                                 | somme = 400 ✅         |
-| Effort lissé 2 263,21 €    | « charges mensuelles + provisions lissées + mensualités »     | 1 804,21 + 59 + 400 ✅ |
-| À payer ce mois 2 204,21 € | « ce qui quitte réellement le compte, factures et échéances » | 1 804,21 + 400 ✅      |
+| Total affiché              | Décomposition offerte                                         | Vérification                     |
+| -------------------------- | ------------------------------------------------------------- | -------------------------------- |
+| Charges fixes − 1 455,37 € | les 14 lignes, chacune avec son montant                       | somme = 1 455,37 ✅              |
+| Lissage − 58 €             | 20 € (« 60 € tous les 3 mois »), 21,67 €, 4 €, 9,17 €, 3,17 € | somme = 58,00 ✅ (avant arrondi) |
+| Engagements − 370 €        | 190 € + 180 €                                                 | somme = 370 ✅                   |
+| Effort lissé 1 883,37 €    | « charges mensuelles + provisions lissées + mensualités »     | 1 455,37 + 58 + 370 ✅           |
+| À payer ce mois 1 825,37 € | « ce qui quitte réellement le compte, factures et échéances » | 1 455,37 + 370 ✅                |
 
 La ligne du lissage est le meilleur exemple : elle n'affiche pas « 15 € » mais
 « 15 € — 45 € tous les 3 mois ». Le chiffre porte **sa provenance et sa périodicité**,
@@ -185,8 +185,8 @@ Et dans les deux sens, comme la règle l'exige : « À virer vers l'épargne **5
 mettre de côté − 0 € de factures ce mois ».
 
 **L'application détecte elle-même le doublon que le profil semé lui a tendu.**
-« Impôt » existe en facture (220 €) et « SPF Impôt — plan d'apurement » en engagement
-(220 €). Sur `/app/charges`, l'app affiche spontanément : « Une obligation semble saisie
+« Impôt » existe en facture (190 €) et « SPF Impôt — plan d'apurement » en engagement
+(190 €). Sur `/app/charges`, l'app affiche spontanément : « Une obligation semble saisie
 deux fois — « Impôt » (facture) et « SPF Impôt — plan d'apurement » (engagement) portent le
 même montant de 220 € ». Elle ne double-compte pas, **et elle le dit**. C'est mieux que
 correct : c'est explicable.

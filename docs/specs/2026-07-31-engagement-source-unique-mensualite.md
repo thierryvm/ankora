@@ -8,23 +8,23 @@
 
 ## Le défaut, mesuré
 
-Profil de test local, 19 charges reproduisant les totaux de contrôle de @thierry
-(mensuel 1 804,21 · trimestriel 45 → 15 · annuel 528 → 44 · **effort lissé
-1 863,21 €/mois**, recalculé en SQL indépendamment de l'application), plus un plan
-d'apurement « SPF Impôt » de 220 €/mois désignant la **même dette** que la charge
-mensuelle « Impôt 220 € ».
+Profil de test local, 19 charges d'un profil fictif (valeurs remplacées le 2 octobre 2026, dépôt public)
+(mensuel 1 455,37 · trimestriel 60 → 20 · annuel 456 → 38 · **effort lissé
+1 513,37 €/mois**, recalculé en SQL indépendamment de l'application), plus un plan
+d'apurement « SPF Impôt » de 190 €/mois désignant la **même dette** que la charge
+mensuelle « Impôt 190 € ».
 
 Le cockpit affiche :
 
 ```
-Revenus              2 637 €
-Charges fixes      − 1 804,21 €      ← contient « Impôt 220 € »
-Provisions lissées      − 59 €
-Engagements            − 220 €      ← le MÊME impôt, une seconde fois
-Budget du mois         553,79 €      ← devrait être 773,79 €
+Revenus              2 500 €
+Charges fixes      − 1 455,37 €      ← contient « Impôt 190 € »
+Provisions lissées      − 58 €
+Engagements            − 190 €      ← le MÊME impôt, une seconde fois
+Budget du mois         796,63 €      ← devrait être 986,63 €
 ```
 
-**Le budget est minoré de 220 €.** Ce n'est pas rattrapable par une saisie plus
+**Le budget est minoré de 190 €.** Ce n'est pas rattrapable par une saisie plus
 soigneuse : `charges` et `commitments` sont deux tables **sans clé étrangère ni
 champ de liaison**, et `calculerSituationDuMois` additionne les deux sources sans
 jamais les confronter :
@@ -37,7 +37,7 @@ Aucune détection de doublon, aucun avertissement. Toute dette saisie aux deux
 endroits sera comptée deux fois, **par construction**.
 
 **Second agrégat, incohérent avec le premier, sur le même écran.** « Restant
-Principal » du Plan du mois vaut 318,79 € = 2 637 − 500 − 14 − 1 804,21 : il
+Principal » du Plan du mois vaut 530,63 € = 2 500 − 500 − 14 − 1 455,37 : il
 **ignore complètement** les engagements, là où « Budget du mois » les déduit. Deux
 chiffres présentés comme « ce qu'il te reste », deux règles sur la même donnée.
 
@@ -57,8 +57,8 @@ de l'intention, on la signale. Faisceau d'indices, à confirmer par mesure :
   significatif — « Impôt » ⊂ « SPF Impôt — plan d'apurement »)
 
 L'avertissement est **non bloquant** : bandeau ou mention sur les deux fiches,
-avec l'écart chiffré (« ces deux lignes déduisent 440 € ; s'il s'agit de la même
-dette, tu en comptes 220 € de trop »). Jamais de fusion automatique.
+avec l'écart chiffré (« ces deux lignes déduisent 380 € ; s'il s'agit de la même
+dette, tu en comptes 190 € de trop »). Jamais de fusion automatique.
 
 **3. Cohérence des agrégats.** Décider explicitement si « Restant Principal »
 doit ou non déduire les engagements, et l'écrire. Deux réponses différentes sur

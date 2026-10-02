@@ -6,7 +6,7 @@ erreur de console capturée. Tout ce qui suit est **mesuré**, jamais déduit.
 
 Le persona : 16 charges (loyer, énergie, eau, internet, mobile, 3 assurances, 3 taxes, 2 postes
 d'entretien prévisible, 2 abonnements), 3 engagements (crédit voiture 36×, cuisine 24×, soins
-dentaires 6×), 8 dépenses réparties sur le mois, 3 comptes avec solde, revenu 2 693 €.
+dentaires 6×), 8 dépenses réparties sur le mois, 3 comptes avec solde, revenu 2 500 €.
 
 ---
 

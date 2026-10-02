@@ -13,25 +13,25 @@
 
 ## Contexte & problème
 
-Le bucket-model d'Ankora (cf. ADR-002) repose sur l'idée que les charges périodiques sont **lissées en provisions mensuelles**. L'utilisateur vire chaque mois `provisionsMensuellesTotales` vers le compte Provisions. Au moment où la facture annuelle tombe (ex: Dashlane 53 € en avril), il pioche dans ce compte pour la payer.
+Le bucket-model d'Ankora (cf. ADR-002) repose sur l'idée que les charges périodiques sont **lissées en provisions mensuelles**. L'utilisateur vire chaque mois `provisionsMensuellesTotales` vers le compte Provisions. Au moment où la facture annuelle tombe (ex: un abonnement annuel de 48 € en avril), il pioche dans ce compte pour la payer.
 
 **Problème pratique** : ce modèle simpliste fait virer "à plein" tous les mois, même quand une facture annuelle tombe le mois courant. Exemple :
 
-> @thierry provisionne 59 €/mois pour ses 5 factures périodiques.
-> En avril, sa charge Dashlane (53 €) est due.
-> Logique naïve : il vire **59 € vers Épargne** comme d'habitude, puis paye Dashlane **depuis le compte courant** (53 €).
-> Résultat : il sort 59 + 53 = **112 €** du compte courant ce mois, au lieu de 59 €.
+> Un utilisateur provisionne 50 €/mois pour ses 5 factures périodiques.
+> En avril, son abonnement annuel (48 €) est dû.
+> Logique naïve : il vire **50 € vers Épargne** comme d'habitude, puis paye l'abonnement **depuis le compte courant** (48 €).
+> Résultat : il sort 50 + 48 = **98 €** du compte courant ce mois, au lieu de 50 €.
 
 C'est **inefficace** et **anxiogène**. L'utilisateur a l'impression que les mois "à grosses factures annuelles" sont brutaux alors que justement le lissage est censé les éviter.
 
 **Solution intelligente** : ne virer vers Épargne que la **différence** entre la provision mensuelle et les factures périodiques du mois courant.
 
 ```
-Mai 2026 : aucune facture périodique due → virer 59 € vers Épargne (provision pleine)
-Avril 2026 : Dashlane 53 € due → virer seulement (59 - 53) = 6 € vers Épargne
-              + payer Dashlane 53 € depuis Épargne (l'argent est déjà là, lissé sur 12 mois)
-Juin 2026 : Taxe voiture 300 € due → virer (59 - 300) = -241 €
-              → message inverse : "À récupérer 241 € de l'épargne pour payer la taxe"
+Mai 2026 : aucune facture périodique due → virer 50 € vers Épargne (provision pleine)
+Avril 2026 : abonnement 48 € dû → virer seulement (50 - 48) = 2 € vers Épargne
+              + payer l'abonnement 48 € depuis Épargne (l'argent est déjà là, lissé sur 12 mois)
+Juin 2026 : taxe de circulation 240 € due → virer (50 - 240) = -190 €
+              → message inverse : "À récupérer 190 € de l'épargne pour payer la taxe"
 ```
 
 C'est ce calcul que le mockup IronBudget appelle l'**Assistant Virements**. C'est le **cœur différenciateur** d'Ankora vs concurrence (Monarch / YNAB / Lunch Money / Linxo / Bankin' ne le font pas).
@@ -79,15 +79,15 @@ transfertRecommandeAjuste = transfertRecommande + rattrapageMensuel
 Sous le montant principal, afficher la décomposition de `provisionMensuelleTotale` :
 
 ```
-Détail des 59,00 € de provisions :
-- Dashlane (annuelle 53€)        +4,42 €
-- S.W.D.E (trimestrielle 45€)    +15,00 €
-- Taxe voiture (annuelle 300€)   +25,00 €
-- Taxe poubelle (annuelle 120€)  +10,00 €
-- Taxe égout (annuelle 55€)      +4,58 €
+Détail des 50,00 € de provisions :
+- Abonnement (annuel 48€)        +4,00 €
+- Eau (trimestrielle 36€)        +12,00 €
+- Taxe de circulation (240€)    +20,00 €
+- Collecte déchets (108€)       +9,00 €
+- Taxe égouts (annuelle 60€)     +5,00 €
 ```
 
-Cette transparence est **essentielle** pour la confiance utilisateur : il voit d'où vient le 59 €.
+Cette transparence est **essentielle** pour la confiance utilisateur : il voit d'où vient le 50 €.
 
 ### Implémentation TypeScript (domain pur)
 
@@ -178,10 +178,10 @@ export function calculerAssistantVirements(
 
 ## Conséquences négatives
 
-- ❌ **Complexité conceptuelle pour novices** : un utilisateur habitué à "épargne = montant fixe / mois" peut être surpris de voir "à virer 6 €" en avril alors qu'il visait 59 €. Mitigation : tooltip explicatif "Ce mois-ci, ta facture Dashlane (53€) est payée depuis l'Épargne, donc tu n'as à virer que la différence (6€) pour les 4 autres provisions" + onboarding pédagogique (PR-D6).
-- ❌ **Dépendance forte à `payment_months` correctement renseigné** : si l'utilisateur oublie de cocher "avril" dans les mois d'échéance Dashlane, l'Assistant Virements suggère de virer 59 € au lieu de 6 €. L'utilisateur paye double. Mitigation : nudge onboarding "As-tu vérifié les mois d'échéance de tes charges annuelles ?".
+- ❌ **Complexité conceptuelle pour novices** : un utilisateur habitué à "épargne = montant fixe / mois" peut être surpris de voir "à virer 2 €" en avril alors qu'il visait 50 €. Mitigation : tooltip explicatif "Ce mois-ci, ton abonnement annuel (48€) est payé depuis l'Épargne, donc tu n'as à virer que la différence (2€) pour les 4 autres provisions" + onboarding pédagogique (PR-D6).
+- ❌ **Dépendance forte à `payment_months` correctement renseigné** : si l'utilisateur oublie de cocher "avril" dans les mois d'échéance de l'abonnement, l'Assistant Virements suggère de virer 50 € au lieu de 2 €. L'utilisateur paye double. Mitigation : nudge onboarding "As-tu vérifié les mois d'échéance de tes charges annuelles ?".
 - ❌ **Cas "aucun virement" peut sembler bizarre** : "Aucun virement nécessaire ce mois" peut surprendre. Mitigation : message explicatif clair.
-- ❌ **Cas "depuis épargne" anxiogène la première fois** : "Tu dois récupérer 241 € de ton épargne" peut alarmer un user qui voit son épargne baisser. Mitigation : message explicatif "Cet argent était déjà sur l'épargne pour cette facture précise — tu utilises le bucket comme prévu". Couplage visuel avec le détail provisions (ex: "Sur les 300 € de Taxe voiture, 275 € viennent de tes provisions cumulées et 25 € de ta provision de ce mois").
+- ❌ **Cas "depuis épargne" anxiogène la première fois** : "Tu dois récupérer 190 € de ton épargne" peut alarmer un user qui voit son épargne baisser. Mitigation : message explicatif "Cet argent était déjà sur l'épargne pour cette facture précise — tu utilises le bucket comme prévu". Couplage visuel avec le détail provisions (ex: "Sur les 240 € de taxe de circulation, 220 € viennent de tes provisions cumulées et 20 € de ta provision de ce mois").
 
 ---
 
@@ -201,9 +201,9 @@ Au lieu de suggérer un virement, suggérer "ton solde Épargne devrait être de
 
 ### Alternative 3 — Virer = provisionMensuelleTotale, gérer les factures périodiques en notification séparée
 
-Garder le virement mensuel constant à 59 €, et notifier séparément "facture Dashlane 53 € due ce mois, à payer depuis Épargne".
+Garder le virement mensuel constant à 50 €, et notifier séparément "abonnement annuel 48 € dû ce mois, à payer depuis Épargne".
 
-**Rejetée** : 2 mouvements à gérer manuellement (vire 59 + paye 53 depuis épargne) au lieu d'1 (vire 6). Cognitive overhead inutile.
+**Rejetée** : 2 mouvements à gérer manuellement (vire 50 + paye 48 depuis épargne) au lieu d'1 (vire 2). Cognitive overhead inutile.
 
 ### Alternative 4 — Inclure les mensuelles aussi dans le "à virer"
 
@@ -213,9 +213,9 @@ Calculer `transfert = totalCharges_du_mois` (mensuelles + périodiques). Faire u
 
 ### Alternative 5 — Multi-buckets affectés (ADR-002 strict)
 
-Au lieu d'un compte Provisions global, avoir 1 bucket par charge périodique avec son propre solde (Bucket Dashlane, Bucket Taxe voiture, etc.).
+Au lieu d'un compte Provisions global, avoir 1 bucket par charge périodique avec son propre solde (Bucket Abonnement, Bucket Taxe de circulation, etc.).
 
-**Rejetée v1.0** : trop complexe à manager (5+ buckets pour @thierry). v1.1 : reconsidérer si l'utilisateur exprime ce besoin (cf. ADR-015 future Savings Buckets segregation, A10).
+**Rejetée v1.0** : trop complexe à manager (5+ buckets pour un profil courant). v1.1 : reconsidérer si l'utilisateur exprime ce besoin (cf. ADR-015 future Savings Buckets segregation, A10).
 
 ---
 
@@ -231,7 +231,7 @@ Au lieu d'un compte Provisions global, avoir 1 bucket par charge périodique ave
      - Sans charges périodiques → provision = 0, virer = 0
      - Avec rattrapage > 0 → ajustement correct
      - Avec rattrapage = 0 (à jour) → pas d'ajout
-     - Cas réel @thierry (Dashlane avril, Taxe poubelle/égout mars, etc.)
+     - Profil d'exemple (abonnement annuel en avril, taxes communales en mars, etc.)
 2. **PR-D5 (Bloc droite)** :
    - Composant `VirementsAssistantCard` avec card hero (gradient bleu/vert)
    - Sub-card `SanteProvisionsCard` (cf. ADR-011) intégrée
@@ -256,7 +256,7 @@ Au lieu d'un compte Provisions global, avoir 1 bucket par charge périodique ave
 
 ## Risques
 
-- **Risque 1 — Mauvaise UX si formule mal expliquée** : "Tu dois récupérer 241 € de ton épargne" peut paniquer. Mitigation : message contextuel rassurant + tooltip + lien vers glossaire.
+- **Risque 1 — Mauvaise UX si formule mal expliquée** : "Tu dois récupérer 190 € de ton épargne" peut paniquer. Mitigation : message contextuel rassurant + tooltip + lien vers glossaire.
 - **Risque 2 — Calcul erroné si `payment_months` mal renseigné** : l'algo dépend de cette donnée. Mitigation : validation Zod stricte (array de SMALLINT entre 1 et 12) + nudge onboarding.
 - **Risque 3 — Cumul rattrapage explose** : si déficit énorme + plusieurs factures gros mois → `transfertRecommandeAjuste` peut dépasser revenus. Mitigation : warning UX explicite + cap sur le rattrapage (cf. ADR-011 risque 4).
 - **Risque 4 — Double-comptage avec ADR-002 bucket-model** : assurer que `provisionMensuelleTotale` n'inclut JAMAIS les charges mensuelles. Test Vitest dédié + commentaire défensif dans le code.

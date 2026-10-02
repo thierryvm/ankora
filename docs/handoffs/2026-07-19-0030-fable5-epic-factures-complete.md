@@ -26,7 +26,7 @@ Branches nettoyées : toutes les branches feat/\* mergées supprimées (local + 
 - **#225** — headline « Reste à payer ce mois » live en tête de la page charges (+ npm audit fix 3 high).
 - **#226** — passe de cohérence page charges : chip 3 états « reste X € / ✓ tout payé », unités de cadence sur les sous-totaux (/mois, /trimestre, /an), bandeau succès, tri par date, formulaire replié (liste-first).
 - **#227** — PR-C : colonne `is_watched` + `toggleWatchAction` (authz/audit/rate-limit) + `ProchainesFacturesCard` réécrite en 2 sections (« Ce mois-ci » 5 non payées + reste à payer / « À surveiller » = marquées 🔖) + bouton Bookmark inline + **THI-348 a11y soldé** + résilience anti-page-vide (`select('*')` + `log.error`).
-- **#228** — PR-D : `CadenceField` (THI-301) — cluster unifié fréquence/ancre/jour, selects natifs, « Dernier jour du mois »=31, résumé humain « Prélevé le 15 : mars, juin, sept., déc. », `CHARGE_FREQUENCIES` centralisé domaine. **C'est l'outil pour corriger les vraies ancres de dates de @thierry** (ex. S.W.D.E → trimestriel à partir de mai).
+- **#228** — PR-D : `CadenceField` (THI-301) — cluster unifié fréquence/ancre/jour, selects natifs, « Dernier jour du mois »=31, résumé humain « Prélevé le 15 : mars, juin, sept., déc. », `CHARGE_FREQUENCIES` centralisé domaine. **C'est l'outil pour corriger les vraies ancres de dates de @thierry** (ex. Eau → trimestriel à partir de mai).
 
 ## 3. Incident majeur résolu (2026-07-18) — « tout le contenu a disparu »
 

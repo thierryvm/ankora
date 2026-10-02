@@ -13,9 +13,9 @@
 
 ## Contexte & problème
 
-Plusieurs cas réels d'utilisateurs Ankora (à commencer par @thierry lui-même) ne sont pas couverts par les concepts existants ADR-002 (charges récurrentes) ou ADR-016 (transactions ponctuelles) :
+Plusieurs cas d'utilisateurs Ankora ne sont pas couverts par les concepts existants ADR-002 (charges récurrentes) ou ADR-016 (transactions ponctuelles) :
 
-1. **Apurement fiscal** : @thierry a 2 407 € à payer en 11 fois (10 × 220 € + 1 × 207,93 €), prélèvement le 15 du mois. Ce n'est pas une charge récurrente classique (montant non identique chaque fois, durée finie connue à l'avance) ni une transaction ponctuelle (le paiement est étalé).
+1. **Apurement fiscal** : un utilisateur a 2 077,50 € à payer en 11 fois (10 × 190 € + 1 × 177,50 €), prélèvement le 15 du mois. Ce n'est pas une charge récurrente classique (montant non identique chaque fois, durée finie connue à l'avance) ni une transaction ponctuelle (le paiement est étalé).
 
 2. **Remboursement crédit personnel** : 12 000 € à rembourser sur 36 mois à 350 €/mois. Caractéristiques : montant fixe, durée fixe, fin programmée.
 
@@ -66,7 +66,7 @@ CREATE TABLE installment_plans (
   direction                   text NOT NULL CHECK (direction IN ('out', 'in')),  -- out = paiement utilisateur, in = restitution
 
   -- Montants
-  total_amount                numeric(12,2) NOT NULL,                   -- ex: 2407.00
+  total_amount                numeric(12,2) NOT NULL,                   -- ex: 2077.50
   installments_count          integer NOT NULL CHECK (installments_count BETWEEN 2 AND 60),
   installment_amount_std      numeric(12,2) NOT NULL,                   -- ex: 220.00
   installment_amount_final    numeric(12,2),                            -- ex: 207.93 (NULL si toutes égales, calculé sinon)
@@ -181,7 +181,7 @@ Card dédiée entre Activité récente et Tes Signaux (déjà livrée par Claude
 │                                                              │
 │ ┌──────────────────────────────────────────────────────────┐ │
 │ │ 🏛  Impôt 2026                  PROCHAINE                │ │
-│ │     Total 2 407 €   ·   11 échéances    220,00 €        │ │
+│ │     Total 2 077,50 €   ·   11 échéances 190,00 €        │ │
 │ │                                  15 juin 2026            │ │
 │ │ ████████░░░░░░░░░░  5/11 PAYÉES · 45,7 %                │ │
 │ │ 1 100 € payés · reste 1 307 €                            │ │
@@ -228,7 +228,7 @@ Réutilise le pattern `EditDrawer` (atom Drawer) avec champs field-driven :
 | `start_date`               | date   | ✓        | "Date de la 1ère échéance"                       |
 | `notes`                    | text   | optional | contexte libre                                   |
 
-**Helper texte vivant** (preview en bas du drawer) : « Avec ces réglages, tu rembourseras 2 407 € en 11 mensualités de 220 € (sauf la dernière 207,93 €) à partir du 15 mai 2026, soit jusqu'au 15 mars 2027. »
+**Helper texte vivant** (preview en bas du drawer) : « Avec ces réglages, tu rembourseras 2 077,50 € en 11 mensualités de 190 € (sauf la dernière 177,50 €) à partir du 15 juin 2026, soit jusqu'au 15 avril 2027. »
 
 ### 7. Empty state (avant création du 1er plan)
 

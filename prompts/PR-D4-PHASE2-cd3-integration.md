@@ -31,26 +31,26 @@ L'erreur historique d'ADR-009 a été clarifiée. Le hero waterfall affiche dés
 
 ```
 Reste disponible      = Revenus − Charges fixes − Provisions OUT du mois − Virement matelas saisi
-                      = 662 €/mois pour Thierry mai 2026 (vraies données)
+                      = 640 €/mois sur le profil d'exemple
 
 Reste à vivre         = budget vie courante variable saisi par l'utilisateur
                       = 500 €/mois estimé Thierry (courses 200 + imprévus 50 + sorties 0 + marge 250)
                       = AJUSTABLE manuellement chaque mois (R-10) via bouton "Ajuster ce mois"
 
 Capacité d'épargne    = Reste disponible − Reste à vivre
-réelle                = 162 €/mois pour Thierry mai 2026
+réelle                = 160 €/mois pour profil d'exemple
 ```
 
 **Implications UI à porter dans cette PR** :
 
 1. **HeroWaterfall** affiche 3 labels triple-ligne au-dessus de la barre Reste :
    - Ligne 1 : `Reste disponible`
-   - Ligne 2 : `+ 662 €` (gros, font-display)
+   - Ligne 2 : `+ 640 €` (gros, font-display)
    - Ligne 3 : `+ 87 € vs. avril` (delta, opacity 0.7, taille xs)
-2. **Card "Capacité d'épargne réelle"** dans SignauxCard affiche **162 €** (PAS 662 €), avec sub-stats :
-   - Reste disponible 662 €
-   - Reste à vivre 500 € + bouton textuel "Ajuster ce mois →"
-   - Capacité d'épargne réelle 162 €
+2. **Card "Capacité d'épargne réelle"** dans SignauxCard affiche **160 €** (PAS 640 €), avec sub-stats :
+   - Reste disponible 640 €
+   - Reste à vivre 480 € + bouton textuel "Ajuster ce mois →"
+   - Capacité d'épargne réelle 160 €
 3. **Modèle de données** : `workspace_settings.reste_a_vivre_default` (numeric) + `workspace_settings.reste_a_vivre_overrides` (jsonb keyé par YYYY-MM). Le bouton "Ajuster ce mois" écrit dans `reste_a_vivre_overrides[currentMonth]`. Si pas d'override → fallback `reste_a_vivre_default`.
 4. **Onboarding Étape 3** demande ce Reste à vivre avec helper adaptatif neutre aux 3 ratios (R-06 anti-culpa, déjà livré Bloc D mais à respecter dans l'intégration).
 
@@ -100,16 +100,16 @@ COMMENT ON COLUMN recurring_templates.included_services IS
 2. Pour la Surface 1 cockpit, l'`ActiviteRecente` n'a PAS besoin d'afficher les bundles V1.
 3. **Anticiper côté props** des atoms `Chip` et `Avatar` : prévoir que la donnée `chargeRow` puisse contenir un futur champ `included_services` sans casser le typage.
 
-Cas réels confirmés Thierry (à respecter dans les seeds e2e) :
+Cas types confirmés (à respecter dans les seeds e2e) :
 
-1. Orange 89 €/mois inclut Netflix
-2. Assurance auto 150 €/mois est un PACK (auto + habitation + incendie + familiale)
+1. Un abonnement télécom (ex. 45 €/mois) inclut un service de streaming
+2. Une assurance auto (ex. 64 €/mois) est un PACK (auto + habitation + incendie + familiale)
 
 → **Ne JAMAIS ajouter** "Mutuelle annuelle 848 €" ni "Assurance habitation 420 €" dans les seeds — tout est mensualisé chez Thierry.
 
 ### D · ADR-017 Plans d'apurement (préparation cross-PR)
 
-[ADR-017 Proposed](../docs/adr/ADR-017-plans-apurement.md) introduit la table `installment_plans` pour les paiements étalés (cas réel Thierry : Impôt 2 407 € en 11 fois).
+[ADR-017 Proposed](../docs/adr/ADR-017-plans-apurement.md) introduit la table `installment_plans` pour les paiements étalés (cas type : impôt de 2 077,50 € en 11 fois).
 
 **Dans cette PR PHASE 2**, ce qu'il faut faire :
 
@@ -184,7 +184,7 @@ Ajouter aux tests Vitest existants (§4) :
 
 Playwright e2e additionnel :
 
-1. `e2e/dashboard-rav-adjust.spec.ts` — flow : ouvrir dashboard → cliquer "Ajuster ce mois" → modifier RAV à 450 € → vérifier capacité passe à 212 € (662 - 450)
+1. `e2e/dashboard-rav-adjust.spec.ts` — flow : ouvrir dashboard → cliquer "Ajuster ce mois" → modifier RAV à 450 € → vérifier capacité passe à 190 € (640 - 450)
 2. `e2e/dashboard-mouvements-tab.spec.ts` — flow : ouvrir CompteEpargne → cliquer onglet "Mouvements" → vérifier rendu timeline (vide ou pleine)
 
 ### J0 · Atoms 10 & 11 — ThemeToggle + LangSwitcher (livrés Patch Bloc E 2026-05-09)
@@ -434,7 +434,7 @@ L'implémentation des **server fetchers** + branchement des 4 APIs externes (Ver
 | R-01 Budget 0 €                   | Aucune dépendance payante ajoutée                                                                          |
 | R-02 FSMA-safe                    | Aucun terme "investir/placer/rendement" dans les copies                                                    |
 | R-03 no-PSD2                      | Aucun appel API banque, aucun OAuth bancaire                                                               |
-| R-04 vraies données > seeds       | Les seeds e2e utilisent les vraies données Thierry mai 2026                                                |
+| R-04 vraies données > seeds       | Les seeds e2e utilisent un profil réaliste (fictif, dépôt public)                                          |
 | R-05 3 concepts capacité          | HeroWaterfall + SignauxCard décomposition pédagogique                                                      |
 | R-06 anti-culpabilisation         | Helpers RAV neutres, pas de rouge agressif sur déficits                                                    |
 | R-07 mobile-first                 | Container queries CompteEpargne, sidebar off-canvas mobile                                                 |

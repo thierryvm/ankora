@@ -17,15 +17,15 @@ Le Dashboard Ankora actuel (post PR-C2a) affiche 3 comptes nommés en dur : "Com
 
 > Le mot "Compte Principal" est ambigu. L'utilisateur lit "Principal → Vie Courante" et ne sait pas si "Principal" = "celui d'où ça part" (sémantique métier Ankora) ou "celui qui est principal pour moi" (sémantique langagière user, qui pense souvent que c'est son compte courant chez sa banque).
 
-Plus largement, @thierry utilise dans la vraie vie :
+Plus largement, un utilisateur type a, dans la vraie vie :
 
-- **Belfius** (compte courant où arrive le salaire) — concept Ankora `Compte Principal`
-- **Compte Épargne Belfius** (provisions factures variables) — concept Ankora `Compte Épargne`
-- **Revolut** (carte quotidienne courses/essence/loisirs) — concept Ankora `Vie Courante`
+- **Le compte courant de sa banque** (là où arrive le salaire) — concept Ankora `Compte Principal`
+- **Le compte épargne de la même banque** (provisions factures variables) — concept Ankora `Compte Épargne`
+- **Une néobanque** (carte quotidienne courses/essence/loisirs) — concept Ankora `Vie Courante`
 
 Forcer l'utilisateur à renommer mentalement ses comptes pour matcher la nomenclature Ankora **crée de la friction cognitive permanente**. À l'inverse, laisser l'utilisateur nommer librement sans typer sémantiquement casse toute la logique métier (l'Assistant Virements, l'algo Santé Provisions, le routing des charges entre comptes, etc.).
 
-La spec canonique du Dashboard cockpit (cf. document `dashboard-cockpit-vraie-vision-2026-05-03.md`) tranche : on a **3 comptes typés sémantiquement** (`income_bills` / `provisions` / `daily_card`) **renommables par l'utilisateur** (Belfius / Compte Épargne / Revolut). Cet ADR formalise ce choix dans le data model.
+La spec canonique du Dashboard cockpit (cf. document `dashboard-cockpit-vraie-vision-2026-05-03.md`) tranche : on a **3 comptes typés sémantiquement** (`income_bills` / `provisions` / `daily_card`) **renommables par l'utilisateur** (ex. « Ma banque » / « Compte épargne » / « Carte du quotidien »). Cet ADR formalise ce choix dans le data model.
 
 ---
 

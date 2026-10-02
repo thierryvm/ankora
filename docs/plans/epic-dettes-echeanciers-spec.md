@@ -104,4 +104,4 @@ Motif de la correction : la formulation d'origine n'a jamais été implémentée
 
 Intérêts/TAEG · échéances **arbitrairement** irrégulières (un montant libre par échéance) · rappels/notifications d'échéance · export du plan de remboursement.
 
-> **Amendement 2026-08-02** — la **dernière** échéance, elle, est désormais dérivée : `total − (n − 1) × mensualité`. Le « SPF classique est régulier » était faux sur le cas réel — 2 407,93 € sur 11 × 220 € donne dix échéances pleines et un solde de 207,93 €, et la carte annonçait « 11 échéances de 220 € ». Un plan à montants tous différents reste hors épic.
+> **Amendement 2026-08-02** — la **dernière** échéance, elle, est désormais dérivée : `total − (n − 1) × mensualité`. Le « SPF classique est régulier » était faux sur le cas mesuré — 2 077,50 € sur 11 × 190 € donne dix échéances pleines et un solde de 177,50 €, et la carte annonçait « 11 échéances de 220 € ». Un plan à montants tous différents reste hors épic.

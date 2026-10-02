@@ -123,7 +123,7 @@ La spec canonique impose PR-D2 (3 cards comptes typés + renommage inline) AVANT
 
 | Module                       | Test file                                   | Cas couverts                                                                                                                                                                                  |
 | ---------------------------- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `effort-financier-lisse.ts`  | `__tests__/effort-financier-lisse.test.ts`  | 11 cas : 3 fonctions exportées, fixtures Dashlane @thierry réelle, précision Decimal `53/12`, inactives ignorées                                                                              |
+| `effort-financier-lisse.ts`  | `__tests__/effort-financier-lisse.test.ts`  | 11 cas : 3 fonctions exportées, fixture d'abonnement annuel, précision Decimal sur une division non entière, inactives ignorées                                                               |
 | `capacite-epargne-reelle.ts` | `__tests__/capacite-epargne-reelle.test.ts` | **14 cas** : revenus=0, charges vides, plafond>revenus, capacite=0 (`isPositive: true`), mix complet, Decimal precision (`12 × 53/12 = 53`), inactives, breakdown effort séparé, early signup |
 
 ### Évaluation qualitative ≥ 90 %

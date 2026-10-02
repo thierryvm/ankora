@@ -8,7 +8,7 @@
 - **Cause racine data** : migration `20260503000002_pr_d1_charges_enrichments.sql`
   (l.57-60) a backfillé `payment_months = array[due_month]` pour les
   non-mensuelles → une charge `quarterly` avec `due_month=1` a `payment_months=[1]`
-  au lieu de `[1,4,7,10]`. D'où **S.W.D.E (eaux) « janv. 2027 »**. La fonction
+  au lieu de `[1,4,7,10]`. D'où **Eau « janv. 2027 »**. La fonction
   `paymentMonthsFromFrequency` est correcte ; les données n'ont jamais été
   recalculées avec.
 - **Cause logique** : `nextDueDateForCharge` (l.37-52) roule toujours vers
@@ -23,7 +23,7 @@
 
 - **Migration backfill** : recompute `payment_months` via
   `paymentMonthsFromFrequency(frequency, due_month)` pour les charges
-  incohérentes (corrige S.W.D.E ; n'altère pas les mensuelles `[1..12]`).
+  incohérentes (corrige l'eau ; n'altère pas les mensuelles `[1..12]`).
 - **Domaine** `currentPeriodDueDate(charge, year, month)` (pur, NOUVEAU,
   distinct de `nextDueDateForCharge` qu'on ne touche PAS — 7 call-sites) :
   retourne l'occurrence du mois courant sans rouler en avant. États : dû ce
@@ -77,10 +77,10 @@
 ## Nuance cadence (clé pour PR-A + PR-D)
 
 - Trimestriel/semestriel = tous les N mois **à partir de l'ancre `due_month`**,
-  PAS universellement 3/6/9/12. Ex : S.W.D.E réel (ancre mai) = `[2,5,8,11]` ;
+  PAS universellement 3/6/9/12. Ex : eau (ancre mai) = `[2,5,8,11]` ;
   ancre janvier → `[1,4,7,10]` ; ancre mars → `[3,6,9,12]`.
 - Le **backfill PR-A** recompute depuis le `due_month` STOCKÉ (souvent faux —
-  S.W.D.E a `due_month=1` → `[1,4,7,10]`) : il **dé-casse** (rend vraiment
+  l'eau a `due_month=1` → `[1,4,7,10]`) : il **dé-casse** (rend vraiment
   trimestriel, fin du « janv. 2027 ») mais ne devine PAS la bonne ancre.
   @thierry fixe l'ancre réelle via **CadenceField (PR-D)**.
 - **UX critique PR-D** : @thierry trouve les fréquences déroutantes (verbatim
@@ -101,7 +101,7 @@ rapport `docs/prs/PR-epic-factures-<X>-report.md`.
 
 ## Smoke @thierry post-merge
 
-- PR-A : `/app/charges` en juin → S.W.D.E n'affiche plus « janv. 2027 » ; charge
+- PR-A : `/app/charges` en juin → l'eau n'affiche plus « janv. 2027 » ; charge
   mensuelle jour passé non payée = badge « en retard » ; dashboard la montre en « En retard ».
 - PR-B : marquer une facture « à surveiller » → apparaît dans la section dashboard dédiée ; décocher → disparaît.
 - PR-C : cocher 2 payées → « Réinitialiser le mois » → décochées ; lendemain sans cocher → badge « N oubliées ».

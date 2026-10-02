@@ -80,7 +80,7 @@ Août — ton cockpit
   › Ce qui arrive                  rien ce mois
   › Mes provisions                       à jour
   › Mes comptes                 4 653 € au total
-  › Mes engagements              fin mars 2027
+  › Mes engagements              fin avril 2027
   › Mes dernières sorties             336,91 €
 ```
 
@@ -88,21 +88,21 @@ Août — ton cockpit
 que montre chaque section une fois ouverte, la façon dont un mois chargé se
 distingue d'un mois calme, la typographie, le rythme, les transitions.
 
-## Les vraies données (le mois d'août de l'utilisateur)
+## Données d'exemple (un mois d'août fictif, ordres de grandeur réalistes)
 
 ```
-Revenus                  2 693 €
-  − Factures mensuelles  1 575,48 €
-  − Lissage des annuelles   59 €      (provisions pour factures périodiques)
-  − Engagements            220 €      (échéancier de dette)
-  = Budget du mois         838,52 €
-  − Dépensé ce mois        336,91 €   (14 dépenses)
-  = Il te reste            501,61 €
-  Épargne estimée          384,42 €   (projection du rythme actuel)
+Revenus                  2 500 €
+  − Factures mensuelles  1 412,60 €
+  − Lissage des annuelles   50 €      (provisions pour factures périodiques)
+  − Engagements            190 €      (échéancier de dette)
+  = Budget du mois         847,40 €
+  − Dépensé ce mois        312,75 €   (12 dépenses)
+  = Il te reste            534,65 €
+  Épargne estimée          402,10 €   (projection du rythme actuel)
 
-Provisions   100 % — cible 130,58 €, solde réel 1 460 €, +1 329,42 € au-delà
-Engagement   SPF impôt · 1 527,93 € restant · 7 échéances · fin mars 2027
-Comptes      Belfius 2 693 € · Belfius Épargne 1 460 € · Revolut Vie Courante 500 €
+Provisions   100 % — cible 118,33 €, solde réel 1 250 €, +1 131,67 € au-delà
+Engagement   SPF impôt · 1 317,50 € restant · 7 échéances · fin avril 2027
+Comptes      Compte principal 2 480 € · Compte épargne 1 250 € · Vie courante 500 €
 Prochaines factures  aucune ce mois-ci
 ```
 

@@ -17,13 +17,13 @@ L'algorithme bucket-model d'Ankora (cf. ADR-002) repose sur l'idée que **chaque
 
 **Problème pratique** : un utilisateur qui rejoint Ankora **en cours d'année** ne peut PAS avoir constitué les provisions depuis janvier. Exemple :
 
-> En mai, @thierry a une Taxe voiture annuelle de 300 € due en juin. Si Ankora avait commencé à provisionner depuis janvier, il aurait 5 × 25 € = 125 € sur le compte Provisions. Mais @thierry vient d'arriver en mai → il n'a 0 € pour cette charge → **déficit de 25 € × 5 mois = 125 €**.
+> En mai, un utilisateur a une taxe de circulation annuelle de 240 € due en juin. Si Ankora avait commencé à provisionner depuis janvier, il aurait 5 × 20 € = 100 € sur le compte Provisions. Mais il vient d'arriver en mai → il n'a 0 € pour cette charge → **déficit de 20 € × 5 mois = 100 €**.
 
 Plus largement, à n'importe quel moment T, on peut calculer **combien il devrait y avoir** sur le compte Provisions pour que le bucket-model fonctionne (= `totalEpargneTheorique`). Si `soldeEpargneActuel < totalEpargneTheorique` → **déficit**.
 
 Sans plan, ce déficit reste opaque : l'utilisateur arrive sur le Dashboard, voit "Santé provisions : Critique", panique, mais ne sait pas quoi faire.
 
-Le mockup IronBudget formalise une solution élégante : **étaler le rattrapage sur 3 mois** automatiquement. L'utilisateur n'a pas à payer 125 € d'un coup ; on lui demande +41.67 €/mois pendant 3 mois en supplément du virement normal. Au bout de 3 mois, le bucket-model est à jour.
+Le mockup IronBudget formalise une solution élégante : **étaler le rattrapage sur 3 mois** automatiquement. L'utilisateur n'a pas à payer 100 € d'un coup ; on lui demande +33.33 €/mois pendant 3 mois en supplément du virement normal. Au bout de 3 mois, le bucket-model est à jour.
 
 Cet ADR formalise l'algo de détection et la stratégie UX du plan de rattrapage.
 
@@ -33,7 +33,7 @@ Cet ADR formalise l'algo de détection et la stratégie UX du plan de rattrapage
 
 Trois objectifs en tension :
 
-1. **Honnêteté** : l'algo ne ment pas. Si le déficit est de 125 €, on l'affiche honnêtement.
+1. **Honnêteté** : l'algo ne ment pas. Si le déficit est de 100 €, on l'affiche honnêtement.
 2. **Actionnabilité** : un déficit doit toujours s'accompagner d'un plan concret pour le combler.
 3. **Confort utilisateur** : étaler sur 3 mois est un compromis : assez court pour être responsabilisant, assez long pour ne pas étrangler le cash flow d'un mois.
 
@@ -99,7 +99,7 @@ Ce montant **s'ajoute** au virement recommandé normal (cf. ADR-012 Assistant Vi
 transfertRecommandeAjuste = transfertRecommande + rattrapageMensuel
 ```
 
-L'utilisateur voit : "À virer vers l'Épargne : 100,67 €" avec le sous-titre "Inclut +41,67 € pour rattraper le déficit sur 3 mois."
+L'utilisateur voit : "À virer vers l'Épargne : 83,33 €" avec le sous-titre "Inclut +33,33 € pour rattraper le déficit sur 3 mois."
 
 ### Implémentation TypeScript (domain pur)
 
@@ -237,7 +237,7 @@ Si déficit, ajouter dans la card "À virer" :
 
 ### Alternative 1 — Pas de rattrapage automatique, juste afficher le déficit
 
-Affichage "Déficit -125 €" sans plan. L'utilisateur se débrouille.
+Affichage "Déficit -100 €" sans plan. L'utilisateur se débrouille.
 
 **Rejetée** : non actionnable, anxiogène. Le différenciateur Ankora est précisément la dimension "coach".
 
@@ -281,7 +281,7 @@ Calculer `rattrapageMensuel = min(deficit / 3, capaciteEpargneReelle × 0.5)`.
      - Solde épargne > cible → deficit négatif → rattrapage = 0
      - Solde épargne = cible → statut a_jour exact
      - Mix 5 charges annuelles + 2 trimestrielles
-     - Cas réel @thierry (Dashlane + S.W.D.E + Taxes voiture/poubelle/égout)
+     - Profil d'exemple (abonnement annuel + eau trimestrielle + taxe de circulation et taxes communales)
 2. **PR-D5 (Bloc droite)** :
    - Composant `SanteProvisionsCard` (sub-component de `VirementsAssistantCard`)
    - Affichage des 3-4 lignes (Cible théorique, Solde actuel, Statut OU Déficit, Rattrapage si applicable)
@@ -303,7 +303,7 @@ Calculer `rattrapageMensuel = min(deficit / 3, capaciteEpargneReelle × 0.5)`.
 ## Risques
 
 - **Risque 1 — Bug subtil dans le wrap-around décembre/janvier** : décembre = mois 12, janvier = mois 1, modulo négatif possible. Mitigation : tests Vitest dédiés sur transitions année.
-- **Risque 2 — Décimales infinies** : `montant / cycleMonths` peut donner des décimales infinies (4.4166666... pour Dashlane 53€/12). Decimal.js gère, mais affichage doit arrondir à 2 décimales pour ne pas effrayer l'utilisateur.
+- **Risque 2 — Décimales infinies** : `montant / cycleMonths` peut donner des décimales infinies (4.1666666... pour un abonnement annuel de 50 €/12). Decimal.js gère, mais affichage doit arrondir à 2 décimales pour ne pas effrayer l'utilisateur.
 - **Risque 3 — Charge supprimée laisse paiements orphelins** : si user supprime une charge périodique, ses `charge_payments` historiques restent. Mitigation : ON DELETE CASCADE sur la FK + audit log.
 - **Risque 4 — Dépassement marge** : rattrapage qui dépasse la Capacité Réelle disponible. Mitigation explicite dans la formule (cap à 30 % des revenus + extension horizon si nécessaire) — **à documenter explicitement en code** avec commentaires éducatifs.
 

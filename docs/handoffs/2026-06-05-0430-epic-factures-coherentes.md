@@ -22,11 +22,11 @@ redesign+toggle dans PR-A, drop le trim.
 ## 3. Diagnostic factuel (prouvé en prod, lecture seule)
 
 - **DATA** : migration `20260503000002` l.57-60 a fait `payment_months=[due_month]`
-  pour non-mensuelles → S.W.D.E `quarterly`=`[1]` au lieu de `[1,4,7,10]` → « janv. 2027 ».
+  pour non-mensuelles → Eau `quarterly`=`[1]` au lieu de `[1,4,7,10]` → « janv. 2027 ».
 - **LOGIQUE** : `nextDueDateForCharge` roule vers l'occurrence future → échéance
   passée non payée saute d'un an (cache le retard).
 - **Workspace propre** : 19 charges ; « Crédit travaux » = autre user (RLS OK).
-- **Trimestriel** = tous les 3 mois dès l'ancre `due_month` (S.W.D.E réel=mai=`[2,5,8,11]`), pas 3/6/9/12 universel.
+- **Trimestriel** = tous les 3 mois dès l'ancre `due_month` (eau, ancre mai=`[2,5,8,11]`), pas 3/6/9/12 universel.
 
 ## 4. Epic (spec complète dans docs/plans/)
 

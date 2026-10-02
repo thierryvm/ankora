@@ -79,7 +79,7 @@ Epic « Factures cohérentes » (spec `docs/plans/epic-factures-coherentes-spec.
 
 **Reprise : dès le GO visuel @thierry sur #224 → `gh pr merge 224 --squash --delete-branch`, puis `gh pr close 221` + `git fetch --prune` (cleanup branches), puis démarrer PR-C** (is_watched + dashboard « Ce mois 5 / À surveiller ») — plan `docs/plans/pr-c-watched-marker-dashboard.md` → plan-reviewer (migration + Server Action `toggleWatchAction`) → exécuter.
 
-⚠️ **Migration #223 prod** : confirmer qu'elle s'est appliquée (mécanisme deploy Supabase) — le « janv. 2027 » S.W.D.E ne disparaît qu'après application.
+⚠️ **Migration #223 prod** : confirmer qu'elle s'est appliquée (mécanisme deploy Supabase) — le « janv. 2027 » de l'eau ne disparaît qu'après application.
 
 ## 8. Anti-pièges
 

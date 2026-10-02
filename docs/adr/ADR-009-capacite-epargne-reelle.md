@@ -181,7 +181,7 @@ Calculer `Revenus - effortFinancierLisse - dépenses_quotidiennes_du_mois_en_cou
      - 1 charge mensuelle 100 → effort = 100
      - 1 charge annuelle 1200 → provisions = 100/mois
      - 1 charge trimestrielle 300 → provisions = 100/mois
-     - Mix 3 mensuelles + 2 annuelles + 1 trimestrielle (cas réel @thierry)
+     - Mix 3 mensuelles + 2 annuelles + 1 trimestrielle (profil d'exemple)
      - Capacité négative (revenus = 1000, charges = 1500) → assertion vert/rouge
      - Edge case revenus = 0 → capacité = -charges - quotidien
      - Edge case Decimal précision (montant 4.41 / 12 → cumul stable sur 12 itérations)
@@ -230,7 +230,7 @@ Calculer `Revenus - effortFinancierLisse - dépenses_quotidiennes_du_mois_en_cou
 
 ## Amendement 2026-05-09 — Clarification wording UX (3 concepts distincts)
 
-**Contexte** : pendant la session Claude Design #3 (mockup user dashboard v3 avec vraies données Thierry), il est apparu que le wording original "Capacité d'Épargne Réelle" affichait souvent à l'écran le **Reste disponible** sans soustraire le `Plafond_Quotidien`. Trois corrections successives ont été nécessaires en 24 h sur le même concept (« multiplier par 12 », « 622 vs 662 », « 162 vs 122 »), ce qui prouve qu'un amendement formel est nécessaire pour figer la nomenclature.
+**Contexte** : pendant la session Claude Design #3 (mockup user dashboard v3 avec les données du profil d'exemple), il est apparu que le wording original "Capacité d'Épargne Réelle" affichait souvent à l'écran le **Reste disponible** sans soustraire le `Plafond_Quotidien`. Trois corrections successives ont été nécessaires en 24 h sur le même concept (« multiplier par 12 », « 622 vs 640 », « 160 vs 122 »), ce qui prouve qu'un amendement formel est nécessaire pour figer la nomenclature.
 
 Cet amendement **ne modifie PAS la formule mathématique** d'origine — elle prévoyait déjà la soustraction du `Plafond_Quotidien` (rebaptisé ici `Reste_à_vivre` pour clarté). Il **clarifie les concepts UX** que les composants Dashboard doivent afficher distinctement.
 
@@ -249,23 +249,23 @@ Capacité_Épargne_    = Reste_disponible − Reste_à_vivre
 Réelle               = ce qu'on peut effectivement mettre de côté EN PLUS des virements automatiques
 ```
 
-**Pour le persona Thierry mai 2026** (cf. `_donnees-thierry/profil-financier.md` dans le vault Athenaeum) :
+**Pour un profil d'exemple** (valeurs fictives, ordres de grandeur réalistes) :
 
-- Reste disponible : **662 €/mois**
-- Reste à vivre estimé : **500 €/mois** (courses ~200, imprévus ~50, sorties 0 par manque d'argent, marge 250)
-- Capacité d'épargne réelle : **162 €/mois** (= 662 − 500, cohérent avec son souhait personnel +100 €/mois)
+- Reste disponible : **640 €/mois**
+- Reste à vivre estimé : **480 €/mois** (courses ~200, imprévus ~50, sorties ~30, marge 200)
+- Capacité d'épargne réelle : **160 €/mois** (= 640 − 480, cohérent avec un objectif d'épargne de +100 €/mois)
 
 ### Implications UI sur la card "Capacité d'épargne réelle"
 
 Le composant `CapaciteEpargneReelleCard` doit désormais afficher (de haut en bas) :
 
-1. **KPI principal** : Capacité d'épargne réelle (ex: + 162 €/mois) en grand format, couleur emerald si ≥ 0, rose si < 0.
+1. **KPI principal** : Capacité d'épargne réelle (ex: + 160 €/mois) en grand format, couleur emerald si ≥ 0, rose si < 0.
 2. **Sub-stats** (3 mini-cards horizontales sur desktop, stack mobile) :
-   - "Reste disponible : 662 €" (= avant la vie courante)
-   - "Reste à vivre estimé : 500 €" + bouton **"Ajuster ce mois"** (R-10 ajustement manuel)
-   - "Capacité épargne : 162 €" (= 662 − 500, le KPI principal redondant pour la cohérence visuelle)
-3. **Lede pédagogique adapté** : « Tu peux mettre **+162 €** de côté ce mois en plus de tes virements automatiques. Tu décides combien tu y mets vraiment. »
-4. **Tooltip explicatif** au hover sur le KPI principal : « Cette valeur soustrait tes charges fixes, tes provisions lissées sur l'année, ton virement automatique, ET ton estimation de vie courante (500 €). C'est ce que tu peux choisir d'épargner en plus. »
+   - "Reste disponible : 640 €" (= avant la vie courante)
+   - "Reste à vivre estimé : 480 €" + bouton **"Ajuster ce mois"** (R-10 ajustement manuel)
+   - "Capacité épargne : 160 €" (= 640 − 480, le KPI principal redondant pour la cohérence visuelle)
+3. **Lede pédagogique adapté** : « Tu peux mettre **+160 €** de côté ce mois en plus de tes virements automatiques. Tu décides combien tu y mets vraiment. »
+4. **Tooltip explicatif** au hover sur le KPI principal : « Cette valeur soustrait tes charges fixes, tes provisions lissées sur l'année, ton virement automatique, ET ton estimation de vie courante (480 €). C'est ce que tu peux choisir d'épargner en plus. »
 
 ### Implications onboarding (Étape 3 PR-D5)
 
