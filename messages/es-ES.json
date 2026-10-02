@@ -806,7 +806,7 @@
       "toastCreated": "Factura añadida",
       "toastUpdated": "Factura actualizada",
       "paymentKept": "El pago de {month}, {amount}, no ha cambiado.",
-      "paymentFollowed": "El pago de {month} sigue: {amount}",
+      "paymentFollowed": "El pago de {month} pasa de {previous} a {amount}.",
       "toastDeleted": "Factura eliminada",
       "toastMarkedPaid": "Factura marcada como pagada",
       "toastMarkedUnpaid": "Factura marcada como por pagar",

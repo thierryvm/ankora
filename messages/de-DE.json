@@ -806,7 +806,7 @@
       "toastCreated": "Rechnung hinzugefügt",
       "toastUpdated": "Rechnung aktualisiert",
       "paymentKept": "Die Zahlung für {month}, {amount}, wurde nicht geändert.",
-      "paymentFollowed": "Die Zahlung für {month} folgt: {amount}",
+      "paymentFollowed": "Die Zahlung für {month} ändert sich von {previous} auf {amount}.",
       "toastDeleted": "Rechnung gelöscht",
       "toastMarkedPaid": "Rechnung als bezahlt markiert",
       "toastMarkedUnpaid": "Rechnung als zu zahlen markiert",

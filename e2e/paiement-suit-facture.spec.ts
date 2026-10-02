@@ -126,7 +126,7 @@ test.describe('le paiement suit la facture corrigée', () => {
         timeZone: 'Europe/Brussels',
       }).format(new Date());
       await expect(
-        page.getByText(new RegExp(`^Le paiement pour ${mois} suit : 705`, 'u')).first(),
+        page.getByText(new RegExp(`^Le paiement pour ${mois} passe de 505[^à]*à 705`, 'u')).first(),
       ).toBeVisible();
 
       // 3. The row in the base followed: one payment, at the new amount.
