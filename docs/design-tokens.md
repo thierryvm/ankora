@@ -147,7 +147,8 @@ these are separate tokens.
 #### Borders & Dividers — three roles, three tokens
 
 - `--color-border` → #e7e4dc (light) / #3a3c40 (dark) — the rule INSIDE a card
-- `--color-border-card` → #dcd8ce (light) / white 7 % (dark) — the OUTLINE of a level-1 surface
+- `--color-border-card` → #c4bfb2 (light) / white 7 % (dark) — the OUTLINE of a level-1 surface
+- `--shadow-card` → two-layer soft shadow (light) / `--shadow-sm` (dark) — the card's own shadow; `--shadow-sm` stays for buttons and fields
 - `--color-border-bar` → card outline (light) / `--color-border` (dark) — top bar, tab bar, rail
 - `--color-border-control` → #7f7c75 (light) / #8a8882 (dark) — the edge of an input at rest, ≥ 3:1 (WCAG 1.4.11)
 

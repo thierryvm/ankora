@@ -79,7 +79,7 @@ export function Repli({
     // Le contour de carte du lot 1 (--color-border-card), jamais le filet
     // interne : un repli EST une carte, il se pose sur la page comme elle.
     <div
-      className="border-border-card bg-card text-foreground rounded-xl border shadow-sm"
+      className="border-border-card bg-card text-foreground shadow-card rounded-xl border"
       data-repli
       data-testid={testId}
     >
