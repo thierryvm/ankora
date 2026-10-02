@@ -2,9 +2,9 @@
  * « Modifier la facture » — what the drawer says about this month's payment
  * once the amount is corrected.
  *
- * A payment recorded at the bill's previous amount follows it, silently. One
- * typed by hand stays, and the confirmation says so in one sentence, with that
- * amount. Figures are fictitious.
+ * A payment recorded at the bill's previous amount follows it, and the
+ * confirmation says so (« suit »). One typed by hand stays, and it says so too,
+ * in one sentence, with that amount. Figures are fictitious.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
@@ -100,13 +100,26 @@ describe('ChargeEditDrawer — this month’s payment after an amount correction
     );
   });
 
-  it('adds nothing when the payment followed', async () => {
+  it('says that the payment follows, with the amount it now carries', async () => {
     updateChargeMock.mockResolvedValue({
       ok: true,
-      payment: { kind: 'followed', periodYear: 2026, periodMonth: 10, paidAmount: 705 },
+      payment: { kind: 'followed', periodYear: 2026, periodMonth: 10, paidAmount: 705.5 },
     });
     await correctAmountTo('705');
-    expect(toastSuccessMock).toHaveBeenCalledWith('Facture mise à jour', undefined);
+    const [title, options] = toastSuccessMock.mock.calls[0]!;
+    expect(title).toBe('Facture mise à jour');
+    expect(options.description).toMatch(/^Le paiement pour octobre suit : 705,50[  ]€$/);
+  });
+
+  it('writes the followed payment in English with the month capitalised', async () => {
+    updateChargeMock.mockResolvedValue({
+      ok: true,
+      payment: { kind: 'followed', periodYear: 2026, periodMonth: 10, paidAmount: 705.5 },
+    });
+    await correctAmountTo('705', 'en');
+    expect(toastSuccessMock.mock.calls[0]![1].description).toMatch(
+      /^The payment for October follows: .*705\.50$/,
+    );
   });
 
   it('adds nothing when there is no payment this month', async () => {

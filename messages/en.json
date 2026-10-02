@@ -806,6 +806,7 @@
       "toastCreated": "Bill added",
       "toastUpdated": "Bill updated",
       "paymentKept": "The payment for {month}, {amount}, has not changed.",
+      "paymentFollowed": "The payment for {month} follows: {amount}",
       "toastDeleted": "Bill deleted",
       "toastMarkedPaid": "Bill marked as paid",
       "toastMarkedUnpaid": "Bill marked as to pay",

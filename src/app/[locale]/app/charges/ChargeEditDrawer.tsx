@@ -116,11 +116,12 @@ export function ChargeEditDrawer({
   const parsedAmount = parseAmountInput(amount);
   const amountInvalid = parsedAmount === null;
 
-  // This month's payment did not take the new amount (typed by hand, or the
-  // write did not land): say it in one sentence, with the amount it keeps.
-  function paymentNotFollowed(payment: ChargePaymentFollow | undefined): string | null {
-    if (!payment || payment.kind === 'followed') return null;
-    return t('paymentKept', {
+  // What happened to this month's payment, in one sentence with its amount:
+  // it followed the corrected bill, or it kept the amount it had (typed by
+  // hand, or the write did not land). No payment this month: nothing to say.
+  function paymentSentence(payment: ChargePaymentFollow | undefined): string | null {
+    if (!payment) return null;
+    return t(payment.kind === 'followed' ? 'paymentFollowed' : 'paymentKept', {
       month: formatMonthInSentence(payment.periodMonth, locale),
       amount: formatCurrency(payment.paidAmount, locale),
     });
@@ -143,7 +144,7 @@ export function ChargeEditDrawer({
           paymentMonths: computedPaymentMonths,
         });
         if (result.ok) {
-          const description = paymentNotFollowed(result.payment);
+          const description = paymentSentence(result.payment);
           toast.success(t('toastUpdated'), description ? { description } : undefined);
           onClose();
           router.refresh();
