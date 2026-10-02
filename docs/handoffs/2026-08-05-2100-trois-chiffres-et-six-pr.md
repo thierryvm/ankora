@@ -17,32 +17,32 @@
 
 ---
 
-## 2. Les trois chiffres de @thierry — établis par la preuve
+## 2. Les trois chiffres signalés — établis par la preuve
 
-Enquête `prod-bug-investigator`, mesures obtenues en exécutant les vraies fonctions du domaine sur ses données.
+Enquête `prod-bug-investigator`, mesures obtenues en exécutant les vraies fonctions du domaine. Montants ci-dessous **fictifs** (dépôt public), même arithmétique.
 
-### « Après tes sorties · Août » = 347,40 € — arithmétique JUSTE, explication FAUSSE
+### « Après tes sorties · Août » = 366,10 € — arithmétique JUSTE, explication FAUSSE
 
 `netPrincipalAfterPlan` (`transfer.ts:103-107`) :
 
 ```
-2500 − 500 (Vie Courante) − 50 (Épargne) − 1412,60 (factures) − 190 (engagements) = 347,40
+2400 − 450 (Vie Courante) − 40 (Épargne) − 1378,90 (factures) − 165 (engagements) = 366,10
 ```
 
-Le sous-titre ne nomme que **1 602,60 €** sur **2 152,60 €** soustraits. **550 € disparaissent sans être nommés.**
+Le sous-titre ne nomme que **1 543,90 €** sur **2 033,90 €** soustraits. **490 € disparaissent sans être nommés.**
 
-**La preuve qui tranche** : sur 12 mois le chiffre varie de **285 €** pendant que les deux montants énumérés par le sous-titre **ne bougent jamais**. En juillet — le mois de la plus grosse facture — la carte affiche **le plus d'argent restant** (632,40 €), parce que `epargneTransferNet` devient négatif et _ajoute_ 190 €.
+**La preuve qui tranche** : sur 12 mois le chiffre varie de **260 €** pendant que les deux montants énumérés par le sous-titre **ne bougent jamais**. En juillet — le mois de la plus grosse facture — la carte affiche **le plus d'argent restant** (626,10 €), parce que `epargneTransferNet` devient négatif et _ajoute_ de l'argent.
 
 Deux défauts de plus, du même bloc :
 
-- **« Sorties » est un mot faux.** Les 500 € et les 50 € restent son argent, sur ses comptes.
-- **« Budget du mois » 847,40 € et « Après tes sorties » 347,40 € diffèrent d'exactement 500 €** — le virement Vie Courante — et rien ne le dit.
+- **« Sorties » est un mot faux.** Les 450 € et les 40 € restent son argent, sur ses comptes.
+- **« Budget du mois » 816,10 € et « Après tes sorties » 366,10 € diffèrent d'exactement 450 €** — le virement Vie Courante — et rien ne le dit.
 
 **Jalon ADR-035 rouge.** L'amendement accepté le jour même impose « À virer vers l'épargne » / « À reprendre sur l'épargne » ; le code affiche encore « Principal → Épargne ». Le `grep` de l'ADR rend **6** au lieu de **0**. Ce bloc est la seule surface du cockpit restée hors du chantier vocabulaire, et la seule sans décomposition ouvrable.
 
-**Bug daté, silencieux.** `installmentAmountAt` — seule fonction qui sait que la dernière échéance diffère — **n'a aucun appelant en production**. En avril 2027, « Après tes sorties » retirera 190 € au lieu de 177,50 €. **12,50 € d'erreur, sans signal.**
+**Bug daté, silencieux.** `installmentAmountAt` — seule fonction qui sait que la dernière échéance diffère — **n'a aucun appelant en production**. En mars 2027, « Après tes sorties » retirera 165 € au lieu de 152,38 €. **12,62 € d'erreur, sans signal.**
 
-### Solde « Compte Principal » 2 480 € — un nombre tapé à la main, jamais dérivé
+### Solde « Compte Principal » 2 310 € — un nombre tapé à la main, jamais dérivé
 
 Écrivain unique : `updateAccountBalanceAction`. Aucun trigger, aucun job. **Ce solde n'est pas devenu faux : il a cessé d'être vrai au premier euro qui a bougé.**
 
@@ -57,13 +57,13 @@ Cause racine : **ADR-038 D6**, accepté aujourd'hui, zéro ligne implémentée.
 
 Le tiret est **conforme** (jour 5 < 7, ADR-035). Il apparaîtra le 7 août.
 
-Mais la vraie question de @thierry a déjà sa réponse dans l'app, **sous un nom qui ne la donne pas** : `surplusOverTarget = 1 250 − 118,33 = 1 131,67 €`, affiché « au-delà de la cible ».
+Mais la question posée a déjà sa réponse dans l'app, **sous un nom qui ne la donne pas** : `surplusOverTarget = 1 180 − 112,50 = 1 067,50 €`, affiché « au-delà de la cible ».
 
-**`detailParCharge` est calculé puis JETÉ** — zéro consommateur hors tests. Les cinq noms qui composent les 118,33 € existent et ne sont montrés nulle part. C'est exactement pourquoi le nombre lui paraît incohérent.
+**`detailParCharge` est calculé puis JETÉ** — zéro consommateur hors tests. Les cinq noms qui composent les 112,50 € existent et ne sont montrés nulle part. C'est exactement pourquoi le nombre lui paraît incohérent.
 
-> **Piège si on l'affiche** : les parts arrondies somment à 118,**34**, le total affiche 118,**33**. La décomposition descend avec le total non arrondi — jamais re-sommée à l'affichage.
+> **Piège si on l'affiche** : les parts arrondies somment à 112,**51**, le total affiche 112,**50**. La décomposition descend avec le total non arrondi — jamais re-sommée à l'affichage.
 
-**Les 310 € évoqués ne se reconstituent depuis AUCUNE définition du code.** Candidats mesurés : 118,33 (cible), 600 (total annuel), 300 (six mois de lissage). Le plus proche est 300. **Question ouverte à lui poser — ne pas l'inventer.**
+**Le montant évoqué ne se reconstituent depuis AUCUNE définition du code.** Candidats mesurés : 112,50 (cible), 570 (total annuel), 285 (six mois de lissage). Le plus proche est 285. **Question ouverte à lui poser — ne pas l'inventer.**
 
 ---
 
@@ -73,7 +73,7 @@ Mais la vraie question de @thierry a déjà sa réponse dans l'app, **sous un no
 2. **Le bloc « Plan du mois »** : nommer les deux virements OU cesser de les appeler « sorties », appliquer le vocabulaire ADR-035 (jalon à 0), rendre la carte ouvrable. `MonthlyTransferPlan` porte déjà les cinq termes.
 3. **`detailParCharge` sous « Cible théorique »** — ferme la règle 10 sans rien recalculer.
 4. **`accounts.updated_at`** affiché en attendant ADR-038 D6.
-5. `installmentAmountAt` sans appelant (12,50 € en avril 2027) — PR séparée.
+5. `installmentAmountAt` sans appelant (12,62 € en mars 2027) — PR séparée.
 6. Menu mobile (15 entrées, 717 px sur 844), `/security` (issue #79), NOTICE, CSP `style-src`, ADR-011 branche morte, CGU au signup, doublon de constante.
 7. **Puis seulement** la refonte design + UX, landing en tête.
 

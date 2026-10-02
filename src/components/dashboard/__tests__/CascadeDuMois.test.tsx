@@ -133,7 +133,7 @@ describe('<CascadeDuMois />', () => {
  * Règle 10 de `CLAUDE.md` — « aucun montant agrégé sans sa décomposition
  * accessible ».
  *
- * Le constat d'origine, de @thierry : « les 59 € de provisions à verser, rien
+ * Le constat d'origine : « les 59 € de provisions à verser, rien
  * n'explique pourquoi ce montant, à quelle facture cela correspond ». Ces cas
  * verrouillent que la ligne s'ouvre et qu'elle dit d'où le nombre vient. Ils
  * ont suivi la cascade quand elle a quitté le hero (chantier 6) : c'est le même
@@ -382,7 +382,7 @@ describe('<CascadeDuMois /> — le libellé d’une ligne dépliable est aligné
     expect(libelle).toHaveClass('min-h-11');
   });
 
-  // Seen at 375 px on 27 Sept. 2026: « − 1 804,21 € » broke after the minus,
+  // Seen at 375 px on 27 Sept. 2026: « − 1 455,37 € » broke after the minus,
   // which landed on top of its label. An amount is one unit: it never wraps.
   it('ne coupe jamais un montant, ouvrable ou non', async () => {
     const { container } = await renderCascade();

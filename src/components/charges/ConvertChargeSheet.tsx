@@ -77,8 +77,8 @@ const readAmountDoor = (raw: string): { amount: number | null; invalid: boolean 
  * ## Confront, name, never correct
  *
  * Two doors that disagree are BOTH displayed with their origin, and the
- * retained one is named. The remembered total (@thierry's « ~14 500 € » against
- * 60 × 250 = 15 000 €) is compared past 1 %, shown as a sentence, and stored
+ * retained one is named. A remembered total (say « ~13 300 € » against
+ * 60 × 230 = 13 800 €) is compared past 1 %, shown as a sentence, and stored
  * nowhere: it is not a column of the model, so no cockpit figure can inherit
  * the approximation. That confinement is what makes tolerating it safe.
  */

@@ -95,46 +95,46 @@ describe('calculerEpargneRequiseParCharge — annual', () => {
 describe('calculerEpargneRequiseParCharge — quarterly', () => {
   it('quarterly — exactly between two due months → mid-cycle requirement', () => {
     const c = charge({
-      amount: new Decimal(45),
+      amount: new Decimal(60),
       frequency: 'quarterly',
       paymentMonths: [1, 4, 7, 10],
     });
     // ref month 5, next due 7 (in 2 months), cycleMonths = 3, safeMonthsLeft = 2
-    // requise = 45 - 15 × 2 = 15
+    // requise = 60 - 20 × 2 = 20
     const out = calculerEpargneRequiseParCharge({
       charge: c,
       ref: ref(2026, 5),
       payments: noPayments,
     });
-    expect(out.toNumber()).toBe(15);
+    expect(out.toNumber()).toBe(20);
   });
 
   it('quarterly — just after a due month → almost full cycle to save', () => {
     const c = charge({
-      amount: new Decimal(45),
+      amount: new Decimal(60),
       frequency: 'quarterly',
       paymentMonths: [1, 4, 7, 10],
     });
     // ref month 2, next due 4 (in 2 months), safeMonthsLeft = 2
-    // requise = 45 - 15 × 2 = 15
+    // requise = 60 - 20 × 2 = 20
     const out = calculerEpargneRequiseParCharge({
       charge: c,
       ref: ref(2026, 2),
       payments: noPayments,
     });
-    expect(out.toNumber()).toBe(15);
+    expect(out.toNumber()).toBe(20);
   });
 
   it('quarterly — due this month and paid → 1/3 of cycle elapsed → ~0', () => {
     const c = charge({
       id: 'water',
-      amount: new Decimal(45),
+      amount: new Decimal(60),
       frequency: 'quarterly',
       paymentMonths: [1, 4, 7, 10],
     });
     const payments = new Map<string, boolean>([[paymentKey('water', 2026, 4), true]]);
     // After paying April, nextMois = July → monthsLeft = 3, safeMonthsLeft = 3
-    // requise = 45 - 15 × 3 = 0
+    // requise = 60 - 20 × 3 = 0
     const out = calculerEpargneRequiseParCharge({
       charge: c,
       ref: ref(2026, 4),
@@ -145,18 +145,18 @@ describe('calculerEpargneRequiseParCharge — quarterly', () => {
 
   it('quarterly — wrap-around December → January', () => {
     const c = charge({
-      amount: new Decimal(45),
+      amount: new Decimal(60),
       frequency: 'quarterly',
       paymentMonths: [1, 4, 7, 10],
     });
     // ref month 12, next due Jan (wraps), monthsLeft = 1, safeMonthsLeft = 1
-    // requise = 45 - 15 × 1 = 30
+    // requise = 60 - 20 × 1 = 40
     const out = calculerEpargneRequiseParCharge({
       charge: c,
       ref: ref(2026, 12),
       payments: noPayments,
     });
-    expect(out.toNumber()).toBe(30);
+    expect(out.toNumber()).toBe(40);
   });
 });
 
@@ -249,7 +249,7 @@ describe('calculerEpargneRequiseParCharge — wrap-around scenarios', () => {
 
   it('paymentMonths sorted ascending regardless of input order', () => {
     const c = charge({
-      amount: new Decimal(45),
+      amount: new Decimal(60),
       frequency: 'quarterly',
       paymentMonths: [10, 1, 7, 4], // unsorted
     });
@@ -258,8 +258,8 @@ describe('calculerEpargneRequiseParCharge — wrap-around scenarios', () => {
       ref: ref(2026, 5),
       payments: noPayments,
     });
-    // Same as the sorted [1,4,7,10] case: next = 7, monthsLeft = 2 → requise = 15
-    expect(out.toNumber()).toBe(15);
+    // Same as the sorted [1,4,7,10] case: next = 7, monthsLeft = 2 → requise = 60 - 20 × 2 = 20
+    expect(out.toNumber()).toBe(20);
   });
 
   it('handles empty paymentMonths defensively (returns 0)', () => {
@@ -343,18 +343,18 @@ describe('calculerSanteProvisions — aggregation', () => {
     expect(out.detailParCharge.find((d) => d.chargeId === 'b')).toBeDefined();
   });
 
-  it("reproduces @thierry's real fixture (5 periodic charges)", () => {
+  it('handles the reference fixture (5 periodic charges)', () => {
     const charges = [
-      charge({ id: 'dashlane', amount: new Decimal(53), paymentMonths: [4] }),
+      charge({ id: 'gestionnaire-mdp', amount: new Decimal(38), paymentMonths: [4] }),
       charge({
-        id: 'swde',
-        amount: new Decimal(45),
+        id: 'eau',
+        amount: new Decimal(60),
         frequency: 'quarterly',
         paymentMonths: [1, 4, 7, 10],
       }),
-      charge({ id: 'taxe-voiture', amount: new Decimal(300), paymentMonths: [6] }),
+      charge({ id: 'taxe-voiture', amount: new Decimal(240), paymentMonths: [6] }),
       charge({ id: 'taxe-poubelle', amount: new Decimal(120), paymentMonths: [3] }),
-      charge({ id: 'taxe-egout', amount: new Decimal(55), paymentMonths: [3] }),
+      charge({ id: 'taxe-egout', amount: new Decimal(58), paymentMonths: [3] }),
     ];
     const out = calculerSanteProvisions({
       charges,

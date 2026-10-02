@@ -21,9 +21,10 @@
  * Money note: amounts are `Decimal` internally, `number` at the API boundary
  * (the RSC boundary cannot carry a Decimal). The previous justification for
  * plain floats — "a fixed count of IDENTICAL instalments" — stopped holding
- * the moment the final instalment became a derived residue: on the real SPF
- * plan, `2407.93 − 10 × 220` evaluates to `207.92999999999984` in float and
- * to `207.93` in Decimal with banker's rounding (`domain/types.ts`).
+ * the moment the final instalment became a derived residue: on the reference
+ * SPF fixture, `1802.38 − 10 × 165` is NOT `152.38` in float (it lands one
+ * float step above it) while Decimal with banker's rounding gives `152.38`
+ * exactly (`domain/types.ts`). `schedule.test.ts` pins both facts.
  */
 import { money } from '../types';
 
@@ -178,8 +179,8 @@ export function installmentAmountOf(c: Commitment): number {
 
 /**
  * Amount of the FINAL instalment — derived, never stored (ADR-021):
- * `total − (n − 1) × regular`. On the real SPF plan (2 407,93 € = 10 × 220 €
- * + a residue) this is 207,93 €, and the card must not claim otherwise.
+ * `total − (n − 1) × regular`. On the reference SPF fixture (1 802,38 € =
+ * 10 × 165 € + a residue) this is 152,38 €, and the card must not claim otherwise.
  *
  * Clamped to ≥ 0: an over-specified plan (regular instalments summing past the
  * total) yields a 0 final instalment rather than a negative one.
@@ -227,8 +228,8 @@ export function installmentIndexAt(c: Commitment, ref: Period): number {
 
 /**
  * Whether the final instalment differs from the regular one — the predicate
- * the UI needs to choose between « 11 échéances de 220 € » (a lie on the SPF
- * plan) and « 10 × 220 € + 207,93 € ».
+ * the UI needs to choose between « 11 échéances de 165 € » (a lie on the SPF
+ * plan) and « 10 × 165 € + 152,38 € ».
  */
 export function hasIrregularFinalInstallment(c: Commitment): boolean {
   return c.installmentsTotal > 1 && lastInstallmentAmount(c) !== installmentAmountOf(c);

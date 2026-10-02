@@ -318,8 +318,8 @@ describe('<CommitmentsClient />', () => {
     renderPage([], { currentPeriod: { year: 2026, month: 7 } });
     fireEvent.click(screen.getByTestId('commitments-add-toggle'));
     fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'SPF impôt' } });
-    fireEvent.change(screen.getByLabelText(/Montant total dû/), { target: { value: '2407.93' } });
-    fireEvent.change(screen.getByLabelText(/Montant par échéance/), { target: { value: '220' } });
+    fireEvent.change(screen.getByLabelText(/Montant total dû/), { target: { value: '1802.38' } });
+    fireEvent.change(screen.getByLabelText(/Montant par échéance/), { target: { value: '165' } });
     fireEvent.change(screen.getByLabelText(/Nombre total d'échéances/), {
       target: { value: '11' },
     });

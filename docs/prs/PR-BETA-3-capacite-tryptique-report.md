@@ -144,7 +144,7 @@ Hypothèse @cowork "migration non appliquée" éliminée : `supabase migration l
 
 ### Smoke @thierry post-merge hotfix
 
-1. Cockpit charge → sub-stats 640 / 480 / 160 (inchangé)
+1. Cockpit charge → sub-stats 610 / 455 / 155 (inchangé)
 2. Tap "Ajuster ce mois" → drawer ouvre
 3. Modifier 500 → 450 → Enregistrer
    - ✅ Toast vert "Reste à vivre ajusté pour ce mois"
@@ -213,13 +213,13 @@ Nouveau `AuditEvent.WORKSPACE_RESTE_A_VIVRE_UPDATED = 'workspace.reste_a_vivre_u
 ┌─────────────────────────────────────────────────┐
 │ Capacité d'épargne réelle  [CheckCircle2]       │
 │                                                 │
-│ + 160 €  [Info-tooltip]                         │
-│ « Tu peux mettre +160 € de côté ce mois en plus │
+│ + 155 €  [Info-tooltip]                         │
+│ « Tu peux mettre +155 € de côté ce mois en plus │
 │   de tes virements automatiques. Tu décides     │
 │   combien tu y mets vraiment. »                 │
 │ ──────────────────────────────────────────────  │
 │ Reste dispo  │ Reste à vivre │ Capacité épargne │
-│  640 €       │  480 € [Adj]  │ + 160 €          │
+│  610 €       │  455 € [Adj]  │ + 155 €          │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -271,15 +271,15 @@ Test parity exhaustif (assert présence + placeholders attendus) intégré au te
 
 ### Unitaires Vitest (1281 tests passent globalement, dont les nouveaux)
 
-- `capacite-epargne-reelle.test.ts` — 6 nouveaux tests (resteDisponible exposé, persona @thierry, legacy alias back-compat, edge cases zero/negative, precision Decimal.js sur lissage)
+- `capacite-epargne-reelle.test.ts` — 6 nouveaux tests (resteDisponible exposé, persona de référence, legacy alias back-compat, edge cases zero/negative, precision Decimal.js sur lissage)
 - `reste-a-vivre.test.ts` (Server Action) — 14 tests : rate-limit, Zod validation (regex YYYYMM, négatif, > 100k, zéro OK), happy path (merge JSONB, premier override, row missing, audit log sans montant, revalidate), DB read/write failures
-- `CapaciteEpargneCard.test.tsx` — réécriture complète : 3 sub-stats, fixture @thierry (640 / 480 / 160), trigger "Ajuster ce mois" rendered, lede interpolé, ledeNegatif sans culpabilisation, tooltip accessible, parity 5 locales
+- `CapaciteEpargneCard.test.tsx` — réécriture complète : 3 sub-stats, fixture de référence (610 / 455 / 155), trigger "Ajuster ce mois" rendered, lede interpolé, ledeNegatif sans culpabilisation, tooltip accessible, parity 5 locales
 - `AjusterResteAVivreDrawer.test.tsx` — 14 tests : trigger, open state, prefill, helper adaptatif (coherent/bas/haut/fallback null), live update, submit flow (Server Action call, close on success, toast on failure, disabled when invalid, comma decimal), ESC dismiss
 
 ### E2E Playwright
 
 - `dashboard-cockpit-bloc2.spec.ts` mis à jour (waterfall → sub-stats, `rose` → `text-danger`)
-- `dashboard-capacite-triptyque.spec.ts` (nouveau) — 3 tests : fixture @thierry (3 sub-stats avec bonnes valeurs), drawer open + override persisté, mobile viewport 375×667 stack vertical
+- `dashboard-capacite-triptyque.spec.ts` (nouveau) — 3 tests : fixture de référence (3 sub-stats avec bonnes valeurs), drawer open + override persisté, mobile viewport 375×667 stack vertical
 
 Les E2E sont gated par `adminClientOrNull()` (skip si pas de Supabase remote configuré — pattern repo standard).
 

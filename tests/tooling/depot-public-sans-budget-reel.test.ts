@@ -10,7 +10,9 @@ import { resolve } from 'node:path';
  * generic descriptions).
  *
  * This guard reads every TRACKED file under `docs/`, `scripts/`, `prompts/`,
- * `.claude/` and `CHANGELOG.md`, and fails if a marker comes back.
+ * `.claude/`, `src/`, `e2e/`, `messages/` and `CHANGELOG.md`, and fails if a
+ * marker comes back. Code, tests and the public landing copy used to carry the
+ * same real figures as fixtures and illustrations.
  *
  * The marker list is deliberately SHORT. Every marker written here is itself
  * published: a long list of old amounts would rebuild, in one place, the very
@@ -56,13 +58,18 @@ const MARKERS: ReadonlyArray<{ name: string; pattern: RegExp; sample: string }> 
   },
   { name: 'energy amount', pattern: /(?<![\d,.])42[,.]21(?!\d)/, sample: 'énergie 42,21 €' },
   {
+    name: 'real-person fixture',
+    pattern: /@?thierry'?s?\s+real|real\s+@?thierry|fixture\s+@thierry/i,
+    sample: "matches @thierry's real fixture",
+  },
+  {
     name: 'rent',
     pattern: /loyer[^\n]{0,20}(?<!\d)740(?!\d)|(?<!\d)740[^\n]{0,10}loyer/i,
     sample: 'Loyer 740 €',
   },
 ];
 
-const SCANNED = ['docs', 'scripts', 'prompts', '.claude', 'CHANGELOG.md'];
+const SCANNED = ['docs', 'scripts', 'prompts', '.claude', 'src', 'e2e', 'messages', 'CHANGELOG.md'];
 
 function trackedFiles(): string[] {
   const out = execFileSync('git', ['ls-files', '-z', '--', ...SCANNED], {
@@ -89,6 +96,9 @@ describe('public repository carries no real budget', () => {
     expect(files.some((f) => f.startsWith('docs/adr/'))).toBe(true);
     expect(files.some((f) => f.startsWith('scripts/'))).toBe(true);
     expect(files.some((f) => f.startsWith('prompts/'))).toBe(true);
+    expect(files.some((f) => f.startsWith('src/lib/domain/'))).toBe(true);
+    expect(files.some((f) => f.startsWith('e2e/'))).toBe(true);
+    expect(files).toContain('messages/fr-BE.json');
     expect(files.some((f) => f.startsWith('docs/retours/'))).toBe(false);
   });
 

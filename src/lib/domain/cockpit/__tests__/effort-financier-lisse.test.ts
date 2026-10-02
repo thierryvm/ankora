@@ -29,7 +29,7 @@ describe('totalChargesMensuelles', () => {
       charge({ amount: new Decimal(900), frequency: 'monthly' }),
       charge({ amount: new Decimal(60), frequency: 'monthly' }),
       charge({ amount: new Decimal(300), frequency: 'annual', paymentMonths: [3] }),
-      charge({ amount: new Decimal(45), frequency: 'quarterly', paymentMonths: [1, 4, 7, 10] }),
+      charge({ amount: new Decimal(60), frequency: 'quarterly', paymentMonths: [1, 4, 7, 10] }),
     ];
     expect(totalChargesMensuelles(charges).toNumber()).toBe(960);
   });
@@ -69,23 +69,29 @@ describe('provisionsMensuellesLissees', () => {
 
   it('divides quarterly charges by 3', () => {
     const charges = [
-      charge({ amount: new Decimal(45), frequency: 'quarterly', paymentMonths: [1, 4, 7, 10] }),
+      charge({ amount: new Decimal(60), frequency: 'quarterly', paymentMonths: [1, 4, 7, 10] }),
     ];
-    expect(provisionsMensuellesLissees(charges).toNumber()).toBe(15);
+    // 60 / 3 = 20
+    expect(provisionsMensuellesLissees(charges).toNumber()).toBe(20);
   });
 
-  it("matches @thierry's real Dashlane fixture", () => {
+  it('matches the reference fixture (5 periodic charges)', () => {
     const charges = [
-      charge({ id: 'dashlane', amount: new Decimal(53), frequency: 'annual', paymentMonths: [4] }),
       charge({
-        id: 'swde',
-        amount: new Decimal(45),
+        id: 'gestionnaire-mdp',
+        amount: new Decimal(38),
+        frequency: 'annual',
+        paymentMonths: [4],
+      }),
+      charge({
+        id: 'eau',
+        amount: new Decimal(60),
         frequency: 'quarterly',
         paymentMonths: [1, 4, 7, 10],
       }),
       charge({
         id: 'taxe-voiture',
-        amount: new Decimal(300),
+        amount: new Decimal(240),
         frequency: 'annual',
         paymentMonths: [6],
       }),
@@ -97,13 +103,14 @@ describe('provisionsMensuellesLissees', () => {
       }),
       charge({
         id: 'taxe-egout',
-        amount: new Decimal(55),
+        amount: new Decimal(58),
         frequency: 'annual',
         paymentMonths: [3],
       }),
     ];
-    // 53/12 + 45/3 + 300/12 + 120/12 + 55/12 = 4.4166… + 15 + 25 + 10 + 4.5833… = 59
-    expect(provisionsMensuellesLissees(charges).toFixed(2)).toBe('59.00');
+    // 38/12 + 60/3 + 240/12 + 120/12 + 58/12 = 3.1666… + 20 + 20 + 10 + 4.8333… = 58
+    // (annual part: (38 + 240 + 120 + 58) / 12 = 456 / 12 = 38 ; + 20 quarterly = 58)
+    expect(provisionsMensuellesLissees(charges).toFixed(2)).toBe('58.00');
   });
 
   it('ignores inactive periodic charges', () => {
@@ -124,10 +131,10 @@ describe('effortFinancierLisse', () => {
     const charges = [
       charge({ amount: new Decimal(1500), frequency: 'monthly' }),
       charge({ amount: new Decimal(1200), frequency: 'annual', paymentMonths: [3] }),
-      charge({ amount: new Decimal(45), frequency: 'quarterly', paymentMonths: [1, 4, 7, 10] }),
+      charge({ amount: new Decimal(60), frequency: 'quarterly', paymentMonths: [1, 4, 7, 10] }),
     ];
-    // 1500 + (100 + 15) = 1615
-    expect(effortFinancierLisse(charges).toNumber()).toBe(1615);
+    // 1500 + (100 + 20) = 1620
+    expect(effortFinancierLisse(charges).toNumber()).toBe(1620);
   });
 
   it('returns 0 for an empty list', () => {
@@ -135,8 +142,8 @@ describe('effortFinancierLisse', () => {
   });
 
   it('keeps internal precision (no premature rounding)', () => {
-    // 53 / 12 = 4.4166666… — stored as Decimal, should NOT collapse to 4.42
-    const charges = [charge({ amount: new Decimal(53), frequency: 'annual', paymentMonths: [4] })];
-    expect(effortFinancierLisse(charges).toFixed(6)).toBe('4.416667');
+    // 38 / 12 = 3.1666666… — stored as Decimal, should NOT collapse to 3.17
+    const charges = [charge({ amount: new Decimal(38), frequency: 'annual', paymentMonths: [4] })];
+    expect(effortFinancierLisse(charges).toFixed(6)).toBe('3.166667');
   });
 });

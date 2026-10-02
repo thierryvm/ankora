@@ -94,11 +94,11 @@ describe('computeMonthlyTransferPlan — monthly bills paid from Principal', () 
 
 describe('computeMonthlyTransferPlan — "Virement Intelligent"', () => {
   it('nets provision against bills due in the same month', () => {
-    // IronBudget reference example: provision 59€, bill 53€ this month → net 6€.
-    const dashlane: Charge = {
-      id: 'dashlane',
-      label: 'Dashlane',
-      amount: money(53),
+    // IronBudget-style example: provision 58€, bill 38€ this month → net 20€.
+    const passwordManager: Charge = {
+      id: 'gestionnaire-mdp',
+      label: 'Gestionnaire de mots de passe',
+      amount: money(38),
       frequency: 'annual',
       dueMonth: 4,
       paymentMonths: [4],
@@ -107,12 +107,12 @@ describe('computeMonthlyTransferPlan — "Virement Intelligent"', () => {
       isActive: true,
       paidFrom: 'epargne',
     };
-    // Provision total ≈ 53 / 12 ≈ 4.4166… so we craft another charge to bring it to 59.
-    // Use an annual charge of (59 - 53/12)*12 = 655 to push the monthly provision to 59.
+    // Provision total ≈ 38 / 12 ≈ 3.1666… so we craft another charge to bring it to 58.
+    // Use an annual charge of (58 - 38/12)*12 = 696 - 38 = 658 to push the monthly provision to 58.
     const extra: Charge = {
       id: 'extra',
       label: 'Charge composée',
-      amount: money(655),
+      amount: money(658),
       frequency: 'annual',
       dueMonth: 10,
       paymentMonths: [10],
@@ -123,16 +123,17 @@ describe('computeMonthlyTransferPlan — "Virement Intelligent"', () => {
     };
 
     const plan = computeMonthlyTransferPlan({
-      charges: [dashlane, extra],
+      charges: [passwordManager, extra],
       month: 4,
       monthlyIncome: money(2500),
       vieCouranteMonthlyTransfer: money(500),
       commitmentsDue: money(0),
     });
 
-    expect(plan.epargneProvisionTarget.toNumber()).toBe(59);
-    expect(plan.epargneBillsDue.toNumber()).toBe(53);
-    expect(plan.epargneTransferNet.toNumber()).toBe(6);
+    // (38 + 658) / 12 = 696 / 12 = 58 ; only the 38€ bill is due in April → 58 - 38 = 20
+    expect(plan.epargneProvisionTarget.toNumber()).toBe(58);
+    expect(plan.epargneBillsDue.toNumber()).toBe(38);
+    expect(plan.epargneTransferNet.toNumber()).toBe(20);
   });
 });
 

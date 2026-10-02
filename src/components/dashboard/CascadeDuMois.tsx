@@ -437,7 +437,7 @@ function FlowRow({
    */
   detail?: FlowRowDetail;
 }) {
-  // `whitespace-nowrap`: an amount is one unit. Without it « − 1 804,21 € »
+  // `whitespace-nowrap`: an amount is one unit. Without it « − 1 455,37 € »
   // broke after the minus at 375 px and the sign landed on its label.
   const amountClass = `whitespace-nowrap tabular-nums ${strong ? 'font-bold' : 'font-medium'} text-foreground`;
 

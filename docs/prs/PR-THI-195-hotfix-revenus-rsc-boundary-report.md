@@ -33,7 +33,7 @@ Faire traverser `revenus` en **`number`** brut, et le wrapper `money()` **à l'i
 ## Garde-fous
 
 - **Type-level** : le typecheck passe avec `revenus: number` → preuve qu'aucun appel de méthode Decimal ne subsiste sur le `revenus` brut (TS errorerait sur `.lte`/`.minus`).
-- **Test unitaire de régression** : `SimulatorDrawer.test.tsx` passe désormais `revenus={2466}` (number, mirror de la vraie frontière — un Decimal masquait le bug) + test dédié « renders without crashing when revenus arrives as a raw number (RSC boundary) » qui ouvre le drawer et force le chemin `money(revenus).lte(0)`.
+- **Test unitaire de régression** : `SimulatorDrawer.test.tsx` passe désormais `revenus={2384}` (number, mirror de la vraie frontière — un Decimal masquait le bug) + test dédié « renders without crashing when revenus arrives as a raw number (RSC boundary) » qui ouvre le drawer et force le chemin `money(revenus).lte(0)`.
 - **E2E** (déjà présent sur main via #199) : `dashboard-simulator-drawer.spec.ts` ouvre réellement le drawer + sélectionne une charge + assert que l'Impact rend → reproduction navigateur réelle de la sérialisation.
 
 ## Audit « autres Money vers le drawer »

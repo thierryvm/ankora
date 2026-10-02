@@ -19,7 +19,7 @@
  * decide whether a charge falls in a given month. The seed scripts left it
  * unset, so the column default `{1,…,12}` applied and every annual tax in the
  * test profile was due *every month* — inflating the amount left to pay by
- * 573 € and inventing five overdue bills. A harness defect, not a product one,
+ * several hundred euros and inventing five overdue bills. A harness defect, not a product one,
  * but it falsified every measurement taken on that profile. Measured
  * 10 August 2026.
  */

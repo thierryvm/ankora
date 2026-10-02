@@ -42,7 +42,7 @@ Ankora EST :
 | **Réserve libre**                  | NORTH_STAR   | Buffer de sécurité non affecté. Disponible sans contrainte.                                                                              |
 | **Total Épargne**                  | NORTH_STAR   | Somme brute (Provisions affectées + Réserve libre). Lecture 1/3.                                                                         |
 | **Effort financier mensuel**       | ADR-009      | Total des charges fixes mensuelles + provisions mensuelles lissées.                                                                      |
-| **Plan d'apurement**               | ADR-017      | Échelonnement d'une dette (ex: 2 077,50 € / 11 mensualités). Génération auto N transactions.                                             |
+| **Plan d'apurement**               | ADR-017      | Échelonnement d'une dette (ex: 1 802,38 € / 11 mensualités). Génération auto N transactions.                                             |
 | **Assistant Virements**            | ADR-012      | Sub-section dashboard qui suggère le montant à virer ce mois, avec détail provisions item-par-item.                                      |
 | **Ballet provisions**              | ADR-018      | Aller-retour bidirectionnel compte courant ↔ épargne (audit trail OUT/IN).                                                               |
 | **Live decrement**                 | ADR-010      | Décompte temps réel du Quotidien restant (useOptimistic).                                                                                |

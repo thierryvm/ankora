@@ -18,11 +18,11 @@ const ordinal = (p: Period): number => p.year * 12 + (p.month - 1);
  * original capital, none of which the model stores.
  */
 export type PorteHorizon =
-  /** « Ça se termine vers juin 2029 » — the date read off a memory. */
+  /** « Ça se termine vers février 2029 » — the date read off a memory. */
   | Readonly<{ kind: 'dateDeFin'; year: number; month: number }>
   /** « Il me reste 35 mensualités » — read off a statement. */
   | Readonly<{ kind: 'echeancesRestantes'; count: number }>
-  /** « Mon relevé dit 8 750 € » — the door that survives a lost contract. */
+  /** « Mon relevé dit 8 050 € » — the door that survives a lost contract. */
   | Readonly<{ kind: 'soldeRestantDu'; balance: number }>;
 
 export type PorteKind = PorteHorizon['kind'];
@@ -40,8 +40,8 @@ export type DeriverHorizonOptions = Readonly<{
  * nothing usable (a date before the anchor, a zero amount, a balance smaller
  * than half an instalment).
  *
- * The date door counts the anchor itself: an engagement anchored on August 2026
- * and ending June 2029 has 35 monthly instalments, not 34 — the last one is
+ * The date door counts the anchor itself: an engagement anchored on April 2026
+ * and ending February 2029 has 35 monthly instalments, not 34 — the last one is
  * paid, not skipped.
  */
 export function deriverInstallmentsTotal(
@@ -132,8 +132,8 @@ export function confronterPortes(
 /**
  * Relative gap between a total the user typed from memory and the total the
  * schedule implies. Above `TOLERANCE_TOTAL`, both numbers are shown with their
- * origin — « d'après tes 60 échéances de 250 €, le total serait 15 000 € plutôt
- * que 14 500 € ».
+ * origin — « d'après tes 60 échéances de 230 €, le total serait 13 800 € plutôt
+ * que 13 300 € ».
  *
  * This figure has NO budgetary consequence: the model stores no "total with
  * interest" field, so a remembered total cannot reach any cockpit figure. That

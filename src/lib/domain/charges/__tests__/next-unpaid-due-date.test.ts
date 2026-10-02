@@ -38,7 +38,7 @@ describe('nextUnpaidDueDate', () => {
   });
 
   it('skips months not in paymentMonths (quarterly) → next quarter, not overdue', () => {
-    // Quarterly [1,4,7,10] (post-backfill S.W.D.E), today June → July 1.
+    // Quarterly [1,4,7,10] (a water bill, post-backfill), today June → July 1.
     const res = nextUnpaidDueDate(
       charge({ paymentMonths: [1, 4, 7, 10] }),
       new Map(),

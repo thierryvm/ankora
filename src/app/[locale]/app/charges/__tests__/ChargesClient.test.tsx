@@ -456,24 +456,24 @@ describe('<ChargesClient /> — PR-UI-3a grouping & totals', () => {
     // itself « Effort lissé / mois », which is the two-perimeters-one-name
     // defect this chantier closes, one screen further down.
     renderCharges(sampleCharges, {
-      effortLisseTotal: 1863.21,
-      effortLisseAnnuelTotal: 22358.52,
+      effortLisseTotal: 1488.37,
+      effortLisseAnnuelTotal: 17860.44,
     });
     const total = screen.getByTestId('charges-total');
     expect(total).toHaveTextContent('Compté chaque mois');
     expect(total).toHaveTextContent('par an');
-    expect(screen.getByTestId('charges-total-monthly')).toHaveTextContent(/1[  ]863,21/);
-    expect(screen.getByTestId('charges-total-annual')).toHaveTextContent(/22[  ]358,52/);
+    expect(screen.getByTestId('charges-total-monthly')).toHaveTextContent(/1[  ]488,37/);
+    expect(screen.getByTestId('charges-total-annual')).toHaveTextContent(/17[  ]860,44/);
   });
 
   it('the footer annual is exactly twelve times the header monthly — one perimeter', () => {
     renderCharges(sampleCharges, {
-      effortLisseTotal: 1863.21,
-      effortLisseAnnuelTotal: 1863.21 * 12,
+      effortLisseTotal: 1488.37,
+      effortLisseAnnuelTotal: 1488.37 * 12,
     });
-    expect(screen.getByTestId('charges-total-toggle')).toHaveTextContent(/1[  ]863,21/);
-    expect(screen.getByTestId('charges-total-monthly')).toHaveTextContent(/1[  ]863,21/);
-    expect(screen.getByTestId('charges-total-annual')).toHaveTextContent(/22[  ]358,52/);
+    expect(screen.getByTestId('charges-total-toggle')).toHaveTextContent(/1[  ]488,37/);
+    expect(screen.getByTestId('charges-total-monthly')).toHaveTextContent(/1[  ]488,37/);
+    expect(screen.getByTestId('charges-total-annual')).toHaveTextContent(/17[  ]860,44/);
   });
 
   it('does not render the total footer when there are no charges', () => {
@@ -954,7 +954,7 @@ describe('<ChargesClient /> — month-history navigator', () => {
  * CHANTIER 3 — the month's list is ONE list.
  *
  * A bill and a commitment instalment for the same obligation used to live on
- * two different tabs, which is how the same 220 € came to be counted twice with
+ * two different tabs, which is how the same 165 € came to be counted twice with
  * nothing on screen able to show it. These cases lock the three surfaces that
  * close it: the instalment rows, the two NAMED totals, and the warning that
  * names a probable duplicate without moving a single figure.
@@ -965,23 +965,23 @@ describe('<ChargesClient /> — chantier 3: obligations in one list', () => {
   const instalment = {
     id: 'spf',
     label: 'SPF Finances',
-    amountDue: 220,
+    amountDue: 165,
     paymentDay: 15,
     isPaid: false,
     installmentIndex: 5,
     installmentsTotal: 11,
   };
 
-  // Reported by @thierry on 28 Sept. 2026: « Encore à payer » counted the
-  // SPF instalment while the lists he could see did not add up to it — the
+  // Reported on 28 Sept. 2026: « Encore à payer » counted the SPF
+  // instalment while the lists on screen did not add up to it — the
   // commitments group sat below the annual bills and had no remaining line.
   it('says how « Encore à payer » splits between bills and instalments', () => {
     renderCharges([monthly], { commitmentInstalments: [instalment] });
     const split = screen.getByTestId('charges-remaining-split');
     expect(split).toHaveTextContent(/1[\s\u202f\u00a0]?200/);
-    expect(split).toHaveTextContent(/220/);
+    expect(split).toHaveTextContent(/165/);
     expect(screen.getByTestId('charges-remaining-amount')).toHaveTextContent(
-      /1[\s\u202f\u00a0]?420/,
+      /1[\s\u202f\u00a0]?365/,
     );
   });
 
@@ -989,7 +989,7 @@ describe('<ChargesClient /> — chantier 3: obligations in one list', () => {
     renderCharges([monthly], { commitmentInstalments: [instalment] });
     const footer = screen.getByTestId('charges-group-subtotal-commitments');
     expect(footer).toHaveTextContent(/Reste à payer/);
-    expect(footer).toHaveTextContent(/220/);
+    expect(footer).toHaveTextContent(/165/);
   });
 
   it('puts the commitments group right after the monthly bills, before the rarer ones', () => {
@@ -1012,7 +1012,7 @@ describe('<ChargesClient /> — chantier 3: obligations in one list', () => {
     expect(screen.getByTestId('charges-instalment-position-spf')).toHaveTextContent(
       'échéance 5/11',
     );
-    expect(screen.getByTestId('charges-instalment-amount-spf')).toHaveTextContent(/220/);
+    expect(screen.getByTestId('charges-instalment-amount-spf')).toHaveTextContent(/165/);
   });
 
   it('an instalment is tickable, and the tick writes to commitment_payments', async () => {
@@ -1035,35 +1035,35 @@ describe('<ChargesClient /> — chantier 3: obligations in one list', () => {
 
   it('the month countdown covers bills AND instalments — one month, one count', () => {
     renderCharges([monthly], { commitmentInstalments: [instalment] });
-    // 1 200 € (loyer, unpaid) + 220 € (instalment, unpaid) = 1 420 €, 0/2 ticked.
-    expect(screen.getByTestId('charges-remaining-amount')).toHaveTextContent(/1[  ]420/);
+    // 1 200 € (loyer, unpaid) + 165 € (instalment, unpaid) = 1 365 €, 0/2 ticked.
+    expect(screen.getByTestId('charges-remaining-amount')).toHaveTextContent(/1[  ]365/);
     expect(screen.getByTestId('charges-paid-summary')).toHaveTextContent('0/2');
   });
 
   it('names the two views instead of showing two unlabelled totals', () => {
     renderCharges([monthly], {
       commitmentInstalments: [instalment],
-      aPayerCeMoisTotal: 1981.21,
-      effortLisseTotal: 1863.21,
+      aPayerCeMoisTotal: 1604.37,
+      effortLisseTotal: 1488.37,
     });
     expect(screen.getByTestId('charges-head-card')).toHaveTextContent('À payer ce mois');
     expect(screen.getByTestId('charges-total')).toHaveTextContent('Effort lissé');
-    expect(screen.getByTestId('charges-a-payer-total')).toHaveTextContent(/1[  ]981/);
-    expect(screen.getByTestId('charges-total-monthly')).toHaveTextContent(/1[  ]863/);
+    expect(screen.getByTestId('charges-a-payer-total')).toHaveTextContent(/1[  ]604/);
+    expect(screen.getByTestId('charges-total-monthly')).toHaveTextContent(/1[  ]488/);
   });
 
   it('WARNS about a probable duplicate — and moves no total while doing it', () => {
     renderCharges([monthly], {
       commitmentInstalments: [instalment],
-      aPayerCeMoisTotal: 2024.21,
-      effortLisseTotal: 2024.21,
+      aPayerCeMoisTotal: 1595.37,
+      effortLisseTotal: 1595.37,
       duplicates: [
         {
           chargeId: 'a1',
           chargeLabel: 'Impôt',
           commitmentId: 'spf',
           commitmentLabel: 'SPF Impôts',
-          montant: 220,
+          montant: 165,
           signaux: ['montant', 'jour', 'libelle'],
         },
       ],
@@ -1073,8 +1073,8 @@ describe('<ChargesClient /> — chantier 3: obligations in one list', () => {
     expect(warning).toHaveTextContent('SPF Impôts');
     expect(warning).toHaveTextContent('même montant, même jour, noms proches');
     // The totals are exactly what the server passed: nothing was netted off.
-    expect(screen.getByTestId('charges-a-payer-total')).toHaveTextContent(/2[  ]024/);
-    expect(screen.getByTestId('charges-total-monthly')).toHaveTextContent(/2[  ]024/);
+    expect(screen.getByTestId('charges-a-payer-total')).toHaveTextContent(/1[  ]595/);
+    expect(screen.getByTestId('charges-total-monthly')).toHaveTextContent(/1[  ]595/);
   });
 
   it('says nothing when there is no probable duplicate', () => {

@@ -13,16 +13,16 @@ quoi il sert ?
 | ---------------------------------------------------- | -------------------------------------------------- |
 | Revenu mensuel                                       | 2 500,00 €                                         |
 | Virement mensuel vers la carte du quotidien          | 300,00 €                                           |
-| Charges du mois (14 mensuelles, payées du principal) | 1 455,37 €                                         |
+| Charges du mois (14 mensuelles, payées du principal) | 1 430,37 €                                         |
 | Provisions (1 trimestrielle + 4 annuelles, lissées)  | 58,00 €                                            |
-| Engagements (plan d'apurement 190 + prêt 180)        | 370,00 €                                           |
+| Engagements (plan d'apurement 165 + prêt 180)        | 345,00 €                                           |
 | Dépenses saisies sur le mois (9)                     | 421,05 €                                           |
 | Soldes                                               | principal 1 240 · quotidien 385,50 · épargne 2 150 |
-| **Reste attendu**                                    | **316,63 €**                                       |
+| **Reste attendu**                                    | **366,63 €**                                       |
 
 ## 1. Ce qui est juste, et qu'il faut dire
 
-**L'arithmétique du domaine est exacte.** `2 500 − 300 − 58 − 1 455,37 − 370 = 316,63`, et
+**L'arithmétique du domaine est exacte.** `2 500 − 300 − 58 − 1 430,37 − 345 = 366,63`, et
 c'est très précisément ce qu'affiche « Plan du mois ». Les onze montants semés sont tous
 présents à l'écran, aux bons endroits, dans le bon format.
 
@@ -33,21 +33,21 @@ par an » → 21,67 €/mois), les 2 engagements. C'est exactement la règle « 
 peut pas ouvrir est une injonction » — elle est appliquée.
 
 **Le piège du double comptage est évité.** Le semis pose délibérément un plan d'apurement
-SPF de 190 €/mois qui désigne la même dette qu'une charge mensuelle « Impôt 190 € ».
+SPF de 165 €/mois qui désigne la même dette qu'une charge mensuelle « Impôt 165 € ».
 Aucun « 380 € » n'apparaît nulle part : l'application ne les additionne pas.
 
 ## 2. ⛔ Deux « il te reste » sur le même écran, et ils ne disent pas la même chose
 
 | Où                     | Libellé                                             | Montant      |
 | ---------------------- | --------------------------------------------------- | ------------ |
-| Hero, en haut          | « **IL TE RESTE** 195,58 € sur 616,63 € de budget » | **195,58 €** |
-| Plan du mois, plus bas | « Après tes sorties · Août »                        | **316,63 €** |
+| Hero, en haut          | « **IL TE RESTE** 245,58 € sur 666,63 € de budget » | **245,58 €** |
+| Plan du mois, plus bas | « Après tes sorties · Août »                        | **366,63 €** |
 
 Les deux sont défendables **séparément** :
 
-- `616,63 = 2 500 − 1 455,37 − 58 − 370` — ce qui reste une fois les obligations fixes
+- `666,63 = 2 500 − 1 430,37 − 58 − 345` — ce qui reste une fois les obligations fixes
   retirées, **avant** le virement vers la carte du quotidien ;
-- `195,58 = 616,63 − 421,05` — le même budget, moins ce qui a réellement été dépensé ;
+- `245,58 = 666,63 − 421,05` — le même budget, moins ce qui a réellement été dépensé ;
 - `−63,21 = 236,79 − 300` — le même budget, moins le virement de lissage.
 
 Trois notions distinctes, **deux d'entre elles appelées « il te reste »**, et rien à

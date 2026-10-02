@@ -4,7 +4,7 @@ import { AUCUNE_OPERATION } from '@/lib/domain/cockpit/operations-du-mois';
  * calcul ?
  *
  * La question s'est posée le 2026-07-31 : sur un profil de test à valeurs
- * contrôlées, le cockpit affichait **382,89 € pour les deux**. Sur un écran qui
+ * contrôlées, le cockpit affichait **le même montant pour les deux**. Sur un écran qui
  * portait déjà un double comptage avéré (une charge mensuelle et un plan
  * d'apurement désignant la même dette, déduits deux fois), l'hypothèse d'un
  * second agrégat mal câblé méritait d'être testée plutôt que supposée.
@@ -28,7 +28,7 @@ import type { CockpitCharge, PaymentLedger, ReferencePeriod } from '@/lib/domain
 
 const NO_PAYMENTS: PaymentLedger = new Map();
 const REF: ReferencePeriod = { year: 2026, month: 7 };
-const DEPENSES = '170.90';
+const DEPENSES = '158.40';
 const JOURS_DU_MOIS = 31;
 
 const charge = (over: Partial<CockpitCharge>): CockpitCharge => ({
@@ -42,16 +42,16 @@ const charge = (over: Partial<CockpitCharge>): CockpitCharge => ({
   ...over,
 });
 
-/** Les chiffres réels du profil de test du 2026-07-31. */
+/** Un profil fictif de même forme que celui du 2026-07-31 (valeurs de référence). */
 const profil = (joursEcoules: number) =>
   calculerSituationDuMois({
     operations: AUCUNE_OPERATION,
-    revenus: new Decimal(2637),
-    charges: [charge({ amount: new Decimal('1804.21'), frequency: 'monthly' })],
-    soldeEpargneActuel: new Decimal(430),
+    revenus: new Decimal(2290),
+    charges: [charge({ amount: new Decimal('1430.37'), frequency: 'monthly' })],
+    soldeEpargneActuel: new Decimal(400),
     payments: NO_PAYMENTS,
     ref: REF,
-    engagementsMensuels: new Decimal(220),
+    engagementsMensuels: new Decimal(165),
     depensesDuMois: new Decimal(DEPENSES),
     joursEcoules,
     joursDuMois: JOURS_DU_MOIS,

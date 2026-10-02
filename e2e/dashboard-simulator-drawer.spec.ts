@@ -130,7 +130,7 @@ test.describe('THI-195 — simulator drawer', () => {
     try {
       // THI-195: réserve libre = revenus − effort lissé. Seed income so the
       // "Reste disponible" framing is shown (not the income-setup hint).
-      await admin.from('workspaces').update({ monthly_income: 2466 }).eq('id', user.workspaceId);
+      await admin.from('workspaces').update({ monthly_income: 2384 }).eq('id', user.workspaceId);
 
       await login(page, user.email, user.password);
       await page.getByTestId('simulator-drawer-trigger').click();

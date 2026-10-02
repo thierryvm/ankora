@@ -7,8 +7,9 @@ import type { CockpitCharge } from '@/lib/domain/cockpit/types';
  * « EFFORT LISSÉ » — the budget view.
  *
  * charges mensuelles + provisions lissées + mensualités d'engagement. This is
- * what « Budget du mois » deducts from income, and the figure @thierry uses as
- * his control total (1 863,21 €/mois).
+ * what « Budget du mois » deducts from income, and the figure a user checks as
+ * their control total (1 513,37 €/mois on the reference fixture of
+ * `une-obligation-une-table.test.ts`).
  *
  * ## Why this thin wrapper exists rather than an inline `.plus()`
  *

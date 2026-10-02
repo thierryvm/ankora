@@ -77,12 +77,12 @@ const conversionSchema = z.object({
  *
  * ## Designed on the degraded case
  *
- * @thierry lost the Alpha Credit contract. He knows 250 €/month. That is the
- * NORMAL case — finding the paperwork for a running loan is rare — so the only
- * thing this action asks for is the horizon, through whichever of the three
- * doors the user can answer (`confronterPortes`). Everything else is derived
- * from the charge: label, payment day, cadence, and the anchor (its next due
- * date). Zero additional mandatory field.
+ * A user who lost the contract of a « Crédit auto » still knows 230 €/month.
+ * That is the NORMAL case — finding the paperwork for a running loan is rare —
+ * so the only thing this action asks for is the horizon, through whichever of
+ * the three doors the user can answer (`confronterPortes`). Everything else is
+ * derived from the charge: label, payment day, cadence, and the anchor (its
+ * next due date). Zero additional mandatory field.
  *
  * When several doors are filled, they are CONFRONTED: the result carries the
  * divergences so the UI can name them. Nothing is silently corrected.

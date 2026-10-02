@@ -106,12 +106,12 @@ Suppression imports : `PiggyBank`, `Receipt`, `Shield`, `Provision`, `Budget`. S
 
 **Vitest** :
 
-| Fichier                                    | Cas | Couverture                                                                                                                    |
-| ------------------------------------------ | --- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `CapaciteEpargneCard.test.tsx` (étendu)    | +5  | 3-row waterfall plafond > 0, 2-row plafond = 0, valeurs formatées fixture @thierry, big number visible, breakdown i18n parity |
-| `CapaciteEpargneCard.test.tsx` (existants) | 7   | inchangés, tous passent (data-testids préservés)                                                                              |
-| `EffortFinancierCard.test.tsx` (existants) | 5   | inchangés, tous passent                                                                                                       |
-| `dashboard-cockpit-bloc2.spec.ts` (étendu) | +2  | DOM order accounts BEFORE plan, legacy KPI labels gone (`toHaveCount(0)`)                                                     |
+| Fichier                                    | Cas | Couverture                                                                                                                        |
+| ------------------------------------------ | --- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `CapaciteEpargneCard.test.tsx` (étendu)    | +5  | 3-row waterfall plafond > 0, 2-row plafond = 0, valeurs formatées fixture de référence, big number visible, breakdown i18n parity |
+| `CapaciteEpargneCard.test.tsx` (existants) | 7   | inchangés, tous passent (data-testids préservés)                                                                                  |
+| `EffortFinancierCard.test.tsx` (existants) | 5   | inchangés, tous passent                                                                                                           |
+| `dashboard-cockpit-bloc2.spec.ts` (étendu) | +2  | DOM order accounts BEFORE plan, legacy KPI labels gone (`toHaveCount(0)`)                                                         |
 
 **Mock `getTranslations`** : upgrade pour walker les nested keys (e.g. `breakdown.revenus` → `messages.dashboard.capacite.breakdown.revenus`). Évite faux négatifs sur les sub-namespaces.
 
