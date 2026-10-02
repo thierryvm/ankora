@@ -103,22 +103,22 @@ describe('ChargeEditDrawer — this month’s payment after an amount correction
   it('says that the payment follows, with the amount it now carries', async () => {
     updateChargeMock.mockResolvedValue({
       ok: true,
-      payment: { kind: 'followed', periodYear: 2026, periodMonth: 10, paidAmount: 705 },
+      payment: { kind: 'followed', periodYear: 2026, periodMonth: 10, paidAmount: 705.5 },
     });
     await correctAmountTo('705');
     const [title, options] = toastSuccessMock.mock.calls[0]!;
     expect(title).toBe('Facture mise à jour');
-    expect(options.description).toMatch(/^Le paiement pour octobre suit : 705[  ]€$/);
+    expect(options.description).toMatch(/^Le paiement pour octobre suit : 705,50[  ]€$/);
   });
 
   it('writes the followed payment in English with the month capitalised', async () => {
     updateChargeMock.mockResolvedValue({
       ok: true,
-      payment: { kind: 'followed', periodYear: 2026, periodMonth: 10, paidAmount: 705 },
+      payment: { kind: 'followed', periodYear: 2026, periodMonth: 10, paidAmount: 705.5 },
     });
     await correctAmountTo('705', 'en');
     expect(toastSuccessMock.mock.calls[0]![1].description).toMatch(
-      /^The payment for October follows: .*705$/,
+      /^The payment for October follows: .*705\.50$/,
     );
   });
 

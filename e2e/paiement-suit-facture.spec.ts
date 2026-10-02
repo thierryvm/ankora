@@ -116,7 +116,7 @@ test.describe('le paiement suit la facture corrigée', () => {
       await page.locator(`[data-testid="charges-row-open-${chargeId}"]`).click();
       const champ = page.getByTestId('charge-edit-amount');
       await champ.click();
-      await champ.press('Control+A');
+      await champ.press('ControlOrMeta+A');
       await champ.pressSequentially(String(NOUVEAU));
       await expect(champ).toHaveValue(String(NOUVEAU));
       await page.getByTestId('charge-edit-save').click();
