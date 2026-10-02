@@ -38,7 +38,7 @@ function euroDigits(value: number): string {
 
 /**
  * Expected digits for a whole-euro constant displayed WITHOUT decimals —
- * the cascade amounts ('+2 466 €' → '2466'). Distinct from `euroDigits`
+ * the cascade amounts ('+2 384 €' → '2384'). Distinct from `euroDigits`
  * on purpose: reusing the hero helper here would demand decimals the
  * cascade strings never had, and fail on every bundle.
  */

@@ -43,17 +43,17 @@ describe('calculerAssistantVirements — direction', () => {
   it('returns "depuis_epargne" when periodic bills exceed provisions', () => {
     const out = calculerAssistantVirements({
       charges: [
-        charge({ amount: new Decimal(53), frequency: 'annual', paymentMonths: [4] }), // 4.42/m
+        charge({ amount: new Decimal(38), frequency: 'annual', paymentMonths: [4] }), // 3.17/m
         charge({ amount: new Decimal(300), frequency: 'annual', paymentMonths: [4] }), // 25/m
       ],
       ref: ref(2026, 4), // both due
       rattrapageMensuel: ZERO,
     });
-    // provision = 4.4166… + 25 = 29.4166…
-    // périodiques avril = 53 + 300 = 353
-    // transfert = 29.4166… - 353 ≈ -323.58
+    // provision = 3.1666… + 25 = 28.1666…
+    // périodiques avril = 38 + 300 = 338
+    // transfert = 28.1666… - 338 = -309.8333… ≈ -309.83
     expect(out.direction).toBe('depuis_epargne');
-    expect(out.transfertRecommandeAjuste.toFixed(2)).toBe('-323.58');
+    expect(out.transfertRecommandeAjuste.toFixed(2)).toBe('-309.83');
   });
 
   it('returns "aucun" when the math lands exactly on zero', () => {
@@ -88,18 +88,25 @@ describe('calculerAssistantVirements — direction', () => {
 });
 
 describe('calculerAssistantVirements — provisions', () => {
-  it('reproduces @thierry real fixture (provision 59€)', () => {
+  it('handles the reference fixture (provision 58€)', () => {
     const charges = [
-      charge({ id: 'dashlane', amount: new Decimal(53), frequency: 'annual', paymentMonths: [4] }),
       charge({
-        id: 'swde',
-        amount: new Decimal(45),
+        id: 'gestionnaire-mdp',
+        label: 'Gestionnaire de mots de passe',
+        amount: new Decimal(38),
+        frequency: 'annual',
+        paymentMonths: [4],
+      }),
+      charge({
+        id: 'eau',
+        label: 'Eau',
+        amount: new Decimal(60),
         frequency: 'quarterly',
         paymentMonths: [1, 4, 7, 10],
       }),
       charge({
         id: 'taxe-voiture',
-        amount: new Decimal(300),
+        amount: new Decimal(240),
         frequency: 'annual',
         paymentMonths: [6],
       }),
@@ -111,7 +118,7 @@ describe('calculerAssistantVirements — provisions', () => {
       }),
       charge({
         id: 'taxe-egout',
-        amount: new Decimal(55),
+        amount: new Decimal(58),
         frequency: 'annual',
         paymentMonths: [3],
       }),
@@ -121,24 +128,32 @@ describe('calculerAssistantVirements — provisions', () => {
       ref: ref(2026, 5), // mai → no periodic due
       rattrapageMensuel: ZERO,
     });
-    expect(out.provisionMensuelleTotale.toFixed(2)).toBe('59.00');
+    // (38 + 240 + 120 + 58) / 12 + 60 / 3 = 456 / 12 + 20 = 38 + 20 = 58
+    expect(out.provisionMensuelleTotale.toFixed(2)).toBe('58.00');
     expect(out.totalPeriodiquesMois.toNumber()).toBe(0);
-    expect(out.transfertRecommandeAjuste.toFixed(2)).toBe('59.00');
+    expect(out.transfertRecommandeAjuste.toFixed(2)).toBe('58.00');
     expect(out.direction).toBe('vers_epargne');
   });
 
-  it('reproduces @thierry real fixture in April (Dashlane + S.W.D.E due → 6€ to transfer)', () => {
+  it('handles the reference fixture in April (password manager + water due → pull 40€)', () => {
     const charges = [
-      charge({ id: 'dashlane', amount: new Decimal(53), frequency: 'annual', paymentMonths: [4] }),
       charge({
-        id: 'swde',
-        amount: new Decimal(45),
+        id: 'gestionnaire-mdp',
+        label: 'Gestionnaire de mots de passe',
+        amount: new Decimal(38),
+        frequency: 'annual',
+        paymentMonths: [4],
+      }),
+      charge({
+        id: 'eau',
+        label: 'Eau',
+        amount: new Decimal(60),
         frequency: 'quarterly',
         paymentMonths: [1, 4, 7, 10],
       }),
       charge({
         id: 'taxe-voiture',
-        amount: new Decimal(300),
+        amount: new Decimal(240),
         frequency: 'annual',
         paymentMonths: [6],
       }),
@@ -150,43 +165,50 @@ describe('calculerAssistantVirements — provisions', () => {
       }),
       charge({
         id: 'taxe-egout',
-        amount: new Decimal(55),
+        amount: new Decimal(58),
         frequency: 'annual',
         paymentMonths: [3],
       }),
     ];
     const out = calculerAssistantVirements({
       charges,
-      ref: ref(2026, 4), // April : Dashlane + S.W.D.E due
+      ref: ref(2026, 4), // April : password manager + water due
       rattrapageMensuel: ZERO,
     });
-    // provision 59, bills due = 53 + 45 = 98
-    // transfert = 59 - 98 = -39 → depuis_epargne
+    // provision 58, bills due = 38 + 60 = 98
+    // transfert = 58 - 98 = -40 → depuis_epargne
     expect(out.totalPeriodiquesMois.toNumber()).toBe(98);
-    expect(out.transfertRecommandeAjuste.toFixed(2)).toBe('-39.00');
+    expect(out.transfertRecommandeAjuste.toFixed(2)).toBe('-40.00');
     expect(out.direction).toBe('depuis_epargne');
   });
 
-  it('reproduces ADR-012 example: virer 6€ when only Dashlane (53€) is due in April', () => {
-    // Per ADR-012: provisionMensuelleTotale = 59, Dashlane only due in April → 59 - 53 = 6.
-    // Real Thierry has S.W.D.E too but ADR's pedagogical example assumes only Dashlane.
+  it('ADR-012 example shape: virer 20€ when only the password manager (38€) is due in April', () => {
+    // Same shape as ADR-012: provisionMensuelleTotale = 58, only the password
+    // manager due in April → 58 - 38 = 20. The water bill is left out on purpose:
+    // the pedagogical example has a single bill due.
     const charges = [
-      charge({ id: 'dashlane', amount: new Decimal(53), frequency: 'annual', paymentMonths: [4] }),
-      // 4 dummy provisions to round provision to ~59€ (without bills due in April)
+      charge({
+        id: 'gestionnaire-mdp',
+        label: 'Gestionnaire de mots de passe',
+        amount: new Decimal(38),
+        frequency: 'annual',
+        paymentMonths: [4],
+      }),
+      // 4 dummy provisions to bring the provision to 58€ (without bills due in April)
       charge({ id: 'a', amount: new Decimal(180), frequency: 'annual', paymentMonths: [6] }),
       charge({ id: 'b', amount: new Decimal(120), frequency: 'annual', paymentMonths: [3] }),
       charge({ id: 'c', amount: new Decimal(120), frequency: 'annual', paymentMonths: [9] }),
-      charge({ id: 'd', amount: new Decimal(235), frequency: 'annual', paymentMonths: [12] }),
+      charge({ id: 'd', amount: new Decimal(238), frequency: 'annual', paymentMonths: [12] }),
     ];
-    // 53/12 + 180/12 + 120/12 + 120/12 + 235/12 = (53+180+120+120+235)/12 = 708/12 = 59
+    // 38/12 + 180/12 + 120/12 + 120/12 + 238/12 = (38+180+120+120+238)/12 = 696/12 = 58
     const out = calculerAssistantVirements({
       charges,
       ref: ref(2026, 4),
       rattrapageMensuel: ZERO,
     });
-    expect(out.provisionMensuelleTotale.toFixed(2)).toBe('59.00');
-    expect(out.totalPeriodiquesMois.toNumber()).toBe(53);
-    expect(out.transfertRecommandeAjuste.toFixed(2)).toBe('6.00');
+    expect(out.provisionMensuelleTotale.toFixed(2)).toBe('58.00');
+    expect(out.totalPeriodiquesMois.toNumber()).toBe(38);
+    expect(out.transfertRecommandeAjuste.toFixed(2)).toBe('20.00');
     expect(out.direction).toBe('vers_epargne');
   });
 });
@@ -222,14 +244,14 @@ describe('calculerAssistantVirements — semiannual support', () => {
     const out = calculerAssistantVirements({
       charges: [
         charge({ amount: new Decimal(600), frequency: 'semiannual', paymentMonths: [3, 9] }),
-        charge({ amount: new Decimal(45), frequency: 'quarterly', paymentMonths: [1, 4, 7, 10] }),
+        charge({ amount: new Decimal(60), frequency: 'quarterly', paymentMonths: [1, 4, 7, 10] }),
         charge({ amount: new Decimal(1200), frequency: 'annual', paymentMonths: [12] }),
       ],
       ref: ref(2026, 5), // none due in May
       rattrapageMensuel: ZERO,
     });
-    // 600/6 + 45/3 + 1200/12 = 100 + 15 + 100 = 215
-    expect(out.provisionMensuelleTotale.toNumber()).toBe(215);
+    // 600/6 + 60/3 + 1200/12 = 100 + 20 + 100 = 220
+    expect(out.provisionMensuelleTotale.toNumber()).toBe(220);
     expect(out.totalPeriodiquesMois.toNumber()).toBe(0);
     expect(out.direction).toBe('vers_epargne');
   });
@@ -319,12 +341,13 @@ describe('calculerAssistantVirements — détail provisions', () => {
   it('keeps Decimal precision in provisionLissee', () => {
     const out = calculerAssistantVirements({
       charges: [
-        charge({ id: 'd', amount: new Decimal(53), frequency: 'annual', paymentMonths: [4] }),
+        charge({ id: 'd', amount: new Decimal(38), frequency: 'annual', paymentMonths: [4] }),
       ],
       ref: ref(2026, 5),
       rattrapageMensuel: ZERO,
     });
-    expect(out.detailProvisions[0]!.provisionLissee.toFixed(6)).toBe('4.416667');
+    // 38 / 12 = 3.1666…
+    expect(out.detailProvisions[0]!.provisionLissee.toFixed(6)).toBe('3.166667');
   });
 
   it('returns label in détail entry (UI consumes it directly)', () => {
@@ -332,8 +355,8 @@ describe('calculerAssistantVirements — détail provisions', () => {
       charges: [
         charge({
           id: 'water',
-          label: 'S.W.D.E.',
-          amount: new Decimal(45),
+          label: 'Eau',
+          amount: new Decimal(60),
           frequency: 'quarterly',
           paymentMonths: [1, 4, 7, 10],
         }),
@@ -341,7 +364,7 @@ describe('calculerAssistantVirements — détail provisions', () => {
       ref: ref(2026, 5),
       rattrapageMensuel: ZERO,
     });
-    expect(out.detailProvisions[0]!.label).toBe('S.W.D.E.');
+    expect(out.detailProvisions[0]!.label).toBe('Eau');
     expect(out.detailProvisions[0]!.frequency).toBe('quarterly');
   });
 });

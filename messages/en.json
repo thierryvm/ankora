@@ -237,14 +237,14 @@
       "ctaSecondary": "How does it work?",
       "waterfall": {
         "income": "Income",
-        "incomeAmount": "+2,466 €",
+        "incomeAmount": "+2,384 €",
         "expenses": "Daily expenses",
-        "expensesAmount": "−1,959 €",
+        "expensesAmount": "−1,872 €",
         "provisionsCaption": "of which {amount} € smoothed into earmarked provisions",
         "provisionsDefinition": "A provision: money set aside each month for a bill that only lands once or twice a year.",
         "available": "Available money",
-        "availableAmount": "+507 €",
-        "ariaLabel": "Illustrative cascade: 2,466 € income, 1,959 € daily expenses (of which 59 € smoothed into provisions), 507 € available."
+        "availableAmount": "+512 €",
+        "ariaLabel": "Illustrative cascade: 2,384 € income, 1,872 € daily expenses (of which 58 € smoothed into provisions), 512 € available."
       }
     },
     "whatif": {

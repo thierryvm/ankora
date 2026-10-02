@@ -290,19 +290,19 @@ describe('remainingBalance / installmentsPaid / isFinished', () => {
 });
 
 // ---------------------------------------------------------------------------
-// The real « SPF impôt » case that started this (reported 2026-08-02)
+// The « SPF impôt » case that started this (reported 2026-08-02)
 // ---------------------------------------------------------------------------
 //
-// 2 407,93 € over 11 monthly instalments from 15/05/2026: 10 × 220 € then a
-// 207,93 € residue, 4 ticked. The app announced « 11 échéances de 220 €,
+// Reference fixture: 1 802,38 € over 11 monthly instalments from 15/05/2026:
+// 10 × 165 € then a 152,38 € residue, 4 ticked. The app announced « 11 échéances de 165 €,
 // dernière en Mai 2027 » — two months late and a wrong amount, because the
 // stored anchor was the CREATION month (July) and the final instalment was
 // never derived.
 describe('SPF impôt — the reported case, end to end', () => {
   const spf = commitment({
     kind: 'installment_plan',
-    totalAmount: 2407.93,
-    installmentAmount: 220,
+    totalAmount: 1802.38,
+    installmentAmount: 165,
     installmentsTotal: 11,
     startYear: 2026,
     startMonth: 5,
@@ -329,21 +329,23 @@ describe('SPF impôt — the reported case, end to end', () => {
     expect(installmentPeriods(spf)[0]).toEqual({ year: 2026, month: 5 });
   });
 
-  it('derives a 207,93 € final instalment, exactly (native floats do not)', () => {
-    expect(lastInstallmentAmount(spf)).toBe(207.93);
-    expect(2407.93 - 10 * 220).not.toBe(207.93); // the float trap this guards
+  it('derives a 152,38 € final instalment, exactly (native floats do not)', () => {
+    // 1 802,38 − 10 × 165 = 1 802,38 − 1 650 = 152,38
+    expect(lastInstallmentAmount(spf)).toBe(152.38);
+    expect(1802.38 - 10 * 165).not.toBe(152.38); // the float trap this guards
   });
 
   it('flags the plan as having an irregular final instalment', () => {
     expect(hasIrregularFinalInstallment(spf)).toBe(true);
-    expect(installmentAmountAt(spf, 0)).toBe(220);
-    expect(installmentAmountAt(spf, 9)).toBe(220);
-    expect(installmentAmountAt(spf, 10)).toBe(207.93);
+    expect(installmentAmountAt(spf, 0)).toBe(165);
+    expect(installmentAmountAt(spf, 9)).toBe(165);
+    expect(installmentAmountAt(spf, 10)).toBe(152.38);
   });
 
-  it('reports 1 527,93 € still owed after the 4 ticked instalments', () => {
+  it('reports 1 142,38 € still owed after the 4 ticked instalments', () => {
+    // 1 802,38 − 4 × 165 = 1 802,38 − 660 = 1 142,38
     expect(installmentsPaid(spf, fourPaid)).toBe(4);
-    expect(remainingBalance(spf, fourPaid)).toBe(1527.93);
+    expect(remainingBalance(spf, fourPaid)).toBe(1142.38);
   });
 
   it('points the next instalment at September 2026 — first + 4 periods', () => {
@@ -439,7 +441,7 @@ describe('end-of-month clamping', () => {
 
 describe('a settled plan never shows a negative remainder', () => {
   it('reads exactly 0 when every instalment is ticked, residue included', () => {
-    const c = commitment({ totalAmount: 2407.93, installmentAmount: 220, installmentsTotal: 11 });
+    const c = commitment({ totalAmount: 1802.38, installmentAmount: 165, installmentsTotal: 11 });
     const all = paidSet(installmentPeriods(c).map((p): [number, number] => [p.year, p.month]));
     expect(remainingBalance(c, all)).toBe(0);
     expect(isFinished(c, all)).toBe(true);

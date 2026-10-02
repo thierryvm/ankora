@@ -12,8 +12,8 @@ Convention du trio : [`trio-agents.md`](trio-agents.md).
 
 **État au moment de l'envoi** : la palette « papier » venait de descendre dans
 l'application (PR #442), le pli du cockpit était refait (#440) et la feuille de
-saisie corrigée (#441). Les chiffres de la §Problème sont relevés sur la
-production, AVANT #440.
+saisie corrigée (#441). Les chiffres de la §Problème sont remplacés par des
+valeurs fictives (dépôt public), même structure, AVANT #440.
 
 ---
 
@@ -35,7 +35,7 @@ Le tableau de bord empile **neuf cartes**, soit plus de **1 790 px de contenu
 sur un écran de 900**, et **la réponse est donnée dans les 250 premiers pixels**.
 
 ```
-1  hero « Il te reste 501,61 € »     250 px  ← la réponse
+1  hero « Il te reste 487,30 € »     250 px  ← la réponse
 2  D'où vient ce chiffre             400 px  ← l'explication, le plus gros bloc
 3  Santé provisions + Engagements    200 px  ← 2 cartes en grille, mal appariées
 4  Prochaines factures               160 px  ← dit « tout est payé ce mois »
@@ -70,18 +70,18 @@ Août — ton cockpit
 
   ✓ Tu gères bien ce mois-ci
   IL TE RESTE
-  501,61 €
-  sur 838,52 € · 55,73 €/jour jusqu'au 31
+  487,30 €
+  sur 816,10 € · 54,14 €/jour jusqu'au 31
   ████████████░░░░░░░░░░░░░░░░
 
   ──────────── le pli (550 px utiles sur iPhone) ────────────
 
-  › D'où vient ce chiffre              501,61 €
+  › D'où vient ce chiffre              487,30 €
   › Ce qui arrive                  rien ce mois
   › Mes provisions                       à jour
-  › Mes comptes                 4 653 € au total
-  › Mes engagements              fin avril 2027
-  › Mes dernières sorties             336,91 €
+  › Mes comptes                 4 210 € au total
+  › Mes engagements              fin mars 2027
+  › Mes dernières sorties             328,80 €
 ```
 
 **Ce sur quoi Fable a la main** : la forme du hero, le graphisme des lignes, ce
@@ -91,18 +91,18 @@ distingue d'un mois calme, la typographie, le rythme, les transitions.
 ## Données d'exemple (un mois d'août fictif, ordres de grandeur réalistes)
 
 ```
-Revenus                  2 500 €
-  − Factures mensuelles  1 412,60 €
-  − Lissage des annuelles   50 €      (provisions pour factures périodiques)
-  − Engagements            190 €      (échéancier de dette)
-  = Budget du mois         847,40 €
-  − Dépensé ce mois        312,75 €   (12 dépenses)
-  = Il te reste            534,65 €
-  Épargne estimée          402,10 €   (projection du rythme actuel)
+Revenus                  2 400 €
+  − Factures mensuelles  1 378,90 €
+  − Lissage des annuelles   40 €      (provisions pour factures périodiques)
+  − Engagements            165 €      (échéancier de dette)
+  = Budget du mois         816,10 €
+  − Dépensé ce mois        303,40 €   (12 dépenses)
+  = Il te reste            512,70 €
+  Épargne estimée          388,60 €   (projection du rythme actuel)
 
-Provisions   100 % — cible 118,33 €, solde réel 1 250 €, +1 131,67 € au-delà
-Engagement   SPF impôt · 1 317,50 € restant · 7 échéances · fin avril 2027
-Comptes      Compte principal 2 480 € · Compte épargne 1 250 € · Vie courante 500 €
+Provisions   100 % — cible 112,50 €, solde réel 1 180 €, +1 067,50 € au-delà
+Engagement   SPF impôt · 1 142,38 € restant · 7 échéances · fin mars 2027
+Comptes      Compte principal 2 310 € · Compte épargne 1 180 € · Vie courante 450 €
 Prochaines factures  aucune ce mois-ci
 ```
 

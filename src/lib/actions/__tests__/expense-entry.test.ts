@@ -99,12 +99,12 @@ function situationFactice(
       ],
     },
     situation: {
-      ilTeReste: new Decimal('429.89'),
-      resteDisponible: new Decimal('838.52'),
-      // 838,52 − 429,89. Cohérent avec les deux autres délibérément : la feuille
+      ilTeReste: new Decimal('412.35'),
+      resteDisponible: new Decimal('816.10'),
+      // 816,10 − 412,35. Cohérent avec les deux autres délibérément : la feuille
       // publie désormais un couple, et une situation dont les membres se
       // contredisent laisserait passer une implémentation qui les intervertit.
-      depensesDuMois: new Decimal('408.63'),
+      depensesDuMois: new Decimal('403.75'),
       statut: 'vert',
       ...over,
     },
@@ -137,9 +137,9 @@ describe('getExpenseEntryContextAction — la frontière Decimal', () => {
     expect(typeof res.data.ilTeReste).toBe('number');
     expect(typeof res.data.budgetDuMois).toBe('number');
     expect(typeof res.data.depensesDuMois).toBe('number');
-    expect(res.data.ilTeReste).toBe(429.89);
-    expect(res.data.budgetDuMois).toBe(838.52);
-    expect(res.data.depensesDuMois).toBe(408.63);
+    expect(res.data.ilTeReste).toBe(412.35);
+    expect(res.data.budgetDuMois).toBe(816.1);
+    expect(res.data.depensesDuMois).toBe(403.75);
   });
 
   it('LIT « Dépensé ce mois », au lieu de le déduire des deux autres', async () => {
@@ -294,7 +294,7 @@ describe('getExpenseEntryContextAction — les descriptions déjà saisies (règ
     expect(res.ok).toBe(true);
     if (!res.ok) return;
     expect(res.data.descriptions).toEqual([]);
-    expect(res.data.ilTeReste).toBe(429.89);
+    expect(res.data.ilTeReste).toBe(412.35);
     expect(res.data.chips.length).toBeGreaterThan(0);
   });
 

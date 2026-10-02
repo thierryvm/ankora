@@ -1,5 +1,5 @@
 // Profil de test à valeurs contrôlées — stack LOCALE uniquement.
-// Totaux attendus : chargesFixes 1455,37 · provisions 58 · engagements 190.
+// Totaux attendus : chargesFixes 1430,37 · provisions 58 · engagements 165.
 // Valeurs FICTIVES (dépôt public) : aucun libellé ni montant d'un budget réel.
 import { createClient } from '@supabase/supabase-js';
 
@@ -24,11 +24,11 @@ const MENSUELLES = [
   ['Assurance auto', 64, 3],
   ['Téléphonie', 35, 3],
   ['Frais bancaires', 4, 4],
-  ['Impôt', 190, 5],
+  ['Impôt', 165, 5],
   ['Mutuelle', 12, 5],
   ['Énergie', 61.37, 8],
   ['Abonnement jeux', 8, 9],
-  ['Cotisation syndicale', 17, 10],
+  ['Cotisation association', 17, 10],
   ['Mutuelle (2)', 18, 11],
   ['Crédit auto', 230, 15],
   ['Stockage en ligne', 3, 16],
@@ -80,7 +80,7 @@ await db.from('workspaces').update({ monthly_income: 2500 }).eq('id', ws);
 // `due_month` n'est qu'une référence héritée. Ce script ne la renseignait pas : la valeur
 // par défaut de la colonne est `{1,…,12}`, si bien que la taxe annuelle de mars était due
 // TOUS LES MOIS dans le profil semé. Le cockpit affichait alors cinq fausses factures en
-// retard et gonflait le « reste à payer » de 573 € — un défaut du harnais, pas du produit,
+// retard et gonflait le « reste à payer » de plusieurs centaines d'euros — un défaut du harnais, pas du produit,
 // mais qui faussait toute mesure prise sur ce profil. Mesuré le 10 août 2026.
 //
 // Le calcul vit dans `./lib/payment-months.mjs`, miroir de la fonction du domaine
@@ -138,15 +138,15 @@ const { error: chErr } = await db.from('charges').insert(rows);
 if (chErr) throw chErr;
 
 // LE CAS À TRANCHER : un plan d'apurement qui désigne la MÊME dette que la
-// charge mensuelle « Impôt 190 € » ci-dessus. Si l'app déduit 380 €, elle
+// charge mensuelle « Impôt 165 € » ci-dessus. Si l'app déduit 330 €, elle
 // compte deux fois.
 const { error: coErr } = await db.from('commitments').insert({
   workspace_id: ws,
   created_by: userId,
   label: 'SPF Impôt — plan d apurement',
   kind: 'installment_plan',
-  total_amount: 2280,
-  installment_amount: 190,
+  total_amount: 1980,
+  installment_amount: 165,
   installments_total: 12,
   start_year: 2026,
   start_month: 1,

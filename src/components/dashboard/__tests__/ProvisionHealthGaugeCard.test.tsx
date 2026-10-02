@@ -205,20 +205,20 @@ describe('<ProvisionHealthGaugeCard /> (THI-190 cockpit v3 #2)', () => {
 });
 
 // PR-BETA-CLEANUP-2 (THI-281) — Option C visual cap.
-// Before this PR the headline KPI showed e.g. "546% — À jour" when the
+// Before this PR the headline KPI showed e.g. several hundred % — À jour" when the
 // user had stashed well past the 12-month provisions target. Math was
 // correct but UX was confusing. We now cap the headline at 100% and
 // surface the surplus as "+ X € au-delà de la cible" — factual, R-06
 // anti-culpabilisation-safe wording.
 describe('<ProvisionHealthGaugeCard /> — Option C 100% cap (PR-BETA-CLEANUP-2)', () => {
   it('caps the headline percent at 100% when soldeActuel > target', async () => {
-    // amount = 1200 € target, soldeActuel = 1766 € → raw ratio ≈ 1.47
+    // amount = 1200 € target, soldeActuel = 1652 € → raw ratio ≈ 1.38
     await renderCard({
       charges: [ANNUAL_CHARGE({})],
-      soldeEpargneActuel: new Decimal(1766),
+      soldeEpargneActuel: new Decimal(1652),
     });
     const percent = screen.getByTestId('provision-health-gauge-percent');
-    // Must show 100%, never the raw ~147%.
+    // Must show 100%, never the raw ~138%.
     expect(percent.textContent ?? '').toBe('100%');
     // Tier stays 'success' (math says we are at or beyond target).
     const card = screen.getByTestId('provision-health-gauge-card');
@@ -226,14 +226,14 @@ describe('<ProvisionHealthGaugeCard /> — Option C 100% cap (PR-BETA-CLEANUP-2)
   });
 
   it('renders the "+ X € au-delà de la cible" surplus sub-text when overachieving', async () => {
-    // soldeActuel - target = 1766 - 1200 = 566 €.
+    // soldeActuel - target = 1652 - 1200 = 452 €.
     await renderCard({
       charges: [ANNUAL_CHARGE({})],
-      soldeEpargneActuel: new Decimal(1766),
+      soldeEpargneActuel: new Decimal(1652),
     });
     const surplus = screen.getByTestId('provision-health-gauge-surplus');
     expect(surplus).toBeInTheDocument();
-    expect(surplus.textContent ?? '').toMatch(/566/);
+    expect(surplus.textContent ?? '').toMatch(/452/);
     expect(surplus.className).toContain('text-success');
     // Anti-culpabilisation contract — no judgement language.
     expect(surplus.textContent ?? '').not.toMatch(/trop|économise|devrais/i);
@@ -259,23 +259,23 @@ describe('<ProvisionHealthGaugeCard /> — Option C 100% cap (PR-BETA-CLEANUP-2)
     expect(screen.queryByTestId('provision-health-gauge-surplus')).toBeNull();
   });
 
-  it('reproduces the @thierry incident fixture (1766 / 323.58 → "100%" + "+ 1 442,42 €")', async () => {
-    // Smoke 2026-05-26 — the user saw "546%". Target reverse-engineered
-    // from the screenshot to 323.58 €.
+  it('reproduces the incident fixture (1652 / 318.47 → "100%" + "+ 1 333,53 €")', async () => {
+    // Smoke 2026-05-26 — the gauge showed a ratio above 500 %.
+    // Fictional values of the same shape: a target of 318.47 €.
     await renderCard({
       charges: [
         ANNUAL_CHARGE({
-          amount: new Decimal('323.58'),
+          amount: new Decimal('318.47'),
           paymentMonths: [1],
         }),
       ],
-      soldeEpargneActuel: new Decimal('1766.00'),
+      soldeEpargneActuel: new Decimal('1652.00'),
     });
     expect(screen.getByTestId('provision-health-gauge-percent').textContent ?? '').toBe('100%');
     const surplus = screen.getByTestId('provision-health-gauge-surplus');
-    // 1766.00 - 323.58 = 1442.42. The fr-BE formatter uses comma + NBSP for
-    // thousand separators, so accept the rendered shape "1 442,42 €".
-    expect(surplus.textContent ?? '').toMatch(/1[\s ]?442[,.]42/);
+    // 1652.00 - 318.47 = 1333.53. The fr-BE formatter uses comma + NBSP for
+    // thousand separators, so accept the rendered shape "1 333,53 €".
+    expect(surplus.textContent ?? '').toMatch(/1[\s ]?333[,.]53/);
   });
 
   it('clamps the ProgressBar at value=1 when overachieving (visual safety)', async () => {

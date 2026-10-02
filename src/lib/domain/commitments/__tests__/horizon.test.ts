@@ -13,29 +13,34 @@ import { endPeriod, type Commitment } from '../schedule';
 /**
  * THE DEGRADED CASE IS THE NORMAL CASE.
  *
- * @thierry lost the Alpha Credit contract: no rate, no original capital, no
- * original term. He knows 250 €/month. A form that demands the rate is a form
- * that gets abandoned — so the conversion is designed on this case, and the
- * three doors below are the only questions it may ask.
+ * A user who lost the contract of a car loan: no rate, no original capital,
+ * no original term. They know 230 €/month. A form that demands the rate is a
+ * form that gets abandoned — so the conversion is designed on this case, and
+ * the three doors below are the only questions it may ask.
  *
  * The reference dataset, and the number every door must land on:
- *   Alpha Credit · 250 €/mois · 1ʳᵉ échéance 15/07/2024 · 60 mensualités
- *   fin 15/06/2029 · **35 échéances restantes = 8 750 €**
+ *   Crédit auto · 230 €/mois · 1ʳᵉ échéance 15/03/2024 · 60 mensualités
+ *   fin 15/02/2029 · **35 échéances restantes = 8 050 €**
+ *
+ * Arithmetic: March 2024 + 59 months = February 2029 (the 60th). Paid from
+ * March 2024 to March 2026 = 25, so 60 − 25 = 35 remain from April 2026 on,
+ * and 35 × 230 = 8 050.
  */
 
-/** Anchor = the NEXT instalment, August 2026 (locked decision D3). */
+/** Anchor = the NEXT instalment, April 2026 (locked decision D3). */
 const OPTS: DeriverHorizonOptions = {
-  anchor: { year: 2026, month: 8 },
-  installmentAmount: 250,
+  anchor: { year: 2026, month: 4 },
+  installmentAmount: 230,
   frequency: 'monthly',
 };
 
-const PORTE_DATE: PorteHorizon = { kind: 'dateDeFin', year: 2029, month: 6 };
+const PORTE_DATE: PorteHorizon = { kind: 'dateDeFin', year: 2029, month: 2 };
 const PORTE_COUNT: PorteHorizon = { kind: 'echeancesRestantes', count: 35 };
-const PORTE_SOLDE: PorteHorizon = { kind: 'soldeRestantDu', balance: 8750 };
+const PORTE_SOLDE: PorteHorizon = { kind: 'soldeRestantDu', balance: 8050 };
 
-describe('the three doors, on the real Alpha Credit', () => {
-  it('date de fin juin 2029 → 35 échéances', () => {
+describe('the three doors, on the reference car loan', () => {
+  it('date de fin février 2029 → 35 échéances', () => {
+    // (2029·12 + 1) − (2026·12 + 3) = 34 months, + 1 for the anchor itself = 35
     expect(deriverInstallmentsTotal(PORTE_DATE, OPTS)).toBe(35);
   });
 
@@ -43,25 +48,27 @@ describe('the three doors, on the real Alpha Credit', () => {
     expect(deriverInstallmentsTotal(PORTE_COUNT, OPTS)).toBe(35);
   });
 
-  it('solde restant dû 8 750 € → 35 (the door that survives a lost contract)', () => {
+  it('solde restant dû 8 050 € → 35 (the door that survives a lost contract)', () => {
+    // 8 050 / 230 = 35 exactly
     expect(deriverInstallmentsTotal(PORTE_SOLDE, OPTS)).toBe(35);
   });
 
-  it('the round trip closes: 35 instalments from August 2026 end in June 2029', () => {
+  it('the round trip closes: 35 instalments from April 2026 end in February 2029', () => {
     const c: Commitment = {
-      id: 'alpha',
+      id: 'credit-auto',
       kind: 'debt',
-      totalAmount: 35 * 250,
-      installmentAmount: 250,
+      totalAmount: 35 * 230,
+      installmentAmount: 230,
       installmentsTotal: 35,
       startYear: 2026,
-      startMonth: 8,
+      startMonth: 4,
       paymentDay: 15,
       frequency: 'monthly',
       isActive: true,
     };
-    expect(endPeriod(c)).toEqual({ year: 2029, month: 6 });
-    expect(c.totalAmount).toBe(8750);
+    // April 2026 + 34 months = February 2029
+    expect(endPeriod(c)).toEqual({ year: 2029, month: 2 });
+    expect(c.totalAmount).toBe(8050);
   });
 });
 
@@ -75,17 +82,19 @@ describe('a door that yields nothing yields null, never a wrong number', () => {
   });
 
   it('a balance smaller than half an instalment rounds to 0 → null', () => {
+    // round(40 / 230) = round(0.17…) = 0
     expect(deriverInstallmentsTotal({ kind: 'soldeRestantDu', balance: 40 }, OPTS)).toBeNull();
   });
 
   it('an end date IN the anchor month is one instalment, not zero', () => {
-    expect(deriverInstallmentsTotal({ kind: 'dateDeFin', year: 2026, month: 8 }, OPTS)).toBe(1);
+    expect(deriverInstallmentsTotal({ kind: 'dateDeFin', year: 2026, month: 4 }, OPTS)).toBe(1);
   });
 
   it('a quarterly cadence counts cycles, not months', () => {
+    // April 2026 → April 2027 = 12 months = 4 cycles, + 1 for the anchor = 5
     expect(
       deriverInstallmentsTotal(
-        { kind: 'dateDeFin', year: 2027, month: 8 },
+        { kind: 'dateDeFin', year: 2027, month: 4 },
         { ...OPTS, frequency: 'quarterly' },
       ),
     ).toBe(5);
@@ -101,7 +110,8 @@ describe('confronting the doors — redundancy is a gift, not a duplicate', () =
   });
 
   it('two doors that disagree are BOTH reported, and neither is corrected', () => {
-    const out = confronterPortes([PORTE_COUNT, { kind: 'soldeRestantDu', balance: 8000 }], OPTS);
+    // 7 360 / 230 = 32 exactly — three instalments short of the count door
+    const out = confronterPortes([PORTE_COUNT, { kind: 'soldeRestantDu', balance: 7360 }], OPTS);
     expect(out?.installmentsTotal).toBe(35);
     expect(out?.ecarts).toEqual([{ porte: 'soldeRestantDu', installmentsTotal: 32 }]);
   });
@@ -117,22 +127,24 @@ describe('confronting the doors — redundancy is a gift, not a duplicate', () =
 });
 
 describe('the total remembered from memory — confronted, never arbitrated', () => {
-  it("@thierry's 14 500 € against the schedule's 15 000 € is a 3,3 % gap", () => {
-    const ecart = ecartRelatif(14_500, 60 * 250);
+  it("a remembered 13 300 € against the schedule's 13 800 € is a 3,6 % gap", () => {
+    // 60 × 230 = 13 800 ; |13 800 − 13 300| / 13 800 = 500 / 13 800 = 0,036231…
+    const ecart = ecartRelatif(13_300, 60 * 230);
     expect(ecart).not.toBeNull();
-    expect(ecart! * 100).toBeCloseTo(3.33, 2);
+    expect(ecart! * 100).toBeCloseTo(3.62, 2);
   });
 
   it('past 1 %, both numbers are shown with their origin', () => {
-    expect(totalDivergeSuffisamment(14_500, 15_000)).toBe(true);
+    expect(totalDivergeSuffisamment(13_300, 13_800)).toBe(true);
   });
 
   it('under 1 %, saying nothing is the right amount of noise', () => {
-    expect(totalDivergeSuffisamment(14_950, 15_000)).toBe(false);
+    // 50 / 13 800 = 0,36 %
+    expect(totalDivergeSuffisamment(13_750, 13_800)).toBe(false);
   });
 
   it('an absent or nonsensical remembered total is simply not confronted', () => {
-    expect(ecartRelatif(0, 15_000)).toBeNull();
-    expect(totalDivergeSuffisamment(0, 15_000)).toBe(false);
+    expect(ecartRelatif(0, 13_800)).toBeNull();
+    expect(totalDivergeSuffisamment(0, 13_800)).toBe(false);
   });
 });

@@ -242,19 +242,19 @@ describe('ChargesClient — v3 shape (F8 head card, F6/F14 footer)', () => {
   // Rule of code 10 (Reviewer blocker on #490): « Compté chaque mois » is the
   // domain's `effortLisse` = monthly bills + smoothed share + commitment
   // instalments. The footer used to open only the smoothed share, so 505 € of
-  // a 740 € total had no line. Every euro of the total now has a named line.
+  // a 712 € total had no line. Every euro of the total now has a named line.
   it('« Compté chaque mois » opens on its THREE parts, and they add up to it', () => {
     const pret = {
       id: 'pret',
       label: 'Prêt voiture',
-      monthly: 220,
-      invoiceAmount: 220,
+      monthly: 192,
+      invoiceAmount: 192,
       cycleMonths: 1,
     };
     renderCharges([rent, water], {
-      effortLisseTotal: 740,
-      effortLisseAnnuelTotal: 8880,
-      commitmentShare: { total: 220, parts: [pret] },
+      effortLisseTotal: 712,
+      effortLisseAnnuelTotal: 8544,
+      commitmentShare: { total: 192, parts: [pret] },
     });
     fireEvent.click(screen.getByTestId('charges-total-toggle'));
 
@@ -265,14 +265,14 @@ describe('ChargesClient — v3 shape (F8 head card, F6/F14 footer)', () => {
     const monthly = amountOf('charges-poste-monthly-total');
     const smoothed = amountOf('charges-effort-lisse-total');
     const commitments = amountOf('charges-poste-commitments-total');
-    expect([monthly, smoothed, commitments]).toEqual([505, 15, 220]);
+    expect([monthly, smoothed, commitments]).toEqual([505, 15, 192]);
     expect(monthly + smoothed + commitments).toBe(amountOf('charges-total-monthly'));
 
     expect(screen.getByTestId('charges-monthly-part-rent')).toHaveTextContent(
       /Loyer.*505\s€ par mois/,
     );
     expect(screen.getByTestId('charges-commitment-part-pret')).toHaveTextContent(
-      /Prêt voiture.*220\s€ par mois/,
+      /Prêt voiture.*192\s€ par mois/,
     );
   });
 

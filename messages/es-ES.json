@@ -237,14 +237,14 @@
       "ctaSecondary": "¿Cómo funciona?",
       "waterfall": {
         "income": "Revenus",
-        "incomeAmount": "+2 466 €",
+        "incomeAmount": "+2 384 €",
         "expenses": "Dépenses courantes",
-        "expensesAmount": "−1 959 €",
+        "expensesAmount": "−1 872 €",
         "provisionsCaption": "dont {amount} € lissés vers provisions affectées",
         "provisionsDefinition": "Une provision : l'argent mis de côté chaque mois pour une facture qui ne tombe qu'une ou deux fois l'an.",
         "available": "Argent disponible",
-        "availableAmount": "+507 €",
-        "ariaLabel": "Cascade illustrative : 2 466 € de revenus, 1 959 € de dépenses courantes (dont 59 € lissés en provisions), 507 € disponibles."
+        "availableAmount": "+512 €",
+        "ariaLabel": "Cascade illustrative : 2 384 € de revenus, 1 872 € de dépenses courantes (dont 58 € lissés en provisions), 512 € disponibles."
       }
     },
     "whatif": {

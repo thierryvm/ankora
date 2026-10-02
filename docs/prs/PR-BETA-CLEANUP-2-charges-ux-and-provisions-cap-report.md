@@ -13,7 +13,7 @@
 Smoke @thierry post-merge PR-BETA-3 a révélé **2 bugs UX indépendants** sur le cockpit user :
 
 1. **`/app/charges`** affiche juste le mois abrégé ("JANV.") sans date complète, pas de bouton "Modifier" — seulement Supprimer
-2. **`/app` cockpit** card "Santé des provisions" affiche `546%` "À jour" — math correcte mais UX trompeuse
+2. **`/app` cockpit** card "Santé des provisions" affiche `519 %` "À jour" — math correcte mais UX trompeuse
 
 Aucun Server Action touché → zéro risque de réintroduire l'incident 503 / NEXT_REDIRECT de PR-BETA-3.
 
@@ -40,7 +40,7 @@ Trois corrections de scope avant exécution :
 **Fichier** : `src/components/dashboard/ProvisionHealthGaugeCard.tsx`
 
 ```diff
-- const percentLabel = Math.round(ratio * 100);  // 546% pour Thierry
+- const percentLabel = Math.round(ratio * 100);  // 519 % pour le cas signalé
 + const isOverachieving = hasTarget && ratio > 1;
 + const displayPercent = isOverachieving ? 100 : Math.round(ratio * 100);
 + const surplusOverTarget = isOverachieving
@@ -48,8 +48,8 @@ Trois corrections de scope avant exécution :
 +   : null;
 ```
 
-- KPI principal cappé à **100%** quand `solde > cible` (au lieu de 546%)
-- Sub-text **"+ 1 131,67 € au-delà de la cible"** affiché en couleur success
+- KPI principal cappé à **100%** quand `solde > cible` (au lieu de 519 %)
+- Sub-text **"+ 1 067,50 € au-delà de la cible"** affiché en couleur success
 - ProgressBar `value={Math.min(ratio, 1)}` cappée pour éviter overflow visuel
 - Math interne `result.soldeEpargneActuel` / `result.totalEpargneTheorique` **inchangée** (préservation pour autres consommateurs)
 
@@ -110,7 +110,7 @@ Nouvelles clés :
 ### Vitest (1321 passing, +26 nouveaux)
 
 - **`payment-months-from-frequency.test.ts`** (7 cas) : monthly→[1..12], quarterly avec wrap, semiannual avec wrap, annual single, dueMonth out-of-range défensif, ordre ascendant garanti
-- **`ProvisionHealthGaugeCard.test.tsx`** (+6 cas Option C) : cap à 100%, sub-text "+X€" en couleur success, pas de sub-text à 100% pile, pas de sub-text < 100%, fixture (1250/118.33), ProgressBar clamped
+- **`ProvisionHealthGaugeCard.test.tsx`** (+6 cas Option C) : cap à 100%, sub-text "+X€" en couleur success, pas de sub-text à 100% pile, pas de sub-text < 100%, fixture (1180/112.50), ProgressBar clamped
 - **`ChargesClient.test.tsx`** (+13 cas PR-BETA-CLEANUP-2) :
   - liste : next-due date locale-aware, Modifier + Supprimer buttons
   - form add : input paymentDay présent, action payload contient `paymentDay` + `paymentMonths`
@@ -149,8 +149,8 @@ Nouvelles clés :
 
 ### `/app` cockpit
 
-1. Card "Santé des provisions" affiche **`100%`** (au lieu de `546%`)
-2. Sub-text **"+ 1 131,67 € au-delà de la cible"** visible en couleur success
+1. Card "Santé des provisions" affiche **`100%`** (au lieu de `519 %`)
+2. Sub-text **"+ 1 067,50 € au-delà de la cible"** visible en couleur success
 3. Status "À jour" toujours présent
 4. ProgressBar full (cappée à 100%)
 5. Pas de jugement / culpabilisation dans la copy

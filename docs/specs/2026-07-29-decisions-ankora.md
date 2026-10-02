@@ -166,7 +166,7 @@ Le prototype **propose** « Tous les 9 mois » dans sa liste `FREQS` (ligne 164)
 
 Les institutions facturent sur des cycles **qui bouclent sur l'année civile**, parce que leur comptabilité est annuelle : 1, 2, 3, 4, 6, 12 mois. 9 n'est pas un diviseur de 12 — un cycle de 9 mois dérive dans le calendrier (janvier → octobre → juillet → avril…). Aucun fournisseur d'eau, d'énergie, d'assurance, ni aucune commune belge ne facture ainsi.
 
-**Mon hypothèse sur l'origine de ta demande [H]** : « tous les 9 mois » est presque certainement une lecture de **« étalé sur 9 mois »** — un plan de paiement, typiquement fiscal. Or ça, ce n'est **pas** une charge périodique : c'est 9 mensualités consécutives, puis c'est fini. Ankora modélise déjà exactement ça, proprement, sous `commitments` avec `kind = 'installment_plan'` et `installments_total = 9` **[V]** (`supabase/migrations/20260719000001_commitments.sql`). Ton « Impôt (plan de paiement) 190 €/mois » du prototype **est** ce cas, et il est déjà couvert.
+**Mon hypothèse sur l'origine de ta demande [H]** : « tous les 9 mois » est presque certainement une lecture de **« étalé sur 9 mois »** — un plan de paiement, typiquement fiscal. Or ça, ce n'est **pas** une charge périodique : c'est 9 mensualités consécutives, puis c'est fini. Ankora modélise déjà exactement ça, proprement, sous `commitments` avec `kind = 'installment_plan'` et `installments_total = 9` **[V]** (`supabase/migrations/20260719000001_commitments.sql`). Ton « Impôt (plan de paiement) 165 €/mois » du prototype **est** ce cas, et il est déjà couvert.
 
 #### Preuve 3 — le coût réel n'est pas 4 jours, il est bien plus élevé
 

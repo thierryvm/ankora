@@ -109,7 +109,7 @@ Cas types confirmés (à respecter dans les seeds e2e) :
 
 ### D · ADR-017 Plans d'apurement (préparation cross-PR)
 
-[ADR-017 Proposed](../docs/adr/ADR-017-plans-apurement.md) introduit la table `installment_plans` pour les paiements étalés (cas type : impôt de 2 077,50 € en 11 fois).
+[ADR-017 Proposed](../docs/adr/ADR-017-plans-apurement.md) introduit la table `installment_plans` pour les paiements étalés (cas type : impôt de 1 802,38 € en 11 fois).
 
 **Dans cette PR PHASE 2**, ce qu'il faut faire :
 
@@ -184,7 +184,7 @@ Ajouter aux tests Vitest existants (§4) :
 
 Playwright e2e additionnel :
 
-1. `e2e/dashboard-rav-adjust.spec.ts` — flow : ouvrir dashboard → cliquer "Ajuster ce mois" → modifier RAV à 450 € → vérifier capacité passe à 190 € (640 - 450)
+1. `e2e/dashboard-rav-adjust.spec.ts` — flow : ouvrir dashboard → cliquer "Ajuster ce mois" → modifier RAV à 450 € → vérifier capacité passe à 165 € (640 - 450)
 2. `e2e/dashboard-mouvements-tab.spec.ts` — flow : ouvrir CompteEpargne → cliquer onglet "Mouvements" → vérifier rendu timeline (vide ou pleine)
 
 ### J0 · Atoms 10 & 11 — ThemeToggle + LangSwitcher (livrés Patch Bloc E 2026-05-09)

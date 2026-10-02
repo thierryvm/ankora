@@ -46,17 +46,17 @@ export const RELEVE_DEMO = {
  * `Athenaeum/10_Projects/ankora/analysis/2026-04-28-waterfall-coherence-audit.md`.
  *
  * `provisions` is rendered as a discreet sub-caption under the expenses
- * step ("dont 59 € lissés vers provisions affectées"), not as a standalone
+ * step ("dont 58 € lissés vers provisions affectées"), not as a standalone
  * step. The `available` figure is the visible bottom-line user takeaway
  * and equals `income − expenses` by construction.
  */
 export const FEATURE_WATERFALL_DEMO = {
-  /** Monthly income (illustrative, anchored on real anonymised user data). */
-  income: 2466,
+  /** Monthly income (illustrative, fictional household). */
+  income: 2384,
   /** Daily expenses incl. fixed bills + subscriptions + provision smoothing. */
-  expenses: 1959,
+  expenses: 1872,
   /** Discreet sub-segment of expenses smoothed into earmarked provisions. */
-  provisions: 59,
+  provisions: 58,
   /** Bottom-line money available after expenses (= income − expenses). */
-  available: 507,
+  available: 512,
 } as const;

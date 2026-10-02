@@ -14,7 +14,7 @@ SQL, hors application** :
 
 | Fréquence     |      Somme |  Lissé mensuel |
 | ------------- | ---------: | -------------: |
-| mensuelles    | 1 455,37 € |     1 455,37 € |
+| mensuelles    | 1 430,37 € |     1 430,37 € |
 | trimestrielle |       60 € |           20 € |
 | annuelles     |      456 € |           38 € |
 | **total**     |            | **1 513,37 €** |
@@ -25,11 +25,11 @@ SQL, hors application** :
 
 - **Écran Charges** : affiche `Effort lissé / mois 1 513,37 €` et
   `Équivalent annuel 18 160,44 €` — l'étalon à l'euro près. Sous-totaux
-  conformes, `Reste à payer ce mois 1 515,37 €` = 1 455,37 + 60.
+  conformes, `Reste à payer ce mois 1 515,37 €` = 1 430,37 + 60.
 - **Projection des échéances annuelles** : Taxe de circulation au 1ᵉʳ mars 2027, Taxe
   égouts au 1ᵉʳ juin 2027 — les occurrences 2026 étant passées, correct.
 - **Dépenses** : `170,90 €`, `≈ 5,51 €/jour sur 31 jours` (170,90 / 31 = 5,51).
-- **Engagements** : `0/12 échéances de 190 €`, reste `2 280 €`.
+- **Engagements** : `0/12 échéances de 165 €`, reste `1 980 €`.
 - **Comptes** : les cinq champs sont peuplés (2500, 500, 1200, 180, 430),
   vérifié **au DOM**.
 - **Simulateur** : le sélecteur expose bien les **19 charges**.

@@ -53,9 +53,9 @@ async function renderFeature() {
 // same file the component reads can distinguish neither an NBSP regression
 // nor a copy drift (testing-library's normalizer folds NBSP, hence the
 // assertions below read raw textContent).
-const FR_INCOME = '+2 466 €';
-const FR_EXPENSES = '−1 959 €';
-const FR_AVAILABLE = '+507 €';
+const FR_INCOME = '+2 384 €';
+const FR_EXPENSES = '−1 872 €';
+const FR_AVAILABLE = '+512 €';
 
 describe('<Feature /> — the cascade as a statement (PR L3)', () => {
   it('renders the eyebrow + h2 split on 2 lines + description', async () => {
@@ -101,8 +101,8 @@ describe('<Feature /> — the cascade as a statement (PR L3)', () => {
     expect(figure).not.toBeNull();
     const aria = figure!.getAttribute('aria-label')!;
     expect(aria).toContain('Cascade illustrative');
-    expect(aria).toContain('2 466 €');
-    expect(aria).toContain('507 €');
+    expect(aria).toContain('2 384 €');
+    expect(aria).toContain('512 €');
   });
 
   it('renders the 3 canonical steps in an <ol> (Revenus, Dépenses courantes, Argent disponible)', async () => {

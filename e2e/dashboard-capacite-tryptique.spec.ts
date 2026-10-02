@@ -14,13 +14,13 @@ const admin = adminClientOrNull();
 test.describe('PR-BETA-3 — Capacité tryptique (ADR-009 amendement)', () => {
   test.skip(!admin, 'Needs real Supabase (NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY).');
 
-  test('renders the 3 sub-stats with the @thierry canonical fixture', async ({ page }) => {
+  test('renders the 3 sub-stats with the canonical fixture', async ({ page }) => {
     if (!admin) return;
     const user = await seedOnboardedUser(admin, [
       { label: 'Loyer', amount: 1500, frequency: 'monthly', dueMonth: 1, paidFrom: 'principal' },
       {
         label: 'Assurances',
-        amount: 338,
+        amount: 324,
         frequency: 'monthly',
         dueMonth: 1,
         paidFrom: 'principal',
@@ -48,7 +48,7 @@ test.describe('PR-BETA-3 — Capacité tryptique (ADR-009 amendement)', () => {
 
       const resteDispo = page.getByTestId('substat-reste-disponible');
       await expect(resteDispo).toContainText('Reste disponible');
-      await expect(resteDispo).toContainText(/662/);
+      await expect(resteDispo).toContainText(/676/);
 
       const resteAVivre = page.getByTestId('substat-reste-a-vivre');
       await expect(resteAVivre).toContainText('Reste à vivre');
@@ -56,7 +56,7 @@ test.describe('PR-BETA-3 — Capacité tryptique (ADR-009 amendement)', () => {
 
       const capacite = page.getByTestId('substat-capacite');
       await expect(capacite).toContainText('Capacité épargne');
-      await expect(capacite).toContainText(/162/);
+      await expect(capacite).toContainText(/176/);
     } finally {
       await deleteSeededUser(admin, user.userId);
     }

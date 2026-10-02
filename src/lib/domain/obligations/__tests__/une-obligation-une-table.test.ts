@@ -28,11 +28,11 @@ import {
  * invariant, no test and no database constraint — `20260719000001_commitments.sql`
  * has no foreign key towards `charges`.
  *
- * The consequence, measured on @thierry's data: « Impôt 220 € » existed as a
- * monthly charge AND as an SPF commitment. `effortFinancierLisse(charges)`
- * counted it, `engagementsMensuelsLisses(commitments)` counted it again, and
- * « Budget du mois » read 553,79 € instead of 773,79 €. Wrong by 220 €, in the
- * direction that told him he had less than he did.
+ * The consequence, as reproduced by the reference fixture below: « Impôt 165 € »
+ * existed as a monthly charge AND as an SPF commitment.
+ * `effortFinancierLisse(charges)` counted it, `engagementsMensuelsLisses(commitments)`
+ * counted it again, and « Budget du mois » came out 165 € too low — wrong in
+ * the direction that told the user they had less than they did.
  *
  * ## The three properties asserted here
  *
@@ -41,7 +41,7 @@ import {
  *   2. the duplicate heuristic WARNS and enters no total — vary the warning,
  *      nothing moves;
  *   3. NON-CONTAMINATION — a redundantly hand-typed figure (a total remembered
- *      as 14 500 € against 60 × 250 = 15 000 €) reaches no cockpit figure.
+ *      as 13 300 € against 60 × 230 = 13 800 €) reaches no cockpit figure.
  *
  * Property 3 is the one that makes human approximation *structurally* unable to
  * touch a displayed number. It is deliberately falsifiable: it varies the
@@ -65,8 +65,8 @@ const commitment = (over: Partial<NamedCommitment> = {}): NamedCommitment => ({
   id: 'commitment-1',
   label: 'Engagement',
   kind: 'debt',
-  totalAmount: 8750,
-  installmentAmount: 250,
+  totalAmount: 8050,
+  installmentAmount: 230,
   installmentsTotal: 35,
   startYear: 2026,
   startMonth: 7,
@@ -80,21 +80,21 @@ const NO_CHARGE_PAYMENTS: PaymentLedger = new Map();
 const NO_COMMITMENT_PAYMENTS: ReadonlyMap<string, ReadonlySet<string>> = new Map();
 
 describe('each view counts an obligation exactly once', () => {
-  // @thierry's real month, in the CORRECTED model: the 220 € tax is a
+  // Reference fixture month, in the CORRECTED model: the 165 € tax is a
   // commitment only, no longer also a charge.
   const charges = [
-    charge({ id: 'loyer', label: 'Loyer', amount: new Decimal(1584.21), paymentDay: 1 }),
+    charge({ id: 'loyer', label: 'Loyer', amount: new Decimal(1265.37), paymentDay: 1 }),
     charge({
       id: 'assurance',
       label: 'Assurance auto',
-      amount: new Decimal(177),
+      amount: new Decimal(174),
       frequency: 'quarterly',
       paymentMonths: [1, 4, 7, 10],
       paymentDay: 20,
     }),
   ];
   const commitments = [
-    commitment({ id: 'spf', label: 'SPF Finances', installmentAmount: 220, totalAmount: 2420 }),
+    commitment({ id: 'spf', label: 'SPF Finances', installmentAmount: 165, totalAmount: 1815 }),
   ];
 
   const obligations = obligationsDuMois({
@@ -107,14 +107,14 @@ describe('each view counts an obligation exactly once', () => {
 
   it('« À payer ce mois » lists every occurrence once, charges and instalments alike', () => {
     expect(obligations.map((o) => o.id)).toEqual(['loyer', 'spf', 'assurance']);
-    // 1 584,21 (loyer) + 220 (échéance SPF) + 177 (assurance, due en juillet)
-    expect(aPayerCeMois(obligations).toNumber()).toBeCloseTo(1981.21, 2);
+    // 1 265,37 (loyer) + 165 (échéance SPF) + 174 (assurance, due en juillet) = 1 604,37
+    expect(aPayerCeMois(obligations).toNumber()).toBeCloseTo(1604.37, 2);
   });
 
   it('« Effort lissé » smooths the same obligations, and also counts each once', () => {
     const engagements = engagementsMensuelsLisses(commitments, NO_COMMITMENT_PAYMENTS, REF);
-    // 1 584,21 (mensuel) + 59,00 (177 / 3) + 220,00 (engagement) = 1 863,21
-    expect(effortLisse(charges, engagements).toNumber()).toBeCloseTo(1863.21, 2);
+    // 1 265,37 (mensuel) + 58,00 (174 / 3) + 165,00 (engagement) = 1 488,37
+    expect(effortLisse(charges, engagements).toNumber()).toBeCloseTo(1488.37, 2);
   });
 
   it('the same euro may sit in both views — the two totals differ, and that is correct', () => {
@@ -134,19 +134,20 @@ describe('each view counts an obligation exactly once', () => {
       ref: REF,
     });
     expect(ticked).toHaveLength(3);
-    expect(aPayerCeMois(ticked).toNumber()).toBeCloseTo(1981.21, 2);
-    expect(resteAPayerCeMois(ticked).toNumber()).toBeCloseTo(1761.21, 2);
+    expect(aPayerCeMois(ticked).toNumber()).toBeCloseTo(1604.37, 2);
+    // 1 604,37 − 165 (échéance SPF cochée) = 1 439,37
+    expect(resteAPayerCeMois(ticked).toNumber()).toBeCloseTo(1439.37, 2);
   });
 });
 
 describe('the double count, reproduced and named', () => {
-  // The BROKEN state documented on 2026-07-29: « Impôt 220 € » in both tables.
+  // The BROKEN state documented on 2026-07-29: « Impôt 165 € » in both tables.
   const charges = [
-    charge({ id: 'loyer', label: 'Loyer', amount: new Decimal(1584.21), paymentDay: 1 }),
-    charge({ id: 'impot', label: 'Impôt', amount: new Decimal(220), paymentDay: 15 }),
+    charge({ id: 'loyer', label: 'Loyer', amount: new Decimal(1265.37), paymentDay: 1 }),
+    charge({ id: 'impot', label: 'Impôt', amount: new Decimal(165), paymentDay: 15 }),
   ];
   const commitments = [
-    commitment({ id: 'spf', label: 'SPF Impôts', installmentAmount: 220, totalAmount: 2420 }),
+    commitment({ id: 'spf', label: 'SPF Impôts', installmentAmount: 165, totalAmount: 1815 }),
   ];
 
   it('the heuristic sees the pair', () => {
@@ -182,38 +183,40 @@ describe('the double count, reproduced and named', () => {
 
     // The pair IS flagged...
     expect(detecterDoublonsProbables({ charges, commitments, ref: REF })).toHaveLength(1);
-    // ...and the arithmetic is untouched: 220 € still counted twice, on purpose.
+    // ...and the arithmetic is untouched: 165 € still counted twice, on purpose.
     // The fix is structural (convert the charge, or deactivate it), never a
     // silent subtraction driven by a resemblance.
-    expect(aPayerCeMois(obligations).toNumber()).toBeCloseTo(2024.21, 2);
-    expect(effortLisse(charges, engagements).toNumber()).toBeCloseTo(2024.21, 2);
+    // 1 265,37 + 165 (charge) + 165 (engagement) = 1 595,37 in both views.
+    expect(aPayerCeMois(obligations).toNumber()).toBeCloseTo(1595.37, 2);
+    expect(effortLisse(charges, engagements).toNumber()).toBeCloseTo(1595.37, 2);
   });
 
-  it('converting the charge away is what fixes the figure — 2 024,21 → 1 804,21', () => {
+  it('converting the charge away is what fixes the figure — 1 595,37 → 1 430,37', () => {
     // Exactly what the conversion flow does: the charge is deactivated, the
-    // commitment becomes the single source of the 220 €.
+    // commitment becomes the single source of the 165 €.
+    // 1 265,37 + 165 (engagement) = 1 430,37
     const converted = charges.map((c) => (c.id === 'impot' ? { ...c, isActive: false } : c));
     const engagements = engagementsMensuelsLisses(commitments, NO_COMMITMENT_PAYMENTS, REF);
-    expect(effortLisse(converted, engagements).toNumber()).toBeCloseTo(1804.21, 2);
+    expect(effortLisse(converted, engagements).toNumber()).toBeCloseTo(1430.37, 2);
   });
 });
 
 describe('non-contamination — a remembered figure reaches no cockpit total', () => {
-  const charges = [charge({ id: 'loyer', amount: new Decimal(1584.21) })];
+  const charges = [charge({ id: 'loyer', amount: new Decimal(1265.37) })];
 
-  /** Alpha Credit: 250 €/month, 35 instalments left. */
-  const alphaCredit = (totalAmount: number): NamedCommitment =>
+  /** Crédit auto: 230 €/month, 35 instalments left. */
+  const creditAuto = (totalAmount: number): NamedCommitment =>
     commitment({
-      id: 'alpha',
-      label: 'Alpha Credit',
-      installmentAmount: 250,
+      id: 'credit-auto',
+      label: 'Crédit auto',
+      installmentAmount: 230,
       installmentsTotal: 35,
       totalAmount,
     });
 
-  it('varying `totalAmount` (14 500 remembered vs 8 750 derived) moves nothing', () => {
-    const derived = [alphaCredit(8750)];
-    const remembered = [alphaCredit(14500)];
+  it('varying `totalAmount` (13 300 remembered vs 8 050 derived) moves nothing', () => {
+    const derived = [creditAuto(8050)];
+    const remembered = [creditAuto(13300)];
 
     const effortOf = (cs: readonly NamedCommitment[]) =>
       effortLisse(charges, engagementsMensuelsLisses(cs, NO_COMMITMENT_PAYMENTS, REF)).toNumber();
@@ -231,18 +234,20 @@ describe('non-contamination — a remembered figure reaches no cockpit total', (
     expect(effortOf(remembered)).toBe(effortOf(derived));
     expect(cashOf(remembered)).toBe(cashOf(derived));
     // And the value they both take is the one the SCHEDULE implies.
-    expect(effortOf(derived)).toBeCloseTo(1834.21, 2);
-    expect(cashOf(derived)).toBeCloseTo(1834.21, 2);
+    // 1 265,37 (loyer) + 230 (mensualité) = 1 495,37
+    expect(effortOf(derived)).toBeCloseTo(1495.37, 2);
+    expect(cashOf(derived)).toBeCloseTo(1495.37, 2);
   });
 
   it('the test is not vacuous — the instalment IS what drives both figures', () => {
-    const heavier = [alphaCredit(8750)].map((c) => ({ ...c, installmentAmount: 300 }));
+    const heavier = [creditAuto(8050)].map((c) => ({ ...c, installmentAmount: 300 }));
+    // 1 265,37 (loyer) + 300 (mensualité alourdie) = 1 565,37
     expect(
       effortLisse(
         charges,
         engagementsMensuelsLisses(heavier, NO_COMMITMENT_PAYMENTS, REF),
       ).toNumber(),
-    ).toBeCloseTo(1884.21, 2);
+    ).toBeCloseTo(1565.37, 2);
   });
 });
 
@@ -251,8 +256,8 @@ describe('a ticked charge and a ticked instalment read the same way', () => {
     const obligations = obligationsDuMois({
       charges: [charge({ id: 'loyer', paymentDay: 1 })],
       chargePayments: new Map([[paymentKey('loyer', 2026, 7), true]]),
-      commitments: [commitment({ id: 'alpha', label: 'Alpha Credit' })],
-      paidKeysByCommitment: new Map([['alpha', new Set(['2026-7'])]]),
+      commitments: [commitment({ id: 'credit-auto', label: 'Crédit auto' })],
+      paidKeysByCommitment: new Map([['credit-auto', new Set(['2026-7'])]]),
       ref: REF,
     });
     expect(obligations.every((o) => o.isPaid)).toBe(true);
@@ -263,7 +268,7 @@ describe('a ticked charge and a ticked instalment read the same way', () => {
     const obligations = obligationsDuMois({
       charges: [charge({ id: 'loyer' })],
       chargePayments: NO_CHARGE_PAYMENTS,
-      commitments: [commitment({ id: 'alpha', startYear: 2026, startMonth: 3 })],
+      commitments: [commitment({ id: 'credit-auto', startYear: 2026, startMonth: 3 })],
       paidKeysByCommitment: NO_COMMITMENT_PAYMENTS,
       ref: REF,
     });

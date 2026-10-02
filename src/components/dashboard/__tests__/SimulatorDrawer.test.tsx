@@ -40,11 +40,11 @@ const charges: RawCharge[] = [
 ];
 
 const sim = messages.app.simulator;
-// Raw number, NOT money(2466): mirrors the real RSC boundary. A Decimal loses
+// Raw number, NOT money(2384): mirrors the real RSC boundary. A Decimal loses
 // its prototype when serialized into the client drawer, so production passes a
 // plain number — passing a Decimal here would mask the `.lte is not a function`
 // crash (regression guard for the revenus RSC-boundary hotfix).
-const revenus = 2466;
+const revenus = 2384;
 
 describe('<SimulatorDrawer /> — closed state', () => {
   it('renders the trigger labelled "Simuler"', () => {
@@ -120,7 +120,7 @@ describe('<SimulatorDrawer /> — open state', () => {
     // re-wraps it with money(). Passing a Decimal used to reach the client as a
     // prototype-less object and crash at `revenus.lte(0)`. Opening the drawer
     // forces that code path; the empty impact state proves a full render.
-    renderWithIntl(<SimulatorDrawer charges={charges} revenus={2466} engagementsMensuels={0} />);
+    renderWithIntl(<SimulatorDrawer charges={charges} revenus={2384} engagementsMensuels={0} />);
     fireEvent.click(screen.getByTestId('simulator-drawer-trigger'));
     await screen.findByTestId('simulator-drawer');
     expect(screen.getByText(sim.impact.empty)).toBeInTheDocument();

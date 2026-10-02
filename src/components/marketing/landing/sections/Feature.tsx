@@ -22,8 +22,8 @@ import { ArrowRight } from '../icons';
  *   the rules and the reading order do their work; arrows belonged to the
  *   old dashboard-mockup grammar.
  * - Amounts are neutral ink. The previous success/danger/brand colouring was
- *   REDUNDANT with the sign already carried by the i18n strings ("+2 466 €",
- *   "−1 959 €"), and colour as the only carrier is a WCAG 1.4.1 defect. Same
+ *   REDUNDANT with the sign already carried by the i18n strings ("+2 384 €",
+ *   "−1 872 €"), and colour as the only carrier is a WCAG 1.4.1 defect. Same
  *   doctrine as the hero card and ADR-035 §3 (never green; the sign does the
  *   work). The sign is pinned per-bundle by `constants.test.ts`.
  * - The heading is an `<h2>`: this section's main heading was an `<h3>` with
@@ -36,7 +36,7 @@ import { ArrowRight } from '../icons';
  * aria-label, and the step list stays an `<ol>` of exactly 3 items so screen
  * readers announce a 3-item ordered sequence.
  *
- * Numbers come from `FEATURE_WATERFALL_DEMO` (anchored on a real anonymised
+ * Numbers come from `FEATURE_WATERFALL_DEMO` (a fictional household,
  * user case); display strings are pre-formatted per locale in the bundles.
  */
 export async function Feature() {

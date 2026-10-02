@@ -122,7 +122,7 @@ export async function ProvisionHealthGaugeCard({
   const ratio = Number.isFinite(rawRatio) ? Math.max(0, rawRatio) : 0;
 
   // PR-BETA-CLEANUP-2 (THI-281) — visual cap @ 100% Option C.
-  // The cockpit was showing "546% À jour" when the user had stashed far
+  // The cockpit was showing several hundred % À jour" when the user had stashed far
   // more than the 12-month target — math correct, UX confusing. We now
   // display 100% as the headline KPI once the user is on or past target,
   // and surface the overflow as a factual sub-text "+ X € au-delà de la
