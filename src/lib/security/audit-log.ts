@@ -59,6 +59,9 @@ export const AuditEvent = {
   CHARGE_UPDATED: 'charge.updated',
   CHARGE_DELETED: 'charge.deleted',
   CHARGE_PAYMENT_TOGGLED: 'charge.payment_toggled',
+  // The payment of the current month took the bill's corrected amount (it had
+  // been recorded at the bill's previous amount, i.e. the default).
+  CHARGE_PAYMENT_AMOUNT_FOLLOWED: 'charge.payment_amount_followed',
   CHARGE_WATCH_TOGGLED: 'charge.watch_toggled',
   COMMITMENT_CREATED: 'commitment.created',
   COMMITMENT_UPDATED: 'commitment.updated',

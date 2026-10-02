@@ -805,6 +805,7 @@
       "editAria": "Modificar {label}",
       "toastCreated": "Factura añadida",
       "toastUpdated": "Factura actualizada",
+      "paymentKept": "El pago de {month}, {amount}, no ha cambiado.",
       "toastDeleted": "Factura eliminada",
       "toastMarkedPaid": "Factura marcada como pagada",
       "toastMarkedUnpaid": "Factura marcada como por pagar",
@@ -1736,7 +1737,8 @@
         "dateFuture": "Esta fecha es futura. Elige el día en que se pagó la factura.",
         "dateOutOfPeriod": "Esta fecha está demasiado lejos del mes de la factura.",
         "alreadyPaid": "Esta factura ya está pagada. La página se está actualizando.",
-        "notPaid": "Esta factura no está pagada. La página se está actualizando."
+        "notPaid": "Esta factura no está pagada. La página se está actualizando.",
+        "readFailed": "No se pudo leer el pago de este mes. No se ha modificado nada."
       }
     },
     "accounts": {

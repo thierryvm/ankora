@@ -13,6 +13,10 @@ const { supa, auditSpy, rateLimitSpy } = vi.hoisted(() => {
   const queue: ScriptedQueue[] = [];
   let lastInsert: Record<string, unknown> | undefined;
   let lastUpdate: Record<string, unknown> | undefined;
+  const updates: Array<{ table: string; payload: Record<string, unknown> }> = [];
+  const eqCalls: Array<{ table: string; op: string; column: string; value: unknown }> = [];
+  // Every write, in the order it reached the database.
+  const writeOrder: string[] = [];
   let userValue: { id: string } | null = { id: 'user-1' };
 
   function takeResult(table: string, op: ScriptedQueue['op']): TerminalResult {
@@ -28,9 +32,17 @@ const { supa, auditSpy, rateLimitSpy } = vi.hoisted(() => {
 
   function buildBuilder(table: string) {
     let currentOp: ScriptedQueue['op'] = 'select';
+    // PostgREST returns rows from a write only when `.select()` follows it.
+    let returning = false;
     const builder: Record<string, unknown> = {
+      // After a write, `.select()` is PostgREST's « returning »: the op stays
+      // the write's.
       select: vi.fn(() => {
-        currentOp = 'select';
+        if (currentOp !== 'insert' && currentOp !== 'update' && currentOp !== 'delete') {
+          currentOp = 'select';
+        } else {
+          returning = true;
+        }
         return builder;
       }),
       insert: vi.fn((payload: Record<string, unknown>) => {
@@ -41,13 +53,18 @@ const { supa, auditSpy, rateLimitSpy } = vi.hoisted(() => {
       update: vi.fn((payload: Record<string, unknown>) => {
         currentOp = 'update';
         lastUpdate = payload;
+        updates.push({ table, payload });
+        writeOrder.push(`${table}.update`);
         return builder;
       }),
       delete: vi.fn(() => {
         currentOp = 'delete';
         return builder;
       }),
-      eq: vi.fn(() => builder),
+      eq: vi.fn((column: string, value: unknown) => {
+        eqCalls.push({ table, op: currentOp, column, value });
+        return builder;
+      }),
       in: vi.fn(() => builder),
       order: vi.fn(() => builder),
       limit: vi.fn(() => builder),
@@ -56,7 +73,11 @@ const { supa, auditSpy, rateLimitSpy } = vi.hoisted(() => {
       maybeSingle: vi.fn(async () => takeResult(table, currentOp)),
       single: vi.fn(async () => takeResult(table, currentOp)),
       then: (onFulfilled: (v: TerminalResult) => unknown) => {
-        const result = takeResult(table, currentOp);
+        const scripted = takeResult(table, currentOp);
+        const result: TerminalResult =
+          currentOp !== 'select' && !returning && scripted.error === null
+            ? { data: null, error: null }
+            : scripted;
         return Promise.resolve(result).then(onFulfilled);
       },
     };
@@ -80,12 +101,19 @@ const { supa, auditSpy, rateLimitSpy } = vi.hoisted(() => {
         queue.length = 0;
         lastInsert = undefined;
         lastUpdate = undefined;
+        updates.length = 0;
+        eqCalls.length = 0;
+        writeOrder.length = 0;
         userValue = { id: 'user-1' };
         client.auth.getUser.mockClear();
         client.from.mockClear();
       },
       lastInsertPayload: () => lastInsert,
       lastUpdatePayload: () => lastUpdate,
+      writeOrder: () => [...writeOrder],
+      updatesOn: (table: string) => updates.filter((u) => u.table === table),
+      eqCallsOn: (table: string, op: string) =>
+        eqCalls.filter((c) => c.table === table && c.op === op),
       authReturn: (value: { data: { user: { id: string } | null } }) => {
         userValue = value.data.user;
       },
@@ -123,6 +151,7 @@ vi.mock('@/lib/security/audit-log', () => ({
     CHARGE_UPDATED: 'charge.updated',
     CHARGE_DELETED: 'charge.deleted',
     CHARGE_PAYMENT_TOGGLED: 'charge.payment_toggled',
+    CHARGE_PAYMENT_AMOUNT_FOLLOWED: 'charge.payment_amount_followed',
     CHARGE_WATCH_TOGGLED: 'charge.watch_toggled',
     EXPENSE_CREATED: 'expense.created',
     EXPENSE_UPDATED: 'expense.updated',
@@ -133,6 +162,12 @@ vi.mock('@/lib/security/audit-log', () => ({
 
 vi.mock('@/lib/security/rate-limit', () => ({
   rateLimit: rateLimitSpy,
+}));
+
+// « Today » in Brussels is pinned: the current period is October 2026.
+vi.mock('@/lib/date/tz', () => ({
+  ANKORA_TIMEZONE: 'Europe/Brussels',
+  todayInAnkoraTz: () => '2026-10-02',
 }));
 
 vi.mock('next/cache', () => ({
@@ -340,6 +375,14 @@ describe('updateChargeAction — paymentMonths mirrors due_month', () => {
 describe('updateChargeAction — happy path + audit', () => {
   it('updates label + amount and emits audit event', async () => {
     programMembership();
+    // An amount change reads the bill's current amount, then this month's
+    // payment (none here).
+    supa.program({
+      table: 'charges',
+      op: 'select',
+      result: { data: { amount: 800 }, error: null },
+    });
+    supa.program({ table: 'charge_payments', op: 'select', result: { data: null, error: null } });
     supa.program({
       table: 'charges',
       op: 'update',
@@ -388,6 +431,239 @@ describe('updateChargeAction — happy path + audit', () => {
     const r = await updateChargeAction(CHARGE_ID, { label: 'X' });
     expect(r).toEqual({ ok: false, errorCode: 'errors.charges.updateFailed' });
     expect(auditSpy).not.toHaveBeenCalled();
+  });
+});
+
+// A bill ticked « payée » this month was recorded at the bill's amount of that
+// moment. Correcting the bill's amount afterwards must carry that payment
+// along — or say plainly why it did not. Figures are fictitious (505 / 705).
+describe('updateChargeAction — the payment of the current month follows the amount', () => {
+  const PAYMENT_ID = '2b7d4c1e-9f3a-4e6b-8c5d-1a2b3c4d5e6f';
+
+  function programChargeRead(amount: number) {
+    supa.program({ table: 'charges', op: 'select', result: { data: { amount }, error: null } });
+  }
+
+  it('a payment recorded at the old amount takes the new amount, and is audited', async () => {
+    programMembership();
+    programChargeRead(505);
+    supa.program({
+      table: 'charge_payments',
+      op: 'select',
+      result: { data: { id: PAYMENT_ID, paid_amount: 505 }, error: null },
+    });
+    supa.program({ table: 'charges', op: 'update', result: { data: null, error: null } });
+    supa.program({
+      table: 'charge_payments',
+      op: 'update',
+      result: { data: [{ id: PAYMENT_ID }], error: null },
+    });
+
+    const r = await updateChargeAction(CHARGE_ID, { amount: 705 });
+
+    expect(r).toEqual({
+      ok: true,
+      payment: { kind: 'followed', periodYear: 2026, periodMonth: 10, paidAmount: 705 },
+    });
+    expect(supa.updatesOn('charge_payments')).toEqual([
+      { table: 'charge_payments', payload: { paid_amount: 705 } },
+    ]);
+    // The write is scoped to the caller's workspace, this period, and only
+    // while the payment still carries the old default amount.
+    const filters = supa.eqCallsOn('charge_payments', 'update');
+    expect(filters).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ column: 'id', value: PAYMENT_ID }),
+        expect.objectContaining({ column: 'workspace_id', value: 'ws-1' }),
+        expect.objectContaining({ column: 'charge_id', value: CHARGE_ID }),
+        expect.objectContaining({ column: 'period_year', value: 2026 }),
+        expect.objectContaining({ column: 'period_month', value: 10 }),
+        expect.objectContaining({ column: 'paid_amount', value: 505 }),
+      ]),
+    );
+    expect(auditSpy).toHaveBeenCalledWith(
+      'charge.payment_amount_followed',
+      { userId: 'user-1', workspaceId: 'ws-1' },
+      {
+        resource_type: 'charge_payment',
+        resource_id: PAYMENT_ID,
+        period_year: 2026,
+        period_month: 10,
+      },
+    );
+    // The bill first: a bill that fails to update leaves its payment alone.
+    expect(supa.writeOrder()).toEqual(['charges.update', 'charge_payments.update']);
+  });
+
+  it('a bill that fails to update leaves its payment untouched', async () => {
+    programMembership();
+    programChargeRead(505);
+    supa.program({
+      table: 'charge_payments',
+      op: 'select',
+      result: { data: { id: PAYMENT_ID, paid_amount: 505 }, error: null },
+    });
+    supa.program({
+      table: 'charges',
+      op: 'update',
+      result: { data: null, error: { message: 'rls denied' } },
+    });
+
+    const r = await updateChargeAction(CHARGE_ID, { amount: 705 });
+
+    expect(r).toEqual({ ok: false, errorCode: 'errors.charges.updateFailed' });
+    expect(supa.updatesOn('charge_payments')).toEqual([]);
+    expect(auditSpy).not.toHaveBeenCalled();
+  });
+
+  it('reads the payment of the current Brussels period, in the caller workspace', async () => {
+    programMembership();
+    programChargeRead(505);
+    supa.program({ table: 'charge_payments', op: 'select', result: { data: null, error: null } });
+    supa.program({ table: 'charges', op: 'update', result: { data: null, error: null } });
+
+    const r = await updateChargeAction(CHARGE_ID, { amount: 705 });
+
+    expect(r).toEqual({ ok: true });
+    expect(supa.eqCallsOn('charge_payments', 'select')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ column: 'charge_id', value: CHARGE_ID }),
+        expect.objectContaining({ column: 'workspace_id', value: 'ws-1' }),
+        expect.objectContaining({ column: 'period_year', value: 2026 }),
+        expect.objectContaining({ column: 'period_month', value: 10 }),
+      ]),
+    );
+    // A past month is never read, so never rewritten.
+    expect(supa.updatesOn('charge_payments')).toEqual([]);
+  });
+
+  it('a payment at an amount typed by hand does not move, and the answer says so', async () => {
+    programMembership();
+    programChargeRead(505);
+    supa.program({
+      table: 'charge_payments',
+      op: 'select',
+      result: { data: { id: PAYMENT_ID, paid_amount: 480 }, error: null },
+    });
+    supa.program({ table: 'charges', op: 'update', result: { data: null, error: null } });
+
+    const r = await updateChargeAction(CHARGE_ID, { amount: 705 });
+
+    expect(r).toEqual({
+      ok: true,
+      payment: { kind: 'kept', periodYear: 2026, periodMonth: 10, paidAmount: 480 },
+    });
+    expect(supa.updatesOn('charge_payments')).toEqual([]);
+    expect(auditSpy).not.toHaveBeenCalledWith(
+      'charge.payment_amount_followed',
+      expect.anything(),
+      expect.anything(),
+    );
+  });
+
+  it('an unchanged amount reads no payment and writes none', async () => {
+    programMembership();
+    programChargeRead(505);
+    supa.program({ table: 'charges', op: 'update', result: { data: null, error: null } });
+
+    const r = await updateChargeAction(CHARGE_ID, { amount: 505, label: 'Assurance' });
+
+    expect(r).toEqual({ ok: true });
+    expect(supa.client.from).not.toHaveBeenCalledWith('charge_payments');
+  });
+
+  it('a bill of another workspace: nothing is written at all', async () => {
+    programMembership();
+    // RLS + the workspace_id filter → the foreign bill is invisible.
+    supa.program({ table: 'charges', op: 'select', result: { data: null, error: null } });
+
+    const r = await updateChargeAction(CHARGE_ID, { amount: 705 });
+
+    expect(r).toEqual({ ok: false, errorCode: 'errors.charges.notFound' });
+    expect(supa.updatesOn('charges')).toEqual([]);
+    expect(supa.updatesOn('charge_payments')).toEqual([]);
+    expect(supa.eqCallsOn('charges', 'select')).toEqual(
+      expect.arrayContaining([expect.objectContaining({ column: 'workspace_id', value: 'ws-1' })]),
+    );
+    expect(auditSpy).not.toHaveBeenCalled();
+  });
+
+  it('a failed read of the payment writes nothing and names the failure', async () => {
+    programMembership();
+    programChargeRead(505);
+    supa.program({
+      table: 'charge_payments',
+      op: 'select',
+      result: { data: null, error: { message: 'timeout' } },
+    });
+
+    const r = await updateChargeAction(CHARGE_ID, { amount: 705 });
+
+    expect(r).toEqual({ ok: false, errorCode: 'errors.charges.payments.readFailed' });
+    expect(supa.updatesOn('charges')).toEqual([]);
+    expect(auditSpy).not.toHaveBeenCalled();
+  });
+
+  it('a failed read of the bill writes nothing', async () => {
+    programMembership();
+    supa.program({
+      table: 'charges',
+      op: 'select',
+      result: { data: null, error: { message: 'timeout' } },
+    });
+
+    const r = await updateChargeAction(CHARGE_ID, { amount: 705 });
+
+    expect(r).toEqual({ ok: false, errorCode: 'errors.charges.updateFailed' });
+    expect(supa.updatesOn('charges')).toEqual([]);
+  });
+
+  it('a payment update that touches no row is not announced as followed', async () => {
+    programMembership();
+    programChargeRead(505);
+    supa.program({
+      table: 'charge_payments',
+      op: 'select',
+      result: { data: { id: PAYMENT_ID, paid_amount: 505 }, error: null },
+    });
+    supa.program({ table: 'charges', op: 'update', result: { data: null, error: null } });
+    // Changed or removed by another tab between the read and the write.
+    supa.program({ table: 'charge_payments', op: 'update', result: { data: [], error: null } });
+
+    const r = await updateChargeAction(CHARGE_ID, { amount: 705 });
+
+    expect(r).toEqual({
+      ok: true,
+      payment: { kind: 'unchanged', periodYear: 2026, periodMonth: 10, paidAmount: 505 },
+    });
+    expect(auditSpy).not.toHaveBeenCalledWith(
+      'charge.payment_amount_followed',
+      expect.anything(),
+      expect.anything(),
+    );
+  });
+
+  it('a failed payment write is not announced as followed either', async () => {
+    programMembership();
+    programChargeRead(505);
+    supa.program({
+      table: 'charge_payments',
+      op: 'select',
+      result: { data: { id: PAYMENT_ID, paid_amount: 505 }, error: null },
+    });
+    supa.program({ table: 'charges', op: 'update', result: { data: null, error: null } });
+    supa.program({
+      table: 'charge_payments',
+      op: 'update',
+      result: { data: null, error: { message: 'rls denied' } },
+    });
+
+    const r = await updateChargeAction(CHARGE_ID, { amount: 705 });
+
+    expect(r).toEqual({
+      ok: true,
+      payment: { kind: 'unchanged', periodYear: 2026, periodMonth: 10, paidAmount: 505 },
+    });
   });
 });
 
