@@ -236,7 +236,13 @@ export async function updateChargeAction(
             period_month: periodMonth,
           },
         );
-        payment = { kind: 'followed', periodYear, periodMonth, paidAmount: newAmount };
+        payment = {
+          kind: 'followed',
+          periodYear,
+          periodMonth,
+          paidAmount: newAmount,
+          previousAmount,
+        };
       }
     }
   }

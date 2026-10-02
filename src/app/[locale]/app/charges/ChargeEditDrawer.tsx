@@ -121,10 +121,15 @@ export function ChargeEditDrawer({
   // hand, or the write did not land). No payment this month: nothing to say.
   function paymentSentence(payment: ChargePaymentFollow | undefined): string | null {
     if (!payment) return null;
-    return t(payment.kind === 'followed' ? 'paymentFollowed' : 'paymentKept', {
-      month: formatMonthInSentence(payment.periodMonth, locale),
-      amount: formatCurrency(payment.paidAmount, locale),
-    });
+    const month = formatMonthInSentence(payment.periodMonth, locale);
+    if (payment.kind === 'followed') {
+      return t('paymentFollowed', {
+        month,
+        previous: formatCurrency(payment.previousAmount, locale),
+        amount: formatCurrency(payment.paidAmount, locale),
+      });
+    }
+    return t('paymentKept', { month, amount: formatCurrency(payment.paidAmount, locale) });
   }
 
   function submit() {

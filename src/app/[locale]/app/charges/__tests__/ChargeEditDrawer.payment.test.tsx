@@ -3,7 +3,7 @@
  * once the amount is corrected.
  *
  * A payment recorded at the bill's previous amount follows it, and the
- * confirmation says so (« suit »). One typed by hand stays, and it says so too,
+ * confirmation says so (« passe de … à … »). One typed by hand stays, and it says so too,
  * in one sentence, with that amount. Figures are fictitious.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -100,25 +100,39 @@ describe('ChargeEditDrawer — this month’s payment after an amount correction
     );
   });
 
-  it('says that the payment follows, with the amount it now carries', async () => {
+  it('says the payment goes from the old amount to the new one', async () => {
     updateChargeMock.mockResolvedValue({
       ok: true,
-      payment: { kind: 'followed', periodYear: 2026, periodMonth: 10, paidAmount: 705.5 },
+      payment: {
+        kind: 'followed',
+        periodYear: 2026,
+        periodMonth: 10,
+        paidAmount: 705.5,
+        previousAmount: 505,
+      },
     });
     await correctAmountTo('705');
     const [title, options] = toastSuccessMock.mock.calls[0]!;
     expect(title).toBe('Facture mise à jour');
-    expect(options.description).toMatch(/^Le paiement pour octobre suit : 705,50[  ]€$/);
+    expect(options.description).toMatch(
+      /^Le paiement pour octobre passe de 505[  ]€ à 705,50[  ]€\.$/,
+    );
   });
 
   it('writes the followed payment in English with the month capitalised', async () => {
     updateChargeMock.mockResolvedValue({
       ok: true,
-      payment: { kind: 'followed', periodYear: 2026, periodMonth: 10, paidAmount: 705.5 },
+      payment: {
+        kind: 'followed',
+        periodYear: 2026,
+        periodMonth: 10,
+        paidAmount: 705.5,
+        previousAmount: 505,
+      },
     });
     await correctAmountTo('705', 'en');
     expect(toastSuccessMock.mock.calls[0]![1].description).toMatch(
-      /^The payment for October follows: .*705\.50$/,
+      /^The payment for October goes from .*505 to .*705\.50\.$/,
     );
   });
 

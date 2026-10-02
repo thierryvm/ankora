@@ -463,7 +463,13 @@ describe('updateChargeAction — the payment of the current month follows the am
 
     expect(r).toEqual({
       ok: true,
-      payment: { kind: 'followed', periodYear: 2026, periodMonth: 10, paidAmount: 705 },
+      payment: {
+        kind: 'followed',
+        periodYear: 2026,
+        periodMonth: 10,
+        paidAmount: 705,
+        previousAmount: 505,
+      },
     });
     expect(supa.updatesOn('charge_payments')).toEqual([
       { table: 'charge_payments', payload: { paid_amount: 705 } },

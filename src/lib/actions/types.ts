@@ -20,6 +20,12 @@ export type ActionResult<T = undefined> =
  * Absent when the amount did not change, or no payment exists this month.
  */
 export type ChargePaymentFollow =
-  | { kind: 'followed'; periodYear: number; periodMonth: number; paidAmount: number }
+  | {
+      kind: 'followed';
+      periodYear: number;
+      periodMonth: number;
+      paidAmount: number;
+      previousAmount: number;
+    }
   | { kind: 'kept'; periodYear: number; periodMonth: number; paidAmount: number }
   | { kind: 'unchanged'; periodYear: number; periodMonth: number; paidAmount: number };
