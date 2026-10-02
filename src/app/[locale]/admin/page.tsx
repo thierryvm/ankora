@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import * as React from 'react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { countDeletionsNearBreach, countStuckDeletions } from '@/lib/gdpr/deletion';
-import { log } from '@/lib/log';
+import { readAdminMetrics } from '@/lib/admin/metrics';
+import { requireAdminOnce } from '@/lib/auth/require-admin-once';
 
 export const metadata: Metadata = {
   title: 'Admin · Ankora',
@@ -24,7 +24,8 @@ export const metadata: Metadata = {
  *
  * The read is SEALED: `count: 'exact', head: true` selects zero columns, so no
  * identifier can reach this page — not a user id, not an email, not a request
- * id. `requireAdmin()` already guards the whole segment (admin/layout.tsx).
+ * id. `requireAdmin()` guards the whole segment (admin/layout.tsx), and the
+ * page awaits the same verdict before any read (`requireAdminOnce`).
  *
  * ## Why the second counter is wider than the first
  *
@@ -37,23 +38,16 @@ export const metadata: Metadata = {
  * without anyone noticing. See ADR-042 G6.
  */
 export default async function AdminHomePage(): Promise<React.JSX.Element> {
-  // Read independently, and a failure is DISPLAYED rather than folded into a
-  // zero: an alarm that cannot distinguish "nothing to see" from "I could not
-  // look" is the mute mechanism these counters exist to remove.
-  const [stuck, nearBreach] = await Promise.all([
-    countStuckDeletions().catch((error: unknown) => {
-      log.error('Admin: failed to count stuck deletion requests', {
-        error_message: error instanceof Error ? error.message : 'unknown',
-      });
-      return null;
-    }),
-    countDeletionsNearBreach().catch((error: unknown) => {
-      log.error('Admin: failed to count deletion requests near breach', {
-        error_message: error instanceof Error ? error.message : 'unknown',
-      });
-      return null;
-    }),
-  ]);
+  // Each block is read independently, and a failure is DISPLAYED rather than
+  // folded into a zero: an alarm that cannot distinguish "nothing to see" from
+  // "I could not look" is the mute mechanism these counters exist to remove.
+  // The other blocks of `readAdminMetrics` get their screen in the next PR.
+  // The layout's guard does not hold the page back (they render in parallel):
+  // no privileged read starts before the verdict.
+  await requireAdminOnce();
+  const { deletions } = (await readAdminMetrics()).gdpr;
+  const stuck = deletions?.stuck ?? null;
+  const nearBreach = deletions?.nearBreach ?? null;
 
   const display = (value: number | null) => (value === null ? '—' : String(value));
 

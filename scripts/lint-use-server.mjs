@@ -172,6 +172,7 @@ const SERVER_ONLY_MODULES = [
   '@/lib/security/audit-log',
   '@/lib/gdpr/export',
   '@/lib/gdpr/deletion',
+  '@/lib/admin/metrics',
 ];
 
 for (const file of files) {
