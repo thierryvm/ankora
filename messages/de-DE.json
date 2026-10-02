@@ -805,6 +805,7 @@
       "editAria": "{label} bearbeiten",
       "toastCreated": "Rechnung hinzugefügt",
       "toastUpdated": "Rechnung aktualisiert",
+      "paymentKept": "Die Zahlung für {month}, {amount}, wurde nicht geändert.",
       "toastDeleted": "Rechnung gelöscht",
       "toastMarkedPaid": "Rechnung als bezahlt markiert",
       "toastMarkedUnpaid": "Rechnung als zu zahlen markiert",
@@ -1736,7 +1737,8 @@
         "dateFuture": "Dieses Datum liegt in der Zukunft. Wähle den Tag, an dem die Rechnung bezahlt wurde.",
         "dateOutOfPeriod": "Dieses Datum liegt zu weit vom Monat der Rechnung entfernt.",
         "alreadyPaid": "Diese Rechnung ist bereits bezahlt. Die Seite wird aktualisiert.",
-        "notPaid": "Diese Rechnung ist nicht bezahlt. Die Seite wird aktualisiert."
+        "notPaid": "Diese Rechnung ist nicht bezahlt. Die Seite wird aktualisiert.",
+        "readFailed": "Die Zahlung dieses Monats konnte nicht gelesen werden. Es wurde nichts geändert."
       }
     },
     "accounts": {

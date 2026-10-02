@@ -805,6 +805,7 @@
       "editAria": "{label} bewerken",
       "toastCreated": "Factuur toegevoegd",
       "toastUpdated": "Factuur bijgewerkt",
+      "paymentKept": "De betaling voor {month}, {amount}, is niet gewijzigd.",
       "toastDeleted": "Factuur verwijderd",
       "toastMarkedPaid": "Factuur als betaald gemarkeerd",
       "toastMarkedUnpaid": "Factuur als te betalen gemarkeerd",
@@ -1736,7 +1737,8 @@
         "dateFuture": "Deze datum ligt in de toekomst. Kies de dag waarop de factuur betaald is.",
         "dateOutOfPeriod": "Deze datum ligt te ver van de maand van de factuur.",
         "alreadyPaid": "Deze factuur is al betaald. De pagina wordt bijgewerkt.",
-        "notPaid": "Deze factuur is niet betaald. De pagina wordt bijgewerkt."
+        "notPaid": "Deze factuur is niet betaald. De pagina wordt bijgewerkt.",
+        "readFailed": "De betaling van deze maand kon niet worden gelezen. Er is niets gewijzigd."
       }
     },
     "accounts": {

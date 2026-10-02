@@ -805,6 +805,7 @@
       "editAria": "Edit {label}",
       "toastCreated": "Bill added",
       "toastUpdated": "Bill updated",
+      "paymentKept": "The payment for {month}, {amount}, has not changed.",
       "toastDeleted": "Bill deleted",
       "toastMarkedPaid": "Bill marked as paid",
       "toastMarkedUnpaid": "Bill marked as to pay",
@@ -1736,7 +1737,8 @@
         "dateFuture": "This date is in the future. Pick the day the bill was paid.",
         "dateOutOfPeriod": "This date is too far from the bill's month.",
         "alreadyPaid": "This bill is already paid. The page is updating.",
-        "notPaid": "This bill is not paid. The page is updating."
+        "notPaid": "This bill is not paid. The page is updating.",
+        "readFailed": "Could not read this month's payment. Nothing was changed."
       }
     },
     "accounts": {

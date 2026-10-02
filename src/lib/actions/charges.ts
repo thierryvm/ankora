@@ -8,8 +8,9 @@ import { isCategoryWritable } from '@/lib/actions/category-ownership';
 import { chargeInputSchema, chargeUpdateSchema } from '@/lib/schemas/charge';
 import { AuditEvent, logAuditEvent } from '@/lib/security/audit-log';
 import { rateLimit } from '@/lib/security/rate-limit';
-import type { ActionResult } from '@/lib/actions/types';
+import type { ActionResult, ChargePaymentFollow } from '@/lib/actions/types';
 import { MFA_REQUISE, elevationDue } from '@/lib/auth/require-elevated';
+import { todayInAnkoraTz } from '@/lib/date/tz';
 
 const uuidSchema = z.string().uuid();
 
@@ -96,7 +97,12 @@ export async function createChargeAction(input: unknown): Promise<ActionResult> 
   return { ok: true };
 }
 
-export async function updateChargeAction(id: string, input: unknown): Promise<ActionResult> {
+const toCents = (value: number | string) => Math.round(Number(value) * 100);
+
+export async function updateChargeAction(
+  id: string,
+  input: unknown,
+): Promise<ActionResult & { payment?: ChargePaymentFollow }> {
   if (!uuidSchema.safeParse(id).success) {
     return { ok: false, errorCode: 'errors.validation.generic' };
   }
@@ -132,6 +138,43 @@ export async function updateChargeAction(id: string, input: unknown): Promise<Ac
   if (!(await isCategoryWritable(supabase, ctx.workspaceId, parsed.data.categoryId, 'charge'))) {
     return { ok: false, errorCode: 'errors.validation.generic' };
   }
+
+  // An amount change carries this month's payment along (see
+  // ChargePaymentFollow). Both reads happen BEFORE any write: a read that
+  // fails leaves the bill and its payment exactly as they were.
+  const newAmount = parsed.data.amount;
+  let previousAmount: number | null = null;
+  let currentPayment: { id: string; paid_amount: number | string } | null = null;
+  // The current period is Brussels' — a UTC date would file the 1st of the
+  // month, before 2 a.m., under the previous month.
+  const [periodYear, periodMonth] = todayInAnkoraTz().split('-').map(Number) as [number, number];
+
+  if (newAmount !== undefined) {
+    const { data: charge, error: chargeError } = await supabase
+      .from('charges')
+      .select('amount')
+      .eq('id', id)
+      .eq('workspace_id', ctx.workspaceId)
+      .maybeSingle();
+    if (chargeError) return { ok: false, errorCode: 'errors.charges.updateFailed' };
+    if (!charge) return { ok: false, errorCode: 'errors.charges.notFound' };
+    previousAmount = Number(charge.amount);
+
+    if (toCents(previousAmount) !== toCents(newAmount)) {
+      // Only the current period is read; a past month is never rewritten.
+      const { data: payment, error: paymentError } = await supabase
+        .from('charge_payments')
+        .select('id, paid_amount')
+        .eq('charge_id', id)
+        .eq('workspace_id', ctx.workspaceId)
+        .eq('period_year', periodYear)
+        .eq('period_month', periodMonth)
+        .maybeSingle();
+      if (paymentError) return { ok: false, errorCode: 'errors.charges.payments.readFailed' };
+      currentPayment = payment;
+    }
+  }
+
   const { error } = await supabase
     .from('charges')
     .update({
@@ -157,9 +200,50 @@ export async function updateChargeAction(id: string, input: unknown): Promise<Ac
     workspaceId: ctx.workspaceId,
   });
 
+  let payment: ChargePaymentFollow | undefined;
+  if (currentPayment && previousAmount !== null && newAmount !== undefined) {
+    if (toCents(currentPayment.paid_amount) !== toCents(previousAmount)) {
+      // An amount typed by hand: it is what was paid, it stays.
+      payment = {
+        kind: 'kept',
+        periodYear,
+        periodMonth,
+        paidAmount: Number(currentPayment.paid_amount),
+      };
+    } else {
+      // Compare-and-set on the old amount: a payment edited meanwhile is not
+      // overwritten, and a write that touches no row is not announced.
+      const { data: followed, error: followError } = await supabase
+        .from('charge_payments')
+        .update({ paid_amount: newAmount })
+        .eq('id', currentPayment.id)
+        .eq('workspace_id', ctx.workspaceId)
+        .eq('charge_id', id)
+        .eq('period_year', periodYear)
+        .eq('period_month', periodMonth)
+        .eq('paid_amount', previousAmount)
+        .select('id');
+      if (followError || !followed || followed.length === 0) {
+        payment = { kind: 'unchanged', periodYear, periodMonth, paidAmount: previousAmount };
+      } else {
+        await logAuditEvent(
+          AuditEvent.CHARGE_PAYMENT_AMOUNT_FOLLOWED,
+          { userId: ctx.userId, workspaceId: ctx.workspaceId },
+          {
+            resource_type: 'charge_payment',
+            resource_id: currentPayment.id,
+            period_year: periodYear,
+            period_month: periodMonth,
+          },
+        );
+        payment = { kind: 'followed', periodYear, periodMonth, paidAmount: newAmount };
+      }
+    }
+  }
+
   revalidateDashboard();
   revalidateAppPath('charges');
-  return { ok: true };
+  return payment ? { ok: true, payment } : { ok: true };
 }
 
 /**

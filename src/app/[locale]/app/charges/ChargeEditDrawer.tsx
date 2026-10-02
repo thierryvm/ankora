@@ -3,14 +3,17 @@
 import { useId, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Bookmark, Trash2 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 import { updateChargeAction } from '@/lib/actions/charges';
+import type { ChargePaymentFollow } from '@/lib/actions/types';
 import { isNextControlFlowError } from '@/lib/actions/next-control-flow';
 import { paymentMonthsFromFrequency } from '@/lib/domain/charges';
 import { CHARGE_FREQUENCIES, type ChargeFrequency } from '@/lib/domain/types';
 import { useActionErrorTranslator } from '@/lib/i18n/action-errors';
 import { parseAmountInput } from '@/lib/i18n/parse-amount';
+import { formatCurrency, formatMonthInSentence } from '@/lib/i18n/formatters';
+import type { Locale } from '@/i18n/routing';
 import { toast } from '@/components/ui/toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -72,6 +75,7 @@ export function ChargeEditDrawer({
   pendingOutside = false,
 }: Props) {
   const t = useTranslations('app.charges');
+  const locale = useLocale() as Locale;
   const tAmount = useTranslations('ui.amountField');
   const translateError = useActionErrorTranslator();
   const router = useRouter();
@@ -112,6 +116,16 @@ export function ChargeEditDrawer({
   const parsedAmount = parseAmountInput(amount);
   const amountInvalid = parsedAmount === null;
 
+  // This month's payment did not take the new amount (typed by hand, or the
+  // write did not land): say it in one sentence, with the amount it keeps.
+  function paymentNotFollowed(payment: ChargePaymentFollow | undefined): string | null {
+    if (!payment || payment.kind === 'followed') return null;
+    return t('paymentKept', {
+      month: formatMonthInSentence(payment.periodMonth, locale),
+      amount: formatCurrency(payment.paidAmount, locale),
+    });
+  }
+
   function submit() {
     if (!charge || parsedAmount === null) return;
     const parsedDueMonth = Number(dueMonth);
@@ -129,7 +143,8 @@ export function ChargeEditDrawer({
           paymentMonths: computedPaymentMonths,
         });
         if (result.ok) {
-          toast.success(t('toastUpdated'));
+          const description = paymentNotFollowed(result.payment);
+          toast.success(t('toastUpdated'), description ? { description } : undefined);
           onClose();
           router.refresh();
         } else {
