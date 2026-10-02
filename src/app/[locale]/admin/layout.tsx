@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import * as React from 'react';
 
-import { requireAdmin } from '@/lib/auth/require-admin';
+import { requireAdminOnce } from '@/lib/auth/require-admin-once';
 
 import { AdminTopbar } from './_components/AdminTopbar';
 
@@ -45,7 +45,7 @@ export default async function AdminLayout({
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
 }): Promise<React.JSX.Element> {
-  await requireAdmin();
+  await requireAdminOnce();
   const { locale } = await params;
 
   return (
