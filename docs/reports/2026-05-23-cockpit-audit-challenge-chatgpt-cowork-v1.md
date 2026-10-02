@@ -72,7 +72,7 @@ Trois concepts distincts à afficher côte à côte (ADR-009 amendement 09/05) :
 - **Reste à vivre** (vie courante variable, ajustable mensuellement)
 - **Capacité d'épargne réelle** (= reste disponible − reste à vivre)
 
-profil d'exemple : 640 / 480 / 160 €.
+profil d'exemple : 615 / 470 / 145 €.
 
 Aucun concurrent ne calcule ce KPI. Cf. ADR-009 §"Alternatives évaluées" pour le rejet des KPI court-termistes type Monarch ("Cash flow ce mois").
 

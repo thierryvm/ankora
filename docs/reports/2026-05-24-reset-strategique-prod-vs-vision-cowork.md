@@ -50,7 +50,7 @@ Ce rapport ne minimise rien. Il sépare ce qui est **vraiment livrable en 17 jou
 | **Activité récente** (10 derniers mouvements)                                                                              | `ActiviteRecenteCard`            | ❌ AUCUN                                                                                    |
 | **Ton année** (narratif lié au mois)                                                                                       | `TonAnneeNarrative`              | ❌ AUCUN                                                                                    |
 | **Cashflow projection 6 mois** (graphique solde projeté avec marqueurs Taxe/Vacances/Précompte)                            | `CashflowProjectionChart`        | ❌ AUCUN                                                                                    |
-| **Triptyque UX Capacité d'épargne** (Reste disponible 640 € / Reste à vivre 480 € / Capacité 160 €) — ADR-009 amendé 09/05 | dans `CapaciteEpargneCard`       | ⚠️ **AMENDEMENT NON IMPLÉMENTÉ** — code actuel = ADR-009 ORIGINAL (waterfall 3 rows simple) |
+| **Triptyque UX Capacité d'épargne** (Reste disponible 615 € / Reste à vivre 470 € / Capacité 145 €) — ADR-009 amendé 09/05 | dans `CapaciteEpargneCard`       | ⚠️ **AMENDEMENT NON IMPLÉMENTÉ** — code actuel = ADR-009 ORIGINAL (waterfall 3 rows simple) |
 
 **Constat** : les screenshots 3, 4, 5 que tu m'as envoyés montrent la **vision cible Claude Design v3**, pas la prod. Le gap entre les deux est massif et probablement source de ton sentiment "ce que je vois ne reflète plus mon ambition".
 
@@ -195,7 +195,7 @@ Pas Beta-blocker mais **post-Beta sprint dédié** si on veut une codebase saine
 | 8   | **PR-FEAT-GOALS-MATELAS**             | Nouveau composant `GoalsEpargneCard` — Matelas de sécurité avec progress + ETA 3-11 mois + bouton "+50 € maintenant" + "Modifier la cible"                                        | ~4-6h    |
 | 9   | **`PR-FEAT-ACTIVITE-RECENTE`**        | Nouveau composant `ActiviteRecenteCard` — 10 derniers mouvements avec date + label + chip statut + montant. Lien "Tout voir →" vers page dédiée                                   | ~3-4h    |
 | 10  | **PR-FEAT-CASHFLOW-PROJECTION-6M**    | Installer Tremor + nouveau composant `CashflowProjectionChart` — graphique 6 mois solde projeté avec marqueurs Taxe/Vacances/Précompte                                            | ~6-8h    |
-| 11  | **PR-FEAT-TON-ANNEE-NARRATIVE**       | Nouveau composant `TonAnneeNarrative` — bloc texte narratif lié au mois (ex: "Le 640 € de ce mois, c'est ton reste disponible…")                                                  | ~2-3h    |
+| 11  | **PR-FEAT-TON-ANNEE-NARRATIVE**       | Nouveau composant `TonAnneeNarrative` — bloc texte narratif lié au mois (ex: "Le 615 € de ce mois, c'est ton reste disponible…")                                                  | ~2-3h    |
 
 **Total v1.0** : ~21-29h dev. Sur 20 jours (post-Beta) = très réalisable.
 

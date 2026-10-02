@@ -132,17 +132,17 @@ Tout texte produit pour l'app doit éviter les formulations suggérant du consei
 
 ## Un chiffre qu'on ne peut pas ouvrir est une injonction, pas une information
 
-**Verrouillé le 5 août 2026, sur constat de @thierry.** Le cockpit affiche « 59 € à verser
+**Verrouillé le 5 août 2026, sur constat de @thierry.** Le cockpit affiche « 64 € à verser
 sur l'épargne ». Rien ne dit d'où vient ce nombre.
 
 Il est pourtant entièrement décomposable, et le code le sait au moment même où il le
 calcule : `monthlyProvisionTotal()` additionne, pour chaque charge lissée, `montant ÷
-périodicité`. L'assurance auto y met 23,33 €, le précompte 18,00 €, la taxe déchets
-4,50 €. **Chaque euro des 59 a un nom.** L'interface les jette pour n'afficher que la
+périodicité`. L'assurance auto y met 25,33 €, la taxe communale 21,00 €, la taxe déchets
+18,00 €. **Chaque euro des 64 a un nom.** L'interface les jette pour n'afficher que la
 somme.
 
 Ce n'est pas un manque de données, c'est un refus d'expliquer. Et la conséquence est
-qu'on ne présente pas une information mais un ordre : verse 59 €. On obéit, ou on ignore.
+qu'on ne présente pas une information mais un ordre : verse 64 €. On obéit, ou on ignore.
 Ni l'un ni l'autre n'est de la gestion.
 
 Le constat vient de la personne qui a écrit la formule. **Si l'auteur du calcul doit se
@@ -150,8 +150,8 @@ demander à quoi le total correspond, personne d'autre n'a une chance.**
 
 **La règle.** Tout montant issu d'une somme s'ouvre sur ce qui le compose — chaque ligne,
 avec sa part et son échéance. Sans exception, et **dans les deux sens** : ce qu'on verse
-comme ce qu'on reprend. Une notification qui demande de reverser 340 € dit _pourquoi_ :
-« l'assurance auto (280 €) et la taxe (60 €) tombent ce mois ». Elle a tout ce qu'il faut
+comme ce qu'on reprend. Une notification qui demande de reverser 184 € dit _pourquoi_ :
+« l'assurance auto (76 €) et la taxe déchets (108 €) tombent ce mois ». Elle a tout ce qu'il faut
 pour le dire.
 
 Corollaire de conception : un composant qui reçoit un total sans recevoir ses composantes

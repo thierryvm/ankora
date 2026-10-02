@@ -71,7 +71,7 @@ EN équivalent : `effortLisseTitle: "Smoothed financial effort"`, `capaciteReell
 
 ### Spec canonique (vault Athenaeum)
 
-`C:\Users\thier\iCloudDrive\iCloud~md~obsidian\Athenaeum\10_Projects\ankora\specs\dashboard-cockpit-vraie-vision-2026-05-03.md` §"Bloc 1 — 3 cards comptes" :
+`specs/dashboard-cockpit-vraie-vision-2026-05-03.md` (notes de conception hors dépôt) §"Bloc 1 — 3 cards comptes" :
 
 > | `daily_card` | violet | CreditCard | "Carte Quotidien" | **Input `plafondQuotidien` éditable** |
 

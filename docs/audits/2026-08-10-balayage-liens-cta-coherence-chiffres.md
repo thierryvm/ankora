@@ -181,14 +181,14 @@ La ligne du lissage est le meilleur exemple : elle n'affiche pas « 15 € » ma
 « 15 € — 45 € tous les 3 mois ». Le chiffre porte **sa provenance et sa périodicité**,
 donc il se vérifie de tête.
 
-Et dans les deux sens, comme la règle l'exige : « À virer vers l'épargne **59 €** — 59 € à
+Et dans les deux sens, comme la règle l'exige : « À virer vers l'épargne **58 €** — 58 € à
 mettre de côté − 0 € de factures ce mois ».
 
 **L'application détecte elle-même le doublon que le profil semé lui a tendu.**
 « Impôt » existe en facture (165 €) et « SPF Impôt — plan d'apurement » en engagement
 (165 €). Sur `/app/charges`, l'app affiche spontanément : « Une obligation semble saisie
 deux fois — « Impôt » (facture) et « SPF Impôt — plan d'apurement » (engagement) portent le
-même montant de 220 € ». Elle ne double-compte pas, **et elle le dit**. C'est mieux que
+même montant de 165 € ». Elle ne double-compte pas, **et elle le dit**. C'est mieux que
 correct : c'est explicable.
 
 **La projection d'épargne est en vraies `<table>` HTML** — 0 SVG de taille graphique, 11

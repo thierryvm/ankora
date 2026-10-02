@@ -38,8 +38,8 @@ La landing publique vend un simulateur précis. Le drawer livré n'en délivre q
 
 **Problèmes de présentation (le vrai sujet) :**
 
-1. **« Actuel / mois 1 986 € » — actuel de quoi ?** Aucun ancrage. Ce 1 986 € = l'« Effort financier lissé » du dashboard (charges fixes 1 927 € + provisions 59 €). L'utilisateur ne peut pas le deviner.
-2. **« +37,26 % / mois »** est un faux ami : c'est la part de la charge supprimée sur le total des charges, **pas** une hausse mensuelle. Le « + » vert suggère un gain mensuel récurrent. Trompeur.
+1. **« Actuel / mois 1 850 € » — actuel de quoi ?** Aucun ancrage. Ce 1 850 € = l'« Effort financier lissé » du dashboard (charges fixes 1 792 € + provisions 58 €). L'utilisateur ne peut pas le deviner.
+2. **« +37,30 % / mois »** est un faux ami : c'est la part de la charge supprimée sur le total des charges, **pas** une hausse mensuelle. Le « + » vert suggère un gain mensuel récurrent. Trompeur.
 3. **Déconnexion de la réserve libre.** Le produit se définit par « provisions affectées vs réserve libre ». Le simulateur projette sur le total des charges, pas sur la réserve libre. Il rate sa propre signature.
 
 **Action @cc-ankora** : faire passer le `financial-formula-validator` sur `src/lib/domain/` une fois la logique recâblée sur la réserve libre, et ajouter des tests sur le mapping Actuel→Projeté→Économie→cumul 6 mois.

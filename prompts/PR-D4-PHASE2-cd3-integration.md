@@ -31,26 +31,26 @@ L'erreur historique d'ADR-009 a été clarifiée. Le hero waterfall affiche dés
 
 ```
 Reste disponible      = Revenus − Charges fixes − Provisions OUT du mois − Virement matelas saisi
-                      = 640 €/mois sur le profil d'exemple
+                      = 615 €/mois sur le profil d'exemple
 
 Reste à vivre         = budget vie courante variable saisi par l'utilisateur
-                      = 500 €/mois estimé Thierry (courses 200 + imprévus 50 + sorties 0 + marge 250)
+                      = 470 €/mois sur le profil d'exemple (courses 190 + imprévus 45 + sorties 35 + marge 200)
                       = AJUSTABLE manuellement chaque mois (R-10) via bouton "Ajuster ce mois"
 
 Capacité d'épargne    = Reste disponible − Reste à vivre
-réelle                = 160 €/mois pour profil d'exemple
+réelle                = 145 €/mois pour profil d'exemple
 ```
 
 **Implications UI à porter dans cette PR** :
 
 1. **HeroWaterfall** affiche 3 labels triple-ligne au-dessus de la barre Reste :
    - Ligne 1 : `Reste disponible`
-   - Ligne 2 : `+ 640 €` (gros, font-display)
-   - Ligne 3 : `+ 87 € vs. avril` (delta, opacity 0.7, taille xs)
-2. **Card "Capacité d'épargne réelle"** dans SignauxCard affiche **160 €** (PAS 640 €), avec sub-stats :
-   - Reste disponible 640 €
-   - Reste à vivre 480 € + bouton textuel "Ajuster ce mois →"
-   - Capacité d'épargne réelle 160 €
+   - Ligne 2 : `+ 615 €` (gros, font-display)
+   - Ligne 3 : `+ 64 € vs. avril` (delta, opacity 0.7, taille xs)
+2. **Card "Capacité d'épargne réelle"** dans SignauxCard affiche **145 €** (PAS 615 €), avec sub-stats :
+   - Reste disponible 615 €
+   - Reste à vivre 470 € + bouton textuel "Ajuster ce mois →"
+   - Capacité d'épargne réelle 145 €
 3. **Modèle de données** : `workspace_settings.reste_a_vivre_default` (numeric) + `workspace_settings.reste_a_vivre_overrides` (jsonb keyé par YYYY-MM). Le bouton "Ajuster ce mois" écrit dans `reste_a_vivre_overrides[currentMonth]`. Si pas d'override → fallback `reste_a_vivre_default`.
 4. **Onboarding Étape 3** demande ce Reste à vivre avec helper adaptatif neutre aux 3 ratios (R-06 anti-culpa, déjà livré Bloc D mais à respecter dans l'intégration).
 
@@ -79,7 +79,7 @@ Mots à traquer et corriger systématiquement :
 
 Belgicismes attendus : "septante" / "nonante" interdits dans les nombres (toLocaleString gère), "courriel" préféré à "mail" mais `Email` (mot anglicisé universel) accepté, "GSM" accepté.
 
-Référence : [`_regles-decisions-critiques.md` R-14](../../obsidian-second-brain/...) (vault Athenaeum, demander à @thierry si besoin).
+Référence : règle R-14 des notes de décision (hors dépôt, demander à @thierry si besoin).
 
 ### C · R-13 — Services bundlés (préparer le data model)
 
@@ -91,7 +91,7 @@ ALTER TABLE recurring_templates
   ADD COLUMN included_services jsonb DEFAULT '[]'::jsonb;
 
 COMMENT ON COLUMN recurring_templates.included_services IS
-  'Services secondaires inclus dans cette charge (ex: [{ "name": "Netflix", "icon": "netflix" }] pour Orange + Netflix)';
+  'Services secondaires inclus dans cette charge (ex: [{ "name": "Streaming", "icon": "tv" }] pour un abonnement internet qui inclut un service de streaming)';
 ```
 
 **Dans cette PR PHASE 2**, ce qu'il faut faire :
@@ -100,12 +100,12 @@ COMMENT ON COLUMN recurring_templates.included_services IS
 2. Pour la Surface 1 cockpit, l'`ActiviteRecente` n'a PAS besoin d'afficher les bundles V1.
 3. **Anticiper côté props** des atoms `Chip` et `Avatar` : prévoir que la donnée `chargeRow` puisse contenir un futur champ `included_services` sans casser le typage.
 
-Cas types confirmés (à respecter dans les seeds e2e) :
+Cas types (exemples génériques, à respecter dans les seeds e2e) :
 
-1. Un abonnement télécom (ex. 45 €/mois) inclut un service de streaming
-2. Une assurance auto (ex. 64 €/mois) est un PACK (auto + habitation + incendie + familiale)
+1. Un abonnement peut inclure un service secondaire (ex. internet + streaming)
+2. Une assurance peut être un PACK qui couvre plusieurs risques
 
-→ **Ne JAMAIS ajouter** "Mutuelle annuelle 848 €" ni "Assurance habitation 420 €" dans les seeds — tout est mensualisé chez Thierry.
+→ Les seeds e2e restent mensualisés : aucune charge annuelle inventée.
 
 ### D · ADR-017 Plans d'apurement (préparation cross-PR)
 
@@ -184,7 +184,7 @@ Ajouter aux tests Vitest existants (§4) :
 
 Playwright e2e additionnel :
 
-1. `e2e/dashboard-rav-adjust.spec.ts` — flow : ouvrir dashboard → cliquer "Ajuster ce mois" → modifier RAV à 450 € → vérifier capacité passe à 165 € (640 - 450)
+1. `e2e/dashboard-rav-adjust.spec.ts` — flow : ouvrir dashboard → cliquer "Ajuster ce mois" → modifier RAV à 440 € → vérifier capacité passe à 175 € (615 - 440)
 2. `e2e/dashboard-mouvements-tab.spec.ts` — flow : ouvrir CompteEpargne → cliquer onglet "Mouvements" → vérifier rendu timeline (vide ou pleine)
 
 ### J0 · Atoms 10 & 11 — ThemeToggle + LangSwitcher (livrés Patch Bloc E 2026-05-09)
@@ -446,13 +446,13 @@ L'implémentation des **server fetchers** + branchement des 4 APIs externes (Ver
 | R-13 services bundlés             | Préparer types `included_services` jsonb                                                                   |
 | R-14 UI 100 % FR-BE               | Audit `i18n-auditor` obligatoire avant merge                                                               |
 
-Détail complet des 14 règles dans `Athenaeum/10_Projects/ankora/_regles-decisions-critiques.md` (vault Obsidian de @thierry, demander si besoin).
+Détail complet des 14 règles dans les notes de décision hors dépôt (demander à @thierry si besoin).
 
 ---
 
 ## 1 · Source de vérité visuelle
 
-Le pack final Claude Design Session #3 vit dans le projet remote claude.ai/design (ID `019dbeb5-1a7d-7b39-b9c5-ce01e2a48e7e`). Tu n'y as pas d'accès direct — ce prompt en est l'extrait fidèle.
+Le pack final Claude Design Session #3 vit dans le projet remote claude.ai/design. Tu n'y as pas d'accès direct — ce prompt en est l'extrait fidèle.
 
 **Récap des livrables Claude Design (8 atoms + 4 surfaces + 2 playgrounds + tokens prod inchangés)** :
 

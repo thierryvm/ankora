@@ -22,7 +22,7 @@ const charge = (over: Partial<CockpitCharge>): CockpitCharge => ({
 describe('calculerSituationDuMois — les deux chiffres de la projection', () => {
   const base = {
     revenus: new Decimal(2500),
-    charges: [charge({ amount: new Decimal(1838), frequency: 'monthly' as const })],
+    charges: [charge({ amount: new Decimal(1845), frequency: 'monthly' as const })],
     soldeEpargneActuel: new Decimal(0),
     payments: NO_PAYMENTS,
     ref: REF,
@@ -67,7 +67,7 @@ describe('calculerSituationDuMois', () => {
     const out = calculerSituationDuMois({
       operations: AUCUNE_OPERATION,
       revenus: new Decimal(2500),
-      charges: [charge({ amount: new Decimal(1838), frequency: 'monthly' })],
+      charges: [charge({ amount: new Decimal(1845), frequency: 'monthly' })],
       soldeEpargneActuel: new Decimal(0),
       payments: NO_PAYMENTS,
       ref: REF,
@@ -78,7 +78,7 @@ describe('calculerSituationDuMois', () => {
     });
     expect(out.statut).toBe('vert');
     expect(out.hasRevenus).toBe(true);
-    expect(out.resteDisponible.toNumber()).toBe(662);
+    expect(out.resteDisponible.toNumber()).toBe(655);
     expect(out.provisionsAJour).toBe(true);
   });
 
@@ -259,17 +259,17 @@ describe('calculerSituationDuMois', () => {
     const out = calculerSituationDuMois({
       operations: AUCUNE_OPERATION,
       revenus: new Decimal(2500),
-      charges: [charge({ amount: new Decimal(1838), frequency: 'monthly' })],
+      charges: [charge({ amount: new Decimal(1845), frequency: 'monthly' })],
       soldeEpargneActuel: new Decimal(0),
       payments: NO_PAYMENTS,
       ref: REF,
       engagementsMensuels: new Decimal(200),
-      depensesDuMois: new Decimal(500), // 462 available, 500 spent
+      depensesDuMois: new Decimal(500), // 455 available, 500 spent
       joursEcoules: 15,
       joursDuMois: 30,
     });
-    expect(out.resteDisponible.toNumber()).toBe(462); // 2500 − 1838 − 200
-    expect(out.ilTeReste.toNumber()).toBe(-38);
+    expect(out.resteDisponible.toNumber()).toBe(455); // 2500 − 1845 − 200
+    expect(out.ilTeReste.toNumber()).toBe(-45);
     expect(out.statut).toBe('orange');
   });
 

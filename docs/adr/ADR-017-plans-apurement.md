@@ -15,7 +15,7 @@
 
 Plusieurs cas d'utilisateurs Ankora ne sont pas couverts par les concepts existants ADR-002 (charges récurrentes) ou ADR-016 (transactions ponctuelles) :
 
-1. **Apurement fiscal** : un utilisateur a 1 802,38 € à payer en 11 fois (10 × 165 € + 1 × 152,38 €), prélèvement le 15 du mois. Ce n'est pas une charge récurrente classique (montant non identique chaque fois, durée finie connue à l'avance) ni une transaction ponctuelle (le paiement est étalé).
+1. **Apurement fiscal** : un utilisateur a 1 802,38 € à payer en 11 fois (10 × 165 € + 1 × 152,38 €), prélèvement le 20 du mois. Ce n'est pas une charge récurrente classique (montant non identique chaque fois, durée finie connue à l'avance) ni une transaction ponctuelle (le paiement est étalé).
 
 2. **Remboursement crédit personnel** : 12 000 € à rembourser sur 36 mois à 350 €/mois. Caractéristiques : montant fixe, durée fixe, fin programmée.
 
@@ -29,11 +29,11 @@ Plusieurs cas d'utilisateurs Ankora ne sont pas couverts par les concepts exista
 
 Ankora a une promesse de **clarté financière sans surprise** (cf. NORTH_STAR.md). Un utilisateur qui rembourse un Impôt sur 11 mois doit voir d'un coup d'œil :
 
-- Total restant : 1 307 €
-- Prochaine échéance : 15 juin · 220 €
-- Avancement : 5/11 payées · 45,7 %
-- Date de fin programmée : 15 mars 2027
-- Insight pédagogique : « Quand tu auras fini ce plan, tu débloques 220 €/mois pour ton matelas ou un autre objectif. »
+- Total restant : 977,38 €
+- Prochaine échéance : 20 octobre · 165 €
+- Avancement : 5/11 payées · 45,8 % du montant
+- Date de fin programmée : 20 mars 2027
+- Insight pédagogique : « Quand tu auras fini ce plan, tu débloques 165 €/mois pour ton matelas ou un autre objectif. »
 
 ---
 
@@ -66,7 +66,7 @@ CREATE TABLE installment_plans (
   direction                   text NOT NULL CHECK (direction IN ('out', 'in')),  -- out = paiement utilisateur, in = restitution
 
   -- Montants
-  total_amount                numeric(12,2) NOT NULL,                   -- ex: 1802,38
+  total_amount                numeric(12,2) NOT NULL,                   -- ex: 1802.38
   installments_count          integer NOT NULL CHECK (installments_count BETWEEN 2 AND 60),
   installment_amount_std      numeric(12,2) NOT NULL,                   -- ex: 165.00
   installment_amount_final    numeric(12,2),                            -- ex: 152.38 (NULL si toutes égales, calculé sinon)
@@ -182,16 +182,16 @@ Card dédiée entre Activité récente et Tes Signaux (déjà livrée par Claude
 │ ┌──────────────────────────────────────────────────────────┐ │
 │ │ 🏛  Impôt 2026                  PROCHAINE                │ │
 │ │     Total 1 802,38 €   ·   11 échéances 165,00 €        │ │
-│ │                                  15 juin 2026            │ │
-│ │ ████████░░░░░░░░░░  5/11 PAYÉES · 45,7 %                │ │
-│ │ 1 100 € payés · reste 1 307 €                            │ │
+│ │                                  20 octobre 2026         │ │
+│ │ ████████░░░░░░░░░░  5/11 PAYÉES · 45,8 %                │ │
+│ │ 825 € payés · reste 977,38 €                             │ │
 │ │ Voir les 6 échéances restantes →                         │ │
 │ └──────────────────────────────────────────────────────────┘ │
 │                                                              │
 │ ┌──────────────────────────────────────────────────────────┐ │
 │ │ ⚡ Plan accordé énergie         PROCHAINE                │ │
 │ │     Total 600 €   ·   6 échéances     100,00 €          │ │
-│ │                                  15 juin 2026            │ │
+│ │                                  15 octobre 2026         │ │
 │ │ ████████████████░░  4/6 PAYÉES · 66,7 %                 │ │
 │ │ 400 € payés · reste 200 €                                │ │
 │ │ Voir les 2 échéances restantes →                         │ │
@@ -228,7 +228,7 @@ Réutilise le pattern `EditDrawer` (atom Drawer) avec champs field-driven :
 | `start_date`               | date   | ✓        | "Date de la 1ère échéance"                       |
 | `notes`                    | text   | optional | contexte libre                                   |
 
-**Helper texte vivant** (preview en bas du drawer) : « Avec ces réglages, tu rembourseras 1 802,38 € en 11 mensualités de 165 € (sauf la dernière 152,38 €) à partir du 15 mai 2026, soit jusqu’au 15 mars 2027. »
+**Helper texte vivant** (preview en bas du drawer) : « Avec ces réglages, tu rembourseras 1 802,38 € en 11 mensualités de 165 € (sauf la dernière 152,38 €) à partir du 20 mai 2026, soit jusqu’au 20 mars 2027. »
 
 ### 7. Empty state (avant création du 1er plan)
 
@@ -244,7 +244,7 @@ Card collapsed avec illustration discrète + texte rassurant :
 Quand un plan approche de sa fin (`installments_remaining ≤ 3`), Ankora affiche un nudge contextualisé :
 
 > 🎉 **Plus que 2 échéances avant la fin de ton plan Impôt 2026.**
-> Quand ce sera fini (15 mars 2027), tu débloques 220 €/mois supplémentaires pour ton matelas ou un autre objectif.
+> Quand ce sera fini (20 mars 2027), tu débloques 165 €/mois supplémentaires pour ton matelas ou un autre objectif.
 
 Ce nudge est calculé côté `domain/installment-plans.ts` (fonction pure) à partir des paramètres du plan + date courante.
 
@@ -330,7 +330,7 @@ Discriminer via une colonne `template_type` enum ('recurring' | 'installment').
 
 6. **Tests E2E Playwright** :
    - Création plan apurement Impôt 11 échéances → vérification 11 transactions générées
-   - Toggle Payé sur 5/11 échéances → progression 45,7 % affichée correctement
+   - Toggle Payé sur 5/11 échéances → progression 45,8 % (part du montant) affichée correctement
    - Suppression plan → cascade delete des transactions associées
    - Edge case ajustement final différent de std
 

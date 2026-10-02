@@ -12,7 +12,7 @@ import {
  * Une part d'un poste du cockpit — ce qui compose un total affiché.
  *
  * Règle 10 de `CLAUDE.md` : aucun montant agrégé ne s'affiche sans sa
- * décomposition accessible. « 59 € de lissage » n'apprend rien ; « assurance
+ * décomposition accessible. « 64 € de lissage » n'apprend rien ; « assurance
  * habitation — 300 € tous les 3 mois » explique.
  *
  * `origine` porte le montant réel de la facture et la longueur de son cycle,

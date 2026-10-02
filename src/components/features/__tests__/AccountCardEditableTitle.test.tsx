@@ -69,7 +69,7 @@ describe('<AccountCardEditableTitle />', () => {
     renderWithIntl(<AccountCardEditableTitle {...baseProps} />);
     fireEvent.click(screen.getByRole('button', { name: /Renommer le compte/i }));
     const input = await screen.findByRole('textbox');
-    fireEvent.change(input, { target: { value: 'Belfius' } });
+    fireEvent.change(input, { target: { value: 'Banque Lune' } });
     fireEvent.keyDown(input, { key: 'Escape' });
     expect(renameMock).not.toHaveBeenCalled();
     // Back to button mode
@@ -82,13 +82,13 @@ describe('<AccountCardEditableTitle />', () => {
     fireEvent.click(screen.getByRole('button', { name: /Renommer le compte/i }));
     const input = await screen.findByRole('textbox');
     await act(async () => {
-      fireEvent.change(input, { target: { value: '  Belfius  ' } });
+      fireEvent.change(input, { target: { value: '  Banque Lune  ' } });
       fireEvent.keyDown(input, { key: 'Enter' });
     });
     await waitFor(() => {
       expect(renameMock).toHaveBeenCalledWith({
         accountType: 'income_bills',
-        displayName: 'Belfius',
+        displayName: 'Banque Lune',
       });
     });
   });
@@ -117,7 +117,7 @@ describe('<AccountCardEditableTitle />', () => {
     fireEvent.click(screen.getByRole('button', { name: /Renommer le compte/i }));
     const input = await screen.findByRole('textbox');
     await act(async () => {
-      fireEvent.change(input, { target: { value: 'Belfius' } });
+      fireEvent.change(input, { target: { value: 'Banque Lune' } });
       fireEvent.keyDown(input, { key: 'Enter' });
     });
     await waitFor(() => {

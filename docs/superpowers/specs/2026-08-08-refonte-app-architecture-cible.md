@@ -157,7 +157,7 @@ avant d'arriver. Une banque ne peut pas dessiner ça, faute de connaître l'aven
 
 ### 3.3 Ce que le cockpit ne doit PAS emprunter aux applications bancaires
 
-@thierry a demandé « des graphiques comme Revolut, Belfius ». **Écarté, et il a suivi.**
+@thierry a demandé « des graphiques comme dans les applis bancaires ». **Écarté, et il a suivi.**
 
 Ce sont des applications _bancaires_ : leurs graphiques sont **rétrospectifs par
 construction** — camembert par catégorie, barres du mois, comparaison au mois dernier — parce

@@ -72,10 +72,10 @@ test.describe('Audit trail — service_role writes actually land (H3 / #192)', (
       await card.getByRole('button', { name: /Renommer le compte/i }).click();
       const input = card.getByRole('textbox');
       await expect(input).toBeFocused();
-      await input.fill('Belfius');
+      await input.fill('Banque Lune');
       await input.press('Enter');
       await expect(
-        card.getByRole('button', { name: /Renommer le compte « Belfius »/i }),
+        card.getByRole('button', { name: /Renommer le compte « Banque Lune »/i }),
       ).toBeVisible();
 
       await expect
