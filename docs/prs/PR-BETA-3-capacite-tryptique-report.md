@@ -144,7 +144,7 @@ Hypothèse @cowork "migration non appliquée" éliminée : `supabase migration l
 
 ### Smoke @thierry post-merge hotfix
 
-1. Cockpit charge → sub-stats 662/500/162 (inchangé)
+1. Cockpit charge → sub-stats 640 / 480 / 160 (inchangé)
 2. Tap "Ajuster ce mois" → drawer ouvre
 3. Modifier 500 → 450 → Enregistrer
    - ✅ Toast vert "Reste à vivre ajusté pour ce mois"
@@ -213,13 +213,13 @@ Nouveau `AuditEvent.WORKSPACE_RESTE_A_VIVRE_UPDATED = 'workspace.reste_a_vivre_u
 ┌─────────────────────────────────────────────────┐
 │ Capacité d'épargne réelle  [CheckCircle2]       │
 │                                                 │
-│ + 162 €  [Info-tooltip]                         │
-│ « Tu peux mettre +162 € de côté ce mois en plus │
+│ + 160 €  [Info-tooltip]                         │
+│ « Tu peux mettre +160 € de côté ce mois en plus │
 │   de tes virements automatiques. Tu décides     │
 │   combien tu y mets vraiment. »                 │
 │ ──────────────────────────────────────────────  │
 │ Reste dispo  │ Reste à vivre │ Capacité épargne │
-│  662 €       │  500 € [Adj]  │ + 162 €          │
+│  640 €       │  480 € [Adj]  │ + 160 €          │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -273,7 +273,7 @@ Test parity exhaustif (assert présence + placeholders attendus) intégré au te
 
 - `capacite-epargne-reelle.test.ts` — 6 nouveaux tests (resteDisponible exposé, persona @thierry, legacy alias back-compat, edge cases zero/negative, precision Decimal.js sur lissage)
 - `reste-a-vivre.test.ts` (Server Action) — 14 tests : rate-limit, Zod validation (regex YYYYMM, négatif, > 100k, zéro OK), happy path (merge JSONB, premier override, row missing, audit log sans montant, revalidate), DB read/write failures
-- `CapaciteEpargneCard.test.tsx` — réécriture complète : 3 sub-stats, fixture @thierry (662/500/162), trigger "Ajuster ce mois" rendered, lede interpolé, ledeNegatif sans culpabilisation, tooltip accessible, parity 5 locales
+- `CapaciteEpargneCard.test.tsx` — réécriture complète : 3 sub-stats, fixture @thierry (640 / 480 / 160), trigger "Ajuster ce mois" rendered, lede interpolé, ledeNegatif sans culpabilisation, tooltip accessible, parity 5 locales
 - `AjusterResteAVivreDrawer.test.tsx` — 14 tests : trigger, open state, prefill, helper adaptatif (coherent/bas/haut/fallback null), live update, submit flow (Server Action call, close on success, toast on failure, disabled when invalid, comma decimal), ESC dismiss
 
 ### E2E Playwright
@@ -329,10 +329,10 @@ npm run build           ✅ Production build OK
 
 1. Login sur preview Vercel
 2. Cockpit doit afficher 3 sub-stats (Reste dispo / Reste à vivre / Capacité épargne)
-3. Pour Thierry : valeurs attendues **662 / 500 / 162** (si workspace cohérent avec les charges du persona)
+3. Pour le profil d'exemple : valeurs attendues **640 / 480 / 160** (si workspace cohérent avec les charges du persona)
 4. Tap "Ajuster ce mois" → drawer slide-up sur iPhone
 5. Modifier 500 → 450 → Enregistrer → la sub-stat "Reste à vivre" affiche 450 et "Capacité épargne" passe à 212
-6. Re-tap "Ajuster" → re-modifier 450 → 500 → revient à 162
+6. Re-tap "Ajuster" → re-modifier 450 → 500 → revient à 160
 
 ### Migration Supabase à appliquer
 

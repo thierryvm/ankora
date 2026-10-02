@@ -225,7 +225,7 @@ Le run Playwright a flaggé **12 annotations** sur **7 spec lines distincts**. T
 ## Pour @thierry (validation post-merge empirique)
 
 - **Desktop ankora.be/app** : voir le breakdown waterfall Capacité Réelle au PREMIER regard (`+ Revenus 2 500 € / − Effort lissé 1 876 € / − Plafond quotidien 500 € / +124 € hero`).
-- **Layout** : comptes (Belfius / Belfius Épargne / Revolut) EN HAUT, Plan du mois (Principal→Vie Courante / →Épargne / Restant) EN BAS.
+- **Layout** : comptes (Principal / Épargne / Vie courante) EN HAUT, Plan du mois (Principal→Vie Courante / →Épargne / Restant) EN BAS.
 - **Disparition** des 4 cards legacy (Provisions/mois, Santé Critique, Virement suggéré, Factures Mai).
 - **iPhone 14 PWA standalone** : breakdown lisible mobile (3 lignes empilées), big number hero préservé, layout stack vertical cohérent (radar → comptes → plan).
 

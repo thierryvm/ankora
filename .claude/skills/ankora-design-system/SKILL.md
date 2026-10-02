@@ -89,8 +89,8 @@ encre neutre par défaut, `--color-danger` si négatif, **jamais de vert**.
 - **Compte épargne · trois lectures** (NORTH_STAR) — Total Épargne / Provisions affectées / Réserve libre. Différenciateur n°1, jamais réduire à un montant unique.
 - **Provisions affectées** + **Réserve libre** — distinction obligatoire. Provisions = argent fléché pour facture future (taxe, vacances). Réserve = buffer libre sans contrainte.
 - **Effort financier mensuel** — total charges fixes mensuelles + provisions mensuelles lissées. Reste valide : c'est un total de sorties, pas un des quatre chiffres affichés.
-- **Lissage** — différenciateur Ankora vs YNAB/Monarch. Provisions mensualisées pour absorber les factures annuelles (taxe voiture 25 €/mois × 12 = 300 € au 28/05).
-- **Plan d'apurement** (ADR-017, table `installment_plans`) — échelonnement d'une dette (ex : 2 407 € / 11 mensualités). Génération auto N transactions pending.
+- **Lissage** — différenciateur Ankora vs YNAB/Monarch. Provisions mensualisées pour absorber les factures annuelles (taxe de circulation 20 €/mois × 12 = 240 € au 28/05).
+- **Plan d'apurement** (ADR-017, table `installment_plans`) — échelonnement d'une dette (ex : 2 077,50 € / 11 mensualités). Génération auto N transactions pending.
 - **Assistant Virements** (ADR-012) — sub-section dashboard qui suggère le montant à virer ce mois + détail provisions item-par-item. Gradient bleu-vert + sub-card Santé.
 - **Ballet provisions** (ADR-018) — aller-retour bidirectionnel compte courant ↔ épargne, audit trail OUT (mensualisation) / IN (rapatriement avant échéance).
 - **Live decrement** (ADR-010) — « Il te reste » descend quand on saisit une dépense. Le nombre **TICKE** (digit roll), jamais cross-fade. Implémenté par `components/dashboard/HeroAmount.tsx` ; l'optimisme passe par `lib/expenses/optimistic-spend.ts`, qui publie une **figure absolue** et non un delta (un delta produisait une frame fausse — voir le fichier).

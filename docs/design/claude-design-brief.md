@@ -313,7 +313,7 @@ Bloc 1 — 3 ACCOUNT CARDS (3 colonnes desktop / 1 colonne mobile)
   - "Compte Épargne" (provisions, emerald PiggyBank) — input savings balance editable, sub-label "Provisions Annuelles"
   - "Carte Quotidien" (daily_card, purple CreditCard) — input monthly daily-spending plafond editable, sub-label "Courses, Essence, Loisirs"
 
-  CRITICAL: the card title is RENAMABLE inline (click → input → save). Thierry calls his "Belfius", "Compte Épargne Belfius", "Revolut Quotidien". The account_TYPE is fixed (semantic), but the display_name is free-text. Show a subtle pencil hint on hover.
+  CRITICAL: the card title is RENAMABLE inline (click → input → save). A user may call theirs "Main bank", "Bank savings", "Daily card". The account_TYPE is fixed (semantic), but the display_name is free-text. Show a subtle pencil hint on hover.
 
 Bloc 2 — 2 HERO RADAR CARDS (2 colonnes equal width)
   Card 2.1 — "Effort Financier Lissé"
@@ -402,7 +402,7 @@ Bloc 3 — 2/3 + 1/3 SPLIT (desktop) / vertical stack (mobile)
         - 1-line explanatory text
         - Button "Appliquer ce changement" (primary blue, persists modification + creates provider_negotiations record cf. ADR-013 future)
 
-      Tone: empowering. The user is in control, can simulate "what if I switch internet provider to Orange at 89€" in real-time and see immediate impact. ⚠️ FSMA: do NOT use the word "investissement" or "placement" anywhere in this component.
+      Tone: empowering. The user is in control, can simulate "what if I switch internet provider to a cheaper offer at 35€" in real-time and see immediate impact. ⚠️ FSMA: do NOT use the word "investissement" or "placement" anywhere in this component.
 
 ────────────────────────────────────────────────────────────────────────
 MODALS (overlay, backdrop-blur, Liquid Glass aesthetic)

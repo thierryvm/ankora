@@ -9,28 +9,28 @@
 
 ## Étalon
 
-19 charges reproduisant les données réelles de @thierry. Totaux **recalculés en
+19 charges d'un profil de test fictif (valeurs remplacées le 2 octobre 2026, dépôt public : les égalités ci-dessous sont recalculées sur ce profil, la mesure d'origine portait sur l'ancien). Totaux **recalculés en
 SQL, hors application** :
 
 | Fréquence     |      Somme |  Lissé mensuel |
 | ------------- | ---------: | -------------: |
-| mensuelles    | 1 804,21 € |     1 804,21 € |
-| trimestrielle |       45 € |           15 € |
-| annuelles     |      528 € |           44 € |
-| **total**     |            | **1 863,21 €** |
+| mensuelles    | 1 455,37 € |     1 455,37 € |
+| trimestrielle |       60 € |           20 € |
+| annuelles     |      456 € |           38 € |
+| **total**     |            | **1 513,37 €** |
 
-Équivalent annuel : **22 358,52 €**.
+Équivalent annuel : **18 160,44 €**.
 
 ## Ce qui est juste
 
-- **Écran Charges** : affiche `Effort lissé / mois 1 863,21 €` et
-  `Équivalent annuel 22 358,52 €` — l'étalon à l'euro près. Sous-totaux
-  conformes, `Reste à payer ce mois 1 849,21 €` = 1 804,21 + 45.
-- **Projection des échéances annuelles** : Taxe voiture au 1ᵉʳ mars 2027, Taxe
-  égout au 1ᵉʳ juin 2027 — les occurrences 2026 étant passées, correct.
+- **Écran Charges** : affiche `Effort lissé / mois 1 513,37 €` et
+  `Équivalent annuel 18 160,44 €` — l'étalon à l'euro près. Sous-totaux
+  conformes, `Reste à payer ce mois 1 515,37 €` = 1 455,37 + 60.
+- **Projection des échéances annuelles** : Taxe de circulation au 1ᵉʳ mars 2027, Taxe
+  égouts au 1ᵉʳ juin 2027 — les occurrences 2026 étant passées, correct.
 - **Dépenses** : `170,90 €`, `≈ 5,51 €/jour sur 31 jours` (170,90 / 31 = 5,51).
-- **Engagements** : `0/12 échéances de 220 €`, reste `2 640 €`.
-- **Comptes** : les cinq champs sont peuplés (2637, 500, 1200, 180, 430),
+- **Engagements** : `0/12 échéances de 190 €`, reste `2 280 €`.
+- **Comptes** : les cinq champs sont peuplés (2500, 500, 1200, 180, 430),
   vérifié **au DOM**.
 - **Simulateur** : le sélecteur expose bien les **19 charges**.
 - **« Épargne estimée » n'est pas un doublon de « Il te reste ».** Cf. plus bas.
@@ -83,7 +83,7 @@ Elles n'ont rien coûté ici parce qu'elles ont été rattrapées — elles aura
 produit deux faux rapports de bug.
 
 **`innerText` n'expose pas la valeur des champs.** L'écran Comptes semblait
-présenter cinq champs vides ; ils contenaient 2637, 500, 1200, 180 et 430. Toute
+présenter cinq champs vides ; ils contenaient 2500, 500, 1200, 180 et 430. Toute
 vérification portant sur un `<input>`, `<select>` ou `<textarea>` doit lire le
 DOM (`element.value`), jamais le texte rendu.
 

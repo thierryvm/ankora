@@ -8,7 +8,7 @@
 
 Corriger à la racine les dates de factures incohérentes, **sans toucher** `nextDueDateForCharge` (**2 call-sites prod** : `upcoming.ts` repointé ici, `ChargesClient.tsx` en PR-B). Deux leviers :
 
-1. **Backfill data** : `payment_months` recomputé pour les charges non-mensuelles mal stockées (S.W.D.E `[1]` → `[1,4,7,10]`).
+1. **Backfill data** : `payment_months` recomputé pour les charges non-mensuelles mal stockées (eau `[1]` → `[1,4,7,10]`).
 2. **Domaine payment-aware** : nouvelle fonction « prochaine occurrence NON PAYÉE » → câblée dans le dashboard.
 
 ## Scope (PR-A — dashboard + data uniquement ; page charges = PR-B)
@@ -21,7 +21,7 @@ Corriger à la racine les dates de factures incohérentes, **sans toucher** `nex
    - ne saute PAS l'occurrence du mois courant si son jour est passé + non payée (→ `isOverdue`).
    - `null` si tout payé dans la fenêtre OU charge inactive/`paymentMonths` vide.
    - **NE modifie PAS** `nextDueDateForCharge` (reste pour ses autres call-sites).
-3. **Câblage dashboard** : `getUpcomingCharges` (`upcoming.ts`) utilise `nextUnpaidDueDate` au lieu de `nextDueDateForCharge`. Effet : Impôt juin payé → roule à juillet ; Taxe voiture juin non payée → bucket `overdue` ; S.W.D.E → date correcte. La carte `ProchainesFacturesCard` reçoit déjà `payments`.
+3. **Câblage dashboard** : `getUpcomingCharges` (`upcoming.ts`) utilise `nextUnpaidDueDate` au lieu de `nextDueDateForCharge`. Effet : Impôt juin payé → roule à juillet ; Taxe de circulation juin non payée → bucket `overdue` ; Eau → date correcte. La carte `ProchainesFacturesCard` reçoit déjà `payments`.
 4. i18n : aucune nouvelle clé requise (bucket `overdue` existe déjà). À confirmer.
 
 ## Non-goals (→ PR-B/C/D)
@@ -36,7 +36,7 @@ Corriger à la racine les dates de factures incohérentes, **sans toucher** `nex
 - `src/lib/domain/charges/next-unpaid-due-date.ts` (CREATE) + `__tests__/` (CREATE)
 - `src/lib/domain/charges/index.ts` (export)
 - `src/lib/domain/charges/upcoming.ts` (MODIFY — utilise nextUnpaidDueDate ; signature `getUpcomingCharges` inchangée, elle a déjà `payments`)
-- `src/lib/domain/charges/__tests__/upcoming.test.ts` (MODIFY — cas payé→roule, non-payé-passé→overdue, S.W.D.E-like backfillé)
+- `src/lib/domain/charges/__tests__/upcoming.test.ts` (MODIFY — cas payé→roule, non-payé-passé→overdue, type eau backfillé)
 
 ## Logique (réconcilie THI-329 + feedback session)
 
@@ -53,8 +53,8 @@ nextUnpaidDueDate(charge, payments, fromIso):
 ```
 
 - Impôt juin payé → offset 0 sauté → juillet (pas overdue). ✓
-- Taxe voiture juin non payée → offset 0 → juin, isOverdue. ✓
-- S.W.D.E backfillé [1,4,7,10], non payé, juin → juillet. ✓ (ancre perfectionnée plus tard via CadenceField PR-D)
+- Taxe de circulation juin non payée → offset 0 → juin, isOverdue. ✓
+- Eau backfillée [1,4,7,10], non payé, juin → juillet. ✓ (ancre perfectionnée plus tard via CadenceField PR-D)
 
 ## Risk tiering / QA
 
@@ -63,7 +63,7 @@ Voie LOURDE : migration + domaine. Agents : **plan-reviewer** (ce doc), **financ
 ## Migration — prudence
 
 - `UPDATE charges SET payment_months = <recompute> WHERE payment_months <> <recompute>` — recompute en SQL OU script de migration. Préférer une fonction SQL inline reproduisant `paymentMonthsFromFrequency` (monthly=[1..12], quarterly=[a,a+3,a+6,a+9] mod 12, semiannual=[a,a+6], annual=[a]) pour rester déterministe. Vérifier sur copie avant prod. Pas de DELETE, pas de perte.
-- @thierry corrigera les ANCRES réelles (S.W.D.E mai) via CadenceField (PR-D) — le backfill ne devine pas l'ancre, il dé-casse seulement (un seul mois → la cadence complète).
+- @thierry corrigera les ANCRES réelles (eau : mai) via CadenceField (PR-D) — le backfill ne devine pas l'ancre, il dé-casse seulement (un seul mois → la cadence complète).
 
 ## DoD
 
@@ -71,7 +71,7 @@ typecheck · lint · lint:use-server · test · build · QA agents · Sourcery s
 
 ## Smoke @thierry
 
-Dashboard `/app` : « Prochaines factures » — Impôt (juin payé) n'apparaît plus en juin (roulé) ; Taxe voiture (juin non payée) en « En retard » ; S.W.D.E n'affiche plus janv. 2027.
+Dashboard `/app` : « Prochaines factures » — Impôt (juin payé) n'apparaît plus en juin (roulé) ; Taxe de circulation (juin non payée) en « En retard » ; l'eau n'affiche plus janv. 2027.
 
 ## Changements plan-reviewer intégrés (🟡 APPROVED WITH CHANGES, 2026-06-05)
 

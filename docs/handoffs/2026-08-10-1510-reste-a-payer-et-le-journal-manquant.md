@@ -144,7 +144,7 @@ invisible. La règle « synchronisation ROADMAP ↔ repo » du `CLAUDE.md` a ét
 Trois points absents de l'ADR, tous issus de @thierry — matière d'un **ADR-040 amendant
 ADR-038**, jamais d'une réécriture (un `Accepted` est immuable) :
 
-1. **Le reliquat de fin de mois** — « mon Belfius n'est pas à zéro une fois tout payé ».
+1. **Le reliquat de fin de mois** — « mon compte principal n'est pas à zéro une fois tout payé ».
    Absent d'ADR-038 **et** du §7 du modèle source, qui liste pourtant ce qui manque.
    Ne doit **jamais** entrer dans « Budget du mois » (chiffre nº 2 d'ADR-035).
 2. **Cohérence garantie / exhaustivité non garantie** — reformule D6, qui disait

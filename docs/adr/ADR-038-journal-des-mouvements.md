@@ -67,10 +67,10 @@ revenu variable.
 
 ### Ce que le modèle manque le plus : l'arbitrage mensuel
 
-Relevé auprès de @thierry le 5 août 2026, sur son fonctionnement réel :
+Relevé auprès d'un utilisateur le 5 août 2026 (citation reformulée, montants fictifs — dépôt public) :
 
-> « Ce mois-ci j'ai envoyé 500 € sur Revolut et pas la somme totale que j'aurais pu.
-> J'ai préféré épargner 301 € + 59 € envoyés sur le compte épargne que d'avoir 801 €
+> « Ce mois-ci j'ai envoyé 450 € sur ma carte du quotidien et pas la somme totale que j'aurais pu.
+> J'ai préféré épargner 280 € + 50 € envoyés sur le compte épargne que d'avoir 730 €
 > de disponible. »
 
 Le virement vers le compte de vie courante **n'est pas un paramètre. C'est la décision du

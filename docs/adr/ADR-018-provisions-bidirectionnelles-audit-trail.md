@@ -37,17 +37,17 @@ Cette phrase capture l'essence du modèle Ankora pour les charges non-mensuelles
 
 Aujourd'hui (post-ADR-002 + ADR-012), Ankora modélise des **virements** simples entre comptes (`account_transfers`) et entre buckets (`bucket_transfers`). Mais le cas d'usage **provision non-mensuelle** est intrinsèquement **bidirectionnel et cyclique** :
 
-1. **OUT (mensualisation)** : chaque mois, X € quittent le compte courant et alimentent le bucket dédié dans le compte de lissage. Ex : Taxe voiture 25 €/mois × 12 mois → bucket "Taxe voiture 2026".
-2. **IN (rapatriement à échéance)** : juste avant la date de paiement de la facture annuelle (ou pluri-mensuelle), le bucket est vidé et le montant cumulé revient sur le compte courant pour permettre le paiement effectif. Ex : 300 € reviennent au 28/05 pour payer la Taxe voiture du 01/06 au Trésor public.
+1. **OUT (mensualisation)** : chaque mois, X € quittent le compte courant et alimentent le bucket dédié dans le compte de lissage. Ex : taxe de circulation 20 €/mois × 12 mois → bucket "Taxe de circulation 2026".
+2. **IN (rapatriement à échéance)** : juste avant la date de paiement de la facture annuelle (ou pluri-mensuelle), le bucket est vidé et le montant cumulé revient sur le compte courant pour permettre le paiement effectif. Ex : 240 € reviennent au 28/05 pour payer la taxe de circulation du 01/06 au Trésor public.
 3. **Paiement final** : la transaction de paiement (sortie du compte courant vers le créancier) est l'aboutissement du cycle.
 
-Sans audit trail dédié, l'utilisateur voit dans le hero waterfall une provision mensuelle de 25 €/mois (OUT), puis tout d'un coup un mouvement IN de 300 € en mai qui semble surgir de nulle part, suivi d'une dépense de 300 € au profit de "Trésor Public Belgique" en juin. **Il perd le fil narratif et doute de la cohérence des chiffres** — exactement le contraire de la promesse "Ankora te rend le contrôle".
+Sans audit trail dédié, l'utilisateur voit dans le hero waterfall une provision mensuelle de 20 €/mois (OUT), puis tout d'un coup un mouvement IN de 240 € en mai qui semble surgir de nulle part, suivi d'une dépense de 240 € au profit de "Trésor Public Belgique" en juin. **Il perd le fil narratif et doute de la cohérence des chiffres** — exactement le contraire de la promesse "Ankora te rend le contrôle".
 
 ### Pourquoi ADR-002 ne suffit pas
 
 ADR-002 garantit l'invariant comptable (`sum(buckets) === account.balance`), mais ne capture pas :
 
-- **L'intention** d'un virement OUT (« je provisionne pour la Taxe voiture 2026 ») vs un virement IN (« je rapatrie pour payer la facture qui tombe »).
+- **L'intention** d'un virement OUT (« je provisionne pour la taxe de circulation 2026 ») vs un virement IN (« je rapatrie pour payer la facture qui tombe »).
 - **Le lien** entre le cycle de provisionnement et la transaction finale de paiement.
 - **La timeline** : l'utilisateur veut voir "ce que mon argent fait pour moi" en chronologie, pas comme une pile de virements anonymes.
 - **La pédagogie** : un nouvel utilisateur a besoin de comprendre que provisionner ≠ dépenser, et que rapatrier ≠ recevoir un revenu.
@@ -80,8 +80,8 @@ Critères, classés par poids :
 
 - Aucun lien entre un virement OUT et le virement IN qui le rapatrie 11 mois plus tard.
 - Aucune timeline dédiée → l'utilisateur doit reconstruire le cycle mentalement.
-- Impossible de répondre proprement à la question « combien me reste-t-il à provisionner pour la Taxe voiture cette année ? » sans heuristique fragile.
-- Impossible de générer une notif J-3 « rapatrier 300 € vers compte courant » sans table dédiée.
+- Impossible de répondre proprement à la question « combien me reste-t-il à provisionner pour la taxe de circulation cette année ? » sans heuristique fragile.
+- Impossible de générer une notif J-3 « rapatrier 240 € vers compte courant » sans table dédiée.
 
 **Verdict** : ❌ rejetée. La promesse produit (« voir le ballet aller-retour ») devient impossible à tenir.
 
@@ -159,14 +159,14 @@ CREATE TABLE provision_transfers (
   direction             provision_direction NOT NULL,
 
   -- Lien vers la charge récurrente provisionnée
-  -- (ex: Taxe voiture annuelle 300 € échue le 01/06/2026)
+  -- (ex: taxe de circulation annuelle 240 € échue le 01/06/2026)
   recurring_template_id UUID NOT NULL REFERENCES recurring_templates(id) ON DELETE RESTRICT,
 
   -- Cycle annuel concerné (année civile de l'échéance, pas année de la provision)
   provision_cycle_year  SMALLINT NOT NULL CHECK (provision_cycle_year BETWEEN 2025 AND 2099),
 
   -- Lien optionnel : si direction = 'in', la transaction de paiement final qui clôt le cycle
-  -- (ex: virement 300 € au Trésor public le 01/06/2026)
+  -- (ex: virement 240 € au Trésor public le 01/06/2026)
   -- NULL tant que le paiement n'est pas confirmé (ADR-016)
   settlement_transaction_id UUID REFERENCES transactions(id) ON DELETE SET NULL,
 
@@ -282,22 +282,22 @@ export async function createProvisionTransfer(
 
 Reste à livrer côté CC Ankora intégration (PR-D5) :
 
-1. **Drawer drilldown par cycle** : tap sur une ligne IN ouvre un drawer "Cycle Taxe voiture · 2026" avec grille 12 mois (chip vert pour OUT effectués, chip neutre pour OUT à venir, gros chip teal pour IN final, chip "Payée" si settlement_transaction matché).
+1. **Drawer drilldown par cycle** : tap sur une ligne IN ouvre un drawer "Cycle Taxe de circulation · 2026" avec grille 12 mois (chip vert pour OUT effectués, chip neutre pour OUT à venir, gros chip teal pour IN final, chip "Payée" si settlement_transaction matché).
 2. **Tooltip pédagogique** sur le label "Mouvements" : « L'argent ne disparaît pas — il attend que la facture tombe. » (FR-BE, R-14).
-3. **Notification J-3 in-app** avant l'échéance d'une charge récurrente avec bucket cumulé : « Taxe voiture · 300 € prêts à être rapatriés ». Bouton "Rapatrier maintenant" lance la création de la paire `account_transfers` + `provision_transfers` direction='in'.
-4. **Ajustement manuel R-10** : possibilité de modifier le montant d'un OUT mensuel à mi-cycle. Auto-rebalance proposé pour les mois restants (ex: « Tu veux que les 8 mois suivants compensent ce mois-ci à 32 €/mois ou tu préfères garder 25 €/mois et avoir 25 € de moins au final ? »).
+3. **Notification J-3 in-app** avant l'échéance d'une charge récurrente avec bucket cumulé : « Taxe de circulation · 240 € prêts à être rapatriés ». Bouton "Rapatrier maintenant" lance la création de la paire `account_transfers` + `provision_transfers` direction='in'.
+4. **Ajustement manuel R-10** : possibilité de modifier le montant d'un OUT mensuel à mi-cycle. Auto-rebalance proposé pour les mois restants (ex: « Tu veux que les 8 mois suivants compensent ce mois-ci à 22,50 €/mois ou tu préfères garder 20 €/mois et avoir 20 € de moins au final ? »).
 5. **Mode "cycle rompu"** : si l'utilisateur dépense le bucket avant l'échéance (R-06 anti-culpa : « Pas de panique, on regarde comment rééquilibrer »), drawer propose 3 chemins : reprovisionner sur les mois restants, accepter le déficit et activer un plan d'apurement (ADR-017) si la facture est étalée, ou repousser l'échéance.
 
-### Cas d'usage typiques (seeds Thierry mai 2026)
+### Cas d'usage typiques (profil d'exemple, valeurs fictives)
 
-| Cycle                  | OUT mensuel                             | IN attendu             | Settlement                                   |
-| ---------------------- | --------------------------------------- | ---------------------- | -------------------------------------------- |
-| **Taxe voiture 2026**  | 25 €/mois × 12 (juin 2025 → mai 2026)   | 300 € au 28/05/2026    | Paiement Trésor public 01/06/2026            |
-| **Taxe poubelle 2026** | 10 €/mois × 12 (avril 2025 → mars 2026) | 120 € au 22/03/2026 ✅ | Paiement Commune 25/03/2026 ✅ déjà clôturé  |
-| **Taxe égout 2026**    | ~5 €/mois × 12 (avril 2025 → mars 2026) | 55 € au 22/03/2026 ✅  | Paiement Commune 25/03/2026 ✅ déjà clôturé  |
-| **Dashlane annuel**    | ~4,50 €/mois × 12                       | 53 € au 09/04/2026 ✅  | Paiement Dashlane 11/04/2026 ✅ déjà clôturé |
+| Cycle                         | OUT mensuel                            | IN attendu             | Settlement                                  |
+| ----------------------------- | -------------------------------------- | ---------------------- | ------------------------------------------- |
+| **Taxe de circulation 2026**  | 20 €/mois × 12 (juin 2025 → mai 2026)  | 240 € au 28/05/2026    | Paiement Trésor public 01/06/2026           |
+| **Collecte des déchets 2026** | 9 €/mois × 12 (avril 2025 → mars 2026) | 108 € au 22/03/2026 ✅ | Paiement Commune 25/03/2026 ✅ déjà clôturé |
+| **Taxe égouts 2026**          | 5 €/mois × 12 (avril 2025 → mars 2026) | 60 € au 22/03/2026 ✅  | Paiement Commune 25/03/2026 ✅ déjà clôturé |
+| **Abonnement annuel**         | 4 €/mois × 12                          | 48 € au 09/04/2026 ✅  | Paiement éditeur 11/04/2026 ✅ déjà clôturé |
 
-→ 3 cycles déjà clôturés en 2026 (visibles en historique grisé), 1 cycle actif (Taxe voiture), 0 cycle de plus pour Thierry (cf. R-13 : pas d'invention de mutuelle annuelle ni d'assurance habitation séparée — tout est mensualisé).
+→ 3 cycles déjà clôturés en 2026 (visibles en historique grisé), 1 cycle actif (taxe de circulation), 0 cycle de plus pour ce profil (cf. R-13 : pas d'invention de mutuelle annuelle ni d'assurance habitation séparée — tout est mensualisé).
 
 ### Lien avec ADR-009 amendé (3 concepts)
 
@@ -305,7 +305,7 @@ Reste à livrer côté CC Ankora intégration (PR-D5) :
 - **Reste à vivre** = budget vie courante (saisi user, R-10 ajustable)
 - **Capacité d'épargne réelle** = Reste disponible − Reste à vivre
 
-Les `provision_transfers direction='out'` du mois en cours alimentent le calcul du Reste disponible. Les `direction='in'` du mois en cours **ne s'ajoutent pas aux revenus** — ils sont neutres dans le hero waterfall (juste un déplacement entre buckets, pas une rentrée d'argent fraîche). C'est crucial pour ne pas tromper l'utilisateur (un IN de 300 € en juin ne signifie PAS qu'il a 300 € de plus à dépenser).
+Les `provision_transfers direction='out'` du mois en cours alimentent le calcul du Reste disponible. Les `direction='in'` du mois en cours **ne s'ajoutent pas aux revenus** — ils sont neutres dans le hero waterfall (juste un déplacement entre buckets, pas une rentrée d'argent fraîche). C'est crucial pour ne pas tromper l'utilisateur (un IN de 240 € en juin ne signifie PAS qu'il a 240 € de plus à dépenser).
 
 ---
 
@@ -357,7 +357,7 @@ Les `provision_transfers direction='out'` du mois en cours alimentent le calcul 
    - `<ProvisionCycleDrawer />` (drilldown par cycle)
    - `<ProvisionRepatriationNudge />` (notif J-3 in-app)
 5. Tests Vitest domain ≥ 90% couverture (cycles, ruptures, ajustements R-10).
-6. Tests Playwright e2e : flow complet "provisionner → rapatrier → payer" sur seeds Thierry.
+6. Tests Playwright e2e : flow complet "provisionner → rapatrier → payer" sur le profil de test.
 7. Audit `gdpr-compliance-auditor` (provision_transfers contient un lien fort vers user via workspace, doit être inclus dans export GDPR art. 20 et anonymisé en deletion art. 17).
 8. Audit `financial-formula-validator` (vérifier l'invariant OUT ≥ IN par cycle, vérifier non-double-comptage dans hero waterfall).
 9. i18n FR-BE 100% (R-14) + audit `i18n-auditor`.

@@ -30,11 +30,11 @@ La landing publique vend un simulateur précis. Le drawer livré n'en délivre q
 
 ## 2. Données & calculs (vérifié live, sur la preview connectée)
 
-**Le calcul n'est PAS faux — il est mal étiqueté.** Arithmétique vérifiée sur le scénario « Annuler une charge / Loyer 740 € » :
+**Le calcul n'est PAS faux — il est mal étiqueté.** Arithmétique vérifiée sur le scénario « Annuler une charge / Loyer 690 € » :
 
-- `Actuel 1 986 € − 740 € = Projeté 1 246 €` ✅
-- `740 € × 12 = Économie annuelle 8 880 €` ✅
-- `740 / 1 986 = 37,26 %` ✅ → mais affiché « **+37,26 % / mois** »
+- `Actuel 1 850 € − 690 € = Projeté 1 160 €` ✅
+- `690 € × 12 = Économie annuelle 8 280 €` ✅
+- `690 / 1 850 = 37,30 %` ✅ → mais affiché « **+37,30 % / mois** »
 
 **Problèmes de présentation (le vrai sujet) :**
 
@@ -184,11 +184,11 @@ _(URLs complètes dans les rapports des deux sous-agents de recherche, archivabl
 
 @thierry a confirmé le modèle (+ tableau Coda de référence) :
 
-> **Réserve libre = l'argent envoyé sur le compte de vie quotidienne (Revolut)**
+> **Réserve libre = l'argent envoyé sur le compte de vie quotidienne**
 > **= Revenus − (factures + charges du mois) − provisions de lissage.**
 
-Exemple réel : `2 466 € (revenus) − 1 895 € (charges mensuelles du mois) − ~59 € (provisions lissées) ≈ 507 €`.
-C'est exactement l'« Argent disponible +507 € » de la landing, et le « Reste disponible » (~514 €) du dashboard.
+Exemple (valeurs fictives) : `2 500 € (revenus) − 1 900 € (charges mensuelles du mois) − ~50 € (provisions lissées) ≈ 550 €`.
+Même définition que l'« Argent disponible » de la landing et le « Reste disponible » du dashboard.
 
 **Le simulateur doit faire bouger CE chiffre** (Reste disponible / réserve libre) :
 
@@ -197,12 +197,12 @@ C'est exactement l'« Argent disponible +507 € » de la landing, et le « Rest
 
 Mapping dashboard : **Reste disponible = réserve libre (cible S2)** · Reste à vivre = besoin · Capacité d'épargne = surplus.
 
-### Scénarios S1 réalistes — tirés des vraies charges (tableau Coda @thierry)
+### Scénarios S1 réalistes — tirés d'un profil type (valeurs fictives)
 
-- **Renégocier télécom** : Orange 89 €/mois, Voo 78 €/mois (afficher la fourchette marché en repère documentaire).
-- **Couper un abonnement** : Playstation 9 €, Apple One 3 €, ou combo (Voo + Playstation).
-- **Renégocier énergie/assurance** : MEGA 55 €, Assurance auto 150 €.
-- Charges non-mensuelles (S.W.D.E trimestrielle, taxes voiture/poubelle/égout + Dashlane annuelles) → alimentent les **provisions de lissage**, ne sont pas dans les charges « du mois ».
+- **Renégocier télécom** : opérateur A 35 €/mois, opérateur B 42 €/mois (afficher la fourchette marché en repère documentaire).
+- **Couper un abonnement** : abonnement jeux 8 €, stockage en ligne 3 €, ou combo des deux.
+- **Renégocier énergie/assurance** : énergie 61 €, assurance auto 64 €.
+- Charges non-mensuelles (eau trimestrielle, taxe de circulation, taxes communales + abonnement annuel) → alimentent les **provisions de lissage**, ne sont pas dans les charges « du mois ».
 
 > @cc-ankora : utiliser des fixtures réalistes de ce type, **jamais « annuler le Loyer »**. Les euros exacts viennent du **domaine Ankora** (données saisies dans l'app), pas du tableau Coda — celui-ci est le modèle de référence de @thierry, à **ne pas hardcoder**.
 
@@ -211,6 +211,6 @@ Mapping dashboard : **Reste disponible = réserve libre (cible S2)** · Reste à
 @thierry veut un système de notifications **bidirectionnel**, cœur de la valeur « provisions affectées » :
 
 1. **Rappel de versement** — un peu avant la date prévue : « verse X € vers ton compte de lissage (épargne) ».
-2. **Rappel de paiement** — à l'échéance : « paie la/les facture(s) lissée(s) Y », avec le détail, depuis le compte principal (Belfius).
+2. **Rappel de paiement** — à l'échéance : « paie la/les facture(s) lissée(s) Y », avec le détail, depuis le compte principal.
 
 FSMA-safe (rappels organisationnels, jamais de conseil). À cadrer en **feature dédiée** — NE PAS l'intégrer au P0 simulateur.

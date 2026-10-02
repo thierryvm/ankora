@@ -132,7 +132,7 @@ migration :
 
 Relevé auprès de @thierry le 2026-08-10 :
 
-> « chaque fin de mois, si mes comptes ne sont pas à zéro € […] mon solde Belfius principal
+> « chaque fin de mois, si mes comptes ne sont pas à zéro € […] mon solde [banque] principal
 > ne sera pas à 0 € une fois tout payé »
 
 Absent d'ADR-038, et absent du §7 du modèle source qui liste pourtant ce qui manque.
@@ -159,7 +159,7 @@ incertain, pas l'arithmétique.
 - Ankora **ne garantit pas l'exhaustivité** — ce qui ne lui a pas été dit lui est invisible.
 
 Le rapprochement interne ne sert donc pas à vérifier la justesse (elle l'est par
-construction) : il sert à **mesurer ce qui manque**. Un versement déclaré de 360 € dont les
+construction) : il sert à **mesurer ce qui manque**. Un versement déclaré de 310 € dont les
 parts n'en couvrent que 340 signale un trou de 20 €, sans rien savoir de la banque.
 
 **Conséquence de rédaction, y compris sur la vitrine** (cf. #357) : ne jamais écrire

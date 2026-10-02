@@ -150,15 +150,15 @@ Affichée seulement à partir du 7ᵉ jour du mois (sinon la projection est du b
 
 #### Preuve 1 — aucune de tes 19 charges n'est à 9 mois
 
-J'ai relu les données réelles du prototype **[V]** (`gestion-budget.html`, lignes 203–231) :
+J'ai relu les données du prototype **[V]** (`gestion-budget.html`, lignes 203–231) :
 
-| Cadence     | Nb de charges | Lesquelles                                                                                                                                                            |
-| ----------- | ------------: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **1 mois**  |            14 | Loyer, Charges immeuble, Pension alimentaire, Assurance auto, Orange, Belfius, Impôt (plan), Solidaris ×2, EnergyVision, PlayStation, FGTB, Crédit voiture, Apple One |
-| **3 mois**  |             1 | S.W.D.E. (eau)                                                                                                                                                        |
-| **12 mois** |             4 | Taxe voiture, Taxe égout, Taxe poubelle, Dashlane                                                                                                                     |
-| **6 mois**  |             0 | —                                                                                                                                                                     |
-| **9 mois**  |         **0** | —                                                                                                                                                                     |
+| Cadence     | Nb de charges | Lesquelles                                                                                                                                                                                  |
+| ----------- | ------------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1 mois**  |            14 | Loyer, Charges communes, Assurance habitation, Assurance auto, Téléphonie, Frais bancaires, Impôt (plan), Mutuelle ×2, Énergie, Abonnement jeux, Cotisation, Crédit auto, Stockage en ligne |
+| **3 mois**  |             1 | Eau                                                                                                                                                                                         |
+| **12 mois** |             4 | Taxe de circulation, Taxe égouts, Collecte des déchets, Gestionnaire de mots de passe                                                                                                       |
+| **6 mois**  |             0 | —                                                                                                                                                                                           |
+| **9 mois**  |         **0** | —                                                                                                                                                                                           |
 
 Le prototype **propose** « Tous les 9 mois » dans sa liste `FREQS` (ligne 164) — mais **aucune charge ne l'utilise**. C'est une option de menu, pas un besoin. L'audit avait raison de la signaler ; il avait tort de ne pas vérifier si elle servait.
 
@@ -166,7 +166,7 @@ Le prototype **propose** « Tous les 9 mois » dans sa liste `FREQS` (ligne 164)
 
 Les institutions facturent sur des cycles **qui bouclent sur l'année civile**, parce que leur comptabilité est annuelle : 1, 2, 3, 4, 6, 12 mois. 9 n'est pas un diviseur de 12 — un cycle de 9 mois dérive dans le calendrier (janvier → octobre → juillet → avril…). Aucun fournisseur d'eau, d'énergie, d'assurance, ni aucune commune belge ne facture ainsi.
 
-**Mon hypothèse sur l'origine de ta demande [H]** : « tous les 9 mois » est presque certainement une lecture de **« étalé sur 9 mois »** — un plan de paiement, typiquement fiscal. Or ça, ce n'est **pas** une charge périodique : c'est 9 mensualités consécutives, puis c'est fini. Ankora modélise déjà exactement ça, proprement, sous `commitments` avec `kind = 'installment_plan'` et `installments_total = 9` **[V]** (`supabase/migrations/20260719000001_commitments.sql`). Ton « Impôt (plan de paiement) 220 €/mois » du prototype **est** ce cas, et il est déjà couvert.
+**Mon hypothèse sur l'origine de ta demande [H]** : « tous les 9 mois » est presque certainement une lecture de **« étalé sur 9 mois »** — un plan de paiement, typiquement fiscal. Or ça, ce n'est **pas** une charge périodique : c'est 9 mensualités consécutives, puis c'est fini. Ankora modélise déjà exactement ça, proprement, sous `commitments` avec `kind = 'installment_plan'` et `installments_total = 9` **[V]** (`supabase/migrations/20260719000001_commitments.sql`). Ton « Impôt (plan de paiement) 190 €/mois » du prototype **est** ce cas, et il est déjà couvert.
 
 #### Preuve 3 — le coût réel n'est pas 4 jours, il est bien plus élevé
 
@@ -701,7 +701,7 @@ Le ⊕ ouvre la saisie ; l'onglet Dépenses ne sert plus qu'à consulter l'histo
 
 - **Aucune capture de l'app réelle.** Toujours pas de variables Supabase ; l'analyse d'Ankora reste statique, comme dans l'audit.
 - **Je n'ai pas vu les apps concurrentes de mes yeux.** Tout ce qui est marqué **[V]** en §2 vient de leur documentation officielle ou d'un support éditeur, pas d'une session dans l'app. Emma en particulier : la fonction « true balance » est documentée, son emplacement exact à l'écran est une inférence **[H]**.
-- **Les revenus de la maquette sont inventés** (2 600 €/mois). Les 19 charges, elles, sont tes vraies données : charges fixes mensuelles 1 334,21 € · engagements 470,00 € · provisions lissées 59,00 € — dont la somme redonne exactement l'effort lissé de 1 863,21 € établi par l'audit **[V]**.
+- **Les revenus de la maquette sont inventés** (2 600 €/mois). Les 19 charges reprennent le profil de test (valeurs fictives depuis le 2 octobre 2026, dépôt public) : charges fixes mensuelles 1 035,37 € · engagements 420,00 € · provisions lissées 58,00 € — dont la somme redonne exactement l'effort lissé de 1 513,37 € établi par l'audit **[V]**.
 - **Les chiffrages en jours sont des ordres de grandeur [H]**, pas des mesures. Le seul chiffrage que je qualifierais de solide est celui de Q4, parce qu'il repose sur un comptage de fichiers.
 
 **Aucune modification, aucune branche, aucun commit, aucun push sur le dépôt Ankora.** Le clone a été fait dans un espace jetable.

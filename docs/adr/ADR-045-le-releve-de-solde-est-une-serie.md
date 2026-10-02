@@ -171,7 +171,7 @@ en le sachant, et non contre une surprise.
 
 ## Conséquences
 
-**Positives.** Le journal existe ; un virement de 360 € se retient en entier, avec ses deux
+**Positives.** Le journal existe ; un virement de 310 € se retient en entier, avec ses deux
 parts ; de l'argent reçu s'écrit ; un solde a une date. L'écart entre déclaré et dérivé
 devient mesurable au lieu d'être absorbé.
 
