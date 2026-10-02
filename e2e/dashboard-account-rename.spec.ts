@@ -15,7 +15,7 @@ const admin = adminClientOrNull();
 test.describe('Dashboard — typed account cards + inline rename (PR-D2)', () => {
   test.skip(!admin, 'Needs real Supabase (NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY).');
 
-  test('user clicks the Compte Principal title, types Belfius, presses Enter — value persists', async ({
+  test('user clicks the Compte Principal title, types Banque Lune, presses Enter — value persists', async ({
     page,
   }) => {
     if (!admin) return;
@@ -58,7 +58,7 @@ test.describe('Dashboard — typed account cards + inline rename (PR-D2)', () =>
       // Replace the value and submit with Enter.
       //
       // The Server Action's response is awaited BEFORE the reload below, and
-      // that ordering is the whole point. The title flips to « Belfius »
+      // that ordering is the whole point. The title flips to « Banque Lune »
       // OPTIMISTICALLY — before anything is written — so asserting on it and
       // reloading straight after races the write: the reload re-reads the
       // database, which may still hold the old name. That race is what made
@@ -75,7 +75,7 @@ test.describe('Dashboard — typed account cards + inline rename (PR-D2)', () =>
       // can no longer satisfy the wait and let the reload through early. That
       // would have reintroduced the exact race this closes, silently.
       // (Sourcery, PR #327.)
-      await input.fill('Belfius');
+      await input.fill('Banque Lune');
       await Promise.all([
         page.waitForResponse((r) => 'next-action' in r.request().headers(), { timeout: 15_000 }),
         input.press('Enter'),
@@ -83,7 +83,7 @@ test.describe('Dashboard — typed account cards + inline rename (PR-D2)', () =>
 
       // Optimistic update + revalidatePath: the title is back as a button with the new value.
       await expect(
-        card.getByRole('button', { name: /Renommer le compte « Belfius »/i }),
+        card.getByRole('button', { name: /Renommer le compte « Banque Lune »/i }),
       ).toBeVisible();
 
       // Refresh and assert persistence. The fold is closed again after a reload.
@@ -91,7 +91,7 @@ test.describe('Dashboard — typed account cards + inline rename (PR-D2)', () =>
       await ouvrirRepli(page, 'repli-comptes');
       await expect(
         page.locator('[data-account-type="income_bills"]').getByRole('button', {
-          name: /Renommer le compte « Belfius »/i,
+          name: /Renommer le compte « Banque Lune »/i,
         }),
       ).toBeVisible();
 
@@ -103,7 +103,7 @@ test.describe('Dashboard — typed account cards + inline rename (PR-D2)', () =>
         .eq('account_type', 'income_bills')
         .single();
       expect(error).toBeNull();
-      expect(row?.display_name).toBe('Belfius');
+      expect(row?.display_name).toBe('Banque Lune');
     } finally {
       await deleteSeededUser(admin, user.userId);
     }

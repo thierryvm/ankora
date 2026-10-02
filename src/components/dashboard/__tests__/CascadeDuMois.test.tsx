@@ -55,23 +55,23 @@ const BASE: CascadeDuMoisProps = {
   misDeCote: 0,
   auDelaDuRevenu: 0,
   chargesFixes: 1500,
-  provisionsLissees: 338,
+  provisionsLissees: 345,
   engagementsMensuels: 0,
   chargesFixesParts: [{ id: 'loyer', libelle: 'Loyer', montantMensuel: 1500, origine: null }],
   lissageParts: [
     {
       id: 'assurance',
       libelle: 'Assurance habitation',
-      montantMensuel: 338,
-      origine: { montantFacture: 1014, cycleMois: 3 },
+      montantMensuel: 345,
+      origine: { montantFacture: 1035, cycleMois: 3 },
     },
   ],
   engagementsParts: [],
-  // factures 1500 + lissage 338 + engagements 0 — the domain's « retenu ».
-  retenu: 1838,
-  resteDisponible: 662,
+  // factures 1500 + lissage 345 + engagements 0 — the domain's « retenu ».
+  retenu: 1845,
+  resteDisponible: 655,
   depensesDuMois: 200,
-  ilTeReste: 462,
+  ilTeReste: 455,
   epargneEstimee: 318,
   locale: 'fr-BE' as const,
 };
@@ -98,7 +98,7 @@ describe('<CascadeDuMois />', () => {
   });
 
   it('ADR-021: surfaces an engagements flow row + bar segment when engagements > 0', async () => {
-    await renderCascade({ engagementsMensuels: 250, resteDisponible: 412 });
+    await renderCascade({ engagementsMensuels: 250, resteDisponible: 405 });
     expect(screen.getByText(messages.dashboard.situation.flow.engagements)).toBeInTheDocument();
     expect(screen.getByTestId('allocation-segment-engagements')).toBeInTheDocument();
   });
@@ -111,7 +111,7 @@ describe('<CascadeDuMois />', () => {
 
   it('ADR-021: the AllocationBar aria mentions engagements only when present', async () => {
     // Base barAria never contains the word « engagements » — the appended clause does.
-    await renderCascade({ engagementsMensuels: 250, resteDisponible: 412 });
+    await renderCascade({ engagementsMensuels: 250, resteDisponible: 405 });
     const bar = screen.getByTestId('allocation-bar').querySelector('[role="img"]');
     expect(bar?.getAttribute('aria-label')).toContain('engagements');
   });
@@ -133,7 +133,7 @@ describe('<CascadeDuMois />', () => {
  * Règle 10 de `CLAUDE.md` — « aucun montant agrégé sans sa décomposition
  * accessible ».
  *
- * Le constat d'origine : « les 59 € de provisions à verser, rien
+ * Le constat d'origine : « les 64 € de provisions à verser, rien
  * n'explique pourquoi ce montant, à quelle facture cela correspond ». Ces cas
  * verrouillent que la ligne s'ouvre et qu'elle dit d'où le nombre vient. Ils
  * ont suivi la cascade quand elle a quitté le hero (chantier 6) : c'est le même
@@ -142,25 +142,25 @@ describe('<CascadeDuMois />', () => {
 describe('<CascadeDuMois /> — décomposition des postes', () => {
   it('la ligne de lissage s’ouvre et nomme chaque facture avec son échéance', async () => {
     await renderCascade({
-      provisionsLissees: 59,
+      provisionsLissees: 64.33,
       lissageParts: [
         {
           id: 'auto',
           libelle: 'Assurance auto',
-          montantMensuel: 23.33,
-          origine: { montantFacture: 70, cycleMois: 3 },
+          montantMensuel: 25.33,
+          origine: { montantFacture: 76, cycleMois: 3 },
         },
         {
-          id: 'precompte',
-          libelle: 'Précompte immobilier',
-          montantMensuel: 18,
-          origine: { montantFacture: 216, cycleMois: 12 },
+          id: 'taxe-communale',
+          libelle: 'Taxe communale',
+          montantMensuel: 21,
+          origine: { montantFacture: 252, cycleMois: 12 },
         },
         {
           id: 'dechets',
           libelle: 'Taxe déchets',
-          montantMensuel: 17.67,
-          origine: { montantFacture: 106, cycleMois: 6 },
+          montantMensuel: 18,
+          origine: { montantFacture: 108, cycleMois: 6 },
         },
       ],
     });
@@ -168,7 +168,7 @@ describe('<CascadeDuMois /> — décomposition des postes', () => {
     const panneau = screen.getByTestId('flow-detail-lissage');
     // Le libellé de chaque poste — c'est la réponse à « à quoi ça correspond ».
     expect(panneau.textContent).toContain('Assurance auto');
-    expect(panneau.textContent).toContain('Précompte immobilier');
+    expect(panneau.textContent).toContain('Taxe communale');
     expect(panneau.textContent).toContain('Taxe déchets');
     // Et son échéance, sans laquelle la part reste un nombre sans histoire.
     const texte = (panneau.textContent ?? '').replace(/[\s ]/g, ' ');
@@ -210,7 +210,7 @@ describe('<CascadeDuMois /> — décomposition des postes', () => {
   it('les engagements se décomposent aussi — la règle vaut pour les trois postes', async () => {
     await renderCascade({
       engagementsMensuels: 220,
-      resteDisponible: 442,
+      resteDisponible: 435,
       engagementsParts: [{ id: 'pret', libelle: 'Prêt auto', montantMensuel: 220, origine: null }],
     });
     expect(screen.getByTestId('flow-detail-engagements').textContent).toContain('Prêt auto');
@@ -258,13 +258,13 @@ describe('<CascadeDuMois /> — ADR-047, revenu prévu', () => {
 
 describe('<CascadeDuMois /> — PR D, set aside and received on top', () => {
   const flow = messages.dashboard.situation.flow;
-  // 2 120 (of which 120 on top) − 1 500 − 338 − 200 set aside = 82 ; − 200 spent = −118
+  // 2 620 (of which 120 on top) − 1 500 − 345 − 200 set aside = 575 ; − 200 spent = 375
   const pr = {
     revenus: 2620,
     recuEnPlus: 120,
     misDeCote: 200,
-    resteDisponible: 582,
-    ilTeReste: 382,
+    resteDisponible: 575,
+    ilTeReste: 375,
   };
 
   it('shows the base income, then what was received on top, then what was set aside', async () => {
@@ -357,7 +357,7 @@ describe('<CascadeDuMois /> — le sous-total « Déjà compté pour tes facture
     await renderCascade();
     const sousTotal = screen.getByText('Déjà compté pour tes factures');
     const ligne = sousTotal.closest('div');
-    expect(ligne).toHaveTextContent(/factures1[\s\u202f\u00a0]?838[\s\u202f\u00a0]?€$/);
+    expect(ligne).toHaveTextContent(/factures1[\s\u202f\u00a0]?845[\s\u202f\u00a0]?€$/);
     expect(ligne?.textContent).not.toContain('−');
     const lissage = screen.getByText('Lissage');
     const budget = screen.getByText('Budget du mois');

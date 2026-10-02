@@ -25,7 +25,7 @@
 
 ## 1. Spec UX résumée (source : vault Athenaeum)
 
-**Source** : [`specs/dashboard-cockpit-vraie-vision-2026-05-03.md`](file://C:/Users/thier/iCloudDrive/iCloud~md~obsidian/Athenaeum/10_Projects/ankora/specs/dashboard-cockpit-vraie-vision-2026-05-03.md), section 4 + section 5.
+**Source** : [`specs/dashboard-cockpit-vraie-vision-2026-05-03.md`] (notes de conception hors dépôt), section 4 + section 5.
 
 ### 1.1 Formule canonique (ADR-011, déjà implémentée dans `sante-provisions.ts`)
 

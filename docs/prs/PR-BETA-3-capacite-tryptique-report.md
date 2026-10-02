@@ -149,7 +149,7 @@ Hypothèse @cowork "migration non appliquée" éliminée : `supabase migration l
 3. Modifier 500 → 450 → Enregistrer
    - ✅ Toast vert "Reste à vivre ajusté pour ce mois"
    - ✅ Drawer ferme
-   - ✅ Sub-stat affiche 450 + capacité passe à 212
+   - ✅ Sub-stat affiche 450 + capacité passe à 165
 4. Re-tap "Ajuster" → saisir 999999 (au-dessus du max 100k Zod)
    - ✅ Toast rouge erreur traduit (pas raw errorCode)
    - ✅ Drawer reste ouvert
@@ -305,7 +305,7 @@ npm run build           ✅ Production build OK
 | Suppression du waterfall          | Retiré (pas conservé en expandable)                                                                    | Redondant : `Reste disponible = Revenus − Effort` est déjà le sub-stat #1 + la card `EffortFinancierCard` voisine montre le détail effort. Garder les deux noyait l'utilisateur. ADR-009 amendement file le triptyque en remplacement, pas en addition |
 | Drawer dédié vs `EditDrawer` atom | Dédié (`AjusterResteAVivreDrawer.tsx`)                                                                 | L'atom `EditDrawer` ne modèle pas le helper text adaptatif par ratio — c'est un Field renderer générique. Forker l'atom serait pollution. Un seul cas d'usage justifie un composant dédié                                                              |
 | Reset state du draft              | Synchrone dans `openDrawer()`, pas dans `useEffect`                                                    | React 19 + `react-hooks/set-state-in-effect` lint rule bloque l'effet. Le reset au moment du clic trigger est équivalent et idiomatique                                                                                                                |
-| `resteAVivre` source              | `workspace_settings.reste_a_vivre_default` + overrides JSONB                                           | Le prompt @cowork le demande explicitement, séparé de `workspaces.vie_courante_monthly_transfer`. Concept distinct (budget vie courante ≠ montant transféré). Pour Thierry les deux valent 500€ donc UX identique pour lui                             |
+| `resteAVivre` source              | `workspace_settings.reste_a_vivre_default` + overrides JSONB                                           | Le prompt @cowork le demande explicitement, séparé de `workspaces.vie_courante_monthly_transfer`. Concept distinct (budget vie courante ≠ montant transféré). Sur le profil d'exemple les deux valent autant, donc UX identique                        |
 | Audit metadata                    | `{ period_yyyymm }` seul, pas de montant                                                               | Doctrine repo : amounts = PII-adjacent en financial software. Même règle que `charge_payments` qui exclut `paid_amount`                                                                                                                                |
 | Supabase types                    | Patch manuel + comment "until supabase:types is re-run"                                                | Pas d'accès local Supabase dans cette session. `npm run supabase:types` à relancer post-merge contre le projet remote                                                                                                                                  |
 | Onboarding step 3 saisie initiale | **Hors-scope** PR-BETA-3                                                                               | Le prompt @cowork l'exclut explicitement (= PR-D5 onboarding séparée). Users existants ajusteront via bouton "Ajuster ce mois"                                                                                                                         |
@@ -329,10 +329,10 @@ npm run build           ✅ Production build OK
 
 1. Login sur preview Vercel
 2. Cockpit doit afficher 3 sub-stats (Reste dispo / Reste à vivre / Capacité épargne)
-3. Pour le profil d'exemple : valeurs attendues **640 / 480 / 160** (si workspace cohérent avec les charges du persona)
+3. Pour le profil d'exemple : valeurs attendues **615 / 470 / 145** (si workspace cohérent avec les charges du persona)
 4. Tap "Ajuster ce mois" → drawer slide-up sur iPhone
-5. Modifier 500 → 450 → Enregistrer → la sub-stat "Reste à vivre" affiche 450 et "Capacité épargne" passe à 212
-6. Re-tap "Ajuster" → re-modifier 450 → 500 → revient à 160
+5. Modifier 470 → 450 → Enregistrer → la sub-stat "Reste à vivre" affiche 450 et "Capacité épargne" passe à 165
+6. Re-tap "Ajuster" → re-modifier 450 → 470 → revient à 145
 
 ### Migration Supabase à appliquer
 

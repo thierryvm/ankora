@@ -24,15 +24,15 @@ import { TransferDoneControl, type TransferLineState } from '../TransferDoneCont
 
 /*
  * The cockpit's « J'ai fait ce virement ». Figures are fictitious: a plan line
- * of 280/12 + 70/3 (= 46.666…) to the provisions account, of which 23.33 is
+ * of 256/12 + 76/3 (= 46.666…) to the provisions account, of which 25.33 is
  * provisions for the bills.
  */
 const BASE = {
   lineLabel: 'Vers Provisions pour tes factures',
   fromAccountType: 'income_bills' as const,
   toAccountType: 'provisions' as const,
-  suggested: 280 / 12 + 70 / 3,
-  plannedProvisions: 23.33,
+  suggested: 256 / 12 + 76 / 3,
+  plannedProvisions: 25.33,
   planYear: 2026,
   planMonth: 9,
   today: '2026-09-21',
@@ -88,7 +88,7 @@ describe('TransferDoneControl — « J’ai fait ce virement »', () => {
     const sheet = screen.getByTestId('feuille-virement');
     const amount = within(sheet).getByLabelText('Combien as-tu viré ?');
     await userEvent.type(amount, '50');
-    expect(sheet.textContent).toMatch(/23,33\s€ de provisions \+ 26,67\s€ d’épargne libre/);
+    expect(sheet.textContent).toMatch(/25,33\s€ de provisions \+ 24,67\s€ d’épargne libre/);
 
     await userEvent.click(within(sheet).getByRole('button', { name: 'Enregistrer' }));
     expect(actions.record).toHaveBeenCalledWith({

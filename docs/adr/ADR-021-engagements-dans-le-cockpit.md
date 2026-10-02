@@ -324,8 +324,8 @@ montant total du plan ; `installments_total` = le nombre total d'échéances.
    jamais stockées » exige : on ne stocke que ce qui ne bouge pas.
 3. **Le coût de l'ambiguïté a été mesuré.** Le formulaire de création était le
    seul consommateur à suivre D3, et sans champ de saisie il ancrait sur le
-   **mois de création**. Un plan SPF de test — première échéance 15/06/2026, 11
-   mensualités, créé le 21/07/2026 — annonçait « dernière en Mai 2027 » au lieu
+   **mois de création**. Un plan de test — première échéance le 20/05/2026, 11
+   mensualités, créé en juillet — annonçait « dernière en Mai 2027 » au lieu
    de mars 2027. L'arithmétique était juste ; c'est la donnée qui n'avait jamais
    pu être saisie.
 

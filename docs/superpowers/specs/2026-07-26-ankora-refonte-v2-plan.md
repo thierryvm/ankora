@@ -1012,7 +1012,7 @@ Livrés comme une vue read-only de l'admin panel à l'étape 7. **Le 5ᵉ indica
 ### Tentations produit
 
 12. **Copier l'architecture de l'information de Revolut.** @thierry demande « style Revolut » : lui livrer l'**esthétique** et lui **refuser** l'**architecture**. La liste chronologique en écran principal et le donut de catégories supposent un flux automatique. Sans PSD2, ce sont des coquilles remplies à la main pour un résultat **inférieur** à ce que BNP Paribas Fortis ou KBC donnent déjà gratuitement. **C'est le seul scénario où Ankora meurt** — et c'est exactement la trajectoire de la page Dépenses actuelle : un relevé bancaire en moins bien. **À valider explicitement avec @thierry**, car c'est une divergence assumée par rapport à sa formulation.
-13. **Devenir une super-app.** L'erreur centrale de Belfius, littéralement le symptôme dont se plaint @thierry.
+13. **Devenir une super-app.** L'erreur centrale des applis bancaires qui empilent les services.
 14. **Ajouter une recherche interne pour réparer la navigation.** Quand on ajoute un moteur de recherche pour retrouver ses propres écrans, l'architecture a déjà échoué.
 15. **Importer 60 catégories par défaut.** Monarch peut se le permettre : ses transactions arrivent déjà catégorisées. En saisie manuelle, 60 est un mur. 8 est déjà la limite haute.
 16. **Livrer les tags dans la même couche que les catégories.**

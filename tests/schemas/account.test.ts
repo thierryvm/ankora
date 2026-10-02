@@ -34,11 +34,11 @@ describe('accountKindSchema (legacy, kept for back-compat)', () => {
 
 describe('accountDisplayNameSchema', () => {
   it('accepts a typical bank name', () => {
-    expect(accountDisplayNameSchema.parse('Belfius')).toBe('Belfius');
+    expect(accountDisplayNameSchema.parse('Banque Lune')).toBe('Banque Lune');
   });
 
   it('trims whitespace', () => {
-    expect(accountDisplayNameSchema.parse('  Belfius  ')).toBe('Belfius');
+    expect(accountDisplayNameSchema.parse('  Banque Lune  ')).toBe('Banque Lune');
   });
 
   it('rejects empty strings (after trim)', () => {
@@ -57,8 +57,8 @@ describe('accountDisplayNameSchema', () => {
 
   it('rejects HTML-like characters that could enable injection', () => {
     expect(accountDisplayNameSchema.safeParse('<script>').success).toBe(false);
-    expect(accountDisplayNameSchema.safeParse('Belfius>').success).toBe(false);
-    expect(accountDisplayNameSchema.safeParse('<Belfius').success).toBe(false);
+    expect(accountDisplayNameSchema.safeParse('Banque Lune>').success).toBe(false);
+    expect(accountDisplayNameSchema.safeParse('<Banque Lune').success).toBe(false);
   });
 
   it('accepts accented characters and ampersands', () => {
@@ -66,7 +66,7 @@ describe('accountDisplayNameSchema', () => {
   });
 
   it('accepts emoji (no HTML restriction beyond < / >)', () => {
-    expect(accountDisplayNameSchema.parse('Belfius 🏦')).toBe('Belfius 🏦');
+    expect(accountDisplayNameSchema.parse('Banque Lune 🏦')).toBe('Banque Lune 🏦');
   });
 });
 
@@ -74,7 +74,7 @@ describe('accountRenameByTypeSchema', () => {
   it('accepts a well-formed payload', () => {
     const result = accountRenameByTypeSchema.safeParse({
       accountType: 'income_bills',
-      displayName: 'Belfius',
+      displayName: 'Banque Lune',
     });
     expect(result.success).toBe(true);
   });
@@ -83,7 +83,7 @@ describe('accountRenameByTypeSchema', () => {
     expect(
       accountRenameByTypeSchema.safeParse({
         accountType: 'principal',
-        displayName: 'Belfius',
+        displayName: 'Banque Lune',
       }).success,
     ).toBe(false);
   });
@@ -109,7 +109,7 @@ describe('accountRenameByTypeSchema', () => {
   it('exposes field-level error path on accountType', () => {
     const result = accountRenameByTypeSchema.safeParse({
       accountType: 'unknown',
-      displayName: 'Belfius',
+      displayName: 'Banque Lune',
     });
     expect(result.success).toBe(false);
     if (!result.success) {

@@ -293,12 +293,12 @@ describe('remainingBalance / installmentsPaid / isFinished', () => {
 // The « SPF impôt » case that started this (reported 2026-08-02)
 // ---------------------------------------------------------------------------
 //
-// Reference fixture: 1 802,38 € over 11 monthly instalments from 15/05/2026:
+// Reference fixture: 1 802,38 € over 11 monthly instalments from 20/05/2026:
 // 10 × 165 € then a 152,38 € residue, 4 ticked. The app announced « 11 échéances de 165 €,
 // dernière en Mai 2027 » — two months late and a wrong amount, because the
 // stored anchor was the CREATION month (July) and the final instalment was
 // never derived.
-describe('SPF impôt — the reported case, end to end', () => {
+describe('tax instalment plan — the reference case, end to end', () => {
   const spf = commitment({
     kind: 'installment_plan',
     totalAmount: 1802.38,
@@ -306,7 +306,7 @@ describe('SPF impôt — the reported case, end to end', () => {
     installmentsTotal: 11,
     startYear: 2026,
     startMonth: 5,
-    paymentDay: 15,
+    paymentDay: 20,
   });
 
   const fourPaid = paidSet([
@@ -320,12 +320,12 @@ describe('SPF impôt — the reported case, end to end', () => {
     expect(endPeriod(spf)).toEqual({ year: 2027, month: 3 });
   });
 
-  it('dates the last instalment on 15 March 2027', () => {
-    expect(endInstallmentDate(spf)).toEqual({ year: 2027, month: 3, day: 15 });
+  it('dates the last instalment on 20 March 2027', () => {
+    expect(endInstallmentDate(spf)).toEqual({ year: 2027, month: 3, day: 20 });
   });
 
   it('starts on the anchor itself — instalment n°1 carries no offset', () => {
-    expect(firstInstallmentDate(spf)).toEqual({ year: 2026, month: 5, day: 15 });
+    expect(firstInstallmentDate(spf)).toEqual({ year: 2026, month: 5, day: 20 });
     expect(installmentPeriods(spf)[0]).toEqual({ year: 2026, month: 5 });
   });
 

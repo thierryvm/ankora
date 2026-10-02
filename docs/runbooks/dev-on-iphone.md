@@ -195,7 +195,7 @@ Trois options selon ce qui est disponible :
 
 1. **AirDrop** vers un Mac (n/a si @thierry n'a que Windows)
 2. **iCloud Drive** : sauvegarder dans Photos → iCloud Photos sur PC
-   (Windows iCloud client) → récupérer dans `C:\Users\thier\Pictures\iCloud Photos`
+   (Windows iCloud client) → récupérer dans le dossier « iCloud Photos » de Windows
 3. **Email à soi-même** : Photos → Partager → Mail → envoyer à
    `thierryvm@gmail.com`. Le plus rapide en pratique.
 

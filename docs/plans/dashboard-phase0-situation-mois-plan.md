@@ -93,7 +93,7 @@ describe('calculerSituationDuMois', () => {
   it('statut vert when capacité ≥ 0 and provisions à jour (no periodic charge)', () => {
     const out = calculerSituationDuMois({
       revenus: new Decimal(2500),
-      charges: [charge({ amount: new Decimal(1838), frequency: 'monthly' })],
+      charges: [charge({ amount: new Decimal(1845), frequency: 'monthly' })],
       budgetVieCourante: new Decimal(500),
       soldeEpargneActuel: new Decimal(0),
       payments: NO_PAYMENTS,
@@ -101,8 +101,8 @@ describe('calculerSituationDuMois', () => {
     });
     expect(out.statut).toBe('vert');
     expect(out.hasRevenus).toBe(true);
-    expect(out.resteDisponible.toNumber()).toBe(662);
-    expect(out.capacite.toNumber()).toBe(162);
+    expect(out.resteDisponible.toNumber()).toBe(655);
+    expect(out.capacite.toNumber()).toBe(155);
     expect(out.provisionsAJour).toBe(true);
   });
 
@@ -727,10 +727,10 @@ vi.mock('../AjusterResteAVivreDrawer', () => ({
 const BASE = {
   revenus: 2500,
   chargesFixes: 1500,
-  provisionsLissees: 338,
-  resteDisponible: 662,
+  provisionsLissees: 345,
+  resteDisponible: 655,
   budgetVieCourante: 500,
-  capacite: 162,
+  capacite: 155,
   deficitEpargne: 0,
   rattrapageMensuel: 0,
   provisionsAJour: true,

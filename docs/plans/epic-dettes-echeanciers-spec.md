@@ -3,13 +3,13 @@
 > @cc-ankora (Fable 5) 2026-07-19 · Épic issue des retours @thierry sur son tableau Coda.
 > **Statut : SPEC — à valider par @thierry AVANT tout code.** Nouveau modèle de données → aucune ligne de code écrite avant ton GO sur les 4 décisions ci-dessous.
 
-## 1. Le problème (verbatim @thierry, 2026-07-19)
+## 1. Le problème (2026-07-19)
 
-> « mon tableau sur Coda montre bien ce qui est validé etc, mais pas les factures futures, les dettes liées à des crédits, ou un remboursement différé des impôts suite à un arrangement avec le SPF »
+> Besoin exprimé : voir, en plus de ce qui est validé, les factures futures, les dettes liées à des crédits et les remboursements étalés (plan de paiement).
 
 Ankora sait modéliser **une seule chose** : une charge récurrente **infinie** (loyer, Netflix, assurance). Trois besoins réels n'entrent pas dans ce moule :
 
-| Besoin                        | Exemple @thierry                          | Pourquoi ça ne rentre pas                                                                                    |
+| Besoin                        | Exemple type                              | Pourquoi ça ne rentre pas                                                                                    |
 | ----------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | **Dette à solde**             | Crédit voiture 250 €/mois                 | Il a un **capital restant dû** qui descend. Ankora ne sait pas dire « il reste 4 200 € sur 12 mensualités ». |
 | **Échéancier fini**           | Arrangement SPF : 8 mensualités puis stop | Une charge récurrente ne s'arrête **jamais** toute seule → elle polluerait le budget pour toujours.          |
@@ -96,7 +96,7 @@ Les paiements réutilisent **le mécanisme existant** (`charge_payments`) via un
 
 **D3 — Saisie : montant total + nombre total d'échéances + date de la première.** ~~Solde restant + échéances restantes ; `start_year/month` = la **prochaine** échéance.~~ **Corrigé le 2026-08-02** (voir ADR-021 § « Correction D3 »). `total_amount` = le montant total du plan, toutes échéances comprises ; `installments_total` = leur nombre total ; `start_year/month/payment_day` = la **première** échéance, même si elle est déjà payée.
 
-Motif de la correction : la formulation d'origine n'a jamais été implémentée. Le grand livre compte les cochages **sur les périodes planifiées à partir de l'ancre**, et le bouton `+` remplit la plus ancienne échéance non payée du calendrier — deux comportements qui n'ont de sens que si l'ancre est la **première** échéance. Seul le formulaire de création suivait D3, et de la pire manière : faute de champ de saisie, il ancrait sur le **mois de création**. Un plan SPF réel dont la première échéance tombait en mai 2026, créé en juillet, annonçait donc une fin en mai 2027 au lieu de mars 2027. Le reste dû et le compteur `4/11`, eux, étaient justes — parce qu'ils lisent le calendrier, pas la doc.
+Motif de la correction : la formulation d'origine n'a jamais été implémentée. Le grand livre compte les cochages **sur les périodes planifiées à partir de l'ancre**, et le bouton `+` remplit la plus ancienne échéance non payée du calendrier — deux comportements qui n'ont de sens que si l'ancre est la **première** échéance. Seul le formulaire de création suivait D3, et de la pire manière : faute de champ de saisie, il ancrait sur le **mois de création**. Un plan de test créé deux mois après sa première échéance annonçait donc une fin décalée de deux mois. Le reste dû et le compteur `4/11`, eux, étaient justes — parce qu'ils lisent le calendrier, pas la doc.
 
 **D4 — Migration : bouton « convertir en engagement »** sur la ligne de charge (PR-2). Pré-remplit label/montant/jour depuis la charge, tu complètes le solde restant ; la charge d'origine est désactivée après conversion (jamais supprimée sans confirmation).
 
@@ -104,4 +104,4 @@ Motif de la correction : la formulation d'origine n'a jamais été implémentée
 
 Intérêts/TAEG · échéances **arbitrairement** irrégulières (un montant libre par échéance) · rappels/notifications d'échéance · export du plan de remboursement.
 
-> **Amendement 2026-08-02** — la **dernière** échéance, elle, est désormais dérivée : `total − (n − 1) × mensualité`. Le « SPF classique est régulier » était faux sur le cas mesuré — 1 802,38 € sur 11 × 165 € donne dix échéances pleines et un solde de 152,38 €, et la carte annonçait « 11 échéances de 220 € ». Un plan à montants tous différents reste hors épic.
+> **Amendement 2026-08-02** — la **dernière** échéance, elle, est désormais dérivée : `total − (n − 1) × mensualité`. Le « SPF classique est régulier » était faux sur le cas mesuré — 1 802,38 € sur 11 × 165 € donne dix échéances pleines et un solde de 152,38 €, et la carte annonçait « 11 échéances de 165 € ». Un plan à montants tous différents reste hors épic.

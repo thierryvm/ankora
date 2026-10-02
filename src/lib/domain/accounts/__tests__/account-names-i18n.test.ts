@@ -82,7 +82,7 @@ describe('isSeededDefaultName', () => {
   });
 
   it('never replaces a name the person typed, nor a default of another type', () => {
-    expect(isSeededDefaultName('daily_card', 'Belfius')).toBe(false);
+    expect(isSeededDefaultName('daily_card', 'Banque Lune')).toBe(false);
     expect(isSeededDefaultName('income_bills', 'Carte Quotidien')).toBe(false);
     expect(isSeededDefaultName('provisions', 'compte épargne')).toBe(false);
     for (const type of ACCOUNT_TYPES) expect(isSeededDefaultName(type, '')).toBe(false);
