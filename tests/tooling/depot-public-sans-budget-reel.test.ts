@@ -21,7 +21,7 @@ import { resolve } from 'node:path';
  * as the SHA-256 digest of its canonical form, and the scan hashes every number
  * it reads. Canonical form: no group separator, a point before the decimals,
  * the decimals as written (`1234.56`), and an integer without decimals
- * (`740`). The labels the owner chose for this guard stay as patterns: they
+ * (`505`). The labels the owner chose for this guard stay as patterns: they
  * carry no amount.
  *
  * A digest removes the value from the files and from any text search. It is
@@ -112,7 +112,7 @@ const READINGS: ReadonlyArray<{ pattern: RegExp; groupSep: RegExp; decimal: stri
   { pattern: /\d{1,3}(?:\.\d{3})+(?:,\d+)?/g, groupSep: /\./g, decimal: ',' },
   // 1,234.56 (en)
   { pattern: /\d{1,3}(?:,\d{3})+(?:\.\d+)?/g, groupSep: /,/g, decimal: '\\.' },
-  // 1234,56 · 1234.56 · 740
+  // 1234,56 · 1234.56 · 505
   { pattern: /\d+(?:[,.]\d+)?/g, groupSep: /(?!)/g, decimal: '[,.]' },
 ];
 
@@ -239,6 +239,21 @@ describe('public repository carries no real budget', () => {
     expect(hit('Huur 505 €')).toEqual(['trap.md:2 — constructed rent']);
     expect(hit('Total 505 €')).toEqual([]);
     expect(hit('current 505')).toEqual([]);
+  });
+
+  // The guard is excluded from the scan (its label samples are traps), so it
+  // checks itself for the amounts, without any context word: an example in a
+  // comment once published a banned amount here.
+  it('this guard writes no banned amount in clear, not even as an example', () => {
+    const anywhere = AMOUNT_MARKERS.map(({ name, sha256: digest }) => ({ name, sha256: digest }));
+    const hits = readFileSync(resolve(root, SELF), 'utf8')
+      .split('\n')
+      .flatMap((line, i) =>
+        line.includes('sha256:')
+          ? []
+          : amountHits(line, anywhere).map((n) => `${SELF}:${i + 1} — ${n}`),
+      );
+    expect(hits).toEqual([]);
   });
 
   it('no scanned tracked file quotes a marker', () => {

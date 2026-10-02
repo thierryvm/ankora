@@ -3,13 +3,13 @@
 > @cc-ankora (Fable 5) 2026-07-19 · Épic issue des retours @thierry sur son tableau Coda.
 > **Statut : SPEC — à valider par @thierry AVANT tout code.** Nouveau modèle de données → aucune ligne de code écrite avant ton GO sur les 4 décisions ci-dessous.
 
-## 1. Le problème (verbatim @thierry, 2026-07-19)
+## 1. Le problème (2026-07-19)
 
 > Besoin exprimé : voir, en plus de ce qui est validé, les factures futures, les dettes liées à des crédits et les remboursements étalés (plan de paiement).
 
 Ankora sait modéliser **une seule chose** : une charge récurrente **infinie** (loyer, Netflix, assurance). Trois besoins réels n'entrent pas dans ce moule :
 
-| Besoin                        | Exemple @thierry                          | Pourquoi ça ne rentre pas                                                                                    |
+| Besoin                        | Exemple type                              | Pourquoi ça ne rentre pas                                                                                    |
 | ----------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | **Dette à solde**             | Crédit voiture 250 €/mois                 | Il a un **capital restant dû** qui descend. Ankora ne sait pas dire « il reste 4 200 € sur 12 mensualités ». |
 | **Échéancier fini**           | Arrangement SPF : 8 mensualités puis stop | Une charge récurrente ne s'arrête **jamais** toute seule → elle polluerait le budget pour toujours.          |
