@@ -10,6 +10,21 @@ test.describe('Security headers', () => {
     expect(csp).toMatch(/'nonce-[^']+'/);
     expect(csp).toContain("frame-ancestors 'none'");
     expect(csp).toContain("object-src 'none'");
+    // Every source is named: our exact Supabase host, never a wildcard.
+    expect(csp).not.toContain('*');
+  });
+
+  test('image optimizer is closed', async ({ request }) => {
+    // No component renders next/image; `images.unoptimized` in next.config.ts
+    // turns the endpoint into a 404 instead of an on-demand transformer. The
+    // source is a real file of public/, so a 200 here means the optimizer is
+    // back on, not that the file is missing.
+    const file = await request.get('/icons/apple-touch-icon.png');
+    expect(file.status(), 'the source file itself is served').toBe(200);
+    const response = await request.get(
+      '/_next/image?url=%2Ficons%2Fapple-touch-icon.png&w=64&q=75',
+    );
+    expect(response.status()).toBe(404);
   });
 
   test('style-src allow-lists no third-party style hash', async ({ page }) => {
