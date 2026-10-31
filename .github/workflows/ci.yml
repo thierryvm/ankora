@@ -144,7 +144,13 @@ jobs:
     # would be siblings on the host with `localhost:54421` routing nowhere.
     # The price is installing browsers rather than using the pre-baked image;
     # see the cache step.
-    runs-on: ubuntu-latest
+    #
+    # Pinned to 24.04, TEMPORARILY (2026-10-31): `ubuntu-latest` moved to
+    # Ubuntu 26.04 and the Playwright in package.json cannot install chromium
+    # there ("Playwright does not support chromium on ubuntu26.04-x64"). The
+    # public job is unaffected — its image is `-noble` (24.04). Unpin once
+    # Playwright is upgraded to a release that supports 26.04.
+    runs-on: ubuntu-24.04
     # Sibling of `e2e`, NOT downstream of it: chaining would add ~7 minutes to
     # the critical path for nothing.
     needs: quality
