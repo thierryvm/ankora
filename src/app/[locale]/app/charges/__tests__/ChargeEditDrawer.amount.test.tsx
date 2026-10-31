@@ -17,6 +17,7 @@ import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 
 import messages from '../../../../../../messages/fr-BE.json';
+import { waitForSheetFocus } from '../../../../../../tests/helpers/sheet';
 
 const updateChargeMock = vi.hoisted(() => vi.fn());
 const toastErrorMock = vi.hoisted(() => vi.fn());
@@ -55,6 +56,9 @@ function renderDrawer() {
 
 async function typeAmount(value: string) {
   const user = userEvent.setup();
+  // The drawer focuses its label field one frame after opening; typing before
+  // that frame races it (see the helper).
+  await waitForSheetFocus();
   const field = screen.getByTestId('charge-edit-amount');
   await user.clear(field);
   if (value !== '') await user.type(field, value);
