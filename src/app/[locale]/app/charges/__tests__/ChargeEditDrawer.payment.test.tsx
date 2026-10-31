@@ -13,6 +13,7 @@ import { NextIntlClientProvider } from 'next-intl';
 
 import messages from '../../../../../../messages/fr-BE.json';
 import messagesEn from '../../../../../../messages/en.json';
+import { waitForSheetFocus } from '../../../../../../tests/helpers/sheet';
 
 const updateChargeMock = vi.hoisted(() => vi.fn());
 const toastSuccessMock = vi.hoisted(() => vi.fn());
@@ -50,6 +51,9 @@ async function correctAmountTo(value: string, locale: 'fr-BE' | 'en' = 'fr-BE') 
     </NextIntlClientProvider>,
   );
   const user = userEvent.setup();
+  // The drawer focuses its label field one frame after opening; typing before
+  // that frame races it (see the helper).
+  await waitForSheetFocus();
   const field = screen.getByTestId('charge-edit-amount');
   await user.clear(field);
   await user.type(field, value);
@@ -140,5 +144,44 @@ describe('ChargeEditDrawer — this month’s payment after an amount correction
     updateChargeMock.mockResolvedValue({ ok: true });
     await correctAmountTo('705');
     expect(toastSuccessMock).toHaveBeenCalledWith('Facture mise à jour', undefined);
+  });
+
+  it('types the amount into the amount field even when the drawer’s first frame comes late', async () => {
+    // CI run 41189853415: the frame that focuses the label field landed between
+    // `user.type`'s click on the amount and its first key, so « 705 » went into
+    // the label and the amount stayed empty. Here the frame is held until that
+    // exact click (or 200 ms, so a helper that waits for it is not left
+    // hanging). Without `waitForSheetFocus` in the helper this case fails.
+    const pending = new Map<number, FrameRequestCallback>();
+    let nextId = 0;
+    const flush = () => {
+      const callbacks = [...pending.values()];
+      pending.clear();
+      for (const cb of callbacks) cb(performance.now());
+    };
+    const raf = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
+      pending.set(++nextId, cb);
+      window.setTimeout(flush, 200);
+      return nextId;
+    });
+    const caf = vi
+      .spyOn(window, 'cancelAnimationFrame')
+      .mockImplementation((id) => void pending.delete(id));
+    const onClick = (event: MouseEvent) => {
+      if ((event.target as HTMLElement).dataset.testid === 'charge-edit-amount') flush();
+    };
+    document.addEventListener('click', onClick, true);
+    try {
+      updateChargeMock.mockResolvedValue({ ok: true });
+      await correctAmountTo('705');
+      expect(updateChargeMock.mock.calls[0]![1]).toMatchObject({
+        label: 'Assurance habitation',
+        amount: 705,
+      });
+    } finally {
+      document.removeEventListener('click', onClick, true);
+      raf.mockRestore();
+      caf.mockRestore();
+    }
   });
 });
