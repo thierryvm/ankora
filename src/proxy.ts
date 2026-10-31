@@ -4,6 +4,7 @@ import createMiddleware from 'next-intl/middleware';
 
 import { routing } from '@/i18n/routing';
 import { env } from '@/lib/env';
+import { isPlainHttpUrl } from '@/lib/supabase-url';
 import { updateSession } from '@/lib/supabase/middleware';
 
 /**
@@ -41,14 +42,16 @@ const handleI18nRouting = createMiddleware(routing);
  * client works the day it is used. `img-src` carries no Supabase source: no
  * image is served from Storage.
  *
- * Fails closed on anything but a plain http(s) host: the value lands verbatim in
- * a header, where a `;` or a quote would open a new directive.
+ * The env schema already refuses anything but a plain http(s) host
+ * (`src/lib/supabase-url.ts`), so a bad value fails the build. The same check
+ * runs again here because the value lands verbatim in a header, where a `;` or
+ * a quote would open a new directive: fail closed rather than trust one layer.
  */
 function supabaseSources(url: string): string {
-  const { protocol, host, origin } = new URL(url);
-  if ((protocol !== 'https:' && protocol !== 'http:') || !/^[a-z0-9.-]+(:\d{1,5})?$/.test(host)) {
+  if (!isPlainHttpUrl(url)) {
     throw new Error('NEXT_PUBLIC_SUPABASE_URL is not a plain http(s) host');
   }
+  const { protocol, host, origin } = new URL(url);
   const wsProtocol = protocol === 'https:' ? 'wss:' : 'ws:';
   return `${origin} ${wsProtocol}//${host}`;
 }

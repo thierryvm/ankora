@@ -129,3 +129,25 @@ puis APPROVED après révision. `security-auditor` (Opus) sur le diff :
 - **P3-3, hors périmètre.** Une spec e2e existante cite l'identifiant réel du projet
   dans un commentaire. PR séparée.
 - **P3-4, corrigé.** Le cas e2e vérifie d'abord que le fichier source répond 200.
+
+## 9. Retours Sourcery (premier push) et changement fait après revue
+
+- **Corrigé — un schéma non http(s) ne passait la validation de l'env que pour échouer
+  à chaque requête.** La règle vit maintenant dans `src/lib/supabase-url.ts`
+  (`isPlainHttpUrl`, `supabaseUrlSchema`), appliquée par les deux schémas de
+  `src/lib/env.ts` : une valeur invalide fait échouer le build. Le proxy rejoue la même
+  fonction en défense. Tests : `supabase-url.test.ts` (4 acceptées, 4 refusées) et
+  `env-supabase-url.test.ts`, qui charge réellement `env.ts` (rouge si le schéma n'y est
+  plus branché, vérifié par mutation temporaire). `plan-reviewer` : APPROVED.
+- **Refusé dans le fil — accepter les littéraux IPv6.** Une source d'hôte CSP ne sait
+  pas exprimer une adresse entre crochets : l'accepter produirait une politique que le
+  navigateur ignore sans le dire. La pile locale passe par 127.0.0.1.
+- **Refusé dans le fil — « WebSocket non sécurisé » (opengrep).** `ws://` n'est produit
+  que si l'URL Supabase configurée est elle-même en `http:`, donc la pile locale. La
+  production émet `wss://`.
+- **Suivi — service d'images Vercel.** C'est P2-1 ci-dessus, mesuré en production après
+  le merge.
+
+Le premier run « Lint + Typecheck + Unit Tests » de l'événement `pull_request` a échoué
+sur `ChargeEditDrawer.payment.test.tsx`, un test instable sans lien avec ce diff (même
+commit vert sur le run du push et en local). Il est traité dans une session dédiée.
