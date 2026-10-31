@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid';
 import createMiddleware from 'next-intl/middleware';
 
 import { routing } from '@/i18n/routing';
+import { env } from '@/lib/env';
 import { updateSession } from '@/lib/supabase/middleware';
 
 /**
@@ -31,9 +32,30 @@ import { updateSession } from '@/lib/supabase/middleware';
 
 const handleI18nRouting = createMiddleware(routing);
 
+/**
+ * Our Supabase project, over HTTP(S) and its WebSocket scheme — and no other.
+ * Read from the validated env, never hardcoded, so a local stack
+ * (`http://127.0.0.1:54421` → `ws://`) or a custom domain follows on its own.
+ * The browser makes no direct Supabase call today (`src/lib/supabase/client.ts`
+ * is imported by no app code); `connect-src` keeps our project only, so that
+ * client works the day it is used. `img-src` carries no Supabase source: no
+ * image is served from Storage.
+ *
+ * Fails closed on anything but a plain http(s) host: the value lands verbatim in
+ * a header, where a `;` or a quote would open a new directive.
+ */
+function supabaseSources(url: string): string {
+  const { protocol, host, origin } = new URL(url);
+  if ((protocol !== 'https:' && protocol !== 'http:') || !/^[a-z0-9.-]+(:\d{1,5})?$/.test(host)) {
+    throw new Error('NEXT_PUBLIC_SUPABASE_URL is not a plain http(s) host');
+  }
+  const wsProtocol = protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${origin} ${wsProtocol}//${host}`;
+}
+
 function buildCsp(nonce: string): string {
   const isDev = process.env.NODE_ENV !== 'production';
-  const supabaseDomains = 'https://*.supabase.co wss://*.supabase.co';
+  const supabaseDomains = supabaseSources(env.NEXT_PUBLIC_SUPABASE_URL);
   const vercelInsights = 'https://vitals.vercel-insights.com';
 
   // React 19 + Turbopack need loosened script/style policies in dev for HMR and
@@ -58,7 +80,7 @@ function buildCsp(nonce: string): string {
     'default-src': `'self'`,
     'script-src': `'self' 'nonce-${nonce}' 'strict-dynamic'${devScriptExtras}`,
     'style-src': `'self' 'nonce-${nonce}'${devStyleExtras}`,
-    'img-src': `'self' data: blob: ${supabaseDomains}`,
+    'img-src': `'self' data: blob:`,
     'font-src': `'self' data:`,
     'connect-src': `'self' ${supabaseDomains} ${vercelInsights}${isDev ? ' ws: wss:' : ''}`,
     'frame-src': `'self'`,

@@ -12,18 +12,21 @@ const nextConfig: NextConfig = {
   productionBrowserSourceMaps: false,
 
   images: {
+    // Optimizer closed. No component renders next/image or getImageProps
+    // (measured on 31 October 2026), so /_next/image had nothing to serve yet
+    // fetched and transformed images on demand, at the cost of the
+    // optimization quota. With `unoptimized`, it answers 404; a future
+    // next/image would render its src as is. No remote source is allowed:
+    // re-enabling the optimizer means naming our exact Supabase host, never a
+    // wildcard. Guarded by src/__tests__/next-config-images.test.ts and
+    // e2e/security-headers.spec.ts.
+    unoptimized: true,
+    // Kept in case the optimizer is ever switched back on.
     // WebP only. Next.js 16.3 (August 2026 security release, GHSA-2xp9-vwfh-vxw4)
     // disables AVIF optimization by default; listing 'image/avif' here would opt
     // back into the vulnerable libheif path for any AVIF served from an allowed
     // remote pattern. Do not add it back until sharp ships a fixed libheif.
     formats: ['image/webp'],
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '*.supabase.co',
-        pathname: '/storage/v1/object/public/**',
-      },
-    ],
   },
 
   /**
