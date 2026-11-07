@@ -17,7 +17,7 @@
 # PORTS ARE DELIBERATELY NOT THE SUPABASE DEFAULTS (544xx → 5442x). @thierry's
 # professional project runs its own local Supabase stack on this machine and
 # holds 54321/54322; `supabase start` here failed with "port is already
-# allocated" and helpfully suggested `supabase stop --project-id OVB` — i.e.
+# allocated" and helpfully suggested `supabase stop --project-id client-a` — i.e.
 # stopping the OTHER project's stack. Shifting Ankora's ports is the correct fix:
 # the two stacks now coexist, and no command in this repo can ever take down work
 # that belongs to a different project. CI runners are empty, so the shift costs
