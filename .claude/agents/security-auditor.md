@@ -168,7 +168,7 @@ function, or a `FORCE RLS` table, hand the deep version to `silent-failure-audit
 
 ## Before any outbound or destructive operation
 
-This machine holds credentials for a **second, professional** account (`ovb`) on GitHub,
+This machine holds credentials for a **second, professional** account (`client-a`) on GitHub,
 Vercel and Supabase. Ankora is always `thierryvm`. Any finding that involves pushing,
 deploying, migrating or rotating a secret must state that `npm run preflight` returns GO
 first — it interrogates the **live CLI sessions**, not just the link files on disk.
