@@ -40,9 +40,10 @@ jobs:
           set -uo pipefail
           out=$(curl -sS -o /dev/null --max-time 20 --retry 2 --retry-delay 5 \
             -A "$USER_AGENT" \
-            -w '%{http_code}|%{time_connect}|%{time_starttransfer}|%header{x-vercel-id}|%header{x-matched-path}' \
+            -w '%{http_code}|%header{x-matched-path}|%{time_connect}|%{time_starttransfer}|%header{x-vercel-id}' \
             "$TARGET") || { echo "::error::$TARGET unreachable"; exit 1; }
-          IFS='|' read -r code connect ttfb vercel_id matched <<<"$out"
+          # x-vercel-id last: a stray '|' in it cannot shift the checked fields.
+          IFS='|' read -r code matched connect ttfb vercel_id <<<"$out"
           echo "status=$code connect=${connect}s ttfb=${ttfb}s edge=${vercel_id%%::*} x-vercel-id=$vercel_id x-matched-path=$matched"
           # A 307 from the [locale]/app route proves the function itself answered
           # (not the CDN, not the proxy alone). Anything else: the ping no longer

@@ -122,9 +122,9 @@ Un lancement qui tombe dans un trou de planification : inchangé.
 ## 6. Coût, au budget 0 €
 
 Sur Hobby, `vercel usage` répond « billing cost data unavailable », et `vercel metrics`
-(CPU, froid/chaud) exige l'add-on payant Observability Plus, non acheté. La
-consommation actuelle ne se lit donc pas en ligne de commande : bornes calculées
-(le temps CPU ne dépasse jamais le temps mural, le TTFB est une borne haute).
+(CPU, froid/chaud) exige l'add-on payant Observability Plus, non acheté. Les chiffres
+ci-dessous sont donc des bornes calculées (le temps CPU ne dépasse jamais le temps
+mural, le TTFB est une borne haute).
 
 Quotas Hobby (doc Vercel lue le 15 novembre 2026) : Active CPU 4 h, mémoire provisionnée
 360 Go-h, 1 million d'invocations par mois. **Les dépasser met la production en pause**
@@ -135,19 +135,17 @@ Quotas Hobby (doc Vercel lue le 15 novembre 2026) : Active CPU 4 h, mémoire pro
 | Invocations             | 8 640 pages + 8 640 proxy = 17 280            | 1,7 %         |
 | Mémoire                 | ≤ 8 640 × 2 Go × 2 s = 9,6 Go-h               | 2,7 %         |
 | Active CPU, tout chaud  | ≤ 8 640 × 0,3 s = 0,72 h                      | 18 %          |
-| Active CPU, 25 % froids | ≤ 8 640 × (0,25 × 1,9 + 0,75 × 0,3) s = 1,7 h | 42 %          |
-| Active CPU, tout froid  | ≤ 8 640 × 1,9 s = 4,6 h                       | **> quota**   |
 | Active CPU, 10 % froids | ≤ 8 640 × (0,1 × 1,9 + 0,9 × 0,3) s = 1,1 h   | 28 %          |
+| Active CPU, 25 % froids | ≤ 8 640 × (0,25 × 1,9 + 0,75 × 0,3) s = 1,7 h | 42 %          |
+| Active CPU, tout froid  | ≤ 8 640 × 1,9 s = 4,6 h (borne pessimiste)    | **> quota**   |
 
 GitHub Actions : gratuit pour un dépôt public. La ligne mémoire suppose une facturation
 à la durée de la requête (S) : la marge reste large même si le chiffre réel est
 plusieurs fois plus élevé.
 
-**La consommation actuelle n'est pas connue.** Elle ne se lit que sur la page Usage du
-tableau de bord Vercel, et @thierry, qui a délégué ce lot, n'est pas sollicité. Les
-seuils du § 7 sont donc fixés **sans marge connue**, au plus prudent : à 10 % de pings
-froids, le keeper ajoute au plus 1,1 h (28 % du quota). Un démarrage à froid évité à un
-vrai visiteur rend d'ailleurs le CPU qu'il aurait coûté ; ce gain n'est pas compté.
+Les seuils du § 7 sont fixés au plus prudent : à 10 % de pings froids, le keeper ajoute
+au plus 1,1 h (28 % du quota). Un démarrage à froid évité à un vrai visiteur rend
+d'ailleurs le CPU qu'il aurait coûté ; ce gain n'est pas compté.
 
 D'où le GO/NO-GO du § 7 : un keeper qui rate sa fenêtre paie un démarrage à froid à
 chaque passage, sans rien apporter.
@@ -163,12 +161,16 @@ Commandes `gh` lancées depuis PowerShell, préfixées `work perso -NoCd &&`.
    bord du runner et temps de connexion. Plus de 25 % de froids →
    `gh workflow disable keep-warm.yml` (réversible) et rapport.
 2. **T + 24 h** : on garde seulement si les pings froids restent ≤ 10 %.
+3. Puis au moins cinq lancements à froid depuis la Belgique, à des heures quelconques ;
+   médiane comparée à 1,65 s. Les chiffres arrivent dans ce rapport par une PR de
+   documentation.
+4. **Chaque mois** : relecture datée du taux de pings froids et de la page Usage Vercel
+   (ligne P1 de la ROADMAP). Un avertissement GitHub n'envoie pas d'e-mail : sans cette
+   relecture, une dérive de la planification passerait inaperçue.
 
 Le runner est le plus souvent aux États-Unis : son TTFB inclut l'aller-retour
 transatlantique et le proxy américain. Le seuil d'1 s compte donc trop de froids plutôt
-que pas assez, et coupe plus tôt : l'erreur va dans le sens prudent. 3. Puis au moins cinq lancements à froid depuis la Belgique, à des heures quelconques ;
-médiane comparée à 1,65 s. Les chiffres arrivent dans ce rapport par une PR de
-documentation.
+que pas assez, et coupe plus tôt : l'erreur va dans le sens prudent.
 
 _Résultats : à compléter après le merge._
 
@@ -196,9 +198,10 @@ _Résultats : à compléter après le merge._
   (`src/lib/supabase/middleware.ts:85`), comme pour tout visiteur anonyme : environ
   8 640 lignes par mois. Aucune écriture Supabase, Upstash ni audit.
 - **Le proxy européen** reste froid au lancement (§ 5).
-- **Suivi pour @thierry** : lire la consommation Active CPU sur la page Usage du
-  tableau de bord Vercel, que la CLI ne voit pas sur Hobby. Avec ce chiffre, les seuils
-  du § 7 pourront être recalculés sur la marge réelle.
+- **Suivi** : recalculer les seuils du § 7 sur la consommation réelle relevée sur la page
+  Usage du tableau de bord Vercel.
+- **Un edge compromis** pourrait faire passer le keeper pour sain : `x-vercel-id` est lu
+  en dernier, si bien qu'un `|` glissé dedans ne décale pas les champs vérifiés.
 - **Suivi pour @thierry** : un pinger européen gratuit (compte requis).
 
 ## 10. Ligne ROADMAP — « Programme — une seule grammaire »
@@ -218,14 +221,14 @@ une section « Lot P — lancement rapide » ; la ligne à reporter dans le prog
   fichier commité et lancé de la même façon contre la prod :
 
   ```text
-  status=307 connect=0.033848s ttfb=0.307467s edge=cdg1 x-vercel-id=cdg1::fra1::… x-matched-path=/[locale]/app
+  status=307 connect=0.030792s ttfb=0.339448s edge=cdg1 x-vercel-id=cdg1::fra1::… x-matched-path=/[locale]/app
   exit=0
   ```
 
   Cas négatif (`TARGET=https://ankora.be/`) :
 
   ```text
-  status=200 connect=0.026733s ttfb=0.235867s edge=cdg1 x-vercel-id=cdg1::fra1::… x-matched-path=/[locale]
+  status=200 connect=0.054042s ttfb=0.229410s edge=cdg1 x-vercel-id=cdg1::fra1::… x-matched-path=/[locale]
   ::error::expected 307 from /[locale]/app, got 200 from '/[locale]'
   exit=1
   ```
@@ -237,13 +240,13 @@ une section « Lot P — lancement rapide » ; la ligne à reporter dans le prog
 
 ## 12. Definition of Done
 
-| Critère                                                    | État                                                                                            |
-| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `plan-reviewer` (Opus)                                     | 🟡 approuvé avec 3 corrections, intégrées (seuils prudents, porte `npm run dev`, `shell: bash`) |
-| `security-auditor` (Opus) sur le workflow                  | à reporter                                                                                      |
-| CI verte (Lint, Typecheck, Tests, E2E ×2, Security, Build) | à reporter                                                                                      |
-| Sourcery et Codex traités dans leurs fils                  | à reporter                                                                                      |
-| Pas de conflit avec `main`, `mergeStateStatus` CLEAN       | à reporter                                                                                      |
-| GO/NO-GO à T + 3 h et T + 24 h, médianes après             | PR de documentation après merge                                                                 |
+| Critère                                                    | État                                                                                                      |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `plan-reviewer` (Opus)                                     | 🟡 approuvé avec 3 corrections, intégrées (seuils prudents, porte `npm run dev`, `shell: bash`)           |
+| `security-auditor` (Opus) sur le workflow                  | PASS_WITH_NOTES : champ vérifié lu avant `x-vercel-id`, relecture mensuelle, phrasé public ; tout intégré |
+| CI verte (Lint, Typecheck, Tests, E2E ×2, Security, Build) | à reporter                                                                                                |
+| Sourcery et Codex traités dans leurs fils                  | à reporter                                                                                                |
+| Pas de conflit avec `main`, `mergeStateStatus` CLEAN       | à reporter                                                                                                |
+| GO/NO-GO à T + 3 h et T + 24 h, médianes après             | PR de documentation après merge                                                                           |
 
 Planchers e2e inchangés : aucune spec touchée.

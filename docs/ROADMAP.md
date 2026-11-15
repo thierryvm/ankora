@@ -363,13 +363,13 @@ serveur (médiane mesurée 1,65 s, contre 0,27 s à chaud). Lot du programme ADR
 lignes rejoindront la section « Programme — une seule grammaire » quand la PR #542 sera
 fusionnée.
 
-| Lot | Contenu                                                                   | État                                                                                                |
-| --- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| P1  | Garder le serveur chaud : `keep-warm.yml`, un ping anonyme de `/app`      | 🔄 PR ouverte ; GO/NO-GO à T + 3 h et T + 24 h — [rapport](./prs/PR-lot-p1-serveur-chaud-report.md) |
-| P2  | Données de `/app` en parallèle (`readDebutDesDonnees`, `isAdmin`)         | ⏳                                                                                                  |
-| P3  | Pré-chargement de navigation dans le service worker                       | ⏳                                                                                                  |
-| P4  | Fusionner les deux vagues du journal des comptes                          | ⏳ plus tard                                                                                        |
-| P5  | `getClaims()` dans le proxy à la place de `getUser` (revue sécurité Opus) | ⏳ en dernier                                                                                       |
+| Lot | Contenu                                                                   | État                                                                                                                                           |
+| --- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| P1  | Garder le serveur chaud : `keep-warm.yml`, un ping anonyme de `/app`      | 🔄 PR ouverte ; GO/NO-GO à T + 3 h et T + 24 h, puis relecture mensuelle des pings froids — [rapport](./prs/PR-lot-p1-serveur-chaud-report.md) |
+| P2  | Données de `/app` en parallèle (`readDebutDesDonnees`, `isAdmin`)         | ⏳                                                                                                                                             |
+| P3  | Pré-chargement de navigation dans le service worker                       | ⏳                                                                                                                                             |
+| P4  | Fusionner les deux vagues du journal des comptes                          | ⏳ plus tard                                                                                                                                   |
+| P5  | `getClaims()` dans le proxy à la place de `getUser` (revue sécurité Opus) | ⏳ en dernier                                                                                                                                  |
 
 ---
 
