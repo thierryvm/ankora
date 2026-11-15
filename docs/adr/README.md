@@ -65,6 +65,7 @@ Decision Records) — light, lisible, versionnable en git.
 | 041 | [Provisionner n'est pas payer](./ADR-041-provisionner-nest-pas-payer.md)                                                   | Accepted                     | 2026-08-10 |
 | 042 | [File de suppression : compter les tentatives](./ADR-042-file-de-suppression-compter-les-tentatives.md)                    | Proposed                     | 2026-08-10 |
 | 043 | [Les catégories que l'utilisateur crée lui-même](./ADR-043-categories-creees-par-l-utilisateur.md)                         | Accepted (amende 022)        | 2026-08-23 |
+| 049 | [Une seule grammaire de mouvement, de chiffres et de lecture](./ADR-049-une-seule-grammaire-de-mouvement-et-de-lecture.md) | Accepted                     | 2026-11-15 |
 
 > **Note numérotation** : ADR-013/014/015 jamais rédigés (réservés en buffer lors de la consolidation ADR-007 → 011/012, finalement non utilisés). La numérotation reprend à 016 pour les ADRs de la session 2026-05-08.
 >
