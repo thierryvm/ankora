@@ -19,10 +19,18 @@ les plus sensibles de l'app.
 Deux jobs, donc **deux planchers distincts** — un chiffre global agrégé serait
 ininterprétable au premier conflit, donc ignoré :
 
-| Job                              | Plancher au 21 septembre 2026                                                                                                       |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `Playwright E2E`                 | **294 passed** (268 au 13/09, 259 au 22/08, 253 plus tôt le 22/08, 247 au 11/08, 241 plus tôt le 11/08, 231 au 09/08, 228 au 06/08) |
-| `Playwright E2E (authenticated)` | **81 passed** (80 plus tôt dans la PR C, 74 avant, 64 au 13/09, 63 le 13/09 plus tôt, 62 au 24/08, 50 au 23/08, 45 avant)           |
+| Job                              | Plancher au 15 novembre 2026                                                                                                                      |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Playwright E2E`                 | **296 passed** (294 au 21/09, 268 au 13/09, 259 au 22/08, 253 plus tôt le 22/08, 247 au 11/08, 241 plus tôt le 11/08, 231 au 09/08, 228 au 06/08) |
+| `Playwright E2E (authenticated)` | **81 passed** (80 plus tôt dans la PR C, 74 avant, 64 au 13/09, 63 le 13/09 plus tôt, 62 au 24/08, 50 au 23/08, 45 avant)                         |
+
+> **15 novembre 2026, lot P3 (préchargement de navigation du service worker) — public 294 → 296, authentifié 81 inchangé.**
+>
+> Un test ajouté à `e2e/pwa.spec.ts` : le worker active le préchargement et une navigation vers
+> `/app` ne met aucune page en cache. Il tourne sous `next start` seulement, et en Chromium
+> seulement (`chromium-desktop`, `mobile-chrome`) ; `mobile-safari` le saute. Mesuré en local sur
+> un build de production (`E2E_PROD_SERVER=1`) : `e2e/pwa.spec.ts` sans le test `9 passed`, avec
+> `11 passed` / `1 skipped`, soit **+2**. À confirmer par le journal CI de la PR, qui fait foi.
 
 > **21 septembre 2026, PR C ([#476](https://github.com/thierryvm/ankora/pull/476)), dernier commit — public 294, authentifié 80 → 81.**
 >
