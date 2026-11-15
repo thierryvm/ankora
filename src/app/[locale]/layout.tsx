@@ -22,6 +22,7 @@ import {
 } from '@/components/layout/bottom-tab-bar-visibility';
 import { getOptionalUser } from '@/lib/auth/require-user';
 import { isAdmin } from '@/lib/auth/is-admin';
+import { FontPreloads } from '@/lib/fonts';
 
 import '../globals.css';
 
@@ -29,10 +30,11 @@ import '../globals.css';
 // `globals.css` and surfaced through the Tailwind v4 `@theme --font-sans`
 // token. The `next/font/google` Inter import was dropped on 2026-05-19
 // (THI-244 Phase A): it pulled a second copy of Inter from Google Fonts on
-// top of the self-hosted `/fonts/Inter-Variable.woff2`, adding ~25 KB of
-// duplicate font payload plus a third-party connection and a GDPR exposure
-// (Google logs visitor IPs). Single source of truth = the WOFF2 in
-// `/public/fonts/` served with a 1-year immutable Cache-Control header.
+// top of the self-hosted file, adding duplicate font payload plus a
+// third-party connection and a GDPR exposure (Google logs visitor IPs).
+// Single source of truth = the WOFF2 subsets under `/public/fonts/<family>/`,
+// described by `scripts/fonts/fonts.json` and served with a 1-year immutable
+// Cache-Control header (a new build lands at a new path).
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -208,6 +210,9 @@ export default async function LocaleLayout({
             undefined`, the rendered <script> had no nonce, and the strict
             CSP blocked execution. See ThemeBootScript JSDoc + proxy.ts. */}
         <ThemeBootScript />
+        {/* Body text is Inter on every page: its latin file is on every LCP
+            path. React hoists these <link> into <head>. */}
+        <FontPreloads scope="layout" />
         <a
           href="#main"
           // PR-D5 a11y: `bg-primary`, `text-primary-foreground`, `ring-ring`

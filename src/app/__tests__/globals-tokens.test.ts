@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
+import fontManifest from '../../../scripts/fonts/fonts.json';
+
 /**
  * Tokens guard test — PR-3a Design System socle (cc-design integration v1).
  *
@@ -152,24 +154,20 @@ describe('globals.css — Design System tokens (PR-3a, cc-design v1)', () => {
       expect(css).toMatch(new RegExp(`font-family:\\s*'${family}'`));
     });
 
-    it('uses font-display: swap for all three', () => {
+    it('uses font-display: swap on every face fonts.json declares', () => {
       const swapMatches = css.match(/font-display:\s*swap/g);
-      expect(swapMatches?.length).toBe(3);
+      expect(swapMatches?.length).toBe(fontManifest.outputs.length);
     });
 
-    it('points to /fonts/ public path in WOFF2 format for all three', () => {
-      // THI-244 Phase A perf fix (2026-05-19): migrated from TTF to WOFF2.
-      // WOFF2 has >97 % browser support and Brotli-compresses the variable
-      // fonts by ~60 % (Inter 879→343 KB, JetBrainsMono 300→114 KB). Fraunces
-      // is sourced directly as a WOFF2 from @fontsource-variable/fraunces
-      // (replacement for the previously corrupted local TTF — sfntVersion
-      // 0x0a0a0a0a, root cause of the iPhone OTS parsing error referenced in
-      // PR #171). Cf. docs/audits/2026-05-19-thi-225-perf-investigation-1sec-nav-lag.md.
-      expect(css).toMatch(/url\('\/fonts\/Inter-Variable\.woff2'\)\s*format\('woff2'\)/);
-      expect(css).toMatch(/url\('\/fonts\/Fraunces-Variable\.woff2'\)\s*format\('woff2'\)/);
-      expect(css).toMatch(/url\('\/fonts\/JetBrainsMono-Variable\.woff2'\)\s*format\('woff2'\)/);
-      // Defense-in-depth: no leftover TTF references anywhere in globals.css.
-      expect(css).not.toMatch(/\/fonts\/[A-Za-z]+-Variable\.ttf/);
+    it('points every face to a WOFF2 under /fonts/ listed in fonts.json', () => {
+      // History: TTF → WOFF2 on 2026-05-19 (THI-244). Since lot A (ADR-049,
+      // November 2026) each face is a latin + latin-ext pair of subsets built
+      // by scripts/fonts/build-fonts.py; scripts/fonts/__tests__/fonts.test.ts
+      // checks the files themselves. Here: no stray URL, no TTF.
+      for (const output of fontManifest.outputs) {
+        expect(css).toContain(`url('/fonts/${output.file}') format('woff2')`);
+      }
+      expect(css).not.toMatch(/\/fonts\/[^']+\.ttf/);
     });
   });
 
