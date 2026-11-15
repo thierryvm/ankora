@@ -91,13 +91,34 @@ No assertion weakened, no retry, no skip, no timeout raised.
   judged acceptable); other exposed suites, below.
 - e2e: not affected (unit tests only); CI's two e2e jobs are the witness, floors 294 / 81.
 
+## Review round — 15 November 2026
+
+`main` moved (#538, #539: vitest 4.1.12); merged into the branch, no conflict. The same flake hit
+#538's `pull_request` run 41209808431, so `main` itself can go red on this test until this lands.
+
+Two Sourcery remarks, both « medium »:
+
+1. **« The regression case passes without the wait, because the capture listener flushes on
+   `user.clear`'s click »** — refused in the thread, with measurements. `user.clear` dispatches **no**
+   click (probe on a bare input: 0 clicks after `user.clear`, 1 after `user.type`). With the wait
+   removed (throwaway copy), the case fails **10/10** on the merged tree, on `toHaveValue(705)` at the
+   helper. The test comment now states that `user.clear` focuses without clicking.
+2. **« `ConvertChargeSheet.amount.test.tsx` keeps the race »** — fixed. The sheet's first field (its
+   initial focus) is the instalment count; three cases type before that frame. Measured with the frame
+   delayed 0–60 ms (93 runs): **47/93 failures before** (typing the balance first), **0/93 after**;
+   delayed 70–150 ms (123 runs): **44/123 before** — the case that types the count first is exposed
+   too once the frame lands after it — **0/123 after**. The three cases now open the sheet through
+   `openSheet()`, which waits with `waitForSheetFocus()`.
+
+Gates on the merged tree: lint 0 errors (26 warnings, none in the changed files), `lint:use-server` ✓,
+typecheck ✓, **272 files, 3818/3818 tests passed**, build ✓ (Next.js 16.4.3, 165/165), the three touched
+files 18/18 over five runs.
+
 ## Follow-up (not in this PR)
 
 Other suites render a `Sheet` and type into a field that is not the sheet's initial focus target,
 with neither a rAF stub nor a wait — same latent race. Each is a one-line `await waitForSheetFocus()`.
 
-- **Exposed**: `src/components/charges/__tests__/ConvertChargeSheet.amount.test.tsx` — the sheet's
-  first field is the instalment count, the tests type into the balance first.
 - **Probably weaker**: `CommitmentsClient.test.tsx` and `ChargesClient.test.tsx` type into « Description »
   first, likely the first field (not verified); only a later field could be hit.
 - **To check**: `AddExpenseSheet.test.tsx` focuses the amount via `initialFocusRef`, so typing the amount

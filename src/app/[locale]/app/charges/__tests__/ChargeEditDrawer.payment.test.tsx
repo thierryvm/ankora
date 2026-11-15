@@ -151,7 +151,9 @@ describe('ChargeEditDrawer — this month’s payment after an amount correction
     // `user.type`'s click on the amount and its first key, so « 705 » went into
     // the label and the amount stayed empty. Here the frame is held until that
     // exact click (or 200 ms, so a helper that waits for it is not left
-    // hanging). Without `waitForSheetFocus` in the helper this case fails.
+    // hanging). `user.clear` focuses without clicking (measured: 0 clicks), so
+    // the first click on the amount is `user.type`'s. Without
+    // `waitForSheetFocus` in the helper this case fails.
     const pending = new Map<number, FrameRequestCallback>();
     let nextId = 0;
     const flush = () => {
