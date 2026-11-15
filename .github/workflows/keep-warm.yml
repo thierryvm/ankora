@@ -1,0 +1,56 @@
+name: Keep warm
+
+# Lot P1 — keep the production pages function warm so a first launch does not
+# pay the serverless cold start (median 1.65 s measured on 2026-11-15, about
+# 0.27 s warm; the instance is released after 5 to 7.5 min idle).
+# Report and GO/NO-GO rules: docs/prs/PR-lot-p1-serveur-chaud-report.md
+#
+# One anonymous GET, no cookie, no secret, no third-party action. `/app` (the
+# PWA start_url) answers 307 to /login from the function that renders every
+# [locale] page, so the cheapest request there is wakes the function a launch
+# needs. Every ping counts against the Hobby Active CPU allowance (4 h/month;
+# going over pauses production): that is why there is exactly one target, and
+# why a cold ping is flagged — a keeper that misses its window pays a full
+# cold start on every run. Disable with `gh workflow disable keep-warm.yml`.
+
+on:
+  schedule:
+    # Every 5 minutes, off the top of the hour (GitHub's busiest minute).
+    - cron: '2-59/5 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: keep-warm
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    if: github.repository == 'thierryvm/ankora'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Wake the pages function
+        shell: bash
+        env:
+          TARGET: https://ankora.be/app
+          USER_AGENT: ankora-keep-warm (+https://github.com/thierryvm/ankora/blob/main/.github/workflows/keep-warm.yml)
+        run: |
+          set -uo pipefail
+          out=$(curl -sS -o /dev/null --max-time 20 --retry 2 --retry-delay 5 \
+            -A "$USER_AGENT" \
+            -w '%{http_code}|%{time_connect}|%{time_starttransfer}|%header{x-vercel-id}|%header{x-matched-path}' \
+            "$TARGET") || { echo "::error::$TARGET unreachable"; exit 1; }
+          IFS='|' read -r code connect ttfb vercel_id matched <<<"$out"
+          echo "status=$code connect=${connect}s ttfb=${ttfb}s edge=${vercel_id%%::*} x-vercel-id=$vercel_id x-matched-path=$matched"
+          # A 307 from the [locale]/app route proves the function itself answered
+          # (not the CDN, not the proxy alone). Anything else: the ping no longer
+          # wakes what it claims to wake.
+          if [ "$code" != "307" ] || [ "$matched" != "/[locale]/app" ]; then
+            echo "::error::expected 307 from /[locale]/app, got $code from '$matched'"
+            exit 1
+          fi
+          if awk -v t="$ttfb" 'BEGIN { exit !(t > 1) }'; then
+            echo "::warning::cold start (${ttfb}s): the previous ping was too far back"
+          fi
