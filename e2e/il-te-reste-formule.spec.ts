@@ -27,6 +27,18 @@ const admin = adminClientOrNull();
 type SeededUser = Awaited<ReturnType<typeof seedOnboardedUser>>;
 const ECRITURE_MS = 15_000;
 
+/**
+ * The annual bill must NEVER fall due in the month the suite runs. In its due
+ * month the plan nets the bill against the month's provision
+ * (`plan.epargneTransferNet` = provision − bills due from savings), the net goes
+ * negative and the cockpit line flips to « Virement depuis Provisions »
+ * (`app/page.tsx`, `epargneGoesToEpargne`): the « vers Provisions » button this
+ * spec clicks does not exist. With `dueMonth: 11` hard-coded, the spec passed in
+ * October and failed every run in November 2026. Six months from now is never
+ * the current month, whatever the day or the time zone.
+ */
+const MOIS_ECHEANCE_ANNUELLE = ((new Date().getUTCMonth() + 6) % 12) + 1;
+
 test.use({ viewport: { width: 375, height: 812 } });
 
 async function seConnecter(page: Page, user: SeededUser): Promise<void> {
@@ -151,8 +163,15 @@ test.describe.serial('« Il te reste » — la formule de la PR D, geste par ges
     a = await seedOnboardedUser(admin, [
       { label: 'Loyer', amount: 505, frequency: 'monthly', dueMonth: 1, paidFrom: 'principal' },
       // 1 800 a year: 150 of provisions a month, so the plan proposes a
-      // transfer to the provisions account.
-      { label: 'Assurance', amount: 1800, frequency: 'annual', dueMonth: 11, paidFrom: 'epargne' },
+      // transfer to the provisions account — as long as the bill is not due
+      // this month (see MOIS_ECHEANCE_ANNUELLE).
+      {
+        label: 'Assurance',
+        amount: 1800,
+        frequency: 'annual',
+        dueMonth: MOIS_ECHEANCE_ANNUELLE,
+        paidFrom: 'epargne',
+      },
     ]);
     const { error } = await admin
       .from('workspaces')
