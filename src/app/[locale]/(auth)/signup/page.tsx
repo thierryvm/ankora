@@ -23,7 +23,7 @@ export default async function SignupPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('pageTitle')}</CardTitle>
+        <CardTitle as="h1">{t('pageTitle')}</CardTitle>
         <CardDescription>{t('pageDescription')}</CardDescription>
       </CardHeader>
       <CardContent>

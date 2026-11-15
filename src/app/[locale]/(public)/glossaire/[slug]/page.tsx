@@ -115,7 +115,7 @@ export default async function GlossaireTermPage({ params }: LocaleSlugParams) {
   return (
     <>
       <Header variant="marketing" />
-      <main className="bg-background min-h-screen">
+      <main id="main" className="bg-background min-h-screen">
         <div className="container mx-auto px-4 py-12 sm:py-16">
           <Breadcrumb
             items={[

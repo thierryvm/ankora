@@ -55,8 +55,14 @@ type CardTitleProps = React.HTMLAttributes<HTMLHeadingElement> & {
    * page `h1` and a section `h2`. Override when the surrounding outline
    * differs — a wrong level is its own accessibility defect, so this is a real
    * prop rather than a fixed tag.
+   *
+   * `h1` exists for pages whose card IS the page: the six auth screens render
+   * one card and nothing else, so its title is the page title. Without it their
+   * first heading was an h3 with no h1 above it (WCAG 1.3.1 / 2.4.6, measured
+   * on ankora.be on 15 November 2026). `h2` is for a card directly under the
+   * page `h1`, as in `/app/settings`.
    */
-  as?: 'h2' | 'h3' | 'h4';
+  as?: 'h1' | 'h2' | 'h3' | 'h4';
 };
 
 /**

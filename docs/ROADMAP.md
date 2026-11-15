@@ -398,11 +398,13 @@ Elles étaient six ; la liste en compte **quatre** sur `main`. La PR #462 en lib
 et en remet une ; elle était bloquée par deux checks rouges le 12 septembre. La liste ne
 doit que **rétrécir**.
 
-### `CardTitle` rend une `<div>`
+### ~~`CardTitle` rend une `<div>`~~ — close depuis le 29 juillet 2026 (6358f76)
 
-Les titres de section du cockpit ne portent donc aucun rôle `heading` — défaut WCAG
-sur la page la plus importante de l'app, et cause de trois des six specs
-quarantinées. Primitive partagée : PR dédiée + `ui-auditor`.
+`CardTitle` rend un vrai titre (h3 par défaut) depuis le 29 juillet 2026. La dette restait
+inscrite ici. Ce qui manquait encore, c'était le **niveau** : les six pages
+d'authentification n'avaient aucun h1 (leur premier titre était ce h3), et `/app/settings`
+sautait du h1 aux h3. Le lot B (titres et contrastes, 15 novembre 2026) ajoute `as="h1"`
+et pose h1 sur l'authentification, h2 dans les réglages.
 
 ### ~~Angle mort du préflight comptes~~ — comblé le 27 juillet 2026 (#276)
 

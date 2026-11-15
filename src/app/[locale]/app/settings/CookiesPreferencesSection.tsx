@@ -171,7 +171,7 @@ export function CookiesPreferencesSection({ initialServerSnapshot }: Props) {
   return (
     <Card id="cookies-preferences">
       <CardHeader>
-        <CardTitle>{t('title')}</CardTitle>
+        <CardTitle as="h2">{t('title')}</CardTitle>
         <CardDescription>{t('description')}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
