@@ -23,6 +23,8 @@ const h = vi.hoisted(() => ({
   logInfo: vi.fn(),
   pending: [] as Array<() => void>,
   issued: [] as string[],
+  // Never drained by `drive`: every call of the request, for "never issued" checks.
+  everIssued: [] as string[],
   getUserCalls: 0,
   tables: {} as Record<string, { data: unknown; error: unknown }>,
   user: { id: 'user-fictif', email: 'famille@ankora.test' } as unknown,
@@ -45,6 +47,7 @@ vi.mock('react', async (importOriginal) => {
 
 function pendingCall<T>(name: string, value: T): Promise<T> {
   h.issued.push(name);
+  h.everIssued.push(name);
   return new Promise<T>((resolve) => h.pending.push(() => resolve(value)));
 }
 
@@ -52,7 +55,18 @@ function queryBuilder(table: string) {
   const result = h.tables[table] ?? { data: [], error: null };
   let started: Promise<unknown> | null = null;
   const builder: Record<string, unknown> = {};
-  for (const method of ['select', 'eq', 'gte', 'lt', 'order', 'limit', 'in', 'is']) {
+  for (const method of [
+    'select',
+    'eq',
+    'gte',
+    'lt',
+    'lte',
+    'order',
+    'limit',
+    'in',
+    'is',
+    'range',
+  ]) {
     builder[method] = () => builder;
   }
   builder.single = () => builder;
@@ -92,7 +106,10 @@ vi.mock('@/i18n/navigation', () => ({
   },
 }));
 
-import { requireUser } from '@/lib/auth/require-user';
+import { getOptionalUser, requireUser } from '@/lib/auth/require-user';
+import { isAdmin } from '@/lib/auth/is-admin';
+import { readDepensesDebut } from '@/lib/data/debut-des-donnees';
+import { loadMonthSituation } from '@/lib/data/month-situation';
 import * as snapshotModule from '@/lib/data/workspace-snapshot';
 
 const tick = () => new Promise((resolve) => setImmediate(resolve));
@@ -136,6 +153,8 @@ beforeEach(() => {
   h.logInfo.mockReset();
   h.pending.length = 0;
   h.issued.length = 0;
+  h.everIssued.length = 0;
+  h.user = { id: 'user-fictif', email: 'famille@ankora.test' };
   h.getUserCalls = 0;
   h.tables = {
     users: { data: { onboarded_at: '2026-01-01T00:00:00Z' }, error: null },
@@ -157,6 +176,107 @@ describe('/app render — session lookups', () => {
   it('checks the session once for the layout AND the page snapshot of one request', async () => {
     await drive(Promise.all([requireUser(), snapshotModule.getWorkspaceSnapshot()]));
     expect(h.getUserCalls).toBe(1);
+  });
+});
+
+describe('locale layout — the admin entry shares the session lookup', () => {
+  it('asks the auth server once for getOptionalUser AND isAdmin in one request', async () => {
+    // The layout awaits them one after the other; the second must be a memo hit.
+    await drive(
+      (async () => {
+        const signedIn = (await getOptionalUser()) !== null;
+        return signedIn && (await isAdmin());
+      })(),
+    );
+    expect(h.getUserCalls).toBe(1);
+  });
+});
+
+/** Every call the render issued, across all waves. */
+const countIssued = (waves: string[][], name: string) =>
+  waves.flat().filter((issued) => issued === name).length;
+
+describe('/app render — the G-31 read leaves with the snapshot (lot P2)', () => {
+  it('starts on the memoized workspace: wave 3, one resolution, three waves in all', async () => {
+    const early = snapshotModule
+      .currentWorkspaceId()
+      .then((workspaceId) => readDepensesDebut(workspaceId, '2026-09-12'));
+    const { waves, result } = await drive(
+      Promise.all([
+        snapshotModule.getSnapshotWith(null, (workspaceId) =>
+          pendingCall('page-read', workspaceId),
+        ),
+        early,
+      ]),
+    );
+    expect(waves).toHaveLength(3);
+    // Every `expenses` read — the snapshot's month and the G-31 one — is in wave 3.
+    expect(waves[2]).toContain('expenses');
+    expect(countIssued(waves.slice(0, 2), 'expenses')).toBe(0);
+    expect(waveOf(waves, 'page-read')).toBe(3);
+    // One resolution of the workspace for both readers.
+    expect(h.getUserCalls).toBe(1);
+    expect(countIssued(waves, 'users')).toBe(1);
+    expect(countIssued(waves, 'workspace_members')).toBe(1);
+    expect(result[1]).toEqual([]);
+  });
+
+  it('a redirect from the workspace gate rejects the early read, which never runs', async () => {
+    h.tables.users = { data: { onboarded_at: null }, error: null };
+    const early = snapshotModule
+      .currentWorkspaceId()
+      .then((workspaceId) => readDepensesDebut(workspaceId, '2026-09-12'));
+    await expect(drive(early)).rejects.toThrow('REDIRECT /onboarding');
+    expect(h.everIssued).toContain('users');
+    expect(h.everIssued).not.toContain('expenses');
+  });
+
+  it('a session owing its second factor is redirected before the early read leaves', async () => {
+    // A verified factor and no readable session token: `elevationDue` fails
+    // closed, so the gate redirects to the challenge.
+    h.user = {
+      id: 'user-fictif',
+      email: 'famille@ankora.test',
+      factors: [{ id: 'f-1', status: 'verified', factor_type: 'totp' }],
+    };
+    const early = snapshotModule
+      .currentWorkspaceId()
+      .then((workspaceId) => readDepensesDebut(workspaceId, '2026-09-12'));
+    await expect(drive(early)).rejects.toThrow('REDIRECT /login/2fa');
+    expect(h.everIssued).toContain('auth.getUser');
+    expect(h.everIssued).not.toContain('expenses');
+    expect(h.everIssued).not.toContain('workspace_members');
+  });
+
+  it('the whole cockpit read: four waves, the ledger second wave being the last', async () => {
+    // A statement, so the ledger's second wave (the debits) has work to do.
+    h.tables.account_balance_statements = {
+      data: [
+        {
+          id: 'st-1',
+          account_type: 'daily_card',
+          balance: 400,
+          stated_on: '2026-09-01',
+          recorded_at: '2026-09-01T08:00:00Z',
+          cancelled_at: null,
+        },
+      ],
+      error: null,
+    };
+    const early = snapshotModule
+      .currentWorkspaceId()
+      .then((workspaceId) => readDepensesDebut(workspaceId, '2026-09-12'));
+    const { waves } = await drive(Promise.all([loadMonthSituation('/app', null), early]));
+    // 1 session · 2 users + membership · 3 snapshot, commitments, journal,
+    // G-31 · 4 the journal's debits and included flows (lot P4 would merge
+    // these two waves of the journal; out of scope here).
+    expect(waves).toHaveLength(4);
+    expect(waveOf(waves, 'account_balance_statements')).toBe(3);
+    expect(waveOf(waves, 'movements')).toBe(3);
+    expect(waveOf(waves, 'statement_included_flows')).toBe(4);
+    // The debits read expenses in wave 4: the statement did give it work.
+    expect(waves[3]).toContain('expenses');
+    expect(waves[2]).toContain('expenses');
   });
 });
 

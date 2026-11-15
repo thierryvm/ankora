@@ -13,7 +13,13 @@ import { SimulatorDrawer } from '@/components/dashboard/SimulatorDrawer';
 import { Repli } from '@/components/cockpit/Repli';
 import { SixMoisRepli } from '@/components/cockpit/SixMoisRepli';
 import { RythmeDuMois } from '@/components/cockpit/RythmeDuMois';
-import { readDebutDesDonnees } from '@/lib/data/debut-des-donnees';
+import {
+  debutDesDonneesPourLaCarte,
+  readDebutDesDonnees,
+  readDepensesDebut,
+  type LectureAnticipee,
+} from '@/lib/data/debut-des-donnees';
+import { currentWorkspaceId } from '@/lib/data/workspace-snapshot';
 import { epargneAffichee, tropTotPourProjeter } from '@/lib/domain/cockpit/trop-tot';
 import { IlTeResteCard } from '@/components/cockpit/IlTeResteCard';
 import { EncoreAPayerCard, type LigneAPayer } from '@/components/cockpit/EncoreAPayerCard';
@@ -131,7 +137,10 @@ export default async function DashboardPage({
   const t = await getTranslations('app.dashboard');
   // ADR-046, lot 2 — the cockpit follows `?period=YYYY-MM`, with the window
   // and the parser of Bills. Absent or out of the window: the current month.
-  const [todayYear, todayMonth] = todayIsoInBrussels().split('-').map(Number) as [number, number];
+  // Read ONCE: the period parse and the early G-31 read below must speak of the
+  // same day — a second call could already be past midnight.
+  const todayAtStart = todayIsoInBrussels();
+  const [todayYear, todayMonth] = todayAtStart.split('-').map(Number) as [number, number];
   // ADR-047 — WITHOUT `?period`, the month shown is the budget month running
   // (`null` here; `loadMonthSituation` resolves it from the journal): on
   // 28 September with October's salary written, the cockpit opens October.
@@ -142,28 +151,50 @@ export default async function DashboardPage({
   const tNav = await getTranslations('app.charges.periodNav');
   const locale = (await getLocale()) as Locale;
 
-  const {
-    snapshot,
-    commitments,
-    paidKeysByCommitment,
-    situation,
-    engagementsMensuels,
-    decomposition,
-    paymentsLedger,
-    cockpitCharges,
-    soldeEpargneActuel,
-    provisionsSansReleve,
-    soldesComptes,
-    soldeQuotidien,
-    ledger,
-    joursEcoules,
-    joursDuMois: daysInMonth,
-    todayIso,
-    ref,
-    isCurrentMonth,
-    monthlyExpenses,
-    fenetre,
-  } = await loadMonthSituation('/app', viewedPeriod);
+  // Lot P2 — the expenses read of G-31 (« Trop tôt pour projeter ») needs the
+  // workspace and today, not the month's situation: it leaves now, beside the
+  // snapshot reads, instead of one round trip after the whole journal.
+  //
+  // Only the READ's own failure is captured; whether it matters is decided
+  // below, once the situation says whether the card is shown. The workspace
+  // comes from the server-side gate (`currentWorkspaceId`, the same memoized
+  // resolution `loadMonthSituation` waits on): a redirect or a failure there is
+  // NOT captured and rejects this promise.
+  //
+  // No `await` between this line and the `Promise.all` below, on purpose: the
+  // `Promise.all` is what observes a rejection of this promise. An `await` in
+  // between could let a redirect reject it unobserved.
+  const depensesDebut: Promise<LectureAnticipee> = currentWorkspaceId().then((workspaceId) =>
+    readDepensesDebut(workspaceId, todayAtStart).then(
+      (dates): LectureAnticipee => ({ ok: true, dates }),
+      (error: unknown): LectureAnticipee => ({ ok: false, error }),
+    ),
+  );
+  const [
+    {
+      snapshot,
+      commitments,
+      paidKeysByCommitment,
+      situation,
+      engagementsMensuels,
+      decomposition,
+      paymentsLedger,
+      cockpitCharges,
+      soldeEpargneActuel,
+      provisionsSansReleve,
+      soldesComptes,
+      soldeQuotidien,
+      ledger,
+      joursEcoules,
+      joursDuMois: daysInMonth,
+      todayIso,
+      ref,
+      isCurrentMonth,
+      monthlyExpenses,
+      fenetre,
+    },
+    lectureAnticipee,
+  ] = await Promise.all([loadMonthSituation('/app', viewedPeriod), depensesDebut]);
   // The month the cockpit calls « current »: the budget month running now.
   const moisEnCours = snapshot.moisDeBudget;
   // Issue #504 — the base income is called what it is: « Revenu prévu » while
@@ -175,22 +206,25 @@ export default async function DashboardPage({
 
   // G-31 — « Trop tôt pour projeter »: days of data count from the FIRST
   // operation ever recorded. Movements are already loaded (`ledger`, sorted by
-  // date); the expenses' side is one bounded read. Only the current month has
-  // a projection, so only it pays for the read — and not while the situation
-  // is incomplete: the pace card is not shown then, and a failed read would
-  // take the whole cockpit down for a card that is absent.
+  // date); the expenses' side is the bounded read sent early, above. Only the
+  // current month has a projection, and not while the situation is
+  // incomplete: the pace card is not shown then, so a failed read is ignored
+  // rather than taking the whole cockpit down for a card that is absent.
+  const premierMouvement =
+    ledger.movements
+      .map((m) => m.occurredOn.toISOString().slice(0, 10))
+      .find((d) => d <= todayIso) ?? null;
+  const debutDesDonnees = await debutDesDonneesPourLaCarte({
+    needed: isCurrentMonth && situation.statut !== 'incomplet',
+    todayIso,
+    todayAtStart,
+    early: lectureAnticipee,
+    premierMouvement,
+    reread: () => readDebutDesDonnees(snapshot.workspaceId, todayIso, premierMouvement),
+  });
   const tropTot =
-    isCurrentMonth && situation.statut !== 'incomplet'
-      ? tropTotPourProjeter({
-          ...(await readDebutDesDonnees(
-            snapshot.workspaceId,
-            todayIso,
-            ledger.movements
-              .map((m) => m.occurredOn.toISOString().slice(0, 10))
-              .find((d) => d <= todayIso) ?? null,
-          )),
-          aujourdhui: todayIso,
-        })
+    debutDesDonnees !== null
+      ? tropTotPourProjeter({ ...debutDesDonnees, aujourdhui: todayIso })
       : false;
   // One savings figure for the whole cockpit (G-31): the cascade and the pace
   // card read the same value, never one « too early » beside one amount.
