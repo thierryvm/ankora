@@ -1,8 +1,8 @@
 # ADR-048 — Les pages publiques se servent depuis le cache
 
 - **Statut** : Proposé (30 octobre 2026). Passe à « Accepté » seulement si la preuve du §6
-  est rendue sur une branche d'essai, avant toute PR de code mergée, **et** si @thierry
-  tranche la question Q1 (§5).
+  est rendue sur une branche d'essai, avant toute PR de code mergée. Q1 (§5) est
+  tranchée le 15 novembre 2026 (voir §5).
 - **Relu par** : `plan-reviewer`, 30 octobre 2026 — 🟡 approuvé avec onze changements,
   tous intégrés dans cette version.
 - **Cite** : audit `docs/audits/2026-05-19-thi-225-perf-investigation-1sec-nav-lag.md`
@@ -170,6 +170,10 @@ un visiteur connecté. Deux voies :
 
 Recommandation du pilote : **(a)**, si la preuve montre un mécanisme propre ; sinon (b).
 
+**Tranché le 15 novembre 2026** par le pilote, sur délégation explicite de @thierry
+(« tu as l'autorisation de faire tout ce qui est nécessaire ») : **(a)**, à condition
+que le point 3 du §6 montre le mécanisme ; à défaut, **(b)**, sans nouvelle décision.
+
 ## 6. La preuve qui fait passer cet ADR à « Accepté »
 
 Sur une branche d'essai, **non mergée**, dans cet ordre. Un point en échec arrête l'essai.
@@ -214,6 +218,13 @@ Sur une branche d'essai, **non mergée**, dans cet ordre. Un point en échec arr
 
 ## 7. Conséquences
 
+- **Amende la règle de code 6 du `CLAUDE.md`** (« jamais de script ou de style en ligne
+  sans `nonce` »). Sur les pages du §2 seulement, une **empreinte** (`'sha256-…'`) calculée
+  au build remplace le nonce ; partout ailleurs, la règle 6 reste entière. L'amendement
+  n'entre en vigueur qu'avec la PR de code, une fois la preuve du §6 rendue : cette PR
+  modifie la règle 6 dans le même commit, avec le renvoi vers cet ADR. Le JSON-LD n'est
+  pas concerné (un bloc `application/ld+json` n'est pas exécuté). Tant que l'ADR reste
+  « Proposé », la règle 6 s'applique sans exception.
 - **Deux politiques CSP à tenir.** Les invariants de D1 sont ce qui empêche leur dérive.
 - **Un test de build échoue** quand une route du §2 redevient dynamique. Aucun
   `force-static` ne le contourne. Chaque montée de Next rejoue les points 1 et 2 du §6.
