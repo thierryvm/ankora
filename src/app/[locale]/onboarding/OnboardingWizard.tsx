@@ -224,7 +224,7 @@ export function OnboardingWizard() {
                 type="checkbox"
                 checked={skipCharge}
                 onChange={(e) => setSkipCharge(e.target.checked)}
-                className="border-border h-4 w-4 rounded"
+                className="border-border accent-brand-text h-4 w-4 rounded"
               />
               {tStep3('skipLater')}
             </label>

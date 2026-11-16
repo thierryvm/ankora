@@ -846,6 +846,9 @@ body > .mkt-paper > main {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     border-color: var(--color-border-control);
+    /* The inset highlights and the 50px drop shadow are depth effects; under
+       increased contrast the edge carries the separation on its own. */
+    box-shadow: none;
   }
 }
 

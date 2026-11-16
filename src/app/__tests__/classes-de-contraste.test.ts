@@ -43,61 +43,88 @@ function fichiers(dossier: string, acc: string[] = []): string[] {
  * meaningful.
  */
 function sansCommentaires(source: string): string {
-  let out = '';
+  // Kept text is copied in slices, not character by character: this scanner
+  // walks every source file of the app, and per-character concatenation made
+  // the guard overrun the default timeout when the whole suite runs in
+  // parallel.
+  const parts: string[] = [];
+  let kept = 0;
   let i = 0;
   let quote: string | null = null;
   while (i < source.length) {
     const c = source[i]!;
     const next = source[i + 1];
     if (quote) {
-      out += c;
-      if (c === '\\') {
-        out += next ?? '';
-        i += 2;
-        continue;
+      if (c === '\\') i += 2;
+      else {
+        if (c === quote) quote = null;
+        i++;
       }
-      if (c === quote) quote = null;
-      i++;
       continue;
     }
     if (c === "'" || c === '"' || c === '`') {
       quote = c;
-      out += c;
       i++;
       continue;
     }
-    if (c === '/' && next === '/') {
-      while (i < source.length && source[i] !== '\n') i++;
+    if (c === '/' && (next === '/' || next === '*')) {
+      parts.push(source.slice(kept, i));
+      let stop: number;
+      if (next === '/') {
+        const eol = source.indexOf('\n', i);
+        stop = eol === -1 ? source.length : eol;
+      } else {
+        const end = source.indexOf('*/', i + 2);
+        stop = end === -1 ? source.length : end + 2;
+      }
+      parts.push(source.slice(i, stop).replace(/[^\n]/g, ' '));
+      i = kept = stop;
       continue;
     }
-    if (c === '/' && next === '*') {
-      const end = source.indexOf('*/', i + 2);
-      const stop = end === -1 ? source.length : end + 2;
-      out += source.slice(i, stop).replace(/[^\n]/g, ' ');
-      i = stop;
-      continue;
-    }
-    out += c;
     i++;
   }
-  return out;
+  parts.push(source.slice(kept));
+  return parts.join('');
 }
 
 /** A class token, not a substring of a longer one (`decoration-brand-700`). */
 const borne = (motif: string): RegExp => new RegExp(`(?<![\\w-])${motif}(?![\\w-])`);
 
-const FAMILLES: ReadonlyArray<readonly [string, RegExp]> = [
-  ['text-brand-700 (2.63:1 on the dark card)', borne('(?:[\\w-]+:)*text-brand-700')],
-  ['phantom primary-foreground', borne('(?:[\\w-]+:)*(?:text|bg|border)-primary(?:-foreground)?')],
-  ['phantom secondary token', borne('(?:[\\w-]+:)*(?:text|bg|border)-secondary(?:-foreground)?')],
-  ['phantom border-input', borne('(?:[\\w-]+:)*border-input')],
-  ['hover:bg-brand-600 under white (3.75:1)', borne('hover:bg-brand-600')],
-  ['accent-brand-400 (1.65:1 on paper)', borne('(?:[\\w-]+:)*accent-brand-400')],
+/**
+ * Each family: its name, a cheap substring that must be present for the
+ * family to be possible at all, and the exact token pattern. The substring
+ * pre-check skips the regex on the vast majority of files.
+ */
+const FAMILLES: ReadonlyArray<readonly [string, string, RegExp]> = [
+  [
+    'text-brand-700 (2.63:1 on the dark card)',
+    'text-brand-700',
+    borne('(?:[\\w-]+:)*text-brand-700'),
+  ],
+  [
+    'phantom primary-foreground',
+    '-primary',
+    borne('(?:[\\w-]+:)*(?:text|bg|border)-primary(?:-foreground)?'),
+  ],
+  [
+    'phantom secondary token',
+    '-secondary',
+    borne('(?:[\\w-]+:)*(?:text|bg|border)-secondary(?:-foreground)?'),
+  ],
+  ['phantom border-input', 'border-input', borne('(?:[\\w-]+:)*border-input')],
+  ['hover:bg-brand-600 under white (3.75:1)', 'hover:bg-brand-600', borne('hover:bg-brand-600')],
+  [
+    'accent-brand-400 (1.65:1 on paper)',
+    'accent-brand-400',
+    borne('(?:[\\w-]+:)*accent-brand-400'),
+  ],
 ];
 
 function violations(source: string): string[] {
+  const possibles = FAMILLES.filter(([, noyau]) => source.includes(noyau));
+  if (possibles.length === 0) return [];
   const propre = sansCommentaires(source);
-  return FAMILLES.filter(([, motif]) => motif.test(propre)).map(([nom]) => nom);
+  return possibles.filter(([, , motif]) => motif.test(propre)).map(([nom]) => nom);
 }
 
 describe('source guards — class families removed by lot B', () => {

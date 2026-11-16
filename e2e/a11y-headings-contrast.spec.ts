@@ -68,3 +68,24 @@ test('the landing header turns opaque under increased contrast', async ({ page, 
   expect(apres.backdrop).toBe('none');
   expect(apres.alpha).toBe(1);
 });
+
+test('an active state keeps a visible outline in forced colours', async ({ page, browserName }) => {
+  test.skip(browserName !== 'chromium', 'forced-colors emulation is Chromium-only');
+
+  await page.goto('/');
+  // The simulator's scenario buttons carry their active state in a fill and
+  // a border colour, both of which forced colours replace.
+  const actif = page.locator('button[aria-pressed="true"]').first();
+  await expect(actif).toHaveCount(1);
+  const contour = () =>
+    actif.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { style: s.outlineStyle, offset: s.outlineOffset };
+    });
+
+  // Baseline: no outline at rest, so the one below is the media query's.
+  expect((await contour()).style).toBe('none');
+
+  await page.emulateMedia({ forcedColors: 'active' });
+  expect(await contour()).toEqual({ style: 'solid', offset: '-2px' });
+});

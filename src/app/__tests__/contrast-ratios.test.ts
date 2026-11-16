@@ -992,6 +992,10 @@ describe('globals.css — prefers-contrast et forced-colors (lot B)', () => {
     });
   });
 
+  it('sous contraste élevé, le verre perd aussi ses ombres de profondeur', () => {
+    expect(ruleIn(mediaBody('prefers-contrast: more'), '.glass')).toMatch(/box-shadow\s*:\s*none/);
+  });
+
   it('le bloc de contraste élevé suit le @supports translucide (le dernier gagne)', () => {
     expect(css.indexOf('@media (prefers-contrast: more)')).toBeGreaterThan(
       css.indexOf('@supports (backdrop-filter: blur(1px))'),
