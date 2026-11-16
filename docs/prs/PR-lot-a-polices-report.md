@@ -84,19 +84,21 @@ Local, on the merged branch (`a7cf21d`):
   `italic`.
 - Loaded faces: Inter normal, Fraunces normal, Fraunces italic, JetBrains Mono normal.
 - Font requests: only the four latin files.
-- Canvas width of the H1 text: 1 036.4 px in Fraunces against 1 030.4 px in Inter.
+- Canvas, glyph by glyph: 18 to 24 of the H1's 24 distinct glyphs differ in width between
+  Fraunces and Inter, depending on the project.
 
 **Negative controls**
 
-- With the Fraunces files blocked by `page.route`, the canvas test fails: the two widths come out
-  equal (1 737.48 on desktop, 1 030.44 on mobile-chrome).
+- With the Fraunces files blocked by `page.route`, the glyph comparison fails: 0 of 24 glyphs
+  differ, on desktop and on mobile-chrome.
 - The `loaded` assertion also fails, with status `error`.
 - The coverage helper fails on the old production Fraunces (134 characters missing).
 
 **E2E floors**
 
 - Public, measured locally on the production build:
-  - with the new spec: 310 passed;
+  - with the new spec: 310 passed, after merging main up to `1a1ef6c`. The CI floor is 301
+    (#549), and CI ran 312 + 1 on `62940af`;
   - the new spec contributes 4 tests × 3 projects = **12** cases, and passes 36/36 in
     `--repeat-each=3`.
   - One local failure, `consent-first-visit` on mobile-safari, passed on rerun. It also fails on a
@@ -109,8 +111,13 @@ Local, on the merged branch (`a7cf21d`):
 
 - Unit tests: `ChargeEditDrawer.payment.test.tsx` failed. This is the focus race fixed by #540,
   unrelated to this change; it is green after merging main.
-- E2E: the canvas test failed on mobile-chrome, because `document.fonts.ready` had settled before
-  Fraunces loaded. Fixed by loading both faces explicitly.
+- E2E: the canvas test failed on mobile-chrome, and again on `62940af` after both faces were
+  loaded explicitly. The cause was not the fonts: the test on the same project that checks
+  Fraunces latin is `loaded` passed on CI. The cause was the measure. At 28 px the whole H1 is
+  almost as wide in Fraunces as in Inter: 1 036.4 against 1 030.4 px locally, and both round to
+  1 038 px on CI's Linux. A total width therefore proves nothing. The test now compares the
+  widths glyph by glyph and requires more than half of them to differ; that count is 0 when
+  Fraunces is unusable.
 
 **Lighthouse mobile**, before and after under the same conditions: a local production build,
 default mobile emulation, two runs each. The Vercel preview answers 302 (SSO), and a bypass token

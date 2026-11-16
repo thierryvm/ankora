@@ -15,8 +15,8 @@ import fonts from '../scripts/fonts/fonts.json';
  *   preloaded: the LCP of `/` is the Inter intro paragraph, and preloading
  *   Fraunces measured slower (see `src/lib/fonts.tsx`);
  * - a French page never fetches a latin-ext file (the ranges are disjoint);
- * - the hero H1 really renders in Fraunces, measured by a canvas comparison
- *   that is EQUAL when Fraunces is unusable — so it can fail.
+ * - the hero H1 really renders in Fraunces, measured glyph by glyph on a
+ *   canvas: no glyph differs when Fraunces is unusable — so it can fail.
  *
  * `@playwright/test` directly, not the shared fixture: no state is installed.
  */
@@ -114,20 +114,26 @@ test.describe('Fonts — preload, coverage, rendering', () => {
       );
       const context = document.createElement('canvas').getContext('2d');
       if (!context) throw new Error('no 2d context');
-      const measure = (family: string) => {
+      const measure = (family: string, glyphs: string) => {
         context.font = font(family);
-        return context.measureText(text).width;
+        return context.measureText(glyphs).width;
       };
-      // If Fraunces were missing or unusable, the first stack would resolve to
-      // Inter and both widths would be equal.
-      return {
-        fraunces: measure('Fraunces, Inter'),
-        inter: measure('Inter'),
-        family: style.fontFamily,
-      };
+      // Compared glyph by glyph, never as one total: at 28 px the whole H1
+      // happens to be almost as wide in Fraunces as in Inter (1 036 vs 1 030 px
+      // locally, both rounding to 1 038 on CI's Linux), so a total proves
+      // nothing. Per glyph, the two designs differ on most letters. If Fraunces
+      // were missing or unusable, `Fraunces, Inter` would resolve to Inter for
+      // every glyph and every difference below would be 0.
+      const glyphs = [...new Set(text.replace(/\s/g, ''))];
+      const differing = glyphs.filter(
+        (glyph) => Math.abs(measure('Fraunces, Inter', glyph) - measure('Inter', glyph)) > 0.25,
+      );
+      return { glyphs: glyphs.length, differing: differing.length, family: style.fontFamily };
     });
     expect(widths.family).toMatch(/^"?Fraunces/);
-    expect(widths.fraunces).not.toBeCloseTo(widths.inter, 0);
+    expect(widths.glyphs).toBeGreaterThan(10);
+    // A real Fraunces differs from Inter on well over half the H1's letters.
+    expect(widths.differing).toBeGreaterThan(widths.glyphs / 2);
   });
 
   test('another public page preloads only Inter and never fetches the italic', async ({ page }) => {
