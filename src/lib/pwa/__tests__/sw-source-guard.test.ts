@@ -465,3 +465,30 @@ describe('public/sw.js — garde source du mécanisme de mise à jour', () => {
     expect(CODE).toContain("request.mode === 'navigate'");
   });
 });
+
+describe('public/sw.js — preload is never enabled without its consumer (lot P3)', () => {
+  // The enabled state lives on the registration and outlives this file. A
+  // worker that keeps enable() but stops reading preloadResponse would send
+  // every navigation twice and replay single-use URLs (/auth/callback?code=).
+  // Either the navigate branch consumes the preload, or activate disables it.
+  /** Body of a top-level function: from its declaration to the next column-0 brace. */
+  const corps = (nom: string) => {
+    const debut = CODE.indexOf(`function ${nom}(`);
+    if (debut < 0) return '';
+    const fin = CODE.indexOf('\n}', debut);
+    return CODE.slice(debut, fin < 0 ? undefined : fin + 2);
+  };
+
+  it('enable() implies the navigate branch awaits event.preloadResponse', () => {
+    const active = CODE.includes('navigationPreload') && /\.enable\(\)/.test(CODE);
+    const desactive = /navigationPreload[\s\S]{0,80}\.disable\(\)/.test(CODE);
+    expect(active || desactive, 'preload is neither enabled nor disabled').toBe(true);
+    if (!active) return;
+    expect(CODE).toContain('event.respondWith(answerNavigation(event))');
+    const answer = corps('answerNavigation');
+    expect(answer, 'answerNavigation not found').not.toBe('');
+    expect(answer).toContain('await event.preloadResponse');
+    // The preload is read before any network request of the worker's own.
+    expect(answer.indexOf('await event.preloadResponse')).toBeLessThan(answer.indexOf('fetch('));
+  });
+});
