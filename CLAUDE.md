@@ -137,7 +137,7 @@ R#sourcery
 
 ### Le nombre de cas e2e exécutés ne descend jamais
 
-Deux planchers **observés**, distincts (jamais un chiffre agrégé) : `Playwright E2E` **301 passed**, `Playwright E2E (authenticated)`
+Deux planchers **observés**, distincts (jamais un chiffre agrégé) : `Playwright E2E` **313 passed**, `Playwright E2E (authenticated)`
 **99 passed**. Relevé : `gh run view <run-id> --log | grep -E
 "^\s+[0-9]+ (passed|failed|flaky|skipped)"`.
 
