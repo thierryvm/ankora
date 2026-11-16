@@ -209,7 +209,7 @@ avant tout.
 ## 9. Environnement
 
 Pile Supabase locale debout (`*_ankora`, API `127.0.0.1:54421`, base `54422`).
-**La pile du projet professionnel tourne en parallèle** (`supabase_db_OVB`, port 54322) — nommer explicitement le conteneur à chaque commande.
+**La pile du projet professionnel tourne en parallèle** (`supabase_db_client-a`, port 54322) — nommer explicitement le conteneur à chaque commande.
 
 Rappel toujours actif : les connecteurs MCP Supabase et Vercel de claude.ai sont
 branchés sur les comptes **professionnels**. Interdits en session Ankora, lecture
