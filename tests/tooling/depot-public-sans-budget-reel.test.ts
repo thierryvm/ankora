@@ -256,7 +256,10 @@ describe('public repository carries no real budget', () => {
     expect(hits).toEqual([]);
   });
 
-  it('no scanned tracked file quotes a marker', () => {
+  // Reads and scans every tracked file (about a thousand): 1 to 2.5 s alone,
+  // over the 5 s default once the whole suite competes for the disk. What this
+  // case proves is the content, not the speed, so it gets a budget of its own.
+  it('no scanned tracked file quotes a marker', { timeout: 30_000 }, () => {
     const hits: string[] = [];
     for (const file of trackedFiles()) {
       const text = readFileSync(resolve(root, file), 'utf8');
