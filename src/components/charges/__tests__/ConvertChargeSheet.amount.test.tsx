@@ -16,6 +16,7 @@ import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 
 import messages from '../../../../messages/fr-BE.json';
+import { waitForSheetFocus } from '../../../../tests/helpers/sheet';
 
 const convertMock = vi.hoisted(() => vi.fn());
 
@@ -48,6 +49,16 @@ function renderSheet() {
   );
 }
 
+/**
+ * Opens the sheet and waits for its initial focus (the instalment count) before
+ * anything is typed. Typing earlier races that frame: landing between a click
+ * on another field and its first key, it sends the keys to the count.
+ */
+async function openSheet() {
+  renderSheet();
+  await waitForSheetFocus();
+}
+
 const balanceField = () => screen.getByLabelText('Solde restant dû (relevé)');
 const rememberedField = () =>
   screen.getByLabelText('Total restant dont tu te souviens (facultatif)');
@@ -68,7 +79,7 @@ describe('ConvertChargeSheet — the amount doors read « 5,90 » as 5.9', () =>
 
   it('sends a remaining balance of 5.9 when « 5,90 » is typed', async () => {
     const user = userEvent.setup();
-    renderSheet();
+    await openSheet();
     await user.type(balanceField(), '5,90');
     await user.click(screen.getByTestId('convert-charge-submit'));
     await waitFor(() => expect(convertMock).toHaveBeenCalledTimes(1));
@@ -80,7 +91,7 @@ describe('ConvertChargeSheet — the amount doors read « 5,90 » as 5.9', () =>
 
   it('reads a remembered « 1.234,56 » as 1 234,56 €, and names the gap', async () => {
     const user = userEvent.setup();
-    renderSheet();
+    await openSheet();
     await user.type(balanceField(), '5,90');
     await user.type(rememberedField(), '1.234,56');
     expect(screen.getByTestId('convert-charge-remembered-divergence')).toHaveTextContent(
@@ -96,7 +107,7 @@ describe('ConvertChargeSheet — the amount doors read « 5,90 » as 5.9', () =>
 
   it('blocks the submit on an unreadable balance, and the field says why', async () => {
     const user = userEvent.setup();
-    renderSheet();
+    await openSheet();
     // A valid door elsewhere: without the guard, the typed balance would be
     // dropped in silence and the conversion would go through without it.
     await user.type(screen.getByLabelText('Nombre d’échéances restantes'), '2');
