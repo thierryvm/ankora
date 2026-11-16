@@ -133,6 +133,13 @@ PR, pour ne pas créer de conflit ici). Point faible, non vérifiable hors appar
 par WebKit d'une redirection opaque préchargée dans une PWA autonome, couvert par le contrôle
 ci-dessous.
 
+Suite à l'alerte de la revue automatique sur le même point : un garde de source
+(`sw-source-guard.test.ts`) exige que tout `navigationPreload.enable()` s'accompagne d'un
+`await event.preloadResponse` lu avant tout `fetch` dans `answerNavigation`, sinon d'un
+`disable()`. Contre-épreuve : `enable()` gardé et lecture retirée → le garde échoue. Il protège
+contre un remaniement partiel, pas contre un revert de la PR entière (qui retire aussi le garde) :
+la procédure écrite reste la protection contre ce cas.
+
 ## Contrôle sur l'appareil par @thierry
 
 Depuis l'écran d'accueil, PWA installée : toucher « Recharger » quand le bandeau apparaît, puis
