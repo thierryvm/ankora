@@ -43,11 +43,15 @@ décisions ci-dessous :
 Le design system reste la référence. Cet ADR tranche là où il se tait ou se contredit.
 
 1. **L'appui se dit par la teinte, jamais par une mise à l'échelle.** C'est ce que fait
-   le code depuis le lot 1 du socle v3 (`button.tsx`). La JSDoc du bouton et
-   `token-usage.md` sont corrigés en conséquence.
+   le code depuis le lot 1 du socle v3 (`button.tsx`). `token-usage.md` est corrigé dans la PR de cet ADR ; la JSDoc de `button.tsx`, qui décrit encore
+   translation et mise à l'échelle, l'est dans le lot B (qui touche déjà ce fichier).
 2. **Tout ce qui se superpose passe par `primitives/Sheet.tsx`, menus compris.** C'est
    ADR-037, déjà décidé. Cet ADR l'ordonne : le menu public mobile et la feuille « Plus »
    sortent de `PENDING_MIGRATION`, comme les deux éditeurs restants.
+   « Ce qui se superpose » vise les panneaux qui recouvrent le contenu (feuilles, tiroirs, menus
+   plein écran). Les **popovers ancrés à leur déclencheur** (menu de compte sur ordinateur,
+   `Select`) restent hors de `Sheet` : ils suivent la règle d'origine ancrée sur le déclencheur
+   (`transform-origin`), sans migration.
 3. **La feuille « Plus » garde l'ordre de la PR-A** : « Se déconnecter » reste atteignable
    **sans défiler** à 390 × 664, et une garde e2e le vérifie. Seuls changent la cible de
    fermeture (44 px), l'unité de hauteur (`svh`) et le confinement du défilement.

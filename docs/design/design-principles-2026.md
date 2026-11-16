@@ -40,7 +40,7 @@ box-shadow:
 - Contraste WCAG AA fragile (toujours tester backdrop clair ET sombre, min 70 % opacity sur surfaces textuelles)
 - Safari iOS : OK mais consomme batterie
 - PWA standalone : peut être désactivé sans GPU — fallback obligatoire
-- `@media (prefers-reduced-transparency)` → fallback surface opaque — et **seule** cette préférence retire le verre : `prefers-reduced-motion` ne le retire plus (ADR-049 décision 7)
+- `@media (prefers-reduced-transparency)` → fallback surface opaque — et, une fois le lot E-c livré, **seule** cette préférence retire le verre (ADR-049 décision 7). **Aujourd'hui**, `globals.css` regroupe encore `prefers-reduced-motion` et `prefers-reduced-transparency` dans le même repli : ne pas s'appuyer sur ce découplage avant E-c
 - `@media (prefers-contrast: more)` → surface opaque + bordure pleine (ADR-049 décision 9)
 - L'edge highlight appartient au **verre** (`.glass`). Sous un en-tête, le séparateur n'apparaît qu'au défilement (scroll edge effect), jamais en filet permanent (ADR-049 décision 8)
 

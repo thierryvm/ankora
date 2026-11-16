@@ -115,7 +115,7 @@ Below is the current Ankora design system extracted from production.
 Use it as a BASELINE — you may propose evolutions (accent color signature, typography refinements, component primitives) but preserve:
   - The dark-first identity
   - The navy/teal/amber color grammar
-  - The serif-for-numbers typography pairing principle
+  - One voice for amounts: tabular figures in `<Num>` (JetBrains Mono), never a serif on a figure (ADR-049 decision 4; the earlier serif-for-numbers pairing was dropped)
 
 Tokens (CSS variables from `src/app/globals.css`):
 
