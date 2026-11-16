@@ -19,10 +19,19 @@ les plus sensibles de l'app.
 Deux jobs, donc **deux planchers distincts** — un chiffre global agrégé serait
 ininterprétable au premier conflit, donc ignoré :
 
-| Job                              | Plancher au 16 novembre 2026                                                                                                                                            |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Playwright E2E`                 | **301 passed** (296 attendu au 15/11, 294 au 21/09, 268 au 13/09, 259 au 22/08, 253 plus tôt le 22/08, 247 au 11/08, 241 plus tôt le 11/08, 231 au 09/08, 228 au 06/08) |
-| `Playwright E2E (authenticated)` | **99 passed** (81 au 21/09, 80 plus tôt dans la PR C, 74 avant, 64 au 13/09, 63 le 13/09 plus tôt, 62 au 24/08, 50 au 23/08, 45 avant)                                  |
+| Job                              | Plancher au 16 novembre 2026                                                                                                                                                                   |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Playwright E2E`                 | **313 passed** (301 plus tôt le 16/11, 296 attendu au 15/11, 294 au 21/09, 268 au 13/09, 259 au 22/08, 253 plus tôt le 22/08, 247 au 11/08, 241 plus tôt le 11/08, 231 au 09/08, 228 au 06/08) |
+| `Playwright E2E (authenticated)` | **99 passed** (81 au 21/09, 80 plus tôt dans la PR C, 74 avant, 64 au 13/09, 63 le 13/09 plus tôt, 62 au 24/08, 50 au 23/08, 45 avant)                                                         |
+
+> **16 novembre 2026, lot A (polices, #545) — public 301 → 313, authentifié 99 inchangé.**
+>
+> `e2e/fonts.spec.ts` ajoute 4 cas publics × 3 projets = 12. Ils vérifient que le préchargement
+> ne porte que sur Inter latin, avec `crossorigin` ; qu'une page française ne télécharge jamais
+> un fichier latin-ext ; que le titre du hero s'affiche réellement en Fraunces (comparaison glyphe
+> par glyphe, 0 glyphe différent quand Fraunces est bloquée) ; et que `/faq` ne demande pas
+> l'italique. Source : les runs CI `success` de `4b00841`, **43942364888** et **43942372420** :
+> `313 passed` (job public) et `99 passed` (job authentifié), sans `flaky`.
 
 > **16 novembre 2026, relevé CI de #547 (lot P3) — public 301, authentifié 99.**
 >

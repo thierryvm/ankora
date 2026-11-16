@@ -1,0 +1,259 @@
+{
+  "$comment": "Single source of truth for the self-hosted fonts. Read by build-fonts.py (never written by it), by scripts/fonts/__tests__/fonts.test.ts and by src/lib/fonts.ts. See scripts/fonts/README.md.",
+  "tools": {
+    "python": "3.13",
+    "fonttools": "4.68.0",
+    "brotli": "1.2.1"
+  },
+  "upstream": {
+    "repository": "https://github.com/google/fonts",
+    "commit": "cc39c4c2c304bc368c9b7c311ea2bcc6013299fe",
+    "rawBase": "https://raw.githubusercontent.com/google/fonts/cc39c4c2c304bc368c9b7c311ea2bcc6013299fe/"
+  },
+  "sources": {
+    "inter": {
+      "path": "ofl/inter/Inter[opsz,wght].ttf",
+      "bytes": 876576,
+      "gitBlobSha1": "047c92f6e2212473dc436020afed689527076d44",
+      "sha256": "29160a80ff49ddcab2c97711247e08b1fab27a484a329ce8b813d820dc559031"
+    },
+    "fraunces": {
+      "path": "ofl/fraunces/Fraunces[SOFT,WONK,opsz,wght].ttf",
+      "bytes": 360440,
+      "gitBlobSha1": "8210f9488d3c732359a9292dd09aca3f2bae830e",
+      "sha256": "177ff6c0f14e5550a3c624247cd1189611d4eb65d000b14944c63d967958abbb"
+    },
+    "fraunces-italic": {
+      "path": "ofl/fraunces/Fraunces-Italic[SOFT,WONK,opsz,wght].ttf",
+      "bytes": 414904,
+      "gitBlobSha1": "2ddf59a11b89a3d6b2816ea6ae7965026c08143a",
+      "sha256": "b24448c43702fac4ee856781d461a0dfba8d8e594b6e8e190234b75fed2c0e01"
+    },
+    "jetbrains-mono": {
+      "path": "ofl/jetbrainsmono/JetBrainsMono[wght].ttf",
+      "bytes": 187208,
+      "gitBlobSha1": "aa310be8b717fe3774f9444dd89d5f4101cc6d10",
+      "sha256": "48715a42ec242c21e9f02692891e147d022299a52e48d5e413e1a942193ffeda"
+    }
+  },
+  "licences": [
+    {
+      "family": "Inter",
+      "upstreamPath": "ofl/inter/OFL.txt",
+      "file": "inter/OFL.txt",
+      "sha256": "5b9321a4298cfeb6b34354164a1c3afc3db114569984c502b9b35d988fd58c57"
+    },
+    {
+      "family": "Fraunces",
+      "upstreamPath": "ofl/fraunces/OFL.txt",
+      "file": "fraunces/OFL.txt",
+      "sha256": "bdf4c22802eaf804f998195871c6b8938aac2ac14b2d78a8bd66a6f1eced833b"
+    },
+    {
+      "family": "JetBrains Mono",
+      "upstreamPath": "ofl/jetbrainsmono/OFL.txt",
+      "file": "jetbrains-mono/OFL.txt",
+      "sha256": "b2fe5e8987594e9ffd1d2ca52a2f5d73eb8335243893c5d6254b5ad69269591d"
+    }
+  ],
+  "ranges": {
+    "latin": "U+0000-00FF, U+0131, U+0152-0153, U+0178, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+1E9E, U+2000-206F, U+20AC, U+2122, U+2190-2195, U+2212, U+2215, U+2248, U+2260, U+2264-2265, U+2295, U+2713, U+FEFF, U+FFFD",
+    "latin-ext": "U+0100-0130, U+0132-0151, U+0154-0177, U+0179-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0300-0303, U+0305-0307, U+0309-0328, U+032A-036F, U+1D00-1DBF, U+1E00-1E9D, U+1E9F, U+1EF2-1EFF, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF"
+  },
+  "required": {
+    "$comment": "Characters every output of a range must map by itself. The latin file of a family must render a French, Dutch, German or Spanish page alone.",
+    "latin": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789àâäæçéèêëîïôöœùûüÿÀÂÄÆÇÉÈÊËÎÏÔÖŒÙÛÜŸßẞáíóúñÁÍÓÚÑ¿¡€  −←↑→↓↔↕≈≠≤≥⊕✓…—–’“”„«»·",
+    "latin-ext": "ąćęłńśźżőűčřšžĳĄĆĘŁŃŚŹŻŐŰČŘŠŽĲ̧̀́̂̃"
+  },
+  "landingBudgetBytes": 194560,
+  "outputs": [
+    {
+      "name": "inter/inter-latin-ext",
+      "file": "inter/inter-latin-ext.9c0b060c.woff2",
+      "family": "Inter",
+      "style": "normal",
+      "weight": "100 900",
+      "source": "inter",
+      "range": "latin-ext",
+      "pin": {},
+      "axes": ["opsz", "wght"],
+      "features": ["kern", "locl"],
+      "alias": {},
+      "exceptions": {},
+      "maxBytes": 138240,
+      "preload": null,
+      "bytes": 130100,
+      "sha256": "9c0b060c9802c2268c888b044e300cb75cde5382e13deee051bbdaf7c09c4cb0"
+    },
+    {
+      "name": "inter/inter-latin",
+      "file": "inter/inter-latin.7011f85f.woff2",
+      "family": "Inter",
+      "style": "normal",
+      "weight": "100 900",
+      "source": "inter",
+      "range": "latin",
+      "pin": {},
+      "axes": ["opsz", "wght"],
+      "features": ["calt", "ccmp", "kern", "locl", "mark", "mkmk", "tnum"],
+      "alias": {},
+      "exceptions": {},
+      "maxBytes": 81920,
+      "preload": "layout",
+      "bytes": 69440,
+      "sha256": "7011f85f2e7d39fb8fdbab6daca89d45d8e2ca7e9fde62848655be5d7b7d4b22"
+    },
+    {
+      "name": "fraunces/fraunces-latin-ext",
+      "file": "fraunces/fraunces-latin-ext.5634b8ba.woff2",
+      "family": "Fraunces",
+      "style": "normal",
+      "weight": "100 900",
+      "source": "fraunces",
+      "range": "latin-ext",
+      "pin": {
+        "SOFT": 0,
+        "WONK": 1,
+        "opsz": 36
+      },
+      "axes": ["wght"],
+      "features": ["kern"],
+      "alias": {},
+      "exceptions": {},
+      "maxBytes": 51200,
+      "preload": null,
+      "bytes": 30908,
+      "sha256": "5634b8baa8b931ee361b38ee4cad0decc1ec3b9602607163e81cdf61def1484b"
+    },
+    {
+      "name": "fraunces/fraunces-latin",
+      "file": "fraunces/fraunces-latin.3b5ef77f.woff2",
+      "family": "Fraunces",
+      "style": "normal",
+      "weight": "100 900",
+      "source": "fraunces",
+      "range": "latin",
+      "pin": {
+        "SOFT": 0,
+        "WONK": 1,
+        "opsz": 36
+      },
+      "axes": ["wght"],
+      "features": ["kern", "liga"],
+      "alias": {},
+      "exceptions": {
+        "U+202F": "No thin space in the Fraunces source, and its U+00A0 is a full 0.205 em space: aliasing would widen it. U+202F is inkless, so Inter (next in --font-display) supplies the correct 0.18 em width.",
+        "U+2190": "Not drawn by the Fraunces source; inkless or symbolic, it falls back to Inter, next in --font-display.",
+        "U+2191": "Not drawn by the Fraunces source; inkless or symbolic, it falls back to Inter, next in --font-display.",
+        "U+2192": "Not drawn by the Fraunces source; inkless or symbolic, it falls back to Inter, next in --font-display.",
+        "U+2193": "Not drawn by the Fraunces source; inkless or symbolic, it falls back to Inter, next in --font-display.",
+        "U+2194": "Not drawn by the Fraunces source; inkless or symbolic, it falls back to Inter, next in --font-display.",
+        "U+2195": "Not drawn by the Fraunces source; inkless or symbolic, it falls back to Inter, next in --font-display.",
+        "U+2295": "Not drawn by the Fraunces source; inkless or symbolic, it falls back to Inter, next in --font-display.",
+        "U+2713": "Not drawn by the Fraunces source; inkless or symbolic, it falls back to Inter, next in --font-display."
+      },
+      "maxBytes": 51200,
+      "preload": null,
+      "bytes": 37160,
+      "sha256": "3b5ef77f26d0e99ea88f5ce7c2f87c47bcea106eb90a2437386fd6496f345640"
+    },
+    {
+      "name": "fraunces/fraunces-italic-latin-ext",
+      "file": "fraunces/fraunces-italic-latin-ext.02dbab43.woff2",
+      "family": "Fraunces",
+      "style": "italic",
+      "weight": "100 900",
+      "source": "fraunces-italic",
+      "range": "latin-ext",
+      "pin": {
+        "SOFT": 0,
+        "WONK": 1,
+        "opsz": 36
+      },
+      "axes": ["wght"],
+      "features": ["kern"],
+      "alias": {},
+      "exceptions": {},
+      "maxBytes": 51200,
+      "preload": null,
+      "bytes": 37072,
+      "sha256": "02dbab430a6f1c66b0ec1b7f4f4c7899693090d762c03ff29c0cacdfb8949238"
+    },
+    {
+      "name": "fraunces/fraunces-italic-latin",
+      "file": "fraunces/fraunces-italic-latin.1ce0c2df.woff2",
+      "family": "Fraunces",
+      "style": "italic",
+      "weight": "100 900",
+      "source": "fraunces-italic",
+      "range": "latin",
+      "pin": {
+        "SOFT": 0,
+        "WONK": 1,
+        "opsz": 36
+      },
+      "axes": ["wght"],
+      "features": ["kern", "liga"],
+      "alias": {},
+      "exceptions": {
+        "U+202F": "No thin space in the Fraunces source, and its U+00A0 is a full 0.205 em space: aliasing would widen it. U+202F is inkless, so Inter (next in --font-display) supplies the correct 0.18 em width.",
+        "U+2190": "Not drawn by the Fraunces source; inkless or symbolic, it falls back to Inter, next in --font-display.",
+        "U+2191": "Not drawn by the Fraunces source; inkless or symbolic, it falls back to Inter, next in --font-display.",
+        "U+2192": "Not drawn by the Fraunces source; inkless or symbolic, it falls back to Inter, next in --font-display.",
+        "U+2193": "Not drawn by the Fraunces source; inkless or symbolic, it falls back to Inter, next in --font-display.",
+        "U+2194": "Not drawn by the Fraunces source; inkless or symbolic, it falls back to Inter, next in --font-display.",
+        "U+2195": "Not drawn by the Fraunces source; inkless or symbolic, it falls back to Inter, next in --font-display.",
+        "U+2295": "Not drawn by the Fraunces source; inkless or symbolic, it falls back to Inter, next in --font-display.",
+        "U+2713": "Not drawn by the Fraunces source; inkless or symbolic, it falls back to Inter, next in --font-display."
+      },
+      "maxBytes": 51200,
+      "preload": null,
+      "bytes": 45080,
+      "sha256": "1ce0c2dfb8431d9f99fe10d3a02918d9041c5d9d438ca9242bfa245858c3e067"
+    },
+    {
+      "name": "jetbrains-mono/jetbrains-mono-latin-ext",
+      "file": "jetbrains-mono/jetbrains-mono-latin-ext.ae2219ad.woff2",
+      "family": "JetBrains Mono",
+      "style": "normal",
+      "weight": "100 800",
+      "source": "jetbrains-mono",
+      "range": "latin-ext",
+      "pin": {},
+      "axes": ["wght"],
+      "features": ["ccmp", "locl"],
+      "alias": {},
+      "exceptions": {
+        "U+0132": "The JetBrains Mono source has no ĳ ligature letter; Dutch text spells it i + j.",
+        "U+0133": "The JetBrains Mono source has no ĳ ligature letter; Dutch text spells it i + j."
+      },
+      "maxBytes": 25600,
+      "preload": null,
+      "bytes": 15152,
+      "sha256": "ae2219adc08e472c00128c66fc5bc9ec8685f3629436a9e20fb45f3b6b4b75eb"
+    },
+    {
+      "name": "jetbrains-mono/jetbrains-mono-latin",
+      "file": "jetbrains-mono/jetbrains-mono-latin.661b79ba.woff2",
+      "family": "JetBrains Mono",
+      "style": "normal",
+      "weight": "100 800",
+      "source": "jetbrains-mono",
+      "range": "latin",
+      "pin": {},
+      "axes": ["wght"],
+      "features": ["ccmp", "locl", "mark"],
+      "alias": {
+        "U+202F": "U+00A0"
+      },
+      "exceptions": {
+        "U+2295": "Not drawn by the JetBrains Mono source; falls back to the system monospace.",
+        "U+2713": "Not drawn by the JetBrains Mono source; falls back to the system monospace."
+      },
+      "maxBytes": 25600,
+      "preload": null,
+      "bytes": 21084,
+      "sha256": "661b79ba2994dc7e232b41dae0647491361d38b00882c8f899901733fc86df8c"
+    }
+  ]
+}
