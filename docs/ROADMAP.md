@@ -356,6 +356,25 @@ le réglage d'un côté, l'écriture à deux mouvements de l'autre — dans cet 
 
 ---
 
+## Chantier — les pages qui se réveillent (30 octobre 2026)
+
+@thierry signale des pages lentes, « plusieurs secondes ». Mesuré le 30 octobre : à
+chaud, tout répond vite (pages publiques 0,16 à 0,45 s au premier octet, pages `/app`
+affichées en 0,42 à 0,90 s, navigation 0,31 à 0,48 s). Le coût est le **réveil** du
+serveur sur un site à faible trafic : 2,37 s sur `/` au premier relevé à froid. Fluid
+Compute est déjà actif. Aucune page n'est servie depuis le cache, parce que le nonce
+CSP et le layout racine imposent le rendu à la demande.
+
+| Chantier                                                                         | État                                 |
+| -------------------------------------------------------------------------------- | ------------------------------------ |
+| **ADR-048** — les pages publiques se servent depuis le cache, CSP par empreintes | 📋 proposé ; Q1 @thierry + preuve §6 |
+| Essai ADR-048 en prévisualisation (le point dur : les scripts RSC en ligne)      | 📋 session suivante, branche d'essai |
+| `/app` : vérifier la session dans le proxy sans appel réseau (`getClaims()`)     | 💡 revue sécurité dédiée             |
+| `/app` : garder le serveur éveillé par un appel planifié                         | 🔄 lot P1, PR #546 (ci-dessous)      |
+| Police Inter réduite aux caractères latins (351 Ko à la première visite)         | 💡                                   |
+
+---
+
 ## Lot P — lancement rapide (15 novembre 2026)
 
 « Lent au lancement, rapide ensuite » : le premier écran attend le démarrage à froid du
@@ -363,13 +382,13 @@ serveur (médiane mesurée 1,65 s, contre 0,27 s à chaud). Lot du programme ADR
 lignes rejoindront la section « Programme — une seule grammaire » quand la PR #542 sera
 fusionnée.
 
-| Lot | Contenu                                                                   | État                                                                                                                                           |
-| --- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| P1  | Garder le serveur chaud : `keep-warm.yml`, un ping anonyme de `/app`      | 🔄 PR ouverte ; GO/NO-GO à T + 3 h et T + 24 h, puis relecture mensuelle des pings froids — [rapport](./prs/PR-lot-p1-serveur-chaud-report.md) |
-| P2  | Données de `/app` en parallèle (`readDebutDesDonnees`, `isAdmin`)         | ⏳                                                                                                                                             |
-| P3  | Pré-chargement de navigation dans le service worker                       | ⏳                                                                                                                                             |
-| P4  | Fusionner les deux vagues du journal des comptes                          | ⏳ plus tard                                                                                                                                   |
-| P5  | `getClaims()` dans le proxy à la place de `getUser` (revue sécurité Opus) | ⏳ en dernier                                                                                                                                  |
+| Lot | Contenu                                                                   | État                                                                                                                                        |
+| --- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| P1  | Garder le serveur chaud : `keep-warm.yml`, un ping anonyme de `/app`      | 🔄 PR #546 ; GO/NO-GO à T + 3 h et T + 24 h, puis relecture mensuelle des pings froids — [rapport](./prs/PR-lot-p1-serveur-chaud-report.md) |
+| P2  | Données de `/app` en parallèle (`readDebutDesDonnees`, `isAdmin`)         | ⏳                                                                                                                                          |
+| P3  | Pré-chargement de navigation dans le service worker                       | ✅ #547                                                                                                                                     |
+| P4  | Fusionner les deux vagues du journal des comptes                          | ⏳ plus tard                                                                                                                                |
+| P5  | `getClaims()` dans le proxy à la place de `getUser` (revue sécurité Opus) | ⏳ en dernier                                                                                                                               |
 
 ---
 

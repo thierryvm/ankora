@@ -109,14 +109,42 @@ self.addEventListener('install', (event) => {
   );
 });
 
+/**
+ * Navigation preload (lot P3, 2026-11-15).
+ *
+ * Without it, a navigation's network request only starts once this worker has
+ * booted — on an installed iPhone PWA that boot sits in front of every launch.
+ * With it, the browser starts the request in parallel and hands it over as
+ * `event.preloadResponse` (see answerNavigation).
+ *
+ * Feature-detected: absent from WebKit before 15.4 and from older browsers. A
+ * failed enable() is swallowed so it can never block activation or claim().
+ *
+ * ROLLBACK: the enabled state is stored on the REGISTRATION and survives a new
+ * worker. A worker that stops reading `preloadResponse` while preload is still
+ * on sends every navigation twice (preload + its own fetch), which replays
+ * single-use URLs (`/auth/callback?code=`, password-reset links). Undo this
+ * with a forward fix that calls `navigationPreload.disable()` in `activate`,
+ * never with a plain revert of this file.
+ */
+async function enableNavigationPreload() {
+  const preload = self.registration && self.registration.navigationPreload;
+  if (!preload) return;
+  await preload.enable().catch(() => undefined);
+}
+
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches
-      .keys()
-      .then((keys) =>
-        Promise.all(keys.filter((k) => !k.startsWith(CACHE_VERSION)).map((k) => caches.delete(k))),
-      )
-      .then(() => self.clients.claim()),
+    Promise.all([
+      enableNavigationPreload(),
+      caches
+        .keys()
+        .then((keys) =>
+          Promise.all(
+            keys.filter((k) => !k.startsWith(CACHE_VERSION)).map((k) => caches.delete(k)),
+          ),
+        ),
+    ]).then(() => self.clients.claim()),
   );
 });
 
@@ -184,6 +212,43 @@ function isBypass(url) {
 const CACHEABLE_ASSET =
   /^\/(?:_next\/static\/|icons\/|brand\/|fonts\/)|^\/(?:manifest\.webmanifest|icon\.svg|apple-icon\.svg|favicon\.ico)$|\.(?:png|jpe?g|svg|webp|avif|ico|woff2?|ttf|otf)$/;
 
+function offlineFallback() {
+  return caches.match(OFFLINE_URL).then((cached) => cached ?? Response.error());
+}
+
+/**
+ * A page navigation, always from the network (lot P3, 2026-11-15).
+ *
+ * 1. The preloaded response is awaited FIRST, on every navigation, so it is
+ *    always consumed (an unread preload is cancelled and logged by Chrome).
+ * 2. A preloaded response is returned as is — redirects included (next-intl
+ *    307 arrives as an opaque redirect, exactly as `fetch(request)` returned it
+ *    for a navigate request). It is a fresh network response: its Set-Cookie
+ *    (session refresh, locale) is applied by the network layer.
+ * 3. Only when there is no preload (unsupported or disabled) does the worker
+ *    fetch, once.
+ * 4. A rejected preload is a network failure: straight to `/offline`, never a
+ *    second request, which would replay a single-use `?code=`.
+ *
+ * No timeout before `/offline`: a cold server alone takes about 2 s, so any
+ * timeout short enough to matter would show the offline page to someone who
+ * is online. Measured and argued in docs/prs/PR-lot-p3-sw-preload-report.md.
+ */
+async function answerNavigation(event) {
+  let preloaded;
+  try {
+    preloaded = await event.preloadResponse;
+  } catch {
+    return offlineFallback();
+  }
+  if (preloaded) return preloaded;
+  try {
+    return await fetch(event.request);
+  } catch {
+    return offlineFallback();
+  }
+}
+
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
@@ -196,11 +261,7 @@ self.addEventListener('fetch', (event) => {
   // never a cached copy of the page itself, which would resurrect a stale locale
   // or a stale auth state (the 2026-07-25 bug).
   if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request).catch(() =>
-        caches.match(OFFLINE_URL).then((cached) => cached ?? Response.error()),
-      ),
-    );
+    event.respondWith(answerNavigation(event));
     return;
   }
 

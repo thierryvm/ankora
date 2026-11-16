@@ -238,6 +238,193 @@ describe('public/sw.js — a simulated fetch event', () => {
   });
 });
 
+/**
+ * Lot P3 (15 November 2026) — navigation preload.
+ *
+ * Every navigation used to wait for the worker to boot before its network
+ * request even started. Navigation preload lets the browser start that request
+ * in parallel; the worker then hands back `event.preloadResponse`. These tests
+ * run the shipped worker against fakes and pin the three properties that make
+ * it safe: the preload is always consumed, never doubled by a second fetch (a
+ * one-shot `?code=` would be replayed), and a navigation never touches Cache
+ * Storage except to read the `/offline` fallback.
+ */
+describe('public/sw.js — navigation preload (lot P3)', () => {
+  type Options = { registration?: unknown; fetchImpl?: (req: unknown) => Promise<unknown> };
+  const OFFLINE = { offline: true };
+
+  function demarrer({ registration, fetchImpl }: Options = {}) {
+    const handlers: Record<string, (e: unknown) => void> = {};
+    const claim = vi.fn(async () => undefined);
+    const fakeSelf: Record<string, unknown> = {
+      location: { origin: 'https://ankora.test' },
+      clients: { claim },
+      skipWaiting: () => undefined,
+      addEventListener: (type: string, h: (e: unknown) => void) => {
+        handlers[type] = h;
+      },
+    };
+    if (registration !== undefined) fakeSelf.registration = registration;
+    const fakeCaches = {
+      match: vi.fn(async (key: unknown) => (key === '/offline' ? OFFLINE : undefined)),
+      open: vi.fn(async () => ({ put: vi.fn(), keys: async () => [], delete: vi.fn() })),
+      keys: vi.fn(async () => ['ankora-v1-old-static']),
+      delete: vi.fn(async () => true),
+    };
+    const reseau = vi.fn(fetchImpl ?? (async () => ({ fromFetch: true })));
+    new Function('self', 'caches', 'fetch', SW)(fakeSelf, fakeCaches, reseau);
+    return { handlers, claim, fakeCaches, reseau };
+  }
+
+  async function activer(registration?: unknown) {
+    const h = demarrer({ registration });
+    let attente: Promise<unknown> | undefined;
+    h.handlers.activate!({
+      waitUntil: (p: Promise<unknown>) => {
+        attente = p;
+      },
+    });
+    expect(attente, 'activate must hand its work to waitUntil').toBeDefined();
+    await attente;
+    return h;
+  }
+
+  /** Dispatches a navigation and returns what the worker answered with. */
+  async function naviguer(
+    h: ReturnType<typeof demarrer>,
+    url: string,
+    preload?: { value: Promise<unknown> } | 'absent',
+  ) {
+    let reponse: Promise<unknown> | undefined;
+    const event: Record<string, unknown> = {
+      request: { method: 'GET', url, mode: 'navigate' },
+      respondWith: (p: Promise<unknown>) => {
+        reponse = Promise.resolve(p);
+      },
+      waitUntil: vi.fn(),
+    };
+    if (preload && preload !== 'absent') event.preloadResponse = preload.value;
+    h.handlers.fetch!(event);
+    expect(reponse, `a navigation to ${url} must be answered by the worker`).toBeDefined();
+    return reponse;
+  }
+
+  it('activate enables navigation preload, still purges old caches and claims', async () => {
+    const enable = vi.fn(async () => undefined);
+    const { claim, fakeCaches } = await activer({ navigationPreload: { enable } });
+    expect(enable).toHaveBeenCalledTimes(1);
+    expect(fakeCaches.delete).toHaveBeenCalledWith('ankora-v1-old-static');
+    expect(claim).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ['no registration at all', undefined],
+    ['a registration without navigationPreload (WebKit < 15.4)', {}],
+  ])('activate feature-detects: %s → no throw, claim still runs', async (_label, registration) => {
+    const { claim } = await activer(registration);
+    expect(claim).toHaveBeenCalledTimes(1);
+  });
+
+  it('a rejected enable() never blocks activation', async () => {
+    const enable = vi.fn(async () => {
+      throw new Error('InvalidStateError');
+    });
+    const { claim } = await activer({ navigationPreload: { enable } });
+    expect(enable).toHaveBeenCalledTimes(1);
+    expect(claim).toHaveBeenCalledTimes(1);
+  });
+
+  it('a preloaded response is returned as is, without a second request', async () => {
+    const h = demarrer();
+    const preloaded = { preloaded: true };
+    const reponse = naviguer(h, 'https://ankora.test/app', {
+      value: Promise.resolve(preloaded),
+    });
+    await expect(reponse).resolves.toBe(preloaded);
+    expect(h.reseau).not.toHaveBeenCalled();
+  });
+
+  it('a redirect from the preload (next-intl 307) is passed through untouched', async () => {
+    const h = demarrer();
+    const redirect = { type: 'opaqueredirect', status: 0, redirected: false };
+    await expect(
+      naviguer(h, 'https://ankora.test/', { value: Promise.resolve(redirect) }),
+    ).resolves.toBe(redirect);
+    expect(h.reseau).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['preloadResponse absent (unsupported browser)', 'absent' as const],
+    [
+      'preloadResponse resolving to undefined (preload disabled)',
+      { value: Promise.resolve(undefined) },
+    ],
+  ])('%s → falls back to one network fetch', async (_label, preload) => {
+    const h = demarrer();
+    await expect(naviguer(h, 'https://ankora.test/app', preload)).resolves.toEqual({
+      fromFetch: true,
+    });
+    expect(h.reseau).toHaveBeenCalledTimes(1);
+  });
+
+  it('a rejected preload goes straight to /offline, never retried', async () => {
+    const h = demarrer();
+    await expect(
+      naviguer(h, 'https://ankora.test/app', { value: Promise.reject(new TypeError('offline')) }),
+    ).resolves.toBe(OFFLINE);
+    expect(h.reseau).not.toHaveBeenCalled();
+  });
+
+  it('a failed fetch (no preload) falls back to /offline', async () => {
+    const h = demarrer({
+      fetchImpl: async () => {
+        throw new TypeError('Failed to fetch');
+      },
+    });
+    await expect(naviguer(h, 'https://ankora.test/app', 'absent')).resolves.toBe(OFFLINE);
+  });
+
+  it('a one-shot OAuth code is requested once: preload present → no fetch, even on failure', async () => {
+    // The navigate branch runs before isBypass, so /auth/callback is preloaded
+    // too. A second request would replay the single-use `?code=`.
+    const ok = demarrer();
+    const preloaded = { preloaded: true };
+    await expect(
+      naviguer(ok, 'https://ankora.test/auth/callback?code=x', {
+        value: Promise.resolve(preloaded),
+      }),
+    ).resolves.toBe(preloaded);
+    expect(ok.reseau).not.toHaveBeenCalled();
+
+    const ko = demarrer();
+    await expect(
+      naviguer(ko, 'https://ankora.test/auth/callback?code=x', {
+        value: Promise.reject(new TypeError('network')),
+      }),
+    ).resolves.toBe(OFFLINE);
+    expect(ko.reseau).not.toHaveBeenCalled();
+  });
+
+  it.each(['/app', '/en/app', '/nl-BE/app/charges', '/', '/login'])(
+    'a navigation to %s never reads or writes Cache Storage for the page',
+    async (path) => {
+      for (const preload of ['absent' as const, { value: Promise.resolve({ preloaded: true }) }]) {
+        const h = demarrer();
+        await naviguer(h, `https://ankora.test${path}`, preload);
+        expect(h.fakeCaches.open).not.toHaveBeenCalled();
+        for (const [key] of h.fakeCaches.match.mock.calls) expect(key).toBe('/offline');
+      }
+      // And on failure, the only read is the offline fallback.
+      const ko = demarrer();
+      await naviguer(ko, `https://ankora.test${path}`, {
+        value: Promise.reject(new TypeError('network')),
+      });
+      expect(ko.fakeCaches.match.mock.calls).toEqual([['/offline']]);
+      expect(ko.fakeCaches.open).not.toHaveBeenCalled();
+    },
+  );
+});
+
 describe('public/sw.js — garde source du mécanisme de mise à jour', () => {
   it("n'active PAS le worker automatiquement à l'installation", () => {
     // Le seul `skipWaiting()` toléré est celui du gestionnaire de message.
