@@ -43,7 +43,7 @@ jobs pouvaient être rouges et la fusion passait.
   épinglés par digest plutôt qu'une base Upstash de CI), après spike mesuré et
   falsifiable. Une dépendance réseau externe dans un gate bloquant apprend à ignorer
   le rouge. La revue a concédé.
-- **Ports Supabase locaux décalés en `5442x`** : le projet professionnel `OVB`
+- **Ports Supabase locaux décalés en `5442x`** : le projet professionnel `client-a`
   occupe les défauts sur la machine de @thierry.
 - **`enforce_admins` et les approbations obligatoires restent désactivés** — dépôt
   solo, ils bloqueraient @thierry sur ses propres PR.
@@ -92,7 +92,7 @@ Consignées parce qu'elles se reproduiront sinon :
 ## 7. État de la machine
 
 Stack Supabase Ankora arrêtée, conteneurs de spike supprimés, serveur de test
-arrêté. **Les 11 conteneurs du projet professionnel `OVB` tournent toujours** —
+arrêté. **Les 11 conteneurs du projet professionnel `client-a` tournent toujours** —
 jamais touchés.
 
 ## 8. Références

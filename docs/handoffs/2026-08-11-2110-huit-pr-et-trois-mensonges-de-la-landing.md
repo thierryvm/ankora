@@ -111,6 +111,6 @@ l'activité récente.
 ## 9. Environnement
 
 Pile Supabase locale debout (`*_ankora`, API `54421`, base `54422`). La pile du
-projet professionnel tourne en parallèle (`supabase_db_OVB`, `54322`) — nommer
+projet professionnel tourne en parallèle (`supabase_db_client-a`, `54322`) — nommer
 le conteneur. Connecteurs MCP Supabase et Vercel toujours interdits en session
 Ankora, lecture comprise.
