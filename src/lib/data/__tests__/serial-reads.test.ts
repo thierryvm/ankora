@@ -108,7 +108,7 @@ vi.mock('@/i18n/navigation', () => ({
 
 import { getOptionalUser, requireUser } from '@/lib/auth/require-user';
 import { isAdmin } from '@/lib/auth/is-admin';
-import { readDepensesDebut } from '@/lib/data/debut-des-donnees';
+import { avecLectureAnticipee, readDepensesDebut } from '@/lib/data/debut-des-donnees';
 import { loadMonthSituation } from '@/lib/data/month-situation';
 import * as snapshotModule from '@/lib/data/workspace-snapshot';
 
@@ -197,17 +197,16 @@ const countIssued = (waves: string[][], name: string) =>
   waves.flat().filter((issued) => issued === name).length;
 
 describe('/app render — the G-31 read leaves with the snapshot (lot P2)', () => {
-  it('starts on the memoized workspace: wave 3, one resolution, three waves in all', async () => {
-    const early = snapshotModule
-      .currentWorkspaceId()
-      .then((workspaceId) => readDepensesDebut(workspaceId, '2026-09-12'));
+  // These go through `avecLectureAnticipee`, the page's own scheduling: if it
+  // ever awaited the situation before sending the G-31 read, that read would
+  // form one wave MORE than counted here.
+  it('the scheduling helper: wave 3, one resolution, three waves in all', async () => {
     const { waves, result } = await drive(
-      Promise.all([
+      avecLectureAnticipee('2026-09-12', () =>
         snapshotModule.getSnapshotWith(null, (workspaceId) =>
           pendingCall('page-read', workspaceId),
         ),
-        early,
-      ]),
+      ).then(async ({ lectureAnticipee }) => lectureAnticipee()),
     );
     expect(waves).toHaveLength(3);
     // Every `expenses` read — the snapshot's month and the G-31 one — is in wave 3.
@@ -218,7 +217,23 @@ describe('/app render — the G-31 read leaves with the snapshot (lot P2)', () =
     expect(h.getUserCalls).toBe(1);
     expect(countIssued(waves, 'users')).toBe(1);
     expect(countIssued(waves, 'workspace_members')).toBe(1);
-    expect(result[1]).toEqual([]);
+    expect(result).toEqual({ ok: true, dates: [] });
+  });
+
+  it('the scheduling helper: a gate redirect surfaces through the situation, no unhandled rejection', async () => {
+    h.tables.users = { data: { onboarded_at: null }, error: null };
+    const unhandled = vi.fn();
+    process.on('unhandledRejection', unhandled);
+    try {
+      await expect(
+        drive(avecLectureAnticipee('2026-09-12', () => snapshotModule.getWorkspaceSnapshot())),
+      ).rejects.toThrow('REDIRECT /onboarding');
+      for (let i = 0; i < 10; i++) await tick();
+      expect(unhandled).not.toHaveBeenCalled();
+      expect(h.everIssued).not.toContain('expenses');
+    } finally {
+      process.off('unhandledRejection', unhandled);
+    }
   });
 
   it('a redirect from the workspace gate rejects the early read, which never runs', async () => {
@@ -263,13 +278,15 @@ describe('/app render — the G-31 read leaves with the snapshot (lot P2)', () =
       ],
       error: null,
     };
-    const early = snapshotModule
-      .currentWorkspaceId()
-      .then((workspaceId) => readDepensesDebut(workspaceId, '2026-09-12'));
-    const { waves } = await drive(Promise.all([loadMonthSituation('/app', null), early]));
+    const { waves } = await drive(
+      avecLectureAnticipee('2026-09-12', () => loadMonthSituation('/app', null)).then(
+        async ({ lectureAnticipee }) => lectureAnticipee(),
+      ),
+    );
     // 1 session · 2 users + membership · 3 snapshot, commitments, journal,
     // G-31 · 4 the journal's debits and included flows (lot P4 would merge
-    // these two waves of the journal; out of scope here).
+    // these two waves of the journal; out of scope here). Sent after the
+    // situation, the G-31 read would be a fifth wave.
     expect(waves).toHaveLength(4);
     expect(waveOf(waves, 'account_balance_statements')).toBe(3);
     expect(waveOf(waves, 'movements')).toBe(3);

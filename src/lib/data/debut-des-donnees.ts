@@ -1,6 +1,7 @@
 import { DataReadUnavailableError } from '@/lib/data/read-failure';
 import { DEPENSES_MIN_PROJECTION } from '@/lib/domain/cockpit/trop-tot';
 import { createClient } from '@/lib/supabase/server';
+import { currentWorkspaceId } from '@/lib/data/workspace-snapshot';
 
 export type DebutDesDonnees = Readonly<{
   /** ISO date of the oldest operation up to today (expense or movement), or null. */
@@ -69,12 +70,49 @@ export async function readDebutDesDonnees(
 export type LectureAnticipee = { ok: true; dates: string[] } | { ok: false; error: unknown };
 
 /**
+ * The cockpit's scheduling (lot P2), kept HERE rather than inline in the page
+ * so a test can prove it: the G-31 expenses read leaves FIRST, then the month's
+ * situation is loaded. Both resolve the workspace through the same memoized
+ * gate (`currentWorkspaceId`, session → second factor → onboarding →
+ * membership), so the read travels in the snapshot's wave instead of one round
+ * trip after the whole journal.
+ *
+ * Only the situation is awaited here. The read is handed back as a thunk and
+ * awaited only if the card turns out to be shown — a past month or an
+ * incomplete situation never waits for it.
+ *
+ * Only the READ's own failure is captured into `{ ok: false }`. A redirect or
+ * a failure of the gate rejects the read's promise too, but it is the SAME
+ * memoized resolution `chargerSituation` waits on, so it surfaces through
+ * `await chargerSituation()`. The no-op handler below exists only so that the
+ * read's promise, when the card is absent and nobody awaits it, is not reported
+ * as an unhandled rejection; awaiting the thunk still rethrows.
+ *
+ * Render-only, like `currentWorkspaceId`.
+ */
+export async function avecLectureAnticipee<T>(
+  todayAtStart: string,
+  chargerSituation: () => Promise<T>,
+): Promise<{ situation: T; lectureAnticipee: () => Promise<LectureAnticipee> }> {
+  const early = currentWorkspaceId().then((workspaceId) =>
+    readDepensesDebut(workspaceId, todayAtStart).then(
+      (dates): LectureAnticipee => ({ ok: true, dates }),
+      (error: unknown): LectureAnticipee => ({ ok: false, error }),
+    ),
+  );
+  early.catch(() => undefined);
+  const situation = await chargerSituation();
+  return { situation, lectureAnticipee: () => early };
+}
+
+/**
  * What the « too early » card gets from a read started BEFORE the month's
  * situation was known (lot P2). The order of the branches is the contract:
  *
- *   1. not needed (another month, an incomplete situation) → `null`, and a
- *      failed early read is ignored: before lot P2 that read did not happen,
- *      so it could not take the cockpit down for a card that is absent;
+ *   1. not needed (another month, an incomplete situation) → `null`, without
+ *      even waiting for the early read; a failed one is ignored: before lot P2
+ *      that read did not happen, so it could not take the cockpit down for a
+ *      card that is absent;
  *   2. midnight crossed between the early read and the situation → read again,
  *      with the situation's day, whatever the early read gave — failure
  *      included: the early answer is about another day;
@@ -88,12 +126,14 @@ export async function debutDesDonneesPourLaCarte(input: {
   todayIso: string;
   /** The day the early read was sent with. */
   todayAtStart: string;
-  early: LectureAnticipee;
+  /** Awaited only in branches 3 and 4. */
+  early: () => Promise<LectureAnticipee>;
   premierMouvement: string | null;
   reread: () => Promise<DebutDesDonnees>;
 }): Promise<DebutDesDonnees | null> {
   if (!input.needed) return null;
   if (input.todayIso !== input.todayAtStart) return input.reread();
-  if (!input.early.ok) throw input.early.error;
-  return combineDebutDesDonnees(input.early.dates, input.premierMouvement);
+  const early = await input.early();
+  if (!early.ok) throw early.error;
+  return combineDebutDesDonnees(early.dates, input.premierMouvement);
 }

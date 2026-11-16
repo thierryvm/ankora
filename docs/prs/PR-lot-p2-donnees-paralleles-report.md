@@ -16,12 +16,17 @@ n'a besoin que du workspace et de la date du jour.
 
 ## Ce qui change
 
-1. **La lecture G-31 part avec le snapshot.** `src/app/[locale]/app/page.tsx` la lance avant
-   d'attendre `loadMonthSituation`, sur le workspace issu de la porte serveur
-   (`currentWorkspaceId()`, même résolution mémoïsée que le snapshot : session, second facteur,
-   onboarding, appartenance). Les deux promesses sont jointes par un seul `Promise.all`, sans
-   `await` intermédiaire. Seul l'échec de la **lecture** est capturé. Une redirection ou un échec
-   de la porte remonte tel quel.
+1. **La lecture G-31 part avec le snapshot.** L'ordonnancement vit dans une fonction de
+   production, `avecLectureAnticipee` (`src/lib/data/debut-des-donnees.ts`), que la page appelle :
+   - elle lance la lecture **avant** de charger la situation du mois ;
+   - elle lit le workspace par la porte serveur (`currentWorkspaceId()`), la même résolution
+     mémoïsée que le snapshot : session, second facteur, onboarding, appartenance.
+
+   Seule la situation est attendue. La lecture revient sous forme de fonction et **n'est attendue
+   que si la carte s'affiche** : un mois passé ou une situation incomplète ne l'attend jamais.
+   Seul l'échec de la **lecture** est capturé. Une redirection ou un échec de la porte remonte par
+   la situation, qui attend la même résolution.
+
 2. **Le jugement de cette lecture** vit dans `debutDesDonneesPourLaCarte`
    (`src/lib/data/debut-des-donnees.ts`). L'ordre des branches est imposé par la revue :
    - carte absente (autre mois, situation incomplète) : `null`, et un échec est ignoré, comme
@@ -129,11 +134,28 @@ Toutes les valeurs sont en millisecondes. Tous les chargements ont répondu 200.
   (garde de statut isolée, cas du second facteur) sont traitées dans cette PR. Risque résiduel :
   `isAdmin` ne vérifie pas le second facteur, comme avant ce diff ; il n'en résulte que l'affichage
   d'un lien, et `/admin` reste gardé par `requireAdmin`.
+- **Sourcery**, trois fils :
+  - `page.tsx:197` (une lecture inutile retarde les mois passés) : **corrigé**. La lecture n'est
+    plus attendue quand la carte est absente. Le test « pas besoin » fournit une lecture qui ne
+    se termine jamais et vérifie qu'elle n'est pas attendue.
+  - `serial-reads.test.ts:210` (le test ne prouve pas l'ordonnancement de la page) :
+    **corrigé**. L'ordonnancement est extrait dans `avecLectureAnticipee`, et les tests de
+    vagues passent par cette fonction. Contre-épreuve faite : si elle attend la situation avant
+    de lancer la lecture, les deux tests de vagues rougissent (une vague de plus).
+  - `page.tsx:167` (la carte peut être périmée par rapport au snapshot) : **refusé dans le
+    fil**. Les lectures du cockpit n'ont jamais partagé un instantané transactionnel : ce sont
+    des requêtes séparées, et l'ancienne lecture séquentielle pouvait aussi voir un autre état
+    que le snapshot (plus tard au lieu de plus tôt). La fenêtre est celle d'un rendu ; toute
+    écriture revalide la page et la corrige au rendu suivant.
+- **CI du premier push** : le run `push` a rougi sur `ChargeEditDrawer.payment.test.tsx`
+  (course de focus, réparée par #540, désormais mergée dans la branche). Le run `pull_request`
+  du même commit était vert, e2e compris : **299** public et **99** authentifié.
 
 ## Coût accepté
 
 La lecture G-31 (bornée à 5 lignes, une colonne, sous RLS) part aussi pour un mois passé ou une
-situation incomplète. Elle ne crée aucune vague : elle voyage avec le snapshot.
+situation incomplète, sans être attendue. Elle ne crée aucune vague : elle voyage avec le
+snapshot.
 
 ## Hors périmètre
 
@@ -148,8 +170,8 @@ situation incomplète. Elle ne crée aucune vague : elle voyage avec le snapshot
 
 À compléter avec les preuves après le push :
 
-1. Checks CI verts : Lint, Typecheck, Tests, E2E (public ≥ 294 passed, authentifié ≥ 81 passed),
-   Security, Build.
+1. Checks CI verts : Lint, Typecheck, Tests, E2E (public ≥ 296 passed, authentifié ≥ 81 passed,
+   planchers de `main` au 16 novembre 2026), Security, Build.
 2. Sourcery et Codex silencieux sur le dernier commit ; fils résolus.
 3. Revue humaine : @thierry (merge délégué à l'orchestration).
 4. `mergeStateStatus` CLEAN.

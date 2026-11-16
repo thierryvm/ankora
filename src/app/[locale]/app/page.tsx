@@ -14,12 +14,10 @@ import { Repli } from '@/components/cockpit/Repli';
 import { SixMoisRepli } from '@/components/cockpit/SixMoisRepli';
 import { RythmeDuMois } from '@/components/cockpit/RythmeDuMois';
 import {
+  avecLectureAnticipee,
   debutDesDonneesPourLaCarte,
   readDebutDesDonnees,
-  readDepensesDebut,
-  type LectureAnticipee,
 } from '@/lib/data/debut-des-donnees';
-import { currentWorkspaceId } from '@/lib/data/workspace-snapshot';
 import { epargneAffichee, tropTotPourProjeter } from '@/lib/domain/cockpit/trop-tot';
 import { IlTeResteCard } from '@/components/cockpit/IlTeResteCard';
 import { EncoreAPayerCard, type LigneAPayer } from '@/components/cockpit/EncoreAPayerCard';
@@ -152,26 +150,11 @@ export default async function DashboardPage({
   const locale = (await getLocale()) as Locale;
 
   // Lot P2 — the expenses read of G-31 (« Trop tôt pour projeter ») needs the
-  // workspace and today, not the month's situation: it leaves now, beside the
-  // snapshot reads, instead of one round trip after the whole journal.
-  //
-  // Only the READ's own failure is captured; whether it matters is decided
-  // below, once the situation says whether the card is shown. The workspace
-  // comes from the server-side gate (`currentWorkspaceId`, the same memoized
-  // resolution `loadMonthSituation` waits on): a redirect or a failure there is
-  // NOT captured and rejects this promise.
-  //
-  // No `await` between this line and the `Promise.all` below, on purpose: the
-  // `Promise.all` is what observes a rejection of this promise. An `await` in
-  // between could let a redirect reject it unobserved.
-  const depensesDebut: Promise<LectureAnticipee> = currentWorkspaceId().then((workspaceId) =>
-    readDepensesDebut(workspaceId, todayAtStart).then(
-      (dates): LectureAnticipee => ({ ok: true, dates }),
-      (error: unknown): LectureAnticipee => ({ ok: false, error }),
-    ),
-  );
-  const [
-    {
+  // workspace and today, not the month's situation: `avecLectureAnticipee`
+  // sends it beside the snapshot reads, instead of one round trip after the
+  // whole journal, and it is awaited below only if the card is shown.
+  const {
+    situation: {
       snapshot,
       commitments,
       paidKeysByCommitment,
@@ -194,7 +177,7 @@ export default async function DashboardPage({
       fenetre,
     },
     lectureAnticipee,
-  ] = await Promise.all([loadMonthSituation('/app', viewedPeriod), depensesDebut]);
+  } = await avecLectureAnticipee(todayAtStart, () => loadMonthSituation('/app', viewedPeriod));
   // The month the cockpit calls « current »: the budget month running now.
   const moisEnCours = snapshot.moisDeBudget;
   // Issue #504 — the base income is called what it is: « Revenu prévu » while

@@ -25,6 +25,9 @@ vi.mock('@/lib/supabase/server', () => ({
   },
 }));
 
+// The scheduling helper reaches the workspace gate; it is proven in serial-reads.
+vi.mock('@/lib/data/workspace-snapshot', () => ({ currentWorkspaceId: async () => 'ws-1' }));
+
 import {
   combineDebutDesDonnees,
   debutDesDonneesPourLaCarte,
@@ -135,27 +138,32 @@ describe('debutDesDonneesPourLaCarte — the early read, judged once the situati
 
   beforeEach(() => reread.mockClear());
 
-  it('not needed: null, no reread', async () => {
-    await expect(
-      debutDesDonneesPourLaCarte({
-        ...base,
-        needed: false,
-        early: { ok: true, dates: ['2026-09-03'] },
-      }),
-    ).resolves.toBeNull();
+  it('not needed: null, no reread, and the early read is never waited for', async () => {
+    // A read that never settles: a past month must not wait for it.
+    const early = vi.fn(() => new Promise<never>(() => {}));
+    await expect(debutDesDonneesPourLaCarte({ ...base, needed: false, early })).resolves.toBeNull();
+    expect(early).not.toHaveBeenCalled();
     expect(reread).not.toHaveBeenCalled();
   });
 
   it('not needed and the early read failed: still null, never thrown', async () => {
     await expect(
-      debutDesDonneesPourLaCarte({ ...base, needed: false, early: { ok: false, error: failure } }),
+      debutDesDonneesPourLaCarte({
+        ...base,
+        needed: false,
+        early: async () => ({ ok: false, error: failure }),
+      }),
     ).resolves.toBeNull();
     expect(reread).not.toHaveBeenCalled();
   });
 
   it('needed and the early read failed: the same DataReadUnavailableError is thrown', async () => {
     await expect(
-      debutDesDonneesPourLaCarte({ ...base, needed: true, early: { ok: false, error: failure } }),
+      debutDesDonneesPourLaCarte({
+        ...base,
+        needed: true,
+        early: async () => ({ ok: false, error: failure }),
+      }),
     ).rejects.toBe(failure);
     expect(reread).not.toHaveBeenCalled();
   });
@@ -165,7 +173,7 @@ describe('debutDesDonneesPourLaCarte — the early read, judged once the situati
       debutDesDonneesPourLaCarte({
         ...base,
         needed: true,
-        early: { ok: true, dates: ['2026-09-03', '2026-09-05'] },
+        early: async () => ({ ok: true, dates: ['2026-09-03', '2026-09-05'] }),
       }),
     ).resolves.toEqual({ premiereOperation: '2026-08-30', nbDepenses: 2 });
     expect(reread).not.toHaveBeenCalled();
@@ -177,7 +185,7 @@ describe('debutDesDonneesPourLaCarte — the early read, judged once the situati
         ...base,
         todayIso: '2026-09-13',
         needed: true,
-        early: { ok: true, dates: ['2026-09-03'] },
+        early: async () => ({ ok: true, dates: ['2026-09-03'] }),
       }),
     ).resolves.toEqual({ premiereOperation: '2026-09-01', nbDepenses: 3 });
     expect(reread).toHaveBeenCalledTimes(1);
@@ -189,7 +197,7 @@ describe('debutDesDonneesPourLaCarte — the early read, judged once the situati
         ...base,
         todayIso: '2026-09-13',
         needed: true,
-        early: { ok: false, error: failure },
+        early: async () => ({ ok: false, error: failure }),
       }),
     ).resolves.toEqual({ premiereOperation: '2026-09-01', nbDepenses: 3 });
     expect(reread).toHaveBeenCalledTimes(1);
