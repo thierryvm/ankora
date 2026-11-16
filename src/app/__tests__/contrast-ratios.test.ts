@@ -844,3 +844,173 @@ describe('globals.css — les jetons d’interface du socle v3 (lot 1)', () => {
     });
   });
 });
+
+/**
+ * Lot B, titres et contrastes (15 novembre 2026) : les paires que le lot
+ * PEINT, chacune mesurée contre l'aplat que le code lui donne.
+ *
+ * - `text-brand-700` a quitté `src/` : #0f766e n'est pas redéclaré en sombre et
+ *   tombait à 2,63:1 sur la carte sombre (mesuré sur ankora.be). Les liens, les
+ *   noms de comptes et le lien de `/login` écrivent `text-brand-text`, mesuré
+ *   ici sur la carte ET sur la page, dans les deux thèmes.
+ * - Le survol du bouton principal était `brand-600` sous du blanc : 3,75:1. Il
+ *   passe à `brand-800`, l'appui à `brand-900` ; l'appui reste distinct du
+ *   survol, et les deux portent `--color-on-accent`.
+ * - Le curseur du simulateur et les cases à cocher prennent `accent-brand-text` :
+ *   un contrôle doit tenir 3:1 sur ce qui l'entoure (WCAG 1.4.11). L'ancien
+ *   `brand-400` donnait environ 1,65:1 sur le papier.
+ */
+describe('globals.css — les paires du lot B (titres et contrastes)', () => {
+  describe.each(THEMES)('mode %s', (_theme, block) => {
+    /** Même cascade que le navigateur : le bloc du thème, sinon `@theme`. */
+    const effectif = (name: string): string => {
+      try {
+        return tokenIn(block, name);
+      } catch {
+        return tokenIn(THEME_BLOCK, name);
+      }
+    };
+
+    it.each(['color-brand-800', 'color-brand-900'] as const)(
+      '--color-on-accent passe AA sur --%s (survol et appui du bouton principal)',
+      (aplat) => {
+        const ratio = contrastRatio(effectif('color-on-accent'), effectif(aplat));
+        expect(
+          ratio,
+          `--color-on-accent sur --${aplat} : ${ratio.toFixed(2)}:1`,
+        ).toBeGreaterThanOrEqual(AA_NORMAL_TEXT);
+      },
+    );
+
+    it('le survol et l’appui restent deux teintes distinctes', () => {
+      expect(effectif('color-brand-800')).not.toBe(effectif('color-brand-900'));
+      expect(effectif('color-brand-800')).not.toBe(effectif('color-brand-700'));
+    });
+
+    it.each(['color-card', 'color-background'] as const)(
+      '--color-brand-text passe AA comme texte sur --%s',
+      (surface) => {
+        const ratio = contrastRatio(effectif('color-brand-text'), effectif(surface));
+        expect(
+          ratio,
+          `--color-brand-text sur --${surface} : ${ratio.toFixed(2)}:1`,
+        ).toBeGreaterThanOrEqual(AA_NORMAL_TEXT);
+      },
+    );
+
+    it.each(['color-card', 'color-background'] as const)(
+      'accent-brand-text (curseur, cases) tient 3:1 sur --%s (WCAG 1.4.11)',
+      (surface) => {
+        const ratio = contrastRatio(effectif('color-brand-text'), effectif(surface));
+        expect(ratio).toBeGreaterThanOrEqual(AA_GRAPHIC_OBJECT);
+      },
+    );
+  });
+
+  it('le témoin : brand-700 en sombre échoue bien sur la carte sombre', () => {
+    // Si ce cas devenait vert un jour, la garde de source qui interdit
+    // `text-brand-700` n'aurait plus de raison d'être : à rouvrir.
+    const ratio = contrastRatio(
+      tokenIn(THEME_BLOCK, 'color-brand-700'),
+      tokenIn(DARK_BLOCK, 'color-card'),
+    );
+    expect(ratio).toBeLessThan(AA_NORMAL_TEXT);
+  });
+
+  it('le témoin : blanc sur brand-600 échoue bien (l’ancien survol)', () => {
+    const ratio = contrastRatio(
+      tokenIn(THEME_BLOCK, 'color-on-accent'),
+      tokenIn(THEME_BLOCK, 'color-brand-600'),
+    );
+    expect(ratio).toBeLessThan(AA_NORMAL_TEXT);
+  });
+
+  it.each(['color-accent-800', 'color-accent-900'] as const)(
+    'en admin, le blanc passe AA sur --%s (le survol remappé sur le laiton)',
+    (aplat) => {
+      const ratio = contrastRatio(
+        tokenIn(THEME_BLOCK, 'color-on-accent'),
+        tokenIn(THEME_BLOCK, aplat),
+      );
+      expect(ratio).toBeGreaterThanOrEqual(AA_NORMAL_TEXT);
+    },
+  );
+
+  it('le remap admin couvre bien brand-800 et brand-900', () => {
+    const admin = blockAfter("[data-accent='admin']");
+    expect(admin).toMatch(/--color-brand-800\s*:\s*var\(--color-accent-800\)/);
+    expect(admin).toMatch(/--color-brand-900\s*:\s*var\(--color-accent-900\)/);
+  });
+});
+
+/**
+ * Les deux préférences système que le lot B prend en charge, lues dans la
+ * feuille (même stratégie que le reste de ce fichier). La preuve au rendu est
+ * dans `e2e/a11y-headings-contrast.spec.ts`.
+ */
+describe('globals.css — prefers-contrast et forced-colors (lot B)', () => {
+  /** Corps d'un `@media` repéré par sa condition exacte. */
+  function mediaBody(condition: string): string {
+    const marker = `@media (${condition})`;
+    const start = css.indexOf(marker);
+    if (start === -1) throw new Error(`Aucun bloc ${marker}`);
+    const open = css.indexOf('{', start);
+    let depth = 0;
+    for (let i = open; i < css.length; i++) {
+      if (css[i] === '{') depth++;
+      else if (css[i] === '}') {
+        depth--;
+        if (depth === 0) return css.slice(open + 1, i);
+      }
+    }
+    throw new Error(`Accolades déséquilibrées après ${marker}`);
+  }
+
+  /** Corps d'une règle `selector { … }` à l'intérieur d'un bloc. */
+  function ruleIn(body: string, selector: string): string {
+    const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const m = body.match(new RegExp(`${escaped}\\s*\\{([^}]*)\\}`));
+    if (!m?.[1]) throw new Error(`Règle ${selector} absente`);
+    return m[1];
+  }
+
+  describe.each(['.surface-overlay', '.glass'] as const)('sous contraste élevé, %s', (selector) => {
+    const rule = (): string => ruleIn(mediaBody('prefers-contrast: more'), selector);
+
+    it('remet à zéro les DEUX préfixes du flou', () => {
+      expect(rule()).toMatch(/(^|[^-])backdrop-filter\s*:\s*none/);
+      expect(rule()).toMatch(/-webkit-backdrop-filter\s*:\s*none/);
+    });
+
+    it('peint un fond opaque, jamais un mélange translucide', () => {
+      expect(rule()).toMatch(/background\s*:\s*var\(--color-(background|card)\)\s*;/);
+      expect(rule()).not.toMatch(/color-mix|transparent/);
+    });
+
+    it('trace son bord avec le jeton gardé à 3:1', () => {
+      expect(rule()).toMatch(/border-color\s*:\s*var\(--color-border-control\)/);
+    });
+  });
+
+  it('le bloc de contraste élevé suit le @supports translucide (le dernier gagne)', () => {
+    expect(css.indexOf('@media (prefers-contrast: more)')).toBeGreaterThan(
+      css.indexOf('@supports (backdrop-filter: blur(1px))'),
+    );
+  });
+
+  it('en couleurs forcées, un état actif se dit par un contour qui ne vole pas le focus', () => {
+    const body = mediaBody('forced-colors: active');
+    expect(body).toMatch(/outline\s*:\s*2px solid Highlight/);
+    expect(body).toMatch(/:not\(:focus-visible\)/);
+    for (const etat of [
+      "[aria-pressed='true']",
+      "[aria-selected='true']",
+      "[role='radio'][aria-checked='true']",
+    ]) {
+      expect(body).toContain(etat);
+    }
+    // Le focus global reste à l'extérieur : les deux indicateurs ne se
+    // recouvrent jamais.
+    expect(css).toMatch(/\*:focus-visible\s*\{[^}]*outline-offset\s*:\s*2px/);
+  });
+});
