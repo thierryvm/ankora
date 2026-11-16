@@ -354,6 +354,21 @@ const resolveWorkspace = cache(async (): Promise<{ workspaceId: string }> => {
 });
 
 /**
+ * The workspace of the signed-in visitor, through the SAME gate as the
+ * snapshot: session, second factor, onboarding, membership. A redirect or a
+ * failed read is thrown exactly as `getSnapshotWith` would throw it.
+ *
+ * Render-only. During a render `resolveWorkspace` is memoized per request, so
+ * a page can start a read on the workspace beside `getSnapshotWith` and both
+ * share one resolution. Outside a render (a Server Action) `cache` memoizes
+ * nothing: every call would ask the auth server and read the membership again
+ * — hand the id down instead, as `getSnapshotWith` does.
+ */
+export async function currentWorkspaceId(): Promise<string> {
+  return (await resolveWorkspace()).workspaceId;
+}
+
+/**
  * The snapshot AND the page's own read, sent in the same wave.
  *
  * A page read needs the workspace id, not the snapshot: waiting for the seven

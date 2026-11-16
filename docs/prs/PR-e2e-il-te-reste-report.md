@@ -6,6 +6,7 @@
 
 `Playwright E2E (authenticated)`, a required check on `main`, failed **on every run** on
 `e2e/il-te-reste-formule.spec.ts:168`:
+
 - 3/3 retries in runs 43710778617 and 43710772839 (15 Nov), and in run 42416007942 (7 Nov),
   all of them on docs-only PRs;
 - the same spec passed on 31 October.
@@ -34,13 +35,13 @@ are still read from the page.
 
 ## Gates
 
-| Gate | Result |
-|---|---|
-| eslint (file) | 0 |
-| prettier | clean |
-| `npm run typecheck` | 0 |
-| `npm run build` | **not run locally**: this worktree links `node_modules` from the main clone, and Turbopack refuses files outside the workspace root. The change touches only an e2e spec, which is not in the app bundle; the CI build is the proof. |
-| e2e floors | proven by the CI jobs of this PR (public 294, authenticated 81). Docker Desktop is not running on the workstation, so the authenticated suite cannot run locally. |
+| Gate                | Result                                                                                                                                                                                                                               |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| eslint (file)       | 0                                                                                                                                                                                                                                    |
+| prettier            | clean                                                                                                                                                                                                                                |
+| `npm run typecheck` | 0                                                                                                                                                                                                                                    |
+| `npm run build`     | **not run locally**: this worktree links `node_modules` from the main clone, and Turbopack refuses files outside the workspace root. The change touches only an e2e spec, which is not in the app bundle; the CI build is the proof. |
+| e2e floors          | proven by the CI jobs of this PR (public 294, authenticated 81). Docker Desktop is not running on the workstation, so the authenticated suite cannot run locally.                                                                    |
 
 ## Follow-up
 
