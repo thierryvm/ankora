@@ -118,9 +118,21 @@ describe('sw.js — caching allowlist (2026-07-25 locale/session bug)', () => {
     // The fallback must be the dedicated offline document — never the page's
     // own cached copy, which is what resurrected the stale locale/session.
     const navBranch = swSource.match(/request\.mode === 'navigate'[\s\S]*?^  }/m)?.[0] ?? '';
-    expect(navBranch).toMatch(/caches\.match\(OFFLINE_URL\)/);
-    expect(navBranch).not.toMatch(/caches\.match\(request\)/);
-    expect(navBranch).not.toMatch(/cache\.put/);
+    // Lot P3: the branch delegates to answerNavigation (navigation preload),
+    // so the guard follows the code into that function and its fallback.
+    expect(navBranch).toContain('event.respondWith(answerNavigation(event))');
+    const fn = (name: string) =>
+      swSource.match(new RegExp(`^(?:async )?function ${name}\\([\\s\\S]*?^}`, 'm'))?.[0] ?? '';
+    const answer = fn('answerNavigation');
+    const fallback = fn('offlineFallback');
+    expect(answer, 'answerNavigation not found').not.toBe('');
+    expect(answer).toContain('offlineFallback()');
+    expect(fallback).toMatch(/caches\.match\(OFFLINE_URL\)/);
+    for (const body of [navBranch, answer, fallback]) {
+      expect(body).not.toMatch(/caches\.match\(request\)/);
+      expect(body).not.toMatch(/caches\.match\(event\.request\)/);
+      expect(body).not.toMatch(/cache\.put|caches\.open/);
+    }
   });
 
   it('declares an allowlist of immutable assets rather than caching everything else', () => {
