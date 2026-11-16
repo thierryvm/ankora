@@ -104,8 +104,11 @@ Local, on the merged branch (`a7cf21d`):
   - One local failure, `consent-first-visit` on mobile-safari, passed on rerun. It also fails on a
     local build of `main` and passes against ankora.be, so the cause is the local environment
     (the login shows « Service temporairement indisponible » without a real Upstash).
-- Authenticated: measured by the CI job (the local `e2e:auth` targets production). See the CI
-  section of the PR conversation.
+- Authenticated: measured by the CI job (the local `e2e:auth` targets production).
+- **CI on `4b00841`** (runs 43942364888 and 43942372420, both `success`): `Playwright E2E`
+  **313 passed** (floor 301 + the 12 new cases), `Playwright E2E (authenticated)` **99 passed**
+  (floor 99, unchanged), no `flaky`. The public floor is raised to 313 in `CLAUDE.md` and in
+  `docs/reference/planchers-e2e-historique.md`.
 
 **First CI run** (`f11c3dd`):
 
@@ -141,17 +144,19 @@ Sourcery opened 7 threads on `f11c3dd`. Each was answered in its thread and reso
 - 1 declined with its reason: keep the old font URLs. Next reloads the document on the first
   navigation after a deploy, so the only effect is a self-healing fallback.
 
-Codex: none at the time of writing.
+Codex: no comment. On `4b00841`: 0 unresolved thread, and no new Sourcery comment (`check-sourcery-resolved`
+green).
 
 ### 3. Human review
 
-Pending: @thierry.
+@thierry delegated the merge to the orchestrating session (« agis sans moi », 15 November 2026),
+which merges once this criterion list is green. The iPhone check below remains his.
 
 ### 4. No conflict with main
 
-`main` was merged into the branch (`a7cf21d`). **#542 (ADR-049 and the lot A row of the
-ROADMAP) is still open.** The plan's merge order puts #542 first. This PR updates the lot A row
-after #542 merges, then the merge state is re-read.
+#542 (ADR-049 and the programme table) merged first, as the plan required. `main` was then
+merged into this branch (`1a9ba9c`), and the lot A row of `docs/ROADMAP.md` is marked
+`✅ #545`. `mergeStateStatus` was CLEAN on `4b00841` and is re-read on the head commit.
 
 ### 5. This report
 
