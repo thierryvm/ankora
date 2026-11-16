@@ -19,10 +19,19 @@ les plus sensibles de l'app.
 Deux jobs, donc **deux planchers distincts** — un chiffre global agrégé serait
 ininterprétable au premier conflit, donc ignoré :
 
-| Job                              | Plancher au 15 novembre 2026                                                                                                                      |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Playwright E2E`                 | **296 passed** (294 au 21/09, 268 au 13/09, 259 au 22/08, 253 plus tôt le 22/08, 247 au 11/08, 241 plus tôt le 11/08, 231 au 09/08, 228 au 06/08) |
-| `Playwright E2E (authenticated)` | **81 passed** (80 plus tôt dans la PR C, 74 avant, 64 au 13/09, 63 le 13/09 plus tôt, 62 au 24/08, 50 au 23/08, 45 avant)                         |
+| Job                              | Plancher au 16 novembre 2026                                                                                                                                            |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Playwright E2E`                 | **301 passed** (296 attendu au 15/11, 294 au 21/09, 268 au 13/09, 259 au 22/08, 253 plus tôt le 22/08, 247 au 11/08, 241 plus tôt le 11/08, 231 au 09/08, 228 au 06/08) |
+| `Playwright E2E (authenticated)` | **99 passed** (81 au 21/09, 80 plus tôt dans la PR C, 74 avant, 64 au 13/09, 63 le 13/09 plus tôt, 62 au 24/08, 50 au 23/08, 45 avant)                                  |
+
+> **16 novembre 2026, relevé CI de #547 (lot P3) — public 301, authentifié 99.**
+>
+> Source : les runs CI `success` du commit de tête de
+> [#547](https://github.com/thierryvm/ankora/pull/547), **43767983519** et **43767992863** :
+> `301 passed` / `332 skipped` (job public) et `99 passed` / `5 skipped` (job authentifié).
+> Le 296 de la veille était déduit du plancher écrit (294) plus le delta local de P3 (+2) ;
+> le plancher écrit était en retard sur la suite réelle, relevée par les PR fusionnées depuis le
+> 21 septembre (non attribuées ici). Le chiffre observé remplace le chiffre déduit.
 
 > **15 novembre 2026, lot P3 (préchargement de navigation du service worker) — public 294 → 296, authentifié 81 inchangé.**
 >
