@@ -9,7 +9,7 @@ Synthèse des trends design fintech 2026 appliqués à Ankora. Source de vérit�
 1. **Hiérarchie radicale** — 1 hero domine 60 % de l'attention, le reste supporte. Ref : Monarch Money (cashflow hero), Copilot (net worth animated).
 2. **Animations narratives** — chaque animation raconte quelque chose (argent qui coule, jauge qui se remplit). Ref : Cleo, Revolut Pockets.
 3. **Données vivantes** — number tickers, graphs live, what-if inline. Ref : Copilot (simulator drawer), Monarch (drag-to-rebalance).
-4. **Typo chiffres dédiée** — tabular-nums + serif display sur gros montants. Ref : Stripe, Mercury.
+4. **Typo chiffres dédiée** — tabular-nums, une seule voix : tout montant isolé en `<Num>` (JetBrains Mono), aucun serif sur un chiffre (ADR-049 décision 4). Ref : Stripe, Mercury.
 5. **Détails invisibles** — edge highlights glass, spring physics, haptics, micro-sons. Ref : Arc Browser, Linear.
 
 ---
@@ -40,7 +40,9 @@ box-shadow:
 - Contraste WCAG AA fragile (toujours tester backdrop clair ET sombre, min 70 % opacity sur surfaces textuelles)
 - Safari iOS : OK mais consomme batterie
 - PWA standalone : peut être désactivé sans GPU — fallback obligatoire
-- `@media (prefers-reduced-transparency)` → fallback surface opaque
+- `@media (prefers-reduced-transparency)` → fallback surface opaque — et, une fois le lot E-c livré, **seule** cette préférence retire le verre (ADR-049 décision 7). **Aujourd'hui**, `globals.css` regroupe encore `prefers-reduced-motion` et `prefers-reduced-transparency` dans le même repli : ne pas s'appuyer sur ce découplage avant E-c
+- `@media (prefers-contrast: more)` → surface opaque + bordure pleine (ADR-049 décision 9)
+- L'edge highlight appartient au **verre** (`.glass`). Sous un en-tête, le séparateur n'apparaît qu'au défilement (scroll edge effect), jamais en filet permanent (ADR-049 décision 8)
 
 **Apps qui le font bien (2026)** : Arc Browser, Raycast, Linear, Vercel.
 
@@ -148,9 +150,9 @@ Le **laiton est l'accent de marque** (différenciation Ankora vs Revolut/N26/Qon
 - **Fraunces** (hero éditorial) — OK, signature douce
 - **Geist** (Vercel) — à considérer si on pousse plus tech-forward
 - **Instrument Serif** — monte fort comme serif éditorial 2026
-- Numbers : tabular-nums obligatoire, serif display sur gros montants
+- Numbers : tabular-nums obligatoire ; tout montant isolé en `<Num>` (JetBrains Mono), Inter tabulaire dans une phrase — **aucun serif sur un chiffre** (ADR-049 décision 4)
 
-**Combo premium 2026 fintech** : Geist Sans (UI) + Fraunces / Instrument Serif (display + numbers) — cette combinaison serif chiffres + sans-serif UI est LA tendance 2026.
+**Combo premium 2026 fintech** : la tendance « serif chiffres + sans-serif UI » (Geist + Fraunces / Instrument Serif) a été **écartée** par ADR-049 : un même objet, le montant, ne porte qu'une voix. Fraunces reste la voix des titres éditoriaux.
 
 ---
 

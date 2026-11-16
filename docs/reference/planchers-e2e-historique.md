@@ -19,10 +19,36 @@ les plus sensibles de l'app.
 Deux jobs, donc **deux planchers distincts** — un chiffre global agrégé serait
 ininterprétable au premier conflit, donc ignoré :
 
-| Job                              | Plancher au 21 septembre 2026                                                                                                       |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `Playwright E2E`                 | **294 passed** (268 au 13/09, 259 au 22/08, 253 plus tôt le 22/08, 247 au 11/08, 241 plus tôt le 11/08, 231 au 09/08, 228 au 06/08) |
-| `Playwright E2E (authenticated)` | **81 passed** (80 plus tôt dans la PR C, 74 avant, 64 au 13/09, 63 le 13/09 plus tôt, 62 au 24/08, 50 au 23/08, 45 avant)           |
+| Job                              | Plancher au 16 novembre 2026                                                                                                                                                                   |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Playwright E2E`                 | **313 passed** (301 plus tôt le 16/11, 296 attendu au 15/11, 294 au 21/09, 268 au 13/09, 259 au 22/08, 253 plus tôt le 22/08, 247 au 11/08, 241 plus tôt le 11/08, 231 au 09/08, 228 au 06/08) |
+| `Playwright E2E (authenticated)` | **99 passed** (81 au 21/09, 80 plus tôt dans la PR C, 74 avant, 64 au 13/09, 63 le 13/09 plus tôt, 62 au 24/08, 50 au 23/08, 45 avant)                                                         |
+
+> **16 novembre 2026, lot A (polices, #545) — public 301 → 313, authentifié 99 inchangé.**
+>
+> `e2e/fonts.spec.ts` ajoute 4 cas publics × 3 projets = 12. Ils vérifient que le préchargement
+> ne porte que sur Inter latin, avec `crossorigin` ; qu'une page française ne télécharge jamais
+> un fichier latin-ext ; que le titre du hero s'affiche réellement en Fraunces (comparaison glyphe
+> par glyphe, 0 glyphe différent quand Fraunces est bloquée) ; et que `/faq` ne demande pas
+> l'italique. Source : les runs CI `success` de `4b00841`, **43942364888** et **43942372420** :
+> `313 passed` (job public) et `99 passed` (job authentifié), sans `flaky`.
+
+> **16 novembre 2026, relevé CI de #547 (lot P3) — public 301, authentifié 99.**
+>
+> Source : les runs CI `success` du commit de tête de
+> [#547](https://github.com/thierryvm/ankora/pull/547), **43767983519** et **43767992863** :
+> `301 passed` / `332 skipped` (job public) et `99 passed` / `5 skipped` (job authentifié).
+> Le 296 de la veille était déduit du plancher écrit (294) plus le delta local de P3 (+2) ;
+> le plancher écrit était en retard sur la suite réelle, relevée par les PR fusionnées depuis le
+> 21 septembre (non attribuées ici). Le chiffre observé remplace le chiffre déduit.
+
+> **15 novembre 2026, lot P3 (préchargement de navigation du service worker) — public 294 → 296, authentifié 81 inchangé.**
+>
+> Un test ajouté à `e2e/pwa.spec.ts` : le worker active le préchargement et une navigation vers
+> `/app` ne met aucune page en cache. Il tourne sous `next start` seulement, et en Chromium
+> seulement (`chromium-desktop`, `mobile-chrome`) ; `mobile-safari` le saute. Mesuré en local sur
+> un build de production (`E2E_PROD_SERVER=1`) : `e2e/pwa.spec.ts` sans le test `9 passed`, avec
+> `11 passed` / `1 skipped`, soit **+2**. À confirmer par le journal CI de la PR, qui fait foi.
 
 > **21 septembre 2026, PR C ([#476](https://github.com/thierryvm/ankora/pull/476)), dernier commit — public 294, authentifié 80 → 81.**
 >

@@ -259,6 +259,9 @@ Avant de pousser une PR qui touche l'UI :
 - [ ] Pas de hardcoded hex hors SVG justifié (utiliser tokens uniquement)
 - [ ] Aucun usage direct des six pigments papier (`--color-paper*`, `--color-ink*`) : ils ne se lisent qu'à travers le remap `.mkt-paper` (cf. §3)
 - [ ] Si un ratio est ajouté au §4 : il est **calculé**, et sa colonne « Gardé » dit la vérité — une valeur écrite à la main sans porte se marque ⬜
+- [ ] Un montant isolé passe par `<Num>` ; un montant dans une phrase garde Inter + `tabular-nums` ; aucun serif sur un chiffre (ADR-049 décision 4)
+- [ ] Une explication de chiffre dans un panneau ouvert est en `--text-body`, au-dessus du pli au minimum en `--text-small` ; `text-xs` réservé aux métadonnées (date, source, unité) ; une décomposition s'écrit en cascade alignée, jamais en phrase-équation (ADR-049 décision 6)
+- [ ] Un montant qui s'ouvre sur sa décomposition passe par `Repli` (cible ≥ 44 px), pas par un `<summary>` non stylé (ADR-049 décision 5)
 
 Si tu détectes un cas non couvert par ce doc → STOP escalade @cowork pour décision + ajout au registre §5.
 
@@ -312,14 +315,14 @@ Quand une classe utilitaire `_shared/shell.css` est consommée par > 1 surface J
 elle est exposée comme composant React dans `src/components/ui/` pour éviter la
 répétition `className="…"` et permettre des props typées.
 
-| Class CSS source                                                                             | Composant React   | Path                                                                 | Notes                                                                                         |
-| -------------------------------------------------------------------------------------------- | ----------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `.glass`                                                                                     | `<Glass>`         | [src/components/ui/glass.tsx](../../src/components/ui/glass.tsx)     | `padding` prop (`none`/`sm`/`md`/`lg`) — wrapper Liquid Glass multi-couche                    |
-| `.eyebrow`                                                                                   | `<Eyebrow>`       | [src/components/ui/eyebrow.tsx](../../src/components/ui/eyebrow.tsx) | `tone` prop (`default`/`accent`) — préheader uppercase                                        |
-| `.num` / `.num-md` / `.num-lg` / `.num-xl`                                                   | `<Num>`           | [src/components/ui/num.tsx](../../src/components/ui/num.tsx)         | `size` (`sm`/`md`/`lg`/`xl`) + `tone` (`default`/`accent`) — figure tabular-nums              |
-| `.row` (cc-design)                                                                           | `<Row>`           | [src/components/ui/row.tsx](../../src/components/ui/row.tsx)         | `gap` / `align` / `justify` — flex row ergonomique                                            |
-| `.btn`, `.btn-primary`, `.btn-outline`, `.btn-ghost`, `.btn-secondary`, `.btn-sm`, `.btn-lg` | `<Button>`        | [src/components/ui/button.tsx](../../src/components/ui/button.tsx)   | Premium pattern Apple/Linear (translateY hover, scale active, magnetic shadow) wrappé via cva |
-| `.card`                                                                                      | `<Card>` (shadcn) | [src/components/ui/card.tsx](../../src/components/ui/card.tsx)       | Inchangé — quasi-équivalent à shell.css                                                       |
+| Class CSS source                                                                             | Composant React   | Path                                                                 | Notes                                                                                                       |
+| -------------------------------------------------------------------------------------------- | ----------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `.glass`                                                                                     | `<Glass>`         | [src/components/ui/glass.tsx](../../src/components/ui/glass.tsx)     | `padding` prop (`none`/`sm`/`md`/`lg`) — wrapper Liquid Glass multi-couche                                  |
+| `.eyebrow`                                                                                   | `<Eyebrow>`       | [src/components/ui/eyebrow.tsx](../../src/components/ui/eyebrow.tsx) | `tone` prop (`default`/`accent`) — préheader uppercase                                                      |
+| `.num` / `.num-md` / `.num-lg` / `.num-xl`                                                   | `<Num>`           | [src/components/ui/num.tsx](../../src/components/ui/num.tsx)         | `size` (`sm`/`md`/`lg`/`xl`) + `tone` (`default`/`accent`) — figure tabular-nums                            |
+| `.row` (cc-design)                                                                           | `<Row>`           | [src/components/ui/row.tsx](../../src/components/ui/row.tsx)         | `gap` / `align` / `justify` — flex row ergonomique                                                          |
+| `.btn`, `.btn-primary`, `.btn-outline`, `.btn-ghost`, `.btn-secondary`, `.btn-sm`, `.btn-lg` | `<Button>`        | [src/components/ui/button.tsx](../../src/components/ui/button.tsx)   | Quatre états du socle v3 : l'appui se dit par la teinte, jamais par translate ni scale (ADR-049 décision 1) |
+| `.card`                                                                                      | `<Card>` (shadcn) | [src/components/ui/card.tsx](../../src/components/ui/card.tsx)       | Inchangé — quasi-équivalent à shell.css                                                                     |
 
 **Règle** : si une nouvelle PR doit consommer une classe `_shared/shell.css`
 dans plus d'une surface, créer le composant Atomic UI correspondant **dans la

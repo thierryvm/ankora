@@ -50,13 +50,13 @@ passé par l'étape prévue.
 | 8     | Premier jour — onboarding, budget proposé               | ⚠️ non vérifié                                                                                                                                                                                                     |
 | 9     | Navigation — couverture, repérage, flags                | ⚠️ partiel, non re-mesuré le 12 septembre                                                                                                                                                                          |
 | 10    | Navigation — 5 entrées + ⊕                              | ✅ `app-destinations.ts` ; la page `/app/simulator` n'existe plus                                                                                                                                                  |
-| 11    | Formulaire unifié + primitive modale unique             | ⚠️ partiel — ADR-037 et `Sheet.tsx` ; les panneaux restants sont listés par `PENDING_MIGRATION` (`sheet-is-the-only-modal.test.ts:38`)                                                                             |
+| 11    | Formulaire unifié + primitive modale unique             | ⚠️ partiel — ADR-037 et `Sheet.tsx` ; les 4 restants de `PENDING_MIGRATION` = lots D-a/D-b/D-c (ADR-049)                                                                                                           |
 | 12    | Suppression réversible                                  | ❌ aucune migration ne porte `deleted_at`                                                                                                                                                                          |
 | 13    | Cockpit — prévu et réel réconciliés                     | ✅ par un autre chemin — `src/lib/domain/cockpit/` et le test `pas-de-double-comptage` (ADR-035)                                                                                                                   |
 | 14    | Historique — navigation par mois                        | ❌ `/app/expenses` ne lit aucun paramètre de mois                                                                                                                                                                  |
 | 15    | Performance et cache                                    | ❌ aucun `unstable_cache`, `revalidateTag` ni `revalidate` dans `src/`                                                                                                                                             |
 | 16    | Lexique FR-BE, slug i18n                                | ❌ pas de colonne `slug` sur `categories`, pas de route d'accessibilité                                                                                                                                            |
-| 17    | Polish visuel — la grammaire                            | ❌ inexécutable telle qu'écrite : son outil de validation, `design-playground`, a été supprimé par ADR-034                                                                                                         |
+| 17    | Polish visuel — la grammaire                            | 🔄 rouverte par ADR-049 (15 nov. 2026) — « Programme — une seule grammaire »                                                                                                                                       |
 
 ### Étape 3 — détail (27 juillet 2026)
 
@@ -155,6 +155,35 @@ nommée :
 
 Levé au passage : **BUG-iOS-010** — le curseur porte désormais `aria-valuemin` /
 `aria-valuemax` / `aria-valuenow` explicites, et son cas e2e sort de `test.fixme`.
+
+## Programme — une seule grammaire (ADR-049, 15 novembre 2026)
+
+Mandat @thierry : « que mon application soit digne des design Apple, menus compris ». Un
+audit du 15 novembre (production publique + `/app`, mesuré au DOM à 390 × 664, rapport hors
+dépôt) fonde **ADR-049**. Un lot = une PR = une préoccupation ; chaque lot passe par
+`spec-translator` → `plan-reviewer`, travaille en worktree, mesure les planchers e2e en
+local et nomme sa porte de démarrage. Contrôles iPhone @thierry à la fin de D, E et G.
+
+| Lot                            | Préoccupation                                                                                                                                                                                                                                                                                                                                                                  | Dépend de                                              | État    |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ | ------- |
+| A — Polices                    | Fraunces servie en entier (la production ne sert que le sous-ensemble latin étendu depuis le 19 mai 2026 : les titres retombent sur Inter), Inter en sous-ensemble + préchargée, JetBrains Mono réduite d'après le relevé de ses usages ; script reproductible `scripts/fonts/`, `OFL.txt`, test de couverture de la cmap (U+202F, U+00A0, U+2212, `tnum`) sans dépendance npm | accord @thierry pour télécharger les sources de police | ✅ #545 |
+| B — Titres et contrastes       | H1 des pages d'auth, H2 des réglages (`CardTitle as`), les 19 `text-brand-700` sans variante sombre, badge « En retard », bouton de mise à jour, survol des CTA, `prefers-contrast` / `forced-colors`                                                                                                                                                                          | —                                                      | 📋      |
+| C — Indexation                 | `noindex` + canonical des pages d'auth, `robots.txt` (`/_next/`), glossaire nl-BE, `x-default`, `og:url` / `og:locale`, en-tête `Link` (voie lourde : `routing.ts` est lu par le proxy)                                                                                                                                                                                        | #538                                                   | 📋      |
+| D-a — Menu public              | `HeaderNav` sur `Sheet` (+ `id` dans la primitive, 5 specs du tiroir)                                                                                                                                                                                                                                                                                                          | B, #540                                                | 📋      |
+| D-b — Feuille « Plus »         | `MoreSheet` sur `Sheet`, ordre PR-A gardé + garde « déconnexion sans défilement », fermeture 44 px, `svh`                                                                                                                                                                                                                                                                      | D-a, #533                                              | 📋      |
+| D-c — Éditeurs                 | `ExpenseEditDrawer` + `SimulatorDrawer` sur `Sheet` ; `PENDING_MIGRATION` est vide quand D-b **et** D-c sont mergés                                                                                                                                                                                                                                                            | D-a, D-b                                               | 📋      |
+| E-a — Gestes de la feuille     | fermeture à la vitesse projetée ou à la distance, élastique ; contrat ADR-037 étendu                                                                                                                                                                                                                                                                                           | D-c                                                    | 📋      |
+| E-b — Repliables               | hauteur animée, contenu fermé `inert` et caché                                                                                                                                                                                                                                                                                                                                 | —                                                      | 📋      |
+| E-c — Toucher et transparence  | règles globales de toucher, `active:` de la bannière, transparence découplée du mouvement réduit (`gdpr-compliance-auditor`)                                                                                                                                                                                                                                                   | —                                                      | 📋      |
+| F — Lisibilité des chiffres    | `<Num>` partout, un seul « chiffre ouvrable », explications à l'échelle, cascade alignée ; graphique du simulateur (libellés de 6 px, courbe qui traîne)                                                                                                                                                                                                                       | #533, E-b                                              | 📋      |
+| G — Premier écran public       | une hauteur d'en-tête, filet au défilement, résultat + inscription visibles bannière comprise, `theme-color` / barre de statut (revue sécurité Opus pour `ThemeBootScript`)                                                                                                                                                                                                    | A, C, E-c, #533                                        | 📋      |
+| H — Texte réglementaire et GEO | « Ankora recommande » dans le glossaire (FSMA), `llms.txt`, titre de la landing                                                                                                                                                                                                                                                                                                | relecture @cowork                                      | 📋      |
+| I — Charge des pages           | messages i18n envoyés au client par sous-arbre                                                                                                                                                                                                                                                                                                                                 | ADR-048                                                | 📋      |
+| P1 — Serveur chaud             | appel anonyme planifié de `/app` toutes les 5 min : le lancement ne paie plus le réveil (~2 s mesurées à froid)                                                                                                                                                                                                                                                                | —                                                      | 🔄 #546 |
+| P2 — Données de `/app`         | une vague de requêtes en moins au rendu, `isAdmin` via la session mémoïsée (−128 ms mesurées en local)                                                                                                                                                                                                                                                                         | —                                                      | 🔄 #544 |
+| P3 — Préchargement SW          | `navigationPreload` dans `sw.js`, aucun délai avant `/offline` ; retour arrière = correctif en avant (`navigationPreload.disable()`), jamais un revert brut                                                                                                                                                                                                                    | —                                                      | 🔄 #547 |
+| P4 — Journal des comptes       | fusionner les deux vagues de `loadAccountLedger`                                                                                                                                                                                                                                                                                                                               | P2                                                     | 📋      |
+| P5 — Session dans le proxy     | `getClaims()` au lieu de `getUser` dans le proxy (40-110 ms), **sans perdre le renouvellement de session** que `updateSession` doit à `getUser` aujourd'hui                                                                                                                                                                                                                    | revue sécurité Opus                                    | 📋      |
 
 ## Programme en cours — le cockpit, la saisie, la palette (août 2026)
 
@@ -353,6 +382,42 @@ compte payeur est attendu. Rien ne lit encore cette colonne ; J4 la lirait.
 
 Si J2 dépasse ce qu'une revue humaine tient d'une traite, le point de coupe est le schéma et
 le réglage d'un côté, l'écriture à deux mouvements de l'autre — dans cet ordre.
+
+---
+
+## Chantier — les pages qui se réveillent (30 octobre 2026)
+
+@thierry signale des pages lentes, « plusieurs secondes ». Mesuré le 30 octobre : à
+chaud, tout répond vite (pages publiques 0,16 à 0,45 s au premier octet, pages `/app`
+affichées en 0,42 à 0,90 s, navigation 0,31 à 0,48 s). Le coût est le **réveil** du
+serveur sur un site à faible trafic : 2,37 s sur `/` au premier relevé à froid. Fluid
+Compute est déjà actif. Aucune page n'est servie depuis le cache, parce que le nonce
+CSP et le layout racine imposent le rendu à la demande.
+
+| Chantier                                                                         | État                                 |
+| -------------------------------------------------------------------------------- | ------------------------------------ |
+| **ADR-048** — les pages publiques se servent depuis le cache, CSP par empreintes | 📋 proposé ; Q1 @thierry + preuve §6 |
+| Essai ADR-048 en prévisualisation (le point dur : les scripts RSC en ligne)      | 📋 session suivante, branche d'essai |
+| `/app` : vérifier la session dans le proxy sans appel réseau (`getClaims()`)     | 💡 revue sécurité dédiée             |
+| `/app` : garder le serveur éveillé par un appel planifié                         | 🔄 lot P1, PR #546 (ci-dessous)      |
+| Police Inter réduite aux caractères latins (351 Ko à la première visite)         | 💡                                   |
+
+---
+
+## Lot P — lancement rapide (15 novembre 2026)
+
+« Lent au lancement, rapide ensuite » : le premier écran attend le démarrage à froid du
+serveur (médiane mesurée 1,65 s, contre 0,27 s à chaud). Lot du programme ADR-049 ; ces
+lignes rejoindront la section « Programme — une seule grammaire » quand la PR #542 sera
+fusionnée.
+
+| Lot | Contenu                                                                   | État                                                                                                                                        |
+| --- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| P1  | Garder le serveur chaud : `keep-warm.yml`, un ping anonyme de `/app`      | 🔄 PR #546 ; GO/NO-GO à T + 3 h et T + 24 h, puis relecture mensuelle des pings froids — [rapport](./prs/PR-lot-p1-serveur-chaud-report.md) |
+| P2  | Données de `/app` en parallèle (`readDebutDesDonnees`, `isAdmin`)         | ⏳                                                                                                                                          |
+| P3  | Pré-chargement de navigation dans le service worker                       | ✅ #547                                                                                                                                     |
+| P4  | Fusionner les deux vagues du journal des comptes                          | ⏳ plus tard                                                                                                                                |
+| P5  | `getClaims()` dans le proxy à la place de `getUser` (revue sécurité Opus) | ⏳ en dernier                                                                                                                               |
 
 ---
 

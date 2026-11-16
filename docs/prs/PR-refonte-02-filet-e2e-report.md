@@ -163,7 +163,7 @@ quarantaine que personne ne voit n'est qu'un skip mieux élevé.
 
 ### Un incident évité côté comptes
 
-`supabase start` a échoué : le projet **professionnel `OVB`** occupe les ports
+`supabase start` a échoué : le projet **professionnel `client-a`** occupe les ports
 Supabase par défaut sur cette machine, et le CLI suggérait d'arrêter **sa** stack.
 Les ports d'Ankora sont décalés (`5442x`) — les deux coexistent, et aucune commande
 d'ici ne peut plus toucher au projet professionnel.
