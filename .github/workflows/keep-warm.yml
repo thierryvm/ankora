@@ -21,9 +21,12 @@ on:
 
 permissions: {}
 
+# Never cancel a run in progress: a newer run arriving late must not kill a
+# ping before it reaches Vercel. A burst after a scheduling delay queues (one
+# running, one pending); an extra ping is harmless.
 concurrency:
   group: keep-warm
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   ping:
