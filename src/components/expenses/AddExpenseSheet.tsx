@@ -621,7 +621,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
           disabled={!canSubmit}
           aria-describedby={categoryMissing ? 'add-expense-category-required' : undefined}
           data-testid="add-expense-submit"
-          className="bg-brand-700 text-primary-foreground focus-visible:ring-brand-600 hover:bg-brand-800 flex h-[50px] w-full items-center justify-center gap-2 rounded-2xl text-base font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-40"
+          className="bg-brand-700 text-on-accent focus-visible:ring-brand-600 hover:bg-brand-800 flex h-[50px] w-full items-center justify-center gap-2 rounded-2xl text-base font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-40"
         >
           <Plus className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
           {isSubmitting ? t('submitting') : t('submit')}
@@ -927,7 +927,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
                           className={[
                             'focus-visible:ring-brand-600 flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none',
                             selected
-                              ? 'bg-brand-700 text-primary-foreground'
+                              ? 'bg-brand-700 text-on-accent'
                               : 'bg-surface-muted text-foreground hover:bg-muted',
                           ].join(' ')}
                         >
@@ -1103,7 +1103,7 @@ export function AddExpenseSheet({ open, onClose }: AddExpenseSheetProps) {
                   onClick={handleCreateCategory}
                   disabled={newCategoryName.trim() === '' || isCreatingCategory}
                   data-testid="add-expense-new-category-submit"
-                  className="bg-brand-700 text-primary-foreground focus-visible:ring-brand-600 min-h-11 flex-1 rounded-lg px-4 text-sm font-semibold transition-opacity focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50"
+                  className="bg-brand-700 text-on-accent focus-visible:ring-brand-600 min-h-11 flex-1 rounded-lg px-4 text-sm font-semibold transition-opacity focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50"
                 >
                   {t('newCategoryCreate')}
                 </button>

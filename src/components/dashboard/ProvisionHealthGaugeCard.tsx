@@ -85,7 +85,7 @@ export async function ProvisionHealthGaugeCard({
             {t('noStatement')}{' '}
             <Link
               href="/app/accounts"
-              className="text-brand-700 hover:text-brand-800 inline-flex min-h-11 scroll-mt-24 scroll-mb-24 items-center underline underline-offset-2"
+              className="text-brand-text hover:text-brand-text-strong inline-flex min-h-11 scroll-mt-24 scroll-mb-24 items-center underline underline-offset-2"
             >
               {t('noStatementLink')}
             </Link>
@@ -251,7 +251,7 @@ export async function ProvisionHealthGaugeCard({
                   <dd>
                     <Link
                       href="/app/accounts"
-                      className="text-muted-foreground hover:text-brand-700 -my-1.5 inline-flex min-h-11 scroll-mt-24 scroll-mb-24 items-center underline underline-offset-2"
+                      className="text-muted-foreground hover:text-brand-text -my-1.5 inline-flex min-h-11 scroll-mt-24 scroll-mb-24 items-center underline underline-offset-2"
                     >
                       {t('currentDetail')}
                     </Link>

@@ -543,7 +543,7 @@ function AccountBalanceCard({ row, today }: { row: AccountBalanceProps; today: s
   return (
     <Card data-account-balance={row.accountType}>
       <CardHeader className="pb-2">
-        <div className="text-brand-700 flex items-center gap-2">
+        <div className="text-brand-text flex items-center gap-2">
           <Icon className="h-5 w-5" aria-hidden />
           <CardTitle className="text-sm font-medium">{row.label}</CardTitle>
         </div>

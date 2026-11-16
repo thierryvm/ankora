@@ -160,7 +160,7 @@ export default async function GlossaireTermPage({ params }: LocaleSlugParams) {
                     <li key={relatedSlug}>
                       <Link
                         href={`${localePrefix}/glossaire/${relatedSlug}`}
-                        className="bg-secondary text-secondary-foreground hover:bg-brand-600 inline-block rounded-full px-4 py-2 text-sm font-medium transition-colors hover:text-white"
+                        className="bg-control text-foreground hover:bg-brand-800 hover:text-on-accent inline-block rounded-full px-4 py-2 text-sm font-medium transition-colors"
                       >
                         {relatedTermsMap[relatedSlug] || relatedSlug}
                       </Link>

@@ -52,7 +52,7 @@ export default async function SignupPage() {
         <SignupForm />
         <p className="text-muted-foreground mt-6 text-center text-sm">
           {t('haveAccount')}{' '}
-          <Link href="/login" className="text-brand-700 font-medium hover:underline">
+          <Link href="/login" className="text-brand-text font-medium hover:underline">
             {t('loginLink')}
           </Link>
         </p>

@@ -129,7 +129,7 @@ export async function AccountCard({
         <Link
           href="/app/accounts"
           aria-label={t('balance.detailAria', { name: displayName })}
-          className="text-muted-foreground hover:text-brand-700 -my-1.5 inline-flex min-h-11 items-center text-xs underline underline-offset-2"
+          className="text-muted-foreground hover:text-brand-text -my-1.5 inline-flex min-h-11 items-center text-xs underline underline-offset-2"
         >
           {t('balance.detail')}
         </Link>

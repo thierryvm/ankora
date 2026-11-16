@@ -74,7 +74,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             {t('noAccount')}{' '}
             <Link
               href="/signup"
-              className="text-brand-700 font-medium underline underline-offset-2"
+              className="text-brand-text font-medium underline underline-offset-2"
             >
               {t('signupLink')}
             </Link>

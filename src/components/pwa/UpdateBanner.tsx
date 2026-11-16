@@ -71,7 +71,7 @@ export function UpdateBanner({ liftedForBottomBar = false }: UpdateBannerProps =
             type="button"
             data-testid="pwa-update-reload"
             onClick={appliquerMiseAJour}
-            className="bg-brand-700 text-primary-foreground focus-visible:ring-brand-600 min-h-11 rounded-md px-4 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
+            className="bg-brand-700 text-on-accent focus-visible:ring-brand-600 min-h-11 rounded-md px-4 text-sm font-medium focus-visible:ring-2 focus-visible:outline-none"
           >
             {t('reload')}
           </button>
