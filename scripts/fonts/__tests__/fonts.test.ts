@@ -19,6 +19,7 @@ import manifestJson from '../fonts.json';
 import { inspectWoff2, type FontReport } from '../woff2-inspect';
 
 type Output = {
+  name: string;
   file: string;
   family: string;
   style: 'normal' | 'italic';
@@ -30,7 +31,7 @@ type Output = {
   alias: Record<string, string>;
   exceptions: Record<string, string>;
   maxBytes: number;
-  preload: 'layout' | 'landing' | null;
+  preload: 'layout' | null;
   bytes: number;
   sha256: string;
 };
@@ -127,6 +128,11 @@ describe.each(manifest.outputs)('$file', (output) => {
     expect(reportOf(output).italic).toBe(output.style === 'italic');
   });
 
+  it('carries the first 8 hex of its SHA-256 in its name (/fonts/ is immutable)', () => {
+    // New bytes must never be served under a URL a browser cached for a year.
+    expect(output.file).toBe(`${output.name}.${output.sha256.slice(0, 8)}.woff2`);
+  });
+
   it('matches the size and SHA-256 recorded in fonts.json, within its budget', () => {
     const bytes = readFileSync(path.join(FONTS, output.file));
     expect(bytes.length).toBe(output.bytes);
@@ -149,14 +155,14 @@ describe('families', () => {
     // Every `tabular-nums` figure outside the mono is Inter. The digits live in
     // the latin file; latin-ext has none, so the subsetter rightly drops tnum
     // there (its feature list in fonts.json says so, and is tested exactly).
-    const inter = manifest.outputs.find((o) => o.file === 'inter/inter-latin.woff2') as Output;
+    const inter = manifest.outputs.find((o) => o.name === 'inter/inter-latin') as Output;
     expect(reportOf(inter).codePoints.has(0x30)).toBe(true);
     expect(reportOf(inter).features.has('tnum')).toBe(true);
   });
 
   it('keeps U+202F in the mono latin file, as the same glyph as U+00A0', () => {
     const mono = manifest.outputs.find(
-      (o) => o.family === 'JetBrains Mono' && o.range === 'latin',
+      (o) => o.name === 'jetbrains-mono/jetbrains-mono-latin',
     ) as Output;
     const ids = reportOf(mono).glyphIds;
     expect(ids.get(0x202f)).toBeDefined();
@@ -176,15 +182,22 @@ describe('families', () => {
   });
 
   it('keeps the landing font payload within budget (production paid 498 KB)', () => {
-    const landing = manifest.outputs.filter(
-      (o) => o.preload !== null || (o.family === 'JetBrains Mono' && o.range === 'latin'),
-    );
+    // What `/` downloads: the four latin files (measured in the browser by
+    // e2e/fonts.spec.ts), never a latin-ext one.
+    const landingFiles = [
+      'inter/inter-latin',
+      'fraunces/fraunces-latin',
+      'fraunces/fraunces-italic-latin',
+      'jetbrains-mono/jetbrains-mono-latin',
+    ];
+    const landing = manifest.outputs.filter((o) => landingFiles.includes(o.name));
+    expect(landing).toHaveLength(landingFiles.length);
     const total = landing.reduce((sum, o) => sum + o.bytes, 0);
     expect(total).toBeLessThanOrEqual(manifest.landingBudgetBytes);
   });
 
   it('detects a missing glyph (negative control on a real file)', () => {
-    const inter = manifest.outputs.find((o) => o.file === 'inter/inter-latin.woff2') as Output;
+    const inter = manifest.outputs.find((o) => o.name === 'inter/inter-latin') as Output;
     expect(missing(reportOf(inter), 'a一')).toEqual(['U+4E00']);
   });
 });
@@ -233,7 +246,7 @@ describe('globals.css', () => {
 
 describe('preloads', () => {
   it('src/lib/fonts.ts preloads exactly what fonts.json flags, per scope', () => {
-    for (const scope of ['layout', 'landing'] as const) {
+    for (const scope of ['layout'] as const) {
       expect([...FONT_PRELOADS[scope]].sort(), scope).toEqual(
         manifest.outputs
           .filter((o) => o.preload === scope)
@@ -243,9 +256,13 @@ describe('preloads', () => {
     }
   });
 
-  it('the locale layout and the landing call their scope', () => {
+  it('preloads nothing fonts.json does not flag', () => {
+    const flagged = manifest.outputs.filter((o) => o.preload !== null).map((o) => o.preload);
+    expect(new Set(flagged)).toEqual(new Set(Object.keys(FONT_PRELOADS)));
+  });
+
+  it('the locale layout renders its scope', () => {
     expect(read('src/app/[locale]/layout.tsx')).toMatch(/<FontPreloads scope="layout" \/>/);
-    expect(read('src/app/[locale]/(public)/page.tsx')).toMatch(/<FontPreloads scope="landing" \/>/);
   });
 
   it('passes crossOrigin, without which a font preload downloads twice', () => {

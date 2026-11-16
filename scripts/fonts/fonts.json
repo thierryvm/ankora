@@ -58,17 +58,18 @@
   ],
   "ranges": {
     "latin": "U+0000-00FF, U+0131, U+0152-0153, U+0178, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+1E9E, U+2000-206F, U+20AC, U+2122, U+2190-2195, U+2212, U+2215, U+2248, U+2260, U+2264-2265, U+2295, U+2713, U+FEFF, U+FFFD",
-    "latin-ext": "U+0100-0130, U+0132-0151, U+0154-0177, U+0179-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9D, U+1E9F, U+1EF2-1EFF, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF"
+    "latin-ext": "U+0100-0130, U+0132-0151, U+0154-0177, U+0179-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0300-0303, U+0305-0307, U+0309-0328, U+032A-036F, U+1D00-1DBF, U+1E00-1E9D, U+1E9F, U+1EF2-1EFF, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF"
   },
   "required": {
     "$comment": "Characters every output of a range must map by itself. The latin file of a family must render a French, Dutch, German or Spanish page alone.",
     "latin": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789àâäæçéèêëîïôöœùûüÿÀÂÄÆÇÉÈÊËÎÏÔÖŒÙÛÜŸßẞáíóúñÁÍÓÚÑ¿¡€  −←↑→↓↔↕≈≠≤≥⊕✓…—–’“”„«»·",
-    "latin-ext": "ąćęłńśźżőűčřšžĳĄĆĘŁŃŚŹŻŐŰČŘŠŽĲ"
+    "latin-ext": "ąćęłńśźżőűčřšžĳĄĆĘŁŃŚŹŻŐŰČŘŠŽĲ̧̀́̂̃"
   },
   "landingBudgetBytes": 194560,
   "outputs": [
     {
-      "file": "inter/inter-latin-ext.woff2",
+      "name": "inter/inter-latin-ext",
+      "file": "inter/inter-latin-ext.9c0b060c.woff2",
       "family": "Inter",
       "style": "normal",
       "weight": "100 900",
@@ -81,11 +82,12 @@
       "exceptions": {},
       "maxBytes": 138240,
       "preload": null,
-      "bytes": 122716,
-      "sha256": "64f0966f2e16b81186f7d6d1a574a8ee97724433d2e2d9060ca1787d0b967815"
+      "bytes": 130100,
+      "sha256": "9c0b060c9802c2268c888b044e300cb75cde5382e13deee051bbdaf7c09c4cb0"
     },
     {
-      "file": "inter/inter-latin.woff2",
+      "name": "inter/inter-latin",
+      "file": "inter/inter-latin.7011f85f.woff2",
       "family": "Inter",
       "style": "normal",
       "weight": "100 900",
@@ -102,7 +104,8 @@
       "sha256": "7011f85f2e7d39fb8fdbab6daca89d45d8e2ca7e9fde62848655be5d7b7d4b22"
     },
     {
-      "file": "fraunces/fraunces-latin-ext.woff2",
+      "name": "fraunces/fraunces-latin-ext",
+      "file": "fraunces/fraunces-latin-ext.5634b8ba.woff2",
       "family": "Fraunces",
       "style": "normal",
       "weight": "100 900",
@@ -119,11 +122,12 @@
       "exceptions": {},
       "maxBytes": 51200,
       "preload": null,
-      "bytes": 30836,
-      "sha256": "dcb0a27fb6e007229f6c5b5219323f2d77e78ee88040b268938e9c9fc8fc1f7f"
+      "bytes": 30908,
+      "sha256": "5634b8baa8b931ee361b38ee4cad0decc1ec3b9602607163e81cdf61def1484b"
     },
     {
-      "file": "fraunces/fraunces-latin.woff2",
+      "name": "fraunces/fraunces-latin",
+      "file": "fraunces/fraunces-latin.3b5ef77f.woff2",
       "family": "Fraunces",
       "style": "normal",
       "weight": "100 900",
@@ -149,12 +153,13 @@
         "U+2713": "Not drawn by the Fraunces source; inkless or symbolic, it falls back to Inter, next in --font-display."
       },
       "maxBytes": 51200,
-      "preload": "landing",
+      "preload": null,
       "bytes": 37160,
       "sha256": "3b5ef77f26d0e99ea88f5ce7c2f87c47bcea106eb90a2437386fd6496f345640"
     },
     {
-      "file": "fraunces/fraunces-italic-latin-ext.woff2",
+      "name": "fraunces/fraunces-italic-latin-ext",
+      "file": "fraunces/fraunces-italic-latin-ext.02dbab43.woff2",
       "family": "Fraunces",
       "style": "italic",
       "weight": "100 900",
@@ -171,11 +176,12 @@
       "exceptions": {},
       "maxBytes": 51200,
       "preload": null,
-      "bytes": 36772,
-      "sha256": "acc4a42094ce994ef0cc0f396504affd2d4d58f10e847c9dc923dc6533f5e9b6"
+      "bytes": 37072,
+      "sha256": "02dbab430a6f1c66b0ec1b7f4f4c7899693090d762c03ff29c0cacdfb8949238"
     },
     {
-      "file": "fraunces/fraunces-italic-latin.woff2",
+      "name": "fraunces/fraunces-italic-latin",
+      "file": "fraunces/fraunces-italic-latin.1ce0c2df.woff2",
       "family": "Fraunces",
       "style": "italic",
       "weight": "100 900",
@@ -201,12 +207,13 @@
         "U+2713": "Not drawn by the Fraunces source; inkless or symbolic, it falls back to Inter, next in --font-display."
       },
       "maxBytes": 51200,
-      "preload": "landing",
+      "preload": null,
       "bytes": 45080,
       "sha256": "1ce0c2dfb8431d9f99fe10d3a02918d9041c5d9d438ca9242bfa245858c3e067"
     },
     {
-      "file": "jetbrains-mono/jetbrains-mono-latin-ext.woff2",
+      "name": "jetbrains-mono/jetbrains-mono-latin-ext",
+      "file": "jetbrains-mono/jetbrains-mono-latin-ext.ae2219ad.woff2",
       "family": "JetBrains Mono",
       "style": "normal",
       "weight": "100 800",
@@ -222,11 +229,12 @@
       },
       "maxBytes": 25600,
       "preload": null,
-      "bytes": 13316,
-      "sha256": "cf8138976154a3c5bfb3b74298f9fdb1ce84fcf7e49374bae209dd05f62266c7"
+      "bytes": 15152,
+      "sha256": "ae2219adc08e472c00128c66fc5bc9ec8685f3629436a9e20fb45f3b6b4b75eb"
     },
     {
-      "file": "jetbrains-mono/jetbrains-mono-latin.woff2",
+      "name": "jetbrains-mono/jetbrains-mono-latin",
+      "file": "jetbrains-mono/jetbrains-mono-latin.661b79ba.woff2",
       "family": "JetBrains Mono",
       "style": "normal",
       "weight": "100 800",

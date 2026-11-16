@@ -6,12 +6,15 @@
  * - `layout`: every page renders body text in Inter, and a French page needs
  *   only the latin file (latin-ext is fetched by `unicode-range` if a
  *   character needs it).
- * - `landing`: the hero H1 is set in Fraunces and holds an italic `em`, so
- *   both latin faces are on the LCP path of `/` and nowhere else.
+ *
+ * Fraunces is deliberately NOT preloaded on the landing. Measured on
+ * 15 November 2026 (Lighthouse mobile, local production build, two runs): the
+ * LCP element of `/` is the intro paragraph, in Inter, not the Fraunces H1;
+ * preloading both Fraunces latin faces made that LCP slower (about 4.1 s
+ * against 3.9 s) for the same score and a nil layout shift either way.
  */
 export const FONT_PRELOADS = {
-  layout: ['/fonts/inter/inter-latin.woff2'],
-  landing: ['/fonts/fraunces/fraunces-latin.woff2', '/fonts/fraunces/fraunces-italic-latin.woff2'],
+  layout: ['/fonts/inter/inter-latin.7011f85f.woff2'],
 } as const;
 
 export type FontPreloadScope = keyof typeof FONT_PRELOADS;

@@ -5,7 +5,6 @@ import { getTranslations } from 'next-intl/server';
 
 import type { Locale } from '@/i18n/routing';
 import { redirectIfSignedIn } from '@/lib/auth/require-user';
-import { FontPreloads } from '@/lib/fonts';
 import { SITE } from '@/lib/site';
 import { FAQ, FAQ_KEYS } from '@/components/marketing/landing/sections/FAQ';
 import { Feature } from '@/components/marketing/landing/sections/Feature';
@@ -127,9 +126,6 @@ export default async function HomePage({ params }: LocaleParams) {
   // https://nextjs.org/docs/app/guides/json-ld
   return (
     <>
-      {/* The hero H1 is set in Fraunces and holds an italic `em`: both latin
-          faces are on this page's LCP path, and on no other page's. */}
-      <FontPreloads scope="landing" />
       <script
         id="ld-software"
         type="application/ld+json"

@@ -1,5 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 
+import fonts from '../scripts/fonts/fonts.json';
+
 /**
  * Fonts as the browser actually loads them (lot A, ADR-049).
  *
@@ -8,8 +10,10 @@ import { test, expect, type Page } from '@playwright/test';
  * tests (`scripts/fonts/__tests__/fonts.test.ts`) now hold the files to
  * `scripts/fonts/fonts.json`; this spec proves the browser side:
  *
- * - the head preloads exactly the planned files, each with `crossorigin`
- *   (without it a font preload is not reused and the file downloads twice);
+ * - the head preloads exactly Inter latin, with `crossorigin` (without it a
+ *   font preload is not reused and the file downloads twice). Fraunces is not
+ *   preloaded: the LCP of `/` is the Inter intro paragraph, and preloading
+ *   Fraunces measured slower (see `src/lib/fonts.tsx`);
  * - a French page never fetches a latin-ext file (the ranges are disjoint);
  * - the hero H1 really renders in Fraunces, measured by a canvas comparison
  *   that is EQUAL when Fraunces is unusable — so it can fail.
@@ -17,11 +21,16 @@ import { test, expect, type Page } from '@playwright/test';
  * `@playwright/test` directly, not the shared fixture: no state is installed.
  */
 
-const LAYOUT_PRELOADS = ['/fonts/inter/inter-latin.woff2'];
-const LANDING_PRELOADS = [
-  '/fonts/fraunces/fraunces-latin.woff2',
-  '/fonts/fraunces/fraunces-italic-latin.woff2',
-];
+/** URL of an output by its stable name; the file name carries a content hash. */
+function url(name: string): string {
+  const output = fonts.outputs.find((o) => o.name === name);
+  if (!output) throw new Error(`fonts.json has no output named ${name}`);
+  return `/fonts/${output.file}`;
+}
+
+const LAYOUT_PRELOADS = [url('inter/inter-latin')];
+/** The hero H1 is Fraunces and holds an italic `em`: both latin faces load on `/`. */
+const LANDING_FONTS = [url('fraunces/fraunces-latin'), url('fraunces/fraunces-italic-latin')];
 
 async function fontPreloads(page: Page) {
   return page.locator('head link[rel="preload"][as="font"]').evaluateAll((links) =>
@@ -44,14 +53,10 @@ async function fontRequests(page: Page) {
 }
 
 test.describe('Fonts — preload, coverage, rendering', () => {
-  test('the landing preloads Inter latin and both Fraunces latin faces, with crossorigin', async ({
-    page,
-  }) => {
+  test('the landing preloads Inter latin only, with crossorigin', async ({ page }) => {
     await page.goto('/');
     const preloads = await fontPreloads(page);
-    expect(preloads.map((p) => p.href).sort()).toEqual(
-      [...LAYOUT_PRELOADS, ...LANDING_PRELOADS].sort(),
-    );
+    expect(preloads.map((p) => p.href)).toEqual(LAYOUT_PRELOADS);
     for (const preload of preloads) {
       expect(preload.type, preload.href).toBe('font/woff2');
       expect(preload.crossorigin, preload.href).not.toBeNull();
@@ -62,7 +67,7 @@ test.describe('Fonts — preload, coverage, rendering', () => {
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     const requests = await fontRequests(page);
-    for (const file of [...LAYOUT_PRELOADS, ...LANDING_PRELOADS]) {
+    for (const file of [...LAYOUT_PRELOADS, ...LANDING_FONTS]) {
       expect(requests, file).toContain(file);
     }
     expect(requests.filter((path) => path.includes('-latin-ext'))).toEqual([]);
@@ -97,14 +102,20 @@ test.describe('Fonts — preload, coverage, rendering', () => {
     await page.goto('/');
     const h1 = page.getByRole('heading', { level: 1 });
     await expect(h1).toBeVisible();
-    await page.evaluate(() => document.fonts.ready);
-    const widths = await h1.evaluate((element) => {
+    const widths = await h1.evaluate(async (element) => {
       const text = element.textContent ?? '';
       const style = getComputedStyle(element);
+      const font = (family: string) => `${style.fontWeight} ${style.fontSize} ${family}`;
+      // `document.fonts.ready` can settle before a swap face has even started
+      // loading (seen on CI, mobile-chrome): ask for both faces explicitly. A
+      // file that fails to load, or lacks these glyphs, leaves Fraunces unusable.
+      await Promise.all(
+        [font('Fraunces'), font('Inter')].map((f) => document.fonts.load(f, text).catch(() => [])),
+      );
       const context = document.createElement('canvas').getContext('2d');
       if (!context) throw new Error('no 2d context');
       const measure = (family: string) => {
-        context.font = `${style.fontWeight} ${style.fontSize} ${family}`;
+        context.font = font(family);
         return context.measureText(text).width;
       };
       // If Fraunces were missing or unusable, the first stack would resolve to
@@ -125,7 +136,7 @@ test.describe('Fonts — preload, coverage, rendering', () => {
     const preloads = await fontPreloads(page);
     expect(preloads.map((p) => p.href)).toEqual(LAYOUT_PRELOADS);
     const requests = await fontRequests(page);
-    expect(requests).not.toContain('/fonts/fraunces/fraunces-italic-latin.woff2');
+    expect(requests).not.toContain(url('fraunces/fraunces-italic-latin'));
     expect(requests.filter((path) => path.includes('-latin-ext'))).toEqual([]);
   });
 });
