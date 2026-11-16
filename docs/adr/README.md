@@ -65,6 +65,11 @@ Decision Records) — light, lisible, versionnable en git.
 | 041 | [Provisionner n'est pas payer](./ADR-041-provisionner-nest-pas-payer.md)                                                   | Accepted                     | 2026-08-10 |
 | 042 | [File de suppression : compter les tentatives](./ADR-042-file-de-suppression-compter-les-tentatives.md)                    | Proposed                     | 2026-08-10 |
 | 043 | [Les catégories que l'utilisateur crée lui-même](./ADR-043-categories-creees-par-l-utilisateur.md)                         | Accepted (amende 022)        | 2026-08-23 |
+| 044 | [La mesure d'audience reste sur consentement](./ADR-044-mesure-d-audience-reste-sur-consentement.md)                       | Accepted                     | 2026-09-19 |
+| 045 | [Le relevé de solde est une série](./ADR-045-le-releve-de-solde-est-une-serie.md)                                          | Accepted                     | 2026-09-20 |
+| 046 | [Le mois concerné d'un argent reçu](./ADR-046-le-mois-concerne-d-un-argent-recu.md)                                        | Proposed                     | 2026-09-24 |
+| 047 | [Le mois de budget commence quand le salaire arrive](./ADR-047-le-mois-de-budget.md)                                       | Accepted                     | 2026-09-28 |
+| 048 | [Les pages publiques se servent depuis le cache](./ADR-048-les-pages-publiques-se-servent-depuis-le-cache.md)              | Proposed                     | 2026-10-30 |
 
 > **Note numérotation** : ADR-013/014/015 jamais rédigés (réservés en buffer lors de la consolidation ADR-007 → 011/012, finalement non utilisés). La numérotation reprend à 016 pour les ADRs de la session 2026-05-08.
 >

@@ -356,6 +356,25 @@ le réglage d'un côté, l'écriture à deux mouvements de l'autre — dans cet 
 
 ---
 
+## Chantier — les pages qui se réveillent (30 octobre 2026)
+
+@thierry signale des pages lentes, « plusieurs secondes ». Mesuré le 30 octobre : à
+chaud, tout répond vite (pages publiques 0,16 à 0,45 s au premier octet, pages `/app`
+affichées en 0,42 à 0,90 s, navigation 0,31 à 0,48 s). Le coût est le **réveil** du
+serveur sur un site à faible trafic : 2,37 s sur `/` au premier relevé à froid. Fluid
+Compute est déjà actif. Aucune page n'est servie depuis le cache, parce que le nonce
+CSP et le layout racine imposent le rendu à la demande.
+
+| Chantier                                                                         | État                                 |
+| -------------------------------------------------------------------------------- | ------------------------------------ |
+| **ADR-048** — les pages publiques se servent depuis le cache, CSP par empreintes | 📋 proposé ; Q1 @thierry + preuve §6 |
+| Essai ADR-048 en prévisualisation (le point dur : les scripts RSC en ligne)      | 📋 session suivante, branche d'essai |
+| `/app` : vérifier la session dans le proxy sans appel réseau (`getClaims()`)     | 💡 revue sécurité dédiée             |
+| `/app` : garder le serveur éveillé par un appel planifié                         | 💡 décision séparée, PR dédiée       |
+| Police Inter réduite aux caractères latins (351 Ko à la première visite)         | 💡                                   |
+
+---
+
 ## Contraintes transverses
 
 **Budget 0 €** — aucune dépendance payante en production tant qu'Ankora n'a pas de
