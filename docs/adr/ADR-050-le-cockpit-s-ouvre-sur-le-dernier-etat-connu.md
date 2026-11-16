@@ -75,6 +75,12 @@ Factures, Comptes, Dépenses, Engagements, les Réglages et le flux de suppressi
   (l. 42, 75, 91) suppose `app/page.tsx` à la racine et écarte les dossiers `(x)`. Il est
   **adapté pour descendre dans les groupes, jamais affaibli**. `app-destinations.ts` reste
   inchangé.
+- **Un second garde-fou suit le déplacement** :
+  `src/components/primitives/__tests__/sheet-is-the-only-modal.test.ts:39` liste
+  `app/[locale]/app/expenses/ExpenseEditDrawer.tsx` dans `PENDING_MIGRATION`, une liste qui
+  ne peut que rétrécir.
+  - Q1 met le chemin à jour vers `app/(pages)/expenses/`.
+  - Le compte reste à quatre, aucune entrée n'est ajoutée.
 - **Chemins cités ailleurs, mis à jour dans Q1** :
   - `.claude/agents/dashboard-ux-auditor.md:15` ;
   - `.claude/skills/ankora-design-system/SKILL.md:163` ;
@@ -130,7 +136,13 @@ Factures, Comptes, Dépenses, Engagements, les Réglages et le flux de suppressi
 
 - **Le serveur fournit l'empreinte.** `DashboardPage` calcule
   `SHA-256(session_id)` à partir des claims **qu'il vient de vérifier**, et la passe avec les
-  chiffres au composant d'écriture.
+  chiffres au composant d'écriture. `getUser()` ne rend pas le `session_id` : celui-ci vient
+  de `getClaims()`, ou du jeton d'accès de la session que `getUser()` vient de valider dans la
+  même requête (le schéma de `elevationDue`, `src/lib/auth/require-elevated.ts`). Le cookie de
+  la requête n'est jamais relu séparément.
+- **Un repère de rendu** (identifiant à usage unique créé par le serveur) accompagne les
+  chiffres. Le client garde en mémoire les repères déjà écrits : c'est ce qui rend « une seule
+  écriture par réponse serveur » vérifiable.
 - **Le client n'écrit que si les deux empreintes sont égales**, celle reçue du serveur et
   celle qu'il tire de son cookie, et **une seule fois par réponse serveur**. Un onglet qui
   montre encore les chiffres de A ne peut donc pas les lier à la session de B ouverte entre
@@ -192,6 +204,9 @@ Sinon : le repli de D1, sans aucun chiffre.
   part.
 - **Il ne fait rien s'il n'existe aucune clé d'instantané** : il ne décode pas le cookie pour
   rien.
+- **Il attend l'empreinte.** « Empreinte pas encore calculée » n'est pas « condition 3
+  fausse » : sinon la purge effacerait l'instantané à chaque chargement. Il n'efface tout de
+  suite que si `crypto.subtle` est absent.
 - **Sinon, il efface l'instantané dès que l'une des conditions 1 à 5 échoue**, sur toute page
   localisée : landing, pages légales, glossaire, `/login`, `/login/2fa`, `/signup`,
   `/reset-password`, `/admin`, `/app/*`.
@@ -237,8 +252,8 @@ n'est pas `httpOnly` (`node_modules/@supabase/ssr/dist/main/utils/constants.js:7
 rafraîchissement. L'instantané n'ajoute presque rien au risque XSS. Les protections restent :
 
 - la CSP à nonce stricte ;
-- `connect-src` et `img-src` limités à l'origine Supabase du projet (#538, vérifié en
-  production le 15 novembre 2026) ;
+- `connect-src` limité à l'origine Supabase du projet, en `https` et `wss` (#538, vérifié en
+  production le 15 novembre 2026). `img-src` vaut `'self' data: blob:` ;
 - le rendu en texte, jamais en HTML.
 
 **Session révoquée mais jeton non expiré**
@@ -343,6 +358,11 @@ reprise dans la politique publique.
 | **Q1** | D1 : groupes de routes, garde-fou adapté, chemins cités mis à jour, repli du cockpit sans pulsation, repli neutre | #542 (ADR-049)               | légère : `ui-auditor`, `mobile-liquid-glass-auditor`                           |
 | **Q2** | D2 : réglage local, empreinte serveur, écriture, purge à la lecture, politique de confidentialité                 | #544 (P2 : `page.tsx`) et Q1 | lourde : `plan-reviewer`, `security-auditor` (Opus), `gdpr-compliance-auditor` |
 
+**Traçage au ROADMAP** : cette PR ajoute Q1 et Q2, avec leur ordre, au tableau « Programme —
+une seule grammaire » de `docs/ROADMAP.md`. Ce tableau arrive avec #542 : la PR de cet ADR est
+rebasée sur `main` une fois #542 fusionnée, puis les lignes sont ajoutées avant sa sortie de
+brouillon.
+
 Chaque plan de lot porte :
 
 - les cinq critères de DONE du `CLAUDE.md` ;
@@ -370,8 +390,9 @@ Chaque plan de lot porte :
 
 3. **Aucun `animate-pulse`** sous `/app` : un test sur les sources le vérifie. Axe sans
    violation. Sous `prefers-reduced-motion`, aucun fondu.
-4. **`app-destinations.test.ts`** reste vert, et descend dans les groupes. Un test supprimé ou
-   affaibli est refusé.
+4. **`app-destinations.test.ts`** reste vert, et descend dans les groupes. **`PENDING_MIGRATION`**
+   de `sheet-is-the-only-modal.test.ts` garde ses quatre entrées, chemin mis à jour. Un test
+   supprimé ou affaibli, ou une entrée ajoutée, est refusé.
 
 ### 7.B — D2 (Q2)
 
@@ -391,7 +412,8 @@ Chaque plan de lot porte :
    - une seule écriture par réponse serveur ;
    - sans `crypto.subtle` (contexte non sécurisé) : aucune écriture, aucun affichage.
 4. **Purge à la lecture** : après chaque échec, le stockage est vide sur une page **publique**.
-   Sans clé d'instantané, le composant ne décode pas le cookie.
+   Sans clé d'instantané, le composant ne décode pas le cookie. **Un instantané valide survit à
+   une navigation vers une page publique** : la purge attend l'empreinte.
 5. **Révocation** : déconnexion globale depuis l'appareil B, puis chargement complet de `/app`
    sur l'appareil A pendant la durée de vie du jeton. Aucun chiffre n'est affiché.
 6. **Second facteur** : connexion par mot de passe d'un compte en 2FA. Pendant le passage par
