@@ -71,6 +71,7 @@ Decision Records) — light, lisible, versionnable en git.
 | 047 | [Le mois de budget commence quand le salaire arrive](./ADR-047-le-mois-de-budget.md)                                       | Accepted                     | 2026-09-28 |
 | 048 | [Les pages publiques se servent depuis le cache](./ADR-048-les-pages-publiques-se-servent-depuis-le-cache.md)              | Proposed                     | 2026-10-30 |
 | 049 | [Une seule grammaire de mouvement, de chiffres et de lecture](./ADR-049-une-seule-grammaire-de-mouvement-et-de-lecture.md) | Accepted                     | 2026-11-15 |
+| 050 | [Le cockpit s'ouvre sur le dernier état connu](./ADR-050-le-cockpit-s-ouvre-sur-le-dernier-etat-connu.md)                  | Proposed                     | 2026-11-16 |
 
 > **Note numérotation** : ADR-013/014/015 jamais rédigés (réservés en buffer lors de la consolidation ADR-007 → 011/012, finalement non utilisés). La numérotation reprend à 016 pour les ADRs de la session 2026-05-08.
 >
