@@ -72,7 +72,7 @@ function ProfileCard({ email, displayName }: { email: string; displayName: strin
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('title')}</CardTitle>
+        <CardTitle as="h2">{t('title')}</CardTitle>
         <CardDescription>{t('description')}</CardDescription>
       </CardHeader>
       <CardContent>
@@ -212,7 +212,7 @@ function MfaCard({ factors }: { factors: Factor[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('title')}</CardTitle>
+        <CardTitle as="h2">{t('title')}</CardTitle>
         <CardDescription>{t('description')}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -347,7 +347,7 @@ function DataCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('title')}</CardTitle>
+        <CardTitle as="h2">{t('title')}</CardTitle>
         <CardDescription>{t('description')}</CardDescription>
       </CardHeader>
       <CardContent>
@@ -388,7 +388,7 @@ function DangerZone({ deletion, email }: { deletion: Deletion; email: string }) 
     return (
       <Card className="border-danger/40">
         <CardHeader>
-          <CardTitle className="text-danger">
+          <CardTitle as="h2" className="text-danger">
             {deletion.status === 'failed' ? t('scheduledTitleFailed') : t('scheduledTitle')}
           </CardTitle>
         </CardHeader>
@@ -431,7 +431,9 @@ function DangerZone({ deletion, email }: { deletion: Deletion; email: string }) 
   return (
     <Card className="border-danger/40">
       <CardHeader>
-        <CardTitle className="text-danger">{t('title')}</CardTitle>
+        <CardTitle as="h2" className="text-danger">
+          {t('title')}
+        </CardTitle>
         <CardDescription>{t('description')}</CardDescription>
       </CardHeader>
       <CardContent>

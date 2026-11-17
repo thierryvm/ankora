@@ -114,11 +114,11 @@ export function SignupForm() {
           // PR-D5 a11y: surface validation errors to AT (was silent).
           aria-invalid={Boolean(acceptTosError)}
           aria-describedby={acceptTosError ? 'acceptTos-error' : undefined}
-          className="border-border text-brand-700 focus:ring-brand-600 mt-1 h-4 w-4 rounded"
+          className="border-border accent-brand-text focus:ring-brand-600 mt-1 h-4 w-4 rounded"
         />
         <span>
           {t('acceptTosPrefix')}{' '}
-          <Link href="/legal/cgu" className="text-brand-700 underline">
+          <Link href="/legal/cgu" className="text-brand-text underline">
             {t('acceptTosLink')}
           </Link>
         </span>
@@ -137,11 +137,11 @@ export function SignupForm() {
           required
           aria-invalid={Boolean(acceptPrivacyError)}
           aria-describedby={acceptPrivacyError ? 'acceptPrivacy-error' : undefined}
-          className="border-border text-brand-700 focus:ring-brand-600 mt-1 h-4 w-4 rounded"
+          className="border-border accent-brand-text focus:ring-brand-600 mt-1 h-4 w-4 rounded"
         />
         <span>
           {t('acceptPrivacyPrefix')}{' '}
-          <Link href="/legal/privacy" className="text-brand-700 underline">
+          <Link href="/legal/privacy" className="text-brand-text underline">
             {t('acceptPrivacyLink')}
           </Link>
         </span>

@@ -242,7 +242,7 @@ export function MergeCategoriesSheet({
                             type="checkbox"
                             data-testid="merge-source"
                             data-nom={c.name}
-                            className="accent-brand-600 h-5 w-5 shrink-0"
+                            className="accent-brand-text h-5 w-5 shrink-0"
                             checked={sources.includes(c.id)}
                             onChange={() => basculer(c.id)}
                           />
@@ -272,7 +272,7 @@ export function MergeCategoriesSheet({
                               name="merge-cible"
                               data-testid="merge-cible"
                               data-nom={c.name}
-                              className="accent-brand-600 h-5 w-5 shrink-0"
+                              className="accent-brand-text h-5 w-5 shrink-0"
                               checked={cible === c.id}
                               onChange={() => setCible(c.id)}
                             />
@@ -286,7 +286,7 @@ export function MergeCategoriesSheet({
                         <input
                           type="radio"
                           name="merge-cible"
-                          className="accent-brand-600 h-5 w-5 shrink-0"
+                          className="accent-brand-text h-5 w-5 shrink-0"
                           checked={cible === NOUVELLE}
                           onChange={() => setCible(NOUVELLE)}
                         />

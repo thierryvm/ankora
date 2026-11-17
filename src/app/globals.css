@@ -821,6 +821,59 @@ body > .mkt-paper > main {
   }
 }
 
+/* ---------- Increased contrast (lot B, 15 November 2026) ----------
+   "Increase Contrast" (iOS / macOS) and Windows contrast themes ask for
+   surfaces that do not depend on what scrolls beneath them. Measured on
+   ankora.be with `contrast: more` emulated: the header stayed 82 % translucent
+   with its blur. Same answer as the reduced-transparency fallback (opaque
+   surface, BOTH backdrop-filter prefixes reset), plus a full-strength edge:
+   `--color-border-control` is the token guarded at >= 3:1 against the card,
+   the page and a control (contrast-ratios.test.ts).
+
+   Placed AFTER the `@supports` block above: equal specificity, so the later
+   rule wins. These rules are unlayered and beat Tailwind utilities, so the
+   border colour only shows on the sides an element already draws. */
+@media (prefers-contrast: more) {
+  .surface-overlay {
+    background: var(--color-background);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-color: var(--color-border-control);
+  }
+
+  .glass {
+    background: var(--color-card);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-color: var(--color-border-control);
+    /* The inset highlights and the 50px drop shadow are depth effects; under
+       increased contrast the edge carries the separation on its own. */
+    box-shadow: none;
+  }
+}
+
+/* ---------- Forced colours (Windows contrast themes) ----------
+   In forced-colors mode the browser drops background colours and box-shadow
+   rings, so an active state carried by a fill or a ring disappears: the
+   active locale segment and the active tab were indistinguishable from their
+   neighbours. An outline survives, in the system `Highlight` colour.
+
+   Drawn INSIDE (offset -2px) and skipped while the element is focused, so the
+   global `*:focus-visible` outline (offset 2px) is never overridden by this
+   more specific rule: focus stays the one indicator that always shows. */
+@media (forced-colors: active) {
+  :is(
+    [aria-current]:not([aria-current='false']),
+    [aria-pressed='true'],
+    [aria-selected='true'],
+    [role='radio'][aria-checked='true'],
+    [role='switch'][aria-checked='true']
+  ):not(:focus-visible) {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}
+
 /* ---------- Semantic element presets ----------
    Wrapped in @layer base so any Tailwind utility class (text-*, bg-*, font-*)
    overrides the default `color: var(--color-foreground)` baked into `.num*`,
@@ -1151,11 +1204,10 @@ body > main {
      hero that consumed it (PR L2, « relevé corrigé » direction — paper is
      flat and calm by design, no atmospheric gradient). */
 
-  /* Custom accent color for native form controls (range slider thumb/track).
-     Replaces inline `style={{ accentColor: 'var(--color-brand-400)' }}` in
-     WhatIfDemoClient.tsx — Tailwind 4 does not yet ship a token-based
-     accent-* utility for design-system CSS variables. */
-  .accent-brand-400 {
-    accent-color: var(--color-brand-400);
-  }
+  /* The custom accent utility for the simulator slider left on 15 November
+     2026 (lot B). Tailwind 4 DOES generate `accent-*` from every `--color-*`
+     theme token, so the slider now uses the native utility on
+     `--color-brand-text`, which follows the theme. The old value, brand-400,
+     sat at about 1.65:1 on the light paper, under the 3:1 a control needs
+     (WCAG 1.4.11). */
 }

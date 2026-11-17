@@ -73,7 +73,7 @@ export default async function GlossairePage({ params }: LocaleParams) {
   return (
     <>
       <Header variant="marketing" />
-      <main className="bg-background min-h-screen">
+      <main id="main" className="bg-background min-h-screen">
         <div className="container mx-auto px-4 py-16 sm:py-24">
           <h1 className="text-foreground text-4xl font-bold tracking-tight sm:text-5xl">
             {t('title')}

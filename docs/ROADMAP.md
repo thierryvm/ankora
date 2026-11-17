@@ -167,7 +167,7 @@ local et nomme sa porte de démarrage. Contrôles iPhone @thierry à la fin de D
 | Lot                                      | Préoccupation                                                                                                                                                                                                                                                                                                                                                                  | Dépend de                                              | État    |
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ | ------- |
 | A — Polices                              | Fraunces servie en entier (la production ne sert que le sous-ensemble latin étendu depuis le 19 mai 2026 : les titres retombent sur Inter), Inter en sous-ensemble + préchargée, JetBrains Mono réduite d'après le relevé de ses usages ; script reproductible `scripts/fonts/`, `OFL.txt`, test de couverture de la cmap (U+202F, U+00A0, U+2212, `tnum`) sans dépendance npm | accord @thierry pour télécharger les sources de police | ✅ #545 |
-| B — Titres et contrastes                 | H1 des pages d'auth, H2 des réglages (`CardTitle as`), les 19 `text-brand-700` sans variante sombre, badge « En retard », bouton de mise à jour, survol des CTA, `prefers-contrast` / `forced-colors`                                                                                                                                                                          | —                                                      | 📋      |
+| B — Titres et contrastes                 | H1 des pages d'auth, H2 des réglages (`CardTitle as`), les 19 `text-brand-700` sans variante sombre, badge « En retard », bouton de mise à jour, survol des CTA, `prefers-contrast` / `forced-colors`                                                                                                                                                                          | —                                                      | 🔄 #551 |
 | C — Indexation                           | `noindex` + canonical des pages d'auth, `robots.txt` (`/_next/`), glossaire nl-BE, `x-default`, `og:url` / `og:locale`, en-tête `Link` (voie lourde : `routing.ts` est lu par le proxy)                                                                                                                                                                                        | #538                                                   | 📋      |
 | D-a — Menu public                        | `HeaderNav` sur `Sheet` (+ `id` dans la primitive, 5 specs du tiroir)                                                                                                                                                                                                                                                                                                          | B, #540                                                | 📋      |
 | D-b — Feuille « Plus »                   | `MoreSheet` sur `Sheet`, ordre PR-A gardé + garde « déconnexion sans défilement », fermeture 44 px, `svh`                                                                                                                                                                                                                                                                      | D-a, #533                                              | 📋      |
@@ -465,11 +465,13 @@ Elles étaient six ; la liste en compte **quatre** sur `main`. La PR #462 en lib
 et en remet une ; elle était bloquée par deux checks rouges le 12 septembre. La liste ne
 doit que **rétrécir**.
 
-### `CardTitle` rend une `<div>`
+### ~~`CardTitle` rend une `<div>`~~ — close depuis le 29 juillet 2026 (6358f76)
 
-Les titres de section du cockpit ne portent donc aucun rôle `heading` — défaut WCAG
-sur la page la plus importante de l'app, et cause de trois des six specs
-quarantinées. Primitive partagée : PR dédiée + `ui-auditor`.
+`CardTitle` rend un vrai titre (h3 par défaut) depuis le 29 juillet 2026. La dette restait
+inscrite ici. Ce qui manquait encore, c'était le **niveau** : les six pages
+d'authentification n'avaient aucun h1 (leur premier titre était ce h3), et `/app/settings`
+sautait du h1 aux h3. Le lot B (titres et contrastes, 15 novembre 2026) ajoute `as="h1"`
+et pose h1 sur l'authentification, h2 dans les réglages.
 
 ### ~~Angle mort du préflight comptes~~ — comblé le 27 juillet 2026 (#276)
 

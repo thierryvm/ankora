@@ -246,7 +246,7 @@ export function BottomTabBar({ isAdmin = false }: BottomTabBarProps) {
                      * canonique (l'échelle ne descend pas à cette granularité),
                      * et l'ombre porte une variable CSS.
                      */
-                    className="bg-brand-700 text-primary-foreground shadow-brand-700/35 flex h-8.25 w-11.5 items-center justify-center rounded-[11px] shadow-[0_2px_8px_var(--tw-shadow-color)]"
+                    className="bg-brand-700 text-on-accent shadow-brand-700/35 flex h-8.25 w-11.5 items-center justify-center rounded-[11px] shadow-[0_2px_8px_var(--tw-shadow-color)]"
                   >
                     <Plus className="h-5 w-5" strokeWidth={1.5} />
                   </span>

@@ -634,7 +634,7 @@ export function ChargesClient({
                 {isOverdue && (
                   <span
                     data-testid={`charges-row-overdue-${c.id}`}
-                    className="bg-danger rounded px-1.5 py-0.5 text-[11px] font-semibold text-white"
+                    className="bg-danger text-on-danger rounded px-1.5 py-0.5 text-xs font-semibold"
                   >
                     {t('statusOverdue')}
                   </span>

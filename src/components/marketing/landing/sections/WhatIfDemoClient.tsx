@@ -244,7 +244,7 @@ export function WhatIfDemoClient({ mois }: Props) {
             aria-valuemin={0}
             aria-valuemax={economieMax}
             aria-valuenow={economie}
-            className="accent-brand-400 h-6 w-full"
+            className="accent-brand-text h-6 w-full"
           />
           {/*
             Les deux bouts nomment les PRIX, dans l'ordre où le geste les

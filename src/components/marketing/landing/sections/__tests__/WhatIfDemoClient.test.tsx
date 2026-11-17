@@ -193,7 +193,7 @@ describe('<WhatIfDemoClient />', () => {
   it('pilote la couleur du curseur par une classe utilitaire, jamais en inline', () => {
     render(<WhatIfDemoClient mois={MOIS} />);
     const curseur = screen.getByRole('slider') as HTMLInputElement;
-    expect(curseur.className).toContain('accent-brand-400');
+    expect(curseur.className).toContain('accent-brand-text');
     expect(curseur.style.accentColor).toBe('');
   });
 

@@ -39,7 +39,7 @@ export function PaidFromChips({ name, legend, accounts, value, onChange, disable
               className={[
                 'focus-within:ring-brand-600 flex min-h-11 cursor-pointer items-center rounded-full px-4 text-sm font-medium transition-colors focus-within:ring-2',
                 selected
-                  ? 'bg-brand-700 text-primary-foreground'
+                  ? 'bg-brand-700 text-on-accent'
                   : 'bg-surface-muted text-foreground hover:bg-muted',
               ].join(' ')}
             >

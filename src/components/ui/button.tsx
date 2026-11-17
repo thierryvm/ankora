@@ -5,20 +5,22 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 /**
- * Premium pattern (Apple / Linear feel) per cc-design `_shared/shell.css`:
- *   - Default rest: clean fill + subtle elevation shadow.
- *   - Hover: `translateY(-1px)` + magnetic shadow strengthens.
- *   - Active: `scale(0.98)` (press-down feel).
+ * The four states of a control, said by TINT, never by movement:
+ *   - Rest: the fill plus a short shadow.
+ *   - Hover (pointer devices only, `hover:` is redeclared under
+ *     `@media (hover: hover)` in globals.css): one step darker on the scale.
+ *     For the primary variant that is `brand-800`; white on it measures
+ *     7.58:1, where the former `brand-600` hover measured 3.75:1 (lot B,
+ *     15 November 2026).
+ *   - Active: one further step (`brand-900` for the primary variant), so the
+ *     press stays distinguishable from the hover. No scale, no translate:
+ *     a control that moves under the finger moves its own target.
  *   - Focus-visible: soft brand-tinted ring (no browser default outline).
- *   - Disabled: opacity 0.5, all hover/focus effects suppressed.
+ *   - Disabled: a muted tint, never an opacity, which would dilute both text
+ *     and fill and break a measured contrast.
  *
- * The motion is wrapped in `motion-safe:` so users with `prefers-reduced-motion`
- * still get a flat button (no translate / scale) — matches the global rule
- * declared in `globals.css` ~line 361.
- *
- * `link` is intentionally NOT enriched with translate/scale (no surface to
- * elevate); same rule applies to `icon` size which keeps the elevation but
- * skips the shadow (icon buttons sit on existing surfaces).
+ * Because nothing moves, `prefers-reduced-motion` changes nothing here: the
+ * colour transition is already zeroed by the global reduced-motion rule.
  */
 // PR-BETA-CLEANUP-3 (2026-05-27) — focus ring aligned on the Input.tsx F2
 // contract: `ring-brand-500/30` at 30% opacity, no offset. The previous
@@ -59,7 +61,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'bg-brand-700 text-on-accent shadow-sm hover:bg-brand-600 active:bg-brand-800 active:shadow-none',
+          'bg-brand-700 text-on-accent shadow-sm hover:bg-brand-800 active:bg-brand-900 active:shadow-none',
         destructive:
           'bg-danger text-on-danger shadow-sm hover:bg-danger/90 active:bg-danger active:shadow-none',
         outline:
@@ -67,7 +69,7 @@ const buttonVariants = cva(
         secondary:
           'bg-brand-100 text-brand-900 hover:bg-brand-200 active:bg-brand-300 active:shadow-none',
         ghost: 'text-foreground hover:bg-control-hover active:bg-control-pressed',
-        link: 'text-brand-700 underline-offset-4 hover:underline',
+        link: 'text-brand-text underline-offset-4 hover:underline',
       },
       size: {
         default: 'h-10 px-4 py-2',

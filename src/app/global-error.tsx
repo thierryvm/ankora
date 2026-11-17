@@ -69,7 +69,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <button
                 onClick={retry}
-                className="bg-brand-700 hover:bg-brand-600 inline-flex h-12 items-center justify-center rounded-lg px-6 text-base font-medium text-white shadow-sm transition-colors"
+                className="bg-brand-700 hover:bg-brand-800 active:bg-brand-900 inline-flex h-12 items-center justify-center rounded-lg px-6 text-base font-medium text-white shadow-sm transition-colors"
               >
                 {copy.retry}
               </button>
@@ -83,7 +83,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
               */}
               <a
                 href="/"
-                className="border-border bg-card text-foreground hover:border-brand-500 hover:text-brand-700 inline-flex h-12 items-center justify-center rounded-lg border px-6 text-base font-medium shadow-sm transition-colors"
+                className="border-border bg-card text-foreground hover:border-brand-500 hover:text-brand-text inline-flex h-12 items-center justify-center rounded-lg border px-6 text-base font-medium shadow-sm transition-colors"
               >
                 {copy.home}
               </a>

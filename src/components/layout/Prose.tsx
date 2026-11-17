@@ -33,7 +33,7 @@ export function Prose({ children }: { children: ReactNode }) {
         // (3.74:1) and is used for focus rings, not text (ADR-035).
         '[&_li::marker]:text-brand-text',
         // Links — 5.5:1 contrast + clear affordance
-        '[&_a]:text-brand-700 [&_a]:decoration-brand-600/40 hover:[&_a]:decoration-brand-700 [&_a]:font-medium [&_a]:underline [&_a]:underline-offset-4',
+        '[&_a]:text-brand-text [&_a]:decoration-brand-600/40 hover:[&_a]:decoration-brand-text [&_a]:font-medium [&_a]:underline [&_a]:underline-offset-4',
         'dark:[&_a]:text-brand-300 dark:[&_a]:decoration-brand-300/50',
         // Inline emphasis
         '[&_strong]:text-foreground [&_strong]:font-semibold',

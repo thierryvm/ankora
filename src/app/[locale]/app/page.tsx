@@ -577,7 +577,7 @@ export default async function DashboardPage({
                 accountType === 'daily_card' && dailyPlafondMissing ? (
                   <Link
                     href="/app/accounts"
-                    className="text-muted-foreground hover:text-brand-700 -my-1.5 inline-flex min-h-11 items-center text-xs underline underline-offset-2"
+                    className="text-muted-foreground hover:text-brand-text -my-1.5 inline-flex min-h-11 items-center text-xs underline underline-offset-2"
                   >
                     {tDaily('cta_set_plafond')}
                   </Link>

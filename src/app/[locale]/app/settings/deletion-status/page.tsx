@@ -86,7 +86,7 @@ export default async function DeletionStatusPage() {
 
       <Card className="border-danger/40">
         <CardHeader>
-          <CardTitle>
+          <CardTitle as="h2">
             {t('statusLabel')} <span className={statusColor}>{statusLabel}</span>
           </CardTitle>
           <CardDescription>{t('requestedOn', { date: requestedAt })}</CardDescription>

@@ -146,7 +146,7 @@ export function AmountSheet(props: AmountSheetProps) {
             <label className="flex min-h-11 items-center gap-3 text-sm">
               <input
                 type="checkbox"
-                className="h-5 w-5"
+                className="accent-brand-text h-5 w-5"
                 checked={overdrawn}
                 onChange={(e) => setOverdrawn(e.target.checked)}
               />

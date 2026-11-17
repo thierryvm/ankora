@@ -171,7 +171,7 @@ export function CookiesPreferencesSection({ initialServerSnapshot }: Props) {
   return (
     <Card id="cookies-preferences">
       <CardHeader>
-        <CardTitle>{t('title')}</CardTitle>
+        <CardTitle as="h2">{t('title')}</CardTitle>
         <CardDescription>{t('description')}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
@@ -181,7 +181,7 @@ export function CookiesPreferencesSection({ initialServerSnapshot }: Props) {
             checked
             disabled
             aria-label={t('essentialLabel')}
-            className="text-brand-700 mt-0.5 h-4 w-4"
+            className="accent-brand-text mt-0.5 h-4 w-4"
           />
           <div className="flex-1">
             <p className="text-sm font-medium">
@@ -205,7 +205,7 @@ export function CookiesPreferencesSection({ initialServerSnapshot }: Props) {
             // already provides the accessible name; aria-label would
             // override it and AT would lose the connection to the
             // descriptive paragraph.
-            className="text-brand-700 focus-visible:ring-brand-600 mt-0.5 h-4 w-4 focus-visible:ring-2 focus-visible:outline-none"
+            className="accent-brand-text focus-visible:ring-brand-600 mt-0.5 h-4 w-4 focus-visible:ring-2 focus-visible:outline-none"
           />
           <div className="flex-1">
             <label htmlFor="analytics-toggle" className="text-sm font-medium">

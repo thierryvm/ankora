@@ -73,7 +73,7 @@ export default async function NotFound() {
       <body className="bg-background font-sans antialiased">
         <main className="flex min-h-screen items-center justify-center px-4 py-16">
           <div className="mx-auto max-w-md text-center">
-            <p className="text-brand-700 font-mono text-sm font-medium tracking-widest uppercase">
+            <p className="text-brand-text font-mono text-sm font-medium tracking-widest uppercase">
               {copy.label}
             </p>
             <h1 className="text-foreground font-display mt-3 text-4xl font-bold tracking-tight md:text-5xl">
@@ -94,13 +94,13 @@ export default async function NotFound() {
               */}
               <a
                 href="/"
-                className="bg-brand-700 hover:bg-brand-600 inline-flex h-12 items-center justify-center rounded-lg px-6 text-base font-medium text-white shadow-sm transition-colors"
+                className="bg-brand-700 hover:bg-brand-800 active:bg-brand-900 inline-flex h-12 items-center justify-center rounded-lg px-6 text-base font-medium text-white shadow-sm transition-colors"
               >
                 {copy.ctaHome}
               </a>
               <a
                 href={cockpitHref}
-                className="border-border bg-card text-foreground hover:border-brand-500 hover:text-brand-700 inline-flex h-12 items-center justify-center rounded-lg border px-6 text-base font-medium shadow-sm transition-colors"
+                className="border-border bg-card text-foreground hover:border-brand-500 hover:text-brand-text inline-flex h-12 items-center justify-center rounded-lg border px-6 text-base font-medium shadow-sm transition-colors"
               >
                 {copy.ctaCockpit}
               </a>
